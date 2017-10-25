@@ -85,6 +85,7 @@ Table of Contents
       + Conditional assembly
           o If, else if, else
           o Switch, case, default
+          o Comment
       + Repetitions
       + Including files
       + Scopes
@@ -847,6 +848,11 @@ when segments are copied into the code with their internal references.
 
 A anonymous symbols are looked up first in the current scope, then in lower
 scopes until the global scope is reached.
+
+Anonymous labels within conditionally assembled code are counted even if the
+code itself is not compiled and the label won't get defined. This ensures that
+anonymous labels are always at the same "distance" independent of the
+conditions in between.
 
 Constant and re-definable symbols
 
@@ -1829,6 +1835,10 @@ To prevent parts of source from compiling conditional constructs can be used.
 This is useful when multiple slightly different versions needs to be compiled
 from the same source.
 
+Anonymous labels are still recognized in the non-compiling parts even if they
+won't get defined. This ensures consistent relative referencing across
+conditionally compiled areas with such labels.
+
 If, else if, else
 
 .if <condition>
@@ -1839,7 +1849,7 @@ If, else if, else
     Compile if previous conditions were not met
 .fi
 .endif
-    End of conditional compilation
+    End of conditional compilation.
 .ifne <value>
     Compile if value is not zero
 .ifeq <value>
@@ -1875,7 +1885,7 @@ be written only once in the switch statement.
 .default
     Compile if the previous conditions were all skipped
 .endswitch
-    End of conditional compile
+    End of conditional compilation.
 
         .switch wait
         .case 2         ;2 cycles
@@ -1887,6 +1897,18 @@ be written only once in the switch statement.
         .default        ;else 5 cycles
         inc $2
         .endswitch
+
+Comment
+
+.comment
+    Never compile.
+.endc
+    End of conditional compilation.
+
+        .comment
+        lda #1          ;this won't be compiled
+        sta $d020
+        .endc
 
 Repetitions
 
@@ -1907,7 +1929,7 @@ Repetitions
 .next
     Assign variable to each item of expression in sequence.
 
-    lp      .for col in [0, 11, 12, 15, 1]
+            .for col in [0, 11, 12, 15, 1]
             lda #col
             sta $d020
             .next
@@ -2310,15 +2332,6 @@ Misc
 .var <expression>
     Defines a variable identified by the label preceding, which is set to the
     value of expression or reference of variable.
-.comment
-.endc
-    Comment block start and comment block end.
-
-            .comment
-            lda #1          ;this won't be compiled
-            sta $d020
-            .endc
-
 .assert
 .check
     Do not use these, the syntax will change in next version!
