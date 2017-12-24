@@ -1387,10 +1387,8 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         } else val = NULL;
                         label = new_label(&labelname, mycontext, strength, &labelexists, cflist);
                         if (labelexists) {
-                            if (label->defpass == pass) {
-                                if (val != NULL) val_destroy(val);
-                                err_msg_double_defined(label, &labelname, &epoint);
-                            } else {
+                            if (label->defpass == pass) err_msg_double_defined(label, &labelname, &epoint);
+                            else {
                                 if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
