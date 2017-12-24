@@ -2082,6 +2082,8 @@ global one with the same name.
 
     This enabled label definitions into the same scope in different files.
 
+    Please note that this directive does not work well with -Wshadow.
+
 Sections
 
 Sections can be used to collect data or code into separate memory areas without
