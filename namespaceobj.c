@@ -33,6 +33,8 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "identobj.h"
+#include "codeobj.h"
+#include "macroobj.h"
 
 static Type obj;
 
@@ -225,12 +227,35 @@ MALLOC Namespace *new_namespace(const struct file_list_s *file_list, linepos_t e
     return val;
 }
 
+static MUST_CHECK Obj *calc2(oper_t op) {
+    if (op->op == &o_MEMBER) {
+        return namespace_member(op, (Namespace *)op->v1);
+    }
+    if (op->v2 == &none_value->v || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
+    return obj_oper_error(op);
+}
+
 void namespaceobj_init(void) {
     new_type(&obj, T_NAMESPACE, "namespace", sizeof(Namespace));
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;
     obj.repr = repr;
+    obj.calc2 = calc2;
+}
+
+Namespace *get_namespace(const Obj *o) {
+    switch (o->obj->type) {
+    case T_CODE:
+        return ((Code *)o)->names;
+    case T_UNION:
+    case T_STRUCT:
+        return ((Struct *)o)->names;
+    case T_NAMESPACE:
+        return (Namespace *)o;
+    default:
+        return NULL;
+    }
 }
 
 #define SLOTS 128

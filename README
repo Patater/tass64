@@ -2070,6 +2070,18 @@ global one with the same name.
     Please note that .ifdef/.ifndef directives are left out from 64tass for of
     technical reasons, so don't wait for them to appear anytime soon.
 
+.namespace [<symbol>]
+.endn
+    Namespace area
+
+    This directive either creates a new scope (if used without a parameter) or
+    activates the one in the parameter.
+
+    The scope can be assigned to a symbol in front of the directive so that it
+    can be reactivated later.
+
+    This enabled label definitions into the same scope in different files.
+
 Sections
 
 Sections can be used to collect data or code into separate memory areas without
@@ -4110,12 +4122,12 @@ Assembler directives
 .addr .al .align .as .assert .autsiz .bend .binary .binclude .block .break
 .byte .case .cdef .cerror .char .check .comment .continue .cpu .cwarn .databank
 .default .dint .dpage .dsection .dstruct .dunion .dword .edef .else .elsif .enc
-.end .endc .endf .endif .endm .endp .ends .endswitch .endu .endweak .eor .error
-.fi .fill .for .function .goto .here .hidemac .if .ifeq .ifmi .ifne .ifpl
-.include .lbl .lint .logical .long .macro .mansiz .next .null .offs .option
-.page .pend .proc .proff .pron .ptext .rept .rta .section .seed .segment .send
-.shift .shiftl .showmac .sint .struct .switch .text .union .var .warn .weak
-.word .xl .xs
+.end .endc .endf .endif .endm .endn .endp .ends .endswitch .endu .endweak .eor
+.error .fi .fill .for .function .goto .here .hidemac .if .ifeq .ifmi .ifne
+.ifpl .include .lbl .lint .logical .long .macro .mansiz .namespace .next .null
+.offs .option .page .pend .proc .proff .pron .ptext .rept .rta .section .seed
+.segment .send .shift .shiftl .showmac .sint .struct .switch .text .union .var
+.warn .weak .word .xl .xs
 
 -------------------------------------------------------------------------------
 
