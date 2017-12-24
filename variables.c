@@ -46,7 +46,6 @@
 #include "noneobj.h"
 #include "labelobj.h"
 #include "errorobj.h"
-#include "macroobj.h"
 #include "mfuncobj.h"
 
 static struct namespacekey_s *lastlb2 = NULL;
@@ -351,20 +350,6 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
     return avltree_container_of(b, struct namespacekey_s, node)->key;            /* already exists */
 }
 
-static Namespace *get_space(const Obj *o) {
-    switch (o->obj->type) {
-    case T_CODE:
-        return ((Code *)o)->names;
-    case T_UNION:
-    case T_STRUCT:
-        return ((Struct *)o)->names;
-    case T_NAMESPACE:
-        return (Namespace *)o;
-    default:
-        return NULL;
-    }
-}
-
 void shadow_check(Namespace *members) {
     const struct avltree_node *n;
 
@@ -375,7 +360,7 @@ void shadow_check(Namespace *members) {
 
         if (key2->defpass != pass) continue;
 
-        ns = get_space(key2->value);
+        ns = get_namespace(key2->value);
 
         if (ns != NULL && ns->len != 0 && key2->owner) {
             size_t ln = ns->len;
@@ -617,7 +602,7 @@ static void labeldump(Namespace *members, FILE *flab) {
             }
         }
 
-        ns = get_space(l2->value);
+        ns = get_namespace(l2->value);
 
         if (ns != NULL && ns->len != 0 && l2->owner) {
             if (l2->name.len < 2 || l2->name.data[1] != 0) {
@@ -647,7 +632,7 @@ static Namespace *find_space(const char *here, bool use) {
         if (labelname.len == 0) return NULL;
         l = find_label2(&labelname, space);
         if (l == NULL) return NULL;
-        space = get_space(l->value);
+        space = get_namespace(l->value);
         if (space == NULL) return NULL;
         lpoint.pos++;
     } while (labelname.data[labelname.len] == '.');

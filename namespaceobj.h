@@ -47,6 +47,7 @@ static inline Namespace *ref_namespace(Namespace *v1) {
 
 extern MALLOC Namespace *new_namespace(const struct file_list_s *, linepos_t);
 extern MUST_CHECK Obj *namespace_member(struct oper_s *, Namespace *);
+extern Namespace *get_namespace(const Obj *);
 
 extern void namespacekey_free(struct namespacekey_s *);
 extern struct namespacekey_s *namespacekey_alloc(void);

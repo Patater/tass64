@@ -148,6 +148,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x52" "endf",
     "\x2d" "endif",
     "\x11" "endm",
+    "\x5f" "endn",
     "\x1e" "endp",
     "\x46" "ends",
     "\x56" "endswitch",
@@ -174,6 +175,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x0c" "long",
     "\x10" "macro",
     "\x5c" "mansiz",
+    "\x5e" "namespace",
     "\x13" "next",
     "\x04" "null",
     "\x0f" "offs",
@@ -221,7 +223,7 @@ typedef enum Command_types {
     CMD_DUNION, CMD_SECTION, CMD_DSECTION, CMD_SEND, CMD_CDEF, CMD_EDEF,
     CMD_BINCLUDE, CMD_FUNCTION, CMD_ENDF, CMD_SWITCH, CMD_CASE, CMD_DEFAULT,
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
-    CMD_MANSIZ, CMD_SEED
+    CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -789,6 +791,10 @@ static const char *check_waitfor(void) {
         pop_context();
         /* fall through */
     case W_BEND: return ".bend";
+    case W_ENDN2:
+        pop_context();
+        /* fall through */
+    case W_ENDN: return ".endn";
     case W_ENDC: return ".endc";
     case W_ENDS:
         if ((waitfor->skip & 1) != 0) current_section->unionmode = waitfor->breakout;
@@ -1363,6 +1369,59 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                             label->epoint = epoint;
                         }
                         if (!arguments.tasmcomp && diagnostics.deprecated) err_msg2(ERROR______OLD_GOTO, NULL, &cmdpoint);
+                        label->ref = false;
+                        goto finish;
+                    }
+                case CMD_NAMESPACE:
+                    { /* namespace */
+                        Label *label;
+                        struct values_s *vs;
+                        bool labelexists;
+                        listing_line(listing, 0);
+                        new_waitfor(W_ENDN, &epoint);
+                        if (!get_exp(0, cflist, 0, 1, &epoint)) goto breakerr;
+                        vs = get_val(); 
+                        if (vs != NULL) {
+                            val = (Obj *)get_namespace(vs->val);
+                            if (val == NULL) err_msg_wrong_type(vs->val, NULL, &vs->epoint);
+                        } else val = NULL;
+                        label = new_label(&labelname, mycontext, strength, &labelexists, cflist);
+                        if (labelexists) {
+                            if (label->defpass == pass) {
+                                if (val != NULL) val_destroy(val);
+                                err_msg_double_defined(label, &labelname, &epoint);
+                            } else {
+                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                label->constant = true;
+                                label->owner = (val == NULL);
+                                label->file_list = cflist;
+                                label->epoint = epoint;
+                                if (val != NULL) const_assign(label, val_reference(val));
+                                else {
+                                    label->defpass = pass;
+                                    if (label->value->obj != NAMESPACE_OBJ) {
+                                        val_destroy(label->value);
+                                        label->value = (Obj *)new_namespace(cflist, &epoint);
+                                    }
+                                }
+                            }
+                        } else {
+                            if (!constcreated && temporary_label_branch == 0) {
+                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                constcreated = true;
+                            }
+                            label->constant = true;
+                            label->owner = (val == NULL);
+                            label->value = (val != NULL) ? val_reference(val) : (Obj *)new_namespace(cflist, &epoint);
+                            label->epoint = epoint;
+                        }
+                        if (label->value->obj == NAMESPACE_OBJ) {
+                            push_context((Namespace *)label->value);
+                            waitfor->what = W_ENDN2;
+                        }
                         label->ref = false;
                         goto finish;
                     }
@@ -2142,6 +2201,14 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                     close_waitfor(W_BEND2);
                 } else err_msg2(ERROR__MISSING_OPEN,".block", &epoint);
                 break;
+            case CMD_ENDN: /* .endn */
+                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if (close_waitfor(W_ENDN)) {
+                } else if (waitfor->what==W_ENDN2) {
+                    if (pop_context()) err_msg2(ERROR__MISSING_OPEN,".namespace", &epoint);
+                    close_waitfor(W_ENDN2);
+                } else err_msg2(ERROR__MISSING_OPEN,".namespace", &epoint);
+                break;
             case CMD_ENDWEAK: /* .endweak */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (close_waitfor(W_WEAK)) {
@@ -2406,6 +2473,49 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         push_context((Namespace *)label->value);
                     }
                 } else new_waitfor(W_BEND, &epoint);
+                break;
+            case CMD_NAMESPACE: if ((waitfor->skip & 1) != 0)
+                { /* .namespace */
+                    struct values_s *vs;
+                    Label *label;
+                    bool labelexists;
+                    str_t tmpname;
+                    listing_line(listing, epoint.pos);
+                    new_waitfor(W_ENDN, &epoint);
+                    if (!get_exp(0, cflist, 0, 1, &epoint)) goto breakerr;
+                    vs = get_val();
+                    if (vs != NULL) {
+                        val = (Obj *)get_namespace(vs->val);
+                        if (val == NULL) err_msg_wrong_type(vs->val, NULL, &vs->epoint);
+                    } else val = NULL;
+                    if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
+                    else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
+                    anonident2.type = '.';
+                    anonident2.star_tree = star_tree;
+                    anonident2.vline = vline;
+                    tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                    label = new_label(&tmpname, mycontext, strength, &labelexists, cflist);
+                    if (labelexists) {
+                        if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
+                        label->constant = true;
+                        label->owner = (val == NULL);
+                        if (val != NULL) const_assign(label, val_reference(val));
+                        else {
+                            label->defpass = pass;
+                            if (label->value->obj != NAMESPACE_OBJ) {
+                                val_destroy(label->value);
+                                label->value = (Obj *)new_namespace(cflist, &epoint);
+                            }
+                        }
+                    } else {
+                        label->constant = true;
+                        label->owner = (val == NULL);
+                        label->value = (val != NULL) ? val_reference(val) : (Obj *)new_namespace(cflist, &epoint);
+                        label->epoint = epoint;
+                    }
+                    push_context((Namespace *)label->value);
+                    waitfor->what = W_ENDN2;
+                } else new_waitfor(W_ENDN, &epoint);
                 break;
             case CMD_WEAK: if ((waitfor->skip & 1) != 0)
                 { /* .weak */

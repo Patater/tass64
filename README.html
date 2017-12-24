@@ -2465,6 +2465,13 @@ scope is of course not allowed and it results in double definition error.</p>
 <p>Please note that <code>.ifdef</code>/<code>.ifndef</code> directives are
 left out from 64tass for of technical reasons, so don't wait for them to appear
 anytime soon.</p>
+
+<dt><code><b class="k">.namespace [&lt;symbol&gt;]</b></code><a name="d_namespace" href="#d_namespace"></a>
+<dt><code><b class="k">.endn</b></code><a name="d_endn" href="#d_endn"></a>
+<dd>Namespace area
+<p>This directive either creates a new scope (if used without a parameter) or activates the one in the parameter.</p>
+<p>The scope can be assigned to a symbol in front of the directive so that it can be reactivated later.</p>
+<p>This enabled label definitions into the same scope in different files.</p>
 </dl>
 
 <h3>Sections<a name="sections" href="#sections"></a></h3>
@@ -4926,6 +4933,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_endf">.endf</a>
 <a href="#d_endif">.endif</a>
 <a href="#d_endm">.endm</a>
+<a href="#d_endn">.endn</a>
 <a href="#d_endp">.endp</a>
 <a href="#d_ends">.ends</a>
 <a href="#d_endswitch">.endswitch</a>
@@ -4952,6 +4960,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_long">.long</a>
 <a href="#d_macro">.macro</a>
 <a href="#d_mansiz">.mansiz</a>
+<a href="#d_namespace">.namespace</a>
 <a href="#d_next">.next</a>
 <a href="#d_null">.null</a>
 <a href="#d_offs">.offs</a>
