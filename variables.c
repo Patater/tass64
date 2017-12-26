@@ -557,18 +557,19 @@ static void labelprint2(const struct avltree *members, FILE *flab, int labelmode
                 }
             }
         } else {
-            Str *val = (Str *)l->value->obj->repr(l->value, NULL, SIZE_MAX);
+            Obj *val = l->value;
+            Str *str = (Str *)val->obj->repr(val, NULL, SIZE_MAX);
             size_t len;
-            if (val == NULL) continue;
-            if (val->v.obj == STR_OBJ) {
+            if (str == NULL) continue;
+            if (str->v.obj == STR_OBJ) {
                 len = printable_print2(l->name.data, flab, l->name.len);
                 padding(len, EQUAL_COLUMN, flab);
                 if (l->constant) fputs("= ", flab);
                 else fputs(&" := "[len < EQUAL_COLUMN], flab);
-                printable_print2(val->data, flab, val->len);
+                printable_print2(str->data, flab, str->len);
                 putc('\n', flab);
             }
-            val_destroy(&val->v);
+            val_destroy(&str->v);
         }
     }
 }
@@ -601,10 +602,11 @@ static void labeldump(Namespace *members, FILE *flab) {
                 val_destroy(&val->v);
             }
         }
+        if (!l2->owner) continue;
 
         ns = get_namespace(l2->value);
 
-        if (ns != NULL && ns->len != 0 && l2->owner) {
+        if (ns != NULL && ns->len != 0) {
             if (l2->name.len < 2 || l2->name.data[1] != 0) {
                 size_t ln = ns->len;
                 ns->len = 0;
