@@ -1083,14 +1083,13 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         tmp2 = find_label2(&labelname, mycontext);
                         if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, false, &epoint); goto breakerr;}
                     }
-                    val = tmp2->value;
-                    if (val->obj != CODE_OBJ) {
-                        if (val->obj != NONE_OBJ) err_msg_wrong_type(val, CODE_OBJ, &epoint);
+                    mycontext = get_namespace(tmp2->value);
+                    if (mycontext == NULL) {
+                        err_msg_wrong_type(tmp2->value, NULL, &epoint);
                         goto breakerr;
                     }
                     tmp2->usepass = pass; /* touch_label(tmp2) */
                     if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
-                    mycontext = ((Code *)val)->names;
                 }
                 lpoint.pos++; islabel = true; epoint = lpoint;
                 labelname.data = pline + lpoint.pos; labelname.len = get_label();
