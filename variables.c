@@ -505,24 +505,10 @@ static void labelprint2(const struct avltree *members, FILE *flab, int labelmode
         default:break;
         }
         if (labelmode == LABEL_VICE) {
-            Obj *val = NULL;
-            Error *err;
-            uval_t uv;
-            struct linepos_s epoint;
-            size_t i, j;
-            const uint8_t *d;
+            Obj *val;
+            size_t i, j = l->name.len;
+            const uint8_t *d = l->name.data;
 
-            if (l->value->obj == ADDRESS_OBJ) {
-                Address *adr = (Address *)l->value;
-                if (adr->type == A_NONE) val = adr->val;
-            } else if (l->value->obj == CODE_OBJ) {
-                Code *code = (Code *)l->value;
-                val = code->addr;
-            }
-            if (val == NULL) continue;
-
-            j = l->name.len;
-            d = l->name.data;
             for (i = 0; i < j; i++) {
                 uint8_t c = d[i];
                 if (c < '0') break;
@@ -535,25 +521,26 @@ static void labelprint2(const struct avltree *members, FILE *flab, int labelmode
             }
             if (i != j) continue;
 
-            err = val->obj->uval(val, &uv, 24, &epoint);
-            if (err != NULL) {
-                val_destroy(&err->v);
-                continue;
+            val = l->value;
+            if (val->obj == ADDRESS_OBJ || val->obj == CODE_OBJ) {
+                struct linepos_s epoint;
+                uval_t uv;
+                Error *err = val->obj->uval(val, &uv, 24, &epoint);
+                if (err == NULL) {
+                    fprintf(flab, "al %" PRIx32 " .", uv & 0xffffff);
+                    labelname_print(l, flab, ':');
+                    putc('\n', flab);
+                } else val_destroy(&err->v);
             }
-
-            fprintf(flab, "al %" PRIx32 " .", uv & 0xffffff);
-            labelname_print(l, flab, ':');
-            putc('\n', flab);
-
-            if (l->value->obj == CODE_OBJ) {
-                Code *code = (Code *)l->value;
-                if (code->names->len != 0 && l->owner) {
-                    size_t ln = code->names->len;
-                    code->names->len = 0;
+            if (l->owner) {
+                Namespace *ns = get_namespace(val);
+                if (ns != NULL && ns->len != 0) {
+                    size_t ln = ns->len;
+                    ns->len = 0;
                     push_label(l);
-                    labelprint2(&code->names->members, flab, labelmode);
+                    labelprint2(&ns->members, flab, labelmode);
                     pop_label();
-                    code->names->len = ln;
+                    ns->len = ln;
                 }
             }
         } else {
