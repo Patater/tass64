@@ -39,6 +39,7 @@
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
+#include "memblocksobj.h"
 
 static Type obj;
 
@@ -58,6 +59,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 static FAST_CALL void destroy(Obj *o1) {
     Code *v1 = (Code *)o1;
     val_destroy(v1->addr);
+    val_destroy(&v1->memblocks->v);
     val_destroy(&v1->names->v);
 }
 
@@ -67,12 +69,18 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     switch (i) {
     case -1:
         v1->addr->refcount--;
+        v1->memblocks->v.refcount--;
         v1->names->v.refcount--;
         return;
     case 0:
         return;
     case 1:
         v = v1->addr;
+        if ((v->refcount & SIZE_MSB) != 0) {
+            v->refcount -= SIZE_MSB - 1;
+            v->obj->garbage(v, 1);
+        } else v->refcount++;
+        v = &v1->memblocks->v;
         if ((v->refcount & SIZE_MSB) != 0) {
             v->refcount -= SIZE_MSB - 1;
             v->obj->garbage(v, 1);
@@ -101,6 +109,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return o2->obj == CODE_OBJ && (v1->addr == v2->addr || v1->addr->obj->same(v1->addr, v2->addr))
         && v1->size == v2->size && v1->offs == v2->offs && v1->dtype == v2->dtype
         && v1->requires == v2->requires && v1->conflicts == v2->conflicts
+/*        && (v1->memblocks == v2->memblocks || v1->memblocks->v.obj->same(&v1->memblocks->v, &v2->memblocks->v)) */
         && (v1->names == v2->names || v1->names->v.obj->same(&v1->names->v, &v2->names->v));
 }
 
@@ -243,7 +252,7 @@ static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
     offs = (size_t)offs2 * ln2;
     r = -1;
     for (val = i2 = 0; i2 < ln2; i2++, offs++) {
-        r = read_mem(v1->mem, v1->memp, v1->membp, offs);
+        r = read_mem(v1->memblocks, v1->memp, v1->membp, offs);
         if (r < 0) return (Obj *)ref_gap();
         val |= (uval_t)r << (i2 * 8);
     }
@@ -354,9 +363,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         if (length == 0) {
             return (Obj *)ref_tuple(null_tuple);
         }
-        if (v1->pass != pass) {
-            return (Obj *)new_error(ERROR____NO_FORWARD, op->epoint);
-        }
         v = new_tuple();
         vals = list_create_elements(v, length);
         i = 0;
@@ -452,6 +458,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 }
                 v = new_code();
                 memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
+                v->memblocks = ref_memblocks(v1->memblocks);
                 v->names = ref_namespace(v1->names);
                 v->addr = op->v1->obj->calc2(op);
                 switch (op->op->op) {
@@ -548,6 +555,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             }
             v = new_code();
             memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v2) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
+            v->memblocks = ref_memblocks(v2->memblocks);
             v->names = ref_namespace(v2->names);
             v->addr = o1->obj->calc2(op);
             v->offs = v2->offs + iv;
