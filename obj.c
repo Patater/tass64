@@ -45,6 +45,7 @@
 #include "errorobj.h"
 #include "mfuncobj.h"
 #include "identobj.h"
+#include "memblocksobj.h"
 
 static Type lbl_obj;
 static Type default_obj;
@@ -293,6 +294,7 @@ void objects_init(void) {
     dictobj_init();
     labelobj_init();
     namespaceobj_init();
+    memblocksobj_init();
     macroobj_init();
     errorobj_init();
     operobj_init();

@@ -36,6 +36,7 @@ typedef enum Code_types {
 } Code_types;
 
 struct Namespace;
+struct Memblocks;
 
 typedef struct Code {
     Obj v;
@@ -45,7 +46,7 @@ typedef struct Code {
     uint8_t apass;
     signed char dtype;
     Obj *addr;
-    const struct memblocks_s *mem;
+    struct Memblocks *memblocks;
     size_t memp;
     size_t membp;
     struct Namespace *names;
