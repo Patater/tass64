@@ -1074,11 +1074,10 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
         labelname.data = pline + lpoint.pos; labelname.len = get_label();
         if (labelname.len != 0) {
             struct linepos_s cmdpoint;
-            bool islabel;
-            islabel = false;
+            bool islabel = false;
             while (here() == '.' && pline[lpoint.pos+1] != '.') {
                 if ((waitfor->skip & 1) != 0) {
-                    if (mycontext == current_context) {
+                    if (!islabel) {
                         if (labelname.data[0] != '_') {
                             tmp2 = find_label(&labelname, NULL);
                             if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, true, &epoint); goto breakerr;}
