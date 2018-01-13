@@ -196,10 +196,10 @@ Label *find_label(const str_t *name, Namespace **here) {
     size_t p = context_stack.p;
     Label label;
 
+    if (name->len > 1 && name->data[1] == 0) label.cfname = *name;
+    else str_cfcpy(&label.cfname, name);
+    tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
-    if (name->len > 1 && name->data[1] == 0) tmp.key->cfname = *name;
-    else str_cfcpy(&tmp.key->cfname, name);
-    tmp.hash = str_hash(&tmp.key->cfname);
 
     while (context_stack.bottom < p) {
         Namespace *context = context_stack.stack[--p].normal;
@@ -226,10 +226,10 @@ Label *find_label2(const str_t *name, Namespace *context) {
     struct namespacekey_s tmp, *c;
     Label label;
 
+    if (name->len > 1 && name->data[1] == 0) label.cfname = *name;
+    else str_cfcpy(&label.cfname, name);
+    tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
-    if (name->len > 1 && name->data[1] == 0) tmp.key->cfname = *name;
-    else str_cfcpy(&tmp.key->cfname, name);
-    tmp.hash = str_hash(&tmp.key->cfname);
 
     b = avltree_lookup(&tmp.node, &context->members, label_compare);
     if (b == NULL) return NULL;
@@ -249,11 +249,11 @@ Label *find_label3(const str_t *name, Namespace *context, uint8_t strength) {
     struct namespacekey_s tmp, *c;
     Label label;
 
+    label.strength = strength;
+    if (name->len > 1 && name->data[1] == 0) label.cfname = *name;
+    else str_cfcpy(&label.cfname, name);
+    tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
-    if (name->len > 1 && name->data[1] == 0) tmp.key->cfname = *name;
-    else str_cfcpy(&tmp.key->cfname, name);
-    tmp.hash = str_hash(&tmp.key->cfname);
-    tmp.key->strength = strength;
 
     b = avltree_lookup(&tmp.node, &context->members, label_compare2);
     if (b == NULL) return NULL;
@@ -272,10 +272,10 @@ Label *find_anonlabel(int32_t count) {
     anon_idents.reffile = reffile;
     anon_idents.count = (int32_t)((count >= 0) ? forwr : backr) + count;
 
+    label.cfname.data = (const uint8_t *)&anon_idents;
+    label.cfname.len = sizeof anon_idents;
+    tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
-    tmp.key->cfname.data = (const uint8_t *)&anon_idents;
-    tmp.key->cfname.len = sizeof anon_idents;
-    tmp.hash = str_hash(&tmp.key->cfname);
 
     while (context_stack.bottom < p) {
         context = context_stack.stack[--p].normal;
@@ -300,10 +300,10 @@ Label *find_anonlabel2(int32_t count, Namespace *context) {
     anon_idents.reffile = reffile;
     anon_idents.count = (int32_t)((count >= 0) ? forwr : backr) + count;
 
+    label.cfname.data = (const uint8_t *)&anon_idents;
+    label.cfname.len = sizeof anon_idents;
+    tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
-    tmp.key->cfname.data = (const uint8_t *)&anon_idents;
-    tmp.key->cfname.len = sizeof anon_idents;
-    tmp.hash = str_hash(&tmp.key->cfname);
 
     b = avltree_lookup(&tmp.node, &context->members, label_compare);
     if (b == NULL) return NULL;
