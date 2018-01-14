@@ -133,7 +133,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 
     if (v1->len != 0) {
         ln = v1->len;
-        chars = ln + 12;
+        chars = ln + 13;
         if (chars < 1) err_msg_out_of_memory(); /* overflow */
         if (chars > maxsize) return NULL;
         tuple = new_tuple(ln);
