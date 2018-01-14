@@ -132,41 +132,44 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     uint8_t *s;
 
     if (v1->len != 0) {
+        const struct avltree_node *n;
+        bool first = true;
         ln = v1->len;
-        chars = ln + 13;
+        chars = ln + 12;
         if (chars < 1) err_msg_out_of_memory(); /* overflow */
         if (chars > maxsize) return NULL;
         tuple = new_tuple(ln);
         vals = tuple->data;
         ln = chars;
-        if (v1->len != 0) {
-            const struct avltree_node *n;
-            for (n = avltree_first(&v1->members); n != NULL; n = avltree_next(n)) {
-                const struct namespacekey_s *p = cavltree_container_of(n, struct namespacekey_s, node);
-                Obj *v, *key = (Obj *)p->key;
-                if (p->key->defpass != pass && !(p->key->constant && (!fixeddig || p->key->defpass == pass - 1))) {
-                    ln--;
-                    chars--;
+        for (n = avltree_first(&v1->members); n != NULL; n = avltree_next(n)) {
+            const struct namespacekey_s *p = cavltree_container_of(n, struct namespacekey_s, node);
+            Obj *v, *key = (Obj *)p->key;
+            if (p->key->defpass != pass && !(p->key->constant && (!fixeddig || p->key->defpass == pass - 1))) {
+                if (first) {
+                    first = false;
                     continue;
-                }
-                v = key->obj->repr(key, epoint, maxsize - chars);
-                if (v == NULL || v->obj != STR_OBJ) {
-                    tuple->len = i;
-                    val_destroy(&tuple->v);
-                    return v;
-                }
-                str = (Str *)v;
-                ln += str->len;
-                if (ln < str->len) err_msg_out_of_memory(); /* overflow */
-                chars += str->chars;
-                if (chars > maxsize) {
-                    tuple->len = i;
-                    val_destroy(&tuple->v);
-                    val_destroy(v);
-                    return NULL;
-                }
-                vals[i++] = v;
+                } 
+                ln--;
+                chars--;
+                continue;
             }
+            v = key->obj->repr(key, epoint, maxsize - chars);
+            if (v == NULL || v->obj != STR_OBJ) {
+                tuple->len = i;
+                val_destroy(&tuple->v);
+                return v;
+            }
+            str = (Str *)v;
+            ln += str->len;
+            if (ln < str->len) err_msg_out_of_memory(); /* overflow */
+            chars += str->chars;
+            if (chars > maxsize) {
+                tuple->len = i;
+                val_destroy(&tuple->v);
+                val_destroy(v);
+                return NULL;
+            }
+            vals[i++] = v;
         }
         tuple->len = i;
     }
