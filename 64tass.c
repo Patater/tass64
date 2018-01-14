@@ -2693,8 +2693,8 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         Str *v;
                         Obj **vals;
                         uint8_t *s;
-                        Tuple *tmp = new_tuple();
-                        tmp->data = vals = list_create_elements(tmp, len);
+                        Tuple *tmp = new_tuple(len);
+                        vals = tmp->data;
                         for (i = 0; i < len; i++) {
                             vs = get_val(); val = vs->val;
                             if (val == &none_value->v) val = (Obj *)ref_str(null_str);
@@ -2714,7 +2714,6 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                             }
                             vals[i] = val;
                         }
-                        tmp->len = i;
                         v = new_str(len2);
                         v->chars = chars;
                         s = v->data;

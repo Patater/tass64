@@ -336,8 +336,8 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         if (len1 == 0) {
             return (Obj *)ref_tuple(null_tuple);
         }
-        v = new_tuple();
-        v->data = vals = list_create_elements(v, len1);
+        v = new_tuple(len1);
+        vals = v->data;
         error = true;
         for (i = 0; i < len1; i++) {
             err = indexoffs(list->data[i], ln, &offs1, epoint2);
@@ -349,7 +349,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             }
             vals[i] = code_item(v1, (ssize_t)offs1 + offs0, ln2);
         }
-        v->len = i;
         return &v->v;
     }
     if (o2->obj == COLONLIST_OBJ) {
@@ -363,15 +362,13 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         if (length == 0) {
             return (Obj *)ref_tuple(null_tuple);
         }
-        v = new_tuple();
-        vals = list_create_elements(v, length);
+        v = new_tuple(length);
+        vals = v->data;
         i = 0;
         while ((end > offs && step > 0) || (end < offs && step < 0)) {
             vals[i++] = code_item(v1, offs + offs0, ln2);
             offs += step;
         }
-        v->len = length;
-        v->data = vals;
         return &v->v;
     }
     err = indexoffs(o2, ln, &offs1, epoint2);

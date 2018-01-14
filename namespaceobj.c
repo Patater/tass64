@@ -136,8 +136,8 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         chars = ln + 12;
         if (chars < 1) err_msg_out_of_memory(); /* overflow */
         if (chars > maxsize) return NULL;
-        tuple = new_tuple();
-        tuple->data = vals = list_create_elements(tuple, ln);
+        tuple = new_tuple(ln);
+        vals = tuple->data;
         ln = chars;
         if (v1->len != 0) {
             const struct avltree_node *n;
