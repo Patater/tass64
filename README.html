@@ -974,15 +974,20 @@ letters, numbers and underscores. Unicode letters are allowed if the <q><a href=
 There's no restriction on the length of symbol names.</p>
 
 <p>Care must be taken to not use duplicate names in the same scope when
-the symbol is used as a constant. Case sensitivity can be enabled with
-the <q><a href="#o_case-sensitive"><tt>-C</tt></a></q> command line
-option, otherwise all symbols are matched case insensitive.</p>
+the symbol is used as a constant as there can be only one definition for them.</p>
 
-<p>Duplicate names in parent scopes are never a problem, they'll just be
-<q>shadowed</q>. This could be either good by reducing collisions and gives the
-ability to override <q>defaults</q> defined in lower scopes. On the other hand
-it's possible to mix-up the new symbol with a old one by mistake, which is hard
-to notice.</p>
+<p>Duplicate names in parent scopes are not a problem and this gives the
+ability to override names defined in lower scopes. However this can just as well lead to mistakes if
+a lower scoped symbol with the same name was meant so there's a 
+<a href="#o_Wshadow">-Wshadow</a> command line option to warn if such ambiguity exists.</p>
+
+<p>Case sensitivity can be enabled with the
+<q><a href="#o_case-sensitive"><tt>-C</tt></a></q> command line option, otherwise all
+symbols are matched case insensitive.</p>
+
+<p>For case insensitive matching it's possible to check for consistent symbol name use
+with the <q><a href="#o_Wcase-symbol"><tt>-Wcase-symbol</tt></a></q> command
+line option.</p>
 
 <p>A regular symbol is looked up first in the current scope, then in lower scopes
 until the global scope is reached.</p>
@@ -2472,7 +2477,6 @@ anytime soon.</p>
 <p>This directive either creates a new scope (if used without a parameter) or activates the one in the parameter.</p>
 <p>The scope can be assigned to a symbol in front of the directive so that it can be reactivated later.</p>
 <p>This enabled label definitions into the same scope in different files.</p>
-<p>Please note that this directive does not work well with <a href="#o_Wshadow">-Wshadow</a>.</p>
 </dl>
 
 <h3>Sections<a name="sections" href="#sections"></a></h3>
