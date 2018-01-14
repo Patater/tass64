@@ -32,6 +32,7 @@ typedef struct Namespace {
 } Namespace;
 
 extern void namespaceobj_init(void);
+extern void namespaceobj_names(void);
 
 struct Label;
 
