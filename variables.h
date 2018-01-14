@@ -43,7 +43,6 @@ extern struct Label *find_anonlabel(int32_t);
 extern struct Label *find_anonlabel2(int32_t, struct Namespace *);
 extern struct Label *new_label(const str_t *, struct Namespace *, uint8_t, bool *, struct file_list_s *);
 extern bool labelprint(const struct symbol_output_s *, bool);
-extern void shadow_check(struct Namespace *);
 extern void unused_check(struct Namespace *);
 extern void ref_labels(void);
 extern void destroy_variables(void);

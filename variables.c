@@ -207,8 +207,36 @@ Label *find_label(const str_t *name, Namespace **here) {
         if (b != NULL) {
             c = strongest_label(b);
             if (c != NULL) {
+                Label *key2 = c->key;
+                if (!diagnostics.shadow || !fixeddig || constcreated || (here != NULL && *here == context)) {
+                    if (here != NULL) *here = context;
+                    return key2;
+                }
                 if (here != NULL) *here = context;
-                return c->key;
+                while (context_stack.bottom < p) {
+                    b = avltree_lookup(&tmp.node, &context_stack.stack[--p].normal->members, label_compare);
+                    if (b != NULL) {
+                        const struct namespacekey_s *l2 = strongest_label(b);
+                        Label *key1 = l2->key;
+                        Obj *o1 = key1->value;
+                        Obj *o2 = key2->value;
+                        if (o1 != o2 && !o1->obj->same(o1, o2)) {
+                            err_msg_shadow_defined(key1, key2);
+                            return key2;
+                        }
+                    }
+                }
+                b = avltree_lookup(&tmp.node, &builtin_namespace->members, label_compare);
+                if (b != NULL) {
+                    const struct namespacekey_s *l2 = cavltree_container_of(b, struct namespacekey_s, node);
+                    Label *key1 = l2->key;
+                    Obj *o1 = key1->value;
+                    Obj *o2 = key2->value;
+                    if (o1 != o2 && !o1->obj->same(o1, o2)) {
+                        err_msg_shadow_defined2(key2);
+                    }
+                }
+                return key2;
             }
         }
     }
@@ -335,7 +363,6 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
         else lastlb->cfname = lastlb->name;
         lastlb->file_list = cflist;
         lastlb->ref = false;
-        lastlb->shadowcheck = false;
         lastlb->update_after = false;
         lastlb->usepass = 0;
         lastlb->defpass = pass;
@@ -348,55 +375,6 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
     }
     *exists = true;
     return avltree_container_of(b, struct namespacekey_s, node)->key;            /* already exists */
-}
-
-void shadow_check(Namespace *members) {
-    const struct avltree_node *n;
-
-    for (n = avltree_first(&members->members); n != NULL; n = avltree_next(n)) {
-        const struct namespacekey_s *l = cavltree_container_of(n, struct namespacekey_s, node);
-        Label *key2 = l->key;
-        Namespace *ns;
-
-        if (key2->defpass != pass) continue;
-
-        ns = get_namespace(key2->value);
-
-        if (ns != NULL && ns->len != 0 && key2->owner) {
-            size_t ln = ns->len;
-            ns->len = 0;
-            push_context(ns);
-            shadow_check(ns);
-            pop_context();
-            ns->len = ln;
-        }
-        if (key2->shadowcheck) {
-            const struct avltree_node *b;
-            size_t p = context_stack.p;
-            Obj *o2 = key2->value;
-            while (context_stack.bottom < p) {
-                b = avltree_lookup(&l->node, &context_stack.stack[--p].normal->members, label_compare2);
-                if (b != NULL) {
-                    const struct namespacekey_s *l2 = cavltree_container_of(b, struct namespacekey_s, node);
-                    Label *key1 = l2->key;
-                    Obj *o1 = key1->value;
-                    if (o1 != o2 && !o1->obj->same(o1, o2)) {
-                        err_msg_shadow_defined(key1, key2);
-                        break;
-                    }
-                }
-            }
-            b = avltree_lookup(&l->node, &builtin_namespace->members, label_compare2);
-            if (b != NULL) {
-                const struct namespacekey_s *l2 = cavltree_container_of(b, struct namespacekey_s, node);
-                Label *key1 = l2->key;
-                Obj *o1 = key1->value;
-                if (o1 != o2 && !o1->obj->same(o1, o2)) {
-                    err_msg_shadow_defined2(key2);
-                }
-            }
-        }
-    }
 }
 
 void unused_check(Namespace *members) {

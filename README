@@ -758,14 +758,18 @@ and underscores. Unicode letters are allowed if the `-a' command line option
 was used. There's no restriction on the length of symbol names.
 
 Care must be taken to not use duplicate names in the same scope when the symbol
-is used as a constant. Case sensitivity can be enabled with the `-C' command
-line option, otherwise all symbols are matched case insensitive.
+is used as a constant as there can be only one definition for them.
 
-Duplicate names in parent scopes are never a problem, they'll just be
-`shadowed'. This could be either good by reducing collisions and gives the
-ability to override `defaults' defined in lower scopes. On the other hand it's
-possible to mix-up the new symbol with a old one by mistake, which is hard to
-notice.
+Duplicate names in parent scopes are not a problem and this gives the ability
+to override names defined in lower scopes. However this can just as well lead
+to mistakes if a lower scoped symbol with the same name was meant so there's a
+-Wshadow command line option to warn if such ambiguity exists.
+
+Case sensitivity can be enabled with the `-C' command line option, otherwise
+all symbols are matched case insensitive.
+
+For case insensitive matching it's possible to check for consistent symbol name
+use with the `-Wcase-symbol' command line option.
 
 A regular symbol is looked up first in the current scope, then in lower scopes
 until the global scope is reached.
@@ -2081,8 +2085,6 @@ global one with the same name.
     can be reactivated later.
 
     This enabled label definitions into the same scope in different files.
-
-    Please note that this directive does not work well with -Wshadow.
 
 Sections
 

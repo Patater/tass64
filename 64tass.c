@@ -1081,7 +1081,6 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         if (labelname.data[0] != '_') {
                             tmp2 = find_label(&labelname, NULL);
                             if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, true, &epoint); goto breakerr;}
-                            tmp2->shadowcheck = true;
                         } else {
                             tmp2 = find_label2(&labelname, cheap_context);
                             if (tmp2 == NULL) {err_msg_not_defined2(&labelname, cheap_context, false, &epoint); goto breakerr;}
@@ -1646,8 +1645,10 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                 if (!islabel) {
                     Namespace *parent;
                     bool down = (labelname.data[0] != '_');
-                    if (down) tmp2 = find_label(&labelname, &parent);
-                    else {
+                    if (down) {
+                        parent = mycontext;
+                        tmp2 = find_label(&labelname, &parent);
+                    } else {
                         parent = cheap_context;
                         tmp2 = find_label2(&labelname, cheap_context);
                     }
@@ -1656,7 +1657,6 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
                         if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
                             touch_label(tmp2);
-                            if (down) tmp2->shadowcheck = true;
                             labelname.len = 0;val = tmp2->value; goto as_macro;
                         }
                         if (parent == mycontext && tmp2->strength == strength) {
@@ -3749,7 +3749,6 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
                             val_destroy(&err->v);
                             touch_label(tmp2);
-                            tmp2->shadowcheck = true;
                             lpoint = oldlpoint;
                             val = tmp2->value;
                             goto as_macro;
@@ -3765,7 +3764,6 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                     if (diagnostics.case_symbol && str_cmp(&opname, &tmp2->name) != 0) err_msg_symbol_case(&opname, tmp2, &epoint);
                     if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
                         touch_label(tmp2);
-                        if (down) tmp2->shadowcheck = true;
                         val = tmp2->value;goto as_macro;
                     }
                 }
@@ -3882,7 +3880,6 @@ static int main2(int *argc2, char **argv2[]) {
     } while (!fixeddig || constcreated);
 
     if (arguments.list == NULL) {
-        if (diagnostics.shadow) shadow_check(root_namespace);
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
     }
     if (error_serious()) {status();return EXIT_FAILURE;}
@@ -3897,7 +3894,6 @@ static int main2(int *argc2, char **argv2[]) {
         listing_close(listing);
         listing = NULL;
 
-        if (diagnostics.shadow) shadow_check(root_namespace);
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
     }
 
