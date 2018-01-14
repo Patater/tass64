@@ -1736,9 +1736,7 @@ Obj *get_vals_tuple(void) {
     default:
         break;
     }
-    list = new_tuple();
-    list->len = len;
-    list->data = list_create_elements(list, len);
+    list = new_tuple(len);
     for (i = 0; i < len; i++) {
         Obj *val2 = pull_val(NULL);
         if (val2->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)val2); val2 = (Obj *)ref_none(); }
