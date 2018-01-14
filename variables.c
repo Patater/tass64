@@ -724,6 +724,7 @@ void init_variables(void)
     bitsobj_names();
     bytesobj_names();
     typeobj_names();
+    namespaceobj_names();
 }
 
 void destroy_lastlb(void) {
