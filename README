@@ -2995,6 +2995,13 @@ default, the others are disabled.
     missed. Most CPUs are supported with the notable exception of 65816 and
     65EL02, but this could improve in later versions.
 
+-Wno-page
+    Don't do an error for page crossing
+
+    Normally the .page directive gives an error on page crossing, this
+    directive can disable it. Using `-Wno-error=page' can turn it into a
+    warning only.
+
 -Wno-portable
     Don't warn about source portability problems.
 
@@ -3554,7 +3561,7 @@ offset out of range
     code offset too much
 operands could not be broadcast together with shapes ? and ?
     list length must match or must have a single element only
-page error at $xxxx
+different start and end page $xxxx and $xxxx
     page crossing was detected
 ptext too long by ? bytes
     .ptext is limited to 255 bytes maximum

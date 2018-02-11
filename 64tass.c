@@ -2180,9 +2180,11 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (close_waitfor(W_ENDP)) {
                 } else if (waitfor->what==W_ENDP2) {
-                    if (((current_section->l_address.address ^ waitfor->laddr.address) & 0xff00) != 0 ||
-                            current_section->l_address.bank != waitfor->laddr.bank) {
-                        err_msg2(ERROR____PAGE_ERROR, &current_section->l_address, &epoint);
+                    if (diagnostics.page) {
+                        if (((current_section->l_address.address ^ waitfor->laddr.address) & 0xff00) != 0 ||
+                                current_section->l_address.bank != waitfor->laddr.bank) {
+                            err_msg_page((waitfor->laddr.address & 0xffff) | waitfor->laddr.bank, (current_section->l_address.address & 0xffff) | current_section->l_address.bank, &epoint);
+                        }
                     }
                     if (waitfor->label != NULL) set_size(waitfor->label, current_section->address - waitfor->addr, current_section->mem, waitfor->memp, waitfor->membp);
                     close_waitfor(W_ENDP2);
