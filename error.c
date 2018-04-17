@@ -766,7 +766,7 @@ void err_msg_symbol_case(const str_t *labelname1, Label *l, linepos_t epoint) {
     adderror("symbol case mismatch");
     str_name(labelname1->data, labelname1->len);
     adderror(" [-Wcase-symbol]");
-    err_msg_double_note(l->file_list, &l->epoint, &l->name);
+    if (l != NULL) err_msg_double_note(l->file_list, &l->epoint, &l->name);
 }
 
 static const char * const opr_names[ADR_LEN] = {
