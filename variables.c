@@ -217,12 +217,14 @@ Label *find_label(const str_t *name, Namespace **here) {
                     b = avltree_lookup(&tmp.node, &context_stack.stack[--p].normal->members, label_compare);
                     if (b != NULL) {
                         const struct namespacekey_s *l2 = strongest_label(b);
-                        Label *key1 = l2->key;
-                        Obj *o1 = key1->value;
-                        Obj *o2 = key2->value;
-                        if (o1 != o2 && !o1->obj->same(o1, o2)) {
-                            err_msg_shadow_defined(key1, key2);
-                            return key2;
+                        if (l2 != NULL) {
+                            Label *key1 = l2->key;
+                            Obj *o1 = key1->value;
+                            Obj *o2 = key2->value;
+                            if (o1 != o2 && !o1->obj->same(o1, o2)) {
+                                err_msg_shadow_defined(key1, key2);
+                                return key2;
+                            }
                         }
                     }
                 }
