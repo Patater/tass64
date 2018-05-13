@@ -1209,7 +1209,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                 val_destroy(val2);
                 if (label != NULL) {
                     listing_equal(listing, result2);
-                    label->file_list = cflist;
+                    if (label->file_list != cflist) {
+                        label_move(label, &labelname, cflist);
+                    }
                     label->epoint = epoint;
                     val_destroy(label->value);
                     label->value = result2;
@@ -1264,7 +1266,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                             }
                             label->constant = true;
                             label->owner = false;
-                            label->file_list = cflist;
+                            if (label->file_list != cflist) {
+                                label_move(label, &labelname, cflist);
+                            }
                             label->epoint = epoint;
                             const_assign(label, val);
                         }
@@ -1322,7 +1326,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                     if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                                 }
                                 label->owner = false;
-                                label->file_list = cflist;
+                                if (label->file_list != cflist) {
+                                    label_move(label, &labelname, cflist);
+                                }
                                 label->epoint = epoint;
                                 val_destroy(label->value);
                                 label->value = val;
@@ -1359,7 +1365,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                label->file_list = cflist;
+                                if (label->file_list != cflist) {
+                                    label_move(label, &labelname, cflist);
+                                }
                                 label->epoint = epoint;
                                 const_assign(label, &lbl->v);
                             }
@@ -1400,7 +1408,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                 }
                                 label->constant = true;
                                 label->owner = (val == NULL);
-                                label->file_list = cflist;
+                                if (label->file_list != cflist) {
+                                    label_move(label, &labelname, cflist);
+                                }
                                 label->epoint = epoint;
                                 if (val != NULL) const_assign(label, val_reference(val));
                                 else {
@@ -1454,7 +1464,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                label->file_list = cflist;
+                                if (label->file_list != cflist) {
+                                    label_move(label, &labelname, cflist);
+                                }
                                 label->epoint = epoint;
                                 const_assign(label, &macro->v);
                                 waitfor->val = val_reference(label->value);
@@ -1501,7 +1513,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                label->file_list = cflist;
+                                if (label->file_list != cflist) {
+                                    label_move(label, &labelname, cflist);
+                                }
                                 label->epoint = epoint;
                                 get_func_params(mfunc, cflist);
                                 get_namespaces(mfunc);
@@ -1560,7 +1574,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                label->file_list = cflist;
+                                if (label->file_list != cflist) {
+                                    label_move(label, &labelname, cflist);
+                                }
                                 label->epoint = epoint;
                                 if (label->value->obj == obj) {
                                     Struct *prev = (Struct *)label->value;
@@ -1691,7 +1707,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                     }
                     newlabel->constant = true;
                     newlabel->owner = true;
-                    newlabel->file_list = cflist;
+                    if (newlabel->file_list != cflist) {
+                        label_move(newlabel, &labelname, cflist);
+                    }
                     newlabel->epoint = epoint;
                     if (!newlabel->update_after) {
                         Obj *tmp;
@@ -3114,7 +3132,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                         if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                                     }
                                     label->owner = false;
-                                    label->file_list = cflist;
+                                    if (label->file_list != cflist) {
+                                        label_move(label, &varname, cflist);
+                                    }
                                     label->epoint = epoint;
                                     val_destroy(label->value);
                                     label->value = val;
@@ -3249,7 +3269,9 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                                             if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                                         }
                                         label->owner = false;
-                                        label->file_list = cflist;
+                                        if (label->file_list != cflist) {
+                                            label_move(label, &varname, cflist);
+                                        }
                                         label->epoint = bpoint;
                                     } else {
                                         label->constant = false;

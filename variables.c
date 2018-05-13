@@ -379,6 +379,18 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
     return avltree_container_of(b, struct namespacekey_s, node)->key;            /* already exists */
 }
 
+void label_move(Label *label, const str_t *name, struct file_list_s *cflist) {
+    bool cfsame = (label->cfname.data == label->name.data);
+    if ((size_t)(label->name.data - label->file_list->file->data) < label->file_list->file->len) {
+        if ((size_t)(name->data - cflist->file->data) < cflist->file->len) label->name = *name;
+        else str_cpy(&label->name, name);
+    }
+    if (cfsame) {
+        label->cfname = label->name;
+    }
+    label->file_list = cflist;
+}
+
 void unused_check(Namespace *members) {
     const struct avltree_node *n;
 

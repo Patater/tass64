@@ -395,7 +395,9 @@ Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epo
                     if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                 }
                 label->owner = false;
-                label->file_list = mfunc->file_list;
+                if (label->file_list != mfunc->file_list) {
+                    label_move(label, &mfunc->param[i].name, mfunc->file_list);
+                }
                 label->epoint = mfunc->param[i].epoint;
                 val_replace(&label->value, val);
                 label->usepass = 0;
