@@ -1395,8 +1395,13 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                         if (!get_exp(0, cflist, 0, 1, &epoint)) goto breakerr;
                         vs = get_val(); 
                         if (vs != NULL) {
-                            val = (Obj *)get_namespace(vs->val);
-                            if (val == NULL) err_msg_wrong_type(vs->val, NULL, &vs->epoint);
+                            val = vs->val;
+                            if (val->obj == ERROR_OBJ) { err_msg_output((Error *)val); val = NULL; }
+                            else if (val == &none_value->v) { err_msg_still_none(NULL, &vs->epoint); val = NULL; }
+                            else {
+                                val = (Obj *)get_namespace(val);
+                                if (val == NULL) err_msg_wrong_type(vs->val, NULL, &vs->epoint);
+                            }
                         } else val = NULL;
                         label = new_label(&labelname, mycontext, strength, &labelexists, cflist);
                         if (labelexists) {
@@ -2510,8 +2515,13 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                     if (!get_exp(0, cflist, 0, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (vs != NULL) {
-                        val = (Obj *)get_namespace(vs->val);
-                        if (val == NULL) err_msg_wrong_type(vs->val, NULL, &vs->epoint);
+                        val = vs->val;
+                        if (val->obj == ERROR_OBJ) { err_msg_output((Error *)val); val = NULL; }
+                        else if (val == &none_value->v) { err_msg_still_none(NULL, &vs->epoint); val = NULL; }
+                        else {
+                            val = (Obj *)get_namespace(val);
+                            if (val == NULL) err_msg_wrong_type(vs->val, NULL, &vs->epoint);
+                        }
                     } else val = NULL;
                     if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
                     else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
