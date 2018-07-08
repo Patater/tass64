@@ -65,6 +65,8 @@ typedef SSIZE_T ssize_t;
 #ifndef PRIuSIZE
 #if __STDC_VERSION__ >= 199901L && !defined _WIN32 && !defined __VBCC__
 #define PRIuSIZE  "zu"
+#elif defined _WIN64 && defined PRIu64
+#define PRIuSIZE PRIu64
 #elif defined USHRT_MAX && SIZE_MAX == USHRT_MAX && !defined __VBCC__ && !defined __DJGPP__
 #define PRIuSIZE  "hu"
 #elif defined UINT_MAX && SIZE_MAX == UINT_MAX && !defined __VBCC__ && !defined __DJGPP__
