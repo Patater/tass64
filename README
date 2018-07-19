@@ -2561,6 +2561,14 @@ Output options
 
     64tass a.asm -o a.prg
 
+--output-section <sectionname>
+    By default all sections go into the output file. Using this option limits
+    the output to specific section and it's children. This is useful to split a
+    larger program into several files.
+
+    64tass a.asm --output-section main -o main.prg
+    64tass a.asm --output-section loader -o loader.prg
+
 -X, --long-address
     Use 3 byte address/length for CBM and nonlinear output instead of 2 bytes.
     Also increases the size of raw output to 16 MiB.
@@ -3624,6 +3632,8 @@ out of memory
     won't happen ;)
 scope '?' for label listing not found
     the scope given on command line couldn't be found
+section '?' for output not found
+    the section given on command line couldn't be found
 too many passes
     with a carefully crafted source file it's possible to create unresolvable
     situations but try to avoid this

@@ -2998,6 +2998,15 @@ system specific.</p>
 64tass a.asm -o a.prg
 </pre>
 
+<dt><b>--output-section</b> &lt;sectionname&gt;<a name="o_output-section" href="#o_output-section"></a>
+<dd>By default all sections go into the output file. Using this option
+limits the output to specific section and it's children. This is useful
+to split a larger program into several files.
+<pre width=80>
+64tass a.asm --output-section main -o main.prg
+64tass a.asm --output-section loader -o loader.prg
+</pre>
+
 <dt><b>-X</b>, <b>--long-address</b><a name="o_long-address" href="#o_long-address"></a>
 <dd>Use 3 byte address/length for CBM and nonlinear output instead of 2
 bytes. Also increases the size of raw output to 16&nbsp;MiB.
@@ -3915,6 +3924,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>option '?' requires an argument<dd>command line option needs an argument
 <dt>out of memory<dd>won't happen ;)
 <dt>scope '?' for label listing not found<dd>the scope given on command line couldn't be found
+<dt>section '?' for output not found<dd>the section given on command line couldn't be found
 <dt>too many passes<dd>with a carefully crafted source file it's possible to create unresolvable situations but try to avoid this
 <dt>unknown option '?'<dd>option not known
 </dl>

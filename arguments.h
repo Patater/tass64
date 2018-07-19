@@ -34,6 +34,7 @@ struct file_s;
 
 struct output_s {
     const char *name;
+    const char *section;
     Output_types mode;
     bool longaddr;
 };
