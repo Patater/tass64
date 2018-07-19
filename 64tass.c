@@ -3945,7 +3945,17 @@ static int main2(int *argc2, char **argv2[]) {
 
     if (error_serious()) {status();return EXIT_FAILURE;}
 
-    output_mem(root_section.mem, &arguments.output);
+    {
+        struct section_s *section = find_this_section(arguments.output.section);
+        if (section == NULL) {
+            str_t sectionname;
+            sectionname.data = pline;
+            sectionname.len = lpoint.pos;
+            err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
+        } else {
+            output_mem(section->mem, &arguments.output);
+        }
+    }
 
     {
         bool e = error_serious();
