@@ -1855,7 +1855,7 @@ MUST_CHECK Obj *compile(struct file_list_s *cflist)
                 newlabel->ref = false;
                 goto as_command;
             }
-            if (labelname.len == 3 && !newlabel->ref && epoint.pos != 0 && diagnostics.label_left) {
+            if (labelname.len == 3 && !newlabel->ref && epoint.pos != 0 && !islabel && diagnostics.label_left) {
                 unsigned int i;
                 for (i = 0; i < 3; i++) {
                     uint8_t c = labelname.data[i] | arguments.caseinsensitive;
