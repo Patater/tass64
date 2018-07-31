@@ -32,7 +32,6 @@
 #define ignore() while(pline[lpoint.pos]==0x20 || pline[lpoint.pos]==0x09) lpoint.pos++
 #define here() pline[lpoint.pos]
 
-struct file_list_s;
 struct Label;
 struct Obj;
 struct Listing;
@@ -55,6 +54,6 @@ extern uint8_t pass, max_pass;
 extern bool referenceit;
 extern const struct cpu_s *current_cpu;
 extern void new_waitfor(Wait_types, linepos_t);
-extern struct Obj *compile(struct file_list_s *);
+extern struct Obj *compile(void);
 extern FAST_CALL void pokeb(unsigned int);
 #endif

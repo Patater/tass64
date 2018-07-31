@@ -46,13 +46,14 @@ bool print_use_color = false;
 bool print_use_bold = false;
 #endif
 
+struct file_list_s *current_file_list;
+
 #define ALIGN(v) (((v) + (sizeof(int *) - 1)) & ~(sizeof(int *) - 1))
 
 static unsigned int errors = 0, warnings = 0;
 
 static struct file_list_s file_list;
 static const struct file_list_s *included_from = &file_list;
-static struct file_list_s *current_file_list = &file_list;
 static const char *prgname;
 
 struct errorbuffer_s {
@@ -166,7 +167,7 @@ static void file_list_free(struct avltree_node *aa)
 }
 
 static struct file_list_s *lastfl = NULL;
-struct file_list_s *enterfile(struct file_s *file, linepos_t epoint) {
+void enterfile(struct file_s *file, linepos_t epoint) {
     struct avltree_node *b;
     if (lastfl == NULL) {
         lastfl = (struct file_list_s *)mallocx(sizeof *lastfl);
@@ -184,7 +185,6 @@ struct file_list_s *enterfile(struct file_s *file, linepos_t epoint) {
         current_file_list = avltree_container_of(b, struct file_list_s, node);
     }
     curfile = (current_file_list->file != NULL) ? current_file_list->file->uid : 1;
-    return current_file_list;
 }
 
 void exitfile(void) {
