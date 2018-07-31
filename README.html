@@ -39,6 +39,8 @@ dl.errorlist > dt, dl.dir > dt, table.trans td, table.esc td, table.opcodes th, 
 dl.dir code b { color: inherit; }
 
 thead th {background-color:#eee;border-bottom:1px solid black;}
+a[href], a:visited { text-decoration: none; color: blue; }
+a[href]:hover { text-decoration: underline; }
 
 @media screen {
    html {background-color: gray;}
@@ -50,13 +52,10 @@ thead th {background-color:#eee;border-bottom:1px solid black;}
 
 @media print {
    h1, h2, h3, h4 {page-break-after:avoid;}
-   a {text-decoration:none;color:inherit;}
+   a[href], a:visited {text-decoration:none;color:inherit;}
    body {font-size:10pt;}
    pre {overflow:hidden;}
 }
-
-a[href], a:visited { text-decoration: none; color: blue; }
-a[href]:hover { text-decoration: underline; }
 
 #toc ul { margin: 0px; font-weight: normal;}
 #toc > ul > li { margin-top: 0.5em; font-weight: bold; }
