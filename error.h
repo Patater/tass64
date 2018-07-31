@@ -35,6 +35,8 @@ struct file_list_s {
     struct avltree members;
 };
 
+extern struct file_list_s *current_file_list;
+
 #if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE || _POSIX_VERSION || _POSIX2_VERSION
 #define COLOR_OUTPUT
 extern bool print_use_color;
@@ -94,7 +96,7 @@ extern void err_msg_char_note(const char *, linepos_t);
 extern void err_msg_immediate_note(linepos_t);
 extern void error_reset(void);
 extern bool error_print(void);
-extern struct file_list_s *enterfile(struct file_s *, linepos_t);
+extern void enterfile(struct file_s *, linepos_t);
 extern void exitfile(void);
 extern void err_init(const char *);
 extern void err_destroy(void);
