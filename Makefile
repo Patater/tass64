@@ -100,8 +100,8 @@ floatobj.o: floatobj.c floatobj.h obj.h attributes.h inttypes.h values.h \
  operobj.h typeobj.h noneobj.h errorobj.h addressobj.h
 functionobj.o: functionobj.c functionobj.h obj.h attributes.h inttypes.h \
  str.h math.h isnprintf.h eval.h stdbool.h variables.h error.h errors_e.h \
- avl.h floatobj.h values.h strobj.h listobj.h intobj.h boolobj.h \
- operobj.h typeobj.h noneobj.h errorobj.h
+ avl.h file.h floatobj.h values.h strobj.h listobj.h intobj.h boolobj.h \
+ operobj.h typeobj.h noneobj.h errorobj.h bytesobj.h
 gapobj.o: gapobj.c gapobj.h obj.h attributes.h inttypes.h error.h \
  stdbool.h errors_e.h avl.h str.h eval.h variables.h values.h strobj.h \
  operobj.h intobj.h boolobj.h typeobj.h noneobj.h errorobj.h
@@ -166,7 +166,7 @@ obj.o: obj.c obj.h attributes.h inttypes.h eval.h stdbool.h error.h \
  identobj.h memblocksobj.h
 opcodes.o: opcodes.c opcodes.h inttypes.h
 operobj.o: operobj.c operobj.h obj.h attributes.h inttypes.h strobj.h \
- typeobj.h stdbool.h
+ stdbool.h typeobj.h
 opt_bit.o: opt_bit.c opt_bit.h stdbool.h attributes.h error.h errors_e.h \
  avl.h obj.h inttypes.h str.h
 optimizer.o: optimizer.c optimizer.h inttypes.h stdbool.h error.h \
@@ -180,8 +180,8 @@ section.o: section.c section.h avl.h stdbool.h str.h inttypes.h mem.h \
  wait_e.h values.h intobj.h longjump.h optimizer.h eval.h memblocksobj.h
 str.o: str.c str.h inttypes.h unicode.h attributes.h unicodedata.h \
  error.h stdbool.h errors_e.h avl.h obj.h arguments.h
-strobj.o: strobj.c strobj.h obj.h attributes.h inttypes.h eval.h \
- stdbool.h unicode.h str.h unicodedata.h error.h errors_e.h avl.h \
+strobj.o: strobj.c strobj.h obj.h attributes.h inttypes.h stdbool.h \
+ eval.h unicode.h str.h unicodedata.h error.h errors_e.h avl.h \
  variables.h arguments.h boolobj.h floatobj.h values.h bytesobj.h \
  intobj.h bitsobj.h listobj.h operobj.h typeobj.h noneobj.h errorobj.h
 ternary.o: ternary.c ternary.h stdbool.h inttypes.h unicode.h \
