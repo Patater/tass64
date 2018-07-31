@@ -980,6 +980,24 @@ any(<expression>)
     Only booleans in a list are accepted with the `-Wstrict-bool' command line
     option.
 
+binary(<string expression>[, <expression>, ...])
+    Returns the binary file content as bytes.
+
+    This function reads the content of a binary file as a byte string. It also
+    accepts optional offset and length parameters.
+
+           Binary function invocation types
+    Read everything        binary(name)
+    Skip starting bytes    binary(name, offset)
+    Some bytes from offset binary(name, offset, length)
+
+    sid     = "music.sid"        ; file name
+    init    = binary(sid, $0a, 2); init address
+    play    = binary(sid, $0c, 2); play address
+
+    *       = binary(sid, $7c, 2); use loading address
+            .binary sid, $7e     ; load music data
+
 format(<string expression>[, <expression>, ...])
     Create string from values according to a format string.
 
@@ -1998,9 +2016,6 @@ directory separator and use lower/uppercase consistently in file names!
             .binary "stuffz.bin"        ;simple include, all bytes
             .binary "stuffz.bin", 2     ;skip start address
             .binary "stuffz.bin", 2, 1000;skip start address, 1000 bytes max
-
-    *       = $1000                     ;load music to $1000 and
-            .binary "music.sid", $7e    ;strip SID header
 
 Scopes
 
@@ -4154,9 +4169,9 @@ Assembler directives
 
 Built-in functions
 
-abs acos all any asin atan atan2 cbrt ceil cos cosh deg exp floor format frac
-hypot len log log10 pow rad random range repr round sign sin sinh size sort
-sqrt tan tanh trunc
+abs acos all any asin atan atan2 binary cbrt ceil cos cosh deg exp floor format
+frac hypot len log log10 pow rad random range repr round sign sin sinh size
+sort sqrt tan tanh trunc
 
 Built-in types
 

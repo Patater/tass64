@@ -335,25 +335,6 @@ static bool tobool(const struct values_s *v1, bool *truth) {
     return error;
 }
 
-static bool tostr(const struct values_s *v1, str_t *out) {
-    Obj *val = v1->val;
-    switch (val->obj->type) {
-    case T_STR:
-        out->len = ((Str *)val)->len;
-        out->data = ((Str *)val)->data;
-        return false;
-    case T_NONE:
-        err_msg_still_none(NULL, &v1->epoint);
-        return true;
-    case T_ERROR:
-        err_msg_output((Error *)val);
-        return true;
-    default:
-        err_msg_wrong_type(val, STR_OBJ, &v1->epoint);
-        return true;
-    }
-}
-
 static MUST_CHECK bool touval2(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epoint) {
     Error *err = v1->obj->uval2(v1, uv, bits, epoint);
     if (err == NULL) return false;

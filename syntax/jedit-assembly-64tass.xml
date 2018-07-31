@@ -248,6 +248,7 @@
                         <FUNCTION>asin</FUNCTION>
                         <FUNCTION>atan</FUNCTION>
                         <FUNCTION>atan2</FUNCTION>
+                        <FUNCTION>binary</FUNCTION>
                         <FUNCTION>bool</FUNCTION>
                         <FUNCTION>cbrt</FUNCTION>
                         <FUNCTION>ceil</FUNCTION>
