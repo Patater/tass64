@@ -1391,9 +1391,10 @@ it does not need to be.
     >1003            ea                                     .align 4, $ea
     .1004            69 01          adc #$01        loop    adc #1
 
-    When alignment is done within structures then it's relative to the start of
-    the structure. This means the structure layout will be always the same
-    independent which address it's instantiated at.
+    When alignment is done within named structures then it's relative to the
+    start of the structure. This means the structure layout will be always the
+    same independent which address it's instantiated at. Anonymous structures
+    do not change the way the alignment works.
 
 Dumping data
 
