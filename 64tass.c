@@ -1922,8 +1922,10 @@ MUST_CHECK Obj *compile(void)
                             memskip(section_address.end - section_address.start);
                         }
                         memref(current_address->mem, section_address.mem);
+                        if (newlabel != NULL && !newlabel->update_after) set_size(newlabel, section_address.end - section_address.start, section_address.mem, 0, 0);
                         val_destroy(section_address.l_address_val);
                         val_destroy(&section_address.mem->v);
+                        newlabel = NULL;
                         goto breakerr;
                     }
                 case CMD_SECTION:
