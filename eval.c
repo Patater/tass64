@@ -314,7 +314,7 @@ MUST_CHECK Obj *get_star_value(Obj *val) {
 
 static MUST_CHECK Obj *get_star(void) {
     if (diagnostics.optimize) cpu_opt_invalidate();
-    return get_star_value(current_section->l_address_val);
+    return get_star_value(current_address->l_address_val);
 }
 
 static size_t evxnum, evx_p;

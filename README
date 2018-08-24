@@ -1352,9 +1352,34 @@ it does not need to be.
     .1004   0304     4c 00 03       jmp $0300               jmp drive
                                                             .here
 
+.virtual [<expression>]
+.endv
+    Changes the program counter to the expression (if given) and discards the
+    result of compilation.
+
+    This is useful to define structures to fixed addresses.
+
+            .virtual $d400  ; base address
+    sid     .block
+    freq    .word ?         ; frequency
+    pulsew  .word ?         ; pulse width
+    control .byte ?         ; control
+    ad      .byte ?         ; attack/decay
+    sr      .byte ?         ; sustain/release
+            .bend
+            .endv
+
+    Or to define stack "allocated" variables on 65816.
+
+            .virtual 1,s
+    p1      .word ?         ; at 1,s
+    tmp     .byte ?         ; at 3,s
+            .endv
+            lda (p1),y      ; lda ($01,s),y
+
 .align <expression>[, <fill>]
-    Align code to a dividable program counter address by inserting
-    uninitialized memory or repeated bytes.
+    Align the program counter to a dividable address by inserting uninitialized
+    memory or repeated bytes.
 
     Usually used to page align data or code to avoid penalty cycles when
     indexing or branching.
@@ -1365,6 +1390,10 @@ it does not need to be.
     .1000            ee 19 d0       inc $d019       irq     inc $d019
     >1003            ea                                     .align 4, $ea
     .1004            69 01          adc #$01        loop    adc #1
+
+    When alignment is done within structures then it's relative to the start of
+    the structure. This means the structure layout will be always the same
+    independent which address it's instantiated at.
 
 Dumping data
 
@@ -4158,12 +4187,12 @@ Assembler directives
 .addr .al .align .as .assert .autsiz .bend .binary .binclude .block .break
 .byte .case .cdef .cerror .char .check .comment .continue .cpu .cwarn .databank
 .default .dint .dpage .dsection .dstruct .dunion .dword .edef .else .elsif .enc
-.end .endc .endf .endif .endm .endn .endp .ends .endswitch .endu .endweak .eor
-.error .fi .fill .for .function .goto .here .hidemac .if .ifeq .ifmi .ifne
+.end .endc .endf .endif .endm .endn .endp .ends .endswitch .endu .endv .endweak
+.eor .error .fi .fill .for .function .goto .here .hidemac .if .ifeq .ifmi .ifne
 .ifpl .include .lbl .lint .logical .long .macro .mansiz .namespace .next .null
 .offs .option .page .pend .proc .proff .pron .ptext .rept .rta .section .seed
 .segment .send .shift .shiftl .showmac .sint .struct .switch .text .union .var
-.warn .weak .word .xl .xs
+.virtual .warn .weak .word .xl .xs
 
 -------------------------------------------------------------------------------
 
