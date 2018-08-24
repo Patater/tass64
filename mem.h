@@ -28,7 +28,7 @@ struct output_s;
 
 extern void mark_mem(const struct Memblocks *, address_t, address_t);
 extern void write_mark_mem(struct Memblocks *, unsigned int);
-extern void list_mem(const struct Memblocks *, bool);
+extern void list_mem(const struct Memblocks *);
 extern void memjmp(struct Memblocks *, address_t);
 extern void memref(struct Memblocks *, struct Memblocks *);
 extern void memprint(struct Memblocks *);
