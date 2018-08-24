@@ -938,7 +938,7 @@ static bool virtual_start(linepos_t epoint) {
 static void union_start(struct section_address_s *section_address) {
     section_address->wrapwarn = section_address->moved = false;
     section_address->address = section_address->start = section_address->end = current_address->address;
-    section_address->l_address = section_address->l_start = current_address->l_address;
+    section_address->l_address = current_address->l_address;
     section_address->mem = new_memblocks();
     section_address->mem->lastaddr = section_address->address;
     section_address->l_address_val = val_reference(current_address->l_address_val);
@@ -1867,6 +1867,7 @@ MUST_CHECK Obj *compile(void)
 
                         oldsection_address = current_address;
                         union_start(&section_address);
+                        section_address.l_start = section_address.l_address;
                         section_address.unionmode = (prm == CMD_DUNION);
                         current_address = &section_address;
 
@@ -3542,6 +3543,7 @@ MUST_CHECK Obj *compile(void)
                     waitfor->section_address = current_address;
                     section_address = (struct section_address_s *)mallocx(sizeof *section_address);
                     union_start(section_address);
+                    section_address->l_start = current_address->l_start;
                     section_address->unionmode = (prm == CMD_UNION);
                     current_address = section_address;
                 }
@@ -3564,6 +3566,7 @@ MUST_CHECK Obj *compile(void)
                     current_section->structrecursion++;
                     oldsection_address = current_address;
                     union_start(&section_address);
+                    section_address.l_start = section_address.l_address;
                     section_address.unionmode = (prm == CMD_DUNION);
                     current_address = &section_address;
                     val = macro_recurse(prm == CMD_DUNION ? W_ENDU2 : W_ENDS2, val, NULL, &epoint);

@@ -1754,9 +1754,10 @@ tmp	<b class="d">.byte</b> <span>?</span>	        <i>; at 3,s</i>
 &gt;1003		 ea					<b class="k">.align</b> <span>4</span>, <span>$ea</span>
 .1004		 69 01		adc #$01	loop	<b>adc</b> #<span>1</span>
 </pre>
-<p>When alignment is done within structures then it's relative to the start
+<p>When alignment is done within named structures then it's relative to the start
 of the structure. This means the structure layout will be always the same
-independent which address it's instantiated at.</p>
+independent which address it's instantiated at. Anonymous structures do not
+change the way the alignment works.</p>
 </dl>
 
 <h3>Dumping data<a name="data-dumping" href="#data-dumping"></a></h3>
