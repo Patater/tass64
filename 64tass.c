@@ -966,7 +966,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
             err_msg_output_and_destroy(err_addressing(am, epoint2));
             break;
         }
-        if (current_section->logicalrecursion == 0) {
+        if (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) {
             current_address->l_address.address = uval & 0xffff;
             current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
             val_destroy(current_address->l_address_val);
@@ -3543,7 +3543,7 @@ MUST_CHECK Obj *compile(void)
                     waitfor->section_address = current_address;
                     section_address = (struct section_address_s *)mallocx(sizeof *section_address);
                     union_start(section_address);
-                    section_address->l_start = current_address->l_start;
+                    section_address->l_start = (prm == CMD_STRUCT) ? current_address->l_start : current_address->l_address;
                     section_address->unionmode = (prm == CMD_UNION);
                     current_address = section_address;
                 }
