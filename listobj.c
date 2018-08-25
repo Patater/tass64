@@ -552,15 +552,16 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             val = val_reference(v1->data[v1->len - 1]);
             for (i = 1; i < v1->len; i++) {
                 Obj *oo1 = v1->data[v1->len - i - 1];
+                Obj *oo2 = val;
                 op->v1 = oo1;
-                op->v2 = val;
+                op->v2 = oo2;
                 val = op->v1->obj->calc2(op);
                 if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
                 else if (op->op == &o_MIN || op->op == &o_MAX) {
                     if (val == &true_value->v) val_replace(&val, oo1);
-                    else if (val == &false_value->v) val_replace(&val, op->v2);
+                    else if (val == &false_value->v) val_replace(&val, oo2);
                 }
-                val_destroy(op->v2);
+                val_destroy(oo2);
             }
             return val;
         }
@@ -623,16 +624,17 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             bool error = true;
             val = val_reference(v2->data[0]);
             for (i = 1; i < v2->len; i++) {
+                Obj *oo1 = val;
                 Obj *oo2 = v2->data[i];
-                op->v1 = val;
+                op->v1 = oo1;
                 op->v2 = oo2;
                 val = op->v1->obj->calc2(op);
                 if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
                 else if (op->op == &o_MIN || op->op == &o_MAX) {
-                    if (val == &true_value->v) val_replace(&val, op->v1);
+                    if (val == &true_value->v) val_replace(&val, oo1);
                     else if (val == &false_value->v) val_replace(&val, oo2);
                 }
-                val_destroy(op->v1);
+                val_destroy(oo1);
             }
             return val;
         }
