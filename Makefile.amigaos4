@@ -83,7 +83,8 @@ floatobj.o: floatobj.c floatobj.h obj.h attributes.h inttypes.h values.h \
  arguments.h boolobj.h codeobj.h strobj.h bytesobj.h intobj.h bitsobj.h \
  operobj.h typeobj.h noneobj.h errorobj.h addressobj.h
 foldobj.o: foldobj.c foldobj.h obj.h attributes.h inttypes.h error.h \
- stdbool.h errors_e.h avl.h str.h values.h eval.h typeobj.h noneobj.h
+ stdbool.h errors_e.h avl.h str.h values.h eval.h typeobj.h operobj.h \
+ noneobj.h strobj.h errorobj.h
 functionobj.o: functionobj.c functionobj.h obj.h attributes.h inttypes.h \
  str.h math.h isnprintf.h eval.h stdbool.h variables.h error.h errors_e.h \
  avl.h file.h floatobj.h values.h strobj.h listobj.h intobj.h boolobj.h \
@@ -92,7 +93,7 @@ gapobj.o: gapobj.c gapobj.h obj.h attributes.h inttypes.h error.h \
  stdbool.h errors_e.h avl.h str.h eval.h variables.h values.h strobj.h \
  operobj.h intobj.h boolobj.h typeobj.h noneobj.h errorobj.h
 identobj.o: identobj.c identobj.h obj.h attributes.h inttypes.h str.h \
- eval.h stdbool.h typeobj.h operobj.h
+ eval.h stdbool.h unicode.h unicodedata.h typeobj.h operobj.h strobj.h
 instruction.o: instruction.c instruction.h attributes.h stdbool.h \
  inttypes.h opcodes.h obj.h 64tass.h wait_e.h section.h avl.h str.h mem.h \
  file.h listing.h error.h errors_e.h longjump.h arguments.h optimizer.h \

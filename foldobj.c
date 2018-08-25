@@ -17,6 +17,7 @@
 
 */
 #include "foldobj.h"
+#include <string.h>
 #include "error.h"
 #include "values.h"
 #include "eval.h"
@@ -24,6 +25,8 @@
 #include "typeobj.h"
 #include "operobj.h"
 #include "noneobj.h"
+#include "strobj.h"
+#include "errorobj.h"
 
 static Type obj;
 
@@ -39,6 +42,24 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     }
     err_msg_wrong_type(v1, NULL, epoint);
     return (Obj *)ref_none();
+}
+
+static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
+    return o1 == o2;
+}
+
+static MUST_CHECK Error *hash(Obj *UNUSED(v1), int *hs, linepos_t UNUSED(epoint)) {
+    *hs = 0; /* whatever, there's only one */
+    return NULL;
+}
+
+static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t maxsize) {
+    Str *v;
+    if (3 > maxsize) return NULL;
+    v = new_str(3);
+    v->chars = 3;
+    memset(v->data, '.', 3);
+    return &v->v;
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
@@ -80,6 +101,9 @@ void foldobj_init(void) {
     new_type(&obj, T_FOLD, "fold", sizeof(Fold));
     obj_init(&obj);
     obj.create = create;
+    obj.same = same;
+    obj.hash = hash;
+    obj.repr = repr;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;
 

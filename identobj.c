@@ -17,16 +17,41 @@
 
 */
 #include "identobj.h"
+#include <string.h>
 #include "eval.h"
+#include "unicode.h"
 
 #include "typeobj.h"
 #include "operobj.h"
+#include "strobj.h"
 
 static Type ident_obj;
 static Type anonident_obj;
 
 Type *const IDENT_OBJ = &ident_obj;
 Type *const ANONIDENT_OBJ = &anonident_obj;
+
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    Ident *v1 = (Ident *)o1;
+    Str *v;
+    size_t len = v1->name.len;
+    if (len > maxsize) return NULL;
+    v = new_str(len);
+    v->chars = calcpos(v1->name.data, len);
+    memcpy(v->data, v1->name.data, len);
+    return &v->v;
+}
+
+static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    Anonident *v1 = (Anonident *)o1;
+    Str *v;
+    size_t len = v1->count < 0 ? -v1->count : (v1->count + 1);
+    if (len > maxsize) return NULL;
+    v = new_str(len);
+    v->chars = len;
+    memset(v->data, v1->count >= 0 ? '+' : '-', len);
+    return &v->v;
+}
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
@@ -54,9 +79,11 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void identobj_init(void) {
     new_type(&ident_obj, T_IDENT, "ident", sizeof(Ident));
+    ident_obj.repr = repr;
     ident_obj.calc2 = calc2;
     ident_obj.rcalc2 = rcalc2;
     new_type(&anonident_obj, T_ANONIDENT, "anonident", sizeof(Anonident));
+    anonident_obj.repr = anon_repr;
     anonident_obj.calc2 = calc2;
     anonident_obj.rcalc2 = rcalc2;
 }
