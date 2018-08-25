@@ -342,7 +342,7 @@ giving a fill byte value to <a href="#d_fill"><code>.fill</code></a>.</p>
 
 <pre width=80>
 *       <b>=</b> <span>$02</span>
-p1	<b class="d">.word</b> <span>?</span>         <i>;a zero page pointer</i>
+p1	<b class="d">.addr</b> <span>?</span>         <i>;a zero page pointer</i>
 temp	<b class="d">.fill</b> <span>10</span>        <i>;a 10 byte temporary area</i>
 </pre>
 
@@ -385,9 +385,9 @@ jumpcmd <b>lda</b> <u>hibytes</u>,x   <i>; selected routine in X register</i>
         <b>pha</b>
         <b>rts</b>             <i>; jump, rts will increase pc by one!</i>
 <i>; Build an anonymous list of jump addresses minus 1</i>
--	<b>=</b> (<u>cmd_p</u>, <u>cmd_c</u>, <u>cmd_m</u>, <u>cmd_s</u>, <u>cmd_r</u>, <u>cmd_l</u>, <u>cmd_e</u>)-<span>1</span>
-lobytes <b class="d">.byte</b> &lt;(<u>-</u>)      <i>; low bytes of jump addresses</i>
-hibytes <b class="d">.byte</b> &gt;(<u>-</u>)      <i>; high bytes</i>
+_	<b>:=</b> (<u>cmd_p</u>, <u>cmd_c</u>, <u>cmd_m</u>, <u>cmd_s</u>, <u>cmd_r</u>, <u>cmd_l</u>, <u>cmd_e</u>)-<span>1</span>
+lobytes <b class="d">.byte</b> &lt;<u>_</u>        <i>; low bytes of jump addresses</i>
+hibytes <b class="d">.byte</b> &gt;<u>_</u>        <i>; high bytes</i>
 </pre>
 
 <p>There are some other tips below in the descriptions.</p>
@@ -673,9 +673,9 @@ useful, so here are a few examples:</p>
 <i>;Classic 256 byte single period sinus table with values of 0&minus;255.</i>
         <b class="d">.byte</b> <span>128.5</span> + <span>127</span> * <span class="k">sin</span>(<span class="k">range</span>(<span>256</span>) * <span class="k">rad</span>(<span>360.0</span>/<span>256</span>))
 <i>;Screen row address tables</i>
--       <b>=</b> <span>$400</span> + <span class="k">range</span>(<span>0</span>, <span>1000</span>, <span>40</span>)
-scrlo   <b class="d">.byte</b> &lt;(<u>-</u>)
-scrhi   <b class="d">.byte</b> &gt;(<u>-</u>)
+_       <b>:=</b> <span>$400</span> + <span class="k">range</span>(<span>0</span>, <span>1000</span>, <span>40</span>)
+scrlo   <b class="d">.byte</b> &lt;<u>_</u>
+scrhi   <b class="d">.byte</b> &gt;<u>_</u>
 </pre>
 
 <h3>Dictionaries<a name="dictionaries" href="#dictionaries"></a></h3>
@@ -785,8 +785,8 @@ modes of the supported CPUs.</b></p>
 <tr><td><code>#&minus;</code><td>signed immediate<td><code><b>lda</b>&nbsp;#<span>&minus;128</span></code>
 <tr><td><code>#<u>addr</u>,#<u>addr</u></code><td>move<td><code><b>mvp</b>&nbsp;#<span>5</span>,#<span>6</span></code>
 <tr><td><code><u>addr</u></code><td>direct or relative<td><code><b>lda</b>&nbsp;<span>$12</span> <b>lda</b>&nbsp;<span>$1234</span> <b>bne</b>&nbsp;<span>$1234</span></code>
-<tr><td><code><u>addr</u>,<u>addr</u></code><td>direct page bit<td><code><b>rmb</b>&nbsp;<span>5</span>,<span>$12</span></code>
-<tr><td><code><u>addr</u>,<u>addr</u>,<u>addr</u></code><td>direct page bit relative jump<td><code><b>bbs</b>&nbsp;<span>5</span>,<span>$12</span>,<span>$1234</span></code>
+<tr><td><code><u>bit</u>,<u>addr</u></code><td>direct page bit<td><code><b>rmb</b>&nbsp;<span>5</span>,<span>$12</span></code>
+<tr><td><code><u>bit</u>,<u>addr</u>,<u>addr</u></code><td>direct page bit relative jump<td><code><b>bbs</b>&nbsp;<span>5</span>,<span>$12</span>,<span>$1234</span></code>
 <tr><td><code>(<u>addr</u>)</code><td>indirect<td><code><b>lda</b>&nbsp;(<span>$12</span>) <b>jmp</b>&nbsp;(<span>$1234</span></code>)
 <tr><td><code>(<u>addr</u>),y</code><td>indirect y indexed<td><code><b>lda</b>&nbsp;(<span>$12</span>),y</code>
 <tr><td><code>(<u>addr</u>),z</code><td>indirect z indexed<td><code><b>lda</b>&nbsp;(<span>$12</span>),z</code>
@@ -1736,9 +1736,9 @@ sr	<b class="d">.byte</b> <span>?</span>	        <i>; sustain/release</i>
 </pre>
 <p>Or to define stack "allocated" variables on 65816.</p>
 <pre width=80>
-	<b class="k">.virtual</b> <span>1</span>,s
-p1	<b class="d">.word</b> <span>?</span>	        <i>; at 1,s</i>
-tmp	<b class="d">.byte</b> <span>?</span>	        <i>; at 3,s</i>
+	<b class="k">.virtual</b> #<span>1</span>,s
+p1	<b class="d">.addr</b> <span>?</span>	        <i>; at #1,s</i>
+tmp	<b class="d">.byte</b> <span>?</span>	        <i>; at #3,s</i>
 	<b class="k">.endv</b>
 	<b>lda</b> (<u>p1</u>),y      <i>; lda ($01,s),y</i>
 </pre>
@@ -2572,7 +2572,7 @@ ss	<b class="d">.word</b> <span>0</span>
 
 start   <b>sei</b>
         <b class="k">.section</b> <u>zp</u>     <i>;declare some new zero page variables</i>
-p2	<b class="d">.word</b> <span>?</span>         <i>;a pointer</i>
+p2	<b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
         <b class="k">.send</b> <u>zp</u>
         <b class="k">.section</b> <u>bss</u>    <i>;new variables</i>
 buffer	<b class="d">.fill</b> <span>10</span>        <i>;temporary area</i>
@@ -2589,7 +2589,7 @@ label   <b class="d">.null</b> <span class="s">"message"</span>
 
         <b>jmp</b> <u>error</u>
         <b class="k">.section</b> <u>zp</u>     <i>;declare some more zero page variables</i>
-p3	<b class="d">.word</b> <span>?</span>         <i>;a pointer</i>
+p3	<b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
         <b class="k">.send</b> <u>zp</u>
         <b class="k">.send</b> <u>code</u>
 </pre>
@@ -2601,7 +2601,7 @@ p3	<b class="d">.word</b> <span>?</span>         <i>;a pointer</i>
 
 .080d	 78				start   <b>sei</b>
 
-&gt;0002					p2      <b class="d">.word</b> <span>?</span>         <i>;a pointer</i>
+&gt;0002					p2      <b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
 &gt;0334					buffer  <b class="d">.fill</b> <span>10</span>        <i>;temporary area</i>
 
 .080e	 b1 02				        <b>lda</b> (<u>p2</u>),y
@@ -2613,7 +2613,7 @@ p3	<b class="d">.word</b> <span>?</span>         <i>;a pointer</i>
 
 .0817	 4c e2 fc			        <b>jmp</b> <u>error</u>
 
-&gt;0004					p2      <b class="d">.word</b> ?         <i>;a pointer</i>
+&gt;0004					p2      <b class="d">.addr</b> ?         <i>;a pointer</i>
 </pre>
 
 <p>Sections can form a hierarchy by nesting a <a href="#d_dsection"><code>.dsection</code></a> into
@@ -2673,7 +2673,7 @@ buffer	<b class="d">.fill</b> <span>10</span>
         <b class="k">.send</b> <u>bss</u>
 
         <b class="k">.section</b> <u>data</u>  <i>;Data section (in bank1)</i>
-routine <b class="d">.word</b> <u>print</u>
+routine <b class="d">.addr</b> <u>print</u>
         <b class="k">.send</b> <u>bss</u>
 </pre>
 
@@ -2829,7 +2829,7 @@ is set to the value of expression or reference of variable.
         <b class="d">.fill</b> <span>$2000</span>, <span>$ff</span> <i>;Pre-fill ROM area</i>
 	<b class="k">.pron</b>
 *       <b>=</b> <span>$8000</span>
-        <b class="d">.word</b> <u>reset</u>, <u>restore</u>
+        <b class="d">.addr</b> <u>reset</u>, <u>restore</u>
         <b class="d">.text</b> <span class="s">"CBM80"</span>
 reset   <b>cld</b>
 </pre>
@@ -3110,7 +3110,7 @@ skipped in the output. Up to 64&nbsp;KiB.</p>
 <pre width=80>
 64tass --atari-xex a.asm
 *       <b>=</b> <span>$02e0</span>
-        <b class="d">.word</b> <u>start</u>      <i>;run address</i>
+        <b class="d">.addr</b> <u>start</u>      <i>;run address</i>
 *       <b>=</b> <span>$2000</span>
 start	<b>rts</b>
 </pre>

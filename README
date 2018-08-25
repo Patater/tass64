@@ -208,7 +208,7 @@ solution is to not use an initial value by using `?' or not giving a fill byte
 value to .fill.
 
 *       = $02
-p1      .word ?         ;a zero page pointer
+p1      .addr ?         ;a zero page pointer
 temp    .fill 10        ;a 10 byte temporary area
 
 Space allocated this way is not saved in the output as there's no data to save
@@ -248,9 +248,9 @@ jumpcmd lda hibytes,x   ; selected routine in X register
         pha
         rts             ; jump, rts will increase pc by one!
 ; Build an anonymous list of jump addresses minus 1
--       = (cmd_p, cmd_c, cmd_m, cmd_s, cmd_r, cmd_l, cmd_e)-1
-lobytes .byte <(-)      ; low bytes of jump addresses
-hibytes .byte >(-)      ; high bytes
+_       := (cmd_p, cmd_c, cmd_m, cmd_s, cmd_r, cmd_l, cmd_e)-1
+lobytes .byte <_        ; low bytes of jump addresses
+hibytes .byte >_        ; high bytes
 
 There are some other tips below in the descriptions.
 
@@ -497,9 +497,9 @@ a few examples:
 ;Classic 256 byte single period sinus table with values of 0-255.
         .byte 128.5 + 127 * sin(range(256) * rad(360.0/256))
 ;Screen row address tables
--       = $400 + range(0, 1000, 40)
-scrlo   .byte <(-)
-scrhi   .byte >(-)
+_       := $400 + range(0, 1000, 40)
+scrlo   .byte <_
+scrhi   .byte >_
 
 Dictionaries
 
@@ -584,40 +584,39 @@ complexity is limited to 4 operators. This is enough to describe all addressing
 modes of the supported CPUs.
 
                   Valid addressing mode operator combinations
-#              immediate                            lda #$12
-#+             signed immediate                     lda #+127
-#-             signed immediate                     lda #-128
-#addr,#addr    move                                 mvp #5,#6
-addr           direct or relative                   lda $12 lda $1234 bne $1234
-addr,addr      direct page bit                      rmb 5,$12
-addr,addr,addr direct page bit relative jump        bbs 5,$12,$1234
-(addr)         indirect                             lda ($12) jmp ($1234)
-(addr),y       indirect y indexed                   lda ($12),y
-(addr),z       indirect z indexed                   lda ($12),z
-(addr,x)       x indexed indirect                   lda ($12,x) jmp ($1234,x)
-[addr]         long indirect                        lda [$12] jmp [$1234]
-[addr],y       long indirect y indexed              lda [$12],y
-#addr,b        data bank indexed                    lda #0,b
-#addr,b,x      data bank x indexed                  lda #0,b,x
-#addr,b,y      data bank y indexed                  lda #0,b,y
-#addr,d        direct page indexed                  lda #0,d
-#addr,d,x      direct page x indexed                lda #0,d,x
-#addr,d,y      direct page y indexed                ldx #0,d,y
-(#addr,d)      direct page indirect                 lda (#$12,d)
-(#addr,d,x)    direct page x indexed indirect       lda (#$12,d,x)
-(#addr,d),y    direct page indirect y indexed       lda (#$12,d),y
-(#addr,d),z    direct page indirect z indexed       lda (#$12,d),z
-[#addr,d]      direct page long indirect            lda [#$12,d]
-[#addr,d],y    direct page long indirect y indexed  lda [#$12,d],y
-#addr,k        program bank indexed                 jsr #0,k
-(#addr,k,x)    program bank x indexed indirect      jmp (#$1234,k,x)
-#addr,r        data stack indexed                   lda #1,r
-(#addr,r),y    data stack indexed indirect y        lda #($12,r),y
-               indexed
-#addr,s        stack indexed                        lda #1,s
-(#addr,s),y    stack indexed indirect y indexed     lda (#$12,s),y
-addr,x         x indexed                            lda $12,x
-addr,y         y indexed                            lda $12,y
+#             immediate                             lda #$12
+#+            signed immediate                      lda #+127
+#-            signed immediate                      lda #-128
+#addr,#addr   move                                  mvp #5,#6
+addr          direct or relative                    lda $12 lda $1234 bne $1234
+bit,addr      direct page bit                       rmb 5,$12
+bit,addr,addr direct page bit relative jump         bbs 5,$12,$1234
+(addr)        indirect                              lda ($12) jmp ($1234)
+(addr),y      indirect y indexed                    lda ($12),y
+(addr),z      indirect z indexed                    lda ($12),z
+(addr,x)      x indexed indirect                    lda ($12,x) jmp ($1234,x)
+[addr]        long indirect                         lda [$12] jmp [$1234]
+[addr],y      long indirect y indexed               lda [$12],y
+#addr,b       data bank indexed                     lda #0,b
+#addr,b,x     data bank x indexed                   lda #0,b,x
+#addr,b,y     data bank y indexed                   lda #0,b,y
+#addr,d       direct page indexed                   lda #0,d
+#addr,d,x     direct page x indexed                 lda #0,d,x
+#addr,d,y     direct page y indexed                 ldx #0,d,y
+(#addr,d)     direct page indirect                  lda (#$12,d)
+(#addr,d,x)   direct page x indexed indirect        lda (#$12,d,x)
+(#addr,d),y   direct page indirect y indexed        lda (#$12,d),y
+(#addr,d),z   direct page indirect z indexed        lda (#$12,d),z
+[#addr,d]     direct page long indirect             lda [#$12,d]
+[#addr,d],y   direct page long indirect y indexed   lda [#$12,d],y
+#addr,k       program bank indexed                  jsr #0,k
+(#addr,k,x)   program bank x indexed indirect       jmp (#$1234,k,x)
+#addr,r       data stack indexed                    lda #1,r
+(#addr,r),y   data stack indexed indirect y indexed lda #($12,r),y
+#addr,s       stack indexed                         lda #1,s
+(#addr,s),y   stack indexed indirect y indexed      lda (#$12,s),y
+addr,x        x indexed                             lda $12,x
+addr,y        y indexed                             lda $12,y
 
 Direct page, data bank, program bank indexed and long addressing modes of
 instructions are intelligently chosen based on the instruction type, the
@@ -1371,9 +1370,9 @@ it does not need to be.
 
     Or to define stack "allocated" variables on 65816.
 
-            .virtual 1,s
-    p1      .word ?         ; at 1,s
-    tmp     .byte ?         ; at 3,s
+            .virtual #1,s
+    p1      .addr ?         ; at #1,s
+    tmp     .byte ?         ; at #3,s
             .endv
             lda (p1),y      ; lda ($01,s),y
 
@@ -2175,7 +2174,7 @@ ss      .word 0
 
 start   sei
         .section zp     ;declare some new zero page variables
-p2      .word ?         ;a pointer
+p2      .addr ?         ;a pointer
         .send zp
         .section bss    ;new variables
 buffer  .fill 10        ;temporary area
@@ -2192,7 +2191,7 @@ label   .null "message"
 
         jmp error
         .section zp     ;declare some more zero page variables
-p3      .word ?         ;a pointer
+p3      .addr ?         ;a pointer
         .send zp
         .send code
 
@@ -2204,7 +2203,7 @@ The compiled code will look like:
 
 .080d    78                             start   sei
 
->0002                                   p2      .word ?         ;a pointer
+>0002                                   p2      .addr ?         ;a pointer
 >0334                                   buffer  .fill 10        ;temporary area
 
 .080e    b1 02                                  lda (p2),y
@@ -2216,7 +2215,7 @@ The compiled code will look like:
 
 .0817    4c e2 fc                               jmp error
 
->0004                                   p2      .word ?         ;a pointer
+>0004                                   p2      .addr ?         ;a pointer
 
 Sections can form a hierarchy by nesting a .dsection into another section. The
 section names must only be unique within a section but can be reused otherwise.
@@ -2273,7 +2272,7 @@ buffer  .fill 10
         .send bss
 
         .section data  ;Data section (in bank1)
-routine .word print
+routine .addr print
         .send bss
 
 65816 related
@@ -2408,7 +2407,7 @@ Printer control
             .fill $2000, $ff ;Pre-fill ROM area
             .pron
     *       = $8000
-            .word reset, restore
+            .addr reset, restore
             .text "CBM80"
     reset   cld
 
@@ -2683,7 +2682,7 @@ Output options
 
     64tass --atari-xex a.asm
     *       = $02e0
-            .word start      ;run address
+            .addr start      ;run address
     *       = $2000
     start   rts
 
