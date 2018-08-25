@@ -248,6 +248,7 @@ static const char * const terr_error[] = {
     "not in range -1.0 to 1.0",
     "empty range not allowed",
     "empty string not allowed",
+    "empty list not allowed",
     "more than a single character",
     "too early to reference",
     "requirements not met",
@@ -656,6 +657,7 @@ void err_msg_output(const Error *val) {
     case ERROR_NEGFRAC_POWER:
     case ERROR___EMPTY_RANGE:
     case ERROR__EMPTY_STRING:
+    case ERROR____EMPTY_LIST:
     case ERROR__BYTES_NEEDED:
     case ERROR___NO_LAST_GAP:
     case ERROR__NOT_ONE_CHAR:
