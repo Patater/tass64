@@ -1,0 +1,95 @@
+/*
+    $Id$
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+*/
+#include "foldobj.h"
+#include "error.h"
+#include "values.h"
+#include "eval.h"
+
+#include "typeobj.h"
+#include "operobj.h"
+#include "noneobj.h"
+
+static Type obj;
+
+Type *FOLD_OBJ = &obj;
+Fold *fold_value;
+
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    switch (v1->obj->type) {
+    case T_NONE:
+    case T_ERROR:
+    case T_FOLD: return val_reference(v1);
+    default: break;
+    }
+    err_msg_wrong_type(v1, NULL, epoint);
+    return (Obj *)ref_none();
+}
+
+static MUST_CHECK Obj *calc2(oper_t op) {
+    Obj *v2 = op->v2;
+    switch (v2->obj->type) {
+    case T_TUPLE:
+    case T_LIST:
+        if (op->op != &o_MEMBER && op->op != &o_X) {
+            return v2->obj->rcalc2(op);
+        }
+        break;
+    case T_NONE:
+    case T_ERROR:
+        return val_reference(v2);
+    default:
+        break;
+    }
+    return obj_oper_error(op);
+}
+
+static MUST_CHECK Obj *rcalc2(oper_t op) {
+    Obj *v1 = op->v1;
+    switch (op->v1->obj->type) {
+    case T_TUPLE:
+    case T_LIST:
+        if (op->op != &o_IN) {
+            return v1->obj->calc2(op);
+        }
+        break;
+    case T_NONE:
+    case T_ERROR:
+        return val_reference(v1);
+    default: break;
+    }
+    return obj_oper_error(op);
+}
+
+void foldobj_init(void) {
+    new_type(&obj, T_FOLD, "fold", sizeof(Fold));
+    obj_init(&obj);
+    obj.create = create;
+    obj.calc2 = calc2;
+    obj.rcalc2 = rcalc2;
+
+    fold_value = (Fold *)val_alloc(FOLD_OBJ);
+}
+
+void foldobj_destroy(void) {
+#ifdef DEBUG
+    if (fold_value->v.refcount != 1) fprintf(stderr, "fold %" PRIuSIZE "\n", fold_value->v.refcount - 1);
+#endif
+ 
+    val_destroy(&fold_value->v);
+}

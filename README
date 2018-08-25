@@ -454,17 +454,19 @@ Tuples are similar but are enclosed in parentheses instead. An empty tuple is
 expression parentheses. When nested they function similar to an array.
 Currently both types are immutable.
 
-         List and tuple operators and functions
-y .. x concatenate lists    [1] .. [2] is [1, 2]
-y in x is member of list    2 in [1, 2, 3] is true
-a x n  repeat               [1, 2] x 2 is [1, 2, 1, 2]
-a[i]   element from start   ("1", 2)[1] is 2
-a[i]   element from end     ("1", 2, 3)[-1] is 3
-a[s]   no change            (1, 2, 3)[:] is (1, 2, 3)
-a[s]   cut off start        (1, 2, 3)[1:] is (2, 3)
-a[s]   cut off end          (1, 2.0, 3)[:-1] is (1, 2.0)
-a[s]   reverse              (1, 2, 3)[::-1] is (3, 2, 1)
-*a     convert to arguments format("%d: %s", *mylist)
+          List and tuple operators and functions
+y .. x   concatenate lists    [1] .. [2] is [1, 2]
+y in x   is member of list    2 in [1, 2, 3] is true
+a x n    repeat               [1, 2] x 2 is [1, 2, 1, 2]
+a[i]     element from start   ("1", 2)[1] is 2
+a[i]     element from end     ("1", 2, 3)[-1] is 3
+a[s]     no change            (1, 2, 3)[:] is (1, 2, 3)
+a[s]     cut off start        (1, 2, 3)[1:] is (2, 3)
+a[s]     cut off end          (1, 2.0, 3)[:-1] is (1, 2.0)
+a[s]     reverse              (1, 2, 3)[::-1] is (3, 2, 1)
+*a       convert to arguments format("%d: %s", *mylist)
+... op a left fold            ... + (1, 2, 3) is ((1+2)+3)
+a op ... right fold           (1, 2, 3) - ... is (1-(2-3))
 
 Arithmetic operations are applied on the all elements recursively, therefore
 [1, 2] + 1 is [2, 3], and abs([1, -1]) is [1, 1].
@@ -486,6 +488,18 @@ mylist  = ("e", cmd_e, "g", cmd_g, "i", cmd_i)
 keys    .text mylist[::2]    ; keys ("e", "g", "i")
 call_l  .byte <mylist[1::2]-1; routines (<cmd_e-1, <cmd_g-1, <cmd_i-1)
 call_h  .byte >mylist[1::2]-1; routines (>cmd_e-1, >cmd_g-1, >cmd_i-1)
+
+Folding is done on pair of elements either forward (left) or reverse (right).
+The list must contain at least one element. Here are some folding examples:
+
+minimum = ... <? size([part1, part2, part3])
+maximum = ... >? size([part1, part2, part3])
+sum     = ... + size([part1, part2, part3])
+xorall  = ... ^ list_of_numbers
+join    = ... .. list_of_strings
+allbits = ... | sprites.(left, middle, right).bits
+all     = ... && [true, true, true, true]
+any     = ... || [false, false, false, true]
 
 The range(start, end, step) built-in function can be used to create lists of
 integers in a range with a given step value. At least the end must be given,
@@ -3553,6 +3567,8 @@ duplicate definition
 empty encoding, add something or correct name
     probably a typo in the name of encoding but if not then use .cdef/.edef to
     define something
+empty list not allowed
+    at least one element is required
 empty range not allowed
     invalid range but there must be at least one element
 empty string not allowed

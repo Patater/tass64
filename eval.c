@@ -52,6 +52,7 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "identobj.h"
+#include "foldobj.h"
 
 size_t get_label(void) {
     uchar_t ch;
@@ -1333,7 +1334,14 @@ static bool get_exp2(int stop) {
                 if (o == &o_SPLAT || o == &o_POS || o == &o_NEG) goto tryanon;
             }
             lpoint.pos++;push_oper((Obj *)ref_gap(), &epoint);goto other;
-        case '.': if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) goto tryanon; /* fall through */
+        case '.': 
+            if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) {
+                if (pline[lpoint.pos + 1] == '.' && pline[lpoint.pos + 2] == '.') {
+                    lpoint.pos += 3;push_oper((Obj *)ref_fold(), &epoint);goto other;
+                }
+                goto tryanon; 
+            }
+            /* fall through */
         case '0':
             if (diagnostics.leading_zeros && pline[lpoint.pos + 1] >= '0' && pline[lpoint.pos + 1] <= '9') err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
             /* fall through */

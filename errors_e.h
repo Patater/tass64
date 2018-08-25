@@ -76,6 +76,7 @@ typedef enum Error_types {
     ERROR___MATH_DOMAIN,
     ERROR___EMPTY_RANGE,
     ERROR__EMPTY_STRING,
+    ERROR____EMPTY_LIST,
     ERROR__NOT_ONE_CHAR,
     ERROR____NO_FORWARD,
     ERROR_REQUIREMENTS_,

@@ -635,6 +635,8 @@ types are immutable.</p>
 <tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off end<td><code>(<span>1</span>, <span>2.0</span>, <span>3</span>)[:<span>&minus;1</span>]</code> is <code>(<span>1</span>, <span>2.0</span>)</code>
 <tr><td><code><u>a</u>[<u>s</u>]</code><td>reverse<td><code>(<span>1</span>, <span>2</span>, <span>3</span>)[::<span>&minus;1</span>]</code> is <code>(<span>3</span>, <span>2</span>, <span>1</span>)</code>
 <tr><td><code>&lowast;<u>a</u></code><td>convert to arguments<td><code><span class="k">format</span>(<span class="s">"%d: %s"</span>, &lowast;<u>mylist</u>)</code>
+<tr><td><code>... op <u>a</u></code><td>left fold<td><code>... + (<span>1</span>, <span>2</span>, <span>3</span>)</code> is <code>((<span>1</span>+<span>2</span>)+<span>3</span>)</code>
+<tr><td><code><u>a</u> op ...</code><td>right fold<td><code>(<span>1</span>, <span>2</span>, <span>3</span>) - ...</code> is <code>(<span>1</span>-(<span>2</span>-<span>3</span>))</code>
 </tbody>
 </table></div>
 
@@ -660,6 +662,20 @@ mylist  <b>=</b> (<span class="s">"e"</span>, <u>cmd_e</u>, <span class="s">"g"<
 keys    <b class="d">.text</b> <u>mylist</u>[::<span>2</span>]    <i>; keys ("e", "g", "i")</i>
 call_l  <b class="d">.byte</b> &lt;<u>mylist</u>[<span>1</span>::<span>2</span>]-<span>1</span><i>; routines (&lt;cmd_e&minus;1, &lt;cmd_g&minus;1, &lt;cmd_i&minus;1)</i>
 call_h  <b class="d">.byte</b> &gt;<u>mylist</u>[<span>1</span>::<span>2</span>]-<span>1</span><i>; routines (&gt;cmd_e&minus;1, &gt;cmd_g&minus;1, &gt;cmd_i&minus;1)</i>
+</pre>
+
+<p>Folding is done on pair of elements either forward (left) or reverse
+(right). The list must contain at least one element. Here are some folding examples:</p>
+
+<pre width=80>
+minimum <b>=</b> ... &lt;? size([<u>part1</u>, <u>part2</u>, <u>part3</u>])
+maximum <b>=</b> ... &gt;? size([<u>part1</u>, <u>part2</u>, <u>part3</u>])
+sum     <b>=</b> ... + size([<u>part1</u>, <u>part2</u>, <u>part3</u>])
+xorall  <b>=</b> ... ^ <u>list_of_numbers</u>
+join    <b>=</b> ... .. <u>list_of_strings</u>
+allbits <b>=</b> ... | <u>sprites</u>.(<u>left</u>, <u>middle</u>, <u>right</u>).<u>bits</u>
+all     <b>=</b> ... &amp;&amp; [<span>true</span>, <span>true</span>, <span>true</span>, <span>true</span>]
+any     <b>=</b> ... || [<span>false</span>, <span>false</span>, <span>false</span>, <span>true</span>]
 </pre>
 
 <p>The <code>range(start, end, step)</code> built-in function can be used to
@@ -3904,6 +3920,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>double defined range<dd>part of a character range was already defined by another .cdef and these ranges can't overlap
 <dt>duplicate definition<dd>symbol defined more than once
 <dt>empty encoding, add something or correct name<dd>probably a typo in the name of encoding but if not then use .cdef/.edef to define something
+<dt>empty list not allowed<dd>at least one element is required
 <dt>empty range not allowed<dd>invalid range but there must be at least one element
 <dt>empty string not allowed<dd>at least one character is required
 <dt>expected exactly/at least/at most ? arguments, got ?<dd>wrong number of function arguments used

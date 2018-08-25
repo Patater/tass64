@@ -31,6 +31,7 @@
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
+#include "foldobj.h"
 
 static Type list_obj;
 static Type tuple_obj;
@@ -544,6 +545,27 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
         return val_reference(o2);
     }
+    if (o2->obj == FOLD_OBJ) {
+        if (v1->len != 0) {
+            Obj *val;
+            bool error = true;
+            val = val_reference(v1->data[v1->len - 1]);
+            for (i = 1; i < v1->len; i++) {
+                Obj *oo1 = v1->data[v1->len - i - 1];
+                op->v1 = oo1;
+                op->v2 = val;
+                val = op->v1->obj->calc2(op);
+                if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
+                else if (op->op == &o_MIN || op->op == &o_MAX) {
+                    if (val == &true_value->v) val_replace(&val, oo1);
+                    else if (val == &false_value->v) val_replace(&val, op->v2);
+                }
+                val_destroy(op->v2);
+            }
+            return val;
+        }
+        return (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint);
+    }
     if (v1->len != 0) {
         bool error = true;
         List *list = (List *)val_alloc(o1->obj);
@@ -594,6 +616,27 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     }
     if (o1 == &none_value->v || o1->obj == ERROR_OBJ) {
         return o1->obj->calc2(op);
+    }
+    if (o1->obj == FOLD_OBJ) {
+        if (v2->len != 0) {
+            Obj *val;
+            bool error = true;
+            val = val_reference(v2->data[0]);
+            for (i = 1; i < v2->len; i++) {
+                Obj *oo2 = v2->data[i];
+                op->v1 = val;
+                op->v2 = oo2;
+                val = op->v1->obj->calc2(op);
+                if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
+                else if (op->op == &o_MIN || op->op == &o_MAX) {
+                    if (val == &true_value->v) val_replace(&val, op->v1);
+                    else if (val == &false_value->v) val_replace(&val, oo2);
+                }
+                val_destroy(op->v1);
+            }
+            return val;
+        }
+        return (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint2);
     }
     if (v2->len != 0) {
         bool error = true;

@@ -46,6 +46,7 @@
 #include "mfuncobj.h"
 #include "identobj.h"
 #include "memblocksobj.h"
+#include "foldobj.h"
 
 static Type lbl_obj;
 static Type default_obj;
@@ -303,6 +304,7 @@ void objects_init(void) {
     noneobj_init();
     mfuncobj_init();
     identobj_init();
+    foldobj_init();
 
     new_type(&lbl_obj, T_LBL, "lbl", sizeof(Lbl));
     lbl_obj.same = lbl_same;
@@ -327,6 +329,7 @@ void objects_destroy(void) {
     intobj_destroy();
     gapobj_destroy();
     noneobj_destroy();
+    foldobj_destroy();
 
 #ifdef DEBUG
     if (default_value->v.refcount != 1) fprintf(stderr, "default %" PRIuSIZE "\n", default_value->v.refcount - 1);
