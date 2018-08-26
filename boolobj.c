@@ -39,6 +39,7 @@ Type *const BOOL_OBJ = &obj;
 Bool *true_value;
 Bool *false_value;
 Bool *bool_value[2];
+static Str *bool_repr[2] = {NULL, NULL};
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
@@ -66,11 +67,15 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Str *v;
     size_t len = o1 == &true_value->v ? 4 : 5;
     if (len > maxsize) return NULL;
-    v = new_str2(len);
-    if (v == NULL) return NULL;
-    v->chars = len;
-    memcpy(v->data, ((Bool *)o1)->name, len);
-    return &v->v;
+    v = bool_repr[len - 4];
+    if (v == NULL) {
+        v = new_str2(len);
+        if (v == NULL) return NULL;
+        v->chars = len;
+        memcpy(v->data, ((Bool *)o1)->name, len);
+        bool_repr[len - 4] = v;
+    }
+    return val_reference(&v->v);
 }
 
 static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
@@ -241,8 +246,12 @@ void boolobj_destroy(void) {
 #ifdef DEBUG
     if (false_value->v.refcount != 1) fprintf(stderr, "false %" PRIuSIZE "\n", false_value->v.refcount - 1);
     if (true_value->v.refcount != 1) fprintf(stderr, "true %" PRIuSIZE "\n", true_value->v.refcount - 1);
+    if (bool_repr[0]->v.refcount != 1) fprintf(stderr, "boolrepr[0] %" PRIuSIZE "\n", bool_repr[0]->v.refcount - 1);
+    if (bool_repr[1]->v.refcount != 1) fprintf(stderr, "boolrepr[1] %" PRIuSIZE "\n", bool_repr[1]->v.refcount - 1);
 #endif
 
     val_destroy(&false_value->v);
     val_destroy(&true_value->v);
+    if (bool_repr[0] != NULL) val_destroy(&bool_repr[0]->v);
+    if (bool_repr[1] != NULL) val_destroy(&bool_repr[1]->v);
 }
