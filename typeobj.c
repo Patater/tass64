@@ -79,7 +79,8 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     ln = strlen(name);
     ln2 = ln + 9;
     if (ln2 > maxsize) return NULL;
-    v = new_str(ln2);
+    v = new_str2(ln2);
+    if (v == NULL) return NULL;
     v->chars = ln2;
     s = v->data;
     memcpy(s, "<type '", 7);

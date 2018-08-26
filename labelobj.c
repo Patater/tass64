@@ -99,7 +99,8 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxlen) {
     }
     len2 = len + 10;
     if (len2 > maxlen) return NULL;
-    v = new_str(len2);
+    v = new_str2(len2);
+    if (v == NULL) return NULL;
     v->chars = calcpos(v1->name.data, len);
     s = v->data;
     memcpy(s, "<label '", 8);

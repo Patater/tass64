@@ -113,7 +113,7 @@ bool tostr(const struct values_s *v1, str_t *out) {
     }
 }
 
-static MALLOC Str *new_str2(size_t ln) {
+MALLOC Str *new_str2(size_t ln) {
     Str *v = (Str *)val_alloc(STR_OBJ);
     v->len = ln;
     if (ln <= sizeof v->u.val) {
@@ -129,7 +129,7 @@ static MALLOC Str *new_str2(size_t ln) {
     return v;
 }
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Str *v1 = (Str *)o1;
     size_t i2, i, chars;
     uint8_t *s, *s2;
@@ -138,11 +138,11 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     i = str_quoting(v1->data, v1->len, &q);
 
     i2 = i + 2;
-    if (i2 < 2) goto failed; /* overflow */
+    if (i2 < 2) return NULL; /* overflow */
     chars = i2 - (v1->len - v1->chars);
     if (chars > maxsize) return NULL;
     v = new_str2(i2);
-    if (v == NULL) goto failed;
+    if (v == NULL) return NULL;
     v->chars = chars;
     s = v->data;
 
@@ -156,8 +156,6 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     }
     s[i] = q;
     return &v->v;
-failed:
-    return (epoint != NULL) ? (Obj *)new_error_mem(epoint) : NULL;
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {

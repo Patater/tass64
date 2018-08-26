@@ -172,7 +172,11 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         }
         tuple->len = i;
     }
-    str = new_str(ln);
+    str = new_str2(ln);
+    if (str == NULL) {
+        if (tuple != NULL) val_destroy(&tuple->v);
+        return NULL;
+    }
     str->chars = chars;
     s = str->data;
     memcpy(s, "namespace({", 11);

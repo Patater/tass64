@@ -219,7 +219,11 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
         }
         list->len = i;
     } else if (chars > maxsize) return NULL;
-    v = new_str(len);
+    v = new_str2(len);
+    if (v == NULL) {
+        if (list != NULL) val_destroy(&list->v);
+        return NULL;
+    }
     v->chars = chars;
     s = v->data;
     if (tupleorlist) *s++ = (o1->obj == LIST_OBJ) ? '[' : '(';

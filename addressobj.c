@@ -168,7 +168,8 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         return NULL;
     }
 
-    v = new_str(len);
+    v = new_str2(len);
+    if (v == NULL) goto error;
     v->chars = chars;
     s = v->data;
     if (ind != 0) {
