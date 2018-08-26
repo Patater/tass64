@@ -3555,6 +3555,8 @@ closing/opening directive '?' not found
     couldn't find the other half of block directive pair
 conflict
     at least one feature is provided, which shouldn't be there
+conversion of ? '?' to ? is not possible
+    this type conversion can't be done
 division by zero
     dividing with zero can't be done
 double defined escape

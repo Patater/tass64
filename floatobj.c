@@ -54,8 +54,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ADDRESS: return float_from_address((Address *)v1, epoint);
     default: break;
     }
-    err_msg_wrong_type(v1, NULL, epoint);
-    return (Obj *)ref_none();
+    return (Obj *)new_error_conv(v1, FLOAT_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {

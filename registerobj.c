@@ -18,7 +18,6 @@
 */
 #include "registerobj.h"
 #include <string.h>
-#include "error.h"
 #include "eval.h"
 #include "variables.h"
 #include "values.h"
@@ -69,8 +68,7 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
         }
     default: break;
     }
-    err_msg_wrong_type(o1, STR_OBJ, epoint);
-    return (Obj *)ref_none();
+    return (Obj *)new_error_conv(o1, REGISTER_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {

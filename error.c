@@ -516,6 +516,20 @@ static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val, li
     err_msg_variable(val, epoint);
 }
 
+static void err_msg_invalid_conv(Obj *v1, const Type *t, linepos_t epoint) {
+    if (v1->obj == ERROR_OBJ) {
+        err_msg_output((const Error *)v1);
+        return;
+    }
+    new_error_msg(SV_ERROR, current_file_list, epoint);
+    adderror("conversion of ");
+    adderror(v1->obj->name);
+    err_msg_variable(v1, epoint);
+    adderror(" to ");
+    adderror(t->name);
+    adderror(" is not possible");
+}
+
 static int notdefines_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct notdefines_s *a = cavltree_container_of(aa, struct notdefines_s, node);
@@ -643,6 +657,7 @@ static void err_msg_key_error(Obj *val, const char *msg, linepos_t epoint) {
 void err_msg_output(const Error *val) {
     switch (val->num) {
     case ERROR___NOT_DEFINED: err_msg_not_defined2(&val->u.notdef.ident, val->u.notdef.names, val->u.notdef.down, &val->epoint);break;
+    case ERROR__INVALID_CONV: err_msg_invalid_conv(val->u.conv.val, val->u.conv.t, &val->epoint);break;
     case ERROR__INVALID_OPER: err_msg_invalid_oper(val->u.invoper.op, val->u.invoper.v1, val->u.invoper.v2, &val->epoint);break;
     case ERROR____STILL_NONE: err_msg_still_none(NULL, &val->epoint); break;
     case ERROR_____CANT_IVAL:

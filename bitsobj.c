@@ -70,8 +70,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
          return ret;
     default: break;
     }
-    err_msg_wrong_type(v1, NULL, epoint);
-    return (Obj *)ref_none();
+    return (Obj *)new_error_conv(v1, BITS_OBJ, epoint);
 }
 
 static inline size_t bitslen(const Bits *v1) {

@@ -52,6 +52,8 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
         val_destroy(v1->u.key);
+    case ERROR__INVALID_CONV:
+        val_destroy(v1->u.conv.val);
         return;
     default: return;
     }
@@ -98,6 +100,8 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
         v = v1->u.key;
+    case ERROR__INVALID_CONV:
+        v = v1->u.conv.val;
         break;
     default: return;
     }
@@ -135,6 +139,15 @@ MALLOC Error *new_error_key(Error_types num, Obj *v1, linepos_t epoint) {
     v->num = num;
     v->epoint = *epoint;
     v->u.key = val_reference(v1);
+    return v;
+}
+
+MALLOC Error *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
+    Error *v = (Error *)val_alloc(ERROR_OBJ);
+    v->num = ERROR__INVALID_CONV;
+    v->epoint = *epoint;
+    v->u.conv.t = t;
+    v->u.conv.val = val_reference(v1);
     return v;
 }
 

@@ -49,6 +49,11 @@ typedef struct Error {
             Obj *val;
         } intconv;
         const char *objname;
+        struct {
+            const struct Type *t;
+            Obj *val;
+        } conv;
+        Obj *obj;
         uint32_t addressing;
         struct Register *reg;
         size_t opers;
@@ -65,5 +70,6 @@ extern void errorobj_init(void);
 extern MALLOC Error *new_error(Error_types, linepos_t);
 extern MALLOC Error *new_error_mem(linepos_t);
 extern MALLOC Error *new_error_key(Error_types, Obj *, linepos_t);
+extern MALLOC Error *new_error_conv(Obj *, struct Type *, linepos_t);
 
 #endif
