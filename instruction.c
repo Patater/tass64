@@ -157,7 +157,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 case 0xC0:
                 case 0xA2:
                 case 0xA0:  /* cpx cpy ldx ldy */
-                    adrgen = (am == A_IMMEDIATE) ? (longindex ? AG_SWORD : AG_SBYTE) : (longindex ? AG_SINT : AG_CHAR);
+                    adrgen = ((w == 1 || longindex) && w != 0) ? ((am == A_IMMEDIATE) ? AG_SWORD : AG_SINT) : ((am == A_IMMEDIATE) ? AG_SBYTE: AG_CHAR);
                     break;
                 case 0xF4: /* pea/phw #$ffff */
                     adrgen = (am == A_IMMEDIATE) ? AG_SWORD : AG_SINT;
@@ -176,7 +176,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                     adrgen = (am == A_IMMEDIATE) ? AG_SBYTE : AG_CHAR;
                     break;
                 default:
-                    adrgen = (am == A_IMMEDIATE) ? (longaccu ? AG_SWORD : AG_SBYTE) : (longaccu ? AG_SINT : AG_CHAR);
+                    adrgen = ((w == 1 || longaccu) && w != 0) ? ((am == A_IMMEDIATE) ? AG_SWORD : AG_SINT) : ((am == A_IMMEDIATE) ? AG_SBYTE: AG_CHAR);
                 }
                 break;
             case (A_IMMEDIATE << 4) | A_BR: /* lda #$ffff,b */
