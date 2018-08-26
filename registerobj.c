@@ -44,13 +44,6 @@ static inline MALLOC Register *new_register(void) {
     return (Register *)val_alloc(REGISTER_OBJ);
 }
 
-static uint8_t *rnew(Register *v, size_t len) {
-    if (len > sizeof v->val) {
-        return (uint8_t *)mallocx(len);
-    }
-    return v->val;
-}
-
 static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
     uint8_t *s;
     switch (o1->obj->type) {
@@ -64,8 +57,11 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
             Register *v = new_register();
             v->chars = v1->chars;
             v->len = v1->len;
-            if (v1->len != 0) {
-                s = rnew(v, v->len);
+            if (v->len != 0) {
+                if (v->len > sizeof v->val) {
+                    s = (uint8_t *)malloc(v->len);
+                    if (s == NULL) return (Obj *)new_error_mem(epoint);
+                } else s = v->val;
                 memcpy(s, v1->data, v->len);
             } else s = NULL;
             v->data = s;
@@ -100,7 +96,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     return NULL;
 }
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Register *v1 = (Register *)o1;
     size_t i2, i;
     uint8_t *s, *s2;
@@ -110,7 +106,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     i = str_quoting(v1->data, v1->len, &q);
 
     i2 = i + 12;
-    if (i2 < 12) err_msg_out_of_memory(); /* overflow */
+    if (i2 < 12) return (Obj *)new_error_mem(epoint); /* overflow */
     chars = i2 - (v1->len - v1->chars);
     if (chars > maxsize) return NULL;
     v = new_str(i2);
