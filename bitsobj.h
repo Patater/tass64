@@ -28,8 +28,11 @@ typedef struct Bits {
     Obj v;
     ssize_t len;
     size_t bits;
-    bdigit_t val[2];
     bdigit_t *data;
+    union {
+        bdigit_t val[2];
+        int hash;
+    } u;
 } Bits;
 
 extern Bits *null_bits;

@@ -26,7 +26,10 @@ typedef struct Bytes {
     Obj v;
     ssize_t len;
     uint8_t *data;
-    uint8_t val[16];
+    union {
+        uint8_t val[16];
+        int hash;
+    } u;
 } Bytes;
 
 extern Bytes *null_bytes;

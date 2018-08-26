@@ -80,29 +80,31 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 
 static FAST_CALL void destroy(Obj *o1) {
     Bytes *v1 = (Bytes *)o1;
-    if (v1->val != v1->data) free(v1->data);
+    if (v1->u.val != v1->data) free(v1->data);
 }
 
 MALLOC Bytes *new_bytes(size_t ln) {
     Bytes *v = (Bytes *)val_alloc(BYTES_OBJ);
-    if (ln > sizeof v->val) {
+    if (ln > sizeof v->u.val) {
+        v->u.hash = -1;
         v->data = (uint8_t *)mallocx(ln);
     } else {
-        v->data = v->val;
+        v->data = v->u.val;
     }
     return v;
 }
 
 static MALLOC Bytes *new_bytes2(size_t ln) {
     Bytes *v = (Bytes *)val_alloc(BYTES_OBJ);
-    if (ln > sizeof v->val) {
+    if (ln > sizeof v->u.val) {
+        v->u.hash = -1;
         v->data = (uint8_t *)malloc(ln);
         if (v->data == NULL) {
             val_destroy(&v->v);
             v = NULL;
         }
     } else {
-        v->data = v->val;
+        v->data = v->u.val;
     }
     return v;
 }
@@ -229,6 +231,10 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     size_t l = byteslen(v1);
     const uint8_t *s2 = v1->data;
     unsigned int h;
+    if (s2 != v1->u.val && v1->u.hash >= 0) {
+        *hs = v1->u.hash;
+        return NULL;
+    }
     if (l == 0) {
         *hs = 0;
         return NULL;
@@ -236,7 +242,9 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     h = (unsigned int)*s2 << 7;
     while ((l--) != 0) h = (1000003 * h) ^ *s2++;
     h ^= (unsigned int)v1->len;
-    *hs = h & ((~0U) >> 1);
+    h &= ((~0U) >> 1);
+    if (v1->data != v1->u.val) v1->u.hash = h;
+    *hs = h;
     return NULL;
 }
 
@@ -254,7 +262,7 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
             }
             return (Obj *)new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint);
         }
-        if (len < sizeof v->val) len = sizeof v->val;
+        if (len < sizeof v->u.val) len = sizeof v->u.val;
         if (len == 0) {
             return (Obj *)ref_bytes(null_bytes);
         }
@@ -264,12 +272,13 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
         encode_string_init(v1, epoint);
         while ((ch = encode_string()) != EOF) {
             if (len2 >= len) {
-                if (v->val == s) {
+                if (v->u.val == s) {
                     len = 32;
                     s = (uint8_t *)malloc(len);
                     if (s == NULL) goto failed2;
                     v->data = s;
-                    memcpy(s, v->val, len2);
+                    memcpy(s, v->u.val, len2);
+                    v->u.hash = -1;
                 } else {
                     len += 1024;
                     if (len < 1024) goto failed2; /* overflow */
@@ -298,11 +307,11 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
         case BYTES_MODE_NULL_CHECK:
         case BYTES_MODE_TEXT: break;
         }
-        if (v->val != s) {
-            if (len2 <= sizeof v->val) {
-                if (len2 != 0) memcpy(v->val, s, len2);
+        if (v->u.val != s) {
+            if (len2 <= sizeof v->u.val) {
+                if (len2 != 0) memcpy(v->u.val, s, len2);
                 free(s);
-                v->data = v->val;
+                v->data = v->u.val;
             } else if (len2 < len) {
                 s = (uint8_t *)realloc(s, len2);
                 if (s == NULL) goto failed2;
@@ -459,11 +468,11 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
     }
 
     while (sz != 0 && d[sz - 1] == 0) sz--;
-    if (v->val != d) {
-        if (sz <= sizeof v->val) {
-            if (sz != 0) memcpy(v->val, d, sz);
+    if (v->u.val != d) {
+        if (sz <= sizeof v->u.val) {
+            if (sz != 0) memcpy(v->u.val, d, sz);
             free(d);
-            v->data = v->val;
+            v->data = v->u.val;
         } else if (sz < i) {
             d = (uint8_t *)realloc(d, sz);
             if (d == NULL) goto failed2;

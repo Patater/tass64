@@ -28,7 +28,10 @@ typedef struct Str {
     size_t len;
     size_t chars;
     uint8_t *data;
-    uint8_t val[16];
+    union {
+        uint8_t val[16];
+        int hash;
+    } u;
 } Str;
 
 extern Str *null_str;

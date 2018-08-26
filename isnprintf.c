@@ -576,7 +576,8 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
     str = new_str(0);
     str->len = return_value.len;
     str->chars = return_value.chars;
-    if (return_value.len > sizeof str->val) {
+    if (return_value.len > sizeof str->u.val) {
+        str->u.hash = -1;
         if (returnsize > return_value.len) {
             uint8_t *d = (uint8_t *)realloc(return_value.data, return_value.len);
             if (d != NULL) {
@@ -587,8 +588,8 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         str->data = return_value.data;
         return &str->v;
     }
-    memcpy(str->val, return_value.data, return_value.len);
-    str->data = str->val;
+    memcpy(str->u.val, return_value.data, return_value.len);
+    str->data = str->u.val;
     free(return_value.data);
     return &str->v;
 error:
