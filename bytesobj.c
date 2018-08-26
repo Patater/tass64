@@ -197,7 +197,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     return DEFAULT_OBJ->truth(o1, type, epoint);
 }
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Bytes *v1 = (Bytes *)o1;
     static const char *hex = "0123456789abcdef";
     size_t i, len, len2, sz;
@@ -207,9 +207,10 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     len2 = sz * 2;
     len = (v1->len < 0) ? 9 : 8;
     len += len2;
-    if (len < len2 || sz > SIZE_MAX / 2) return (epoint != NULL) ? (Obj *)new_error_mem(epoint) : NULL; /* overflow */
+    if (len < len2 || sz > SIZE_MAX / 2) return NULL; /* overflow */
     if (len > maxsize) return NULL;
-    v = new_str(len);
+    v = new_str2(len);
+    if (v == NULL) return NULL;
     v->chars = len;
     s = v->data;
 

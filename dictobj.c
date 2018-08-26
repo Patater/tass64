@@ -241,7 +241,11 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         }
         list->len = i + def;
     }
-    str = new_str(ln);
+    str = new_str2(ln);
+    if (str == NULL) {
+        if (list != NULL) val_destroy(&list->v);
+        return NULL;
+    }
     str->chars = chars;
     s = str->data;
     *s++ = '{';

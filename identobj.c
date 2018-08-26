@@ -33,7 +33,7 @@ Type *const IDENT_OBJ = &ident_obj;
 Type *const ANONIDENT_OBJ = &anonident_obj;
 
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Ident *v1 = (Ident *)o1;
     size_t i2, i;
     uint8_t *s;
@@ -45,10 +45,11 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     i = str_quoting(s2, len, &q);
 
     i2 = i + 9;
-    if (i2 < 9) return (Obj *)new_error_mem(epoint); /* overflow */
+    if (i2 < 9) return NULL; /* overflow */
     chars = i2 - (len - calcpos(s2, len));
     if (chars > maxsize) return NULL;
-    v = new_str(i2);
+    v = new_str2(i2);
+    if (v == NULL) return NULL;
     v->chars = chars;
     s = v->data;
 
@@ -71,7 +72,8 @@ static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsi
     Str *v;
     size_t len = v1->count < 0 ? -v1->count : (v1->count + 1);
     if (len > maxsize) return NULL;
-    v = new_str(len);
+    v = new_str2(len);
+    if (v == NULL) return NULL;
     v->chars = len;
     memset(v->data, v1->count >= 0 ? '+' : '-', len);
     return &v->v;

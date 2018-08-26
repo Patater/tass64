@@ -58,9 +58,10 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Str *v;
     if (epoint == NULL) return NULL;
     len = v1->name.len + 20;
-    if (len < 20) return (Obj *)new_error_mem(epoint); /* overflow */
+    if (len < 20) return NULL; /* overflow */
     if (len > maxsize) return NULL;
-    v = new_str(len);
+    v = new_str2(len);
+    if (v == NULL) return NULL;
     v->chars = len;
     s = v->data;
     memcpy(s, "<native_function '", 18);

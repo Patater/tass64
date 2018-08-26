@@ -96,7 +96,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     return NULL;
 }
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Register *v1 = (Register *)o1;
     size_t i2, i;
     uint8_t *s, *s2;
@@ -106,10 +106,11 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     i = str_quoting(v1->data, v1->len, &q);
 
     i2 = i + 12;
-    if (i2 < 12) return (Obj *)new_error_mem(epoint); /* overflow */
+    if (i2 < 12) return NULL; /* overflow */
     chars = i2 - (v1->len - v1->chars);
     if (chars > maxsize) return NULL;
-    v = new_str(i2);
+    v = new_str2(i2);
+    if (v == NULL) return NULL;
     v->chars = chars;
     s = v->data;
 

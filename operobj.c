@@ -123,7 +123,8 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     len = strlen(txt);
     len2 = len + 8;
     if (len2 > maxsize) return NULL;
-    v = new_str(len2);
+    v = new_str2(len2);
+    if (v == NULL) return NULL;
     v->chars = len2;
     s = v->data;
     memcpy(s, "<oper ", 6);

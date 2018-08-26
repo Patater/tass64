@@ -56,7 +56,8 @@ static MUST_CHECK Error *hash(Obj *UNUSED(v1), int *hs, linepos_t UNUSED(epoint)
 static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t maxsize) {
     Str *v;
     if (3 > maxsize) return NULL;
-    v = new_str(3);
+    v = new_str2(3);
+    if (v == NULL) return NULL;
     v->chars = 3;
     memset(v->data, '.', 3);
     return &v->v;
