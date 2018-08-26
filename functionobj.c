@@ -421,7 +421,11 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
     case F_ROUND: return o1->obj->function(o1, TF_ROUND, epoint);
     case F_TRUNC: return o1->obj->function(o1, TF_TRUNC, epoint);
     case F_ABS: return o1->obj->function(o1, TF_ABS, epoint);
-    case F_REPR: return o1->obj->repr(o1, epoint, SIZE_MAX);
+    case F_REPR:
+        {
+            Obj *v = o1->obj->repr(o1, epoint, SIZE_MAX);
+            return v != NULL ? v : (Obj *)new_error_mem(epoint);
+        }
     default: break;
     }
     if (o1->obj == FLOAT_OBJ) {

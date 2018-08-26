@@ -180,14 +180,14 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Obj *v;
     Str *str;
     uint8_t *s;
-    unsigned int def = (v1->def != NULL) ? 1 : 0;
+    size_t def = (v1->def != NULL) ? 1 : 0;
     if (v1->len != 0 || def != 0) {
         ln = v1->len * 2;
-        if (ln < v1->len) err_msg_out_of_memory(); /* overflow */
+        if (ln < v1->len) return NULL; /* overflow */
         ln += def;
-        if (ln < def) err_msg_out_of_memory(); /* overflow */
+        if (ln < def) return NULL; /* overflow */
         chars = ln + 1 + def;
-        if (chars < ln) err_msg_out_of_memory(); /* overflow */
+        if (chars < ln) return NULL; /* overflow */
         if (chars > maxsize) return NULL;
         list = new_tuple(ln);
         vals = list->data;
@@ -200,7 +200,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                 if (v == NULL || v->obj != STR_OBJ) goto error;
                 str = (Str *)v;
                 ln += str->len;
-                if (ln < str->len) err_msg_out_of_memory(); /* overflow */
+                if (ln < str->len) goto error2; /* overflow */
                 chars += str->chars;
                 if (chars > maxsize) goto error2;
                 vals[i++] = v;
@@ -209,7 +209,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                     if (v == NULL || v->obj != STR_OBJ) goto error;
                     str = (Str *)v;
                     ln += str->len;
-                    if (ln < str->len) err_msg_out_of_memory(); /* overflow */
+                    if (ln < str->len) goto error2; /* overflow */
                     chars += str->chars;
                     if (chars > maxsize) goto error2;
                 } else {
@@ -223,22 +223,19 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         }
         if (def != 0) {
             v = v1->def->obj->repr(v1->def, epoint, maxsize - chars);
-            if (v == NULL || v->obj != STR_OBJ) {
+            if (v == NULL || v->obj != STR_OBJ) goto error;
+            str = (Str *)v;
+            ln += str->len;
+            if (ln < str->len) goto error2; /* overflow */
+            chars += str->chars;
+            if (chars > maxsize) {
+            error2:
+                val_destroy(v);
+                v = NULL;
             error:
                 list->len = i;
                 val_destroy(&list->v);
                 return v;
-            }
-            str = (Str *)v;
-            ln += str->len;
-            if (ln < str->len) err_msg_out_of_memory(); /* overflow */
-            chars += str->chars;
-            if (chars > maxsize) {
-            error2:
-                list->len = i;
-                val_destroy(&list->v);
-                val_destroy(v);
-                return NULL;
             }
             vals[i] = v;
         }

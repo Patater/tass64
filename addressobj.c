@@ -160,9 +160,10 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     if (tmp == NULL || tmp->obj != STR_OBJ) return tmp;
     str = (Str *)tmp;
     len = chars + str->len;
-    if (len < chars) err_msg_out_of_memory(); /* overflow */
+    if (len < chars) goto error; /* overflow */
     chars += str->chars;
     if (chars > maxsize) {
+    error:
         val_destroy(tmp);
         return NULL;
     }
