@@ -136,7 +136,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         bool first = true;
         ln = v1->len;
         chars = ln + 12;
-        if (chars < 1) err_msg_out_of_memory(); /* overflow */
+        if (chars < 1) return NULL; /* overflow */
         if (chars > maxsize) return NULL;
         tuple = new_tuple(ln);
         vals = tuple->data;
@@ -154,20 +154,19 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                 continue;
             }
             v = key->obj->repr(key, epoint, maxsize - chars);
-            if (v == NULL || v->obj != STR_OBJ) {
+            if (v == NULL || v->obj != STR_OBJ) goto error;
+            str = (Str *)v;
+            ln += str->len;
+            if (ln < str->len) goto error2; /* overflow */
+            chars += str->chars;
+            if (chars > maxsize) {
+            error2:
+                val_destroy(v);
+                v = NULL;
+            error:
                 tuple->len = i;
                 val_destroy(&tuple->v);
                 return v;
-            }
-            str = (Str *)v;
-            ln += str->len;
-            if (ln < str->len) err_msg_out_of_memory(); /* overflow */
-            chars += str->chars;
-            if (chars > maxsize) {
-                tuple->len = i;
-                val_destroy(&tuple->v);
-                val_destroy(v);
-                return NULL;
             }
             vals[i++] = v;
         }

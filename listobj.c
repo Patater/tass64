@@ -186,48 +186,34 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
     uint8_t *s;
     size_t llen = v1->len;
     if (llen != 0) {
+        i = (llen != 1 || o1->obj != TUPLE_OBJ) ? (llen - 1) : llen;
+        len += i;
+        if (len < i) return NULL; /* overflow */
+        chars = len;
+        if (chars > maxsize) return NULL;
         list = (Tuple *)val_alloc(TUPLE_OBJ);
         vals = lnew(list, llen);
         if (vals == NULL) return (Obj *)new_error_mem(epoint);
-        i = (llen != 1 || o1->obj != TUPLE_OBJ) ? (llen - 1) : llen;
-        len += i;
-        if (len < i) {
-            list->len = 0;
-            val_destroy(&list->v);
-            return (Obj *)new_error_mem(epoint); /* overflow */
-        }
-        chars = len;
-        if (chars > maxsize) {
-            list->len = 0;
-            val_destroy(&list->v);
-            return NULL;
-        }
         for (i = 0;i < llen; i++) {
             Obj *o2 = v1->data[i];
             if (o2 == &default_value->v && o1->obj == COLONLIST_OBJ) {
                 val = (Obj *)ref_str(null_str);
             } else {
                 val = o2->obj->repr(o2, epoint, maxsize - chars);
-                if (val == NULL || val->obj != STR_OBJ) {
-                    list->len = i;
-                    val_destroy(&list->v);
-                    return val;
-                }
+                if (val == NULL || val->obj != STR_OBJ) goto error;
             }
             v = (Str *)val;
             len += v->len;
-            if (len < v->len) {
-                list->len = i;
-                val_destroy(&list->v);
-                val_destroy(val);
-                return (Obj *)new_error_mem(epoint); /* overflow */
-            }
+            if (len < v->len) goto error2; /* overflow */
             chars += v->chars;
             if (chars > maxsize) {
+            error2:
+                val_destroy(val);
+                val = NULL;
+            error:
                 list->len = i;
                 val_destroy(&list->v);
-                val_destroy(val);
-                return NULL;
+                return val;
             }
             vals[i] = val;
         }

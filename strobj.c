@@ -41,11 +41,15 @@ Type *const STR_OBJ = &obj;
 Str *null_str;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    Obj *v;
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR:
-    case T_STR: return val_reference(v1);
-    default: return v1->obj->repr(v1, epoint, SIZE_MAX);
+    case T_STR:
+        return val_reference(v1);
+    default:
+        v = v1->obj->repr(v1, epoint, SIZE_MAX);
+        return v != NULL ? v : (Obj *)new_error_mem(epoint);
     }
 }
 
