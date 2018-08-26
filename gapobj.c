@@ -35,6 +35,7 @@ static Type obj;
 
 Type *const GAP_OBJ = &obj;
 Gap *gap_value;
+static Str *gap_repr = NULL;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
@@ -57,13 +58,14 @@ static MUST_CHECK Error *hash(Obj *UNUSED(v1), int *hs, linepos_t UNUSED(epoint)
 }
 
 static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t maxsize) {
-    Str *v;
     if (1 > maxsize) return NULL;
-    v = new_str2(1);
-    if (v == NULL) return NULL;
-    v->chars = 1;
-    v->data[0] = '?';
-    return &v->v;
+    if (gap_repr == NULL) {
+        gap_repr = new_str2(1);
+        if (gap_repr == NULL) return NULL;
+        gap_repr->chars = 1;
+        gap_repr->data[0] = '?';
+    }
+    return val_reference(&gap_repr->v);
 }
 
 static MUST_CHECK Obj *function(Obj *v1, Func_types UNUSED(f), linepos_t UNUSED(epoint)) {
@@ -218,7 +220,9 @@ void gapobj_names(void) {
 void gapobj_destroy(void) {
 #ifdef DEBUG
     if (gap_value->v.refcount != 1) fprintf(stderr, "gap %" PRIuSIZE "\n", gap_value->v.refcount - 1);
+    if (gap_repr->v.refcount != 1) fprintf(stderr, "gaprepr %" PRIuSIZE "\n", gap_repr->v.refcount - 1);
 #endif
 
     val_destroy(&gap_value->v);
+    if (gap_repr != NULL) val_destroy(&gap_repr->v);
 }
