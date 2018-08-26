@@ -55,7 +55,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 
 static FAST_CALL void destroy(Obj *o1) {
     Str *v1 = (Str *)o1;
-    if (v1->val != v1->data) free(v1->data);
+    if (v1->u.val != v1->data) free(v1->data);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -116,10 +116,11 @@ bool tostr(const struct values_s *v1, str_t *out) {
 static MALLOC Str *new_str2(size_t ln) {
     Str *v = (Str *)val_alloc(STR_OBJ);
     v->len = ln;
-    if (ln <= sizeof v->val) {
-        v->data = v->val;
+    if (ln <= sizeof v->u.val) {
+        v->data = v->u.val;
         return v;
     }
+    v->u.hash = -1;
     v->data = (uint8_t *)malloc(ln);
     if (v->data == NULL) {
         val_destroy(&v->v);
@@ -164,6 +165,10 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     size_t l = v1->len;
     const uint8_t *s2 = v1->data;
     unsigned int h;
+    if (s2 != v1->u.val && v1->u.hash >= 0) {
+        *hs = v1->u.hash;
+        return NULL;
+    }
     if (l == 0) {
         *hs = 0;
         return NULL;
@@ -171,7 +176,9 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     h = (unsigned int)*s2 << 7;
     while ((l--) != 0) h = (1000003 * h) ^ *s2++;
     h ^= v1->len;
-    *hs = h & ((~0U) >> 1);
+    h &= ((~0U) >> 1);
+    if (v1->data != v1->u.val) v1->u.hash = h;
+    *hs = h;
     return NULL;
 }
 
@@ -299,11 +306,12 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
 MALLOC Str *new_str(size_t ln) {
     Str *v = (Str *)val_alloc(STR_OBJ);
     v->len = ln;
-    if (ln > sizeof v->val) {
+    if (ln > sizeof v->u.val) {
+        v->u.hash = -1;
         v->data = (uint8_t *)mallocx(ln);
         return v;
     }
-    v->data = v->val;
+    v->data = v->u.val;
     return v;
 }
 
@@ -541,11 +549,12 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                     const uint8_t *r = o;
                     m += 4096;
                     if (m < 4096) goto failed2; /* overflow */
-                    if (o == v->val) {
+                    if (o == v->u.val) {
                         o = (uint8_t *)malloc(m);
                         if (o == NULL) goto failed2;
                         v->data = o;
-                        memcpy(o, v->val, m - 4096);
+                        memcpy(o, v->u.val, m - 4096);
+                        v->u.hash = -1;
                     } else {
                         o = (uint8_t *)realloc(o, m);
                         if (o == NULL) goto failed2;
@@ -557,11 +566,11 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             }
             len1 = i;
             len2 = (size_t)(p2 - o);
-            if (o != v->val) {
-                if (len2 <= sizeof v->val) {
-                    memcpy(v->val, o, len2);
+            if (o != v->u.val) {
+                if (len2 <= sizeof v->u.val) {
+                    memcpy(v->u.val, o, len2);
                     free(o);
-                    v->data = v->val;
+                    v->data = v->u.val;
                 } else {
                     o = (uint8_t *)realloc(o, len2);
                     if (o == NULL) goto failed2;
@@ -644,11 +653,11 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 }
             }
             len2 = (size_t)(p2 - o);
-            if (o != v->val) {
-                if (len2 <= sizeof v->val) {
-                    memcpy(v->val, o, len2);
+            if (o != v->u.val) {
+                if (len2 <= sizeof v->u.val) {
+                    memcpy(v->u.val, o, len2);
                     free(o);
-                    v->data = v->val;
+                    v->data = v->u.val;
                 } else {
                     o = (uint8_t *)realloc(o, len2);
                     if (o == NULL) goto failed2;
