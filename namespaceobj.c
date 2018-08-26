@@ -131,6 +131,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Tuple *tuple = NULL;
     uint8_t *s;
 
+    if (epoint == NULL) return NULL;
     if (v1->len != 0) {
         const struct avltree_node *n;
         bool first = true;
