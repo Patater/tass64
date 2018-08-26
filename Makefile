@@ -109,7 +109,8 @@ gapobj.o: gapobj.c gapobj.h obj.h attributes.h inttypes.h error.h \
  stdbool.h errors_e.h avl.h str.h eval.h variables.h values.h strobj.h \
  operobj.h intobj.h boolobj.h typeobj.h noneobj.h errorobj.h
 identobj.o: identobj.c identobj.h obj.h attributes.h inttypes.h str.h \
- eval.h stdbool.h unicode.h unicodedata.h typeobj.h operobj.h strobj.h
+ eval.h stdbool.h unicode.h unicodedata.h typeobj.h errorobj.h errors_e.h \
+ operobj.h strobj.h
 instruction.o: instruction.c instruction.h attributes.h stdbool.h \
  inttypes.h opcodes.h obj.h 64tass.h wait_e.h section.h avl.h str.h mem.h \
  file.h listing.h error.h errors_e.h longjump.h arguments.h optimizer.h \

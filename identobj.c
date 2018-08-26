@@ -22,6 +22,7 @@
 #include "unicode.h"
 
 #include "typeobj.h"
+#include "errorobj.h"
 #include "operobj.h"
 #include "strobj.h"
 
@@ -31,14 +32,37 @@ static Type anonident_obj;
 Type *const IDENT_OBJ = &ident_obj;
 Type *const ANONIDENT_OBJ = &anonident_obj;
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Ident *v1 = (Ident *)o1;
+    size_t i2, i;
+    uint8_t *s;
+    const uint8_t *s2 = v1->name.data;
+    uint8_t q;
+    size_t chars;
     Str *v;
     size_t len = v1->name.len;
-    if (len > maxsize) return NULL;
-    v = new_str(len);
-    v->chars = calcpos(v1->name.data, len);
-    memcpy(v->data, v1->name.data, len);
+    i = str_quoting(s2, len, &q);
+
+    i2 = i + 9;
+    if (i2 < 9) return (Obj *)new_error_mem(epoint); /* overflow */
+    chars = i2 - (len - calcpos(s2, len));
+    if (chars > maxsize) return NULL;
+    v = new_str(i2);
+    v->chars = chars;
+    s = v->data;
+
+    memcpy(s, "ident(", 6);
+    s += 6;
+    *s++ = q;
+    for (i = 0; i < len; i++) {
+        s[i] = s2[i];
+        if (s[i] == q) {
+            s++; s[i] = q;
+        }
+    }
+    s[i] = q;
+    s[i + 1] = ')';
     return &v->v;
 }
 
