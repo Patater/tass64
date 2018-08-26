@@ -1511,7 +1511,7 @@ static bool get_exp2(int stop) {
         case ',':
             lpoint.pos++;
             llen = get_label();
-            if (llen == 1) {
+            if (llen == 1 && pline[epoint.pos + 2] != '"' && pline[epoint.pos + 2] != '\'') {
                 switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
                 case 'x': op = &o_COMMAX; break;
                 case 'y': op = &o_COMMAY; break;
