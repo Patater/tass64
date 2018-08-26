@@ -201,6 +201,7 @@ static inline MUST_CHECK Obj *decimal(struct DATA *p, const struct values_s *v)
 
     minus = (((Int *)err)->len < 0);
     err2 = err->obj->repr(err, &v->epoint, SIZE_MAX);
+    if (err2 == NULL) err2 = (Obj *)new_error_mem(&v->epoint);
     val_destroy(err);
     if (err2->obj != STR_OBJ) return err2;
 
@@ -334,8 +335,10 @@ static inline MUST_CHECK Obj *strings(struct DATA *p, const struct values_s *v)
         none = listp;
         return NULL;
     }
-    if (*p->pf == 'r') err = val->obj->repr(val, &v->epoint, SIZE_MAX);
-    else err = STR_OBJ->create(val, &v->epoint);
+    if (*p->pf == 'r') {
+        err = val->obj->repr(val, &v->epoint, SIZE_MAX);
+        if (err == NULL) err = (Obj *)new_error_mem(&v->epoint);
+    } else err = STR_OBJ->create(val, &v->epoint);
     if (err->obj != STR_OBJ) {
         if (err == &none_value->v) {
             none = listp;
