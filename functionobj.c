@@ -40,6 +40,16 @@ static Type obj;
 
 Type *const FUNCTION_OBJ = &obj;
 
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    switch (v1->obj->type) {
+    case T_NONE:
+    case T_ERROR:
+    case T_FUNCTION: return val_reference(v1);
+    default: break;
+    }
+    return (Obj *)new_error_conv(v1, FUNCTION_OBJ, epoint);
+}
+
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Function *v1 = (const Function *)o1, *v2 = (const Function *)o2;
     return o2->obj == FUNCTION_OBJ && v1->func == v2->func;
@@ -654,6 +664,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
 void functionobj_init(void) {
     new_type(&obj, T_FUNCTION, "function", sizeof(Function));
+    obj.create = create;
     obj.hash = hash;
     obj.same = same;
     obj.repr = repr;
