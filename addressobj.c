@@ -52,8 +52,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ADDRESS: return val_reference(v1);
     default: break;
     }
-    err_msg_wrong_type(v1, NULL, epoint);
-    return (Obj *)ref_none();
+    return (Obj *)new_error_conv(v1, ADDRESS_OBJ, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {
@@ -275,32 +274,28 @@ static MUST_CHECK Error *uval2(Obj *o1, uval_t *uv, unsigned int bits, linepos_t
 
 MUST_CHECK Obj *float_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE) {
-        err_msg_wrong_type(&v1->v, NULL, epoint);
-        return (Obj *)ref_none();
+        return (Obj *)new_error_conv(&v1->v, FLOAT_OBJ, epoint);
     }
     return FLOAT_OBJ->create(v1->val, epoint);
 }
 
 MUST_CHECK Obj *int_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE) {
-        err_msg_wrong_type(&v1->v, NULL, epoint);
-        return (Obj *)ref_none();
+        return (Obj *)new_error_conv(&v1->v, INT_OBJ, epoint);
     }
     return INT_OBJ->create(v1->val, epoint);
 }
 
 MUST_CHECK Obj *bits_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE) {
-        err_msg_wrong_type(&v1->v, NULL, epoint);
-        return (Obj *)ref_none();
+        return (Obj *)new_error_conv(&v1->v, BITS_OBJ, epoint);
     }
     return BITS_OBJ->create(v1->val, epoint);
 }
 
 MUST_CHECK Obj *bytes_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE) {
-        err_msg_wrong_type(&v1->v, NULL, epoint);
-        return (Obj *)ref_none();
+        return (Obj *)new_error_conv(&v1->v, BYTES_OBJ, epoint);
     }
     return BYTES_OBJ->create(v1->val, epoint);
 }

@@ -81,8 +81,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
         return val_reference(&((Struct *)v1)->names->v);
     default: break;
     }
-    err_msg_wrong_type(v1, NULL, epoint);
-    return (Obj *)ref_none();
+    return (Obj *)new_error_conv(v1, NAMESPACE_OBJ, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {

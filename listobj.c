@@ -122,8 +122,7 @@ static MUST_CHECK Obj *list_create(Obj *o1, linepos_t epoint) {
     case T_CODE: return tuple_from_code((Code *)o1, LIST_OBJ, epoint);
     default: break;
     }
-    err_msg_wrong_type(o1, NULL, epoint);
-    return (Obj *)ref_none();
+    return (Obj *)new_error_conv(o1, LIST_OBJ, epoint);
 }
 
 static MUST_CHECK Obj *tuple_create(Obj *o1, linepos_t epoint) {
@@ -135,8 +134,7 @@ static MUST_CHECK Obj *tuple_create(Obj *o1, linepos_t epoint) {
     case T_CODE: return tuple_from_code((Code *)o1, TUPLE_OBJ, epoint);
     default: break;
     }
-    err_msg_wrong_type(o1, NULL, epoint);
-    return (Obj *)ref_none();
+    return (Obj *)new_error_conv(o1, TUPLE_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
