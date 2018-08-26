@@ -405,7 +405,6 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 bool labelexists;
                 uint16_t xadr;
                 uval_t oadr;
-                bool labelexists2;
                 bool crossbank;
                 ln = 1; opr = ADR_REL;
                 longbranch = 0;
@@ -427,19 +426,17 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 xadr = (uint16_t)adr;
                 s = new_star(vline + 1, &labelexists);
 
-                labelexists2 = labelexists;
                 oadr = uval;
-                if (labelexists2 && oval->obj == ADDRESS_OBJ) {
+                if (labelexists && oval->obj == ADDRESS_OBJ) {
                     oval = ((Address *)oval)->val;
                 }
-                if (labelexists2 && oval->obj == CODE_OBJ && pass != ((Code *)oval)->apass) {
+                if (labelexists && oval->obj == CODE_OBJ && pass != ((Code *)oval)->apass && cnmemonic[ADR_REL_L] == ____) { /* not for 65CE02! */
                     adr = (uint16_t)(uval - s->addr);
                 } else {
-                    adr = (uint16_t)(uval - current_address->l_address.address - 1 - ln); labelexists2 = false;
+                    adr = (uint16_t)(uval - current_address->l_address.address - 1 - ln);
                 }
                 if ((adr<0xFF80 && adr>0x007F) || crossbank) {
                     if (cnmemonic[ADR_REL_L] != ____ && !crossbank) { /* 65CE02 long branches */
-                        if (!labelexists2) adr = (uint16_t)adr; /* same + 2 offset! */
                         opr = ADR_REL_L;
                         ln = 2;
                     } else if (arguments.longbranch && (cnmemonic[ADR_ADDR] == ____)) { /* fake long branches */
