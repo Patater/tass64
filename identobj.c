@@ -33,18 +33,20 @@ Type *const IDENT_OBJ = &ident_obj;
 Type *const ANONIDENT_OBJ = &anonident_obj;
 
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Ident *v1 = (Ident *)o1;
     size_t i2, i;
     uint8_t *s;
-    const uint8_t *s2 = v1->name.data;
+    const uint8_t *s2;
     uint8_t q;
     size_t chars;
     Str *v;
-    size_t len = v1->name.len;
-    i = str_quoting(s2, len, &q);
+    size_t len;
 
-    i2 = i + 9;
+    if (epoint == NULL) return NULL;
+    s2 = v1->name.data;
+    len = v1->name.len;
+    i2 = str_quoting(s2, len, &q) + 9;
     if (i2 < 9) return NULL; /* overflow */
     chars = i2 - (len - calcpos(s2, len));
     if (chars > maxsize) return NULL;
@@ -67,10 +69,13 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     return &v->v;
 }
 
-static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Anonident *v1 = (Anonident *)o1;
     Str *v;
-    size_t len = v1->count < 0 ? -v1->count : (v1->count + 1);
+    size_t len;
+
+    if (epoint == NULL) return NULL;
+    len = v1->count < 0 ? -v1->count : (v1->count + 1);
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
