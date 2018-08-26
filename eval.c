@@ -545,10 +545,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 err_msg_invalid_oper(op2, v1->val, NULL, &o_out->epoint);
                 val_replace(&v1->val, (Obj *)none_value);
                 break;
-            case T_CODE:
-            case T_INT:
-            case T_BITS:
-            case T_STR:
+            default:
                 {
                     uint16_t val1;
                     uval_t uval;
@@ -589,10 +586,6 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     v1->val = (Obj *)int_from_uval(val1);
                     break;
                 }
-            default:
-                err_msg_invalid_oper(op2, v1->val, NULL, &o_out->epoint);
-                val_replace(&v1->val, (Obj *)none_value);
-                break;
             case T_ERROR:
             case T_NONE:break;
             }
