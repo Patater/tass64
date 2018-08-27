@@ -3710,11 +3710,13 @@ MUST_CHECK Obj *compile(void)
                 default : err_msg_wrong_type(val, NULL, &vs->epoint); goto breakerr;
                 case T_MACRO:
                 case T_SEGMENT:
+                case T_STRUCT:
+                case T_UNION:
                 case T_MFUNC: break;
                 }
             as_macro:
                 listing_line_cut(listing, epoint.pos);
-                if (val->obj == MACRO_OBJ) {
+                if (val->obj == MACRO_OBJ || val->obj == STRUCT_OBJ || val->obj == UNION_OBJ) {
                     Namespace *context;
                     if (newlabel != NULL && !((Macro *)val)->retval && newlabel->value->obj == CODE_OBJ) {
                         context = ((Code *)newlabel->value)->names;
@@ -3746,7 +3748,7 @@ MUST_CHECK Obj *compile(void)
                         }
                         context = (Namespace *)label->value;
                     }
-                    val = macro_recurse(W_ENDM2, val, context, &epoint);
+                    val = macro_recurse(val->obj == MACRO_OBJ ? W_ENDM2 : val->obj == STRUCT_OBJ ? W_ENDS2 : W_ENDU2, val, context, &epoint);
                 } else if (val->obj == MFUNC_OBJ) {
                     Label *label;
                     Mfunc *mfunc;
