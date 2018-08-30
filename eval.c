@@ -687,7 +687,7 @@ MUST_CHECK Error *indexoffs(Obj *v1, size_t len, size_t *offs, linepos_t epoint)
             return NULL;
         }
     }
-    return new_error_key(ERROR___INDEX_RANGE, v1, epoint);
+    return new_error_obj(ERROR___INDEX_RANGE, v1, epoint);
 }
 
 MUST_CHECK Obj *sliceparams(const struct List *v2, size_t len2, uval_t *olen, ival_t *offs2, ival_t *end2, ival_t *step2, linepos_t epoint) {
