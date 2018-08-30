@@ -3539,17 +3539,17 @@ can't calculate this
     could not get any value, is this a circular reference?
 can't encode character '?' ($xx) in encoding '?'
     can't translate character in this encoding as no definition was given
-can't get absolute value of type '?'
+can't get absolute value of
     not possible to calculate the absolute value of this type
-can't get boolean value of type '?'
+can't get boolean value of
     not possible to determine if this value is true or false
-can't get integer value of type '?'
+can't get integer value of
     this value is not a number
-can't get length of type '?'
+can't get length of
     this type has no length
-can't get sign of type '?'
+can't get sign of
     this type does not have a sign as it's not a number
-can't get size of type '?'
+can't get size of
     this type has no size
 closing/opening directive '?' not found
     couldn't find the other half of block directive pair

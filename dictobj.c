@@ -405,7 +405,7 @@ Obj *dictobj_parse(struct values_s *values, unsigned int args) {
             Colonlist *list = (Colonlist *)key;
             if (list->len != 2 || list->data[1] == &default_value->v) {
                 err = new_error(ERROR__NOT_KEYVALUE, &v2->epoint);
-                err->u.objname = key->obj->name;
+                err->u.obj = val_reference(key);
                 val_destroy(&dict->v);
                 return &err->v;
             }
