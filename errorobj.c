@@ -52,6 +52,7 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
         val_destroy(v1->u.key);
+        return;
     case ERROR__INVALID_CONV:
         val_destroy(v1->u.conv.val);
         return;
@@ -100,6 +101,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
         v = v1->u.key;
+        break;
     case ERROR__INVALID_CONV:
         v = v1->u.conv.val;
         break;
