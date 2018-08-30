@@ -90,12 +90,12 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxlen) {
     uint8_t *s;
     Str *v;
     if (epoint == NULL) return NULL;
-    len = v1->name.len;
     switch (v1->name.data[0]) {
     case '+':
     case '-': len = 1; break;
     case '#':
     case '.': len = 0; break;
+    default: len = v1->name.len;
     }
     len2 = len + 10;
     if (len2 > maxlen) return NULL;
@@ -111,6 +111,26 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxlen) {
     return &v->v;
 }
 
+static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxlen) {
+    Label *v1 = (Label *)o1;
+    size_t len, chars;
+    Str *v;
+    switch (v1->name.data[0]) {
+    case '+':
+    case '-': len = 1; break;
+    case '#':
+    case '.': return NULL;
+    default: len = v1->name.len;
+    }
+    chars = calcpos(v1->name.data, len);
+    if (chars > maxlen) return NULL;
+    v = new_str2(len);
+    if (v == NULL) return NULL;
+    v->chars = chars;
+    memcpy(v->data, v1->name.data, len);
+    return &v->v;
+}
+
 void labelobj_init(void) {
     new_type(&obj, T_LABEL, "label", sizeof(Label));
     obj.create = create;
@@ -118,4 +138,5 @@ void labelobj_init(void) {
     obj.garbage = garbage;
     obj.same = same;
     obj.repr = repr;
+    obj.str = str;
 }

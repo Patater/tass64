@@ -184,6 +184,15 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     return &v->v;
 }
 
+static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
+    Address *v1 = (Address *)o1;
+    if (v1->type == A_NONE) {
+        o1 = v1->val;
+        return o1->obj->repr(o1, epoint, maxsize);
+    }
+    return repr(o1, epoint, maxsize);
+}
+
 bool check_addr(atype_t type) {
     while (type != A_NONE) {
         switch ((Address_types)(type & 0xf)) {
@@ -522,6 +531,7 @@ void addressobj_init(void) {
     obj.truth = truth;
     obj.hash = hash;
     obj.repr = repr;
+    obj.str = str;
     obj.address = address;
     obj.ival = ival;
     obj.uval = uval;

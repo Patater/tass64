@@ -44,6 +44,10 @@ static MUST_CHECK Obj *repr(Obj *v1, linepos_t epoint, size_t UNUSED(maxsize)) {
     return (epoint == NULL) ? NULL : val_reference(v1);
 }
 
+static MUST_CHECK Obj *str(Obj *v1, linepos_t UNUSED(epoint), size_t UNUSED(maxsize)) {
+    return val_reference(v1);
+}
+
 static MUST_CHECK Obj *calc1(oper_t op) {
     return val_reference(op->v1);
 }
@@ -89,6 +93,7 @@ void noneobj_init(void) {
     obj.same = same;
     obj.truth = truth;
     obj.repr = repr;
+    obj.str = str;
     obj.hash = hash;
     obj.calc1 = calc1;
     obj.calc2 = calc2;

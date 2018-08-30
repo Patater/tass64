@@ -56,6 +56,7 @@ typedef struct Type {
     Obj *(*truth)(Obj *, Truth_types, linepos_t) MUST_CHECK;
     struct Error *(*hash)(Obj *, int *, linepos_t) MUST_CHECK;
     Obj *(*repr)(Obj *, linepos_t, size_t) MUST_CHECK;
+    Obj *(*str)(Obj *, linepos_t, size_t) MUST_CHECK;
     Obj *(*calc1)(struct oper_s *) MUST_CHECK;
     Obj *(*calc2)(struct oper_s *) MUST_CHECK;
     Obj *(*rcalc2)(struct oper_s *) MUST_CHECK;

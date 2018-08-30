@@ -127,6 +127,18 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     return &v->v;
 }
 
+static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    Register *v1 = (Register *)o1;
+    Str *v;
+
+    if (v1->chars > maxsize) return NULL;
+    v = new_str2(v1->len);
+    if (v == NULL) return NULL;
+    v->chars = v1->chars;
+    memcpy(v->data, v1->data, v1->len);
+    return &v->v;
+}
+
 static inline int icmp(const Register *v1, const Register *v2) {
     int h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
     if (h != 0) return h;
@@ -196,6 +208,7 @@ void registerobj_init(void) {
     obj.same = same;
     obj.hash = hash;
     obj.repr = repr;
+    obj.str = str;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;
 }
