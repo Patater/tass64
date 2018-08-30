@@ -725,7 +725,7 @@ static void logical_close(linepos_t epoint) {
     current_address->l_address.bank = (waitfor->laddr.bank + ((current_address->address - waitfor->addr) & ~(address_t)0xffff)) & all_mem;
     if (current_address->l_address.bank > all_mem) {
         current_address->l_address.bank &= all_mem;
-        if (epoint != NULL) err_msg2(ERROR_ADDRESS_LARGE, NULL, epoint);
+        if (epoint != NULL) err_msg_big_address(epoint);
     }
     val_destroy(current_address->l_address_val);
     current_address->l_address_val = waitfor->val; waitfor->val = NULL;
@@ -744,7 +744,7 @@ static void virtual_close(linepos_t epoint) {
     current_address = waitfor->section_address;
     if (current_address->l_address.bank > all_mem) {
         current_address->l_address.bank &= all_mem;
-        if (epoint != NULL) err_msg2(ERROR_ADDRESS_LARGE, NULL, epoint);
+        if (epoint != NULL) err_msg_big_address(epoint);
     }
 }
 
@@ -754,7 +754,7 @@ static void section_close(linepos_t epoint) {
     current_address = waitfor->section_address;
     if (current_address->l_address.bank > all_mem) {
         current_address->l_address.bank &= all_mem;
-        if (epoint != NULL) err_msg2(ERROR_ADDRESS_LARGE, NULL, epoint);
+        if (epoint != NULL) err_msg_big_address(epoint);
     }
 }
 
@@ -764,7 +764,7 @@ static void union_close(linepos_t epoint) {
     current_address = waitfor->section_address;
     if (current_address->l_address.bank > all_mem) {
         current_address->l_address.bank &= all_mem;
-        if (epoint != NULL) err_msg2(ERROR_ADDRESS_LARGE, NULL, epoint);
+        if (epoint != NULL) err_msg_big_address(epoint);
     }
     end = (old->end < old->address) ? old->address : old->end;
     if (end != old->start) {
@@ -1087,7 +1087,7 @@ MUST_CHECK Obj *compile(void)
                 current_address->l_address = current_address->l_start;
                 if (current_address->l_address.bank > all_mem) {
                     current_address->l_address.bank &= all_mem;
-                    err_msg2(ERROR_ADDRESS_LARGE, NULL, &epoint);
+                    err_msg_big_address(&epoint);
                 }
             }
             if (current_address->address != current_address->start) {
@@ -1692,7 +1692,7 @@ MUST_CHECK Obj *compile(void)
                         current_address = oldsection_address;
                         if (current_address->l_address.bank > all_mem) {
                             current_address->l_address.bank &= all_mem;
-                            err_msg2(ERROR_ADDRESS_LARGE, NULL, &epoint);
+                            err_msg_big_address(&epoint);
                         }
 
                         if (doubledef) val_destroy(&structure->v);
@@ -1913,7 +1913,7 @@ MUST_CHECK Obj *compile(void)
                         current_address = oldsection_address;
                         if (current_address->l_address.bank > all_mem) {
                             current_address->l_address.bank &= all_mem;
-                            err_msg2(ERROR_ADDRESS_LARGE, NULL, &epoint);
+                            err_msg_big_address(&epoint);
                         }
                         if (section_address.end < section_address.address) {
                             section_address.end = section_address.address;
@@ -3003,7 +3003,7 @@ MUST_CHECK Obj *compile(void)
                             const struct cpu_s *cpumode = (cpui->def != NULL) ? cpui->def : arguments.cpumode;
                             if (current_address->l_address.bank > cpumode->max_address) {
                                 current_address->l_address.bank &= cpumode->max_address;
-                                err_msg2(ERROR_ADDRESS_LARGE, NULL, &epoint);
+                                err_msg_big_address(&epoint);
                             }
                             set_cpumode(cpumode);
                             break;
@@ -3575,7 +3575,7 @@ MUST_CHECK Obj *compile(void)
                     current_address = oldsection_address;
                     if (current_address->l_address.bank > all_mem) {
                         current_address->l_address.bank &= all_mem;
-                        err_msg2(ERROR_ADDRESS_LARGE, NULL, &epoint);
+                        err_msg_big_address(&epoint);
                     }
                     if (section_address.end < section_address.address) {
                         section_address.end = section_address.address;

@@ -694,7 +694,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         current_address = oldsection_address;
         if (current_address->l_address.bank > all_mem) {
             current_address->l_address.bank &= all_mem;
-            err_msg2(ERROR_ADDRESS_LARGE, NULL, epoint);
+            err_msg_big_address(epoint);
         }
         context_set_bottom(oldbottom);
         pop_context();

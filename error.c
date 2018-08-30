@@ -231,7 +231,6 @@ static const char * const terr_error[] = {
     "extra characters on line",
     "more than two characters",
     "floating point overflow",
-    "address not in processor address space",
     "general syntax",
     "expression syntax",
     "label required",
@@ -455,7 +454,6 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR_____NOT_BANK0:
         case ERROR____NOT_DIRECT:
         case ERROR__NOT_DATABANK:
-        case ERROR_ADDRESS_LARGE:
         case ERROR_CANT_CROSS_BA:
             adderror(terr_error[no - 0x40]);
             if (prm != NULL) err_msg_variable((Obj *)prm, epoint);
@@ -507,6 +505,11 @@ static void err_msg_char_name(const char *msg, const char *name, linepos_t epoin
     new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror(msg);
     str_name((const uint8_t *)name, strlen(name));
+}
+
+void err_msg_big_address(linepos_t epoint) {
+    new_error_msg(SV_ERROR, current_file_list, epoint);
+    adderror("address not in processor address space");
 }
 
 static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val, linepos_t epoint) {
@@ -663,7 +666,6 @@ void err_msg_output(const Error *val) {
     case ERROR_____CANT_IVAL:
     case ERROR_____CANT_UVAL:
     case ERROR______NOT_UVAL: new_error_msg(SV_ERROR, current_file_list, &val->epoint); err_msg_big_integer(terr_error[val->num - 0x40], val->u.intconv.bits, val->u.intconv.val, &val->epoint);break;
-    case ERROR_ADDRESS_LARGE:
     case ERROR____NO_FORWARD:
     case ERROR_REQUIREMENTS_:
     case ERROR______CONFLICT:
