@@ -46,8 +46,13 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
     case T_BOOL: return val_reference(v1);
-    default: return v1->obj->truth(v1, TRUTH_BOOL, epoint);
+    default:
+        if (v1->obj->truth != DEFAULT_OBJ->truth) {
+            return v1->obj->truth(v1, TRUTH_BOOL, epoint);
+        }
+        break;
     }
+    return (Obj *)new_error_conv(v1, BOOL_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
