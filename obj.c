@@ -97,7 +97,7 @@ static MUST_CHECK Error *generic_invalid(Obj *v1, linepos_t epoint, Error_types 
         return (Error *)val_reference(v1);
     }
     err = new_error(num, epoint);
-    err->u.objname = v1->obj->name;
+    err->u.obj = val_reference(v1);
     return err;
 }
 

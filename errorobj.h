@@ -48,7 +48,6 @@ typedef struct Error {
             unsigned int bits;
             Obj *val;
         } intconv;
-        const char *objname;
         struct {
             const struct Type *t;
             Obj *val;

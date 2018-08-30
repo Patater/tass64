@@ -46,6 +46,14 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR___NOT_DEFINED:
         val_destroy((Obj *)v1->u.notdef.names);
         return;
+    case ERROR__NOT_KEYVALUE:
+    case ERROR__NOT_HASHABLE:
+    case ERROR_____CANT_SIGN:
+    case ERROR______CANT_ABS:
+    case ERROR______CANT_INT:
+    case ERROR______CANT_LEN:
+    case ERROR_____CANT_SIZE:
+    case ERROR_____CANT_BOOL:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
@@ -95,6 +103,14 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR___NOT_DEFINED:
         v = &v1->u.notdef.names->v;
         break;
+    case ERROR__NOT_KEYVALUE:
+    case ERROR__NOT_HASHABLE:
+    case ERROR_____CANT_SIGN:
+    case ERROR______CANT_ABS:
+    case ERROR______CANT_INT:
+    case ERROR______CANT_LEN:
+    case ERROR_____CANT_SIZE:
+    case ERROR_____CANT_BOOL:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
