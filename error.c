@@ -701,7 +701,7 @@ void err_msg_output(const Error *val) {
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
-    case ERROR_____KEY_ERROR: err_msg_key_error(val->u.key, terr_error[val->num - 0x40], &val->epoint);break;
+    case ERROR_____KEY_ERROR: err_msg_key_error(val->u.obj, terr_error[val->num - 0x40], &val->epoint);break;
     default: break;
     }
 }
