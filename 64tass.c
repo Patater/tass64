@@ -1142,7 +1142,8 @@ MUST_CHECK Obj *compile(void)
         labelname.data = pline + lpoint.pos; labelname.len = get_label();
         if (labelname.len != 0) {
             struct linepos_s cmdpoint;
-            bool islabel = false;
+            bool islabel;
+            islabel = false;
             while (here() == '.' && pline[lpoint.pos+1] != '.') {
                 if ((waitfor->skip & 1) != 0) {
                     if (!islabel) {
