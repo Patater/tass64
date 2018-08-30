@@ -48,7 +48,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_STR:
         return val_reference(v1);
     default:
-        v = v1->obj->repr(v1, epoint, SIZE_MAX);
+        v = v1->obj->str(v1, epoint, SIZE_MAX);
         return v != NULL ? v : (Obj *)new_error_mem(epoint);
     }
 }
@@ -156,6 +156,12 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     }
     s[i] = q;
     return &v->v;
+}
+
+static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    Str *v1 = (Str *)o1;
+    if (v1->chars > maxsize) return NULL;
+    return val_reference(o1);
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
@@ -817,6 +823,7 @@ void strobj_init(void) {
     obj.truth = truth;
     obj.hash = hash;
     obj.repr = repr;
+    obj.str = str;
     obj.ival = ival;
     obj.uval = uval;
     obj.sign = sign;

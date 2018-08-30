@@ -134,6 +134,15 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     return v->obj->repr(v, epoint, maxsize);
 }
 
+static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
+    Code *v1 = (Code *)o1;
+    Obj *v;
+    Error *err = access_check(v1, epoint);
+    if (err != NULL) return &err->v;
+    v = v1->addr;
+    return v->obj->str(v, epoint, maxsize);
+}
+
 static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
     Code *v1 = (Code *)o1;
     Obj *v;
@@ -597,6 +606,7 @@ void codeobj_init(void) {
     obj.same = same;
     obj.truth = truth;
     obj.repr = repr;
+    obj.str = str;
     obj.ival = ival;
     obj.uval = uval;
     obj.uval2 = uval2;

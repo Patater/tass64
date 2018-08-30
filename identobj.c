@@ -69,6 +69,18 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     return &v->v;
 }
 
+static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    Ident *v1 = (Ident *)o1;
+    Str *v;
+    size_t chars = calcpos(v1->name.data, v1->name.len);
+    if (chars > maxsize) return NULL;
+    v = new_str2(v1->name.len);
+    if (v == NULL) return NULL;
+    v->chars = chars;
+    memcpy(v->data, v1->name.data, v1->name.len);
+    return &v->v;
+}
+
 static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Anonident *v1 = (Anonident *)o1;
     Str *v;
@@ -111,6 +123,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 void identobj_init(void) {
     new_type(&ident_obj, T_IDENT, "ident", sizeof(Ident));
     ident_obj.repr = repr;
+    ident_obj.str = str;
     ident_obj.calc2 = calc2;
     ident_obj.rcalc2 = rcalc2;
     new_type(&anonident_obj, T_ANONIDENT, "anonident", sizeof(Anonident));

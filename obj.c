@@ -132,6 +132,10 @@ static MUST_CHECK Obj *invalid_repr(Obj *v1, linepos_t epoint, size_t maxsize) {
     return &v->v;
 }
 
+static MUST_CHECK Obj *invalid_str(Obj *v1, linepos_t epoint, size_t maxsize) {
+    return v1->obj->repr(v1, epoint, maxsize);
+}
+
 static MUST_CHECK Obj *invalid_calc1(oper_t op) {
     return obj_oper_error(op);
 }
@@ -265,6 +269,7 @@ void obj_init(Type *obj) {
     obj->truth = invalid_truth;
     obj->hash = invalid_hash;
     obj->repr = invalid_repr;
+    obj->str = invalid_str;
     obj->calc1 = invalid_calc1;
     obj->calc2 = invalid_calc2;
     obj->rcalc2 = invalid_rcalc2;

@@ -83,6 +83,17 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     return &v->v;
 }
 
+static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    const Function *v1 = (const Function *)o1;
+    Str *v;
+    if (v1->name.len > maxsize) return NULL;
+    v = new_str2(v1->name.len);
+    if (v == NULL) return NULL;
+    v->chars = v1->name.len;
+    memcpy(v->data, v1->name.data, v1->name.len);
+    return &v->v;
+}
+
 typedef MUST_CHECK Obj *(*func_t)(Funcargs *, linepos_t);
 
 static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f) {
@@ -668,6 +679,7 @@ void functionobj_init(void) {
     obj.hash = hash;
     obj.same = same;
     obj.repr = repr;
+    obj.str = str;
     obj.calc2 = calc2;
 }
 
