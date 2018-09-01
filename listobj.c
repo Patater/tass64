@@ -296,7 +296,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         }
         return &v->v;
     }
-    return val_reference((o1->obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
+    return val_reference(o1);
 }
 
 static MUST_CHECK Obj *calc2_list(oper_t op) {
