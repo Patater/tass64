@@ -649,7 +649,6 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
             }
         }
         d[i++] = (uint8_t)uval;
-        val_destroy(val2);
     }
     val_destroy(&iter->v);
 

@@ -327,7 +327,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         iter_next = iter->next;
         for (i = 0; i < len2 && (o2 = iter_next(iter)) != NULL; i++) {
             vv = findit(v1, o2, epoint2);
-            val_destroy(o2);
             if (vv->obj != ERROR_OBJ && more) vv = vv->obj->slice(vv, op, indx + 1);
             if (vv->obj == ERROR_OBJ) {
                 if (error) {err_msg_output((Error *)vv); error = false;}

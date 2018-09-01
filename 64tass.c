@@ -594,7 +594,6 @@ retry:
         case T_NONE:
             warn = true;
         }
-        val_destroy(val2);
         if (*sum >= max) break;
     }
     val_destroy(&iter->v);
@@ -627,10 +626,9 @@ static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
         case T_LIST:
         case T_TUPLE:
             if (byterecursion(val2, prm, uninit, bits)) warn = true;
-            val_destroy(val2);
             continue;
         case T_GAP:
-            *uninit += (unsigned int)abs(bits) / 8; val_destroy(val2);
+            *uninit += (unsigned int)abs(bits) / 8;
             continue;
         default:
         doit:
@@ -695,7 +693,6 @@ static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
         if (prm>=CMD_LINT) pokeb(ch2 >> 16);
         if (prm>=CMD_DINT) pokeb(ch2 >> 24);
         if (iter == NULL) return warn;
-        val_destroy(val2);
     }
     val_destroy(&iter->v);
     return warn;
@@ -714,7 +711,6 @@ static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, st
             err = instruction(prm, w, o1, epoint, epoints);
             if (err != NULL) err_msg_output_and_destroy(err); else was = true;
         }
-        val_destroy(o1);
     }
     val_destroy(&iter->v);
     return was;
@@ -3269,7 +3265,7 @@ MUST_CHECK Obj *compile(void)
                         val2 = iter_next(iter);
                         while (val2 != NULL) {
                             val_destroy(label->value);
-                            label->value = val2;
+                            label->value = val_reference(val2);
                             lpoint.line = lin;
                             waitfor->skip = 1; lvline = vline;
                             nf = compile();

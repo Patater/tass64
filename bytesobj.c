@@ -580,16 +580,18 @@ static size_t iter_len(Iter *v1) {
 }
 
 static MUST_CHECK Obj *next(Iter *v1) {
-    uint8_t b;
+    Bytes *iter;
     const Bytes *vv1 = (Bytes *)v1->data;
     if (v1->val >= byteslen(vv1)) return NULL;
-    b = vv1->data[v1->val++];
-    return (Obj *)bytes_from_u8((vv1->len < 0) ? ~b : b);
+    iter = (Bytes *)v1->iter;
+    iter->data[0] = vv1->data[v1->val++];
+    iter->len = (vv1->len < 0) ? ~1 : 1;
+    return &iter->v;
 }
 
 static MUST_CHECK Iter *getiter(Obj *v1) {
     Iter *v = (Iter *)val_alloc(ITER_OBJ);
-    v->iter = NULL;
+    v->iter = (Obj *)new_bytes(1);
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
@@ -955,7 +957,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         iter_next = iter->next;
         for (i = 0; i < len2 && (o2 = iter_next(iter)) != NULL; i++) {
             err = indexoffs(o2, len1, &offs2, epoint2);
-            val_destroy(o2);
             if (err != NULL) {
                 val_destroy(&v->v);
                 val_destroy(&iter->v);

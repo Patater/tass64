@@ -207,15 +207,15 @@ static size_t invalid_iter_len(Iter *v1) {
 }
 
 static MUST_CHECK Obj *invalid_next(Iter *v1) {
-    if (v1->val == 0) return NULL;
-    v1->val = 0;
-    return val_reference(v1->data);
+    if (v1->val != 0) return NULL;
+    v1->val = 1;
+    return v1->data;
 }
 
 static MUST_CHECK Iter *invalid_getiter(Obj *v1) {
     Iter *v = (Iter *)val_alloc(ITER_OBJ);
     v->iter = NULL;
-    v->val = 1;
+    v->val = 0;
     v->data = val_reference(v1);
     v->next = invalid_next;
     v->len = invalid_iter_len;
