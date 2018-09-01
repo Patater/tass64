@@ -1182,7 +1182,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         val_destroy(&iter->v);
         if (bits != 0) v[sz++] = uv & ((1 << bits) - 1);
 
-        vv->bits = len1;
+        vv->bits = i;
         return normalize(vv, sz, false);
     }
     if (o2->obj == COLONLIST_OBJ) {
