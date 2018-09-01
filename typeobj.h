@@ -41,8 +41,6 @@ typedef enum Func_types {
 
 struct Error;
 
-typedef MUST_CHECK Obj *(*iter_next_t)(Iter *);
-
 typedef struct Type {
     Obj v;
     Type_types type;
@@ -70,7 +68,6 @@ typedef struct Type {
     Obj *(*len)(Obj *, linepos_t) MUST_CHECK;
     Obj *(*size)(Obj *, linepos_t) MUST_CHECK;
     Iter *(*getiter)(Obj *) MUST_CHECK;
-    iter_next_t next;
 } Type;
 
 extern void typeobj_init(void);

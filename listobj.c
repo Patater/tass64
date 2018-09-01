@@ -244,18 +244,19 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(v1->len);
 }
 
-static MUST_CHECK Iter *getiter(Obj *v1) {
-    Iter *v = (Iter *)val_alloc(ITER_OBJ);
-    v->val = 0;
-    v->iter = &v->val;
-    v->data = val_reference(v1);
-    return v;
-}
-
 static MUST_CHECK Obj *next(Iter *v1) {
     const List *vv1 = (List *)v1->data;
     if (v1->val >= vv1->len) return NULL;
     return val_reference(vv1->data[v1->val++]);
+}
+
+static MUST_CHECK Iter *getiter(Obj *v1) {
+    Iter *v = (Iter *)val_alloc(ITER_OBJ);
+    v->iter = NULL;
+    v->val = 0;
+    v->data = val_reference(v1);
+    v->next = next;
+    return v;
 }
 
 Obj **list_create_elements(List *v, size_t n) {
@@ -658,7 +659,6 @@ static void init(Type *obj) {
     obj->truth = truth;
     obj->len = len;
     obj->getiter = getiter;
-    obj->next = next;
     obj->calc1 = calc1;
     obj->calc2 = calc2;
     obj->rcalc2 = rcalc2;

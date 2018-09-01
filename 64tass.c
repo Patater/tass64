@@ -533,7 +533,7 @@ retry:
         iter = val->obj->getiter(val);
     }
 
-    iter_next = iter->v.obj->next;
+    iter_next = iter->next;
     while ((val2 = iter_next(iter)) != NULL) {
         switch (val2->obj->type) {
         case T_BITS:
@@ -621,7 +621,7 @@ static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
         goto doit;
     }
     iter = type->getiter(val);
-    iter_next = iter->v.obj->next;
+    iter_next = iter->next;
     while ((val2 = iter_next(iter)) != NULL) {
         switch (val2->obj->type) {
         case T_LIST:
@@ -3262,7 +3262,7 @@ MUST_CHECK Obj *compile(void)
 
                         new_waitfor(W_NEXT2, &epoint);
                         waitfor->breakout = false;
-                        iter_next = iter->v.obj->next;
+                        iter_next = iter->next;
                         val2 = iter_next(iter);
                         while (val2 != NULL) {
                             val_destroy(label->value);

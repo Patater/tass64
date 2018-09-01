@@ -202,23 +202,24 @@ static MUST_CHECK Obj *invalid_size(Obj *v1, linepos_t epoint) {
     return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_SIZE);
 }
 
-static MUST_CHECK Iter *invalid_getiter(Obj *v1) {
-    Iter *v = (Iter *)val_alloc(ITER_OBJ);
-    v->data = val_reference(v1);
-    v->iter = NULL;
-    v->val = 1;
-    return v;
-}
-
 static MUST_CHECK Obj *invalid_next(Iter *v1) {
     if (v1->val == 0) return NULL;
     v1->val = 0;
     return val_reference(v1->data);
 }
 
+static MUST_CHECK Iter *invalid_getiter(Obj *v1) {
+    Iter *v = (Iter *)val_alloc(ITER_OBJ);
+    v->iter = NULL;
+    v->val = 1;
+    v->data = val_reference(v1);
+    v->next = invalid_next;
+    return v;
+}
+
 static FAST_CALL void iter_destroy(Obj *o1) {
     Iter *v1 = (Iter *)o1;
-    if (v1->iter != &v1->val) free(v1->iter);
+    if (v1->iter != NULL) val_destroy(v1->iter);
     val_destroy(v1->data);
 }
 
@@ -228,11 +229,18 @@ static FAST_CALL void iter_garbage(Obj *o1, int i) {
     switch (i) {
     case -1:
         v1->data->refcount--;
+        if (v1->iter != NULL) v1->iter->refcount--;
         return;
     case 0:
-        if (v1->iter != &v1->val) free(v1->iter);
         return;
     case 1:
+        v = v1->iter;
+        if (v != NULL) {
+            if ((v->refcount & SIZE_MSB) != 0) {
+                v->refcount -= SIZE_MSB - 1;
+                v->obj->garbage(v, 1);
+            } else v->refcount++;
+        }
         v = v1->data;
         if ((v->refcount & SIZE_MSB) != 0) {
             v->refcount -= SIZE_MSB - 1;
@@ -242,9 +250,8 @@ static FAST_CALL void iter_garbage(Obj *o1, int i) {
     }
 }
 
-static MUST_CHECK Obj *iter_next(Iter *v1) {
-    if (v1->iter == NULL) return invalid_next(v1);
-    return v1->data->obj->next(v1);
+static MUST_CHECK Iter *iter_getiter(Obj *o1) {
+    return (Iter *)val_reference(o1);
 }
 
 static FAST_CALL bool lbl_same(const Obj *o1, const Obj *o2) {
@@ -283,7 +290,6 @@ void obj_init(Type *obj) {
     obj->len = invalid_len;
     obj->size = invalid_size;
     obj->getiter = invalid_getiter;
-    obj->next = invalid_next;
 }
 
 void objects_init(void) {
@@ -319,7 +325,7 @@ void objects_init(void) {
     new_type(&iter_obj, T_ITER, "iter", sizeof(Iter));
     iter_obj.destroy = iter_destroy;
     iter_obj.garbage = iter_garbage;
-    iter_obj.next = iter_next;
+    iter_obj.getiter = iter_getiter;
     new_type(&funcargs_obj, T_FUNCARGS, "funcargs", sizeof(Funcargs));
     funcargs_obj.same = funcargs_same;
 
