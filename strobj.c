@@ -243,23 +243,24 @@ static size_t iter_len(Iter *v1) {
 }
 
 static MUST_CHECK Obj *next(Iter *v1) {
+    Str *iter;
     const Str *str = (Str *)v1->data;
     unsigned int ln;
-    Str *v;
     const uint8_t *s;
     if (v1->val >= str->len) return NULL;
+    iter = (Str *)v1->iter;
     s = str->data + v1->val;
     ln = utf8len(*s);
     v1->val += ln;
-    v = new_str(ln);
-    v->chars = 1;
-    memcpy(v->data, s, ln);
-    return &v->v;
+    iter->len = ln;
+    memcpy(iter->data, s, ln);
+    return &iter->v;
 }
 
 static MUST_CHECK Iter *getiter(Obj *v1) {
     Iter *v = (Iter *)val_alloc(ITER_OBJ);
-    v->iter = NULL;
+    v->iter = (Obj *)new_str(6);
+    ((Str *)v->iter)->chars = 1;
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
@@ -528,7 +529,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             p2 = v->data;
             for (i = 0; i < len2 && (o2 = iter_next(iter)) != NULL; i++) {
                 err = indexoffs(o2, len1, &offs2, epoint2);
-                val_destroy(o2);
                 if (err != NULL) {
                     val_destroy(&v->v);
                     val_destroy(&iter->v);
@@ -554,7 +554,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             for (i = 0; i < len2 && (o2 = iter_next(iter)) != NULL; i++) {
                 unsigned int k;
                 err = indexoffs(o2, len1, &offs2, epoint2);
-                val_destroy(o2);
                 if (err != NULL) {
                     val_destroy(&v->v);
                     val_destroy(&iter->v);

@@ -247,7 +247,7 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
 static MUST_CHECK Obj *next(Iter *v1) {
     const List *vv1 = (List *)v1->data;
     if (v1->val >= vv1->len) return NULL;
-    return val_reference(vv1->data[v1->val++]);
+    return vv1->data[v1->val++];
 }
 
 static size_t iter_len(Iter *v1) {
@@ -473,7 +473,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         iter_next = iter->next;
         for (i = 0; i < len && (o2 = iter_next(iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs2, epoint2);
-            val_destroy(o2);
             if (err != NULL) {
                 if (error) {err_msg_output(err); error = false;}
                 val_destroy(&err->v);

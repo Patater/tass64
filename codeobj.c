@@ -353,7 +353,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         iter_next = iter->next;
         for (i = 0; i < len1 && (o2 = iter_next(iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs1, epoint2);
-            val_destroy(o2);
             if (err != NULL) {
                 if (error) {err_msg_output(err); error = false;}
                 val_destroy(&err->v);

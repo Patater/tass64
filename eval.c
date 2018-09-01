@@ -777,7 +777,6 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am) {
             iter_next = iter->next;
             for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
                 vals[i] = apply_addressing(o1, am);
-                val_destroy(o1);
             }
             val_destroy(&iter->v);
             v->len = i;
@@ -1090,7 +1089,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 iter_next = iter->next;
                 for (k = 0; k < len && (tmp = iter_next(iter)) != NULL; k++) {
                     if (values[vsp].val != NULL) val_destroy(values[vsp].val);
-                    values[vsp].val = tmp;
+                    values[vsp].val = val_reference(tmp);
                     values[vsp++].epoint = o_out->epoint;
                 }
                 val_destroy(&iter->v);

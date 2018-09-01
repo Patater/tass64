@@ -154,7 +154,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     iter_next = iter->next;
                     for (i = 0;i < len && (o2 = iter_next(iter)) != NULL; i++) {
                         Obj *val = v1->create(o2, op->epoint2);
-                        val_destroy(o2);
                         if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
                         vals[i] = val;
                     }
