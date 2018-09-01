@@ -701,19 +701,22 @@ static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
     return warn;
 }
 
-static bool instrecursion(List *val, int prm, unsigned int w, linepos_t epoint, struct linepos_s *epoints) {
-    size_t i;
+static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, struct linepos_s *epoints) {
+    iter_next_t iter_next;
+    Iter *iter = o1->obj->getiter(o1);
     Error *err;
     bool was = false;
-    for (i = 0; i < val->len; i++) {
-        Obj *tmp = val->data[i];
-        if (tmp->obj == TUPLE_OBJ || tmp->obj == LIST_OBJ) {
-            if (instrecursion((List *)tmp, prm, w, epoint, epoints)) was = true;
-            continue;
+    iter_next = iter->next;
+    while ((o1 = iter_next(iter)) != NULL) {
+        if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
+            if (instrecursion(o1, prm, w, epoint, epoints)) was = true;
+        } else {
+            err = instruction(prm, w, o1, epoint, epoints);
+            if (err != NULL) err_msg_output_and_destroy(err); else was = true;
         }
-        err = instruction(prm, w, tmp, epoint, epoints);
-        if (err != NULL) err_msg_output_and_destroy(err); else was = true;
+        val_destroy(o1);
     }
+    val_destroy(&iter->v);
     return was;
 }
 
@@ -3835,7 +3838,7 @@ MUST_CHECK Obj *compile(void)
                     if (val->obj == TUPLE_OBJ || val->obj == LIST_OBJ) {
                         epoints[1] = epoints[0];
                         epoints[2] = epoints[0];
-                        if (!instrecursion((List *)val, prm, w, &epoint, epoints)) {
+                        if (!instrecursion(val, prm, w, &epoint, epoints)) {
                             listing_instr(listing, 0, 0, -1);
                         }
                         err = NULL;

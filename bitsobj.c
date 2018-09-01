@@ -1141,24 +1141,32 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     ln = vv1->bits;
 
     if (o2->obj == LIST_OBJ) {
-        List *list = (List *)o2;
-        size_t len1 = list->len;
+        iter_next_t iter_next;
+        Iter *iter = o2->obj->getiter(o2);
+        size_t len1 = iter->len(iter);
 
         if (len1 == 0) {
+            val_destroy(&iter->v);
             return (Obj *)ref_bits(null_bits);
         }
         sz = (len1 + SHIFT - 1) / SHIFT;
 
         vv = new_bits2(sz);
-        if (vv == NULL) goto failed;
+        if (vv == NULL) {
+            val_destroy(&iter->v);
+            goto failed;
+        }
         v = vv->data;
 
         uv = inv;
         bits = sz = 0;
-        for (i = 0; i < len1; i++) {
-            err = indexoffs(list->data[i], ln, &offs2, epoint2);
+        iter_next = iter->next;
+        for (i = 0; i < len1 && (o2 = iter_next(iter)) != NULL; i++) {
+            err = indexoffs(o2, ln, &offs2, epoint2);
+            val_destroy(o2);
             if (err != NULL) {
                 val_destroy(&vv->v);
+                val_destroy(&iter->v);
                 return &err->v;
             }
             o = offs2 / SHIFT;
@@ -1172,6 +1180,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 bits = 0;
             }
         }
+        val_destroy(&iter->v);
         if (bits != 0) v[sz++] = uv & ((1 << bits) - 1);
 
         vv->bits = len1;

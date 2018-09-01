@@ -136,17 +136,29 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             case T_LIST:
             case T_TUPLE:
                 if (v1 != LIST_OBJ && v1 != TUPLE_OBJ && v1 != TYPE_OBJ) {
-                    List *v2 = (List *)o2;
+                    iter_next_t iter_next;
+                    Iter *iter = o2->obj->getiter(o2);
+                    size_t i, len = iter->len(iter);
                     Obj **vals;
-                    size_t i;
-                    bool error = true;
-                    List *v = (List *)val_alloc(o2->obj);
-                    v->data = vals = list_create_elements(v, v2->len);
-                    for (i = 0;i < v2->len; i++) {
-                        Obj *val = v1->create(v2->data[i], op->epoint2);
+                    bool error;
+                    List *v;
+
+                    if (len == 0) {
+                        val_destroy(&iter->v);
+                        return val_reference(o2->obj == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
+                    }
+
+                    v = (List *)val_alloc(o2->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+                    v->data = vals = list_create_elements(v, len);
+                    error = true;
+                    iter_next = iter->next;
+                    for (i = 0;i < len && (o2 = iter_next(iter)) != NULL; i++) {
+                        Obj *val = v1->create(o2, op->epoint2);
+                        val_destroy(o2);
                         if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
                         vals[i] = val;
                     }
+                    val_destroy(&iter->v);
                     v->len = i;
                     return (Obj *)v;
                 }

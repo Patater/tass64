@@ -761,14 +761,26 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am) {
     case T_LIST:
     case T_TUPLE:
         {
-            List *v1 = (List *)o1;
-            List *v = (List *)val_alloc(o1->obj);
-            Obj **vals = list_create_elements(v, v1->len);
-            size_t i;
-            for (i = 0; i < v1->len; i++) {
-                vals[i] = apply_addressing(v1->data[i], am);
+            iter_next_t iter_next;
+            Iter *iter = o1->obj->getiter(o1);
+            size_t i, len = iter->len(iter);
+            List *v;
+            Obj **vals;
+
+            if (len == 0) {
+                val_destroy(&iter->v);
+                return val_reference(o1->obj == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
             }
-            v->len = v1->len;
+
+            v = (List *)val_alloc(o1->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+            vals = list_create_elements(v, len);
+            iter_next = iter->next;
+            for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
+                vals[i] = apply_addressing(o1, am);
+                val_destroy(o1);
+            }
+            val_destroy(&iter->v);
+            v->len = i;
             v->data = vals;
             return &v->v;
         }
@@ -1065,20 +1077,23 @@ static bool get_val2(struct eval_context_s *ev) {
                 }
             }
             if (v1->val->obj == TUPLE_OBJ || v1->val->obj == LIST_OBJ || v1->val->obj == ADDRLIST_OBJ) {
-                List *tmp = (List *)v1->val;
-                size_t k, len = tmp->len;
+                iter_next_t iter_next;
+                Iter *iter = v1->val->obj->getiter(v1->val);
+                size_t k, len = iter->len(iter);
                 size_t len2 = vsp + len;
+                Obj *tmp;
+
                 if (len2 < len) err_msg_out_of_memory(); /* overflow */
                 v1->val = NULL;
                 vsp--;
                 if (len2 >= ev->values_size) values = extend_values(ev, len);
-                for (k = 0; k < len; k++) {
+                iter_next = iter->next;
+                for (k = 0; k < len && (tmp = iter_next(iter)) != NULL; k++) {
                     if (values[vsp].val != NULL) val_destroy(values[vsp].val);
-                    values[vsp].val = (tmp->v.refcount == 1) ? tmp->data[k] : val_reference(tmp->data[k]);
+                    values[vsp].val = tmp;
                     values[vsp++].epoint = o_out->epoint;
                 }
-                if (tmp->v.refcount == 1) tmp->len = 0;
-                val_destroy(&tmp->v);
+                val_destroy(&iter->v);
                 continue;
             }
             if (v1->val->obj == DICT_OBJ) {

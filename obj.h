@@ -40,6 +40,7 @@ typedef struct Lbl_s {
 
 struct Iter;
 typedef MUST_CHECK Obj *(*iter_next_t)(struct Iter *);
+typedef size_t (*iter_len_t)(struct Iter *);
 
 typedef struct Iter {
     Obj v;
@@ -47,6 +48,7 @@ typedef struct Iter {
     size_t val;
     Obj *data;
     iter_next_t next;
+    iter_len_t len;
 } Iter;
 
 typedef struct Funcargs {

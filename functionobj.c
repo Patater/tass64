@@ -414,43 +414,54 @@ static MUST_CHECK Obj *function_binary(Funcargs *vals, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint) {
+    const Type *typ = o1->obj;
     Obj *err;
     double real;
-    if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
-        List *v1 = (List *)o1, *v;
-        if (v1->len != 0) {
-            bool error = true;
-            size_t i;
-            Obj **vals;
-            v = (List *)val_alloc(o1->obj);
-            vals = list_create_elements(v, v1->len);
-            for (i = 0; i < v1->len; i++) {
-                Obj *val = apply_func(v1->data[i], func, epoint);
-                if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
-                vals[i] = val;
-            }
-            v->len = i;
-            v->data = vals;
-            return &v->v;
+
+    if (typ == TUPLE_OBJ || typ == LIST_OBJ) {
+        iter_next_t iter_next;
+        Iter *iter = typ->getiter(o1);
+        size_t len = iter->len(iter);
+        List *v;
+        bool error = true;
+        size_t i;
+        Obj **vals;
+
+        if (len == 0) {
+            val_destroy(&iter->v);
+            return val_reference(typ == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
         }
-        return val_reference(&v1->v);
+
+        v = (List *)val_alloc(typ == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+        vals = list_create_elements(v, len);
+        iter_next = iter->next;
+        for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
+            Obj *val = apply_func(o1, func, epoint);
+            val_destroy(o1);
+            if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
+            vals[i] = val;
+        }
+        val_destroy(&iter->v);
+        v->len = i;
+        v->data = vals;
+        return &v->v;
     }
     switch (func) {
-    case F_SIZE: return o1->obj->size(o1, epoint);
-    case F_SIGN: return o1->obj->sign(o1, epoint);
-    case F_CEIL: return o1->obj->function(o1, TF_CEIL, epoint);
-    case F_FLOOR: return o1->obj->function(o1, TF_FLOOR, epoint);
-    case F_ROUND: return o1->obj->function(o1, TF_ROUND, epoint);
-    case F_TRUNC: return o1->obj->function(o1, TF_TRUNC, epoint);
-    case F_ABS: return o1->obj->function(o1, TF_ABS, epoint);
+    case F_SIZE: return typ->size(o1, epoint);
+    case F_SIGN: return typ->sign(o1, epoint);
+    case F_CEIL: return typ->function(o1, TF_CEIL, epoint);
+    case F_FLOOR: return typ->function(o1, TF_FLOOR, epoint);
+    case F_ROUND: return typ->function(o1, TF_ROUND, epoint);
+    case F_TRUNC: return typ->function(o1, TF_TRUNC, epoint);
+    case F_ABS: return typ->function(o1, TF_ABS, epoint);
     case F_REPR:
         {
-            Obj *v = o1->obj->repr(o1, epoint, SIZE_MAX);
+            Obj *v = typ->repr(o1, epoint, SIZE_MAX);
             return v != NULL ? v : (Obj *)new_error_mem(epoint);
         }
     default: break;
     }
-    if (o1->obj == FLOAT_OBJ) {
+    if (typ == FLOAT_OBJ) {
         real = ((Float *)o1)->real;
     } else {
         err = FLOAT_OBJ->create(o1, epoint);
