@@ -238,14 +238,6 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(v1->chars);
 }
 
-static MUST_CHECK Iter *getiter(Obj *v1) {
-    Iter *v = (Iter *)val_alloc(ITER_OBJ);
-    v->val = 0;
-    v->iter = &v->val;
-    v->data = val_reference(v1);
-    return v;
-}
-
 static MUST_CHECK Obj *next(Iter *v1) {
     const Str *str = (Str *)v1->data;
     unsigned int ln;
@@ -254,11 +246,20 @@ static MUST_CHECK Obj *next(Iter *v1) {
     if (v1->val >= str->len) return NULL;
     s = str->data + v1->val;
     ln = utf8len(*s);
+    v1->val += ln;
     v = new_str(ln);
     v->chars = 1;
     memcpy(v->data, s, ln);
-    v1->val += ln;
     return &v->v;
+}
+
+static MUST_CHECK Iter *getiter(Obj *v1) {
+    Iter *v = (Iter *)val_alloc(ITER_OBJ);
+    v->iter = NULL;
+    v->val = 0;
+    v->data = val_reference(v1);
+    v->next = next;
+    return v;
 }
 
 MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
@@ -830,7 +831,6 @@ void strobj_init(void) {
     obj.function = function;
     obj.len = len;
     obj.getiter = getiter;
-    obj.next = next;
     obj.calc1 = calc1;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;

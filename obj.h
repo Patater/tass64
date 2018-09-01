@@ -38,11 +38,15 @@ typedef struct Lbl_s {
     struct Namespace *parent;
 } Lbl;
 
+struct Iter;
+typedef MUST_CHECK Obj *(*iter_next_t)(struct Iter *);
+
 typedef struct Iter {
     Obj v;
-    void *iter;
+    Obj *iter;
     size_t val;
     Obj *data;
+    iter_next_t next;
 } Iter;
 
 typedef struct Funcargs {

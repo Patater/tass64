@@ -630,7 +630,7 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
         val_destroy(tmp2);
     } else iter = val->obj->getiter(val);
 
-    iter_next = iter->v.obj->next;
+    iter_next = iter->next;
     while ((val2 = iter_next(iter)) != NULL) {
         Error *err = val2->obj->uval(val2, &uval, 8, epoint);
         if (err != NULL) {
