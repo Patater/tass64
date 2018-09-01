@@ -433,7 +433,7 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
         }
 
         v = (List *)val_alloc(typ == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
-        vals = list_create_elements(v, len);
+        v->data = vals = list_create_elements(v, len);
         iter_next = iter->next;
         for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
             Obj *val = apply_func(o1, func, epoint);
@@ -442,7 +442,6 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
         }
         val_destroy(&iter->v);
         v->len = i;
-        v->data = vals;
         return &v->v;
     }
     switch (func) {
