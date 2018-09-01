@@ -309,19 +309,25 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
 
     if (o2 == &none_value->v) return val_reference(o2);
     if (o2->obj == LIST_OBJ) {
-        size_t i;
-        List *v2 = (List *)o2, *v;
+        iter_next_t iter_next;
+        Iter *iter = o2->obj->getiter(o2);
+        size_t i, len2 = iter->len(iter);
+        List *v;
         Obj **vals;
         bool error;
-        if (v2->len == 0) {
+
+        if (len2 == 0) {
+            val_destroy(&iter->v);
             return val_reference(&null_list->v);
         }
         v = (List *)val_alloc(LIST_OBJ);
-        v->data = vals = list_create_elements(v, v2->len);
+        v->data = vals = list_create_elements(v, len2);
         error = true;
         pair_oper.epoint3 = epoint2;
-        for (i = 0; i < v2->len; i++) {
-            vv = findit(v1, v2->data[i], epoint2);
+        iter_next = iter->next;
+        for (i = 0; i < len2 && (o2 = iter_next(iter)) != NULL; i++) {
+            vv = findit(v1, o2, epoint2);
+            val_destroy(o2);
             if (vv->obj != ERROR_OBJ && more) vv = vv->obj->slice(vv, op, indx + 1);
             if (vv->obj == ERROR_OBJ) {
                 if (error) {err_msg_output((Error *)vv); error = false;}
@@ -331,6 +337,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             }
             vals[i] = vv;
         }
+        val_destroy(&iter->v);
         v->len = i;
         return &v->v;
     }

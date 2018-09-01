@@ -250,12 +250,17 @@ static MUST_CHECK Obj *next(Iter *v1) {
     return val_reference(vv1->data[v1->val++]);
 }
 
+static size_t iter_len(Iter *v1) {
+    return ((List *)v1->data)->len - v1->val;
+}
+
 static MUST_CHECK Iter *getiter(Obj *v1) {
     Iter *v = (Iter *)val_alloc(ITER_OBJ);
     v->iter = NULL;
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
+    v->len = iter_len;
     return v;
 }
 
@@ -449,17 +454,26 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     ln = v1->len;
 
     if (o2->obj == LIST_OBJ) {
-        List *v2 = (List *)o2;
+        iter_next_t iter_next;
+        Iter *iter = o2->obj->getiter(o2);
         bool error;
-        if (v2->len == 0) {
+        size_t len = iter->len(iter);
+
+        if (len == 0) {
+            val_destroy(&iter->v);
             return val_reference((o1->obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
         }
         v = (List *)val_alloc(o1->obj);
-        vals = lnew(v, v2->len);
-        if (vals == NULL) goto failed;
+        vals = lnew(v, len);
+        if (vals == NULL) {
+            val_destroy(&iter->v);
+            goto failed;
+        }
         error = true;
-        for (i = 0; i < v2->len; i++) {
-            err = indexoffs(v2->data[i], ln, &offs2, epoint2);
+        iter_next = iter->next;
+        for (i = 0; i < len && (o2 = iter_next(iter)) != NULL; i++) {
+            err = indexoffs(o2, ln, &offs2, epoint2);
+            val_destroy(o2);
             if (err != NULL) {
                 if (error) {err_msg_output(err); error = false;}
                 val_destroy(&err->v);
@@ -473,6 +487,8 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 vals[i] = val_reference(v1->data[offs2]);
             }
         }
+        val_destroy(&iter->v);
+        v->len = i;
         return &v->v;
     }
     if (o2->obj == COLONLIST_OBJ) {

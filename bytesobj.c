@@ -575,6 +575,10 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(byteslen(v1));
 }
 
+static size_t iter_len(Iter *v1) {
+    return ((Bytes *)v1->data)->len - v1->val;
+}
+
 static MUST_CHECK Obj *next(Iter *v1) {
     uint8_t b;
     const Bytes *vv1 = (Bytes *)v1->data;
@@ -589,6 +593,7 @@ static MUST_CHECK Iter *getiter(Obj *v1) {
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
+    v->len = iter_len;
     return v;
 }
 
@@ -933,23 +938,32 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     len1 = byteslen(v1);
 
     if (o2->obj == LIST_OBJ) {
-        List *list = (List *)o2;
-        size_t len2 = list->len;
+        iter_next_t iter_next;
+        Iter *iter = o2->obj->getiter(o2);
+        size_t len2 = iter->len(iter);
 
         if (len2 == 0) {
+            val_destroy(&iter->v);
             return (Obj *)ref_bytes(null_bytes);
         }
         v = new_bytes2(len2);
-        if (v == NULL) goto failed;
+        if (v == NULL) {
+            val_destroy(&iter->v);
+            goto failed;
+        }
         p2 = v->data;
-        for (i = 0; i < len2; i++) {
-            err = indexoffs(list->data[i], len1, &offs2, epoint2);
+        iter_next = iter->next;
+        for (i = 0; i < len2 && (o2 = iter_next(iter)) != NULL; i++) {
+            err = indexoffs(o2, len1, &offs2, epoint2);
+            val_destroy(o2);
             if (err != NULL) {
                 val_destroy(&v->v);
+                val_destroy(&iter->v);
                 return &err->v;
             }
             *p2++ = v1->data[offs2] ^ inv;
         }
+        val_destroy(&iter->v);
         if (i > SSIZE_MAX) goto failed2; /* overflow */
         v->len = (ssize_t)i;
         return &v->v;
