@@ -1067,6 +1067,7 @@ static void for_command(linepos_t epoint) {
     line_t ovline, lvline;
     bool starexists, foreach = false;
     size_t lentmp;
+    Iter *iter = NULL;
     labels.p = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
@@ -1099,14 +1100,23 @@ static void for_command(linepos_t epoint) {
                 }
             } else lpoint.pos++;
             if (foreach) { 
-                if (!get_exp(0, 0, 0, &lpoint)) goto error;
+                ignore();
+                epoint3 = lpoint;
+                if (!get_exp(0, 1, 0, &epoint3)) goto error;
                 val = get_vals_tuple();
+                if (val->obj->getiter == DEFAULT_OBJ->getiter) {
+                    Error *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
+                    val_destroy(val); val = &err->v;
+                } else {
+                    iter = val->obj->getiter(val);
+                    val_destroy(val); val = (Obj *)ref_none();
+                }
             } else {
                 struct linepos_s epoints[3];
                 if (!get_exp(1, 1, 1, &lpoint)) goto error;
                 val = get_vals_addrlist(epoints);
             }
-            if (val->obj == ERROR_OBJ) {err_msg_output((Error *)val); val = (Obj *)none_value;}
+            if (val->obj == ERROR_OBJ) {err_msg_output_and_destroy((Error *)val); val = (Obj *)ref_none();}
         }
         label = new_label(&varname, (varname.data[0] == '_') ? cheap_context : current_context, strength, &labelexists, current_file_list);
         if (foreach) {
@@ -1172,38 +1182,38 @@ static void for_command(linepos_t epoint) {
     lin = lpoint.line;
 
     if (foreach) {
-        Iter *iter = val->obj->getiter(val);
-        iter_next_t iter_next;
-        Obj *val2;
-
         new_waitfor(W_NEXT2, epoint);
         waitfor->breakout = false;
-        iter_next = iter->next;
-        while ((val2 = iter_next(iter)) != NULL) {
-            if (labels.p == 1) {
-                val_destroy(label->value);
-                label->value = val_reference(val2);
-            } else {
-                Iter *iter2 = val2->obj->getiter(val2);
-                iter_next_t iter2_next;
-                size_t i;
-                iter2_next = iter2->next;
-                for (i = 0; i < labels.p && (val2 = iter2_next(iter2)) != NULL; i++) {
-                    val_destroy(labels.data[i]->value);
-                    labels.data[i]->value = val_reference(val2);
+        if (iter != NULL) {
+            iter_next_t iter_next = iter->next;
+            Obj *val2;
+
+            while ((val2 = iter_next(iter)) != NULL) {
+                if (labels.p == 1) {
+                    val_destroy(label->value);
+                    label->value = val_reference(val2);
+                } else {
+                    Iter *iter2 = val2->obj->getiter(val2);
+                    iter_next_t iter2_next;
+                    size_t i;
+                    iter2_next = iter2->next;
+                    for (i = 0; i < labels.p && (val2 = iter2_next(iter2)) != NULL; i++) {
+                        val_destroy(labels.data[i]->value);
+                        labels.data[i]->value = val_reference(val2);
+                    }
+                    i += iter2->len(iter2);
+                    if (i != labels.p) err_msg_cant_unpack(labels.p, i, epoint);
                 }
-                i += iter2->len(iter2);
-                if (i != labels.p) err_msg_cant_unpack(labels.p, i, epoint);
+                lpoint.line = lin;
+                waitfor->skip = 1; lvline = vline;
+                nf = compile();
+                if (nf == NULL || waitfor->breakout) {
+                    break;
+                }
+                if ((waitfor->skip & 1) != 0 && val2 != NULL) listing_line_cut(listing, waitfor->epoint.pos);
             }
-            lpoint.line = lin;
-            waitfor->skip = 1; lvline = vline;
-            nf = compile();
-            if (nf == NULL || waitfor->breakout) {
-                break;
-            }
-            if ((waitfor->skip & 1) != 0 && val2 != NULL) listing_line_cut(listing, waitfor->epoint.pos);
+            val_destroy(&iter->v);
         }
-        val_destroy(&iter->v);
         if (labels.p != 0 && labels.data != labels.val) free(labels.data);
         expr = NULL;
     } else {
