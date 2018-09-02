@@ -54,6 +54,7 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR______CANT_LEN:
     case ERROR_____CANT_SIZE:
     case ERROR_____CANT_BOOL:
+    case ERROR______NOT_ITER:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
@@ -111,6 +112,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR______CANT_LEN:
     case ERROR_____CANT_SIZE:
     case ERROR_____CANT_BOOL:
+    case ERROR______NOT_ITER:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
