@@ -268,7 +268,7 @@ static const char * const terr_error[] = {
     "can't get length of ",
     "can't get size of ",
     "can't get boolean value of ",
-    "not iterable",
+    "not iterable ",
     "no byte sized addressing mode for opcode",
     "no word sized addressing mode for opcode",
     "no long sized addressing mode for opcode",
@@ -696,6 +696,7 @@ void err_msg_output(const Error *val) {
     case ERROR______CANT_LEN:
     case ERROR_____CANT_SIZE:
     case ERROR_____CANT_BOOL:
+    case ERROR______NOT_ITER:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
