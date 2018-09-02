@@ -1063,7 +1063,7 @@ static const uint8_t *printline(const struct file_list_s *cfile, linepos_t epoin
     return line;
 }
 
-static inline void print_error(FILE *f, const struct errorentry_s *err) {
+static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
     const struct file_list_s *cflist = err->file_list;
     linepos_t epoint = &err->epoint;
     const uint8_t *line = NULL;
@@ -1110,7 +1110,7 @@ static inline void print_error(FILE *f, const struct errorentry_s *err) {
     print_use_bold = false;
 #endif
     putc('\n', f);
-    if (arguments.caret && line != NULL) {
+    if (arguments.caret && caret && line != NULL) {
         putc(' ', f);
         printable_print(line, f);
         fputs("\n ", f);
@@ -1127,6 +1127,13 @@ static void color_detect(FILE *f) {
 #else
 #define color_detect(f) {}
 #endif
+
+static bool different_line(const struct errorentry_s *err, const struct errorentry_s *err2) {
+    if (err->file_list->file != err2->file_list->file || err->line_len != err2->line_len ||
+            err->epoint.line != err2->epoint.line || err->epoint.pos != err2->epoint.pos) return true;
+    if (err->line_len == 0) return false;
+    return memcmp(err + 1, err2 + 1, err->line_len) != 0;
+}
 
 bool error_print() {
     const struct errorentry_s *err, *err2, *err3;
@@ -1171,7 +1178,7 @@ bool error_print() {
                         err->line_len != err3->line_len || err->error_len != err3->error_len ||
                         err->epoint.line != err3->epoint.line || err->epoint.pos != err3->epoint.pos ||
                         memcmp(err + 1, err3 + 1, err->line_len + err->error_len) != 0) {
-                    print_error(ferr, err3);
+                    print_error(ferr, err3, different_line(err, err3));
                 }
             }
             err3 = err2;
@@ -1199,13 +1206,13 @@ bool error_print() {
             errors++;
             break;
         }
-        if (err3 != NULL) print_error(ferr, err3);
+        if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
         err3 = err2;
         err2 = err;
         usenote = true;
     }
-    if (err3 != NULL) print_error(ferr, err3);
-    if (err2 != NULL) print_error(ferr, err2);
+    if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
+    if (err2 != NULL) print_error(ferr, err2, true);
     color_detect(stderr);
     if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
     return errors != 0;
