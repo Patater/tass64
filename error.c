@@ -721,6 +721,13 @@ void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
     adderror("'");
 }
 
+void err_msg_cant_unpack(size_t expect, size_t got, linepos_t epoint) {
+    char line[1024];
+    new_error_msg(SV_ERROR, current_file_list, epoint);
+    sprintf(line, "expected %" PRIuSIZE " values but got %" PRIuSIZE " to unpack", expect, got); 
+    adderror(line);
+}
+
 void err_msg_cant_calculate(const str_t *name, linepos_t epoint) {
     err_msg_str_name("can't calculate stable value", name, epoint);
 }

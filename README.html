@@ -2381,11 +2381,11 @@ lp      <b class="k">.for</b> <u>ue</u> = <span>$400</span>, <u>ue</u> &lt; <spa
         <b>bne</b> <u>lp</u>
 </pre>
 
-<dt><code><b class="k">.for</b></code> &lt;variable&gt; in &lt;expression&gt;
+<dt><code><b class="k">.for</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] in &lt;expression&gt;
 <dt><code><b class="k">.next</b></code>
-<dd>Assign variable to each item of expression in sequence.
+<dd>Assign variable(s) to each item of expression in sequence.
 <pre width=80>
-        <b class="k">.for</b> <u>col</u> in [<span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>]
+        <b class="k">.for</b> <u>col</u> in <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
         <b>lda</b> #<u>col</u>
         <b>sta</b> <span>$d020</span>
 	<b class="k">.next</b>
@@ -3871,6 +3871,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>deprecated modulo operator, use '%' instead<dd>double slash for modulo is going away soon, update source
 <dt>deprecated not equal operator, use '!=' instead<dd>non-standard not equal operators which will stop working in the future, update source
 <dt>directive ignored<dd>an assembler directive was ignored for compatibility reasons
+<dt>expected ? values but got ? to unpack<dd>the number of variables must match the number of values when unpacking
 <dt>immediate addressing mode suggested<dd>numeric constant was used as an address which was likely meant as an immediate value
 <dt>independent result, possibly changeable to 'lda'<dd>the result does not seem to depend on the input so it could be just loaded instead
 <dt>instruction 'xxx' is an alias of 'xxx'<dd>an alternative instruction name was used
