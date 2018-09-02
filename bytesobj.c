@@ -584,6 +584,14 @@ static MUST_CHECK Obj *next(Iter *v1) {
     const Bytes *vv1 = (Bytes *)v1->data;
     if (v1->val >= byteslen(vv1)) return NULL;
     iter = (Bytes *)v1->iter;
+    if (iter == NULL) {
+    renew:
+        iter = new_bytes(1);
+        v1->iter = &iter->v;
+    } else if (iter->v.refcount != 1) {
+        iter->v.refcount--;
+        goto renew;
+    }
     iter->data[0] = vv1->data[v1->val++];
     iter->len = (vv1->len < 0) ? ~1 : 1;
     return &iter->v;
@@ -591,7 +599,7 @@ static MUST_CHECK Obj *next(Iter *v1) {
 
 static MUST_CHECK Iter *getiter(Obj *v1) {
     Iter *v = (Iter *)val_alloc(ITER_OBJ);
-    v->iter = (Obj *)new_bytes(1);
+    v->iter = NULL;
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
