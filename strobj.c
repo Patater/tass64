@@ -248,10 +248,19 @@ static MUST_CHECK Obj *next(Iter *v1) {
     unsigned int ln;
     const uint8_t *s;
     if (v1->val >= str->len) return NULL;
-    iter = (Str *)v1->iter;
     s = str->data + v1->val;
     ln = utf8len(*s);
     v1->val += ln;
+    iter = (Str *)v1->iter;
+    if (iter == NULL) {
+    renew:
+        iter = new_str(6);
+        iter->chars = 1;
+        v1->iter = &iter->v;
+    } else if (iter->v.refcount != 1) {
+        iter->v.refcount--;
+        goto renew;
+    }
     iter->len = ln;
     memcpy(iter->data, s, ln);
     return &iter->v;
@@ -259,8 +268,7 @@ static MUST_CHECK Obj *next(Iter *v1) {
 
 static MUST_CHECK Iter *getiter(Obj *v1) {
     Iter *v = (Iter *)val_alloc(ITER_OBJ);
-    v->iter = (Obj *)new_str(6);
-    ((Str *)v->iter)->chars = 1;
+    v->iter = NULL;
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
