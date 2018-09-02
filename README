@@ -1990,11 +1990,11 @@ Repetitions
             dex
             bne lp
 
-.for <variable> in <expression>
+.for <variable>[, <variable>, ...] in <expression>
 .next
-    Assign variable to each item of expression in sequence.
+    Assign variable(s) to each item of expression in sequence.
 
-            .for col in [0, 11, 12, 15, 1]
+            .for col in 0, 11, 12, 15, 1
             lda #col
             sta $d020
             .next
@@ -3456,6 +3456,8 @@ deprecated not equal operator, use '!=' instead
     update source
 directive ignored
     an assembler directive was ignored for compatibility reasons
+expected ? values but got ? to unpack
+    the number of variables must match the number of values when unpacking
 immediate addressing mode suggested
     numeric constant was used as an address which was likely meant as an
     immediate value
