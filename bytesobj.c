@@ -196,7 +196,89 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     return DEFAULT_OBJ->truth(o1, type, epoint);
 }
 
+static uint8_t *z85_encode(uint8_t *dest, const uint8_t *src, size_t len) {
+    static const char *z85 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#";
+    size_t i;
+
+    for (i = 0; i < len; i += 4) {
+        uint32_t tmp = src[i + 3] | (src[i + 2] << 8) | (src[i + 1] << 16) | (src[i] << 24);
+        unsigned int j;
+
+        for (j = 4; j > 0; j--) {
+            uint32_t div = tmp / 85; 
+            dest[j] = z85[tmp - div * 85];
+            tmp = div;
+        }
+        dest[j] = z85[tmp];
+        dest += 5;
+    }
+    return dest;
+}
+
+const uint8_t z85_dec[93] = {
+        68, 85, 84, 83, 82, 72, 85, 75, 76, 70, 65, 85, 63, 62, 69,
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  64, 85, 73, 66, 74, 71, 
+    81, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 
+    51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 77, 85, 78, 67, 85, 
+    85, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 
+    25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 79, 85, 80
+};
+ 
+static const uint8_t *z85_decode(uint8_t *dest, const uint8_t *src, size_t len) {
+    size_t i;
+
+    for (i = 0; i < len; i += 4) {
+        uint32_t tmp;
+        unsigned int j;
+        
+        tmp = z85_dec[src[0] - 33];
+        for (j = 1; j < 5; j++) {
+            tmp = tmp * 85 + z85_dec[src[j] - 33];
+        }
+        dest[i] = tmp >> 24;
+        dest[i+1] = tmp >> 16;
+        dest[i+2] = tmp >> 8;
+        dest[i+3] = tmp;
+        src += 5;
+    }
+    return src;
+}
+
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    Bytes *v1 = (Bytes *)o1;
+    size_t len, len2, sz;
+    uint8_t *s;
+    Str *v;
+    sz = byteslen(v1);
+    len2 = sz / 4 * 5;
+    if ((sz & 3) != 0) len2 += (sz & 3) + 1;
+    len = (v1->len < 0) ? 4 : 3;
+    len += len2;
+    if (len < len2 || sz > SIZE_MAX / 2) return NULL; /* overflow */
+    if (len > maxsize) return NULL;
+    v = new_str2(len);
+    if (v == NULL) return NULL;
+    v->chars = len;
+    s = v->data;
+
+    if (v1->len < 0) *s++ = '~';
+    *s++ = 'z';
+    *s++ = '\'';
+    s = z85_encode(s, v1->data, sz & ~3);
+    if ((sz & 3) != 0) {
+        uint8_t tmp2[5], tmp[4] = {0, 0, 0, 0};
+        memcpy(tmp + 4 - (sz & 3), v1->data + (sz & ~3), sz & 3);
+        sz &= 3;
+        z85_encode(tmp2, tmp, sz);
+        sz++;
+        memcpy(s, tmp2 + 5 - sz, sz);
+        s += sz;
+    }
+    *s = '\'';
+    return &v->v;
+}
+
+static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Bytes *v1 = (Bytes *)o1;
     static const char *hex = "0123456789abcdef";
     size_t i, len, len2, sz;
@@ -247,12 +329,12 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     return NULL;
 }
 
-MUST_CHECK Obj *bytes_from_str2(const uint8_t *s, size_t *ln, linepos_t epoint) {
+MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint) {
     Bytes *v;
     size_t i, j;
     uint8_t ch2, ch = s[0];
 
-    i = 1;
+    i = 1; j = 0;
     for (;;) {
         if ((ch2 = s[i]) == 0) {
             *ln = i;
@@ -262,42 +344,84 @@ MUST_CHECK Obj *bytes_from_str2(const uint8_t *s, size_t *ln, linepos_t epoint) 
         if (ch2 == ch) {
             break; /* end of string; */
         }
+        ch2 ^= 0x30;
+        if (ch2 < 10) continue;
+        ch2 = (ch2 | 0x20) - 0x71;
+        if (ch2 >= 6 && j == 0) j = i;
     }
     *ln = i;
+    if (j != 0) {
+        struct linepos_s epoint2;
+        epoint2 = *epoint;
+        epoint2.pos += j;
+        err_msg2(ERROR______EXPECTED, "hex digit", &epoint2);
+        return (Obj *)ref_none();
+    }
     j = (i > 1) ? (i - 2) : 0;
+    j /= 2;
     v = new_bytes2(j);
     if (v == NULL) return (Obj *)new_error_mem(epoint);
-    v->len = j / 2;
+    v->len = j;
     for (i = 0; i < (size_t)v->len; i++) {
         uint8_t c1, c2;
         s++;
         c1 = s[i] ^ 0x30;
-        if (c1 >= 10) {
-            c1 = (c1 | 0x20) - 0x71;
-            if (c1 < 6) c1 += 10;
-            else {
-                struct linepos_s epoint2;
-                val_destroy(&v->v);
-                epoint2 = *epoint;
-                epoint2.pos += i*2 + 2;
-                err_msg2(ERROR______EXPECTED, "hex digit", &epoint2);
-                return (Obj *)ref_none();
-            }
-        }
+        if (c1 >= 10) c1 = (c1 | 0x20) - 0x67;
         c2 = s[i+1] ^ 0x30;
-        if (c2 >= 10) {
-            c2 = (c2 | 0x20) - 0x71;
-            if (c2 < 6) c2 += 10;
-            else {
-                struct linepos_s epoint2;
-                val_destroy(&v->v);
-                epoint2 = *epoint;
-                epoint2.pos += i*2 + 3;
-                err_msg2(ERROR______EXPECTED, "hex digit", &epoint2);
-                return (Obj *)ref_none();
-            }
-        }
+        if (c2 >= 10) c2 = (c2 | 0x20) - 0x67;
         v->data[i] = (c1 << 4) | c2;
+    }
+    if ((*ln & 1) != 0) err_msg2(ERROR______EXPECTED, "even number of hex digits", epoint);
+    return &v->v;
+}
+
+MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, size_t *ln, linepos_t epoint) {
+    Bytes *v;
+    size_t i, j, sz;
+    uint8_t ch2, ch = s[0];
+
+    i = 1; j = 0;
+    for (;;) {
+        if ((ch2 = s[i]) == 0) {
+            *ln = i;
+            return (Obj *)ref_none();
+        }
+        i++;
+        if (ch2 == ch) {
+            break; /* end of string; */
+        }
+        if (j == 0 && (ch2 <= ' ' || ch2 >= '~' || z85_dec[ch2 - 33] == 85)) j = i;
+    }
+    *ln = i;
+    if (j != 0) {
+        struct linepos_s epoint2;
+        epoint2 = *epoint;
+        epoint2.pos += j;
+        err_msg2(ERROR______EXPECTED, "z85 character", &epoint2);
+        return (Obj *)ref_none();
+    }
+    i = (i > 1) ? (i - 2) : 0;
+    j = i / 5;
+    i -= j * 5;
+    j *= 4;
+    if (i == 1) {
+        err_msg2(ERROR______EXPECTED, "valid z85 string", epoint);
+        return (Obj *)ref_none();
+    }
+    sz = (i > 1) ? (j + i - 1) : j;
+    v = new_bytes2(sz);
+    if (v == NULL) return (Obj *)new_error_mem(epoint);
+    v->len = sz;
+    s = z85_decode(v->data, s + 1, j);
+    if (i > 1) {
+        uint8_t tmp2[4], tmp[5] = {'0', '0', '0', '0', '0'};
+        memcpy(tmp + 5 - i, s, i);
+        i--;
+        z85_decode(tmp2, tmp, i);
+        memcpy(v->data + j, tmp2 + 4 - i, i);
+        if (memcmp(tmp2, "\x0\x0\x0\x0", 4 - i) != 0) {
+            err_msg2(ERROR______EXPECTED, "valid z85 string", epoint);
+        }
     }
     return &v->v;
 }
@@ -1180,6 +1304,7 @@ void bytesobj_init(void) {
     obj.truth = truth;
     obj.hash = hash;
     obj.repr = repr;
+    obj.str = str;
     obj.ival = ival;
     obj.uval = uval;
     obj.uval2 = uval2;
