@@ -296,6 +296,7 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
         }
         i2++;
     }
+    *ln = i;
     j = (i > 1) ? (i - 2) : 0;
     v = new_str2(j - r);
     if (v == NULL) return (Obj *)new_error_mem(epoint);
@@ -318,7 +319,6 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
     } else {
         memcpy(v->data, s + 1, j);
     }
-    *ln = i;
     return &v->v;
 }
 

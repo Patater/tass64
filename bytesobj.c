@@ -204,7 +204,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Str *v;
     sz = byteslen(v1);
     len2 = sz * 2;
-    len = (v1->len < 0) ? 9 : 8;
+    len = (v1->len < 0) ? 4 : 3;
     len += len2;
     if (len < len2 || sz > SIZE_MAX / 2) return NULL; /* overflow */
     if (len > maxsize) return NULL;
@@ -213,16 +213,15 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     v->chars = len;
     s = v->data;
 
-    memcpy(s, "bytes(", 6);
-    s += 6;
     if (v1->len < 0) *s++ = '~';
-    *s++ = '$';
+    *s++ = 'x';
+    *s++ = '\'';
     for (i = 0;i < sz; i++) {
-        b = v1->data[sz - i - 1];
+        b = v1->data[i];
         *s++ = (uint8_t)hex[b >> 4];
         *s++ = (uint8_t)hex[b & 0xf];
     }
-    *s = ')';
+    *s = '\'';
     return &v->v;
 }
 
@@ -246,6 +245,61 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     if (v1->data != v1->u.val) v1->u.hash = h;
     *hs = h;
     return NULL;
+}
+
+MUST_CHECK Obj *bytes_from_str2(const uint8_t *s, size_t *ln, linepos_t epoint) {
+    Bytes *v;
+    size_t i, j;
+    uint8_t ch2, ch = s[0];
+
+    i = 1;
+    for (;;) {
+        if ((ch2 = s[i]) == 0) {
+            *ln = i;
+            return (Obj *)ref_none();
+        }
+        i++;
+        if (ch2 == ch) {
+            break; /* end of string; */
+        }
+    }
+    *ln = i;
+    j = (i > 1) ? (i - 2) : 0;
+    v = new_bytes2(j);
+    if (v == NULL) return (Obj *)new_error_mem(epoint);
+    v->len = j / 2;
+    for (i = 0; i < (size_t)v->len; i++) {
+        uint8_t c1, c2;
+        s++;
+        c1 = s[i] ^ 0x30;
+        if (c1 >= 10) {
+            c1 = (c1 | 0x20) - 0x71;
+            if (c1 < 6) c1 += 10;
+            else {
+                struct linepos_s epoint2;
+                val_destroy(&v->v);
+                epoint2 = *epoint;
+                epoint2.pos += i*2 + 2;
+                err_msg2(ERROR______EXPECTED, "hex digit", &epoint2);
+                return (Obj *)ref_none();
+            }
+        }
+        c2 = s[i+1] ^ 0x30;
+        if (c2 >= 10) {
+            c2 = (c2 | 0x20) - 0x71;
+            if (c2 < 6) c2 += 10;
+            else {
+                struct linepos_s epoint2;
+                val_destroy(&v->v);
+                epoint2 = *epoint;
+                epoint2.pos += i*2 + 3;
+                err_msg2(ERROR______EXPECTED, "hex digit", &epoint2);
+                return (Obj *)ref_none();
+            }
+        }
+        v->data[i] = (c1 << 4) | c2;
+    }
+    return &v->v;
 }
 
 MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types mode) {

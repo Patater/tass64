@@ -415,20 +415,21 @@ Byte string constants
 
 Byte strings are like character strings, but hold bytes instead of characters.
 
-Quoted character strings prefixing by `b', `l', `n', `p' or `s' characters can
-be used to create byte strings. The resulting byte string contains what .text,
-.shiftl, .null, .ptext and .shift would create.
+Quoted character strings prefixing by `b', `l', `n', `p', `s' or `x' characters
+can be used to create byte strings. The resulting byte string contains what
+.text, .shiftl, .null, .ptext and .shift would create. Direct hexadecimal entry
+can be done using the `x' prefix which.
 
-       Byte string operators and functions
-y .. x concatenate strings b"a" .. b"b" is b"ab"
-y in x is substring of     b"b" in b"abc" is true
-a x n  repeat              b"ab" x 3 is b"ababab"
-a[i]   byte from start     b"abc"[1] is b"b"
-a[i]   byte from end       b"abc"[-1] is b"c"
-a[s]   no change           b"abc"[:] is b"abc"
-a[s]   cut off start       b"abc"[1:] is b"bc"
-a[s]   cut off end         b"abc"[:-1] is b"ab"
-a[s]   reverse             b"abc"[::-1] is b"cba"
+          Byte string operators and functions
+y .. x concatenate strings x"12" .. x"34" is x"1234"
+y in x is substring of     x"34" in x"1234" is true
+a x n  repeat              x"ab" x 3 is x"ababab"
+a[i]   byte from start     x"abcd12"[1] is x"cd"
+a[i]   byte from end       x"abcd"[-1] is x"cd"
+a[s]   no change           x"abcd"[:] is x"abcd"
+a[s]   cut off start       x"abcdef"[1:] is x"cdef"
+a[s]   cut off end         x"abcdef"[:-1] is x"abcd"
+a[s]   reverse             x"abcdef"[::-1] is x"efcdab"
 
 Byte strings support indexing and slicing. This is explained in detail in
 section `Slicing and indexing'.
@@ -444,6 +445,7 @@ mystr   = b"oeU"        ;convert text to bytes, like .text
         .text l"p2"     ;convert to bytes like .shiftl
         .text n"p3"     ;convert to bytes like .null
         .text p"p4"     ;convert to bytes like .ptext
+        .text x"fce2"   ;2 bytes: $fc and $e2
 
 Lists and tuples
 
@@ -975,7 +977,7 @@ all(<expression>)
     all bits set or no bits at all        all($f) is true
     all characters non-zero or empty      all("c") is true
     string
-    all bytes non-zero or no bytes        all(b"c") is true
+    all bytes non-zero or no bytes        all(x"ac24") is true
     all elements true or empty list       all([true, true, false]) is false
 
     Only booleans in a list are accepted with the `-Wstrict-bool' command line
@@ -987,7 +989,7 @@ any(<expression>)
                             Any function
     at least one bit set             any(~$f) is false
     at least one non-zero character  any("c") is true
-    at least one non-zero byte       any(b"c") is true
+    at least one non-zero byte       any(x"ac24") is true
     at least one true element        any([true, true, false]) is true
 
     Only booleans in a list are accepted with the `-Wstrict-bool' command line
@@ -1051,7 +1053,7 @@ len(<expression>)
                    Length of various types
     bit string       length in bits       len($034) is 12
     character string number of characters len("abc") is 3
-    byte string      number of bytes      len(b"abc") is 3
+    byte string      number of bytes      len(x"abcd23") is 3
     tuple, list      number of elements   len([1, 2, 3]) is 3
     dictionary       number of elements   len({1:2, 3:4]) is 2
     code             number of elements   len(label)
