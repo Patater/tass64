@@ -244,40 +244,6 @@ static const uint8_t *z85_decode(uint8_t *dest, const uint8_t *src, size_t len) 
     return src;
 }
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Bytes *v1 = (Bytes *)o1;
-    size_t len, len2, sz;
-    uint8_t *s;
-    Str *v;
-    sz = byteslen(v1);
-    len2 = sz / 4 * 5;
-    if ((sz & 3) != 0) len2 += (sz & 3) + 1;
-    len = (v1->len < 0) ? 4 : 3;
-    len += len2;
-    if (len < len2 || sz > SIZE_MAX / 2) return NULL; /* overflow */
-    if (len > maxsize) return NULL;
-    v = new_str2(len);
-    if (v == NULL) return NULL;
-    v->chars = len;
-    s = v->data;
-
-    if (v1->len < 0) *s++ = '~';
-    *s++ = 'z';
-    *s++ = '\'';
-    s = z85_encode(s, v1->data, sz & ~3);
-    if ((sz & 3) != 0) {
-        uint8_t tmp2[5], tmp[4] = {0, 0, 0, 0};
-        memcpy(tmp + 4 - (sz & 3), v1->data + (sz & ~3), sz & 3);
-        sz &= 3;
-        z85_encode(tmp2, tmp, sz);
-        sz++;
-        memcpy(s, tmp2 + 5 - sz, sz);
-        s += sz;
-    }
-    *s = '\'';
-    return &v->v;
-}
-
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Bytes *v1 = (Bytes *)o1;
     static const char *hex = "0123456789abcdef";
@@ -302,6 +268,41 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
         b = v1->data[i];
         *s++ = (uint8_t)hex[b >> 4];
         *s++ = (uint8_t)hex[b & 0xf];
+    }
+    *s = '\'';
+    return &v->v;
+}
+
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+    Bytes *v1 = (Bytes *)o1;
+    size_t len, len2, sz;
+    uint8_t *s;
+    Str *v;
+    sz = byteslen(v1);
+    if (sz <= 1) return str(o1, epoint, maxsize);
+    len2 = sz / 4 * 5;
+    if ((sz & 3) != 0) len2 += (sz & 3) + 1;
+    len = (v1->len < 0) ? 4 : 3;
+    len += len2;
+    if (len < len2 || sz > SIZE_MAX / 2) return NULL; /* overflow */
+    if (len > maxsize) return NULL;
+    v = new_str2(len);
+    if (v == NULL) return NULL;
+    v->chars = len;
+    s = v->data;
+
+    if (v1->len < 0) *s++ = '~';
+    *s++ = 'z';
+    *s++ = '\'';
+    s = z85_encode(s, v1->data, sz & ~3);
+    if ((sz & 3) != 0) {
+        uint8_t tmp2[5], tmp[4] = {0, 0, 0, 0};
+        memcpy(tmp + 4 - (sz & 3), v1->data + (sz & ~3), sz & 3);
+        sz &= 3;
+        z85_encode(tmp2, tmp, sz);
+        sz++;
+        memcpy(s, tmp2 + 5 - sz, sz);
+        s += sz;
     }
     *s = '\'';
     return &v->v;
