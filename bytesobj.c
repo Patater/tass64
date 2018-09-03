@@ -201,8 +201,12 @@ static uint8_t *z85_encode(uint8_t *dest, const uint8_t *src, size_t len) {
     size_t i;
 
     for (i = 0; i < len; i += 4) {
-        uint32_t tmp = src[i + 3] | (src[i + 2] << 8) | (src[i + 1] << 16) | (src[i] << 24);
+        uint8_t src2[4];
+        uint32_t tmp;
         unsigned int j;
+
+        memcpy(src2, src + i, 4);
+        tmp = src2[3] | (src2[2] << 8) | (src2[1] << 16) | (src2[0] << 24);
 
         for (j = 4; j > 0; j--) {
             uint32_t div = tmp / 85; 
