@@ -574,24 +574,24 @@ mystr   <b>=</b> <span class="s">"oeU"</span>         <i>; text</i>
 
 <h3>Byte string constants<a name="byte-string" href="#byte-string"></a></h3>
 <p>Byte strings are like character strings, but hold bytes instead of characters.</p>
-<p>Quoted character strings prefixing by <q>b</q>, <q>l</q>, <q>n</q>, <q>p</q>
-or <q>s</q> characters can be used to create byte strings. The resulting byte
+<p>Quoted character strings prefixing by <q>b</q>, <q>l</q>, <q>n</q>, <q>p</q>, <q>s</q>
+or <q>x</q> characters can be used to create byte strings. The resulting byte
 string contains what <a href="#d_text"><code>.text</code></a>, <a href="#d_shiftl"><code>.shiftl</code></a>,
 <a href="#d_null"><code>.null</code></a>, <a href="#d_ptext"><code>.ptext</code></a> and <a href="#d_shift"><code>.shift</code></a> would
-create.</p>
+create. Direct hexadecimal entry can be done using the <q>x</q> prefix which.</p>
 
 <div><table border="0">
 <caption>Byte string operators and functions</caption>
 <tbody>
-<tr><td><code><u>y</u> .. <u>x</u></code><td>concatenate strings<td><code><span class="s">b"a"</span> .. <span class="s">b"b"</span></code> is <code><span class="s">b"ab"</span></code>
-<tr><td><code><u>y</u> <span class="k">in</span> <u>x</u></code><td>is substring of<td><code><span class="s">b"b"</span> <span class="k">in</span> <span class="s">b"abc"</span></code> is <code><span>true</span></code>
-<tr><td><code><u>a</u> <span class="k">x</span> <u>n</u></code><td>repeat<td><code><span class="s">b"ab"</span> <span class="k">x</span> <span>3</span></code> is <code><span class="s">b"ababab"</span></code>
-<tr><td><code><u>a</u>[<u>i</u>]</code><td>byte from start<td><code><span class="s">b"abc"</span>[<span>1</span>]</code> is <code><span class="s">b"b"</span></code>
-<tr><td><code><u>a</u>[<u>i</u>]</code><td>byte from end<td><code><span class="s">b"abc"</span>[<span>&minus;1</span>]</code> is <code><span class="s">b"c"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>no change<td><code><span class="s">b"abc"</span>[:]</code> is <code><span class="s">b"abc"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off start<td><code><span class="s">b"abc"</span>[<span>1</span>:]</code> is <code><span class="s">b"bc"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off end<td><code><span class="s">b"abc"</span>[:<span>&minus;1</span>]</code> is <code><span class="s">b"ab"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>reverse<td><code><span class="s">b"abc"</span>[::<span>&minus;1</span>]</code> is <code><span class="s">b"cba"</span></code>
+<tr><td><code><u>y</u> .. <u>x</u></code><td>concatenate strings<td><code><span class="s">x"12"</span> .. <span class="s">x"34"</span></code> is <code><span class="s">x"1234"</span></code>
+<tr><td><code><u>y</u> <span class="k">in</span> <u>x</u></code><td>is substring of<td><code><span class="s">x"34"</span> <span class="k">in</span> <span class="s">x"1234"</span></code> is <code><span>true</span></code>
+<tr><td><code><u>a</u> <span class="k">x</span> <u>n</u></code><td>repeat<td><code><span class="s">x"ab"</span> <span class="k">x</span> <span>3</span></code> is <code><span class="s">x"ababab"</span></code>
+<tr><td><code><u>a</u>[<u>i</u>]</code><td>byte from start<td><code><span class="s">x"abcd12"</span>[<span>1</span>]</code> is <code><span class="s">x"cd"</span></code>
+<tr><td><code><u>a</u>[<u>i</u>]</code><td>byte from end<td><code><span class="s">x"abcd"</span>[<span>&minus;1</span>]</code> is <code><span class="s">x"cd"</span></code>
+<tr><td><code><u>a</u>[<u>s</u>]</code><td>no change<td><code><span class="s">x"abcd"</span>[:]</code> is <code><span class="s">x"abcd"</span></code>
+<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off start<td><code><span class="s">x"abcdef"</span>[<span>1</span>:]</code> is <code><span class="s">x"cdef"</span></code>
+<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off end<td><code><span class="s">x"abcdef"</span>[:<span>&minus;1</span>]</code> is <code><span class="s">x"abcd"</span></code>
+<tr><td><code><u>a</u>[<u>s</u>]</code><td>reverse<td><code><span class="s">x"abcdef"</span>[::<span>&minus;1</span>]</code> is <code><span class="s">x"efcdab"</span></code>
 </tbody>
 </table></div>
 
@@ -610,6 +610,7 @@ mystr   <b>=</b> <span class="s">b"oeU"</span>        <i>;convert text to bytes,
         <b class="d">.text</b> <span class="s">l"p2"</span>     <i>;convert to bytes like .shiftl</i>
         <b class="d">.text</b> <span class="s">n"p3"</span>     <i>;convert to bytes like .null</i>
         <b class="d">.text</b> <span class="s">p"p4"</span>     <i>;convert to bytes like .ptext</i>
+        <b class="d">.text</b> <span class="s">x"fce2"</span>   <i>;2 bytes: $fc and $e2</i>
 </pre>
 
 <h3>Lists and tuples<a name="list-tuples" href="#list-tuples"></a></h3>
@@ -1258,7 +1259,7 @@ parameters to functions.</p>
 <tbody>
 <tr><td width="50%">all bits set or no bits at all<td><code><span class="k">all</span>(<span>$f</span>)</code> is <code><span>true</span></code>
 <tr><td>all characters non-zero or empty string<td><code><span class="k">all</span>(<span class="s">"c"</span>)</code> is <code><span>true</span></code>
-<tr><td>all bytes non-zero or no bytes<td><code><span class="k">all</span>(<span class="s">b"c"</span>)</code> is <code><span>true</span></code>
+<tr><td>all bytes non-zero or no bytes<td><code><span class="k">all</span>(<span class="s">x"ac24"</span>)</code> is <code><span>true</span></code>
 <tr><td>all elements true or empty list<td><code><span class="k">all</span>([<span>true</span>, <span>true</span>, <span>false</span>])</code> is <code><span>false</span></code>
 </tbody>
 </table></div>
@@ -1272,7 +1273,7 @@ parameters to functions.</p>
 <tbody>
 <tr><td width="50%">at least one bit set<td><code><span class="k">any</span>(~<span>$f</span>)</code> is <code><span>false</span></code>
 <tr><td>at least one non-zero character<td><code><span class="k">any</span>(<span class="s">"c"</span>)</code> is <code><span>true</span></code>
-<tr><td>at least one non-zero byte<td><code><span class="k">any</span>(<span class="s">b"c"</span>)</code> is <code><span>true</span></code>
+<tr><td>at least one non-zero byte<td><code><span class="k">any</span>(<span class="s">x"ac24"</span>)</code> is <code><span>true</span></code>
 <tr><td>at least one true element<td><code><span class="k">any</span>([<span>true</span>, <span>true</span>, <span>false</span>])</code> is <code><span>true</span></code>
 </tbody>
 </table></div>
@@ -1349,7 +1350,7 @@ type character. These flags can be used:</p>
 <tbody>
 <tr><td>bit string<td>length in bits<td><code><span class="k">len</span>(<span>$034</span>)</code> is <code><span>12</span></code>
 <tr><td>character string<td>number of characters<td><code><span class="k">len</span>(<span class="s">"abc"</span>)</code> is <code><span>3</span></code>
-<tr><td>byte string<td>number of bytes<td><code><span class="k">len</span>(<span class="s">b"abc"</span>)</code> is <code><span>3</span></code>
+<tr><td>byte string<td>number of bytes<td><code><span class="k">len</span>(<span class="s">x"abcd23"</span>)</code> is <code><span>3</span></code>
 <tr><td>tuple, list<td>number of elements<td><code><span class="k">len</span>([<span>1</span>, <span>2</span>, <span>3</span>])</code> is <code><span>3</span></code>
 <tr><td>dictionary<td>number of elements<td><code><span class="k">len</span>({<span>1</span>:<span>2</span>, <span>3</span>:<span>4</span>])</code> is <code><span>2</span></code>
 <tr><td>code<td>number of elements<td><code><span class="k">len</span>(<u>label</u>)</code>

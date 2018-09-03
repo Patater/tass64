@@ -260,6 +260,25 @@ static MUST_CHECK Obj *get_float(linepos_t epoint) {
     return get_exponent2(v, epoint);
 }
 
+static MUST_CHECK Obj *get_bytes(linepos_t epoint) {
+    char txt[4];
+    size_t len;
+    Obj *v = bytes_from_str2(pline + lpoint.pos, &len, epoint);
+    if (v->obj == BYTES_OBJ) {
+        lpoint.pos += len - 1;
+        if ((len & 1) != 0) err_msg2(ERROR______EXPECTED, "even number of hex digits", &lpoint);
+        lpoint.pos++;
+        return v;
+    }
+    txt[1] = (char)here();
+    txt[2] = txt[0] = txt[1] ^ ('\'' ^ '"');
+    txt[3] = 0;
+    lpoint.pos += len - 1;
+    if (here() != txt[1]) err_msg2(ERROR______EXPECTED, txt, &lpoint);
+    lpoint.pos++;
+    return v;
+}
+
 static MUST_CHECK Obj *get_string(linepos_t epoint) {
     char txt[4];
     size_t len;
@@ -1379,6 +1398,7 @@ static bool get_exp2(int stop) {
                     case 'p': mode = BYTES_MODE_PTEXT; break;
                     case 'l': mode = BYTES_MODE_SHIFTL; break;
                     case 'b': mode = BYTES_MODE_TEXT; break;
+                    case 'x': push_oper(get_bytes(&epoint), &epoint); goto other;
                     default: mode = BYTES_MODE_NULL_CHECK; break;
                     }
                     if (mode != BYTES_MODE_NULL_CHECK) {
