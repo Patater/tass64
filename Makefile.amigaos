@@ -5,7 +5,7 @@ OBJ = 64tass.o opcodes.o str.o avl.o my_getopt.o eval.o error.o section.o \
  intobj.o bitsobj.o functionobj.o instruction.o unicode.o unicodedata.o listing.o \
  registerobj.o dictobj.o namespaceobj.o operobj.o gapobj.o typeobj.o noneobj.o \
  longjump.o wctype.o wchar.o math.o arguments.o optimizer.o opt_bit.o labelobj.o \
- errorobj.o macroobj.o mfuncobj.o identobj.o memblocksobj.o
+ errorobj.o macroobj.o mfuncobj.o identobj.o memblocksobj.o foldobj.o
 LDLIBS = -lmsoft
 LANG = C
 REVISION := $(shell svnversion | grep --color=none "^[1-9]" || echo "1515?")
