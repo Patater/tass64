@@ -2161,8 +2161,8 @@ MUST_CHECK Obj *compile(void)
                         newlabel->ref = false;
                         if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
                         vs = get_val(); val = vs->val;
-                        if (val->obj == ERROR_OBJ) { err_msg_output((Error *)val); goto finish; }
-                        if (val == &none_value->v) { err_msg_still_none(NULL, &vs->epoint); goto finish;}
+                        if (val->obj == ERROR_OBJ) { err_msg_output((Error *)val); goto breakerr; }
+                        if (val == &none_value->v) { err_msg_still_none(NULL, &vs->epoint); goto breakerr;}
                         obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
                         if (val->obj != obj) {err_msg_wrong_type(val, obj, &vs->epoint); goto breakerr;}
                         ignore();if (here() == ',') lpoint.pos++;
