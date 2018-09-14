@@ -3396,7 +3396,7 @@ MUST_CHECK Obj *compile(void)
                                 } else {
                                     size_t size;
                                     Code *code;
-                                    if (diagnostics.optimize) cpu_opt_invalidate();
+                                    if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
                                     oaddr = current_address->address;
                                     if (lst->data[i]->obj == CODE_OBJ) {
                                         Obj *tmp = get_star_value(current_address->l_address_val);
@@ -3404,7 +3404,7 @@ MUST_CHECK Obj *compile(void)
                                         if (!tmp->obj->same(tmp, code->addr)) {
                                             val_destroy(code->addr); code->addr = tmp;
                                             if (newlabel->usepass >= pass) {
-                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
+                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
                                                 fixeddig = false;
                                             }
                                         } else val_destroy(tmp);
@@ -3413,7 +3413,7 @@ MUST_CHECK Obj *compile(void)
                                             code->conflicts = current_section->conflicts;
                                             code->offs = 0;
                                             if (newlabel->usepass >= pass) {
-                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
+                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
                                                 fixeddig = false;
                                             }
                                         }
@@ -3425,7 +3425,7 @@ MUST_CHECK Obj *compile(void)
                                         code->dtype = D_NONE;
                                         code->pass = 0;
                                         code->memblocks = ref_memblocks(current_address->mem);
-                                        code->names = new_namespace(current_file_list, &epoint);
+                                        code->names = new_namespace(current_file_list, &newlabel->epoint);
                                         code->requires = current_section->requires;
                                         code->conflicts = current_section->conflicts;
                                         val_destroy(lst->data[i]);
@@ -3440,7 +3440,7 @@ MUST_CHECK Obj *compile(void)
                                     if (code->size != size) {
                                         code->size = size;
                                         if (code->pass != 0) {
-                                            if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
+                                            if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
                                             fixeddig = false;
                                         }
                                     }
