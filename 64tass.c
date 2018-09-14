@@ -3321,16 +3321,17 @@ MUST_CHECK Obj *compile(void)
             case CMD_REPT: if ((waitfor->skip & 1) != 0)
                 { /* .rept */
                     uval_t cnt;
-                    struct values_s *vs;
                     bool light = (newlabel == NULL);
                     Obj *nf;
                     List *lst = NULL;
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_NEXT, &epoint);waitfor->skip = 0;
-                    if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
-                    vs = get_val();
-                    if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) cnt = 0;
+                    if (!get_exp(0, 1, 1, &epoint)) cnt = 0;
+                    else {
+                        struct values_s *vs = get_val();
+                        if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) cnt = 0;
+                    }
                     if (prm == CMD_BREPT) {
                         size_t i;
                         if (light) {
