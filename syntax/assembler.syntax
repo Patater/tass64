@@ -114,6 +114,7 @@ context default lightgray
     keyword whole .assert brightcyan
     keyword whole .bend brightcyan
     keyword whole .binclude brightcyan
+    keyword whole .bfor brightcyan
     keyword whole .block brightcyan
     keyword whole .break brightcyan
     keyword whole .brept brightcyan

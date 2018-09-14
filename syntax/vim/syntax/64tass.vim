@@ -123,7 +123,7 @@ endif
 " Assembler directives
 syn match tass64PreProc /\v\.%(al|align|as|autsiz|bend|block|cdef|cpu)>/ contained
 syn match tass64PreProc /\v\.%(databank|dpage|dsection|edef|enc|end|endp)>/ contained
-syn match tass64PreProc /\v\.%(endweak|eor|for|goto|here|hidemac)>/ contained
+syn match tass64PreProc /\v\.%(endweak|eor|for|bfor|goto|here|hidemac)>/ contained
 syn match tass64PreProc /\v\.%(lbl|logical|mansiz|next|virtual|endv)>/ contained
 syn match tass64PreProc /\v\.%(offs|option|page|pend|proc|proff|pron|rept|brept|section)>/ contained
 syn match tass64PreProc /\v\.%(seed|send|showmac|var|weak|xl|xs|namespace|endn)>/ contained
