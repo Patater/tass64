@@ -1980,50 +1980,69 @@ Comment
 Repetitions
 
 .for [<assignment>], [<condition>], [<assignment>]
+.bfor [<assignment>], [<condition>], [<assignment>]
 .next
-    Loop while the condition is true. If there's no condition then it's an
-    infinite loop and .break must be used to terminate it.
+    Assign initial value, loop while the condition is true and modify value.
+
+    The .for directive is more useful calculate data as normal labels will be
+    double defined when used.
+
+    The .bfor directive creates a new scope for each iteration therefore it
+    also works with normal labels but is a bit more resource intensive.
+
+    If the .bfor directive was prefixed with a label then individual scopes are
+    accessible through that label using indexing, otherwise these are not
+    accessible. Variable access needs dot notation in addition of course.
 
             ldx #0
             lda #32
     lp      .for ue = $400, ue < $800, ue += $100
-            sta ue,x
+            sta ue,x         ;do $400, $500, $600 and $700
             .next
             dex
             bne lp
 
+    First a variable is set, usually this is used for counting. This is
+    optional, the variable may be set already before the loop.
+
+    Then the condition is checked and the enclosed lines are compiled if it's
+    true. If there's no condition then it's an infinite loop and .break must be
+    used to terminate it.
+
+    After an iteration the second assignment is calculated, usually it's
+    updating the loop counter variable. This is optional as well.
+
 .for <variable>[, <variable>, ...] in <expression>
+.bfor <variable>[, <variable>, ...] in <expression>
 .next
-    Assign variable(s) to each item of expression in sequence.
+    Assign variable(s) to values in sequence one-by-one in order.
+
+    The expression is usually the range function or some sort of list.
 
             .for col in 0, 11, 12, 15, 1
-            lda #col
+            lda #col         ;0, 11, 12, 15 and 1
             sta $d020
             .next
 
 .rept <expression>
+.brept <expression>
 .next
     Repeat enclosed lines the specified number of times.
 
-    This directive is more useful to repeat data definitions than code. This is
-    because it's easy to get duplicate label definitions unless anonymous
-    labels or a nested .block is used.
+    The .rept directive is useful to repeat data definitions as normal labels
+    will be double defined when used.
+
+    The .brept directive creates a new scope for each repetition therefore it
+    also works with normal labels but is a bit more resource intensive.
+
+    If the .brept directive was prefixed with a label the scopes are accessible
+    through that label using indexing, otherwise not at all. Variable access
+    needs dot notation in addition of course.
 
             .rept 100
     -       inx
             bne -
             .next
-
-.brept <expression>
-.next
-    Repeat enclosed lines in unique scopes the specified number of times.
-
-    It's the heavyweight version of the .rept directive which also works with
-    normal labels.
-
-    If the directive was prefixed with a label the scopes are accessible
-    through that label using indexing, otherwise not at all. Variable access
-    needs dot notation in addition of course.
 
     lst     .brept 100       ;each iteration into a tuple
     label   jmp label        ;not a duplicate definition
@@ -2032,8 +2051,19 @@ Repetitions
 
 .break
     Exit current loop immediately.
+
+    Can be used inside .for, .bfor, .rept and .brept to terminate the loop
+    immediately.
+
 .continue
     Continue current loop's next iteration.
+
+    Can be used inside .for, .bfor, .rept and .brept to start the next
+    iteration immediately.
+
+.next
+    Closing directive of .for, .bfor, .rept and .brept loop.
+
 .lbl
     Creates a special jump label that can be referenced by .goto
 .goto <labelname>

@@ -119,6 +119,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x35" "assert",
     "\x5b" "autsiz",
     "\x3a" "bend",
+    "\x63" "bfor",
     "\x1a" "binary",
     "\x50" "binclude",
     "\x39" "block",
@@ -229,7 +230,7 @@ typedef enum Command_types {
     CMD_BINCLUDE, CMD_FUNCTION, CMD_ENDF, CMD_SWITCH, CMD_CASE, CMD_DEFAULT,
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
-    CMD_BREPT
+    CMD_BREPT, CMD_BFOR
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -1049,7 +1050,118 @@ static MUST_CHECK Oper *oper_from_token2(int wht, int wht2) {
     return NULL;
 }
 
-static void for_command(linepos_t epoint) {
+static MUST_CHECK Obj *tuple_scope_light(Obj **o, linepos_t epoint) {
+    Obj *nf, *val = *o;
+    if (val->obj != NAMESPACE_OBJ) {
+        val_destroy(val);
+        *o = val = (Obj *)new_namespace(current_file_list, epoint);
+    }
+    push_context((Namespace *)val);
+    nf = compile();
+    pop_context();
+    return nf;
+}
+
+static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
+    Obj *nf;
+    size_t size;
+    Code *code;
+    address_t oaddr;
+    size_t newmemp, newmembp;
+    Obj *val = *o;
+
+    if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
+    oaddr = current_address->address;
+    if (val->obj == CODE_OBJ) {
+        Obj *tmp = get_star_value(current_address->l_address_val);
+        code = (Code *)val;
+        if (!tmp->obj->same(tmp, code->addr)) {
+            val_destroy(code->addr); code->addr = tmp;
+            if (newlabel->usepass >= pass) {
+                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
+                fixeddig = false;
+            }
+        } else val_destroy(tmp);
+        if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+            code->requires = current_section->requires;
+            code->conflicts = current_section->conflicts;
+            code->offs = 0;
+            if (newlabel->usepass >= pass) {
+                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
+                fixeddig = false;
+            }
+        }
+    } else {
+        code = new_code();
+        code->addr = get_star_value(current_address->l_address_val);
+        code->size = 0;
+        code->offs = 0;
+        code->dtype = D_NONE;
+        code->pass = 0;
+        code->memblocks = ref_memblocks(current_address->mem);
+        code->names = new_namespace(current_file_list, &newlabel->epoint);
+        code->requires = current_section->requires;
+        code->conflicts = current_section->conflicts;
+        val_destroy(val);
+        *o = val = &code->v;
+    }
+    get_mem(current_address->mem, &newmemp, &newmembp);
+    code->apass = pass;
+    push_context(((Code *)val)->names);
+    nf = compile();
+    pop_context();
+    size = (current_address->address - oaddr) & all_mem2;
+    if (code->size != size) {
+        code->size = size;
+        if (code->pass != 0) {
+            if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
+            fixeddig = false;
+        }
+    }
+    code->pass = pass;
+    if (code->memblocks != current_address->mem) {
+        val_destroy(&code->memblocks->v);
+        code->memblocks = ref_memblocks(current_address->mem);
+    }
+    code->memp = newmemp;
+    code->membp = newmembp;
+    return nf;
+}
+
+static void list_extend(List *lst) {
+    size_t o = lst->len;
+    if (lst->data == lst->val) {
+        lst->data = (Obj **)mallocx(16 * sizeof *lst->data);
+        memcpy(lst->data, lst->val, lst->len * sizeof *lst->data);
+        lst->len = 16;
+    } else {
+        if (lst->len < 256) lst->len *= 2;
+        else {
+            lst->len += 256;
+            if (lst->len < 256) err_msg_out_of_memory(); /* overflow */
+        }
+        lst->data = (Obj **)reallocx(lst->data, lst->len * sizeof *lst->data);
+    }
+    while (o < lst->len) lst->data[o++] = (Obj *)ref_none();
+}
+
+static void list_shrink(List *lst, size_t i) {
+    size_t j = i;
+    while (j < lst->len) val_destroy(lst->data[j++]);
+    lst->len = i;
+    if (lst->data != lst->val) {
+        if (lst->len <= lenof(lst->val)) {
+            memcpy(lst->val, lst->data, lst->len * sizeof *lst->data);
+            free(lst->data);
+            lst->data = lst->val;
+        } else {
+            Obj **v = realloc(lst->data, lst->len * sizeof *lst->data);
+            if (v != NULL) lst->data =v;
+        }
+    }
+}
+
+static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoint) {
     int wht;
     line_t lin, xlin;
     struct linepos_s apoint, bpoint = {0, 0};
@@ -1071,6 +1183,7 @@ static void for_command(linepos_t epoint) {
     size_t lentmp;
     Iter *iter = NULL;
     labels.p = 0;
+    size_t i = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
     listing_line(listing, epoint->pos);
@@ -1169,7 +1282,7 @@ static void for_command(linepos_t epoint) {
         if (here() != ',') {err_msg(ERROR______EXPECTED, "','"); 
         error:
             if (labels.p != 0 && labels.data != labels.val) free(labels.data);
-            return;
+            return i;
         }
         lpoint.pos++;ignore();
     }
@@ -1197,18 +1310,23 @@ static void for_command(linepos_t epoint) {
                 } else {
                     Iter *iter2 = val2->obj->getiter(val2);
                     iter_next_t iter2_next;
-                    size_t i;
+                    size_t j;
                     iter2_next = iter2->next;
-                    for (i = 0; i < labels.p && (val2 = iter2_next(iter2)) != NULL; i++) {
-                        val_destroy(labels.data[i]->value);
-                        labels.data[i]->value = val_reference(val2);
+                    for (j = 0; j < labels.p && (val2 = iter2_next(iter2)) != NULL; j++) {
+                        val_destroy(labels.data[j]->value);
+                        labels.data[j]->value = val_reference(val2);
                     }
-                    i += iter2->len(iter2);
-                    if (i != labels.p) err_msg_cant_unpack(labels.p, i, epoint);
+                    j += iter2->len(iter2);
+                    if (j != labels.p) err_msg_cant_unpack(labels.p, j, epoint);
                 }
                 lpoint.line = lin;
                 waitfor->skip = 1; lvline = vline;
-                nf = compile();
+                if (lst != NULL) {
+                    if (i >= lst->len) list_extend(lst);
+                    if (light) nf = tuple_scope_light(&lst->data[i], epoint);
+                    else nf = tuple_scope(newlabel, &lst->data[i]);
+                    i++;
+                } else nf = compile();
                 if (nf == NULL || waitfor->breakout) {
                     break;
                 }
@@ -1245,7 +1363,12 @@ static void for_command(linepos_t epoint) {
                 if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
             }
             waitfor->skip = 1;lvline = vline;
-            nf = compile();
+            if (lst != NULL) {
+                if (i >= lst->len) list_extend(lst);
+                if (light) nf = tuple_scope_light(&lst->data[i], epoint);
+                else nf = tuple_scope(newlabel, &lst->data[i]);
+                i++;
+            } else nf = compile();
             xlin = lpoint.line;
             pline = expr;
             lpoint.line = lin;
@@ -1350,6 +1473,7 @@ static void for_command(linepos_t epoint) {
     free(expr);
     if (nf != NULL) close_waitfor(W_NEXT);
     star_tree = stree_old; vline = ovline + vline - lvline;
+    return i;
 }
 
 MUST_CHECK Obj *compile(void)
@@ -3358,13 +3482,14 @@ MUST_CHECK Obj *compile(void)
                             }
                             newlabel = label;
                         }
-                        lst = new_tuple(cnt);
-                        i = 0;
                         if (newlabel->value->obj == TUPLE_OBJ) {
                             List *old = (List *)newlabel->value;
-                            for (;i < cnt && i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
+                            lst = new_tuple(old->len);
+                            for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
+                        } else {
+                            lst = new_tuple(cnt);
+                            for (i = 0; i < cnt; i++) lst->data[i] = (Obj *)ref_none();
                         }
-                        while (i < cnt) lst->data[i++] = (Obj *)ref_none();
                     }
                     if (cnt > 0) {
                         line_t lin = lpoint.line;
@@ -3386,73 +3511,10 @@ MUST_CHECK Obj *compile(void)
                             lpoint.line = lin;
                             waitfor->skip = 1; lvline = vline;
                             if (lst != NULL) {
-                                if (light) {
-                                    if (lst->data[i]->obj != NAMESPACE_OBJ) {
-                                        val_destroy(lst->data[i]);
-                                        lst->data[i] = (Obj *)new_namespace(current_file_list, &epoint);
-                                    }
-                                    push_context((Namespace *)lst->data[i++]);
-                                    nf = compile();
-                                    pop_context();
-                                } else {
-                                    size_t size;
-                                    Code *code;
-                                    if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
-                                    oaddr = current_address->address;
-                                    if (lst->data[i]->obj == CODE_OBJ) {
-                                        Obj *tmp = get_star_value(current_address->l_address_val);
-                                        code = (Code *)lst->data[i];
-                                        if (!tmp->obj->same(tmp, code->addr)) {
-                                            val_destroy(code->addr); code->addr = tmp;
-                                            if (newlabel->usepass >= pass) {
-                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
-                                                fixeddig = false;
-                                            }
-                                        } else val_destroy(tmp);
-                                        if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
-                                            code->requires = current_section->requires;
-                                            code->conflicts = current_section->conflicts;
-                                            code->offs = 0;
-                                            if (newlabel->usepass >= pass) {
-                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
-                                                fixeddig = false;
-                                            }
-                                        }
-                                    } else {
-                                        code = new_code();
-                                        code->addr = get_star_value(current_address->l_address_val);
-                                        code->size = 0;
-                                        code->offs = 0;
-                                        code->dtype = D_NONE;
-                                        code->pass = 0;
-                                        code->memblocks = ref_memblocks(current_address->mem);
-                                        code->names = new_namespace(current_file_list, &newlabel->epoint);
-                                        code->requires = current_section->requires;
-                                        code->conflicts = current_section->conflicts;
-                                        val_destroy(lst->data[i]);
-                                        lst->data[i] = &code->v;
-                                    }
-                                    get_mem(current_address->mem, &newmemp, &newmembp);
-                                    code->apass = pass;
-                                    push_context(((Code *)lst->data[i++])->names);
-                                    nf = compile();
-                                    pop_context();
-                                    size = (current_address->address - oaddr) & all_mem2;
-                                    if (code->size != size) {
-                                        code->size = size;
-                                        if (code->pass != 0) {
-                                            if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
-                                            fixeddig = false;
-                                        }
-                                    }
-                                    code->pass = pass;
-                                    if (code->memblocks != current_address->mem) {
-                                        val_destroy(&code->memblocks->v);
-                                        code->memblocks = ref_memblocks(current_address->mem);
-                                    }
-                                    code->memp = newmemp;
-                                    code->membp = newmembp;
-                                }
+                                if (i >= lst->len) list_extend(lst);
+                                if (light) nf = tuple_scope_light(&lst->data[i], &epoint);
+                                else nf = tuple_scope(newlabel, &lst->data[i]);
+                                i++;
                             } else nf = compile();
                             if (nf == NULL || waitfor->breakout || (--cnt) == 0) {
                                 break;
@@ -3463,11 +3525,7 @@ MUST_CHECK Obj *compile(void)
                             if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
                             else listing_line_cut2(listing, waitfor->epoint.pos);
                         }
-                        if (lst != NULL && lst->len > i) {
-                            size_t j = i;
-                            while (i < lst->len) val_destroy(lst->data[i++]);
-                            lst->len = j;
-                        }
+                        if (lst != NULL && lst->len > i) list_shrink(lst, i);
                         close_waitfor(W_NEXT2);
                         if (nf != NULL) close_waitfor(W_NEXT);
                         star_tree = stree_old; vline = ovline + vline - lvline;
@@ -3589,9 +3647,54 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 }
                 break;
+            case CMD_BFOR:
             case CMD_FOR: if ((waitfor->skip & 1) != 0)
                 { /* .for */
-                    for_command(&epoint);
+                    bool light = (newlabel == NULL);
+                    List *lst = NULL;
+                    size_t i;
+
+                    if (prm == CMD_BFOR) {
+                        if (light) {
+                            Label *label;
+                            bool labelexists;
+                            str_t tmpname;
+                            if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
+                            else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
+                            anonident2.type = '.';
+                            anonident2.star_tree = star_tree;
+                            anonident2.vline = vline;
+                            tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                            label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
+                            if (labelexists) {
+                                if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
+                                label->constant = true;
+                                label->owner = true;
+                                label->defpass = pass;
+                            } else {
+                                label->constant = true;
+                                label->owner = true;
+                                label->value = (Obj *)ref_none();
+                                label->epoint = epoint;
+                            }
+                            newlabel = label;
+                        }
+                        if (newlabel->value->obj == TUPLE_OBJ) {
+                            List *old = (List *)newlabel->value;
+                            lst = new_tuple(old->len);
+                            for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
+                        } else {
+                            lst = new_tuple(lenof(lst->val));
+                            for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
+                        }
+                    }
+                    i = for_command(newlabel, lst, light, &epoint);
+                    if (lst != NULL) {
+                        if (lst->len > i) list_shrink(lst, i);
+                        newlabel->update_after = true;
+                        const_assign(newlabel, &lst->v);
+                        newlabel = NULL;
+                    }
                     goto breakerr;
                 } else new_waitfor(W_NEXT, &epoint);
                 break;

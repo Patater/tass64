@@ -205,7 +205,7 @@
     </context>
 
     <context id="preprocessor-loop" end-at-line-end="true">
-      <start>\.(for|b?rept|next|lbl|goto)(\s|(?=;)|$)</start>
+      <start>\.(b?for|b?rept|next|lbl|goto)(\s|(?=;)|$)</start>
       <include>
         <context sub-pattern="0" where="start" style-ref="preprocessor"/>
         <context ref="miscparam"/>
