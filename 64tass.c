@@ -123,6 +123,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x50" "binclude",
     "\x39" "block",
     "\x5a" "break",
+    "\x62" "brept",
     "\x05" "byte",
     "\x54" "case",
     "\x4e" "cdef",
@@ -227,7 +228,8 @@ typedef enum Command_types {
     CMD_DUNION, CMD_SECTION, CMD_DSECTION, CMD_SEND, CMD_CDEF, CMD_EDEF,
     CMD_BINCLUDE, CMD_FUNCTION, CMD_ENDF, CMD_SWITCH, CMD_CASE, CMD_DEFAULT,
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
-    CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV
+    CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
+    CMD_BREPT
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -3315,23 +3317,61 @@ MUST_CHECK Obj *compile(void)
                     if (cpui->name == NULL) err_msg2(ERROR___UNKNOWN_CPU, &cpuname, &vs->epoint);
                 }
                 break;
+            case CMD_BREPT:
             case CMD_REPT: if ((waitfor->skip & 1) != 0)
                 { /* .rept */
                     uval_t cnt;
                     struct values_s *vs;
+                    bool light = (newlabel == NULL);
                     Obj *nf;
+                    List *lst = NULL;
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_NEXT, &epoint);waitfor->skip = 0;
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
-                    if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) break;
+                    if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) cnt = 0;
+                    if (prm == CMD_BREPT) {
+                        size_t i;
+                        if (light) {
+                            Label *label;
+                            bool labelexists;
+                            str_t tmpname;
+                            if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
+                            else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
+                            anonident2.type = '.';
+                            anonident2.star_tree = star_tree;
+                            anonident2.vline = vline;
+                            tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                            label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
+                            if (labelexists) {
+                                if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
+                                label->constant = true;
+                                label->owner = true;
+                                label->defpass = pass;
+                            } else {
+                                label->constant = true;
+                                label->owner = true;
+                                label->value = (Obj *)ref_none();
+                                label->epoint = epoint;
+                            }
+                            newlabel = label;
+                        }
+                        lst = new_tuple(cnt);
+                        i = 0;
+                        if (newlabel->value->obj == TUPLE_OBJ) {
+                            List *old = (List *)newlabel->value;
+                            for (;i < cnt && i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
+                        }
+                        while (i < cnt) lst->data[i++] = (Obj *)ref_none();
+                    }
                     if (cnt > 0) {
                         line_t lin = lpoint.line;
                         bool starexists;
                         struct star_s *s = new_star(vline, &starexists);
                         struct avltree *stree_old = star_tree;
                         line_t ovline = vline, lvline;
+                        size_t i = 0;
 
                         if (starexists && s->addr != star) {
                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
@@ -3344,7 +3384,75 @@ MUST_CHECK Obj *compile(void)
                         for (;;) {
                             lpoint.line = lin;
                             waitfor->skip = 1; lvline = vline;
-                            nf = compile();
+                            if (lst != NULL) {
+                                if (light) {
+                                    if (lst->data[i]->obj != NAMESPACE_OBJ) {
+                                        val_destroy(lst->data[i]);
+                                        lst->data[i] = (Obj *)new_namespace(current_file_list, &epoint);
+                                    }
+                                    push_context((Namespace *)lst->data[i++]);
+                                    nf = compile();
+                                    pop_context();
+                                } else {
+                                    size_t size;
+                                    Code *code;
+                                    if (diagnostics.optimize) cpu_opt_invalidate();
+                                    oaddr = current_address->address;
+                                    if (lst->data[i]->obj == CODE_OBJ) {
+                                        Obj *tmp = get_star_value(current_address->l_address_val);
+                                        code = (Code *)lst->data[i];
+                                        if (!tmp->obj->same(tmp, code->addr)) {
+                                            val_destroy(code->addr); code->addr = tmp;
+                                            if (newlabel->usepass >= pass) {
+                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
+                                                fixeddig = false;
+                                            }
+                                        } else val_destroy(tmp);
+                                        if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                            code->requires = current_section->requires;
+                                            code->conflicts = current_section->conflicts;
+                                            code->offs = 0;
+                                            if (newlabel->usepass >= pass) {
+                                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
+                                                fixeddig = false;
+                                            }
+                                        }
+                                    } else {
+                                        code = new_code();
+                                        code->addr = get_star_value(current_address->l_address_val);
+                                        code->size = 0;
+                                        code->offs = 0;
+                                        code->dtype = D_NONE;
+                                        code->pass = 0;
+                                        code->memblocks = ref_memblocks(current_address->mem);
+                                        code->names = new_namespace(current_file_list, &epoint);
+                                        code->requires = current_section->requires;
+                                        code->conflicts = current_section->conflicts;
+                                        val_destroy(lst->data[i]);
+                                        lst->data[i] = &code->v;
+                                    }
+                                    get_mem(current_address->mem, &newmemp, &newmembp);
+                                    code->apass = pass;
+                                    push_context(((Code *)lst->data[i++])->names);
+                                    nf = compile();
+                                    pop_context();
+                                    size = (current_address->address - oaddr) & all_mem2;
+                                    if (code->size != size) {
+                                        code->size = size;
+                                        if (code->pass != 0) {
+                                            if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
+                                            fixeddig = false;
+                                        }
+                                    }
+                                    code->pass = pass;
+                                    if (code->memblocks != current_address->mem) {
+                                        val_destroy(&code->memblocks->v);
+                                        code->memblocks = ref_memblocks(current_address->mem);
+                                    }
+                                    code->memp = newmemp;
+                                    code->membp = newmembp;
+                                }
+                            } else nf = compile();
                             if (nf == NULL || waitfor->breakout || (--cnt) == 0) {
                                 break;
                             }
@@ -3354,9 +3462,19 @@ MUST_CHECK Obj *compile(void)
                             if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
                             else listing_line_cut2(listing, waitfor->epoint.pos);
                         }
+                        if (lst != NULL && lst->len > i) {
+                            size_t j = i;
+                            while (i < lst->len) val_destroy(lst->data[i++]);
+                            lst->len = j;
+                        }
                         close_waitfor(W_NEXT2);
                         if (nf != NULL) close_waitfor(W_NEXT);
                         star_tree = stree_old; vline = ovline + vline - lvline;
+                    }
+                    if (lst != NULL) {
+                        newlabel->update_after = true;
+                        const_assign(newlabel, &lst->v);
+                        newlabel = NULL;
                     }
                 } else new_waitfor(W_NEXT, &epoint);
                 break;

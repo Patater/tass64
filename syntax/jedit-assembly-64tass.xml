@@ -46,6 +46,7 @@
                         <KEYWORD3>.binclude</KEYWORD3>
                         <KEYWORD3>.block</KEYWORD3>
                         <KEYWORD3>.break</KEYWORD3>
+                        <KEYWORD3>.brept</KEYWORD3>
                         <KEYWORD3>.case</KEYWORD3>
                         <KEYWORD3>.cdef</KEYWORD3>
                         <KEYWORD3>.cerror</KEYWORD3>
