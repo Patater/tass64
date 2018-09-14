@@ -116,6 +116,7 @@ context default lightgray
     keyword whole .binclude brightcyan
     keyword whole .block brightcyan
     keyword whole .break brightcyan
+    keyword whole .brept brightcyan
     keyword whole .case brightcyan
     keyword whole .cdef brightcyan
     keyword whole .cerror brightcyan

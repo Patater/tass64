@@ -2394,11 +2394,35 @@ lp      <b class="k">.for</b> <u>ue</u> = <span>$400</span>, <u>ue</u> &lt; <spa
 
 <dt><code><b class="k">.rept</b></code> &lt;expression&gt;<a name="d_rept" href="#d_rept"></a>
 <dt><code><b class="k">.next</b></code>
-<dd>Repeat by expression number of times.
+<dd>Repeat enclosed lines the specified number of times.
+<p>This directive is more useful to repeat data definitions than code. This is
+because it's easy to get duplicate label definitions unless
+<a href="#symbols-anonymous">anonymous labels</a> or a nested
+<a href="#d_block"><code>.block</code></a> is used.</p>
+
 <pre width=80>
         <b class="k">.rept</b> <span>100</span>
-	<b>nop</b>
+-	<b>inx</b>
+	<b>bne</b> <u>-</u>
 	<b class="k">.next</b>
+</pre>
+
+<dt><code><b class="k">.brept</b></code> &lt;expression&gt;<a name="d_brept" href="#d_brept"></a>
+<dt><code><b class="k">.next</b></code>
+<dd>Repeat enclosed lines in unique scopes the specified number of times.
+
+<p>It's the heavyweight version of the <a href="#d_rept"><code>.rept</code></a>
+directive which also works with normal labels.</p>
+
+<p>If the directive was prefixed with a label the scopes are accessible
+through that label using indexing, otherwise not at all. Variable access needs
+dot notation in addition of course.</p>
+
+<pre width=80>
+lst     <b class="k">.brept</b> <span>100</span>       <i>;each iteration into a tuple</i>
+label	<b>jmp</b> <u>label</u>        <i>;not a duplicate definition</i>
+	<b class="k">.next</b>
+	<b>jmp</b> <u>lst</u>[<span>5</span>].<u>label</u> <i>;use label of 6th iteration</i>
 </pre>
 
 <dt><code><b class="k">.break</b></code><a name="d_break" href="#d_break"></a>
@@ -4991,6 +5015,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_binclude">.binclude</a>
 <a href="#d_block">.block</a>
 <a href="#d_break">.break</a>
+<a href="#d_brept">.brept</a>
 <a href="#d_byte">.byte</a>
 <a href="#d_case">.case</a>
 <a href="#d_cdef">.cdef</a>
