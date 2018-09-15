@@ -1155,7 +1155,7 @@ static void list_shrink(List *lst, size_t i) {
             free(lst->data);
             lst->data = lst->val;
         } else {
-            Obj **v = realloc(lst->data, lst->len * sizeof *lst->data);
+            Obj **v = (Obj **)realloc(lst->data, lst->len * sizeof *lst->data);
             if (v != NULL) lst->data =v;
         }
     }
