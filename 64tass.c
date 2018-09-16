@@ -1210,7 +1210,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                     size_t l = get_label();
                     if (l != 2 || (pline[lpoint.pos-2] | arguments.caseinsensitive) != 'i' || (pline[lpoint.pos-1] | arguments.caseinsensitive) != 'n') {
                         lpoint.pos -= l;
-                        err_msg(ERROR______EXPECTED, foreach ? "',' or 'in'" : "'=' or ',' or 'in'"); goto error;
+                        err_msg(ERROR______EXPECTED, foreach ? "',' or 'in'" : "':=' or ',' or 'in'"); goto error;
                     } else foreach = true;
                 }
             } else lpoint.pos++;
@@ -1410,7 +1410,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                 }
                 context = (varname.data[0] == '_') ? cheap_context : current_context;
                 if (tmp.op == NULL) {
-                    if (wht != '=') {err_msg(ERROR______EXPECTED, "'='"); break;}
+                    if (wht != '=') {err_msg(ERROR______EXPECTED, "':='"); break;}
                     lpoint.pos++;ignore();
                     label = new_label(&varname, context, strength, &labelexists, current_file_list);
                     if (labelexists) {

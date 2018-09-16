@@ -1996,7 +1996,7 @@ Repetitions
 
             ldx #0
             lda #32
-    lp      .for ue = $400, ue < $800, ue += $100
+    lp      .for ue := $400, ue < $800, ue += $100
             sta ue,x         ;do $400, $500, $600 and $700
             .next
             dex
