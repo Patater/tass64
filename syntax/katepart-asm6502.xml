@@ -60,8 +60,8 @@
       </context>
       <context name="Miscparam" attribute="Normal Text" lineEndContext="Base">
         <RegExpr String="[\-+]+\s*(?=($|[)},;.\]]))" attribute="Label" context="Miscparam2"/>
-        <RegExpr String="[bnlsp]&quot;" attribute="String" context="string1"/>
-        <RegExpr String="'" attribute="String" context="string2"/>
+        <RegExpr String="[bnlspxz]&quot;" attribute="String" context="string1"/>
+        <RegExpr String="[bnlspxz]'" attribute="String" context="string2"/>
         <RegExpr String="([a-z][\w_]*|_\w[\w_]*)\s*(?=\()" attribute="Normal Text" context="#stay" insensitive="TRUE"/>
         <RegExpr String="[a-z][\w_]*|_\w[\w_]*" attribute="Label" context="Miscparam2" insensitive="TRUE"/>
         <RegExpr String="\\([a-z][\w_]*|_\w[\w_]*)" attribute="Preprocessor" context="Miscparam2" insensitive="TRUE"/>

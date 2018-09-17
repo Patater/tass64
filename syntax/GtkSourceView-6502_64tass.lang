@@ -77,10 +77,10 @@
     <context id="double-quoted-string">
       <include>
         <context style-ref="string">
-          <start>"</start><end>"</end>
+          <start>[bnlspxz]?"</start><end>"</end>
         </context>
         <context style-ref="string">
-          <start>'</start><end>'</end>
+          <start>[bnlspxz]?'</start><end>'</end>
         </context>
       </include>
     </context>
@@ -143,6 +143,7 @@
 
     <context id="miscparam">
       <include>
+        <context ref="double-quoted-string"/>
         <context ref="identifier"/>
         <context ref="preidentifier"/>
         <context ref="bfloat"/>
@@ -152,7 +153,6 @@
         <context ref="hex"/>
         <context ref="binary"/>
         <context ref="operator"/>
-        <context ref="double-quoted-string"/>
         <context ref="comment"/>
       </include>
     </context>
