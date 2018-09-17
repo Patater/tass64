@@ -185,8 +185,8 @@ endif
 syn match tass64Escapes "%%" contained conceal cchar=%
 syn match tass64Escapes "%[-+' #0*]*\(\d*\|\*\)\(\.\(\d*\|\*\)\)\=[AabdxXFfeEgGcCsS]" contained
 
-syn match tass64String  /\v[bnlsp]?'%(''|[^'])*'/ skipwhite contained contains=tass64Escapes,tass64Escapes1 nextgroup=@tass64Expression2
-syn match tass64String  /\v[bnlsp]?"%(""|[^"])*"/ skipwhite contained contains=tass64Escapes,tass64Escapes2 nextgroup=@tass64Expression2
+syn match tass64String  /\v[bnlspxz]?'%(''|[^'])*'/ skipwhite contained contains=tass64Escapes,tass64Escapes1 nextgroup=@tass64Expression2
+syn match tass64String  /\v[bnlspxz]?"%(""|[^"])*"/ skipwhite contained contains=tass64Escapes,tass64Escapes2 nextgroup=@tass64Expression2
 
 syn match tass64Delimiter /_/ contained
 syn match tass64Expo    /\v[ep]/ contained
