@@ -420,7 +420,8 @@ rest:
         default:
             if (get_label() == 0) {
                 if (operp != 0) epoint = o_oper[operp - 1].epoint;
-                goto syntaxe;
+                err_msg2(ERROR______EXPECTED, "an expression is", &epoint);
+                goto error;
             }
             break;
         }
@@ -490,13 +491,13 @@ rest:
             if (conv != NULL) push_oper(conv, &cpoint);
             if (conv2 != NULL) push_oper(conv2, &cpoint);
             break;
-        default: goto syntaxe;
+        default: 
+            err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
+            goto error;
         }
         if (operp == 0) return true;
         epoint = o_oper[operp - 1].epoint;
-        err_msg2(ERROR______EXPECTED, "')'", &epoint); goto error;
-    syntaxe:
-        err_msg2(ERROR_EXPRES_SYNTAX, NULL, &epoint);
+        err_msg2(ERROR______EXPECTED, "')'", &epoint);
     error:
         break;
     }
@@ -1514,7 +1515,8 @@ static bool get_exp2(int stop) {
                 }
                 epoint = o_oper[operp - 1].epoint;
             }
-            goto syntaxe;
+            err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
+            goto error;
         }
         if (operp != 0 && o_oper[operp - 1].val == &o_SPLAT) {
             operp--;
@@ -1660,7 +1662,8 @@ static bool get_exp2(int stop) {
             goto push2;
         case '!':
             if (pline[lpoint.pos + 1] == '=') {op = &o_NE;goto push2;}
-            goto syntaxe;
+            err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
+            goto error;
         case ')':
             op = &o_RPARENT;
         tphack:
@@ -1728,7 +1731,7 @@ static bool get_exp2(int stop) {
             case 2: if ((pline[epoint.pos] | arguments.caseinsensitive) == 'i' &&
                         (pline[epoint.pos + 1] | arguments.caseinsensitive) == 'n') {op = &o_IN;goto push2a;} break;
             }
-            err_msg2(ERROR______EXPECTED, "an operator", &epoint);
+            err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
             goto error;
         }
         while (operp != 0) {
@@ -1739,7 +1742,6 @@ static bool get_exp2(int stop) {
             push_oper(&o->v, &o_oper[--operp].epoint);
         }
         if (operp == 0) return get_val2(eval);
-    syntaxe:
         err_msg2(ERROR_EXPRES_SYNTAX, NULL, &epoint);
     error:
         break;
