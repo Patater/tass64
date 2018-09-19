@@ -403,7 +403,7 @@ static MUST_CHECK char *read_one(FILE *f) {
 int testarg(int *argc2, char **argv2[], struct file_s *fin) {
     int argc = *argc2;
     char **argv = *argv2;
-    int opt, tab;
+    int opt;
     size_t max_lines = 0, fp = 0;
     int max = 10;
     bool again;
@@ -486,7 +486,13 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case 0x112: arguments.linenum = true;break;
             case 'C': arguments.caseinsensitive = 0;break;
             case 0x110: arguments.verbose = true;break;
-            case 0x109:tab = atoi(my_optarg); if (tab > 0 && tab <= 64) arguments.tab_size = (unsigned int)tab; break;
+            case 0x109:
+                {
+                    char *s;
+                    long int tab = strtol(my_optarg, &s, 10);
+                    if (tab > 0 && tab <= 64 && *s == 0) arguments.tab_size = (unsigned int)tab;
+                    break;
+                }
             case 0x102:puts(
              /* 12345678901234567890123456789012345678901234567890123456789012345678901234567890 */
                "Usage: 64tass [-abBCfnTqwWcitxmse?V] [-D <label>=<value>] [-o <file>]\n"
