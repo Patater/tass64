@@ -420,7 +420,7 @@ rest:
         default:
             if (get_label() == 0) {
                 if (operp != 0) epoint = o_oper[operp - 1].epoint;
-                err_msg2(ERROR______EXPECTED, "an expression is", &epoint);
+                err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
                 goto error;
             }
             break;
