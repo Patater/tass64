@@ -75,6 +75,7 @@
 #include "macroobj.h"
 #include "mfuncobj.h"
 #include "memblocksobj.h"
+#include "identobj.h"
 
 struct Listing *listing = NULL;
 int temporary_label_branch; /* function declaration in function context, not good */
@@ -1586,19 +1587,26 @@ MUST_CHECK Obj *compile(void)
                         tmp2 = find_label2(&labelname, mycontext);
                         if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, false, &epoint); goto breakerr;}
                     }
-                    mycontext = get_namespace(tmp2->value);
-                    if (mycontext == NULL) {
-                        err_msg_wrong_type(tmp2->value, NULL, &epoint);
-                        goto breakerr;
-                    }
-                    tmp2->usepass = pass; /* touch_label(tmp2) */
                     if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
+                    tmp2->usepass = pass; /* touch_label(tmp2) */
                 }
                 lpoint.pos++; islabel = true; epoint = lpoint;
                 labelname.data = pline + lpoint.pos; labelname.len = get_label();
                 if (labelname.len == 0) {
-                    if ((waitfor->skip & 1) != 0) err_msg(ERROR_GENERL_SYNTAX, NULL);
+                    if ((waitfor->skip & 1) != 0) err_msg2(ERROR______EXPECTED, "a symbol is", &lpoint);
                     goto breakerr;
+                }
+                if ((waitfor->skip & 1) != 0) {
+                    mycontext = get_namespace(tmp2->value);
+                    if (mycontext == NULL) {
+                        Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
+                        idn->name = labelname;
+                        idn->epoint = epoint;
+                        epoint.pos--;
+                        err_msg_invalid_oper(&o_MEMBER, &tmp2->v, &idn->v, &epoint);
+                        val_destroy(&idn->v);
+                        goto breakerr;
+                    }
                 }
             }
             if (!islabel && labelname.data[0] == '_') {
