@@ -98,6 +98,7 @@ struct diagnostics_s {
     bool long_branch;
     bool altmode;
     bool page;
+    bool type_mixing;
 };
 
 extern int testarg(int *, char ***, struct file_s *);

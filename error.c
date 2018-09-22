@@ -921,6 +921,11 @@ void err_msg_unused_variable(Label *l) {
     adderror(" [-Wunused-variable]");
 }
 
+void err_msg_type_mixing(linepos_t epoint) {
+    new_error_msg(diagnostic_errors.type_mixing ? SV_ERROR : SV_WARNING, current_file_list, epoint);
+    adderror("mixed operation with lists and tuples was undefined and is different now [-Wtype-mixing]");
+}
+
 static void err_msg_invalid_oper2(const Oper *op, Obj *v1, Obj *v2, linepos_t epoint) {
     adderror(op->name);
     adderror("' of ");

@@ -543,7 +543,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     if (op->op == &o_IN) {
         return o2->obj->rcalc2(op);
     }
-    if (o1->obj == o2->obj && (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ)) {
+    if (o2->obj == TUPLE_OBJ || o2->obj == LIST_OBJ) {
+        if (diagnostics.type_mixing && o1->obj != o2->obj) err_msg_type_mixing(op->epoint3);
         return calc2_list(op);
     }
     if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
@@ -616,7 +617,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         op->op = &o_IN;
         return (Obj *)ref_bool(false_value);
     }
-    if (o1->obj == o2->obj && (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ)) {
+    if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
+        if (diagnostics.type_mixing && o1->obj != o2->obj) err_msg_type_mixing(op->epoint3);
         return calc2_list(op);
     }
     if (o1 == &none_value->v || o1->obj == ERROR_OBJ) {
