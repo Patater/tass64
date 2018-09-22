@@ -89,8 +89,8 @@ foldobj.o: foldobj.c foldobj.h obj.h attributes.h inttypes.h values.h \
  errors_e.h str.h
 functionobj.o: functionobj.c functionobj.h obj.h attributes.h inttypes.h \
  str.h math.h isnprintf.h eval.h stdbool.h variables.h error.h errors_e.h \
- avl.h file.h floatobj.h values.h strobj.h listobj.h intobj.h boolobj.h \
- operobj.h typeobj.h noneobj.h errorobj.h bytesobj.h
+ avl.h file.h arguments.h floatobj.h values.h strobj.h listobj.h intobj.h \
+ boolobj.h operobj.h typeobj.h noneobj.h errorobj.h bytesobj.h
 gapobj.o: gapobj.c gapobj.h obj.h attributes.h inttypes.h error.h \
  stdbool.h errors_e.h avl.h str.h eval.h variables.h values.h strobj.h \
  operobj.h intobj.h boolobj.h typeobj.h noneobj.h errorobj.h

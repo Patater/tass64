@@ -24,6 +24,7 @@
 #include "variables.h"
 #include "error.h"
 #include "file.h"
+#include "arguments.h"
 
 #include "floatobj.h"
 #include "strobj.h"
@@ -108,14 +109,15 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
             size_t k;
             for (k = j + 1; k < args; k++) {
                 oval[k] = v[k].val;
-                if (v[k].val->obj == objt) {
-                   List *v2 = (List *)v[k].val;
-                   if (v2->len != 1 && v2->len != v1->len) {
-                       Error *err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
-                       err->u.broadcast.v1 = v1->len;
-                       err->u.broadcast.v2 = v2->len;
-                       return &err->v;
-                   }
+                if (oval[k]->obj == LIST_OBJ || oval[k]->obj == TUPLE_OBJ) {
+                    List *v2 = (List *)v[k].val;
+                    if (v2->len != 1 && v2->len != v1->len) {
+                        Error *err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
+                        err->u.broadcast.v1 = v1->len;
+                        err->u.broadcast.v2 = v2->len;
+                        return &err->v;
+                    }
+                    if (diagnostics.type_mixing && v[k].val->obj != objt) err_msg_type_mixing(&v[j].epoint);
                 }
             }
             if (v1->len != 0) {
@@ -128,7 +130,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                     Obj *val;
                     v[j].val = v1->data[i];
                     for (k = j + 1; k < args; k++) {
-                        if (oval[k]->obj == objt) {
+                        if (oval[k]->obj == LIST_OBJ || oval[k]->obj == TUPLE_OBJ) {
                             List *v2 = (List *)oval[k];
                             v[k].val = v2->data[(v2->len == 1) ? 0 : i];
                         }
