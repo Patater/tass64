@@ -500,12 +500,12 @@ readability. The following operations can be used:</p>
 <tr><td><code><u>x</u> &lowast;&lowast; <u>y</u></code><td>x raised t power of y<td><code><span>2.0</span> &lowast;&lowast; <span>&minus;1</span></code> is <code><span>0.5</span></code>
 <tr><td><code>&minus;<u>x</u></code><td>negated value<td><code>&minus;<span>2.0</span></code> is <code><span>&minus;2.0</span></code>
 <tr><td><code>+<u>x</u></code><td>unchanged<td><code>+<span>2.0</span></code> is <code><span>2.0</span></code>
+<tr><td><code>~<u>x</u></code><td>almost &minus;x<td><code>~<span>2.1</span></code> is almost <code><span>&minus;2.1</span></code>
 <tr><td><code><u>x</u> | <u>y</u></code><td>bitwise or<td><code><span>2.5</span> | <span>6.5</span></code> is <code><span>6.5</span></code>
 <tr><td><code><u>x</u> ^ <u>y</u></code><td>bitwise xor<td><code><span>2.5</span> ^ <span>6.5</span></code> is <code><span>4.0</span></code>
 <tr><td><code><u>x</u> &amp; <u>y</u></code><td>bitwise and<td><code><span>2.5</span> &amp; <span>6.5</span></code> is <code><span>2.5</span></code>
 <tr><td><code><u>x</u> &lt;&lt; <u>y</u></code><td>logical shift left<td><code><span>1.0</span> &lt;&lt; <span>3.0</span></code> is <code><span>8.0</span></code>
 <tr><td><code><u>x</u> &gt;&gt; <u>y</u></code><td>arithmetic shift right<td><code><span>&minus;8.0</span> &gt;&gt; <span>4</span></code> is <code><span>&minus;0.5</span></code>
-<tr><td><code>~<u>x</u></code><td>almost &minus;x<td><code>~<span>2.1</span></code> is almost <code><span>&minus;2.1</span></code>
 </tbody>
 </table></div>
 
@@ -530,7 +530,9 @@ point one. This is the reason for the strange definition of inversion.</p>
 <h3>Character string constants<a name="character-string" href="#character-string"></a></h3>
 
 <p>Character strings are enclosed in single or double quotes and can hold any Unicode
-character. Operations like indexing or slicing are always done on the original
+character.</p>
+
+<p>Operations like indexing or slicing are always done on the original
 representation. The current encoding is only applied when it's used in
 expressions as numeric constants or in context of text data directives.
 Doubling the quotes inside string literals escapes them and results in a single quote.</p>
@@ -1089,7 +1091,7 @@ trap when segments are copied into the code with their internal references.</p>
 +	<b>nop</b>             <i>;not contain forward references...</i>
 </pre>
 
-<p>A anonymous symbols are looked up first in the current scope, then in lower scopes
+<p>Anonymous symbols are looked up first in the current scope, then in lower scopes
 until the global scope is reached.</p>
 
 <p>Anonymous labels within conditionally assembled code are counted even
@@ -1107,19 +1109,22 @@ objects over compilation passes.</p>
 constant symbols too. They are bound to the object following them.</p>
 
 <p>Re-definable symbols can be created by the <a href="#d_var"><code>.var</code></a> directive
-or <code>:=</code> construct. These are also called as variables as they
-don't carry their content over from the previous pass. Therefore it's not
+or <code>:=</code> construct. These are also called as variables. They
+don't carry their content over from the previous pass therefore it's not
 possible to use them before their definition.</p>
 
+<p>Variables can be conditionally defined using the <code>:?=</code> construct.
+If the variable was defined already then the original value is retained
+otherwise a new one is created with this value.</p>
+
 <pre width=80>
-border  <b>=</b> <span>$d020</span>         <i>;a constant</i>
-        <b>inc</b> <u>border</u>      <i>;inc $d020</i>
+WIDTH   <b>=</b> <span>40</span>            <i>;a constant</i>
+        <b>lda</b> #<u>WIDTH</u>      <i>;lda #$28</i>
 variabl	<b class="k">.var</b> <span>1</span>          <i>;a variable</i>
 var2	<b>:=</b> <span>1</span>            <i>;another variable</i>
-        <b class="k">.rept</b> <span>10</span>
-        <b class="d">.byte</b> <u>variabl</u>
-variabl	<b class="k">.var</b> <u>variabl</u>+<span>1</span>  <i>;increment it</i>
-	<b class="k">.next</b>
+variabl	<b class="k">.var</b> <u>variabl</u> + <span>1</span><i>;update it verbosely</i>
+var2	<b>+=</b> <span>1</span>            <i>;compound assignment (add one)</i>
+var3	<b>:?=</b> <span>5</span>           <i>;assign 5 if undefined</i>
 </pre>
 
 <h4>The star label<a name="star" href="#star"></a></h4>
@@ -2394,13 +2399,13 @@ lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <sp
 <p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.</p>
 <p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.</p>
 
-<dt><code><b class="k">.for</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] in &lt;expression&gt;
-<dt><code><b class="k">.bfor</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] in &lt;expression&gt;
+<dt><code><b class="k">.for</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;
+<dt><code><b class="k">.bfor</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;
 <dt><code><b class="k">.next</b></code>
 <dd>Assign variable(s) to values in sequence one-by-one in order.
 <p>The expression is usually the <a href="#f_range"><code>range</code></a> function or some sort of <a href="#list-tuples">list</a>.</p>
 <pre width=80>
-        <b class="k">.for</b> <u>col</u> in <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
+        <b class="k">.for</b> <u>col</u> <span class="k">in</span> <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
         <b>lda</b> #<u>col</u>         <i>;0, 11, 12, 15 and 1</i>
         <b>sta</b> <span>$d020</span>
 	<b class="k">.next</b>
@@ -2543,6 +2548,13 @@ count	<b>ldx</b> #<span>0</span>
 	<b class="k">.bend</b>
 </pre>
 
+<dt><code><b class="k">.namespace</b> [&lt;symbol&gt;]</code><a name="d_namespace" href="#d_namespace"></a>
+<dt><code><b class="k">.endn</b></code><a name="d_endn" href="#d_endn"></a>
+<dd>Namespace area
+<p>This directive either creates a new scope (if used without a parameter) or activates the one in the parameter.</p>
+<p>The scope can be assigned to a symbol in front of the directive so that it can be reactivated later.</p>
+<p>This enabled label definitions into the same scope in different files.</p>
+
 <dt><code><b class="k">.weak</b></code><a name="d_weak" href="#d_weak"></a>
 <dt><code><b class="k">.endweak</b></code><a name="d_endweak" href="#d_endweak"></a>
 <dd>Weak symbol area
@@ -2551,6 +2563,7 @@ the same scope from outside. Can be nested as necessary.</p>
 <p>This gives the possibility of giving default values for symbols which might
 not always exist without resorting to <code>.ifdef</code>/<code>.ifndef</code> or
 similar directives in other assemblers.</p>
+
 <pre width=80>
 symbol	<b>=</b> <span>1</span>            <i>;stronger symbol than the one below</i>
 	<b class="k">.weak</b>
@@ -2572,13 +2585,6 @@ scope is of course not allowed and it results in double definition error.</p>
 <p>Please note that <code>.ifdef</code>/<code>.ifndef</code> directives are
 left out from 64tass for of technical reasons, so don't wait for them to appear
 anytime soon.</p>
-
-<dt><code><b class="k">.namespace [&lt;symbol&gt;]</b></code><a name="d_namespace" href="#d_namespace"></a>
-<dt><code><b class="k">.endn</b></code><a name="d_endn" href="#d_endn"></a>
-<dd>Namespace area
-<p>This directive either creates a new scope (if used without a parameter) or activates the one in the parameter.</p>
-<p>The scope can be assigned to a symbol in front of the directive so that it can be reactivated later.</p>
-<p>This enabled label definitions into the same scope in different files.</p>
 </dl>
 
 <h3>Sections<a name="sections" href="#sections"></a></h3>
@@ -3304,16 +3310,21 @@ Label	<b>nop</b>	<i>;Ok, it's a different label...</i>
 </pre>
 
 <dt><b>-D</b> &lt;label&gt;=&lt;value&gt;<a name="o_D" href="#o_D"></a>
-<dd>Define &lt;label&gt; to &lt;value&gt;. Defines a label to a value. Same
-syntax is allowed as in source files. Be careful with strings, the shell
-might eat the quotes unless escaped.
+<dd>Command line definition.
+
+<p>Same syntax is allowed as in source files. Be careful with strings, the
+shell might eat the quotes unless escaped.</p>
+
 <pre width=80>
-64tass -D ii=2 -D var=\"string\" a.asm
+64tass -D ii=2 -D var=\"string\" -D FAST:=true a.asm
         <b>lda</b> #<u>ii</u> <i>;result: $a9, $02</i>
+FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
 </pre>
 
 <dt><b>-w</b><a name="o_w"></a>, <b>--no-warn</b><a name="o_no-warn" href="#o_no-warn"></a>
-<dd>Suppress warnings. Disables warnings during compile.
+<dd>Suppress warnings.
+
+<p>Disables warnings during compile. For fine grained diagnostic message suppression see the <a href="#commandline-diagnostic">diagnostic options</a> section.</p>
 <pre width=80>
 64tass --no-warn a.asm
 </pre>
