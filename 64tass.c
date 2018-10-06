@@ -1045,6 +1045,7 @@ static MUST_CHECK Oper *oper_from_token2(int wht, int wht2) {
         switch (wht) {
         case '<': return &o_MIN;
         case '>': return &o_MAX;
+        case ':': return &o_COND;
         default: return NULL;
         }
     }
@@ -1396,6 +1397,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                         epoint3 = lpoint;
                         lpoint.pos += 2;
                     } else if (wht2 != 0 && pline[lpoint.pos + 2] == '=') {
+                        if (wht == '?') break;
                         tmp.op = oper_from_token2(wht, wht2);
                         if (tmp.op == NULL) break;
                         epoint3 = lpoint;
@@ -1658,6 +1660,8 @@ MUST_CHECK Obj *compile(void)
                     label = NULL;
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     val = get_star_value(current_address->l_address_val);
+                } else if (tmp.op == &o_COND) {
+                    label = NULL; val = NULL;
                 } else {
                     label = find_label2(&labelname, mycontext);
                     if (label == NULL) {
@@ -1700,6 +1704,38 @@ MUST_CHECK Obj *compile(void)
                     referenceit = oldreferenceit;
                 }
                 oaddr = current_address->address;
+                if (val == NULL) {
+                    bool labelexists;
+                    label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                    if (labelexists) {
+                        if (label->constant) {
+                            err_msg_not_variable(label, &labelname, &epoint); goto breakerr;
+                            val_destroy(val2);
+                            goto breakerr;
+                        }
+                        if (label->defpass != pass) {
+                            label->ref = false;
+                            label->defpass = pass;
+                        } else {
+                            val_destroy(val2);
+                            goto finish;
+                        }
+                        label->owner = false;
+                        if (label->file_list != current_file_list) {
+                            label_move(label, &labelname, current_file_list);
+                        }
+                        label->epoint = epoint;
+                        val_destroy(label->value);
+                        label->value = val2;
+                        label->usepass = 0;
+                    } else {
+                        label->constant = false;
+                        label->owner = false;
+                        label->value = val2;
+                        label->epoint = epoint;
+                    }
+                    goto finish;
+                }
                 tmp.v1 = val;
                 tmp.v2 = val2;
                 tmp.epoint = &epoint;

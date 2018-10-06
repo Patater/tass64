@@ -58,6 +58,7 @@ Oper o_X_ASSIGN    = { {&obj, 0}, "repeat assign 'x=", O_X_ASSIGN, 2, 2};
 Oper o_MEMBER_ASSIGN = { {&obj, 0}, "member assign '.=", O_MEMBER_ASSIGN, 2, 2};
 Oper o_LOR_ASSIGN  = { {&obj, 0}, "logical or assign '||=", O_LOR_ASSIGN, 2, 3};
 Oper o_LAND_ASSIGN = { {&obj, 0}, "logical and assign '&&=", O_LAND_ASSIGN, 2, 3};
+Oper o_COND_ASSIGN = { {&obj, 0}, "conditional assign ':?=", O_COND_ASSIGN, 2, 3};
 Oper o_QUEST       = { {&obj, 0}, "'?", O_QUEST, 2, 1};
 Oper o_COLON       = { {&obj, 0}, "':", O_COLON, 2, 1};
 Oper o_COND        = { {&obj, 0}, "condition '?", O_COND, 3, 1};

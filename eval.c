@@ -1618,6 +1618,7 @@ static bool get_exp2(int stop) {
         case '.': op = pline[lpoint.pos + 1] == '.' ? (pline[lpoint.pos + 2] == '=' ? &o_CONCAT_ASSIGN : &o_CONCAT) : (pline[lpoint.pos + 1] == '=' ? &o_MEMBER_ASSIGN : &o_MEMBER); goto push2;
         case '?': lpoint.pos++;op = &o_QUEST; prec = o_COND.prio + 1; goto push3;
         case ':': if (pline[lpoint.pos + 1] == '=') {op = &o_COLON_ASSIGN;goto push2;}
+            if (pline[lpoint.pos + 1] == '?' && pline[lpoint.pos + 2] == '=') {op = &o_COND_ASSIGN;goto push2;}
             op = &o_COLON;
             prec = op->prio + 1;
             while (operp != 0 && prec <= o_oper[operp - 1].val->prio) {

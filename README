@@ -348,12 +348,12 @@ x % y       integer modulo of x divided by y 5.0 % 2.0 is 1.0
 x ** y      x raised t power of y            2.0 ** -1 is 0.5
 -x          negated value                    -2.0 is -2.0
 +x          unchanged                        +2.0 is 2.0
+~x          almost -x                        ~2.1 is almost -2.1
 x | y       bitwise or                       2.5 | 6.5 is 6.5
 x ^ y       bitwise xor                      2.5 ^ 6.5 is 4.0
 x & y       bitwise and                      2.5 & 6.5 is 2.5
 x << y      logical shift left               1.0 << 3.0 is 8.0
 x >> y      arithmetic shift right           -8.0 >> 4 is -0.5
-~x          almost -x                        ~2.1 is almost -2.1
 
 As usual comparing floating point numbers for (non) equality is a bad idea due
 to rounding errors.
@@ -375,8 +375,10 @@ This is the reason for the strange definition of inversion.
 Character string constants
 
 Character strings are enclosed in single or double quotes and can hold any
-Unicode character. Operations like indexing or slicing are always done on the
-original representation. The current encoding is only applied when it's used in
+Unicode character.
+
+Operations like indexing or slicing are always done on the original
+representation. The current encoding is only applied when it's used in
 expressions as numeric constants or in context of text data directives.
 Doubling the quotes inside string literals escapes them and results in a single
 quote.
@@ -865,7 +867,7 @@ when segments are copied into the code with their internal references.
         #somemakro      ;let's hope that this segment does
 +       nop             ;not contain forward references...
 
-A anonymous symbols are looked up first in the current scope, then in lower
+Anonymous symbols are looked up first in the current scope, then in lower
 scopes until the global scope is reached.
 
 Anonymous labels within conditionally assembled code are counted even if the
@@ -883,18 +885,21 @@ Symbols in front of code or certain assembler directives are created as
 constant symbols too. They are bound to the object following them.
 
 Re-definable symbols can be created by the .var directive or := construct.
-These are also called as variables as they don't carry their content over from
-the previous pass. Therefore it's not possible to use them before their
+These are also called as variables. They don't carry their content over from
+the previous pass therefore it's not possible to use them before their
 definition.
 
-border  = $d020         ;a constant
-        inc border      ;inc $d020
+Variables can be conditionally defined using the :?= construct. If the variable
+was defined already then the original value is retained otherwise a new one is
+created with this value.
+
+WIDTH   = 40            ;a constant
+        lda #WIDTH      ;lda #$28
 variabl .var 1          ;a variable
 var2    := 1            ;another variable
-        .rept 10
-        .byte variabl
-variabl .var variabl+1  ;increment it
-        .next
+variabl .var variabl + 1;update it verbosely
+var2    += 1            ;compound assignment (add one)
+var3    :?= 5           ;assign 5 if undefined
 
 The star label
 
@@ -2155,6 +2160,18 @@ global one with the same name.
     count   ldx #0
             .bend
 
+.namespace [<symbol>]
+.endn
+    Namespace area
+
+    This directive either creates a new scope (if used without a parameter) or
+    activates the one in the parameter.
+
+    The scope can be assigned to a symbol in front of the directive so that it
+    can be reactivated later.
+
+    This enabled label definitions into the same scope in different files.
+
 .weak
 .endweak
     Weak symbol area
@@ -2184,18 +2201,6 @@ global one with the same name.
 
     Please note that .ifdef/.ifndef directives are left out from 64tass for of
     technical reasons, so don't wait for them to appear anytime soon.
-
-.namespace [<symbol>]
-.endn
-    Namespace area
-
-    This directive either creates a new scope (if used without a parameter) or
-    activates the one in the parameter.
-
-    The scope can be assigned to a symbol in front of the directive so that it
-    can be reactivated later.
-
-    This enabled label definitions into the same scope in different files.
 
 Sections
 
@@ -2879,15 +2884,20 @@ Operation options
     Label   nop     ;Ok, it's a different label...
 
 -D <label>=<value>
-    Define <label> to <value>. Defines a label to a value. Same syntax is
-    allowed as in source files. Be careful with strings, the shell might eat
-    the quotes unless escaped.
+    Command line definition.
 
-    64tass -D ii=2 -D var=\"string\" a.asm
+    Same syntax is allowed as in source files. Be careful with strings, the
+    shell might eat the quotes unless escaped.
+
+    64tass -D ii=2 -D var=\"string\" -D FAST:=true a.asm
             lda #ii ;result: $a9, $02
+    FAST    :?= false ;define if undefined
 
 -w, --no-warn
-    Suppress warnings. Disables warnings during compile.
+    Suppress warnings.
+
+    Disables warnings during compile. For fine grained diagnostic message
+    suppression see the diagnostic options section.
 
     64tass --no-warn a.asm
 
