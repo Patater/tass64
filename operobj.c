@@ -103,15 +103,15 @@ Oper o_LNOT        = { {&obj, 0}, "logical not '!", O_LNOT, 17, 1};
 Oper o_SPLAT       = { {&obj, 0}, "unary splat '*", O_SPLAT, 18, 1};
 Oper o_CONCAT      = { {&obj, 0}, "concatenate '..", O_CONCAT, 19, 2};
 Oper o_X           = { {&obj, 0}, "repeat 'x", O_X, 20, 1};
-Oper o_MEMBER      = { {&obj, 0}, "member '.", O_MEMBER, 21, 1};
-Oper o_COMMAX      = { {&obj, 0}, "register indexing ',x", O_COMMAX, 22, 2};
-Oper o_COMMAY      = { {&obj, 0}, "register indexing ',y", O_COMMAY, 22, 2};
-Oper o_COMMAZ      = { {&obj, 0}, "register indexing ',z", O_COMMAZ, 22, 2};
-Oper o_COMMAS      = { {&obj, 0}, "register indexing ',s", O_COMMAS, 22, 2};
-Oper o_COMMAR      = { {&obj, 0}, "register indexing ',r", O_COMMAR, 22, 2};
-Oper o_COMMAD      = { {&obj, 0}, "register indexing ',d", O_COMMAD, 22, 2};
-Oper o_COMMAB      = { {&obj, 0}, "register indexing ',b", O_COMMAB, 22, 2};
-Oper o_COMMAK      = { {&obj, 0}, "register indexing ',k", O_COMMAK, 22, 2};
+Oper o_COMMAX      = { {&obj, 0}, "register indexing ',x", O_COMMAX, 21, 2};
+Oper o_COMMAY      = { {&obj, 0}, "register indexing ',y", O_COMMAY, 21, 2};
+Oper o_COMMAZ      = { {&obj, 0}, "register indexing ',z", O_COMMAZ, 21, 2};
+Oper o_COMMAS      = { {&obj, 0}, "register indexing ',s", O_COMMAS, 21, 2};
+Oper o_COMMAR      = { {&obj, 0}, "register indexing ',r", O_COMMAR, 21, 2};
+Oper o_COMMAD      = { {&obj, 0}, "register indexing ',d", O_COMMAD, 21, 2};
+Oper o_COMMAB      = { {&obj, 0}, "register indexing ',b", O_COMMAB, 21, 2};
+Oper o_COMMAK      = { {&obj, 0}, "register indexing ',k", O_COMMAK, 21, 2};
+Oper o_MEMBER      = { {&obj, 0}, "member '.", O_MEMBER, 22, 1};
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Oper *v1 = (Oper *)o1;
