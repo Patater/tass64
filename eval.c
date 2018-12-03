@@ -1564,7 +1564,7 @@ static bool get_exp2(int stop) {
                     push_oper((Obj *)o_oper[operp].val, &o_oper[operp].epoint);
                 }
             } else {
-                while (operp != 0 && prec <= o_oper[operp - 1].val->prio && o_oper[operp - 1].val != &o_COLON2 && o_oper[operp - 1].val != &o_COND) {
+                while (operp != 0 && ((prec <= o_oper[operp - 1].val->prio && o_oper[operp - 1].val != &o_COLON2 && o_oper[operp - 1].val != &o_COND) || (o_oper[operp - 1].val == &o_HASH || o_oper[operp - 1].val == &o_HASH_SIGNED))) {
                     operp--;
                     push_oper((Obj *)o_oper[operp].val, &o_oper[operp].epoint);
                 }
