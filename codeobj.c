@@ -476,8 +476,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_STR:
     case T_BYTES:
     case T_ADDRESS:
-        err = access_check(v1, op->epoint);
-        if (err != NULL) return &err->v;
         op->v1 = v1->addr;
         switch (op->op->op) {
         case O_ADD:
@@ -506,6 +504,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             }
         default: break;
         }
+        err = access_check(v1, op->epoint);
+        if (err != NULL) return &err->v;
         return op->v1->obj->calc2(op);
     default:
         return o2->obj->rcalc2(op);
@@ -576,8 +576,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BITS:
     case T_FLOAT:
     case T_ADDRESS:
-        err = access_check(v2, op->epoint2);
-        if (err != NULL) return &err->v;
         op->v2 = v2->addr;
         if (op->op == &o_ADD) {
             ival_t iv;
@@ -597,6 +595,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             if (v->addr->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)v->addr); v->addr = (Obj *)ref_none(); }
             return &v->v;
         }
+        err = access_check(v2, op->epoint2);
+        if (err != NULL) return &err->v;
         return o1->obj->calc2(op);
     default: break;
     }
