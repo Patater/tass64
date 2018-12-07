@@ -392,10 +392,13 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {
+    Error *err;
+    Code *v1 = (Code *)op->v1;
     switch (op->op->op) {
     case O_LNOT:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
+        op->v1 = v1->addr;
+        return op->v1->obj->calc1(op);
     case O_BANK:
     case O_HIGHER:
     case O_LOWER:
@@ -406,7 +409,9 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_INV:
     case O_NEG:
     case O_POS:
-        op->v1 = ((Code *)op->v1)->addr;
+        err = access_check(v1, op->epoint);
+        if (err != NULL) return &err->v;
+        op->v1 = v1->addr;
         return op->v1->obj->calc1(op);
     default: break;
     }
