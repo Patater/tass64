@@ -459,9 +459,23 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_FLOAT:
     case T_BYTES:
     case T_STR:
+        am = v1->type;
         switch (op->op->op) {
+        case O_CMP:
+        case O_EQ:
+        case O_NE:
+        case O_MIN:
+        case O_LT:
+        case O_LE:
+        case O_MAX:
+        case O_GT:
+        case O_GE:
+            if (am == A_NONE) {
+                op->v1 = v1->val;
+                return op->v1->obj->calc2(op);
+            }
+            break;
         default:
-            am = v1->type;
             if (am == A_NONE) {
                 op->v1 = v1->val;
                 return op->v1->obj->calc2(op);
@@ -470,7 +484,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             goto ok;
         case O_ADD:
         case O_SUB:
-            am = v1->type;
             if (check_addr(am)) break;
         ok:
             op->v1 = v1->val;
@@ -505,19 +518,37 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_STR:
     case T_GAP:
         am = v2->type;
-        if (op->op == &o_ADD) {
-            if (check_addr(am)) break;
-        } else {
+        switch (op->op->op) {
+        case O_CMP:
+        case O_EQ:
+        case O_NE:
+        case O_MIN:
+        case O_LT:
+        case O_LE:
+        case O_MAX:
+        case O_GT:
+        case O_GE:
+            if (am == A_NONE) {
+                op->v2 = v2->val;
+                return t1->calc2(op);
+            }
+            break;
+        default:
             if (am == A_NONE) {
                 op->v2 = v2->val;
                 return t1->calc2(op);
             }
             if (check_addr2(am)) break;
+            goto ok;
+        case O_ADD:
+            if (check_addr(am)) break;
+        ok:
+            op->v2 = v2->val;
+            result = t1->calc2(op);
+            if (result->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result); result = (Obj *)ref_none(); }
+            return (Obj *)new_address(result, am);
         }
-        op->v2 = v2->val;
-        result = t1->calc2(op);
-        if (result->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result); result = (Obj *)ref_none(); }
-        return (Obj *)new_address(result, am);
+        break;
     case T_CODE:
         if (op->op != &o_IN) {
             return t1->calc2(op);
