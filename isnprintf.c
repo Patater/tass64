@@ -426,7 +426,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         return val_reference(val);
     case T_STR: break;
     case T_ADDRESS:
-        if (((Address *)val)->val->obj == ERROR_OBJ || ((Address *)val)->val->obj == NONE_OBJ) return val_reference(((Address *)val)->val);
+        if (((Address *)val)->val == &none_value->v) return val_reference(((Address *)val)->val);
         /* fall through */
     default:
         err_msg_wrong_type(val, STR_OBJ, &v[0].epoint);
