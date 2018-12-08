@@ -81,6 +81,9 @@ static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR: return val_reference(v1);
+    case T_ADDRESS:
+        if (((Address *)v1)->val->obj == ERROR_OBJ || ((Address *)v1)->val->obj == NONE_OBJ) return val_reference(((Address *)v1)->val);
+        break;
     default: break;
     }
     err_msg_wrong_type(v1, NULL, epoint);
