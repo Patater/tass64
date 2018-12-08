@@ -58,6 +58,7 @@
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
+#include "addressobj.h"
 
 #if _BSD_SOURCE || _XOPEN_SOURCE >= 500 || _ISOC99_SOURCE || _POSIX_C_SOURCE >= 200112L
 #else
@@ -409,7 +410,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
 {
     struct values_s *v = vals->val;
     size_t args = vals->len;
-    Obj *err;
+    Obj *err, *val;
     Str *str;
     struct DATA data;
     int state;
@@ -418,17 +419,21 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         err_msg_argnum(args, 1, 0, epoint);
         return (Obj *)ref_none();
     }
-    switch (v[0].val->obj->type) {
+    val = v[0].val;
+    switch (val->obj->type) {
     case T_ERROR:
     case T_NONE:
-        return val_reference(v[0].val);
+        return val_reference(val);
     case T_STR: break;
+    case T_ADDRESS:
+        if (((Address *)val)->val->obj == ERROR_OBJ || ((Address *)val)->val->obj == NONE_OBJ) return val_reference(((Address *)val)->val);
+        /* fall through */
     default:
-        err_msg_wrong_type(v[0].val, STR_OBJ, &v[0].epoint);
+        err_msg_wrong_type(val, STR_OBJ, &v[0].epoint);
         return (Obj *)ref_none();
     }
-    data.pf = ((Str *)v[0].val)->data;
-    data.pfend = data.pf +((Str *)v[0].val)->len;
+    data.pf = ((Str *)val)->data;
+    data.pfend = data.pf +((Str *)val)->len;
 
     listp = 0;
     list = &v[1];
@@ -557,7 +562,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                     str_t msg;
                 error2:
                     epoint2 = v[0].epoint;
-                    epoint2.pos = interstring_position(&epoint2, ((Str *)v[0].val)->data, (size_t)(data.pf - ((Str *)v[0].val)->data));
+                    epoint2.pos = interstring_position(&epoint2, ((Str *)val)->data, (size_t)(data.pf - ((Str *)val)->data));
                     if ((c & 0x80) != 0) msg.len = utf8in(data.pf, &c); else msg.len = 1;
                     err_msg_not_defined(&msg, &epoint2);
                     err = star_args(&data);

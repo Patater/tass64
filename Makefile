@@ -123,7 +123,8 @@ intobj.o: intobj.c intobj.h obj.h attributes.h inttypes.h math.h \
  errorobj.h addressobj.h
 isnprintf.o: isnprintf.c isnprintf.h attributes.h inttypes.h unicode.h \
  str.h unicodedata.h eval.h obj.h stdbool.h error.h errors_e.h avl.h \
- floatobj.h values.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h
+ floatobj.h values.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h \
+ addressobj.h
 labelobj.o: labelobj.c labelobj.h obj.h attributes.h inttypes.h str.h \
  stdbool.h values.h error.h errors_e.h avl.h unicode.h unicodedata.h \
  file.h strobj.h typeobj.h noneobj.h errorobj.h
