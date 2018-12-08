@@ -41,6 +41,7 @@
 #include "typeobj.h"
 #include "labelobj.h"
 #include "errorobj.h"
+#include "noneobj.h"
 
 #ifdef COLOR_OUTPUT
 bool print_use_color = false;
@@ -720,6 +721,16 @@ void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
         adderror(expected->name);
     }
     adderror("'");
+}
+
+void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
+    if (val->obj == ADDRESS_OBJ) {
+        const Obj *val2 = ((Address *)val)->val;
+        if (val2->obj == ERROR_OBJ || val2->obj == NONE_OBJ) val = val2;
+    }
+    if (val->obj == ERROR_OBJ) err_msg_output((Error *)val);
+    else if (val->obj == NONE_OBJ) err_msg_still_none(NULL, epoint);
+    else err_msg_wrong_type(val, expected, epoint);
 }
 
 void err_msg_cant_unpack(size_t expect, size_t got, linepos_t epoint) {
