@@ -1776,6 +1776,10 @@ MUST_CHECK Obj *compile(void)
                     lpoint.pos++; ignore();
                     epoints[0] = lpoint; /* for no elements! */
                     if (here() == 0 || here() == ';') {
+                        if (labelname.data[0] == '*') {
+                            err_msg(ERROR______EXPECTED, "an expression is");
+                            goto breakerr;
+                        }
                         val = (Obj *)ref_addrlist(null_addrlist);
                     } else {
                         bool oldreferenceit = referenceit;
