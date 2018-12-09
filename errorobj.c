@@ -16,10 +16,13 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
+#include <string.h>
 #include "errorobj.h"
 #include "eval.h"
 #include "values.h"
 #include "error.h"
+#include "64tass.h"
+#include "file.h"
 
 #include "typeobj.h"
 #include "registerobj.h"
@@ -31,6 +34,7 @@ Type *const ERROR_OBJ = &obj;
 
 static FAST_CALL void destroy(Obj *o1) {
     Error *v1 = (Error *)o1;
+    if (v1->line != NULL) free((uint8_t *)v1->line);
     switch (v1->num) {
     case ERROR__INVALID_OPER:
         if (v1->u.invoper.v1 != NULL) val_destroy(v1->u.invoper.v1);
@@ -76,7 +80,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     switch (v1->num) {
     case ERROR__INVALID_OPER:
         v = v1->u.invoper.v1;
-        if (v != NULL) {
+        if (v != NULL && v1->u.invoper.v2 != NULL) {
             switch (i) {
             case -1:
                 v->refcount--;
@@ -90,9 +94,8 @@ static FAST_CALL void garbage(Obj *o1, int i) {
                 } else v->refcount++;
                 break;
             }
+            v = v1->u.invoper.v2;
         }
-        v = v1->u.invoper.v2;
-        if (v == NULL) return;
         break;
     case ERROR___NO_REGISTER:
         v = &v1->u.reg->v;
@@ -131,6 +134,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
         v->refcount--;
         return;
     case 0:
+        if (v1->line != NULL) free((uint8_t *)v1->line);
         return;
     case 1:
         if ((v->refcount & SIZE_MSB) != 0) {
@@ -146,31 +150,27 @@ MALLOC Error *new_error(Error_types num, linepos_t epoint) {
     v->num = num;
     v->file_list = current_file_list;
     v->epoint = *epoint;
+    if ((size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+        size_t ln = strlen((const char *)pline) + 1;
+        uint8_t *l = (uint8_t *)malloc(ln);
+        if (l != NULL) memcpy(l, pline, ln);
+        v->line = l;
+    } else v->line = NULL;
     return v;
 }
 
 MALLOC Error *new_error_mem(linepos_t epoint) {
-    Error *v = (Error *)val_alloc(ERROR_OBJ);
-    v->num = ERROR_OUT_OF_MEMORY;
-    v->file_list = current_file_list;
-    v->epoint = *epoint;
-    return v;
+    return new_error(ERROR_OUT_OF_MEMORY, epoint);
 }
 
 MALLOC Error *new_error_obj(Error_types num, Obj *v1, linepos_t epoint) {
-    Error *v = (Error *)val_alloc(ERROR_OBJ);
-    v->num = num;
-    v->file_list = current_file_list;
-    v->epoint = *epoint;
+    Error *v = new_error(num, epoint);
     v->u.obj = val_reference(v1);
     return v;
 }
 
 MALLOC Error *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
-    Error *v = (Error *)val_alloc(ERROR_OBJ);
-    v->num = ERROR__INVALID_CONV;
-    v->file_list = current_file_list;
-    v->epoint = *epoint;
+    Error *v = new_error(ERROR__INVALID_CONV, epoint);
     v->u.conv.t = t;
     v->u.conv.val = val_reference(v1);
     return v;
