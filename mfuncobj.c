@@ -121,12 +121,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Funcargs *v2 = (Funcargs *)op->v2;
             Obj *val;
             size_t i, max = 0, args = v2->len;
-            for (i = 0; i < args; i++) {
-                if (v2->val[i].val == &none_value->v || v2->val[i].val->obj == ERROR_OBJ) {
-                    return val_reference(v2->val[i].val);
-                }
-            }
-            for (; i < v1->argc; i++) {
+            for (i = args; i < v1->argc; i++) {
                 if (v1->param[i].init == NULL) {
                     max = i + 1;
                 }

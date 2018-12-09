@@ -121,13 +121,11 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                 }
             }
             if (v1->len != 0) {
-                bool error = true;
                 size_t i;
                 Obj **vals2, *o1 = v[j].val;
                 vv = (List *)val_alloc(objt);
                 vals2 = list_create_elements(vv, v1->len);
                 for (i = 0; i < v1->len; i++) {
-                    Obj *val;
                     v[j].val = v1->data[i];
                     for (k = j + 1; k < args; k++) {
                         if (oval[k]->obj == LIST_OBJ || oval[k]->obj == TUPLE_OBJ) {
@@ -135,9 +133,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                             v[k].val = v2->data[(v2->len == 1) ? 0 : i];
                         }
                     }
-                    val = gen_broadcast(vals, epoint, f);
-                    if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
-                    vals2[i] = val;
+                    vals2[i] = gen_broadcast(vals, epoint, f);
                 }
                 vv->len = i;
                 vv->data = vals2;
@@ -218,7 +214,8 @@ static uint64_t random64(void) {
 void random_reseed(Obj *o1, linepos_t epoint) {
     Obj *v = INT_OBJ->create(o1, epoint);
     if (v->obj != INT_OBJ) {
-        if (v->obj == ERROR_OBJ) err_msg_output((Error *)v);
+        if (v == &none_value->v) err_msg_still_none(NULL, epoint);
+        else if (v->obj == ERROR_OBJ) err_msg_output((Error *)v);
     } else {
         Int *v1 = (Int *)v;
         Error *err;
@@ -426,7 +423,6 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
         Iter *iter = typ->getiter(o1);
         size_t len = iter->len(iter);
         List *v;
-        bool error = true;
         size_t i;
         Obj **vals;
 
@@ -439,9 +435,7 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
         v->data = vals = list_create_elements(v, len);
         iter_next = iter->next;
         for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
-            Obj *val = apply_func(o1, func, epoint);
-            if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
-            vals[i] = val;
+            vals[i] = apply_func(o1, func, epoint);
         }
         val_destroy(&iter->v);
         v->len = i;

@@ -1221,19 +1221,21 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                 epoint3 = lpoint;
                 if (!get_exp(0, 1, 0, &epoint3)) goto error;
                 val = get_vals_tuple();
-                if (val->obj->getiter == DEFAULT_OBJ->getiter) {
+                if (val->obj == ERROR_OBJ) {
+                    err_msg_output((Error *)val);
+                } else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
                     Error *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
                     val_destroy(val); val = &err->v;
+                    err_msg_output((Error *)val);
                 } else {
                     iter = val->obj->getiter(val);
-                    val_destroy(val); val = (Obj *)ref_none();
                 }
+                val_destroy(val); val = (Obj *)ref_none();
             } else {
                 struct linepos_s epoints[3];
                 if (!get_exp(1, 1, 1, &lpoint)) goto error;
                 val = get_vals_addrlist(epoints);
             }
-            if (val->obj == ERROR_OBJ) {err_msg_output_and_destroy((Error *)val); val = (Obj *)ref_none();}
         }
         label = new_label(&varname, (varname.data[0] == '_') ? cheap_context : current_context, strength, &labelexists, current_file_list);
         if (foreach) {
@@ -1455,8 +1457,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                     tmp.v2 = val;
                     tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
                     result2 = tmp.v1->obj->calc2(&tmp);
-                    if (result2->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result2); result2 = (Obj *)ref_none(); }
-                    else if (minmax) {
+                    if (minmax) {
                         if (result2 == &true_value->v) val_replace(&result2, val1);
                         else if (result2 == &false_value->v) val_replace(&result2, val);
                     }
@@ -1747,8 +1748,7 @@ MUST_CHECK Obj *compile(void)
                 tmp.epoint3 = &epoint3;
                 tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
                 result2 = tmp.v1->obj->calc2(&tmp);
-                if (result2->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result2); result2 = (Obj *)ref_none(); }
-                else if (minmax) {
+                if (minmax) {
                     if (result2 == &true_value->v) val_replace(&result2, val);
                     else if (result2 == &false_value->v) val_replace(&result2, val2);
                 }
@@ -3445,7 +3445,6 @@ MUST_CHECK Obj *compile(void)
                         if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr; }
                         val = vs2->val;
                         if (val == &none_value->v) err_msg_still_none(NULL, &vs2->epoint);
-                        else if (val->obj == ERROR_OBJ) err_msg_output((Error *)val);
                         else if (tryit && new_escape(&escape, val, actual_encoding, &vs2->epoint)) {
                             err_msg2(ERROR_DOUBLE_ESCAPE, NULL, &vs->epoint); goto breakerr;
                         }
