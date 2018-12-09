@@ -1224,9 +1224,11 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                 if (val->obj == ERROR_OBJ) {
                     err_msg_output((Error *)val);
                 } else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
-                    Error *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
-                    val_destroy(val); val = &err->v;
-                    err_msg_output((Error *)val);
+                    if (val != &none_value->v) {
+                        Error *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
+                        val_destroy(val); val = &err->v;
+                        err_msg_output((Error *)val);
+                    }
                 } else {
                     iter = val->obj->getiter(val);
                 }
