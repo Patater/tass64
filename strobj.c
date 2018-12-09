@@ -234,7 +234,7 @@ static size_t iter_len(Iter *v1) {
     return ((Str *)v1->data)->chars - v1->val;
 }
 
-static MUST_CHECK Obj *next(Iter *v1) {
+static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     Str *iter;
     const Str *str = (Str *)v1->data;
     unsigned int ln;
