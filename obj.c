@@ -82,7 +82,7 @@ static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR: return val_reference(v1);
     case T_ADDRESS:
-        if (((Address *)v1)->val == &none_value->v) return val_reference(((Address *)v1)->val);
+        if (((Address *)v1)->val == &none_value->v || ((Address *)v1)->val->obj == ERROR_OBJ) return val_reference(((Address *)v1)->val);
         break;
     default: break;
     }
@@ -150,7 +150,7 @@ static MUST_CHECK Obj *invalid_calc2(oper_t op) {
     }
     if (o2->obj == ADDRESS_OBJ) {
         Obj *val = ((Address *)o2)->val;
-        if (val == &none_value->v) return val_reference(val);
+        if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
 }
@@ -162,7 +162,7 @@ static MUST_CHECK Obj *invalid_rcalc2(oper_t op) {
     }
     if (o1->obj == ADDRESS_OBJ) {
         Obj *val = ((Address *)o1)->val;
-        if (val == &none_value->v) return val_reference(val);
+        if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
 }
@@ -176,7 +176,7 @@ static MUST_CHECK Obj *invalid_slice(Obj *UNUSED(v1), oper_t op, size_t indx) {
         }
         if (o2->obj == ADDRESS_OBJ) {
             Obj *val = ((Address *)o2)->val;
-            if (val == &none_value->v) return val_reference(val);
+            if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
         }
     } else {
         err_msg_argnum(args->len, 1, indx, op->epoint2);

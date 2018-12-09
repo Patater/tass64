@@ -369,7 +369,6 @@ Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epo
             size_t j = 0;
             tuple = new_tuple(get_val_remaining());
             for (j = 0; (val = pull_val(NULL)) != NULL; j++) {
-                if (val->obj == ERROR_OBJ) {err_msg_output_and_destroy((Error *)val); val = (Obj *)ref_none();}
                 tuple->data[j] = val;
             }
             val = &tuple->v;
@@ -381,7 +380,6 @@ Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epo
                 if (val == NULL) { max = i + 1; val = (Obj *)none_value; }
             } else {
                 val = vs->val;
-                if (val->obj == ERROR_OBJ) {err_msg_output((Error *)val); val = (Obj *)none_value;}
             }
         }
         label = new_label(&mfunc->param[i].name, context, strength, &labelexists, mfunc->file_list);
@@ -495,15 +493,12 @@ void get_func_params(Mfunc *v) {
         } else {
             new_mfunc.param[i].init = NULL;
             if (here() == '=') {
-                Obj *val;
                 lpoint.pos++;
                 if (!get_exp(1, 1, 1, &lpoint)) {
                     i++;
                     break;
                 }
-                val = pull_val(NULL);
-                if (val->obj == ERROR_OBJ) {err_msg_output_and_destroy((Error *)val); val = (Obj *)ref_none();}
-                new_mfunc.param[i].init = val;
+                new_mfunc.param[i].init = pull_val(NULL);
             }
         }
         if (here() == 0 || here() == ';') {

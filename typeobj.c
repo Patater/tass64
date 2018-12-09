@@ -106,7 +106,6 @@ static MUST_CHECK Obj *apply_convert(Obj *o2, const Type *v1, linepos_t epoint) 
             Iter *iter = v2->getiter(o2);
             size_t i, len = iter->len(iter);
             Obj **vals;
-            bool error;
             List *v;
 
             if (len == 0) {
@@ -116,12 +115,9 @@ static MUST_CHECK Obj *apply_convert(Obj *o2, const Type *v1, linepos_t epoint) 
 
             v = (List *)val_alloc(v2 == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
             v->data = vals = list_create_elements(v, len);
-            error = true;
             iter_next = iter->next;
             for (i = 0;i < len && (o2 = iter_next(iter)) != NULL; i++) {
-                Obj *val = apply_convert(o2, v1, epoint);
-                if (val->obj == ERROR_OBJ) { if (error) {err_msg_output((Error *)val); error = false;} val_destroy(val); val = (Obj *)ref_none(); }
-                vals[i] = val;
+                vals[i] = apply_convert(o2, v1, epoint);
             }
             val_destroy(&iter->v);
             v->len = i;

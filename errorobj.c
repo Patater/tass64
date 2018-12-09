@@ -19,6 +19,7 @@
 #include "errorobj.h"
 #include "eval.h"
 #include "values.h"
+#include "error.h"
 
 #include "typeobj.h"
 #include "registerobj.h"
@@ -143,6 +144,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
 MALLOC Error *new_error(Error_types num, linepos_t epoint) {
     Error *v = (Error *)val_alloc(ERROR_OBJ);
     v->num = num;
+    v->file_list = current_file_list;
     v->epoint = *epoint;
     return v;
 }
@@ -150,6 +152,7 @@ MALLOC Error *new_error(Error_types num, linepos_t epoint) {
 MALLOC Error *new_error_mem(linepos_t epoint) {
     Error *v = (Error *)val_alloc(ERROR_OBJ);
     v->num = ERROR_OUT_OF_MEMORY;
+    v->file_list = current_file_list;
     v->epoint = *epoint;
     return v;
 }
@@ -157,6 +160,7 @@ MALLOC Error *new_error_mem(linepos_t epoint) {
 MALLOC Error *new_error_obj(Error_types num, Obj *v1, linepos_t epoint) {
     Error *v = (Error *)val_alloc(ERROR_OBJ);
     v->num = num;
+    v->file_list = current_file_list;
     v->epoint = *epoint;
     v->u.obj = val_reference(v1);
     return v;
@@ -165,6 +169,7 @@ MALLOC Error *new_error_obj(Error_types num, Obj *v1, linepos_t epoint) {
 MALLOC Error *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
     Error *v = (Error *)val_alloc(ERROR_OBJ);
     v->num = ERROR__INVALID_CONV;
+    v->file_list = current_file_list;
     v->epoint = *epoint;
     v->u.conv.t = t;
     v->u.conv.val = val_reference(v1);

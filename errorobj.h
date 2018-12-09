@@ -32,6 +32,7 @@ struct Register;
 typedef struct Error {
     Obj v;
     Error_types num;
+    const struct file_list_s *file_list;
     struct linepos_s epoint;
     union {
         struct {
