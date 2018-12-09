@@ -34,6 +34,7 @@ struct oper_s {
     linepos_t epoint;
     linepos_t epoint2;
     linepos_t epoint3;
+    Obj *inplace;
 };
 typedef struct oper_s *oper_t;
 

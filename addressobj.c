@@ -351,6 +351,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         if (check_addr2(am)) break;
     ok:
         op->v1 = v1->val;
+        op->inplace = NULL;
         result = op->v1->obj->calc1(op);
         if (am == A_NONE) return result;
         if (result->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result); result = (Obj *)ref_none(); }
@@ -391,6 +392,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 if (am == v2->type) {
                     op->v1 = v1->val;
                     op->v2 = v2->val;
+                    op->inplace = NULL;
                     return op->v1->obj->calc2(op);
                 }
                 switch (op->op->op) {
@@ -410,6 +412,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 if (check_addr(v2->type)) break;
                 op->v1 = v1->val;
                 op->v2 = v2->val;
+                op->inplace = NULL;
                 result = op->v1->obj->calc2(op);
                 if (am == A_NONE && v2->type == A_NONE) return result;
                 if (result->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result); result = (Obj *)ref_none(); }
@@ -441,6 +444,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     if (am2 != A_NONE) break;
                     op->v1 = v1->val;
                     op->v2 = v2->val;
+                    op->inplace = NULL;
                     result = op->v1->obj->calc2(op);
                     if (am1 == A_NONE) return result;
                     if (result->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result); result = (Obj *)ref_none(); }
@@ -472,12 +476,14 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         case O_GE:
             if (am == A_NONE) {
                 op->v1 = v1->val;
+                op->inplace = NULL;
                 return op->v1->obj->calc2(op);
             }
             break;
         default:
             if (am == A_NONE) {
                 op->v1 = v1->val;
+                op->inplace = NULL;
                 return op->v1->obj->calc2(op);
             }
             if (check_addr2(am)) break;
@@ -487,6 +493,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (check_addr(am)) break;
         ok:
             op->v1 = v1->val;
+            op->inplace = NULL;
             result = op->v1->obj->calc2(op);
             if (result->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result); result = (Obj *)ref_none(); }
             return (Obj *)new_address(result, am);
@@ -530,12 +537,14 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         case O_GE:
             if (am == A_NONE) {
                 op->v2 = v2->val;
+                op->inplace = NULL;
                 return t1->calc2(op);
             }
             break;
         default:
             if (am == A_NONE) {
                 op->v2 = v2->val;
+                op->inplace = NULL;
                 return t1->calc2(op);
             }
             if (check_addr2(am)) break;
@@ -544,6 +553,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             if (check_addr(am)) break;
         ok:
             op->v2 = v2->val;
+            op->inplace = NULL;
             result = t1->calc2(op);
             if (result->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result); result = (Obj *)ref_none(); }
             return (Obj *)new_address(result, am);

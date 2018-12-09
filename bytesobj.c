@@ -979,7 +979,10 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         if (v1->len < ~0) return (Obj *)bytes_from_u16(~((unsigned int)v1->data[0] << 8));
         return (Obj *)bytes_from_u16((v1->len < 0) ? ~0U : 0);
     case O_POS: return val_reference(&v1->v);
-    case O_INV: return invert(v1, op->epoint3);
+    case O_INV: 
+        if (op->inplace != &v1->v) return invert(v1, op->epoint3);
+        v1->len = ~v1->len;
+        return val_reference(&v1->v);
     case O_NEG:
         v = negate(v1, op->epoint3);
         if (v != NULL) return v;
@@ -987,6 +990,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_STRING:
         tmp = int_from_bytes(v1, op->epoint);
         op->v1 = tmp;
+        op->inplace = NULL;
         v = tmp->obj->calc1(op);
         val_destroy(tmp);
         return v;
@@ -1014,6 +1018,7 @@ static MUST_CHECK Obj *calc2_bytes(oper_t op) {
             tmp2 = int_from_bytes(v2, op->epoint2);
             op->v1 = tmp;
             op->v2 = tmp2;
+            op->inplace = NULL;
             result = tmp->obj->calc2(op);
             val_destroy(tmp2);
             val_destroy(tmp);
@@ -1030,6 +1035,7 @@ static MUST_CHECK Obj *calc2_bytes(oper_t op) {
             tmp2 = bits_from_bytes(v2, op->epoint2);
             op->v1 = tmp;
             op->v2 = tmp2;
+            op->inplace = NULL;
             result = tmp->obj->calc2(op);
             val_destroy(tmp2);
             val_destroy(tmp);
@@ -1237,6 +1243,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             default: tmp = int_from_bytes(v1, op->epoint);
             }
             op->v1 = tmp;
+            op->inplace = NULL;
             result = tmp->obj->calc2(op);
             val_destroy(tmp);
             return result;
@@ -1283,6 +1290,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             default: tmp = int_from_bytes(v2, op->epoint2);
             }
             op->v2 = tmp;
+            op->inplace = NULL;
             result = o1->obj->calc2(op);
             val_destroy(tmp);
             return result;

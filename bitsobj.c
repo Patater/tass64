@@ -751,7 +751,10 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_BSWORD:
         uv = ldigit(v1);
         return (Obj *)bytes_from_u16((uint8_t)(uv >> 8) | (uint16_t)(uv << 8));
-    case O_INV: return invert(v1, op->epoint3);
+    case O_INV: 
+        if (op->inplace != &v1->v) return invert(v1, op->epoint3);
+        v1->len = ~v1->len;
+        return val_reference(&v1->v);
     case O_POS: return val_reference(&v1->v);
     case O_NEG:
         v = negate(v1, op->epoint3);
@@ -760,6 +763,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_STRING:
         tmp = int_from_bits(v1, op->epoint);
         op->v1 = tmp;
+        op->inplace = NULL;
         v = tmp->obj->calc1(op);
         val_destroy(tmp);
         return v;
@@ -1295,6 +1299,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         op->v2 = (Obj *)bits_value[(Bool *)o2 == true_value ? 1 : 0];
+        op->inplace = NULL;
         return calc2(op);
     case T_BITS:
         {
@@ -1337,6 +1342,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         }
         tmp = int_from_bits(v1, op->epoint);
         op->v1 = tmp;
+        op->inplace = NULL;
         result = tmp->obj->calc2(op);
         val_destroy(tmp);
         return result;
@@ -1358,6 +1364,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         op->v1 = (Obj *)bits_value[(Bool *)o1 == true_value ? 1 : 0];
+        op->inplace = NULL;
         return calc2(op);
     case T_BITS:
         {
@@ -1387,6 +1394,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_INT:
         tmp = int_from_bits(v2, op->epoint2);
         op->v2 = tmp;
+        op->inplace = NULL;
         result = o1->obj->calc2(op);
         val_destroy(tmp);
         return result;

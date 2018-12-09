@@ -344,7 +344,10 @@ static MUST_CHECK Obj *calc1(oper_t op) {
             v->len = -v->len;
         }
         return &v->v;
-    case O_NEG: return negate(v1, op->epoint3);
+    case O_NEG: 
+        if (op->inplace != &v1->v) return (Obj *)negate(v1, op->epoint3);
+        v1->len = -v1->len;
+        return val_reference(&v1->v);
     case O_POS: return (Obj *)ref_int(v1);
     case O_STRING: return repr(&v1->v, op->epoint, SIZE_MAX);
     case O_LNOT:
@@ -1629,6 +1632,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         tmp = int_from_str((Str *)v2, op->epoint2);
     conv:
         op->v2 = tmp;
+        op->inplace = NULL;
         ret = calc2(op);
         val_destroy(tmp);
         return ret;
@@ -1651,6 +1655,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         default: tmp = (Obj *)int_value[(Bool *)v1 == true_value ? 1 : 0]; break;
         }
         op->v1 = tmp;
+        op->inplace = NULL;
         return tmp->obj->calc2(op);
     }
     return obj_oper_error(op);
