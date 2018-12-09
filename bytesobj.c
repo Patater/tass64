@@ -771,12 +771,12 @@ static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     renew:
         iter = new_bytes(1);
         v1->iter = &iter->v;
+        iter->len = (vv1->len < 0) ? ~1 : 1;
     } else if (iter->v.refcount != 1) {
         iter->v.refcount--;
         goto renew;
     }
     iter->data[0] = vv1->data[v1->val++];
-    iter->len = (vv1->len < 0) ? ~1 : 1;
     return &iter->v;
 }
 
