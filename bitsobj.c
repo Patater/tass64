@@ -1055,6 +1055,31 @@ static MUST_CHECK Obj *rshift(const Bits *vv1, uval_t s, linepos_t epoint) {
     return normalize(vv, sz, (vv1->len < 0));
 }
 
+static MUST_CHECK Obj *calc2_bits(oper_t op) {
+    Bits *v1 = (Bits *)op->v1, *v2 = (Bits *)op->v2;
+    ssize_t val;
+    switch (op->op->op) {
+    case O_CMP:
+        val = icmp(v1, v2);
+        if (val < 0) return (Obj *)ref_int(minus1_value);
+        return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
+    case O_EQ: return truth_reference(icmp(v1, v2) == 0);
+    case O_NE: return truth_reference(icmp(v1, v2) != 0);
+    case O_MIN:
+    case O_LT: return truth_reference(icmp(v1, v2) < 0);
+    case O_LE: return truth_reference(icmp(v1, v2) <= 0);
+    case O_MAX:
+    case O_GT: return truth_reference(icmp(v1, v2) > 0);
+    case O_GE: return truth_reference(icmp(v1, v2) >= 0);
+    case O_AND: return and_(v1, v2, op->epoint3);
+    case O_OR: return or_(v1, v2, op->epoint3);
+    case O_XOR: return xor_(v1, v2, op->epoint3);
+    case O_CONCAT: return concat(v1, v2, op->epoint3);
+    case O_IN: return obj_oper_error(op); /* TODO */
+    default: return NULL;
+    }
+}
+
 static inline MUST_CHECK Obj *repeat(oper_t op) {
     Bits *vv1 = (Bits *)op->v1, *vv;
     bdigit_t *v, *v1;
@@ -1282,7 +1307,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *tmp, *result;
     Error *err;
     ival_t shift;
-    ssize_t val;
 
     if (op->op == &o_X) {
         return repeat(op);
@@ -1302,29 +1326,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         op->inplace = NULL;
         return calc2(op);
     case T_BITS:
-        {
-            Bits *v2 = (Bits *)o2;
-            switch (op->op->op) {
-            case O_CMP:
-                val = icmp(v1, v2);
-                if (val < 0) return (Obj *)ref_int(minus1_value);
-                return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-            case O_EQ: return truth_reference(icmp(v1, v2) == 0);
-            case O_NE: return truth_reference(icmp(v1, v2) != 0);
-            case O_MIN:
-            case O_LT: return truth_reference(icmp(v1, v2) < 0);
-            case O_LE: return truth_reference(icmp(v1, v2) <= 0);
-            case O_MAX:
-            case O_GT: return truth_reference(icmp(v1, v2) > 0);
-            case O_GE: return truth_reference(icmp(v1, v2) >= 0);
-            case O_AND: return and_(v1, v2, op->epoint3);
-            case O_OR: return or_(v1, v2, op->epoint3);
-            case O_XOR: return xor_(v1, v2, op->epoint3);
-            case O_CONCAT: return concat(v1, v2, op->epoint3);
-            case O_IN: return obj_oper_error(op); /* TODO */
-            default: break;
-            }
-        }
+        result = calc2_bits(op);
+        if (result != NULL) return result;
         /* fall through */
     case T_INT:
         switch (op->op->op) {
@@ -1359,7 +1362,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     Bits *v2 = (Bits *)op->v2;
     Obj *o1 = op->v1;
     Obj *tmp, *result;
-    ssize_t val;
+
     switch (o1->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
@@ -1367,29 +1370,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         op->inplace = NULL;
         return calc2(op);
     case T_BITS:
-        {
-            Bits *v1 = (Bits *)o1;
-            switch (op->op->op) {
-            case O_CMP:
-                val = icmp(v1, v2);
-                if (val < 0) return (Obj *)ref_int(minus1_value);
-                return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-            case O_EQ: return truth_reference(icmp(v1, v2) == 0);
-            case O_NE: return truth_reference(icmp(v1, v2) != 0);
-            case O_MIN:
-            case O_LT: return truth_reference(icmp(v1, v2) < 0);
-            case O_LE: return truth_reference(icmp(v1, v2) <= 0);
-            case O_MAX:
-            case O_GT: return truth_reference(icmp(v1, v2) > 0);
-            case O_GE: return truth_reference(icmp(v1, v2) >= 0);
-            case O_AND: return and_(v1, v2, op->epoint3);
-            case O_OR: return or_(v1, v2, op->epoint3);
-            case O_XOR: return xor_(v1, v2, op->epoint3);
-            case O_CONCAT: return concat(v1, v2, op->epoint3);
-            case O_IN: return obj_oper_error(op); /* TODO */
-            default: break;
-            }
-        }
+        result = calc2_bits(op);
+        if (result != NULL) return result;
         /* fall through */
     case T_INT:
         tmp = int_from_bits(v2, op->epoint2);
