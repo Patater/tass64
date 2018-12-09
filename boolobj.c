@@ -251,8 +251,8 @@ void boolobj_destroy(void) {
 #ifdef DEBUG
     if (false_value->v.refcount != 1) fprintf(stderr, "false %" PRIuSIZE "\n", false_value->v.refcount - 1);
     if (true_value->v.refcount != 1) fprintf(stderr, "true %" PRIuSIZE "\n", true_value->v.refcount - 1);
-    if (bool_repr[0]->v.refcount != 1) fprintf(stderr, "boolrepr[0] %" PRIuSIZE "\n", bool_repr[0]->v.refcount - 1);
-    if (bool_repr[1]->v.refcount != 1) fprintf(stderr, "boolrepr[1] %" PRIuSIZE "\n", bool_repr[1]->v.refcount - 1);
+    if (bool_repr[0] != NULL && bool_repr[0]->v.refcount != 1) fprintf(stderr, "boolrepr[0] %" PRIuSIZE "\n", bool_repr[0]->v.refcount - 1);
+    if (bool_repr[1] != NULL && bool_repr[1]->v.refcount != 1) fprintf(stderr, "boolrepr[1] %" PRIuSIZE "\n", bool_repr[1]->v.refcount - 1);
 #endif
 
     val_destroy(&false_value->v);
