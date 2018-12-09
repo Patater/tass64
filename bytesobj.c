@@ -952,7 +952,6 @@ static MUST_CHECK Obj *concat(oper_t op) {
         for (i = 0; i < len2; i++) s[i + len1] = ~v2->data[i];
     } else memcpy(s + len1, v2->data, len2);
     v->len = (v1->len < 0) ? (ssize_t)~ln : (ssize_t)ln;
-    v->data = s;
     return &v->v;
 failed:
     return (Obj *)new_error_mem(op->epoint3);
