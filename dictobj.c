@@ -136,6 +136,7 @@ static int pair_compare(const struct avltree_node *aa, const struct avltree_node
     }
     pair_oper.v1 = a->key;
     pair_oper.v2 = b->key;
+    pair_oper.inplace = NULL;
     result = pair_oper.v1->obj->calc2(&pair_oper);
     if (result->obj == INT_OBJ) h = (int)((Int *)result)->len;
     else h = a->key->obj->type - b->key->obj->type;

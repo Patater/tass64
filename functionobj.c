@@ -301,6 +301,7 @@ static int sortcomp(const void *a, const void *b) {
     size_t aa = *(const size_t *)a, bb = *(const size_t *)b;
     Obj *o1 = sort_tmp.v1 = sort_vals[aa];
     Obj *o2 = sort_tmp.v2 = sort_vals[bb];
+    sort_tmp.inplace = NULL;
     result = sort_tmp.v1->obj->calc2(&sort_tmp);
     if (result->obj == INT_OBJ) ret = (int)((Int *)result)->len;
     else {

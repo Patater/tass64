@@ -1449,12 +1449,14 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                 if (!get_exp(0, 0, 0, &bpoint)) break;
                 val = get_vals_addrlist(epoints);
                 if (tmp.op != NULL) {
+                    bool minmax = (tmp.op == &o_MIN) || (tmp.op == &o_MAX);
                     Obj *result2, *val1 = label->value;
                     tmp.v1 = val1;
                     tmp.v2 = val;
+                    tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
                     result2 = tmp.v1->obj->calc2(&tmp);
                     if (result2->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result2); result2 = (Obj *)ref_none(); }
-                    else if (tmp.op == &o_MIN || tmp.op == &o_MAX) {
+                    else if (minmax) {
                         if (result2 == &true_value->v) val_replace(&result2, val1);
                         else if (result2 == &false_value->v) val_replace(&result2, val);
                     }
@@ -1625,6 +1627,7 @@ MUST_CHECK Obj *compile(void)
             if ((waitfor->skip & 1) == 0) {epoint = lpoint; goto jn;} /* skip things if needed */
             if (labelname.len > 1 && labelname.data[0] == '_' && labelname.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint); goto breakerr;}
             while (wht != 0 && !arguments.tasmcomp) {
+                bool minmax;
                 Label *label;
                 struct oper_s tmp;
                 Obj *result2, *val2;
@@ -1736,14 +1739,16 @@ MUST_CHECK Obj *compile(void)
                     }
                     goto finish;
                 }
+                minmax = (tmp.op == &o_MIN) || (tmp.op == &o_MAX);
                 tmp.v1 = val;
                 tmp.v2 = val2;
                 tmp.epoint = &epoint;
                 tmp.epoint2 = &epoint2;
                 tmp.epoint3 = &epoint3;
+                tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
                 result2 = tmp.v1->obj->calc2(&tmp);
                 if (result2->obj == ERROR_OBJ) { err_msg_output_and_destroy((Error *)result2); result2 = (Obj *)ref_none(); }
-                else if (tmp.op == &o_MIN || tmp.op == &o_MAX) {
+                else if (minmax) {
                     if (result2 == &true_value->v) val_replace(&result2, val);
                     else if (result2 == &false_value->v) val_replace(&result2, val2);
                 }
@@ -2630,6 +2635,7 @@ MUST_CHECK Obj *compile(void)
                             tmp.v1 = waitfor->val;
                             tmp.v2 = val;
                             tmp.epoint2 = &vs->epoint;
+                            tmp.inplace = NULL;
                             result2 = tmp.v1->obj->calc2(&tmp);
                             truth = (Bool *)result2 == true_value;
                             val_destroy(result2);
