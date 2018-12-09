@@ -762,7 +762,7 @@ static size_t iter_len(Iter *v1) {
     return ((Bytes *)v1->data)->len - v1->val;
 }
 
-static MUST_CHECK Obj *next(Iter *v1) {
+static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     Bytes *iter;
     const Bytes *vv1 = (Bytes *)v1->data;
     if (v1->val >= byteslen(vv1)) return NULL;

@@ -39,7 +39,7 @@ typedef struct Lbl_s {
 } Lbl;
 
 struct Iter;
-typedef MUST_CHECK Obj *(*iter_next_t)(struct Iter *);
+typedef FAST_CALL MUST_CHECK Obj *(*iter_next_t)(struct Iter *);
 typedef size_t (*iter_len_t)(struct Iter *);
 
 typedef struct Iter {

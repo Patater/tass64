@@ -222,7 +222,7 @@ static size_t invalid_iter_len(Iter *v1) {
     return 1 - v1->val;
 }
 
-static MUST_CHECK Obj *invalid_next(Iter *v1) {
+static FAST_CALL MUST_CHECK Obj *invalid_next(Iter *v1) {
     if (v1->val != 0) return NULL;
     v1->val = 1;
     return v1->data;
