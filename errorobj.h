@@ -34,9 +34,10 @@ typedef struct Error {
     Error_types num;
     const struct file_list_s *file_list;
     struct linepos_s epoint;
+    const uint8_t *line;
     union {
         struct {
-            struct Oper *op;
+            const struct Oper *op;
             Obj *v1;
             Obj *v2;
         } invoper;
