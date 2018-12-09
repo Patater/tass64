@@ -607,9 +607,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                " Misc:\n"
                "  -?, --help            Give this help list\n"
                "      --usage           Give a short usage message\n"
-               "  -V, --version         Print program version\n"
-               "\n"
-               "Mandatory or optional arguments to long options are also mandatory or optional\n"
+               "  -V, --version         Print program version\n");
+               puts("Mandatory or optional arguments to long options are also mandatory or optional\n"
                "for any corresponding short options.\n"
                "\n"
                "Report bugs to <soci" "\x40" "c64.rulez.org>.");
