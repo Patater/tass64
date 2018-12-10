@@ -178,10 +178,6 @@ MALLOC Error *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
     return v;
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t UNUSED(epoint)) {
-    return val_reference(v1);
-}
-
 static MUST_CHECK Obj *calc1(oper_t op) {
     return val_reference(op->v1);
 }
@@ -200,7 +196,6 @@ static MUST_CHECK Obj *slice(Obj *v1, oper_t UNUSED(op), size_t UNUSED(indx)) {
 
 void errorobj_init(void) {
     new_type(&obj, T_ERROR, "error", sizeof(Error));
-    obj.create = create;
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.calc1 = calc1;
