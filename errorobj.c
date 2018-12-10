@@ -127,7 +127,9 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR__INVALID_CONV:
         v = v1->u.conv.val;
         break;
-    default: return;
+    default:
+        if (i == 0) break;
+        return;
     }
     switch (i) {
     case -1:
