@@ -126,10 +126,7 @@ static MUST_CHECK Obj *tuple_from_list(List *v1, Type *typ, linepos_t epoint) {
 
     ln = v1->len;
     vals = lnew(v, ln);
-    if (vals == NULL) {
-        val_destroy(&v->v);
-        return (Obj *)new_error_mem(epoint);
-    }
+    if (vals == NULL) return (Obj *)new_error_mem(epoint);
 
     for (i = 0; i < ln; i++) {
         vals[i] = val_reference(data[i]);
@@ -213,10 +210,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
         if (chars > maxsize) return NULL;
         list = (Tuple *)val_alloc(TUPLE_OBJ);
         vals = lnew(list, llen);
-        if (vals == NULL) {
-            val_destroy(&list->v);
-            return (Obj *)new_error_mem(epoint);
-        }
+        if (vals == NULL) return (Obj *)new_error_mem(epoint);
         for (i = 0;i < llen; i++) {
             Obj *o2 = v1->data[i];
             if (o2 == &default_value->v && o1->obj == COLONLIST_OBJ) {
@@ -320,10 +314,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         } else {
             v = (List *)val_alloc(o1->obj);
             vals = lnew(v, v1->len);
-            if (vals == NULL) {
-                val_destroy(&v->v);
-                return (Obj *)new_error_mem(op->epoint3);
-            }
+            if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }
         for (i = 0; i < v1->len; i++) {
             Obj *val = v1->data[i];
@@ -385,10 +376,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                     } else {
                         v = (List *)val_alloc(o1->obj);
                         vals = lnew(v, v1->len);
-                        if (vals == NULL) {
-                            val_destroy(&v->v);
-                            goto failed;
-                        }
+                        if (vals == NULL) goto failed;
                         inplace = NULL;
                     }
                     for (i = 0; i < v1->len; i++) {
@@ -455,10 +443,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
             } else {
                 v = (List *)val_alloc(o1->obj);
                 vals = lnew(v, ln);
-                if (vals == NULL) {
-                    val_destroy(&v->v);
-                    goto failed;
-                }
+                if (vals == NULL) goto failed;
                 for (i = 0; i < v1->len; i++) {
                     vals[i] = val_reference(v1->data[i]);
                 }
@@ -494,10 +479,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
         v = (List *)val_alloc(o1->obj);
         ln = v1->len * rep;
         vals = lnew(v, ln);
-        if (vals == NULL) {
-            val_destroy(&v->v);
-            break;
-        }
+        if (vals == NULL) break;
         while ((rep--) != 0) {
             for (j = 0;j < v1->len; j++, i++) {
                 vals[i] = val_reference(v1->data[j]);
@@ -542,7 +524,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         v = (List *)val_alloc(o1->obj);
         vals = lnew(v, len);
         if (vals == NULL) {
-            val_destroy(&v->v);
             val_destroy(&iter->v);
             goto failed;
         }
@@ -583,10 +564,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         }
         v = (List *)val_alloc(o1->obj);
         vals = lnew(v, length);
-        if (vals == NULL) {
-            val_destroy(&v->v);
-            goto failed;
-        }
+        if (vals == NULL) goto failed;
         i = 0;
         while ((end > offs && step > 0) || (end < offs && step < 0)) {
             if (more) {
@@ -661,10 +639,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         } else {
             list = (List *)val_alloc(o1->obj);
             vals = lnew(list, v1->len);
-            if (vals == NULL) {
-                val_destroy(&list->v);
-                return (Obj *)new_error_mem(op->epoint3);
-            }
+            if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }
         for (;i < v1->len; i++) {
             Obj *val;
@@ -746,10 +721,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         } else {
             v = (List *)val_alloc(o2->obj);
             vals = lnew(v, v2->len);
-            if (vals == NULL) {
-                val_destroy(&v->v);
-                return (Obj *)new_error_mem(op->epoint3);
-            }
+            if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }
         for (;i < v2->len; i++) {
             Obj *val;
