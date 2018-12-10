@@ -170,13 +170,15 @@ static MUST_CHECK Obj *invalid_rcalc2(oper_t op) {
 static MUST_CHECK Obj *invalid_slice(Obj *UNUSED(v1), oper_t op, size_t indx) {
     Funcargs *args = (Funcargs *)op->v2;
     if (indx == 0) {
-        Obj *o2 = args->val[0].val;
-        if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
-            return val_reference(o2);
-        }
-        if (o2->obj == ADDRESS_OBJ) {
-            Obj *val = ((Address *)o2)->val;
-            if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
+        if (args->len > 0) {
+            Obj *o2 = args->val[0].val;
+            if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
+                return val_reference(o2);
+            }
+            if (o2->obj == ADDRESS_OBJ) {
+                Obj *val = ((Address *)o2)->val;
+                if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
+            }
         }
     } else {
         err_msg_argnum(args->len, 1, indx, op->epoint2);
