@@ -96,18 +96,17 @@ static MALLOC Bits *new_bits(size_t len) {
 }
 
 static MALLOC Bits *new_bits2(size_t len) {
-    Bits *v;
-    if (len <= lenof(v->u.val)) {
-        v = (Bits *)val_alloc(BITS_OBJ);
+    Bits *v = (Bits *)val_alloc(BITS_OBJ);
+    if (len > lenof(v->u.val)) {
+        v->u.hash = -1;
+        v->data = (len <= SIZE_MAX / sizeof *v->data) ? (bdigit_t *)malloc(len * sizeof *v->data) : NULL;
+        if (v->data == NULL) {
+            val_destroy(&v->v);
+            v = NULL;
+        }
+    } else {
         v->data = v->u.val;
-        return v;
     }
-    if (len > SIZE_MAX / sizeof *v->data) return NULL; /* overflow */
-    bdigit_t *n = (bdigit_t *)malloc(len * sizeof *v->data);
-    if (n == NULL) return NULL;
-    v = (Bits *)val_alloc(BITS_OBJ);
-    v->u.hash = -1;
-    v->data = n;
     return v;
 }
 
