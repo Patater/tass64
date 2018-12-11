@@ -651,8 +651,8 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         const uint8_t *ollist = llist;
         size_t oldbottom;
         bool in_macro_old = in_macro;
-        in_macro = false;
         struct section_address_s section_address, *oldsection_address = current_address;
+        in_macro = false;
 
         if (diagnostics.optimize) cpu_opt_invalidate();
         if (labelexists && s->addr != star) {

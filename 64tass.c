@@ -1185,8 +1185,8 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
     bool starexists, foreach = false;
     size_t lentmp;
     Iter *iter = NULL;
-    labels.p = 0;
     size_t i = 0;
+    labels.p = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
     listing_line(listing, epoint->pos);
