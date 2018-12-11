@@ -303,6 +303,7 @@ static bool close_waitfor(Wait_types what) {
 
 static void set_size(const Label *label, address_t size, Memblocks *mem, size_t memp, size_t membp) {
     Code *code = (Code *)label->value;
+    if (code->v.obj != CODE_OBJ) return;
     size &= all_mem2;
     if (code->size != size) {
         code->size = size;
