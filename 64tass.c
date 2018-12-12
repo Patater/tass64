@@ -2120,7 +2120,7 @@ MUST_CHECK Obj *compile(void)
                         structure->line = epoint.line;
                         get_macro_params(&structure->v);
                         if (labelexists) {
-                            if (label->value->obj == obj) structure->retval = ((Struct *)label->value)->retval;
+                            structure->retval = (label->value->obj == obj) && ((Struct *)label->value)->retval;
                             if (label->defpass == pass) {
                                 doubledef = true;
                                 structure->size = 0;
