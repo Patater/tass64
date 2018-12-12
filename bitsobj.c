@@ -1112,26 +1112,28 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     rbits = vv1->bits / SHIFT;
     abits = vv1->bits % SHIFT;
     l = bitslen(vv1);
-    while ((rep--) != 0) {
+    for (; rep != 0; rep--) {
         if (bits != 0) {
             for (j = 0; j < rbits && j < l; j++) {
                 v[i++] = uv | (v1[j] << bits);
                 uv = (v1[j] >> (SHIFT - bits));
             }
-            uv |= v1[j] << bits;
-            if (j < rbits) { v[i++] = uv; uv = 0; j++;}
-            for (; j < rbits; j++) v[i++] = 0;
+            if (j < l) uv |= v1[j] << bits;
+            if (j < rbits) { 
+                v[i++] = uv; uv = 0; j++;
+                for (; j < rbits; j++) v[i++] = 0;
+            }
             bits += abits;
             if (bits >= SHIFT) {
-                v[i++] = uv;
                 bits -= SHIFT;
-                if (bits != 0) uv = v1[j] >> (abits - bits);
+                v[i++] = uv;
+                if (bits != 0 && j < l) uv = v1[j] >> (abits - bits);
                 else uv = 0;
             }
         } else {
             for (j = 0; j < rbits && j < l; j++) v[i++] = v1[j];
             for (; j < rbits; j++) v[i++] = 0;
-            uv = v1[j];
+            uv = (j < l) ? v1[j] : 0;
             bits = abits;
         }
     }
