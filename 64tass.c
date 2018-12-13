@@ -2007,7 +2007,7 @@ MUST_CHECK Obj *compile(void)
                         macro->line = epoint.line;
                         get_macro_params(&macro->v);
                         if (labelexists) {
-                            if (label->value->obj == obj) macro->retval = ((Macro *)label->value)->retval;
+                            macro->retval = (label->value->obj == obj) && ((Macro *)label->value)->retval;
                             if (label->defpass == pass) {
                                 waitfor->val = &macro->v;
                                 err_msg_double_defined(label, &labelname, &epoint);
