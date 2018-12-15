@@ -293,6 +293,7 @@ static void reset_waitfor(void) {
 static bool close_waitfor(Wait_types what) {
     if (waitfor->what == what) {
         if (waitfor->val != NULL) val_destroy(waitfor->val);
+        if (waitfor->label != NULL) val_destroy(&waitfor->label->v);
         waitfor_p--;
         waitfor = &waitfors[waitfor_p];
         prevwaitfor = (waitfor_p != 0) ? &waitfors[waitfor_p - 1] : waitfor;
@@ -2423,7 +2424,7 @@ MUST_CHECK Obj *compile(void)
                 switch (prm) {
                 case CMD_PROC:
                     listing_line(listing, epoint.pos);
-                    new_waitfor(W_PEND, &epoint);waitfor->label = newlabel;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;
+                    new_waitfor(W_PEND, &epoint);waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                     if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, newmemp, newmembp);}
                     else {         /* TODO: first time it should not compile */
                         push_context(((Code *)newlabel->value)->names);
@@ -2515,7 +2516,7 @@ MUST_CHECK Obj *compile(void)
                     }
                 case CMD_SECTION:
                 case CMD_VIRTUAL:
-                    waitfor->label = newlabel;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;
+                    waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                     listing_line(listing, epoint.pos);
                     newlabel->ref = false;
                     newlabel = NULL;
@@ -3085,7 +3086,7 @@ MUST_CHECK Obj *compile(void)
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
-                    new_waitfor(W_HERE2, &epoint);waitfor->laddr = current_address->l_address;waitfor->label = newlabel;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp; waitfor->val = val_reference(current_address->l_address_val);
+                    new_waitfor(W_HERE2, &epoint);waitfor->laddr = current_address->l_address;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp; waitfor->val = val_reference(current_address->l_address_val);if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                     current_section->logicalrecursion++;
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
@@ -3139,7 +3140,7 @@ MUST_CHECK Obj *compile(void)
                     new_waitfor(W_BEND2, &epoint);
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         push_context(((Code *)newlabel->value)->names);
-                        waitfor->label = newlabel;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;
+                        waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                         newlabel = NULL;
                     } else {
                         Label *label;
@@ -3218,7 +3219,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_WEAK: if ((waitfor->skip & 1) != 0)
                 { /* .weak */
                     listing_line(listing, epoint.pos);
-                    new_waitfor(W_WEAK2, &epoint);waitfor->label = newlabel;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;
+                    new_waitfor(W_WEAK2, &epoint);waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                     strength++;
                     newlabel = NULL;
                 } else new_waitfor(W_WEAK, &epoint);
@@ -3773,7 +3774,7 @@ MUST_CHECK Obj *compile(void)
                 { /* .page */
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
-                    new_waitfor(W_ENDP2, &epoint);waitfor->addr = current_address->address;waitfor->laddr = current_address->l_address;waitfor->label = newlabel;waitfor->memp = newmemp;waitfor->membp = newmembp;
+                    new_waitfor(W_ENDP2, &epoint);waitfor->addr = current_address->address;waitfor->laddr = current_address->l_address;waitfor->memp = newmemp;waitfor->membp = newmembp;if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                     newlabel = NULL;
                 } else new_waitfor(W_ENDP, &epoint);
                 break;
