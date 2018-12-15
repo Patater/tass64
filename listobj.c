@@ -94,6 +94,7 @@ static Obj **lnew(List *v, size_t len) {
         }
     }
     v->len = 0;
+    v->data = v->val;
     val_destroy(&v->v);
     return NULL;
 }
