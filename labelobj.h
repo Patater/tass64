@@ -43,4 +43,8 @@ typedef struct Label {
 
 extern void labelobj_init(void);
 
+static inline Label *ref_label(Label *v1) {
+    v1->v.refcount++; return v1;
+}
+
 #endif
