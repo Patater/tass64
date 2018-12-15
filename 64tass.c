@@ -1487,6 +1487,59 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     return i;
 }
 
+static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
+    uval_t cnt;
+    Obj *nf;
+    size_t i = 0;
+ 
+    if (diagnostics.optimize) cpu_opt_invalidate();
+    listing_line(listing, epoint->pos);
+    new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
+    if (!get_exp(0, 1, 1, epoint)) cnt = 0;
+    else {
+        struct values_s *vs = get_val();
+        if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) cnt = 0;
+    }
+    if (cnt > 0) {
+        line_t lin = lpoint.line;
+        bool starexists;
+        struct star_s *s = new_star(vline, &starexists);
+        struct avltree *stree_old = star_tree;
+        line_t ovline = vline, lvline;
+
+        if (starexists && s->addr != star) {
+            if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+            fixeddig = false;
+        }
+        s->addr = star;
+        star_tree = &s->tree;vline = 0;
+        new_waitfor(W_NEXT2, epoint);
+        waitfor->breakout = false;
+        for (;;) {
+            lpoint.line = lin;
+            waitfor->skip = 1; lvline = vline;
+            if (lst != NULL) {
+                if (i >= lst->len) list_extend(lst);
+                if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
+                else nf = tuple_scope(newlabel, &lst->data[i]);
+                i++;
+            } else nf = compile();
+            if (nf == NULL || waitfor->breakout || (--cnt) == 0) {
+                break;
+            }
+            if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+        }
+        if (nf != NULL) {
+            if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
+            else listing_line_cut2(listing, waitfor->epoint.pos);
+        }
+        close_waitfor(W_NEXT2);
+        if (nf != NULL) close_waitfor(W_NEXT);
+        star_tree = stree_old; vline = ovline + vline - lvline;
+    }
+    return i;
+}
+
 MUST_CHECK Obj *compile(void)
 {
     int wht;
@@ -2204,6 +2257,7 @@ MUST_CHECK Obj *compile(void)
                     if (virtual_start(&cmdpoint)) goto breakerr;
                     star = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
                     break;
+                case CMD_BREPT:
                 case CMD_BFOR:
                     { /* .bfor */
                         List *lst;
@@ -2244,7 +2298,7 @@ MUST_CHECK Obj *compile(void)
                             lst = new_tuple(lenof(lst->val));
                             for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                         }
-                        i = for_command(label, lst, &epoint);
+                        i = (prm == CMD_BFOR) ? for_command(label, lst, &cmdpoint) : rept_command(label, lst, &cmdpoint);
                         if (lst->len > i) list_shrink(lst, i);
                         const_assign(label, &lst->v);
                         goto breakerr;
@@ -3538,102 +3592,6 @@ MUST_CHECK Obj *compile(void)
                     if (cpui->name == NULL) err_msg2(ERROR___UNKNOWN_CPU, &cpuname, &vs->epoint);
                 }
                 break;
-            case CMD_BREPT:
-            case CMD_REPT: if ((waitfor->skip & 1) != 0)
-                { /* .rept */
-                    uval_t cnt;
-                    bool light = (newlabel == NULL);
-                    Obj *nf;
-                    List *lst = NULL;
-                    if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, epoint.pos);
-                    new_waitfor(W_NEXT, &epoint);waitfor->skip = 0;
-                    if (!get_exp(0, 1, 1, &epoint)) cnt = 0;
-                    else {
-                        struct values_s *vs = get_val();
-                        if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) cnt = 0;
-                    }
-                    if (prm == CMD_BREPT) {
-                        size_t i;
-                        if (light) {
-                            Label *label;
-                            bool labelexists;
-                            str_t tmpname;
-                            if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                            else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                            anonident2.type = '.';
-                            anonident2.star_tree = star_tree;
-                            anonident2.vline = vline;
-                            tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
-                            label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
-                            if (labelexists) {
-                                if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
-                                label->constant = true;
-                                label->owner = true;
-                                label->defpass = pass;
-                            } else {
-                                label->constant = true;
-                                label->owner = true;
-                                label->value = (Obj *)ref_none();
-                                label->epoint = epoint;
-                            }
-                            newlabel = label;
-                        }
-                        if (newlabel->value->obj == TUPLE_OBJ) {
-                            List *old = (List *)newlabel->value;
-                            lst = new_tuple(old->len);
-                            for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
-                        } else {
-                            lst = new_tuple(cnt);
-                            for (i = 0; i < cnt; i++) lst->data[i] = (Obj *)ref_none();
-                        }
-                    }
-                    if (cnt > 0) {
-                        line_t lin = lpoint.line;
-                        bool starexists;
-                        struct star_s *s = new_star(vline, &starexists);
-                        struct avltree *stree_old = star_tree;
-                        line_t ovline = vline, lvline;
-                        size_t i = 0;
-
-                        if (starexists && s->addr != star) {
-                            if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
-                            fixeddig = false;
-                        }
-                        s->addr = star;
-                        star_tree = &s->tree;vline = 0;
-                        new_waitfor(W_NEXT2, &epoint);
-                        waitfor->breakout = false;
-                        for (;;) {
-                            lpoint.line = lin;
-                            waitfor->skip = 1; lvline = vline;
-                            if (lst != NULL) {
-                                if (i >= lst->len) list_extend(lst);
-                                if (light) nf = tuple_scope_light(&lst->data[i], &epoint);
-                                else nf = tuple_scope(newlabel, &lst->data[i]);
-                                i++;
-                            } else nf = compile();
-                            if (nf == NULL || waitfor->breakout || (--cnt) == 0) {
-                                break;
-                            }
-                            if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
-                        }
-                        if (nf != NULL) {
-                            if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
-                            else listing_line_cut2(listing, waitfor->epoint.pos);
-                        }
-                        if (lst != NULL && lst->len > i) list_shrink(lst, i);
-                        close_waitfor(W_NEXT2);
-                        if (nf != NULL) close_waitfor(W_NEXT);
-                        star_tree = stree_old; vline = ovline + vline - lvline;
-                    }
-                    if (lst != NULL) {
-                        newlabel->update_after = true;
-                        const_assign(newlabel, &lst->v);
-                        newlabel = NULL;
-                    }
-                } else new_waitfor(W_NEXT, &epoint);
-                break;
             case CMD_PRON: /* .pron */
                 if ((waitfor->skip & 1) != 0) {
                     listing_line(listing, epoint.pos);
@@ -3744,6 +3702,7 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 }
                 break;
+            case CMD_BREPT:
             case CMD_BFOR: if ((waitfor->skip & 1) != 0)
                 { /* .bfor */
                     List *lst;
@@ -3775,7 +3734,7 @@ MUST_CHECK Obj *compile(void)
                         lst = new_tuple(lenof(lst->val));
                         for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                     }
-                    i = for_command(NULL, lst, &epoint);
+                    i = (prm == CMD_BFOR) ? for_command(NULL, lst, &epoint) : rept_command(NULL, lst, &epoint);
                     if (lst->len > i) list_shrink(lst, i);
                     const_assign(label, &lst->v);
                     goto breakerr;
@@ -3784,6 +3743,12 @@ MUST_CHECK Obj *compile(void)
             case CMD_FOR: if ((waitfor->skip & 1) != 0)
                 { /* .for */
                     for_command(NULL, NULL, &epoint);
+                    goto breakerr;
+                } else new_waitfor(W_NEXT, &epoint);
+                break;
+            case CMD_REPT: if ((waitfor->skip & 1) != 0)
+                { /* .for */
+                    rept_command(NULL, NULL, &epoint);
                     goto breakerr;
                 } else new_waitfor(W_NEXT, &epoint);
                 break;
