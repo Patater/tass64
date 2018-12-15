@@ -1090,7 +1090,6 @@ static bool get_val2(struct eval_context_s *ev) {
                 Obj *tmp;
 
                 if (len2 < len) err_msg_out_of_memory(); /* overflow */
-                v1->val = NULL;
                 vsp--;
                 if (len2 >= ev->values_size) values = extend_values(ev, len);
                 iter_next = iter->next;
