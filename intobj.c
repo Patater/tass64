@@ -349,7 +349,11 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         v1->len = -v1->len;
         return val_reference(&v1->v);
     case O_POS: return (Obj *)ref_int(v1);
-    case O_STRING: return repr(&v1->v, op->epoint, SIZE_MAX);
+    case O_STRING:
+        {
+            Obj *o = repr(&v1->v, op->epoint, SIZE_MAX);
+            return (o != NULL) ? o : (Obj *)new_error_mem(op->epoint);
+        }
     case O_LNOT:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return truth_reference(v1->len == 0);
