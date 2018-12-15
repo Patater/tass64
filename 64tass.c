@@ -1344,6 +1344,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
         if (labels.p != 0 && labels.data != labels.val) free(labels.data);
         expr = NULL;
     } else {
+        const uint8_t *oldpline = pline;
         xlin = lpoint.line; apoint = lpoint;
         lentmp = strlen((const char *)pline) + 1;
         expr = (uint8_t *)mallocx(lentmp);
@@ -1472,6 +1473,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                 label->usepass = 0;
             }
         }
+        pline = oldpline;
         lpoint.line = xlin;
     }
     if (nf != NULL) {
