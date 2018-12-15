@@ -1666,7 +1666,7 @@ MUST_CHECK Obj *compile(void)
                         idn->name = labelname;
                         idn->epoint = epoint;
                         epoint.pos--;
-                        err_msg_invalid_oper(&o_MEMBER, &tmp2->v, &idn->v, &epoint);
+                        err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
                         val_destroy(&idn->v);
                         goto breakerr;
                     }
