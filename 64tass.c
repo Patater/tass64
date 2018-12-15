@@ -1164,7 +1164,7 @@ static void list_shrink(List *lst, size_t i) {
     }
 }
 
-static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoint) {
+static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     int wht;
     line_t lin, xlin;
     struct linepos_s apoint, bpoint = {0, 0};
@@ -1330,7 +1330,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
                 waitfor->skip = 1; lvline = vline;
                 if (lst != NULL) {
                     if (i >= lst->len) list_extend(lst);
-                    if (light) nf = tuple_scope_light(&lst->data[i], epoint);
+                    if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                     else nf = tuple_scope(newlabel, &lst->data[i]);
                     i++;
                 } else nf = compile();
@@ -1373,7 +1373,7 @@ static size_t for_command(Label *newlabel, List *lst, bool light, linepos_t epoi
             waitfor->skip = 1;lvline = vline;
             if (lst != NULL) {
                 if (i >= lst->len) list_extend(lst);
-                if (light) nf = tuple_scope_light(&lst->data[i], epoint);
+                if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                 else nf = tuple_scope(newlabel, &lst->data[i]);
                 i++;
             } else nf = compile();
@@ -2203,6 +2203,52 @@ MUST_CHECK Obj *compile(void)
                 case CMD_VIRTUAL:
                     if (virtual_start(&cmdpoint)) goto breakerr;
                     star = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
+                    break;
+                case CMD_BFOR:
+                    { /* .bfor */
+                        List *lst;
+                        bool labelexists;
+                        size_t i;
+                        Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                        if (labelexists) {
+                            if (label->defpass == pass) {
+                                err_msg_double_defined(label, &labelname, &epoint);
+                                epoint = cmdpoint;
+                                goto as_command;
+                            } else {
+                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                if (label->file_list != current_file_list) {
+                                    label_move(label, &labelname, current_file_list);
+                                }
+                                label->defpass = pass;
+                            }
+                        } else {
+                            if (!constcreated && temporary_label_branch == 0) {
+                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                constcreated = true;
+                            }
+                            label->value = (Obj *)ref_none();
+                        }
+                        label->constant = true;
+                        label->owner = true;
+                        label->epoint = epoint;
+                        label->ref = false;
+                        if (label->value->obj == TUPLE_OBJ) {
+                            List *old = (List *)label->value;
+                            lst = new_tuple(old->len);
+                            for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
+                        } else {
+                            lst = new_tuple(lenof(lst->val));
+                            for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
+                        }
+                        i = for_command(label, lst, &epoint);
+                        if (lst->len > i) list_shrink(lst, i);
+                        const_assign(label, &lst->v);
+                        goto breakerr;
+                    }
                     break;
                 }
                 break;
@@ -3698,54 +3744,46 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 }
                 break;
-            case CMD_BFOR:
+            case CMD_BFOR: if ((waitfor->skip & 1) != 0)
+                { /* .bfor */
+                    List *lst;
+                    size_t i;
+                    Label *label;
+                    bool labelexists;
+                    str_t tmpname;
+                    if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
+                    else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
+                    anonident2.type = '.';
+                    anonident2.star_tree = star_tree;
+                    anonident2.vline = vline;
+                    tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                    label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
+                    if (labelexists) {
+                        if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
+                        label->defpass = pass;
+                    } else {
+                        label->value = (Obj *)ref_none();
+                        label->epoint = epoint;
+                    }
+                    label->constant = true;
+                    label->owner = true;
+                    if (label->value->obj == TUPLE_OBJ) {
+                        List *old = (List *)label->value;
+                        lst = new_tuple(old->len);
+                        for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
+                    } else {
+                        lst = new_tuple(lenof(lst->val));
+                        for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
+                    }
+                    i = for_command(NULL, lst, &epoint);
+                    if (lst->len > i) list_shrink(lst, i);
+                    const_assign(label, &lst->v);
+                    goto breakerr;
+                } else new_waitfor(W_NEXT, &epoint);
+                break;
             case CMD_FOR: if ((waitfor->skip & 1) != 0)
                 { /* .for */
-                    bool light = (newlabel == NULL);
-                    List *lst = NULL;
-                    size_t i;
-
-                    if (prm == CMD_BFOR) {
-                        if (light) {
-                            Label *label;
-                            bool labelexists;
-                            str_t tmpname;
-                            if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                            else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                            anonident2.type = '.';
-                            anonident2.star_tree = star_tree;
-                            anonident2.vline = vline;
-                            tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
-                            label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
-                            if (labelexists) {
-                                if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
-                                label->constant = true;
-                                label->owner = true;
-                                label->defpass = pass;
-                            } else {
-                                label->constant = true;
-                                label->owner = true;
-                                label->value = (Obj *)ref_none();
-                                label->epoint = epoint;
-                            }
-                            newlabel = label;
-                        }
-                        if (newlabel->value->obj == TUPLE_OBJ) {
-                            List *old = (List *)newlabel->value;
-                            lst = new_tuple(old->len);
-                            for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
-                        } else {
-                            lst = new_tuple(lenof(lst->val));
-                            for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
-                        }
-                    }
-                    i = for_command(newlabel, lst, light, &epoint);
-                    if (lst != NULL) {
-                        if (lst->len > i) list_shrink(lst, i);
-                        newlabel->update_after = true;
-                        const_assign(newlabel, &lst->v);
-                        newlabel = NULL;
-                    }
+                    for_command(NULL, NULL, &epoint);
                     goto breakerr;
                 } else new_waitfor(W_NEXT, &epoint);
                 break;
