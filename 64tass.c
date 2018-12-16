@@ -2367,11 +2367,9 @@ MUST_CHECK Obj *compile(void)
                         current_address = &section_address;
 
                         if (!ret) {
-                            Code *code;
-                            if (labelexists && label->value->obj == CODE_OBJ) {
-                                Obj *tmp;
-                                tmp = get_star_value(current_address->l_address_val);
-                                code = (Code *)label->value;
+                            Code *code = (Code *)label->value;
+                            if (labelexists && code->v.obj == CODE_OBJ) {
+                                Obj *tmp = get_star_value(current_address->l_address_val);
                                 if (!tmp->obj->same(tmp, code->addr)) {
                                     val_destroy(code->addr); code->addr = tmp;
                                     if (label->usepass >= pass) {
@@ -2391,7 +2389,7 @@ MUST_CHECK Obj *compile(void)
                                 code->apass = pass;
                                 label->defpass = pass;
                             } else {
-                                val_destroy(label->value);
+                                val_destroy(&code->v);
                                 code = new_code();
                                 label->value = (Obj *)code;
                                 code->addr = get_star_value(current_address->l_address_val);
