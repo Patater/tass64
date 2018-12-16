@@ -2316,7 +2316,6 @@ MUST_CHECK Obj *compile(void)
                     {
                         struct section_address_s section_address, *oldsection_address;
                         bool labelexists, ret;
-                        struct values_s *vs;
                         Type *obj;
                         Namespace *context;
                         Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
@@ -2348,11 +2347,16 @@ MUST_CHECK Obj *compile(void)
 
                         if (diagnostics.optimize) cpu_opt_invalidate();
                         listing_line(listing, epoint.pos);
-                        if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
-                        vs = get_val(); val = vs->val;
-                        obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
-                        if (val->obj != obj) {err_msg_wrong_type2(val, obj, &vs->epoint); goto breakerr;}
-                        ret = ((Struct *)val)->retval;
+                        if (get_exp(1, 1, 0, &epoint)) {
+                            struct values_s *vs = get_val(); 
+                            val = vs->val;
+                            obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
+                            if (val->obj != obj) {
+                                err_msg_wrong_type2(val, obj, &vs->epoint); 
+                                val = NULL;
+                            }
+                        } else val = NULL;
+                        ret = (val != NULL) && ((Struct *)val)->retval;
                         ignore();if (here() == ',') lpoint.pos++;
                         current_section->structrecursion++;
 
@@ -2432,10 +2436,12 @@ MUST_CHECK Obj *compile(void)
                             context = (Namespace *)label2->value;
                         }
                         label = ref_label(label);
-                        val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &epoint);
                         if (val != NULL) {
-                            if (ret) const_assign(label, val);
-                            else val_destroy(val);
+                            val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &epoint);
+                            if (val != NULL) {
+                                if (ret) const_assign(label, val);
+                                else val_destroy(val);
+                            }
                         }
                         current_section->structrecursion--;
 
