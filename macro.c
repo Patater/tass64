@@ -662,7 +662,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         s->addr = star;
         star_tree = &s->tree;vline = 0;
         lpoint.line = mfunc->line;
-        new_waitfor(W_ENDF2, epoint);
+        new_waitfor(W_ENDF3, epoint);
         oldbottom = context_get_bottom();
         for (i = 0; i < mfunc->nslen; i++) {
             push_context(mfunc->namespaces[i]);

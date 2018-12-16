@@ -838,6 +838,10 @@ static const char *check_waitfor(void) {
         virtual_close(NULL);
         /* fall through */
     case W_ENDV: return ".endv";
+    case W_ENDU3:
+    case W_ENDS3:
+    case W_ENDM3:
+    case W_ENDF3:
     case W_NEXT2:
     case W_NONE:
         break;
@@ -2486,7 +2490,7 @@ MUST_CHECK Obj *compile(void)
                             }
                             context = (Namespace *)label->value;
                         }
-                        val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS2 : W_ENDU2, val, context, &epoint);
+                        val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &epoint);
                         if (val != NULL) {
                             if (newlabel != NULL) {
                                 newlabel->update_after = true;
@@ -2762,7 +2766,7 @@ MUST_CHECK Obj *compile(void)
                     close_waitfor(W_ENDM);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                     goto breakerr;
-                } else if (close_waitfor(W_ENDM2)) {
+                } else if (close_waitfor(W_ENDM3) || close_waitfor(W_ENDM2)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -2776,7 +2780,7 @@ MUST_CHECK Obj *compile(void)
                 if (close_waitfor(W_ENDF)) {
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                     goto breakerr;
-                } else if (close_waitfor(W_ENDF2)) {
+                } else if (close_waitfor(W_ENDF3) || close_waitfor(W_ENDF2)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -2817,7 +2821,7 @@ MUST_CHECK Obj *compile(void)
                     close_waitfor(W_ENDS);
                     goto breakerr;
                 }
-                if (close_waitfor(W_ENDS2)) {
+                if (close_waitfor(W_ENDS3) || close_waitfor(W_ENDS2)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -2855,7 +2859,7 @@ MUST_CHECK Obj *compile(void)
                 if (waitfor->what==W_ENDU) {
                     if ((waitfor->skip & 1) != 0) union_close(&epoint);
                     close_waitfor(W_ENDU);
-                } else if (close_waitfor(W_ENDU2)) {
+                } else if (close_waitfor(W_ENDU3) || close_waitfor(W_ENDU2)) {
                     nobreak = false;
                 } else err_msg2(ERROR__MISSING_OPEN,".union", &epoint);
                 break;
@@ -3906,7 +3910,7 @@ MUST_CHECK Obj *compile(void)
                     section_address.l_start = section_address.l_address;
                     section_address.unionmode = (prm == CMD_DUNION);
                     current_address = &section_address;
-                    val = macro_recurse(prm == CMD_DUNION ? W_ENDU2 : W_ENDS2, val, NULL, &epoint);
+                    val = macro_recurse(prm == CMD_DUNION ? W_ENDU3 : W_ENDS3, val, NULL, &epoint);
                     if (val != NULL) val_destroy(val);
                     current_section->structrecursion--;
                     current_address = oldsection_address;
@@ -4083,7 +4087,7 @@ MUST_CHECK Obj *compile(void)
                         }
                         context = (Namespace *)label->value;
                     }
-                    val = macro_recurse(val->obj == MACRO_OBJ ? W_ENDM2 : val->obj == STRUCT_OBJ ? W_ENDS2 : W_ENDU2, val, context, &epoint);
+                    val = macro_recurse(val->obj == MACRO_OBJ ? W_ENDM3 : val->obj == STRUCT_OBJ ? W_ENDS3 : W_ENDU3, val, context, &epoint);
                 } else if (val->obj == MFUNC_OBJ) {
                     Label *label;
                     Mfunc *mfunc;
@@ -4117,9 +4121,9 @@ MUST_CHECK Obj *compile(void)
                         val_destroy(&mfunc->v);
                         goto breakerr;
                     }
-                    val = mfunc_recurse(W_ENDF2, mfunc, (Namespace *)label->value, &epoint, strength);
+                    val = mfunc_recurse(W_ENDF3, mfunc, (Namespace *)label->value, &epoint, strength);
                     val_destroy(&mfunc->v);
-                } else val = macro_recurse(W_ENDM2, val, NULL, &epoint);
+                } else val = macro_recurse(W_ENDM3, val, NULL, &epoint);
                 if (val != NULL) {
                     if (newlabel != NULL) {
                         newlabel->update_after = true;
