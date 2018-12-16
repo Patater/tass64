@@ -2228,6 +2228,7 @@ MUST_CHECK Obj *compile(void)
                             waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
                             waitfor->skip = 1;
                             val = macro_recurse(W_ENDS, &structure->v, structure->names, &lpoint);
+                            structure->retval = (val != NULL);
                             if (val != NULL) val_destroy(val);
                         } else err_msg2(ERROR__MACRECURSION, NULL, &cmdpoint);
                         current_section->structrecursion--;
@@ -2303,12 +2304,160 @@ MUST_CHECK Obj *compile(void)
                             lst = new_tuple(lenof(lst->val));
                             for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                         }
+                        label = ref_label(label);
                         i = (prm == CMD_BFOR) ? for_command(label, lst, &cmdpoint) : rept_command(label, lst, &cmdpoint);
                         if (lst->len > i) list_shrink(lst, i);
                         const_assign(label, &lst->v);
+                        val_destroy(&label->v);
                         goto breakerr;
                     }
-                    break;
+                case CMD_DSTRUCT: /* .dstruct */
+                case CMD_DUNION:
+                    {
+                        struct section_address_s section_address, *oldsection_address;
+                        bool labelexists, ret;
+                        struct values_s *vs;
+                        Type *obj;
+                        Namespace *context;
+                        Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                        if (labelexists) {
+                            if (label->defpass == pass) {
+                                err_msg_double_defined(label, &labelname, &epoint);
+                                epoint = cmdpoint;
+                                goto as_command;
+                            } else {
+                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                if (label->file_list != current_file_list) {
+                                    label_move(label, &labelname, current_file_list);
+                                }
+                            }
+                        } else {
+                            if (!constcreated && temporary_label_branch == 0) {
+                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                constcreated = true;
+                            }
+                            label->value = (Obj *)ref_none();
+                        }
+                        label->constant = true;
+                        label->owner = true;
+                        label->epoint = epoint;
+                        label->ref = false;
+
+                        if (diagnostics.optimize) cpu_opt_invalidate();
+                        listing_line(listing, epoint.pos);
+                        if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
+                        vs = get_val(); val = vs->val;
+                        obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
+                        if (val->obj != obj) {err_msg_wrong_type2(val, obj, &vs->epoint); goto breakerr;}
+                        ret = ((Struct *)val)->retval;
+                        ignore();if (here() == ',') lpoint.pos++;
+                        current_section->structrecursion++;
+
+                        oldsection_address = current_address;
+                        union_start(&section_address);
+                        section_address.l_start = section_address.l_address;
+                        section_address.unionmode = (prm == CMD_DUNION);
+                        current_address = &section_address;
+
+                        if (!ret) {
+                            Code *code;
+                            if (labelexists && label->value->obj == CODE_OBJ) {
+                                Obj *tmp;
+                                if (diagnostics.optimize && label->ref) cpu_opt_invalidate();
+                                tmp = get_star_value(current_address->l_address_val);
+                                code = (Code *)label->value;
+                                if (!tmp->obj->same(tmp, code->addr)) {
+                                    val_destroy(code->addr); code->addr = tmp;
+                                    if (label->usepass >= pass) {
+                                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        fixeddig = false;
+                                    }
+                                } else val_destroy(tmp);
+                                if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                    code->requires = current_section->requires;
+                                    code->conflicts = current_section->conflicts;
+                                    code->offs = 0;
+                                    if (label->usepass >= pass) {
+                                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        fixeddig = false;
+                                    }
+                                }
+                                code->apass = pass;
+                                label->defpass = pass;
+                            } else {
+                                val_destroy(label->value);
+                                code = new_code();
+                                label->value = (Obj *)code;
+                                code->addr = get_star_value(current_address->l_address_val);
+                                code->size = 0;
+                                code->offs = 0;
+                                code->dtype = D_NONE;
+                                code->pass = 0;
+                                code->apass = pass;
+                                code->memblocks = ref_memblocks(current_address->mem);
+                                code->names = new_namespace(current_file_list, &epoint);
+                                code->requires = current_section->requires;
+                                code->conflicts = current_section->conflicts;
+                            }
+                            context = code->names;
+                        } else {
+                            Label *label2;
+                            bool labelexists2;
+                            str_t tmpname;
+                            if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
+                            else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
+                            anonident2.type = '#';
+                            anonident2.star_tree = star_tree;
+                            anonident2.vline = vline;
+                            tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                            label2 = new_label(&tmpname, mycontext, strength, &labelexists2, current_file_list);
+                            if (labelexists2) {
+                                if (label2->defpass == pass) err_msg_double_defined(label2, &tmpname, &epoint);
+                                label2->constant = true;
+                                label2->owner = true;
+                                label2->defpass = pass;
+                                if (label2->value->obj != NAMESPACE_OBJ) {
+                                    val_destroy(label2->value);
+                                    label2->value = (Obj *)new_namespace(current_file_list, &epoint);
+                                }
+                            } else {
+                                label2->constant = true;
+                                label2->owner = true;
+                                label2->value = (Obj *)new_namespace(current_file_list, &epoint);
+                                label2->epoint = epoint;
+                            }
+                            context = (Namespace *)label2->value;
+                        }
+                        label = ref_label(label);
+                        val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &epoint);
+                        if (val != NULL) {
+                            if (ret) const_assign(label, val);
+                            else val_destroy(val);
+                        }
+                        current_section->structrecursion--;
+
+                        current_address = oldsection_address;
+                        if (current_address->l_address.bank > all_mem) {
+                            current_address->l_address.bank &= all_mem;
+                            err_msg_big_address(&epoint);
+                        }
+                        if (section_address.end < section_address.address) {
+                            section_address.end = section_address.address;
+                        }
+                        if (section_address.start < section_address.end) {
+                            poke_pos = &epoint;
+                            memskip(section_address.end - section_address.start);
+                        }
+                        memref(current_address->mem, section_address.mem);
+                        if (!ret) set_size(label, section_address.end - section_address.start, section_address.mem, 0, 0);
+                        val_destroy(&label->v);
+                        val_destroy(section_address.l_address_val);
+                        val_destroy(&section_address.mem->v);
+                        goto breakerr;
+                    }
                 }
                 break;
             }
@@ -2436,88 +2585,6 @@ MUST_CHECK Obj *compile(void)
                     }
                     newlabel = NULL;
                     goto finish;
-                case CMD_DSTRUCT: /* .dstruct */
-                case CMD_DUNION:
-                    {
-                        struct section_address_s section_address, *oldsection_address;
-                        struct values_s *vs;
-                        Type *obj;
-                        Namespace *context;
-
-                        if (diagnostics.optimize) cpu_opt_invalidate();
-                        listing_line(listing, epoint.pos);
-                        newlabel->ref = false;
-                        if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
-                        vs = get_val(); val = vs->val;
-                        obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
-                        if (val->obj != obj) {err_msg_wrong_type2(val, obj, &vs->epoint); goto breakerr;}
-                        ignore();if (here() == ',') lpoint.pos++;
-                        current_section->structrecursion++;
-
-                        oldsection_address = current_address;
-                        union_start(&section_address);
-                        section_address.l_start = section_address.l_address;
-                        section_address.unionmode = (prm == CMD_DUNION);
-                        current_address = &section_address;
-
-                        if (!((Struct *)val)->retval && newlabel->value->obj == CODE_OBJ) {
-                            context = ((Code *)newlabel->value)->names;
-                        } else {
-                            Label *label;
-                            bool labelexists;
-                            str_t tmpname;
-                            if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                            else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                            anonident2.type = '#';
-                            anonident2.star_tree = star_tree;
-                            anonident2.vline = vline;
-                            tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
-                            label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
-                            if (labelexists) {
-                                if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
-                                label->constant = true;
-                                label->owner = true;
-                                label->defpass = pass;
-                                if (label->value->obj != NAMESPACE_OBJ) {
-                                    val_destroy(label->value);
-                                    label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                }
-                            } else {
-                                label->constant = true;
-                                label->owner = true;
-                                label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                label->epoint = epoint;
-                            }
-                            context = (Namespace *)label->value;
-                        }
-                        val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &epoint);
-                        if (val != NULL) {
-                            if (newlabel != NULL) {
-                                newlabel->update_after = true;
-                                const_assign(newlabel, val);
-                            } else val_destroy(val);
-                        }
-                        current_section->structrecursion--;
-
-                        current_address = oldsection_address;
-                        if (current_address->l_address.bank > all_mem) {
-                            current_address->l_address.bank &= all_mem;
-                            err_msg_big_address(&epoint);
-                        }
-                        if (section_address.end < section_address.address) {
-                            section_address.end = section_address.address;
-                        }
-                        if (section_address.start < section_address.end) {
-                            poke_pos = &epoint;
-                            memskip(section_address.end - section_address.start);
-                        }
-                        memref(current_address->mem, section_address.mem);
-                        if (newlabel != NULL && !newlabel->update_after) set_size(newlabel, section_address.end - section_address.start, section_address.mem, 0, 0);
-                        val_destroy(section_address.l_address_val);
-                        val_destroy(&section_address.mem->v);
-                        newlabel = NULL;
-                        goto breakerr;
-                    }
                 case CMD_SECTION:
                 case CMD_VIRTUAL:
                     waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;if (newlabel != NULL) waitfor->label = ref_label(newlabel);
