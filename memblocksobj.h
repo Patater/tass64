@@ -36,10 +36,10 @@ typedef struct Memblocks {
         size_t p, len;
         uint8_t *data;
     } mem;
-    bool compressed;
     size_t p, len;
     size_t lastp;
     address_t lastaddr;
+    bool compressed;
     struct memblock_s *data;
 } Memblocks;
 
