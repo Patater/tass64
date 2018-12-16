@@ -33,11 +33,11 @@ struct section_address_s {
     address_t start;
     address_t end;
     address2_t l_start;
-    struct Obj *l_address_val;
-    struct Memblocks *mem;
     bool moved;
     bool wrapwarn;
     bool unionmode;
+    struct Obj *l_address_val;
+    struct Memblocks *mem;
 };
 
 struct section_s {
