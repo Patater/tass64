@@ -2370,7 +2370,6 @@ MUST_CHECK Obj *compile(void)
                             Code *code;
                             if (labelexists && label->value->obj == CODE_OBJ) {
                                 Obj *tmp;
-                                if (diagnostics.optimize && label->ref) cpu_opt_invalidate();
                                 tmp = get_star_value(current_address->l_address_val);
                                 code = (Code *)label->value;
                                 if (!tmp->obj->same(tmp, code->addr)) {
