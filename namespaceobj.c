@@ -112,8 +112,26 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     n = avltree_first(&v1->members);
     n2 = avltree_first(&v2->members);
     while (n != NULL && n2 != NULL) {
-        const struct namespacekey_s *p = cavltree_container_of(n, struct namespacekey_s, node);
-        const struct namespacekey_s *p2 = cavltree_container_of(n2, struct namespacekey_s, node);
+        const struct namespacekey_s *p, *p2;
+        for (;;) {
+            p = cavltree_container_of(n, struct namespacekey_s, node);
+            if (p->key == NULL) break;
+            if (p->key->defpass != pass && !(p->key->constant && (!fixeddig || p->key->defpass == pass - 1))) {
+                n = avltree_next(n);
+                if (n != NULL) continue;
+            }
+            break;
+        }
+        for (;;) {
+            p2 = cavltree_container_of(n2, struct namespacekey_s, node);
+            if (p2->key == NULL) break;
+            if (p2->key->defpass != pass && !(p2->key->constant && (!fixeddig || p2->key->defpass == pass - 1))) {
+                n2 = avltree_next(n2);
+                if (n2 != NULL) continue;
+            }
+            break;
+        }
+        if (n == NULL || n2 == NULL) break;
         if ((p->key == NULL) != (p2->key == NULL)) return false;
         if (p->key != NULL && p2->key != NULL && !p->key->v.obj->same((Obj *)p->key, (Obj *)p2->key)) return false;
         n = avltree_next(n);
