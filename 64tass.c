@@ -2345,6 +2345,7 @@ MUST_CHECK Obj *compile(void)
                         label->epoint = epoint;
                         label->ref = false;
 
+                        epoint = cmdpoint;
                         if (diagnostics.optimize) cpu_opt_invalidate();
                         listing_line(listing, epoint.pos);
                         if (get_exp(1, 1, 0, &epoint)) {
