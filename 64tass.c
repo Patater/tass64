@@ -2836,31 +2836,25 @@ MUST_CHECK Obj *compile(void)
                     if (waitfor->val != NULL) ((Macro *)waitfor->val)->retval = (here() != 0 && here() != ';');
                     close_waitfor(W_ENDM);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                    goto breakerr;
                 } else if (close_waitfor(W_ENDM3) || close_waitfor(W_ENDM2)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
+                        break;
                     }
-                } else {
-                    err_msg2(ERROR__MISSING_OPEN,".macro' or '.segment", &epoint);
-                    goto breakerr;
-                }
-                break;
+                } else err_msg2(ERROR__MISSING_OPEN,".macro' or '.segment", &epoint);
+                goto breakerr;
             case CMD_ENDF: /* .endf */
                 if (close_waitfor(W_ENDF)) {
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                    goto breakerr;
                 } else if (close_waitfor(W_ENDF3) || close_waitfor(W_ENDF2)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
+                        break;
                     }
-                } else {
-                    err_msg2(ERROR__MISSING_OPEN,".function", &epoint);
-                    goto breakerr;
-                }
-                break;
+                } else err_msg2(ERROR__MISSING_OPEN,".function", &epoint);
+                goto breakerr;
             case CMD_NEXT: /* .next */
                 waitfor->epoint = epoint;
                 if (close_waitfor(W_NEXT)) {
@@ -2890,16 +2884,13 @@ MUST_CHECK Obj *compile(void)
                         break;
                     }
                     close_waitfor(W_ENDS);
-                    goto breakerr;
-                }
-                if (close_waitfor(W_ENDS3) || close_waitfor(W_ENDS2)) {
+                } else if (close_waitfor(W_ENDS3) || close_waitfor(W_ENDS2)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
+                        break;
                     }
-                    break;
-                }
-                err_msg2(ERROR__MISSING_OPEN,".struct", &epoint);
+                } else err_msg2(ERROR__MISSING_OPEN,".struct", &epoint);
                 goto breakerr;
             case CMD_SEND: /* .send */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
