@@ -4195,7 +4195,7 @@ MUST_CHECK Obj *compile(void)
                         const_assign(newlabel, val);
                     } else val_destroy(val);
                 }
-                break;
+                goto breakerr;
             }
             break;
         default:
