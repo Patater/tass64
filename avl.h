@@ -56,7 +56,6 @@ typedef void (*avltree_free_fn_t)(struct avltree_node *);
 
 struct avltree {
         struct avltree_node *root;
-        int height;
         struct avltree_node *first, *last;
 };
 
