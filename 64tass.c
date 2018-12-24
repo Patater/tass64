@@ -2112,6 +2112,7 @@ MUST_CHECK Obj *compile(void)
                         mfunc = (Mfunc *)val_alloc(MFUNC_OBJ);
                         mfunc->file_list = current_file_list;
                         mfunc->line = epoint.line;
+                        mfunc->recursion_pass = 0;
                         mfunc->argc = 0;
                         mfunc->param = NULL; /* might be recursive through init */
                         mfunc->nslen = 0;
