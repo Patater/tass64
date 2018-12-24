@@ -123,11 +123,10 @@ static MUST_CHECK Obj *normalize(Int *v, digit_t *d, size_t sz, bool neg) {
 
 static MUST_CHECK Int *return_int(digit_t c, bool neg) {
     Int *vv;
-    digit_t *v;
     if (c < lenof(int_value) && !neg) return ref_int(int_value[c]);
     vv = new_int();
-    vv->data = v = vv->val;
-    v[0] = c;
+    vv->data = vv->val;
+    vv->val[0] = c;
     vv->len = neg ? -1 : 1;
     return vv;
 }
@@ -1451,7 +1450,11 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linep
     *ln2 = i;
     if (i < 10) {
         if (val >= lenof(int_value)) {
-            return (Obj *)return_int(val, false);
+            v = new_int();
+            v->data = v->val;
+            v->val[0] = val;
+            v->len = 1;
+            return &v->v;
         }
         return val_reference(&int_value[val]->v);
     }
