@@ -28,6 +28,7 @@ struct Mfunc;
 struct symbol_output_s;
 struct file_list_s;
 
+extern void push_dummy_context(void);
 extern void push_context(struct Namespace *);
 extern bool pop_context(void);
 extern void reset_context(void);
