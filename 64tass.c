@@ -2064,6 +2064,7 @@ MUST_CHECK Obj *compile(void)
                         macro = (Macro *)val_alloc(obj);
                         macro->file_list = current_file_list;
                         macro->line = epoint.line;
+                        macro->recursion_pass = 0;
                         get_macro_params(&macro->v);
                         if (labelexists) {
                             macro->retval = (label->value->obj == obj) && ((Macro *)label->value)->retval;
@@ -2177,6 +2178,7 @@ MUST_CHECK Obj *compile(void)
                         structure = (Struct *)val_alloc(obj);
                         structure->file_list = current_file_list;
                         structure->line = epoint.line;
+                        structure->recursion_pass = 0;
                         get_macro_params(&structure->v);
                         if (labelexists) {
                             structure->retval = (label->value->obj == obj) && ((Struct *)label->value)->retval;

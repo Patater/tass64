@@ -41,6 +41,7 @@ typedef struct Macro {
     struct file_list_s *file_list;
     line_t line;
     bool retval;
+    uint8_t recursion_pass;
 } Macro;
 typedef struct Macro Segment;
 
@@ -51,6 +52,7 @@ typedef struct Struct {
     struct file_list_s *file_list;
     line_t line;
     bool retval;
+    uint8_t recursion_pass;
     address_t size; /* first part same as macro! */
     struct Namespace *names;
 } Struct;
