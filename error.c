@@ -318,7 +318,7 @@ static void err_msg_variable(Obj *val, linepos_t epoint) {
             adderror(" '");
             adderror2(str->data, str->len);
             adderror("'");
-        } else if (err->obj == ERROR_OBJ) err_msg_output((Error *)err);
+        }
         val_destroy(err);
     }
 }
