@@ -3164,28 +3164,27 @@ MUST_CHECK Obj *compile(void)
                 { /* .logical */
                     struct values_s *vs;
                     uval_t uval;
+                    atype_t am;
+                    Obj *tmp;
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_HERE2, &epoint);waitfor->laddr = current_address->l_address;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp; waitfor->val = val_reference(current_address->l_address_val);if (newlabel != NULL) waitfor->label = ref_label(newlabel);
+                    newlabel = NULL;
                     current_section->logicalrecursion++;
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
-                    do {
-                        atype_t am;
-                        Obj *tmp = vs->val;
-                        if (touval(tmp->obj->address(tmp, &am), &uval, all_mem_bits, &vs->epoint)) break;
-                        if (am != A_NONE && check_addr(am)) {
-                            err_msg_output_and_destroy(err_addressing(am, &vs->epoint));
-                            break;
-                        }
-                        current_address->l_address.address = uval & 0xffff;
-                        current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
-                        val_destroy(current_address->l_address_val);
-                        tmp = vs->val;
-                        current_address->l_address_val = val_reference(tmp->obj == CODE_OBJ ? ((Code *)tmp)->addr : tmp);
-                    } while (false);
-                    newlabel = NULL;
+                    tmp = vs->val;
+                    if (touval(tmp->obj->address(tmp, &am), &uval, all_mem_bits, &vs->epoint)) break;
+                    if (am != A_NONE && check_addr(am)) {
+                        err_msg_output_and_destroy(err_addressing(am, &vs->epoint));
+                        break;
+                    }
+                    current_address->l_address.address = uval & 0xffff;
+                    current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
+                    val_destroy(current_address->l_address_val);
+                    tmp = vs->val;
+                    current_address->l_address_val = val_reference(tmp->obj == CODE_OBJ ? ((Code *)tmp)->addr : tmp);
                 } else new_waitfor(W_HERE, &epoint);
                 break;
             case CMD_VIRTUAL: if ((waitfor->skip & 1) != 0)
