@@ -2673,29 +2673,29 @@ MUST_CHECK Obj *compile(void)
             switch (prm) {
             case CMD_ENDC: /* .endc */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
-                if (!close_waitfor(W_ENDC)) err_msg2(ERROR__MISSING_OPEN,".comment", &epoint);
+                if (!close_waitfor(W_ENDC)) {err_msg2(ERROR__MISSING_OPEN, ".comment", &epoint); goto breakerr;}
                 if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 break;
             case CMD_ENDIF: /* .endif */
             case CMD_FI: /* .fi */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
-                    if (!close_waitfor(W_FI2) && !close_waitfor(W_FI)) err_msg2(ERROR__MISSING_OPEN,".if", &epoint);
+                    if (!close_waitfor(W_FI2) && !close_waitfor(W_FI)) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 }
                 break;
             case CMD_ENDSWITCH: /* .endswitch */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
-                    if (!close_waitfor(W_SWITCH2) && !close_waitfor(W_SWITCH)) err_msg2(ERROR__MISSING_OPEN,".switch", &epoint);
+                    if (!close_waitfor(W_SWITCH2) && !close_waitfor(W_SWITCH)) {err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr;}
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 }
                 break;
             case CMD_DEFAULT: /* .default */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
-                    if (waitfor->what==W_SWITCH) {err_msg2(ERROR______EXPECTED,"'.endswitch'", &epoint); break;}
-                    if (waitfor->what!=W_SWITCH2) {err_msg2(ERROR__MISSING_OPEN,".switch", &epoint); break;}
+                    if (waitfor->what==W_SWITCH) {err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr;}
+                    if (waitfor->what!=W_SWITCH2) {err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr;}
                     waitfor->skip = waitfor->skip >> 1;
                     waitfor->what = W_SWITCH;waitfor->epoint = epoint;
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
@@ -2704,8 +2704,8 @@ MUST_CHECK Obj *compile(void)
             case CMD_ELSE: /* .else */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
-                    if (waitfor->what==W_FI) { err_msg2(ERROR______EXPECTED,"'.fi'", &epoint); break; }
-                    if (waitfor->what!=W_FI2) { err_msg2(ERROR__MISSING_OPEN,".if", &epoint); break; }
+                    if (waitfor->what==W_FI) { err_msg2(ERROR______EXPECTED, "'.fi'", &epoint); goto breakerr; }
+                    if (waitfor->what!=W_FI2) { err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr; }
                     waitfor->skip = waitfor->skip >> 1;
                     waitfor->what = W_FI;waitfor->epoint = epoint;
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
@@ -2770,8 +2770,8 @@ MUST_CHECK Obj *compile(void)
                     bool truth;
                     struct values_s *vs;
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
-                    if (waitfor->what == W_FI) {err_msg2(ERROR______EXPECTED,"'.fi'", &epoint); break; }
-                    if (waitfor->what != W_FI2) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); break;}
+                    if (waitfor->what == W_FI) {err_msg2(ERROR______EXPECTED, "'.fi'", &epoint); goto breakerr; }
+                    if (waitfor->what != W_FI2) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     waitfor->epoint = epoint;
                     if (skwait == 2) {
                         if (!get_exp(0, 1, 1, &epoint)) { waitfor->skip = 0; goto breakerr;}
@@ -2803,8 +2803,8 @@ MUST_CHECK Obj *compile(void)
                     uint8_t skwait = waitfor->skip;
                     bool truth = false;
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
-                    if (waitfor->what == W_SWITCH) { err_msg2(ERROR______EXPECTED,"'.endswitch'", &epoint); goto breakerr; }
-                    if (waitfor->what != W_SWITCH2) { err_msg2(ERROR__MISSING_OPEN,".switch", &epoint); goto breakerr; }
+                    if (waitfor->what == W_SWITCH) { err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr; }
+                    if (waitfor->what != W_SWITCH2) { err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr; }
                     waitfor->epoint = epoint;
                     if (skwait==2 || diagnostics.switch_case) {
                         struct values_s *vs;
@@ -2846,7 +2846,7 @@ MUST_CHECK Obj *compile(void)
                         retval = get_vals_tuple();
                         break;
                     }
-                } else err_msg2(ERROR__MISSING_OPEN,".macro' or '.segment", &epoint);
+                } else err_msg2(ERROR__MISSING_OPEN, ".macro' or '.segment", &epoint);
                 goto breakerr;
             case CMD_ENDF: /* .endf */
                 if (close_waitfor(W_ENDF)) {
@@ -2857,7 +2857,7 @@ MUST_CHECK Obj *compile(void)
                         retval = get_vals_tuple();
                         break;
                     }
-                } else err_msg2(ERROR__MISSING_OPEN,".function", &epoint);
+                } else err_msg2(ERROR__MISSING_OPEN, ".function", &epoint);
                 goto breakerr;
             case CMD_NEXT: /* .next */
                 waitfor->epoint = epoint;
@@ -2868,18 +2868,18 @@ MUST_CHECK Obj *compile(void)
                     nobreak = false;
                 } else if (close_waitfor(W_NEXT3)) {
                     pop_context();
-                } else err_msg2(ERROR__MISSING_OPEN,".for' or '.rept", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".for' or '.rept", &epoint); goto breakerr;}
                 break;
             case CMD_PEND: /* .pend */
                 if (waitfor->what==W_PEND) {
                     if ((waitfor->skip & 1) != 0) {
                         listing_line(listing, epoint.pos);
-                        if (pop_context()) err_msg2(ERROR__MISSING_OPEN,".proc", &epoint);
+                        if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".proc", &epoint);
                         if (waitfor->label != NULL) set_size(waitfor->label, current_address->address - waitfor->addr, current_address->mem, waitfor->memp, waitfor->membp);
                     } else pop_context();
                     close_waitfor(W_PEND);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                } else err_msg2(ERROR__MISSING_OPEN,".proc", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".proc", &epoint); goto breakerr;}
                 break;
             case CMD_ENDS: /* .ends */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
@@ -2896,7 +2896,7 @@ MUST_CHECK Obj *compile(void)
                         retval = get_vals_tuple();
                         break;
                     }
-                } else err_msg2(ERROR__MISSING_OPEN,".struct", &epoint);
+                } else err_msg2(ERROR__MISSING_OPEN, ".struct", &epoint);
                 goto breakerr;
             case CMD_SEND: /* .send */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
@@ -2919,7 +2919,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     section_close(&epoint);
                     close_waitfor(W_SEND2);
-                } else {err_msg2(ERROR__MISSING_OPEN,".section", &epoint);goto breakerr;}
+                } else {err_msg2(ERROR__MISSING_OPEN, ".section", &epoint); goto breakerr;}
                 break;
             case CMD_ENDU: /* .endu */
                 if (diagnostics.optimize) cpu_opt_invalidate();
@@ -2932,7 +2932,7 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 } else if (close_waitfor(W_ENDU2)) {
                     nobreak = false;
-                } else err_msg2(ERROR__MISSING_OPEN,".union", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".union", &epoint); goto breakerr;}
                 break;
             case CMD_ENDP: /* .endp */
                 if (diagnostics.optimize) cpu_opt_invalidate();
@@ -2947,7 +2947,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (waitfor->label != NULL) set_size(waitfor->label, current_address->address - waitfor->addr, current_address->mem, waitfor->memp, waitfor->membp);
                     close_waitfor(W_ENDP2);
-                } else err_msg2(ERROR__MISSING_OPEN,".page", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".page", &epoint); goto breakerr;}
                 break;
             case CMD_HERE: /* .here */
                 if (diagnostics.optimize) cpu_opt_invalidate();
@@ -2956,7 +2956,7 @@ MUST_CHECK Obj *compile(void)
                 } else if (waitfor->what==W_HERE2) {
                     logical_close(&epoint);
                     close_waitfor(W_HERE2);
-                } else err_msg2(ERROR__MISSING_OPEN,".logical", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".logical", &epoint); goto breakerr;}
                 break;
             case CMD_ENDV: /* .endv */
                 if (diagnostics.optimize) cpu_opt_invalidate();
@@ -2965,7 +2965,7 @@ MUST_CHECK Obj *compile(void)
                 } else if (waitfor->what==W_ENDV2) {
                     virtual_close(&epoint);
                     close_waitfor(W_ENDV2);
-                } else err_msg2(ERROR__MISSING_OPEN,".virtual", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".virtual", &epoint); goto breakerr;}
                 break;
             case CMD_BEND: /* .bend */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
@@ -2973,18 +2973,18 @@ MUST_CHECK Obj *compile(void)
                     pop_context();
                 } else if (waitfor->what==W_BEND2) {
                     if (waitfor->label != NULL) set_size(waitfor->label, current_address->address - waitfor->addr, current_address->mem, waitfor->memp, waitfor->membp);
-                    if (pop_context()) err_msg2(ERROR__MISSING_OPEN,".block", &epoint);
+                    if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".block", &epoint);
                     close_waitfor(W_BEND2);
-                } else err_msg2(ERROR__MISSING_OPEN,".block", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".block", &epoint); goto breakerr;}
                 break;
             case CMD_ENDN: /* .endn */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (close_waitfor(W_ENDN)) {
                     pop_context();
                 } else if (waitfor->what==W_ENDN2) {
-                    if (pop_context()) err_msg2(ERROR__MISSING_OPEN,".namespace", &epoint);
+                    if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".namespace", &epoint);
                     close_waitfor(W_ENDN2);
-                } else err_msg2(ERROR__MISSING_OPEN,".namespace", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".namespace", &epoint); goto breakerr;}
                 break;
             case CMD_ENDWEAK: /* .endweak */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
@@ -2993,7 +2993,7 @@ MUST_CHECK Obj *compile(void)
                     if (waitfor->label != NULL) set_size(waitfor->label, current_address->address - waitfor->addr, current_address->mem, waitfor->memp, waitfor->membp);
                     close_waitfor(W_WEAK2);
                     strength--;
-                } else err_msg2(ERROR__MISSING_OPEN,".weak", &epoint);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".weak", &epoint); goto breakerr;}
                 break;
             case CMD_END: /* .end */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
