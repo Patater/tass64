@@ -257,7 +257,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
     Obj *val;
     Macro *macro = (Macro *)tmp2;
     if (macro->recursion_pass == pass) return NULL;
-    else if (macro_parameters.p > 100) {
+    if (macro_parameters.p > 100) {
         macro->recursion_pass = pass;
         err_msg2(ERROR__MACRECURSION, NULL, epoint);
         return NULL;
@@ -361,7 +361,9 @@ Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epo
     Tuple *tuple = NULL;
     size_t max = 0, args = get_val_remaining();
 
+    if (mfunc->recursion_pass == pass) return NULL;
     if (functionrecursion>100) {
+        mfunc->recursion_pass = pass;
         err_msg2(ERROR__FUNRECURSION, NULL, epoint);
         return NULL;
     }
@@ -601,7 +603,9 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
     Namespace *context;
     struct linepos_s xpoint;
 
+    if (mfunc->recursion_pass == pass) return NULL;
     if (functionrecursion>100) {
+        mfunc->recursion_pass = pass;
         err_msg2(ERROR__FUNRECURSION, NULL, epoint);
         return NULL;
     }
