@@ -256,7 +256,9 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
     bool in_macro_old;
     Obj *val;
     Macro *macro = (Macro *)tmp2;
-    if (macro_parameters.p > 100) {
+    if (macro->recursion_pass == pass) return NULL;
+    else if (macro_parameters.p > 100) {
+        macro->recursion_pass = pass;
         err_msg2(ERROR__MACRECURSION, NULL, epoint);
         return NULL;
     }
