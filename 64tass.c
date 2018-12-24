@@ -1961,7 +1961,7 @@ MUST_CHECK Obj *compile(void)
                         listing_line(listing, 0);
                         label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                         lbl = (Lbl *)val_alloc(LBL_OBJ);
-                        lbl->sline = lpoint.line;
+                        lbl->sline = epoint.line;
                         lbl->waitforp = waitfor_p;
                         lbl->file_list = current_file_list;
                         lbl->parent = current_context;
@@ -2002,8 +2002,8 @@ MUST_CHECK Obj *compile(void)
                         struct values_s *vs;
                         bool labelexists;
                         listing_line(listing, 0);
-                        new_waitfor(W_ENDN, &epoint);
-                        if (get_exp(0, 0, 1, &epoint)) {
+                        new_waitfor(W_ENDN, &cmdpoint);
+                        if (get_exp(0, 0, 1, &cmdpoint)) {
                             vs = get_val(); 
                             if (vs != NULL) {
                                 val = vs->val;
@@ -2230,7 +2230,7 @@ MUST_CHECK Obj *compile(void)
                         if (current_section->structrecursion<100) {
                             waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
                             waitfor->skip = 1;
-                            val = macro_recurse(W_ENDS, &structure->v, structure->names, &lpoint);
+                            val = macro_recurse(W_ENDS, &structure->v, structure->names, &epoint);
                             structure->retval = (val != NULL);
                             if (val != NULL) val_destroy(val);
                         } else err_msg2(ERROR__MACRECURSION, NULL, &cmdpoint);
@@ -2240,7 +2240,7 @@ MUST_CHECK Obj *compile(void)
                         current_address = oldsection_address;
                         if (current_address->l_address.bank > all_mem) {
                             current_address->l_address.bank &= all_mem;
-                            err_msg_big_address(&epoint);
+                            err_msg_big_address(&cmdpoint);
                         }
 
                         if (doubledef) val_destroy(&structure->v);
