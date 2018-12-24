@@ -29,6 +29,7 @@ typedef struct Namespace {
     struct avltree members;
     const struct file_list_s *file_list;
     struct linepos_s epoint;
+    uint32_t backr, forwr;
 } Namespace;
 
 extern void namespaceobj_init(void);

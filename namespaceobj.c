@@ -279,6 +279,8 @@ MALLOC Namespace *new_namespace(const struct file_list_s *file_list, linepos_t e
     val->file_list = file_list;
     val->epoint = *epoint;
     val->len = 0;
+    val->backr = 0;
+    val->forwr = 0;
     return val;
 }
 
