@@ -413,7 +413,7 @@ static int get_command(void) {
     lpoint.pos++;
     label = pline + lpoint.pos;
     l = get_label();
-    if (l != 0 && l < 19) {
+    if ((size_t)(l - 2) < 17) {
         uint8_t cmd[20];
         if (arguments.caseinsensitive != 0) {
             size_t i;
@@ -424,7 +424,8 @@ static int get_command(void) {
             felso = sizeof(command)/sizeof(command[0]);
             no = felso/2;
             for (;;) {  /* do binary search */
-                if ((s4=strcmp((const char *)cmd, command[no] + 1)) == 0) {
+                const uint8_t *cmd2 = (const uint8_t *)command[no];
+                if ((s4=cmd[0]-cmd2[1]) == 0 && (s4=cmd[1]-cmd2[2]) == 0 && (s4=strcmp((const char *)cmd + 2, (const char *)cmd2 + 3)) == 0) {
                     return (uint8_t)command[no][0];
                 }
 
