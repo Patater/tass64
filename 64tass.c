@@ -3188,7 +3188,7 @@ MUST_CHECK Obj *compile(void)
                 } else new_waitfor(W_HERE, &epoint);
                 break;
             case CMD_VIRTUAL: if ((waitfor->skip & 1) != 0)
-                { /* .section */
+                { /* .virtual */
                     listing_line(listing, 0);
                     if (virtual_start(&epoint)) goto breakerr;
                 } else new_waitfor(W_ENDV, &epoint);
