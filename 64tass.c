@@ -1644,32 +1644,34 @@ MUST_CHECK Obj *compile(void)
         labelname.data = pline + lpoint.pos; labelname.len = get_label();
         if (labelname.len != 0) {
             struct linepos_s cmdpoint;
-            bool islabel;
-            islabel = false;
+            bool islabel, error;
+            islabel = false; error = (waitfor->skip & 1) == 0;
             while (here() == '.' && pline[lpoint.pos+1] != '.') {
-                if ((waitfor->skip & 1) != 0) {
+                if (!error) {
                     if (!islabel) {
                         if (labelname.data[0] != '_') {
                             tmp2 = find_label(&labelname, NULL);
-                            if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, true, &epoint); goto breakerr;}
+                            if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, true, &epoint); error = true;}
                         } else {
                             tmp2 = find_label2(&labelname, cheap_context);
-                            if (tmp2 == NULL) {err_msg_not_defined2(&labelname, cheap_context, false, &epoint); goto breakerr;}
+                            if (tmp2 == NULL) {err_msg_not_defined2(&labelname, cheap_context, false, &epoint); error = true;}
                         }
                     } else {
                         tmp2 = find_label2(&labelname, mycontext);
-                        if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, false, &epoint); goto breakerr;}
+                        if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, false, &epoint); error = true;}
                     }
-                    if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
-                    tmp2->usepass = pass; /* touch_label(tmp2) */
+                    if (tmp2 != NULL) {
+                        if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
+                        tmp2->usepass = pass; /* touch_label(tmp2) */
+                    }
                 }
                 lpoint.pos++; islabel = true; epoint = lpoint;
                 labelname.data = pline + lpoint.pos; labelname.len = get_label();
                 if (labelname.len == 0) {
-                    if ((waitfor->skip & 1) != 0) err_msg2(ERROR______EXPECTED, "a symbol is", &lpoint);
+                    if (!error) err_msg2(ERROR______EXPECTED, "a symbol is", &lpoint);
                     goto breakerr;
                 }
-                if ((waitfor->skip & 1) != 0) {
+                if (!error) {
                     mycontext = get_namespace(tmp2->value);
                     if (mycontext == NULL) {
                         Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
@@ -1678,7 +1680,7 @@ MUST_CHECK Obj *compile(void)
                         epoint.pos--;
                         err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
                         val_destroy(&idn->v);
-                        goto breakerr;
+                        error = true;
                     }
                 }
             }
@@ -1687,13 +1689,13 @@ MUST_CHECK Obj *compile(void)
             }
             if (here() == ':' && pline[lpoint.pos + 1] != '=') {islabel = true; lpoint.pos++;}
             if (!islabel && labelname.len == 3 && (prm = lookup_opcode(labelname.data)) >=0) {
-                if ((waitfor->skip & 1) != 0) goto as_opcode; else continue;
+                if (!error) goto as_opcode; else continue;
             }
             if (false) {
-            hh: islabel = true;
+            hh: islabel = true; error = (waitfor->skip & 1) == 0;
             }
             ignore();wht = here();
-            if ((waitfor->skip & 1) == 0) {epoint = lpoint; goto jn;} /* skip things if needed */
+            if (error) {epoint = lpoint; goto jn;} /* skip things if needed */
             if (labelname.len > 1 && labelname.data[0] == '_' && labelname.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint); goto breakerr;}
             while (wht != 0 && !arguments.tasmcomp) {
                 bool minmax;
