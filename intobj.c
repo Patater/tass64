@@ -1411,9 +1411,8 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
             free(d);
             v->data = v->val;
         } else if (osz < sz) {
-            d = (digit_t *)realloc(d, osz * sizeof *d);
-            if (d == NULL) goto failed2;
-            v->data = d;
+            digit_t *d2 = (digit_t *)realloc(d, osz * sizeof *d);
+            v->data = (d2 != NULL) ? d2 : d;
         }
     }
     v->len = (ssize_t)osz;
