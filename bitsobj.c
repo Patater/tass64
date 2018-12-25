@@ -625,9 +625,8 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
             free(d);
             v->data = v->u.val;
         } else if (osz < sz) {
-            d = (bdigit_t *)realloc(d, osz * sizeof *d);
-            if (d == NULL) goto failed2;
-            v->data = d;
+            bdigit_t *d2 = (bdigit_t *)realloc(d, osz * sizeof *d);
+            v->data = (d2 != NULL) ? d2 : d;
         }
     }
     v->len = (ssize_t)osz;
