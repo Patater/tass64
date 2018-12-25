@@ -1672,8 +1672,8 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 }
                 if (!error) {
-                    mycontext = get_namespace(tmp2->value);
-                    if (mycontext == NULL) {
+                    Namespace *context = get_namespace(tmp2->value);
+                    if (context == NULL) {
                         Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
                         idn->name = labelname;
                         idn->epoint = epoint;
@@ -1681,7 +1681,7 @@ MUST_CHECK Obj *compile(void)
                         err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
                         val_destroy(&idn->v);
                         error = true;
-                    }
+                    } else mycontext = context;
                 }
             }
             if (!islabel && labelname.data[0] == '_') {
