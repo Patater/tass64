@@ -1138,21 +1138,27 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
     return nf;
 }
 
-static void list_extend(List *lst) {
-    size_t o = lst->len;
+static MUST_CHECK bool list_extend(List *lst) {
+    Obj **vals;
+    size_t o = lst->len, n;
     if (lst->data == lst->val) {
-        lst->data = (Obj **)mallocx(16 * sizeof *lst->data);
-        memcpy(lst->data, lst->val, lst->len * sizeof *lst->data);
-        lst->len = 16;
+        n = 16;
+        vals = (Obj **)malloc(n * sizeof *lst->data);
+        if (vals == NULL) return true;
+        memcpy(vals, lst->val, o * sizeof *lst->data);
     } else {
-        if (lst->len < 256) lst->len *= 2;
+        if (o < 256) n = o * 2;
         else {
-            lst->len += 256;
-            if (lst->len < 256) err_msg_out_of_memory(); /* overflow */
+            n = o + 256;
+            if (/*n < 256 ||*/ n > SIZE_MAX / sizeof *lst->data) return true; /* overflow */
         }
-        lst->data = (Obj **)reallocx(lst->data, lst->len * sizeof *lst->data);
+        vals = (Obj **)realloc(lst->data, n * sizeof *lst->data);
+        if (vals == NULL) return true;
     }
-    while (o < lst->len) lst->data[o++] = (Obj *)ref_none();
+    while (o < n) vals[o++] = (Obj *)ref_none();
+    lst->data = vals;
+    lst->len = n;
+    return false;
 }
 
 static void list_shrink(List *lst, size_t i) {
@@ -1336,8 +1342,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 lpoint.line = lin;
                 waitfor->skip = 1; lvline = vline;
                 if (lst != NULL) {
-                    if (i >= lst->len) list_extend(lst);
-                    if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
+                    if (i >= lst->len && list_extend(lst)) {i = lst->len; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
+                    else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                     else nf = tuple_scope(newlabel, &lst->data[i]);
                     i++;
                 } else nf = compile();
@@ -1379,8 +1385,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             }
             waitfor->skip = 1;lvline = vline;
             if (lst != NULL) {
-                if (i >= lst->len) list_extend(lst);
-                if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
+                if (i >= lst->len && list_extend(lst)) { i = lst->len; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+                else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                 else nf = tuple_scope(newlabel, &lst->data[i]);
                 i++;
             } else nf = compile();
@@ -1526,8 +1532,8 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
             lpoint.line = lin;
             waitfor->skip = 1; lvline = vline;
             if (lst != NULL) {
-                if (i >= lst->len) list_extend(lst);
-                if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
+                if (i >= lst->len && list_extend(lst)) { i = lst->len; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+                else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                 else nf = tuple_scope(newlabel, &lst->data[i]);
                 i++;
             } else nf = compile();
