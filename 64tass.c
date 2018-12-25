@@ -1342,7 +1342,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 lpoint.line = lin;
                 waitfor->skip = 1; lvline = vline;
                 if (lst != NULL) {
-                    if (i >= lst->len && list_extend(lst)) {i = lst->len; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
+                    if (i >= lst->len && list_extend(lst)) {i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
                     else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                     else nf = tuple_scope(newlabel, &lst->data[i]);
                     i++;
@@ -1385,7 +1385,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             }
             waitfor->skip = 1;lvline = vline;
             if (lst != NULL) {
-                if (i >= lst->len && list_extend(lst)) { i = lst->len; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+                if (i >= lst->len && list_extend(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                 else nf = tuple_scope(newlabel, &lst->data[i]);
                 i++;
@@ -1532,7 +1532,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
             lpoint.line = lin;
             waitfor->skip = 1; lvline = vline;
             if (lst != NULL) {
-                if (i >= lst->len && list_extend(lst)) { i = lst->len; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+                if (i >= lst->len && list_extend(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                 else nf = tuple_scope(newlabel, &lst->data[i]);
                 i++;
