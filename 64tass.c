@@ -2355,10 +2355,9 @@ MUST_CHECK Obj *compile(void)
                         label->epoint = epoint;
                         label->ref = false;
 
-                        epoint = cmdpoint;
                         if (diagnostics.optimize) cpu_opt_invalidate();
-                        listing_line(listing, epoint.pos);
-                        if (get_exp(1, 1, 0, &epoint)) {
+                        listing_line(listing, cmdpoint.pos);
+                        if (get_exp(1, 1, 0, &cmdpoint)) {
                             struct values_s *vs = get_val(); 
                             val = vs->val;
                             obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
@@ -2446,7 +2445,7 @@ MUST_CHECK Obj *compile(void)
                         }
                         label = ref_label(label);
                         if (val != NULL) {
-                            val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &epoint);
+                            val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &cmdpoint);
                             if (val != NULL) {
                                 if (ret) const_assign(label, val);
                                 else val_destroy(val);
@@ -2457,13 +2456,13 @@ MUST_CHECK Obj *compile(void)
                         current_address = oldsection_address;
                         if (current_address->l_address.bank > all_mem) {
                             current_address->l_address.bank &= all_mem;
-                            err_msg_big_address(&epoint);
+                            err_msg_big_address(&cmdpoint);
                         }
                         if (section_address.end < section_address.address) {
                             section_address.end = section_address.address;
                         }
                         if (section_address.start < section_address.end) {
-                            poke_pos = &epoint;
+                            poke_pos = &cmdpoint;
                             memskip(section_address.end - section_address.start);
                         }
                         memref(current_address->mem, section_address.mem);
