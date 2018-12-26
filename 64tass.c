@@ -3894,7 +3894,7 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val(); val = vs->val;
                     if (val->obj != LBL_OBJ) {err_msg_wrong_type2(val, LBL_OBJ, &vs->epoint); break;}
                     lbl = (Lbl *)val;
-                    if (lbl->file_list == current_file_list && lbl->parent == current_context) {
+                    if (lbl->file_list == current_file_list && lbl->parent == current_context && oldwaitforp <= lbl->waitforp) {
                         while (lbl->waitforp < waitfor_p) {
                             const char *msg;
                             switch (waitfor->what) {
