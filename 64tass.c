@@ -2236,13 +2236,11 @@ MUST_CHECK Obj *compile(void)
                         label->ref = false;
                         listing_line(listing, cmdpoint.pos);
                         current_section->structrecursion++;
-                        if (current_section->structrecursion<100) {
-                            waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
-                            waitfor->skip = 1;
-                            val = macro_recurse(W_ENDS, &structure->v, structure->names, &epoint);
-                            structure->retval = (val != NULL);
-                            if (val != NULL) val_destroy(val);
-                        } else err_msg2(ERROR__MACRECURSION, NULL, &cmdpoint);
+                        waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
+                        waitfor->skip = 1;
+                        val = macro_recurse(W_ENDS, &structure->v, structure->names, &cmdpoint);
+                        structure->retval = (val != NULL);
+                        if (val != NULL) val_destroy(val);
                         current_section->structrecursion--;
 
                         current_section->provides = provides; current_section->requires = requires; current_section->conflicts = conflicts;
