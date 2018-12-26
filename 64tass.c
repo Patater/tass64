@@ -2639,7 +2639,7 @@ MUST_CHECK Obj *compile(void)
                         }
                     }
                     err_msg2(ERROR_GENERL_SYNTAX, NULL, &epoint);
-                } else err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
+                } else if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                 goto breakerr;
             }
             break;
@@ -2647,7 +2647,7 @@ MUST_CHECK Obj *compile(void)
         case '&':
             if ((waitfor->skip & 1) != 0) {
                 if (pline[lpoint.pos + 1] == wht && pline[lpoint.pos + 2] == '=' && !arguments.tasmcomp) {
-                    err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
+                    if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                     goto breakerr;
                 }
             }
@@ -2666,7 +2666,7 @@ MUST_CHECK Obj *compile(void)
             }
             /* fall through */
         case '=':
-            if ((waitfor->skip & 1) != 0) {err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
+            if ((waitfor->skip & 1) != 0) {if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
             break;
         case ';':
         case '\0':
