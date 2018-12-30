@@ -100,14 +100,15 @@ bool mtranslate(void) {
                         param.len = 1;
                     }
                 } else param = params[j];
+                if (p + param.len < p) err_msg_out_of_memory(); /* overflow */
                 if (p + param.len > mline->len) {
-                    mline->len += param.len + 1024;
-                    if (mline->len < 1024) err_msg_out_of_memory();
-                    mline->data = (uint8_t *)reallocx((char *)mline->data, mline->len);
+                    mline->len = p + param.len + 1024;
+                    if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
+                    mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                 }
                 if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
                 if (param.len != 0) {
-                    memcpy((char *)mline->data + p, param.data, param.len);
+                    memcpy(mline->data + p, param.data, param.len);
                     p += param.len;
                 }
                 last = p; changed = true;
@@ -116,14 +117,15 @@ bool mtranslate(void) {
             if (ch == '@') {
                 /* \@ gives complete parameter list */
                 str_t *all = &macro_parameters.current->all;
+                if (p + all->len < p) err_msg_out_of_memory(); /* overflow */
                 if (p + all->len > mline->len) {
-                    mline->len += all->len + 1024;
-                    if (mline->len < 1024) err_msg_out_of_memory();
-                    mline->data = (uint8_t *)reallocx((char *)mline->data, mline->len);
+                    mline->len = p + all->len + 1024;
+                    if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
+                    mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                 }
                 if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
                 if (all->len != 0) {
-                    memcpy((char *)mline->data + p, all->data, all->len);
+                    memcpy(mline->data + p, all->data, all->len);
                     p += all->len;
                 }
                 last = p; changed = true;
@@ -164,14 +166,15 @@ bool mtranslate(void) {
                         err_msg_unknown_argument(&label, &e);
                         param.len = 0; fault = true;
                     }
+                    if (p + param.len < p) err_msg_out_of_memory(); /* overflow */
                     if (p + param.len > mline->len) {
-                        mline->len += param.len + 1024;
-                        if (mline->len < 1024) err_msg_out_of_memory();
-                        mline->data = (uint8_t *)reallocx((char *)mline->data, mline->len);
+                        mline->len = p + param.len + 1024;
+                        if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
+                        mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                     }
                     if (p != last) memcpy(mline->data + last, pline + e.pos - p + last, p - last); 
                     if (param.len != 0) {
-                        memcpy((char *)mline->data + p, param.data, param.len);
+                        memcpy(mline->data + p, param.data, param.len);
                         p += param.len;
                     }
                     last = p; changed = true;
@@ -189,17 +192,18 @@ bool mtranslate(void) {
                     err_msg_missing_argument(current_file_list, &lpoint, j);
                     lpoint.pos++; p += 2; changed = fault = true; continue;
                 }
+                if (p + param[j].len < p) err_msg_out_of_memory(); /* overflow */
                 if (p + param[j].len > mline->len) {
-                    mline->len += param[j].len + 1024;
-                    if (mline->len < 1024) err_msg_out_of_memory();
-                    mline->data = (uint8_t *)reallocx((char *)mline->data, mline->len);
+                    mline->len = p + param[j].len + 1024;
+                    if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
+                    mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                 }
                 if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
                 if (param[j].len > 1 && param[j].data[0] == '"' && param[j].data[param[j].len-1]=='"') {
-                    memcpy((char *)mline->data + p, param[j].data + 1, param[j].len - 2);
+                    memcpy(mline->data + p, param[j].data + 1, param[j].len - 2);
                     p += param[j].len - 2;
                 } else {
-                    memcpy((char *)mline->data + p, param[j].data, param[j].len);
+                    memcpy(mline->data + p, param[j].data, param[j].len);
                     p += param[j].len;
                 }
                 last = p; changed = true;
@@ -209,10 +213,11 @@ bool mtranslate(void) {
         p++;
     }
     if (changed) {
+        if (p + 1 < 1) err_msg_out_of_memory(); /* overflow */
         if (p + 1 > mline->len) {
-            mline->len += 1024;
+            mline->len = p + 1024;
             if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
-            mline->data = (uint8_t *)reallocx((char *)mline->data, mline->len);
+            mline->data = (uint8_t *)reallocx(mline->data, mline->len);
         }
         if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
         while (p != 0 && (mline->data[p-1] == 0x20 || mline->data[p-1] == 0x09)) p--;
