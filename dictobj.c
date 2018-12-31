@@ -59,10 +59,8 @@ static struct pair_s *pair_alloc(void) {
 #ifdef DEBUG
     pair = (struct pair_s *)mallocx(sizeof *pair);
 #else
-    size_t i;
-    pair = (struct pair_s *)pairs_free;
-    pairs_free = pairs_free->next;
     if (pairs_free == NULL) {
+        size_t i;
         struct pairs_s *old = pairs;
         pairs = (struct pairs_s *)mallocx(sizeof *pairs);
         for (i = 0; i < 126; i++) {
@@ -72,6 +70,8 @@ static struct pair_s *pair_alloc(void) {
         pairs->next = old;
         pairs_free = &pairs->pairs[0];
     }
+    pair = (struct pair_s *)pairs_free;
+    pairs_free = pairs_free->next;
 #endif
     return pair;
 }
@@ -501,19 +501,6 @@ void dictobj_init(void) {
 
 void dictobj_names(void) {
     new_builtin("dict", val_reference(&DICT_OBJ->v));
-}
-
-void init_pairs(void)
-{
-    size_t i;
-    pairs = (struct pairs_s *)mallocx(sizeof *pairs);
-    for (i = 0; i < 126; i++) {
-        pairs->pairs[i].next = &pairs->pairs[i + 1];
-    }
-    pairs->pairs[i].next = NULL;
-    pairs->next = NULL;
-
-    pairs_free = &pairs->pairs[0];
 }
 
 void destroy_pairs(void) {
