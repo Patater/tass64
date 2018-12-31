@@ -19,6 +19,7 @@
 #include "memblocksobj.h"
 #include <string.h>
 #include "values.h"
+#include "error.h"
 
 #include "typeobj.h"
 #include "mem.h"
@@ -53,11 +54,11 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return v1->mem.p == v2->mem.p && !memcmp(v1->mem.data, v2->mem.data, v1->mem.p);
 }
 
-MALLOC Memblocks *new_memblocks(void) {
+MALLOC Memblocks *new_memblocks(size_t ln) {
     Memblocks *val = (Memblocks *)val_alloc(MEMBLOCKS_OBJ);
     val->mem.p = 0;
-    val->mem.len = 0;
-    val->mem.data = NULL;
+    val->mem.len = ln;
+    val->mem.data = (ln == 0) ? NULL : (uint8_t*)mallocx(ln);
     val->p = 0;
     val->len = 0;
     val->lastp = 0;
