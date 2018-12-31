@@ -4375,8 +4375,6 @@ static int main2(int *argc2, char **argv2[]) {
     init_file();
     init_variables();
     init_eval();
-    init_ternary();
-    init_pairs();
     init_opt_bit();
 
     fin = openfile(NULL, "", 0, NULL, &nopoint);
