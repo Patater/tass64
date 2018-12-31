@@ -190,7 +190,9 @@ static MUST_CHECK Obj *function_range(Funcargs *vals, linepos_t UNUSED(epoint)) 
         size_t i = 0;
         while ((end > start && step > 0) || (end < start && step < 0)) {
             val[i] = (Obj *)int_from_ival(start);
-            i++; start += step;
+            i++;
+            if (i >= len2) break;
+            start += step;
         }
     }
     new_value->len = len2;
