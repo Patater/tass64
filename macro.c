@@ -80,13 +80,20 @@ bool mtranslate(void) {
 
     q = p = 0; last = 0; fault = false;
     for (; (ch = here()) != 0; lpoint.pos++) {
-        if (ch == '"'  && (q & 2) == 0) { q ^= 1; }
-        else if (ch == '\'' && (q & 1) == 0) { q ^= 2; }
-        else if ((ch == ';') && q == 0) { q = 4; }
-        else if ((ch == '\\') && q == 0) {
+        switch (ch) {
+        case '"': 
+            if ((q & 2) == 0) q ^= 1;
+            break;
+        case '\'': 
+            if ((q & 1) == 0) q ^= 2;
+            break;
+        case ';': 
+            if (q == 0) q = 4;
+            break;
+        case '\\':
+            if (q != 0) break;
             /* normal parameter reference */
-            ch = pline[lpoint.pos + 1];
-            j = (uint8_t)(ch - '1');
+            j = (uint8_t)(pline[lpoint.pos + 1] - '1');
             if (j < 9) {
                 str_t param, *params = macro_parameters.current->param;
                 /* \1..\9 */
@@ -114,7 +121,7 @@ bool mtranslate(void) {
                 last = p; changed = true;
                 lpoint.pos++;continue;
             }
-            if (ch == '@') {
+            if (j == ('@' - '1')) {
                 /* \@ gives complete parameter list */
                 str_t *all = &macro_parameters.current->all;
                 if (p + all->len < p) err_msg_out_of_memory(); /* overflow */
@@ -135,7 +142,7 @@ bool mtranslate(void) {
                 str_t label;
                 lpoint.pos++;
                 label.data = pline + lpoint.pos;
-                if (ch == '{') {
+                if (j == ('{' - '1')) {
                     lpoint.pos++;
                     label.data++;
                     label.len = get_label();
@@ -182,33 +189,39 @@ bool mtranslate(void) {
                 }
                 lpoint = e;
             }
-        } else if (ch == '@' && arguments.tasmcomp) {
-            /* text parameter reference */
-            j = (uint8_t)(pline[lpoint.pos + 1] - '1');
-            if (j < 9) {
-                /* @1..@9 */
-                str_t *param = macro_parameters.current->param;
-                if (j >= macro_parameters.current->len) {
-                    err_msg_missing_argument(current_file_list, &lpoint, j);
-                    lpoint.pos++; p += 2; changed = fault = true; continue;
+            break;
+        case '@':
+            if (arguments.tasmcomp) {
+                /* text parameter reference */
+                j = (uint8_t)(pline[lpoint.pos + 1] - '1');
+                if (j < 9) {
+                    /* @1..@9 */
+                    str_t *param = macro_parameters.current->param;
+                    if (j >= macro_parameters.current->len) {
+                        err_msg_missing_argument(current_file_list, &lpoint, j);
+                        lpoint.pos++; p += 2; changed = fault = true; continue;
+                    }
+                    if (p + param[j].len < p) err_msg_out_of_memory(); /* overflow */
+                    if (p + param[j].len > mline->len) {
+                        mline->len = p + param[j].len + 1024;
+                        if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
+                        mline->data = (uint8_t *)reallocx(mline->data, mline->len);
+                    }
+                    if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
+                    if (param[j].len > 1 && param[j].data[0] == '"' && param[j].data[param[j].len-1]=='"') {
+                        memcpy(mline->data + p, param[j].data + 1, param[j].len - 2);
+                        p += param[j].len - 2;
+                    } else {
+                        memcpy(mline->data + p, param[j].data, param[j].len);
+                        p += param[j].len;
+                    }
+                    last = p; changed = true;
+                    lpoint.pos++;continue;
                 }
-                if (p + param[j].len < p) err_msg_out_of_memory(); /* overflow */
-                if (p + param[j].len > mline->len) {
-                    mline->len = p + param[j].len + 1024;
-                    if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
-                    mline->data = (uint8_t *)reallocx(mline->data, mline->len);
-                }
-                if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
-                if (param[j].len > 1 && param[j].data[0] == '"' && param[j].data[param[j].len-1]=='"') {
-                    memcpy(mline->data + p, param[j].data + 1, param[j].len - 2);
-                    p += param[j].len - 2;
-                } else {
-                    memcpy(mline->data + p, param[j].data, param[j].len);
-                    p += param[j].len;
-                }
-                last = p; changed = true;
-                lpoint.pos++;continue;
             }
+            break;
+        default:
+            break;
         }
         p++;
     }
