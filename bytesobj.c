@@ -1179,7 +1179,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 val_destroy(&iter->v);
                 return &err->v;
             }
-            *p2++ = v1->data[offs2] ^ inv;
+            p2[i] = v1->data[offs2] ^ inv;
         }
         val_destroy(&iter->v);
         if (i > SSIZE_MAX) goto failed2; /* overflow */
@@ -1208,8 +1208,8 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             v = new_bytes2(length);
             if (v == NULL) goto failed;
             p2 = v->data;
-            while ((end > offs && step > 0) || (end < offs && step < 0)) {
-                *p2++ = v1->data[offs] ^ inv;
+            for (i = 0; i < length; i++) {
+                p2[i] = v1->data[offs] ^ inv;
                 offs += step;
             }
         }

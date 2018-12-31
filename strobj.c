@@ -692,11 +692,12 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             return &v->v;
         }
         if (v1->len == v1->chars) {
+            size_t i;
             v = new_str2(length);
             if (v == NULL) goto failed;
             p2 = v->data;
-            while ((end > offs && step > 0) || (end < offs && step < 0)) {
-                *p2++ = v1->data[offs];
+            for (i = 0; i < length; i++) {
+                p2[i] = v1->data[offs];
                 offs += step;
             }
         } else {

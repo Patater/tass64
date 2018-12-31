@@ -186,8 +186,9 @@ static MUST_CHECK Obj *function_range(Funcargs *vals, linepos_t UNUSED(epoint)) 
     }
     new_value = new_list();
     val = list_create_elements(new_value, len2);
-    for (i = 0; i < len2; i++, start += step) {
+    for (i = 0; i < len2; i++) {
         val[i] = (Obj *)int_from_ival(start);
+        start += step;
     }
     new_value->len = len2;
     new_value->data = val;
