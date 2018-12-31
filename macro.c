@@ -540,6 +540,7 @@ void get_macro_params(Obj *v) {
     size_t len = 0, i, j;
     str_t label;
     struct linepos_s *epoints = NULL;
+    const struct file_s *cfile = macro->file_list->file;
 
     new_macro.param = NULL;
     for (i = 0;;i++) {
@@ -557,8 +558,10 @@ void get_macro_params(Obj *v) {
             str_t cf;
             if (label.len > 1 && label.data[0] == '_' && label.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &label, &epoints[i]);new_macro.param[i].cfname.len = 0; new_macro.param[i].cfname.data = NULL;}
             str_cfcpy(&cf, &label);
-            if (cf.data == label.data) str_cpy(&new_macro.param[i].cfname, &label);
-            else {str_cfcpy(&cf, NULL); new_macro.param[i].cfname = cf;}
+            if (cf.data == label.data) {
+                if ((size_t)(label.data - cfile->data) < cfile->len) new_macro.param[i].cfname = label;
+                else str_cpy(&new_macro.param[i].cfname, &label);
+            } else {str_cfcpy(&cf, NULL); new_macro.param[i].cfname = cf;}
             for (j = 0; j < i; j++) if (new_macro.param[j].cfname.data != NULL) {
                 if (str_cmp(&new_macro.param[j].cfname, &cf) == 0) break;
             }
@@ -568,11 +571,9 @@ void get_macro_params(Obj *v) {
         } else {new_macro.param[i].cfname.len = 0; new_macro.param[i].cfname.data = NULL;}
         ignore();
         if (here() == '=') {
-            const struct file_s *cfile;
             lpoint.pos++;
             label.data = pline + lpoint.pos;
             label.len = macro_param_find();
-            cfile = macro->file_list->file;
             if ((size_t)(label.data - cfile->data) < cfile->len) new_macro.param[i].init = label;
             else str_cpy(&new_macro.param[i].init, &label);
         } else {new_macro.param[i].init.len = 0; new_macro.param[i].init.data = NULL;}
