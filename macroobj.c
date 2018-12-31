@@ -19,6 +19,8 @@
 #include "macroobj.h"
 #include "values.h"
 #include "eval.h"
+#include "error.h"
+#include "file.h"
 
 #include "operobj.h"
 #include "typeobj.h"
@@ -39,10 +41,11 @@ Type *const UNION_OBJ = &union_obj;
 
 static FAST_CALL void macro_destroy(Obj *o1) {
     Macro *v1 = (Macro *)o1;
+    const struct file_s *cfile = v1->file_list->file;
     while (v1->argc != 0) {
         --v1->argc;
         free((char *)v1->param[v1->argc].cfname.data);
-        free((char *)v1->param[v1->argc].init.data);
+        if ((size_t)(v1->param[v1->argc].init.data - cfile->data) >= cfile->len) free((char *)v1->param[v1->argc].init.data);
     }
     free(v1->param);
 }
@@ -60,10 +63,11 @@ static FAST_CALL bool macro_same(const Obj *o1, const Obj *o2) {
 
 static FAST_CALL void struct_destroy(Obj *o1) {
     Struct *v1 = (Struct *)o1;
+    const struct file_s *cfile = v1->file_list->file;
     while (v1->argc != 0) {
         --v1->argc;
         free((char *)v1->param[v1->argc].cfname.data);
-        free((char *)v1->param[v1->argc].init.data);
+        if ((size_t)(v1->param[v1->argc].init.data - cfile->data) >= cfile->len) free((char *)v1->param[v1->argc].init.data);
     }
     free(v1->param);
     val_destroy((Obj *)v1->names);
@@ -72,15 +76,17 @@ static FAST_CALL void struct_destroy(Obj *o1) {
 static FAST_CALL void struct_garbage(Obj *o1, int i) {
     Struct *v1 = (Struct *)o1;
     Obj *v;
+    const struct file_s *cfile;
     switch (i) {
     case -1:
         ((Obj *)v1->names)->refcount--;
         return;
     case 0:
+        cfile = v1->file_list->file;
         while (v1->argc != 0) {
             --v1->argc;
             free((char *)v1->param[v1->argc].cfname.data);
-            free((char *)v1->param[v1->argc].init.data);
+            if ((size_t)(v1->param[v1->argc].init.data - cfile->data) >= cfile->len) free((char *)v1->param[v1->argc].init.data);
         }
         free(v1->param);
         return;

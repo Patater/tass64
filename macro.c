@@ -568,10 +568,13 @@ void get_macro_params(Obj *v) {
         } else {new_macro.param[i].cfname.len = 0; new_macro.param[i].cfname.data = NULL;}
         ignore();
         if (here() == '=') {
+            const struct file_s *cfile;
             lpoint.pos++;
             label.data = pline + lpoint.pos;
             label.len = macro_param_find();
-            str_cpy(&new_macro.param[i].init, &label);
+            cfile = macro->file_list->file;
+            if ((size_t)(label.data - cfile->data) < cfile->len) new_macro.param[i].init = label;
+            else str_cpy(&new_macro.param[i].init, &label);
         } else {new_macro.param[i].init.len = 0; new_macro.param[i].init.data = NULL;}
         ignore();
         if (here() == 0 || here() == ';') {
