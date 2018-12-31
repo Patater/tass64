@@ -1267,7 +1267,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             uv = inv;
             sz = bits = 0;
             l = bitslen(vv1);
-            while ((end > offs && step > 0) || (end < offs && step < 0)) {
+            for (i = 0; i < length; i++) {
                 wo = (uval_t)offs / SHIFT;
                 if (wo < l && ((vv1->data[wo] >> ((uval_t)offs % SHIFT)) & 1) != 0) {
                     uv ^= 1 << bits;
