@@ -1213,7 +1213,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 offs += step;
             }
         }
-        if (length > SSIZE_MAX) goto failed2; /* overflow */
         v->len = (ssize_t)length;
         return &v->v;
     }
