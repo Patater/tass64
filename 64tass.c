@@ -4377,7 +4377,6 @@ static int main2(int *argc2, char **argv2[]) {
     init_file();
     init_variables();
     init_eval();
-    init_opt_bit();
 
     fin = openfile(NULL, "", 0, NULL, &nopoint);
     opts = testarg(argc2, argv2, fin); argc = *argc2; argv = *argv2;
