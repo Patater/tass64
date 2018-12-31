@@ -49,5 +49,5 @@ static inline Memblocks *ref_memblocks(Memblocks *v1) {
     v1->v.refcount++; return v1;
 }
 
-extern MALLOC Memblocks *new_memblocks(void);
+extern MALLOC Memblocks *new_memblocks(size_t);
 #endif

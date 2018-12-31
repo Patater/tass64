@@ -149,7 +149,8 @@ macroobj.o: macroobj.c macroobj.h obj.h attributes.h inttypes.h str.h \
  intobj.h noneobj.h errorobj.h errors_e.h
 math.o: math.c math.h
 memblocksobj.o: memblocksobj.c memblocksobj.h obj.h attributes.h \
- inttypes.h stdbool.h values.h typeobj.h mem.h
+ inttypes.h stdbool.h values.h error.h errors_e.h avl.h str.h typeobj.h \
+ mem.h
 mem.o: mem.c mem.h obj.h attributes.h inttypes.h stdbool.h error.h \
  errors_e.h avl.h str.h file.h 64tass.h wait_e.h listing.h arguments.h \
  values.h memblocksobj.h
