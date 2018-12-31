@@ -32,6 +32,8 @@ typedef struct Dict {
 
 extern void dictobj_init(void);
 extern void dictobj_names(void);
+extern void init_pairs(void);
+extern void destroy_pairs(void);
 
 struct pair_s {
     int hash;
