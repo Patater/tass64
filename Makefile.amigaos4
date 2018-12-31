@@ -26,7 +26,8 @@ $(TARGET): $(OBJ)
  opt_bit.h longjump.h listobj.h codeobj.h strobj.h floatobj.h \
  addressobj.h boolobj.h bytesobj.h intobj.h bitsobj.h functionobj.h \
  namespaceobj.h operobj.h gapobj.h typeobj.h noneobj.h registerobj.h \
- labelobj.h errorobj.h macroobj.h mfuncobj.h memblocksobj.h identobj.h
+ labelobj.h errorobj.h macroobj.h mfuncobj.h memblocksobj.h identobj.h \
+ dictobj.h
 addressobj.o: addressobj.c addressobj.h obj.h attributes.h inttypes.h \
  values.h stdbool.h error.h errors_e.h avl.h str.h eval.h variables.h \
  arguments.h boolobj.h strobj.h intobj.h operobj.h typeobj.h noneobj.h \

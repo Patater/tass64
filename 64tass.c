@@ -76,6 +76,7 @@
 #include "mfuncobj.h"
 #include "memblocksobj.h"
 #include "identobj.h"
+#include "dictobj.h"
 
 struct Listing *listing = NULL;
 int temporary_label_branch; /* function declaration in function context, not good */
@@ -246,6 +247,7 @@ static void tfree(void) {
     err_destroy();
     destroy_file();
     destroy_ternary();
+    destroy_pairs();
     destroy_opt_bit();
     free(arguments.symbol_output);
     unfc(NULL);
@@ -4374,6 +4376,7 @@ static int main2(int *argc2, char **argv2[]) {
     init_variables();
     init_eval();
     init_ternary();
+    init_pairs();
     init_opt_bit();
 
     fin = openfile(NULL, "", 0, NULL, &nopoint);
