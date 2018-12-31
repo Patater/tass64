@@ -43,9 +43,9 @@ static FAST_CALL void macro_destroy(Obj *o1) {
     Macro *v1 = (Macro *)o1;
     const struct file_s *cfile = v1->file_list->file;
     while (v1->argc != 0) {
-        --v1->argc;
-        free((char *)v1->param[v1->argc].cfname.data);
-        if ((size_t)(v1->param[v1->argc].init.data - cfile->data) >= cfile->len) free((char *)v1->param[v1->argc].init.data);
+        const struct macro_param_s *param = &v1->param[--v1->argc];
+        if ((size_t)(param->cfname.data - cfile->data) >= cfile->len) free((char *)param->cfname.data);
+        if ((size_t)(param->init.data - cfile->data) >= cfile->len) free((char *)param->init.data);
     }
     free(v1->param);
 }
@@ -65,9 +65,9 @@ static FAST_CALL void struct_destroy(Obj *o1) {
     Struct *v1 = (Struct *)o1;
     const struct file_s *cfile = v1->file_list->file;
     while (v1->argc != 0) {
-        --v1->argc;
-        free((char *)v1->param[v1->argc].cfname.data);
-        if ((size_t)(v1->param[v1->argc].init.data - cfile->data) >= cfile->len) free((char *)v1->param[v1->argc].init.data);
+        const struct macro_param_s *param = &v1->param[--v1->argc];
+        if ((size_t)(param->cfname.data - cfile->data) >= cfile->len) free((char *)param->cfname.data);
+        if ((size_t)(param->init.data - cfile->data) >= cfile->len) free((char *)param->init.data);
     }
     free(v1->param);
     val_destroy((Obj *)v1->names);
@@ -84,9 +84,9 @@ static FAST_CALL void struct_garbage(Obj *o1, int i) {
     case 0:
         cfile = v1->file_list->file;
         while (v1->argc != 0) {
-            --v1->argc;
-            free((char *)v1->param[v1->argc].cfname.data);
-            if ((size_t)(v1->param[v1->argc].init.data - cfile->data) >= cfile->len) free((char *)v1->param[v1->argc].init.data);
+            const struct macro_param_s *param = &v1->param[--v1->argc];
+            if ((size_t)(param->cfname.data - cfile->data) >= cfile->len) free((char *)param->cfname.data);
+            if ((size_t)(param->init.data - cfile->data) >= cfile->len) free((char *)param->init.data);
         }
         free(v1->param);
         return;
