@@ -98,7 +98,7 @@ static size_t waitfor_p, waitfor_len;
 static struct waitfor_s {
     Wait_types what;
     struct linepos_s epoint;
-    address_t addr;
+    address_t addr, addr2;
     address2_t laddr;
     Label *label;
     size_t memp, membp;
@@ -106,7 +106,7 @@ static struct waitfor_s {
     struct section_address_s *section_address;
     Obj *val;
     uint8_t skip;
-    bool breakout;
+    bool breakout, unionmode;
 } *waitfors, *waitfor, *prevwaitfor;
 
 uint16_t curfile;
@@ -766,21 +766,15 @@ static void section_close(linepos_t epoint) {
 }
 
 static void union_close(linepos_t epoint) {
-    struct section_address_s *old = current_address;
-    address_t end;
-    current_address = waitfor->section_address;
-    if (current_address->l_address.bank > all_mem) {
-        current_address->l_address.bank &= all_mem;
-        if (epoint != NULL) err_msg_big_address(epoint);
+    address_t end = current_address->unionmode ? current_address->end : current_address->address;
+    current_address->start = waitfor->addr;
+    if (waitfor->addr2 > current_address->end) current_address->end = waitfor->addr2;
+    current_address->l_start = waitfor->laddr;
+    current_address->unionmode = waitfor->unionmode;
+    if (end > current_address->address) {
+        poke_pos = epoint;
+        memskip(end - current_address->address);
     }
-    end = (old->end < old->address) ? old->address : old->end;
-    if (end != old->start) {
-        if (epoint != NULL) poke_pos = epoint;
-        memskip(end - old->start);
-    }
-    val_destroy(old->l_address_val);
-    val_destroy(&old->mem->v);
-    free(old);
 }
 
 static const char *check_waitfor(void) {
@@ -821,7 +815,7 @@ static const char *check_waitfor(void) {
         return ".endn";
     case W_ENDC: return ".endc";
     case W_ENDS:
-        if ((waitfor->skip & 1) != 0) union_close(NULL);
+        if ((waitfor->skip & 1) != 0) union_close(&lpoint);
         /* fall through */
     case W_ENDS2: return ".ends";
     case W_SEND2:
@@ -829,7 +823,7 @@ static const char *check_waitfor(void) {
         /* fall through */
     case W_SEND: return ".send";
     case W_ENDU:
-        if ((waitfor->skip & 1) != 0) union_close(NULL);
+        if ((waitfor->skip & 1) != 0) union_close(&lpoint);
         /* fall through */
     case W_ENDU2: return ".endu";
     case W_HERE2:
@@ -946,14 +940,6 @@ static bool virtual_start(linepos_t epoint) {
     section_address->mem->lastaddr = section_address->address;
     current_address = section_address;
     return retval;
-}
-
-static void union_start(struct section_address_s *section_address, Memblocks *mem) {
-    section_address->wrapwarn = section_address->moved = false;
-    section_address->address = section_address->start = section_address->end = current_address->address;
-    section_address->l_address = current_address->l_address;
-    section_address->mem = ref_memblocks(mem);
-    section_address->l_address_val = val_reference(current_address->l_address_val);
 }
 
 static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
@@ -2325,7 +2311,9 @@ MUST_CHECK Obj *compile(void)
                 case CMD_DSTRUCT: /* .dstruct */
                 case CMD_DUNION:
                     {
-                        struct section_address_s section_address, *oldsection_address;
+                        address_t oldstart, oldend;
+                        address2_t oldl_start;
+                        bool oldunionmode;
                         bool labelexists, ret;
                         Type *obj;
                         Namespace *context;
@@ -2371,11 +2359,15 @@ MUST_CHECK Obj *compile(void)
                         ignore();if (here() == ',') lpoint.pos++;
                         current_section->structrecursion++;
 
-                        oldsection_address = current_address;
-                        union_start(&section_address, oldsection_address->mem);
-                        section_address.l_start = section_address.l_address;
-                        section_address.unionmode = (prm == CMD_DUNION);
-                        current_address = &section_address;
+                        oaddr = current_address->address;
+                        get_mem(current_address->mem, &newmemp, &newmembp);
+                        oldstart = current_address->start;
+                        oldend = current_address->end;
+                        oldl_start = current_address->l_start;
+                        oldunionmode = current_address->unionmode;
+                        current_address->start = current_address->end = current_address->address;
+                        current_address->l_start = current_address->l_address;
+                        current_address->unionmode = (prm == CMD_DUNION);
 
                         if (!ret) {
                             Code *code = (Code *)label->value;
@@ -2454,22 +2446,17 @@ MUST_CHECK Obj *compile(void)
                         }
                         current_section->structrecursion--;
 
-                        current_address = oldsection_address;
-                        if (current_address->l_address.bank > all_mem) {
-                            current_address->l_address.bank &= all_mem;
-                            err_msg_big_address(&cmdpoint);
+                        if (!ret) set_size(label, ((current_address->end < current_address->address) ? current_address->address : current_address->end) - oaddr, current_address->mem, newmemp, newmembp);
+                        current_address->start = oldstart;
+                        oldstart = current_address->unionmode ? current_address->end : current_address->address;
+                        if (oldend > current_address->end) current_address->end = oldend;
+                        current_address->l_start = oldl_start;
+                        current_address->unionmode = oldunionmode;
+                        if (oldstart > current_address->address) {
+                            poke_pos = &epoint;
+                            memskip(oldstart - current_address->address);
                         }
-                        if (section_address.end < section_address.address) {
-                            section_address.end = section_address.address;
-                        }
-                        if (section_address.start < section_address.end) {
-                            poke_pos = &cmdpoint;
-                            memskip(section_address.end - section_address.start);
-                        }
-                        if (!ret) set_size(label, section_address.end - section_address.start, section_address.mem, 0, 0);
                         val_destroy(&label->v);
-                        val_destroy(section_address.l_address_val);
-                        val_destroy(&section_address.mem->v);
                         goto breakerr;
                     }
                 }
@@ -3960,21 +3947,23 @@ MUST_CHECK Obj *compile(void)
             case CMD_UNION: /* .union */
                 new_waitfor(prm == CMD_UNION ? W_ENDU : W_ENDS, &epoint);
                 if ((waitfor->skip & 1) != 0) {
-                    struct section_address_s *section_address;
                     if (diagnostics.optimize && prm == CMD_UNION) cpu_opt_invalidate();
                     listing_line(listing, 0);
-                    waitfor->section_address = current_address;
-                    section_address = (struct section_address_s *)mallocx(sizeof *section_address);
-                    union_start(section_address, current_address->mem);
-                    section_address->l_start = (prm == CMD_STRUCT) ? current_address->l_start : current_address->l_address;
-                    section_address->unionmode = (prm == CMD_UNION);
-                    current_address = section_address;
+                    waitfor->addr = current_address->start;
+                    waitfor->addr2 = current_address->end;
+                    waitfor->laddr = current_address->l_start;
+                    waitfor->unionmode = current_address->unionmode;
+                    current_address->start = current_address->end = current_address->address;
+                    if (prm == CMD_UNION) current_address->l_start = current_address->l_address;
+                    current_address->unionmode = (prm == CMD_UNION);
                 }
                 break;
             case CMD_DUNION:
             case CMD_DSTRUCT: if ((waitfor->skip & 1) != 0)
                 { /* .dstruct */
-                    struct section_address_s section_address, *oldsection_address;
+                    address_t oldstart, oldend;
+                    address2_t oldl_start;
+                    bool oldunionmode;
                     struct values_s *vs;
                     Type *obj;
                     if (diagnostics.optimize) cpu_opt_invalidate();
@@ -3985,28 +3974,25 @@ MUST_CHECK Obj *compile(void)
                     obj = (prm == CMD_DUNION) ? UNION_OBJ : STRUCT_OBJ;
                     if (val->obj != obj) {err_msg_wrong_type2(val, obj, &vs->epoint); goto breakerr;}
                     current_section->structrecursion++;
-                    oldsection_address = current_address;
-                    union_start(&section_address, oldsection_address->mem);
-                    section_address.l_start = section_address.l_address;
-                    section_address.unionmode = (prm == CMD_DUNION);
-                    current_address = &section_address;
+                    oldstart = current_address->start;
+                    oldend = current_address->end;
+                    oldl_start = current_address->l_start;
+                    oldunionmode = current_address->unionmode;
+                    current_address->start = current_address->end = current_address->address;
+                    current_address->l_start = current_address->l_address;
+                    current_address->unionmode = (prm == CMD_DUNION);
                     val = macro_recurse(prm == CMD_DUNION ? W_ENDU3 : W_ENDS3, val, NULL, &epoint);
                     if (val != NULL) val_destroy(val);
                     current_section->structrecursion--;
-                    current_address = oldsection_address;
-                    if (current_address->l_address.bank > all_mem) {
-                        current_address->l_address.bank &= all_mem;
-                        err_msg_big_address(&epoint);
-                    }
-                    if (section_address.end < section_address.address) {
-                        section_address.end = section_address.address;
-                    }
-                    if (section_address.start < section_address.end) {
+                    current_address->start = oldstart;
+                    oldstart = current_address->unionmode ? current_address->end : current_address->address;
+                    if (oldend > current_address->end) current_address->end = oldend;
+                    current_address->l_start = oldl_start;
+                    current_address->unionmode = oldunionmode;
+                    if (oldstart > current_address->address) {
                         poke_pos = &epoint;
-                        memskip(section_address.end - section_address.start);
+                        memskip(oldstart - current_address->address);
                     }
-                    val_destroy(section_address.l_address_val);
-                    val_destroy(&section_address.mem->v);
                 }
                 goto breakerr;
             case CMD_DSECTION: if ((waitfor->skip & 1) != 0)
