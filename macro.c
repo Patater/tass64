@@ -388,10 +388,10 @@ Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epo
     for (i = 0; i < mfunc->argc; i++) {
         bool labelexists;
         if (mfunc->param[i].init == &default_value->v) {
-            size_t j = 0;
-            tuple = new_tuple(get_val_remaining());
-            for (j = 0; (val = pull_val(NULL)) != NULL; j++) {
-                tuple->data[j] = val;
+            size_t j, len = get_val_remaining();
+            tuple = new_tuple(len);
+            for (j = 0; j < len; j++) {
+                tuple->data[j] = pull_val(NULL);
             }
             val = &tuple->v;
         } else {

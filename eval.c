@@ -1221,14 +1221,10 @@ struct values_s *get_val(void) {
 
 Obj *pull_val(struct linepos_s *epoint) {
     Obj *val;
-    struct values_s *value;
-
-    if (eval->values_p >= eval->values_len) return NULL;
-
-    value = &eval->values[eval->values_p];
+    struct values_s *value = &eval->values[eval->values_p++];
     if (epoint != NULL) *epoint = value->epoint;
     val = value->val;
-    eval->values[eval->values_p++].val = NULL;
+    value->val = NULL;
     return val;
 }
 
@@ -1770,7 +1766,6 @@ Obj *get_vals_tuple(void) {
 Obj *get_vals_addrlist(struct linepos_s *epoints) {
     size_t i, j, len = get_val_remaining();
     Addrlist *list;
-    struct linepos_s epoint;
 
     switch (len) {
     case 0:
@@ -1783,7 +1778,7 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
     list = new_addrlist();
     list->data = list_create_elements(list, len);
     for (i = j = 0; j < len; j++) {
-        Obj *val2 = pull_val((i < 3) ? &epoints[i] : &epoint);
+        Obj *val2 = pull_val((i < 3) ? &epoints[i] : NULL);
         if (val2->obj == REGISTER_OBJ && ((Register *)val2)->len == 1 && i != 0) {
             Address_types am;
             switch (((Register *)val2)->data[0]) {

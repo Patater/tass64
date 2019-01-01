@@ -1250,9 +1250,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 }
                 val_destroy(val); val = (Obj *)ref_none();
             } else {
-                struct linepos_s epoints[3];
                 if (!get_exp(1, 1, 1, &lpoint)) goto error;
-                val = get_vals_addrlist(epoints);
+                val = pull_val(NULL);
             }
         }
         label = new_label(&varname, (varname.data[0] == '_') ? cheap_context : current_context, strength, &labelexists, current_file_list);
