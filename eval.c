@@ -174,21 +174,12 @@ static double toreal_destroy(Obj *v, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *get_exponent2(Obj *v, linepos_t epoint) {
-    double real;
-    switch (here() | 0x20) {
-    case 'e':
-    case 'p':
-        if (pline[lpoint.pos + 1] == '-' || pline[lpoint.pos + 1] == '+') {
-            if ((pline[lpoint.pos + 2] ^ 0x30) < 10) {
-                real = toreal_destroy(v, &lpoint);
-                return get_exponent(real, epoint);
-            }
-        } else if ((pline[lpoint.pos + 1] ^ 0x30) < 10) {
-            real = toreal_destroy(v, &lpoint);
-            return get_exponent(real, epoint);
+    if (pline[lpoint.pos + 1] == '-' || pline[lpoint.pos + 1] == '+') {
+        if ((pline[lpoint.pos + 2] ^ 0x30) < 10) {
+            return get_exponent(toreal_destroy(v, &lpoint), epoint);
         }
-        break;
-    default: break;
+    } else if ((pline[lpoint.pos + 1] ^ 0x30) < 10) {
+        return get_exponent(toreal_destroy(v, &lpoint), epoint);
     }
     return v;
 }
@@ -213,7 +204,13 @@ static MUST_CHECK Obj *get_hex(linepos_t epoint) {
         return get_exponent(real, epoint);
     }
     lpoint.pos += len;
-    return get_exponent2(v, epoint);
+    switch (here() | 0x20) {
+    case 'e':
+    case 'p':
+        return get_exponent2(v, epoint);
+    default: 
+        return v;
+    }
 }
 
 static MUST_CHECK Obj *get_bin(linepos_t epoint) {
@@ -236,7 +233,13 @@ static MUST_CHECK Obj *get_bin(linepos_t epoint) {
         return get_exponent(real, epoint);
     }
     lpoint.pos += len;
-    return get_exponent2(v, epoint);
+    switch (here() | 0x20) {
+    case 'e':
+    case 'p':
+        return get_exponent2(v, epoint);
+    default: 
+        return v;
+    }
 }
 
 static MUST_CHECK Obj *get_float(linepos_t epoint) {
@@ -257,7 +260,13 @@ static MUST_CHECK Obj *get_float(linepos_t epoint) {
         return get_exponent(real, epoint);
     }
     lpoint.pos += len;
-    return get_exponent2(v, epoint);
+    switch (here() | 0x20) {
+    case 'e':
+    case 'p':
+        return get_exponent2(v, epoint);
+    default: 
+        return v;
+    }
 }
 
 static MUST_CHECK Obj *get_bytes(linepos_t epoint, bool z85) {
