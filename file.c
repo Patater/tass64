@@ -410,7 +410,8 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
             } else {
                 f = dash_name(name) ? stdin : file_open(name, "rb");
             }
-            tmp->realname = (path != NULL) ? path : s;
+            if (path == NULL) path = s;
+            tmp->realname = path;
             if (arguments.quiet) {
                 printf((ftype == 1) ? "Reading file:      " : "Assembling file:   ");
                 argv_print(path, stdout);
