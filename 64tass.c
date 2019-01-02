@@ -767,11 +767,12 @@ static void section_close(linepos_t epoint) {
 }
 
 static void union_close(linepos_t epoint) {
-    address_t end = current_address->unionmode ? current_address->end : current_address->address;
-    current_address->start = waitfor->addr;
-    if (waitfor->addr2 > current_address->end) current_address->end = waitfor->addr2;
-    current_address->l_union = waitfor->laddr;
+    address_t end;
     current_address->unionmode = waitfor->unionmode;
+    current_address->l_union = waitfor->laddr;
+    current_address->start = waitfor->addr;
+    end = (current_address->address < current_address->end) ? current_address->end : current_address->address;
+    current_address->end = (waitfor->addr2 > end) ? waitfor->addr2 : end;
     if (end > current_address->address) {
         poke_pos = epoint;
         memskip(end - current_address->address);
@@ -816,7 +817,9 @@ static const char *check_waitfor(void) {
         return ".endn";
     case W_ENDC: return ".endc";
     case W_ENDS:
-        if ((waitfor->skip & 1) != 0) union_close(&lpoint);
+        if ((waitfor->skip & 1) != 0) {
+            current_address->unionmode = waitfor->unionmode;
+        }
         /* fall through */
     case W_ENDS2: return ".ends";
     case W_SEND2:
@@ -2883,7 +2886,7 @@ MUST_CHECK Obj *compile(void)
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (waitfor->what==W_ENDS) {
                     if ((waitfor->skip & 1) != 0) {
-                        union_close(&epoint);
+                        current_address->unionmode = waitfor->unionmode;
                         close_waitfor(W_ENDS);
                         break;
                     }
@@ -3946,18 +3949,25 @@ MUST_CHECK Obj *compile(void)
                 waitfor->skip = 0;waitfor->label = NULL;
                 break;
             case CMD_STRUCT: /* .struct */
-            case CMD_UNION: /* .union */
-                new_waitfor(prm == CMD_UNION ? W_ENDU : W_ENDS, &epoint);
+                new_waitfor(W_ENDS, &epoint);
                 if ((waitfor->skip & 1) != 0) {
-                    if (diagnostics.optimize && prm == CMD_UNION) cpu_opt_invalidate();
                     listing_line(listing, 0);
+                    waitfor->unionmode = current_address->unionmode;
+                    current_address->unionmode = false;
+                }
+                break;
+            case CMD_UNION: /* .union */
+                new_waitfor(W_ENDU, &epoint);
+                if ((waitfor->skip & 1) != 0) {
+                    if (diagnostics.optimize) cpu_opt_invalidate();
+                    listing_line(listing, 0);
+                    waitfor->unionmode = current_address->unionmode;
+                    current_address->unionmode = true;
                     waitfor->addr = current_address->start;
                     waitfor->addr2 = current_address->end;
                     waitfor->laddr = current_address->l_union;
-                    waitfor->unionmode = current_address->unionmode;
                     current_address->start = current_address->end = current_address->address;
                     current_address->l_union = current_address->l_address;
-                    current_address->unionmode = (prm == CMD_UNION);
                 }
                 break;
             case CMD_DUNION:
