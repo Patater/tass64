@@ -703,6 +703,8 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         section_address.start = 0;
         section_address.l_start.address = 0;
         section_address.l_start.bank = 0;
+        section_address.l_union.address = 0;
+        section_address.l_union.bank = 0;
         section_address.end = 0;
         section_address.mem = new_memblocks(0);
         section_address.mem->lastaddr = 0;

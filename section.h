@@ -33,6 +33,7 @@ struct section_address_s {
     address_t start;
     address_t end;
     address2_t l_start;
+    address2_t l_union;
     bool moved;
     bool wrapwarn;
     bool unionmode;
