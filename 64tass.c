@@ -725,18 +725,19 @@ static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, st
 }
 
 static void logical_close(linepos_t epoint) {
-    current_address->l_address.address = (waitfor->laddr.address + current_address->address - waitfor->addr) & 0xffff;
+    address_t diff = current_address->address - waitfor->addr;
+    current_address->l_address.address = (waitfor->laddr.address + diff) & 0xffff;
     if (current_address->address > waitfor->addr) {
         if (current_address->l_address.address == 0) current_address->l_address.address = 0x10000;
     }
-    current_address->l_address.bank = (waitfor->laddr.bank + ((current_address->address - waitfor->addr) & ~(address_t)0xffff)) & all_mem;
+    current_address->l_address.bank = waitfor->laddr.bank + (current_address->address & ~(address_t)0xffff) - (waitfor->addr & ~(address_t)0xffff);
     if (current_address->l_address.bank > all_mem) {
         current_address->l_address.bank &= all_mem;
         if (epoint != NULL) err_msg_big_address(epoint);
     }
     val_destroy(current_address->l_address_val);
     current_address->l_address_val = waitfor->val; waitfor->val = NULL;
-    if (waitfor->label != NULL) set_size(waitfor->label, current_address->address - waitfor->addr, current_address->mem, waitfor->memp, waitfor->membp);
+    if (waitfor->label != NULL) set_size(waitfor->label, diff, current_address->mem, waitfor->memp, waitfor->membp);
     current_section->logicalrecursion--;
 }
 
