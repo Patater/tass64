@@ -732,8 +732,8 @@ static void logical_close(linepos_t epoint) {
     }
     current_address->l_address.bank = waitfor->laddr.bank + (current_address->address & ~(address_t)0xffff) - (waitfor->addr & ~(address_t)0xffff);
     if (current_address->l_address.bank > all_mem) {
-        current_address->l_address.bank &= all_mem;
         if (epoint != NULL) err_msg_big_address(epoint);
+        current_address->l_address.bank &= all_mem;
     }
     val_destroy(current_address->l_address_val);
     current_address->l_address_val = waitfor->val; waitfor->val = NULL;
@@ -751,8 +751,8 @@ static void virtual_close(linepos_t epoint) {
     free(current_address);
     current_address = waitfor->section_address;
     if (current_address->l_address.bank > all_mem) {
-        current_address->l_address.bank &= all_mem;
         if (epoint != NULL) err_msg_big_address(epoint);
+        current_address->l_address.bank &= all_mem;
     }
 }
 
@@ -761,8 +761,8 @@ static void section_close(linepos_t epoint) {
     current_section = waitfor->section;
     current_address = waitfor->section_address;
     if (current_address->l_address.bank > all_mem) {
-        current_address->l_address.bank &= all_mem;
         if (epoint != NULL) err_msg_big_address(epoint);
+        current_address->l_address.bank &= all_mem;
     }
 }
 
@@ -1578,8 +1578,8 @@ MUST_CHECK Obj *compile(void)
             if (current_address->l_address.address != current_address->l_start.address || current_address->l_address.bank != current_address->l_start.bank) {
                 current_address->l_address = current_address->l_start;
                 if (current_address->l_address.bank > all_mem) {
-                    current_address->l_address.bank &= all_mem;
                     err_msg_big_address(&epoint);
+                    current_address->l_address.bank &= all_mem;
                 }
             }
             if (current_address->address != current_address->start) {
@@ -2234,8 +2234,8 @@ MUST_CHECK Obj *compile(void)
                         current_section->provides = provides; current_section->requires = requires; current_section->conflicts = conflicts;
                         current_address = oldsection_address;
                         if (current_address->l_address.bank > all_mem) {
-                            current_address->l_address.bank &= all_mem;
                             err_msg_big_address(&cmdpoint);
+                            current_address->l_address.bank &= all_mem;
                         }
 
                         if (doubledef) val_destroy(&structure->v);
@@ -3659,8 +3659,8 @@ MUST_CHECK Obj *compile(void)
                         if (cpuname.len == strlen(cpui->name) && memcmp(cpui->name, cpuname.data, cpuname.len) == 0) {
                             const struct cpu_s *cpumode = (cpui->def != NULL) ? cpui->def : arguments.cpumode;
                             if (current_address->l_address.bank > cpumode->max_address) {
-                                current_address->l_address.bank &= cpumode->max_address;
                                 err_msg_big_address(&epoint);
+                                current_address->l_address.bank &= cpumode->max_address;
                             }
                             set_cpumode(cpumode);
                             break;
