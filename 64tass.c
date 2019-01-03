@@ -725,15 +725,21 @@ static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, st
 }
 
 static void logical_close(linepos_t epoint) {
-    address_t diff = current_address->address - waitfor->addr;
-    current_address->l_address.address = (waitfor->laddr.address + diff) & 0xffff;
-    if (current_address->address > waitfor->addr) {
-        if (current_address->l_address.address == 0) current_address->l_address.address = 0x10000;
-    }
-    current_address->l_address.bank = waitfor->laddr.bank + (current_address->address & ~(address_t)0xffff) - (waitfor->addr & ~(address_t)0xffff);
-    if (current_address->l_address.bank > all_mem) {
-        if (epoint != NULL) err_msg_big_address(epoint);
-        current_address->l_address.bank &= all_mem;
+    address_t diff;
+    if (current_address->unionmode) {
+        current_address->l_union = waitfor->laddr;
+        diff = 0;
+    } else {
+        diff = current_address->address - waitfor->addr;
+        current_address->l_address.address = (waitfor->laddr.address + diff) & 0xffff;
+        if (current_address->address > waitfor->addr) {
+            if (current_address->l_address.address == 0) current_address->l_address.address = 0x10000;
+        }
+        current_address->l_address.bank = waitfor->laddr.bank + (current_address->address & ~(address_t)0xffff) - (waitfor->addr & ~(address_t)0xffff);
+        if (current_address->l_address.bank > all_mem) {
+            if (epoint != NULL) err_msg_big_address(epoint);
+            current_address->l_address.bank &= all_mem;
+        }
     }
     val_destroy(current_address->l_address_val);
     current_address->l_address_val = waitfor->val; waitfor->val = NULL;
@@ -1587,6 +1593,7 @@ MUST_CHECK Obj *compile(void)
                     if (current_address->address > current_address->end) current_address->end = current_address->address;
                     current_address->moved = true;
                 }
+                current_address->wrapwarn = false;
                 current_address->address = current_address->start;
                 memjmp(current_address->mem, current_address->address);
             }
@@ -3177,8 +3184,14 @@ MUST_CHECK Obj *compile(void)
                         err_msg_output_and_destroy(err_addressing(am, &vs->epoint));
                         break;
                     }
-                    current_address->l_address.address = uval & 0xffff;
-                    current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
+                    if (current_address->unionmode) {
+                        waitfor->laddr = current_address->l_union;
+                        current_address->l_union.address = uval & 0xffff;
+                        current_address->l_union.bank = uval & all_mem & ~(address_t)0xffff;
+                    } else {
+                        current_address->l_address.address = uval & 0xffff;
+                        current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
+                    }
                     val_destroy(current_address->l_address_val);
                     tmp = vs->val;
                     current_address->l_address_val = val_reference(tmp->obj == CODE_OBJ ? ((Code *)tmp)->addr : tmp);
