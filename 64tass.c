@@ -2935,6 +2935,7 @@ MUST_CHECK Obj *compile(void)
                 if (waitfor->what==W_ENDU) {
                     if ((waitfor->skip & 1) != 0) union_close(&epoint);
                     close_waitfor(W_ENDU);
+                    oaddr = current_address->address;
                 } else if (close_waitfor(W_ENDU3)) {
                     nobreak = false;
                     goto breakerr;
