@@ -3173,7 +3173,7 @@ MUST_CHECK Obj *compile(void)
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
-                    new_waitfor(W_HERE2, &epoint);waitfor->laddr = current_address->l_address;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp; waitfor->val = val_reference(current_address->l_address_val);if (newlabel != NULL) waitfor->label = ref_label(newlabel);
+                    new_waitfor(W_HERE2, &epoint);waitfor->laddr = current_address->unionmode ? current_address->l_union : current_address->l_address;waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp; waitfor->val = val_reference(current_address->l_address_val);if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                     newlabel = NULL;
                     current_section->logicalrecursion++;
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
@@ -3185,7 +3185,6 @@ MUST_CHECK Obj *compile(void)
                         break;
                     }
                     if (current_address->unionmode) {
-                        waitfor->laddr = current_address->l_union;
                         current_address->l_union.address = uval & 0xffff;
                         current_address->l_union.bank = uval & all_mem & ~(address_t)0xffff;
                     } else {
