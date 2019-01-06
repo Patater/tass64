@@ -299,12 +299,6 @@ static bool extendfile(struct file_s *tmp) {
 
 static uint8_t *flushubuff(struct ubuff_s *ubuff, uint8_t *p, struct file_s *tmp) {
     size_t i;
-    if (ubuff->data == NULL) {
-        ubuff->data = (uchar_t *)malloc(16 * sizeof *ubuff->data);
-        if (ubuff->data == NULL) return NULL;
-        ubuff->len = 16;
-        return p;
-    }
     for (i = 0; i < ubuff->p; i++) {
         size_t o = (size_t)(p - tmp->data);
         uchar_t ch;
@@ -322,8 +316,14 @@ static bool extendbuff(struct ubuff_s *ubuff) {
     uchar_t *d;
     size_t len2 = ubuff->len + 16;
     if (/*len2 < 16 ||*/ len2 > SIZE_MAX / sizeof *ubuff->data) return true; /* overflow */
-    d = (uchar_t *)realloc(ubuff->data, len2 * sizeof *ubuff->data);
-    if (d == NULL) return true;
+    if (len2 == 32) {
+        d = (uchar_t *)malloc(32 * sizeof *ubuff->data);
+        if (d == NULL) return true;
+        memcpy(d, ubuff->data, ubuff->p);
+    } else {
+        d = (uchar_t *)realloc(ubuff->data, len2 * sizeof *ubuff->data);
+        if (d == NULL) return true;
+    }
     ubuff->data = d;
     ubuff->len = len2;
     return false;
@@ -453,10 +453,11 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
                     }
                 }
             } else {
-                struct ubuff_s ubuff = {NULL, 0, 0};
+                struct ubuff_s ubuff;
                 size_t max_lines = 0;
                 line_t lines = 0;
                 uint8_t buffer[BUFSIZ * 2];
+                uchar_t ubuffc[16];
                 size_t bp = 0, bl, qr = 1;
                 if (fseek(f, 0, SEEK_END) == 0) {
                     long len = ftell(f);
@@ -478,6 +479,9 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
 #ifdef _WIN32
                 setlocale(LC_CTYPE, "");
 #endif
+                ubuff.p = 0;
+                ubuff.data = ubuffc;
+                ubuff.len = 16;
                 do {
                     size_t k;
                     uint8_t *p;
@@ -689,7 +693,7 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
 #ifdef _WIN32
                 setlocale(LC_CTYPE, "C");
 #endif
-                free(ubuff.data);
+                if (ubuff.len != 16) free(ubuff.data);
                 tmp->lines = lines;
                 if (lines != max_lines) {
                     size_t *d = (size_t *)realloc(tmp->line, lines * sizeof *tmp->line);
