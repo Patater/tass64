@@ -410,34 +410,55 @@ FAST_CALL void pokeb(unsigned int byte) { /* poke_pos! */
 static int get_command(void) {
     unsigned int no, also = 0, felso, elozo;
     const uint8_t *label;
-    size_t l;
+    uint8_t tmp[10];
     int s4;
     lpoint.pos++;
     label = pline + lpoint.pos;
-    l = get_label();
-    if ((size_t)(l - 2) < 17) {
-        uint8_t cmd[20];
-        if (arguments.caseinsensitive != 0) {
-            size_t i;
-            for (i = 0; i < l; i++) cmd[i] = label[i] | 0x20;
-        } else memcpy(cmd, label, l);
-        cmd[l] = 0;
-        if (l != 0) {
-            felso = sizeof(command)/sizeof(command[0]);
-            no = felso/2;
-            for (;;) {  /* do binary search */
-                const uint8_t *cmd2 = (const uint8_t *)command[no];
-                if ((s4=cmd[0]-cmd2[1]) == 0 && (s4=cmd[1]-cmd2[2]) == 0 && (s4=strcmp((const char *)cmd + 2, (const char *)cmd2 + 3)) == 0) {
-                    return (uint8_t)command[no][0];
-                }
-
-                elozo = no;
-                no = ((s4 > 0) ? (felso + (also = no)) : (also + (felso = no)))/2;
-                if (elozo == no) break;
-            }
+    if (arguments.caseinsensitive) {
+        int i, j;
+        for (i = j = 0; i < 10; i++) {
+            if ((uint8_t)(label[i] - 'a') <= ('z' - 'a')) continue;
+            if ((uint8_t)(label[i] - 'A') > ('Z' - 'A')) break;
+            while (j < i) { tmp[j] = label[j]; j++; }
+            tmp[j++] = label[i] | 0x20;
+        }
+        if ((unsigned int)(i - 2) >= (10 - 2)) return lenof(command);
+        if (j != 0) {
+            while (j <= i) { tmp[j] = label[j]; j++; }
+            label = tmp;
         }
     }
-    lpoint.pos -= l;
+ 
+    felso = sizeof(command)/sizeof(command[0]);
+    no = felso/2;
+    for (;;) {  /* do binary search */
+        const uint8_t *cmd2 = (const uint8_t *)command[no];
+        s4 = label[0] - cmd2[1];
+        if (s4 == 0) {
+            int l = 1;
+            for (;;) {
+                s4 = label[l] - cmd2[l + 1];
+                if (s4 != 0) break;
+                l++;
+                if (cmd2[l + 1] != 0) continue;
+                if (label[l] >= '0') {
+                    if ((uint8_t)(label[l] - 'a') <= ('z' - 'a')) break;
+                    if ((label[l] & 0x80) != 0) {
+                        if (arguments.to_ascii) {
+                            uint32_t ch;
+                            utf8in(label + l, &ch);
+                            if ((uget_property(ch)->property & (id_Continue | id_Start)) != 0) return lenof(command);
+                        }
+                    } else if (label[l] <= '9' || (uint8_t)(label[l] - 'A') <= ('Z' - 'A') || label[l] == '_') return lenof(command);
+                }
+                lpoint.pos += l;
+                return (uint8_t)cmd2[0];
+            }
+        }
+        elozo = no;
+        no = ((s4 >= 0) ? (felso + (also = no)) : (also + (felso = no)))/2;
+        if (elozo == no) break;
+    }
     return lenof(command);
 }
 
