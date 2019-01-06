@@ -187,7 +187,10 @@ static struct namespacekey_s *strongest_label(struct avltree_node *b) {
 
     do {
         c = avltree_container_of(n, struct namespacekey_s, node);
-        if (c->key->defpass == pass || (c->key->constant && (!fixeddig || c->key->defpass == pass - 1))) a = c;
+        if (c->key->defpass == pass || (c->key->constant && (!fixeddig || c->key->defpass == pass - 1))) {
+            if (c->key->strength == 0) return c;
+            a = c;
+        }
         n = avltree_next(n);
     } while (n != NULL && label_compare(n, b) == 0);
     if (a != NULL) return a;
