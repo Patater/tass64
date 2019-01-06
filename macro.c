@@ -365,7 +365,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
         star_tree = stree_old; vline = ovline;
         lpoint.line = lin;
     }
-    val_destroy(macro_parameters.current->macro);
+    val_destroy(&macro->v);
     macro_parameters.p--;
     in_macro = in_macro_old;
     if (macro_parameters.p != 0) macro_parameters.current = &macro_parameters.params[macro_parameters.p - 1];
