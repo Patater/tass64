@@ -160,9 +160,14 @@ static int label_compare(const struct avltree_node *aa, const struct avltree_nod
 {
     const struct namespacekey_s *a = cavltree_container_of(aa, struct namespacekey_s, node);
     const struct namespacekey_s *b = cavltree_container_of(bb, struct namespacekey_s, node);
+    const str_t *s1, *s2;
     int h = a->hash - b->hash;
     if (h != 0) return h;
-    return str_cmp(&a->key->cfname, &b->key->cfname);
+    s1 = &a->key->cfname;
+    s2 = &b->key->cfname;
+    if (s1->len != s2->len) return s1->len > s2->len ? 1 : -1;
+    if (s1->data == s2->data) return 0;
+    return memcmp(s1->data, s2->data, s1->len);
 }
 
 static int label_compare2(const struct avltree_node *aa, const struct avltree_node *bb)
