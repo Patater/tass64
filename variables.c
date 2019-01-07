@@ -197,10 +197,12 @@ static struct namespacekey_s *strongest_label(struct avltree_node *b) {
     n = avltree_prev(b);
     while (n != NULL && label_compare(n, b) == 0) {
         c = avltree_container_of(n, struct namespacekey_s, node);
-        if (c->key->defpass == pass || (c->key->constant && (!fixeddig || c->key->defpass == pass - 1))) a = c;
+        if (c->key->defpass == pass || (c->key->constant && (!fixeddig || c->key->defpass == pass - 1))) {
+            return c;
+        }
         n = avltree_prev(n);
     }
-    return a;
+    return NULL;
 }
 
 Label *find_label(const str_t *name, Namespace **here) {
