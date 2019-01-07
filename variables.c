@@ -211,8 +211,7 @@ Label *find_label(const str_t *name, Namespace **here) {
     size_t p = context_stack.p;
     Label label;
 
-    if (name->len > 1 && name->data[1] == 0) label.cfname = *name;
-    else str_cfcpy(&label.cfname, name);
+    str_cfcpy(&label.cfname, name);
     tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
 
@@ -265,14 +264,12 @@ Label *find_label(const str_t *name, Namespace **here) {
     if (here != NULL) *here = NULL;
     return NULL;
 }
-
 Label *find_label2(const str_t *name, Namespace *context) {
     struct avltree_node *b;
     struct namespacekey_s tmp, *c;
     Label label;
 
-    if (name->len > 1 && name->data[1] == 0) label.cfname = *name;
-    else str_cfcpy(&label.cfname, name);
+    str_cfcpy(&label.cfname, name);
     tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
 
@@ -294,7 +291,7 @@ Label *find_label3(const str_t *name, Namespace *context, uint8_t strength) {
     Label label;
 
     label.strength = strength;
-    if (name->len > 1 && name->data[1] == 0) label.cfname = *name;
+    if (name->len == sizeof anon_idents && name->data[1] == 0) label.cfname = *name;
     else str_cfcpy(&label.cfname, name);
     tmp.hash = str_hash(&label.cfname);
     tmp.key = &label;
