@@ -328,10 +328,7 @@ Label *find_anonlabel(int32_t count) {
             if (c != NULL) return c->key;
         }
     }
-    b = avltree_lookup(&tmp.node, &builtin_namespace->members, label_compare);
-    if (b == NULL) return NULL;
-    c = avltree_container_of(b, struct namespacekey_s, node);
-    return (c != NULL) ? c->key : NULL;
+    return NULL;
 }
 
 Label *find_anonlabel2(int32_t count, Namespace *context) {
