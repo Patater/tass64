@@ -1470,7 +1470,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                         label->epoint = bpoint;
                     }
                 } else {
-                    label = find_label2(&varname, context);
+                    label = find_label3(&varname, context, strength);
                     if (label == NULL) {err_msg_not_defined2(&varname, context, false, &bpoint); break;}
                     if (label->constant) {err_msg_not_variable(label, &varname, &bpoint); break;}
                     if (diagnostics.case_symbol && str_cmp(&varname, &label->name) != 0) err_msg_symbol_case(&varname, label, &bpoint);
