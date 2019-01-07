@@ -1753,7 +1753,7 @@ MUST_CHECK Obj *compile(void)
                 } else if (tmp.op == &o_COND) {
                     label = NULL; val = NULL;
                 } else {
-                    label = find_label2(&labelname, mycontext);
+                    label = find_label3(&labelname, mycontext, strength);
                     if (label == NULL) {
                         if (tmp.op == &o_MUL) {
                             if (diagnostics.star_assign) {
