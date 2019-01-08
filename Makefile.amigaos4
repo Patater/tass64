@@ -196,7 +196,10 @@ variables.o: variables.c variables.h stdbool.h str.h inttypes.h unicode.h \
 wchar.o: wchar.c wchar.h inttypes.h
 wctype.o: wctype.c wctype.h
 
-.PHONY: clean
+.PHONY: clean distclean
 
 clean:
-	rm -f $(OBJ) 64tass *~
+	-rm -f $(OBJ)
+
+distclean: clean
+	-rm -f $(TARGET)
