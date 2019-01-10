@@ -1007,7 +1007,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
             }
             return;
         }
-        laddr = (current_address->l_address.address + current_address->l_address.bank) & all_mem; /* overflow included! */
+        laddr = current_address->l_address.address + (current_address->l_address.bank & all_mem); /* overflow included! */
         addr = (address_t)uval & all_mem;
         if (arguments.tasmcomp) addr = (uint16_t)addr;
         else if (addr >= laddr) {
