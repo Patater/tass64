@@ -34,7 +34,6 @@
 #include "noneobj.h"
 #include "namespaceobj.h"
 #include "labelobj.h"
-#include "errorobj.h"
 #include "macroobj.h"
 #include "mfuncobj.h"
 #include "memblocksobj.h"

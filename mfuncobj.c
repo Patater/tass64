@@ -25,8 +25,6 @@
 #include "typeobj.h"
 #include "namespaceobj.h"
 #include "operobj.h"
-#include "noneobj.h"
-#include "errorobj.h"
 #include "listobj.h"
 
 static Type obj;

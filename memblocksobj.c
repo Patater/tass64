@@ -22,7 +22,6 @@
 #include "error.h"
 
 #include "typeobj.h"
-#include "mem.h"
 
 static Type obj;
 
