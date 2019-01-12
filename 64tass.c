@@ -822,9 +822,7 @@ static const char *check_waitfor(void) {
         if (waitfor->label != NULL) set_size(waitfor->label, current_address->address - waitfor->addr, current_address->mem, waitfor->memp, waitfor->membp);
         /* fall through */
     case W_ENDP: return ".endp";
-    case W_ENDM2:
     case W_ENDM: return ".endm";
-    case W_ENDF2:
     case W_ENDF: return ".endf";
     case W_NEXT3:
         pop_context();
@@ -2870,7 +2868,7 @@ MUST_CHECK Obj *compile(void)
                     if (waitfor->val != NULL) ((Macro *)waitfor->val)->retval = (here() != 0 && here() != ';');
                     close_waitfor(W_ENDM);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                } else if (close_waitfor(W_ENDM3) || close_waitfor(W_ENDM2)) {
+                } else if (close_waitfor(W_ENDM3)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -2881,7 +2879,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_ENDF: /* .endf */
                 if (close_waitfor(W_ENDF)) {
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                } else if (close_waitfor(W_ENDF3) || close_waitfor(W_ENDF2)) {
+                } else if (close_waitfor(W_ENDF3)) {
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
