@@ -108,7 +108,7 @@ static struct waitfor_s {
     Obj *val;
     uint8_t skip;
     bool breakout, unionmode;
-} *waitfors, *waitfor, *prevwaitfor;
+} *waitfors, *waitfor;
 
 uint16_t curfile;
 struct avltree *star_tree = NULL;
@@ -269,6 +269,7 @@ static void status(void) {
 }
 
 void new_waitfor(Wait_types what, linepos_t epoint) {
+    uint8_t skwait = waitfor->skip;
     waitfor_p++;
     if (waitfor_p >= waitfor_len) {
         waitfor_len += 8;
@@ -276,20 +277,20 @@ void new_waitfor(Wait_types what, linepos_t epoint) {
         waitfors = (struct waitfor_s *)reallocx(waitfors, waitfor_len * sizeof *waitfors);
     }
     waitfor = &waitfors[waitfor_p];
-    prevwaitfor = (waitfor_p != 0) ? &waitfors[waitfor_p - 1] : waitfor;
     waitfor->what = what;
+    waitfor->skip = skwait;
     waitfor->epoint = *epoint;
     waitfor->label = NULL;
     waitfor->val = NULL;
-    waitfor->skip = prevwaitfor->skip;
 }
 
 static void reset_waitfor(void) {
+    struct waitfor_s dummy;
     struct linepos_s lpos = {0, 0};
+    dummy.skip = 1;
     waitfor_p = (size_t)-1;
+    waitfor = &dummy;
     new_waitfor(W_NONE, &lpos);
-    waitfor->skip = 1;
-    prevwaitfor = waitfor;
 }
 
 static bool close_waitfor(Wait_types what) {
@@ -298,7 +299,6 @@ static bool close_waitfor(Wait_types what) {
         if (waitfor->label != NULL) val_destroy(&waitfor->label->v);
         waitfor_p--;
         waitfor = &waitfors[waitfor_p];
-        prevwaitfor = (waitfor_p != 0) ? &waitfors[waitfor_p - 1] : waitfor;
         return true;
     }
     return false;
@@ -2758,7 +2758,7 @@ MUST_CHECK Obj *compile(void)
                     switch (prm) {
                     case CMD_IF:
                         if (tobool(vs, &truth)) { waitfor->skip = 0; break; }
-                        waitfor->skip = truth ? (prevwaitfor->skip & 1) : (uint8_t)((prevwaitfor->skip & 1) << 1);
+                        waitfor->skip = truth ? (skwait & 1) : (uint8_t)((skwait & 1) << 1);
                         break;
                     case CMD_IFNE:
                     case CMD_IFEQ:
@@ -2769,14 +2769,14 @@ MUST_CHECK Obj *compile(void)
                             val_destroy(err);
                             waitfor->skip = 0; break;
                         }
-                        waitfor->skip = ((((Int *)err)->len == 0) != (prm == CMD_IFNE)) ? (prevwaitfor->skip & 1) : (uint8_t)((prevwaitfor->skip & 1) << 1);
+                        waitfor->skip = ((((Int *)err)->len == 0) != (prm == CMD_IFNE)) ? (skwait & 1) : (uint8_t)((skwait & 1) << 1);
                         val_destroy(err);
                         break;
                     case CMD_IFPL:
                     case CMD_IFMI:
                         if (arguments.tasmcomp) {
                             if (toival(val, &ival, 8 * sizeof ival, &vs->epoint)) { waitfor->skip = 0; break; }
-                            waitfor->skip = (((ival & 0x8000) == 0) != (prm == CMD_IFMI)) ? (prevwaitfor->skip & 1) : (uint8_t)((prevwaitfor->skip & 1) << 1);
+                            waitfor->skip = (((ival & 0x8000) == 0) != (prm == CMD_IFMI)) ? (skwait & 1) : (uint8_t)((skwait & 1) << 1);
                         } else {
                             err = val->obj->sign(val, &vs->epoint);
                             if (err->obj != INT_OBJ) {
@@ -2785,7 +2785,7 @@ MUST_CHECK Obj *compile(void)
                                 val_destroy(err);
                                 waitfor->skip = 0; break;
                             }
-                            waitfor->skip = ((((Int *)err)->len >= 0) != (prm == CMD_IFMI)) ? (prevwaitfor->skip & 1) : (uint8_t)((prevwaitfor->skip & 1) << 1);
+                            waitfor->skip = ((((Int *)err)->len >= 0) != (prm == CMD_IFMI)) ? (skwait & 1) : (uint8_t)((skwait & 1) << 1);
                             val_destroy(err);
                         }
                         break;
@@ -2823,7 +2823,7 @@ MUST_CHECK Obj *compile(void)
                         else if (val == &none_value->v) err_msg_still_none(NULL, &vs->epoint);
                     } else val = (Obj *)none_value;
                     waitfor->val = val_reference(val);
-                    waitfor->skip = (val == &none_value->v) ? 0 : (uint8_t)((prevwaitfor->skip & 1) << 1);
+                    waitfor->skip = (val == &none_value->v) ? 0 : (uint8_t)((skwait & 1) << 1);
                 }
                 break;
             case CMD_CASE: /* .case */
