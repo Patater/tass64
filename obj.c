@@ -21,7 +21,6 @@
 #include "eval.h"
 #include "error.h"
 #include "values.h"
-#include "macro.h"
 
 #include "boolobj.h"
 #include "floatobj.h"

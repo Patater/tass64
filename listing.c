@@ -29,7 +29,6 @@
 #include "section.h"
 #include "instruction.h"
 #include "obj.h"
-#include "mem.h"
 #include "values.h"
 #include "arguments.h"
 

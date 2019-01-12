@@ -59,7 +59,6 @@
 #include "listobj.h"
 #include "codeobj.h"
 #include "strobj.h"
-#include "floatobj.h"
 #include "addressobj.h"
 #include "boolobj.h"
 #include "bytesobj.h"

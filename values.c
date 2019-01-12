@@ -25,7 +25,6 @@
 #include "error.h"
 #include "strobj.h"
 #include "typeobj.h"
-#include "noneobj.h"
 
 #define SLOTS 128
 #define ALIGN sizeof(int *)

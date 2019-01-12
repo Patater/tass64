@@ -19,7 +19,6 @@
 #include "instruction.h"
 #include <string.h>
 #include "opcodes.h"
-#include "obj.h"
 #include "64tass.h"
 #include "section.h"
 #include "file.h"

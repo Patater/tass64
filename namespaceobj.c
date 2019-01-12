@@ -24,7 +24,6 @@
 #include "arguments.h"
 #include "64tass.h"
 
-#include "intobj.h"
 #include "listobj.h"
 #include "strobj.h"
 #include "operobj.h"
