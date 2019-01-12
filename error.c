@@ -325,6 +325,7 @@ static const char * const terr_fatal[] = {
     "file recursion",
     "macro recursion too deep",
     "function recursion too deep",
+    "weak recursion too deep",
     "too many passes"
 };
 

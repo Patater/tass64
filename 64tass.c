@@ -3335,6 +3335,7 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_WEAK2, &epoint);waitfor->addr = current_address->address;waitfor->memp = newmemp;waitfor->membp = newmembp;if (newlabel != NULL) waitfor->label = ref_label(newlabel);
                     strength++;
+                    if (strength == 0) err_msg2(ERROR_WEAKRECURSION, NULL, &epoint);
                     newlabel = NULL;
                 } else new_waitfor(W_WEAK, &epoint);
                 break;
