@@ -250,8 +250,8 @@ static void tfree(void) {
     destroy_pairs();
     destroy_opt_bit();
     free(arguments.symbol_output);
-    unfc(NULL);
-    unfkc(NULL, NULL, 0);
+    if (unfc(NULL)) {}
+    if (unfkc(NULL, NULL, 0)) {}
     str_cfcpy(NULL, NULL);
 }
 

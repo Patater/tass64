@@ -104,12 +104,12 @@ instruction.o: instruction.c instruction.h attributes.h stdbool.h \
  addressobj.h values.h listobj.h registerobj.h codeobj.h typeobj.h \
  noneobj.h errorobj.h
 intobj.o: intobj.c intobj.h obj.h attributes.h inttypes.h math.h \
- unicode.h str.h unicodedata.h encoding.h avl.h stdbool.h errors_e.h \
+ unicode.h str.h unicodedata.h stdbool.h encoding.h avl.h errors_e.h \
  error.h eval.h variables.h arguments.h boolobj.h floatobj.h values.h \
  codeobj.h strobj.h bytesobj.h bitsobj.h operobj.h typeobj.h noneobj.h \
  errorobj.h addressobj.h
 isnprintf.o: isnprintf.c isnprintf.h attributes.h inttypes.h unicode.h \
- str.h unicodedata.h eval.h obj.h stdbool.h error.h errors_e.h avl.h \
+ str.h unicodedata.h stdbool.h eval.h obj.h error.h errors_e.h avl.h \
  floatobj.h values.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h \
  addressobj.h
 labelobj.o: labelobj.c labelobj.h obj.h attributes.h inttypes.h str.h \
@@ -173,7 +173,7 @@ section.o: section.c section.h avl.h stdbool.h str.h inttypes.h mem.h \
  obj.h attributes.h unicode.h unicodedata.h error.h errors_e.h 64tass.h \
  wait_e.h values.h intobj.h longjump.h optimizer.h eval.h memblocksobj.h
 str.o: str.c str.h inttypes.h unicode.h attributes.h unicodedata.h \
- error.h stdbool.h errors_e.h avl.h obj.h arguments.h
+ stdbool.h error.h errors_e.h avl.h obj.h arguments.h
 strobj.o: strobj.c strobj.h obj.h attributes.h inttypes.h stdbool.h \
  eval.h unicode.h str.h unicodedata.h error.h errors_e.h avl.h \
  variables.h arguments.h boolobj.h floatobj.h values.h bytesobj.h \
@@ -185,7 +185,7 @@ typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
  intobj.h boolobj.h listobj.h values.h noneobj.h errorobj.h
 unicodedata.o: unicodedata.c unicodedata.h attributes.h inttypes.h
 unicode.o: unicode.c unicode.h attributes.h str.h inttypes.h \
- unicodedata.h wchar.h wctype.h error.h stdbool.h errors_e.h avl.h obj.h
+ unicodedata.h stdbool.h wchar.h wctype.h error.h errors_e.h avl.h obj.h
 values.o: values.c values.h attributes.h obj.h inttypes.h 64tass.h \
  stdbool.h wait_e.h unicode.h str.h unicodedata.h error.h errors_e.h \
  avl.h strobj.h typeobj.h noneobj.h
