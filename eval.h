@@ -24,7 +24,6 @@
 
 struct List;
 struct Label;
-struct Error;
 struct Oper;
 
 struct oper_s {

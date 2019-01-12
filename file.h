@@ -61,8 +61,6 @@ static inline bool dash_name(const char *name) {
     return (name[0] == '-' && name[1] == 0);
 }
 
-struct str_t;
-
 extern struct file_s *openfile(const char *, const char *, int, const struct str_t *, linepos_t);
 extern void closefile(struct file_s*);
 extern struct star_s *new_star(line_t, bool *);

@@ -22,7 +22,6 @@
 #include "inttypes.h"
 
 struct oper_s;
-struct Namespace;
 struct Type;
 
 typedef struct Obj {

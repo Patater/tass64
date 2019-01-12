@@ -44,9 +44,6 @@ static inline MUST_CHECK Obj *truth_reference(bool i) {
     return (Obj *)ref_bool(bool_value[i ? 1 : 0]);
 }
 
-struct Int;
-struct Float;
-
 extern MUST_CHECK struct Obj *int_from_bool(const struct Bool *);
 extern MUST_CHECK struct Float *float_from_bool(const struct Bool *);
 #endif

@@ -25,6 +25,7 @@
 #include "longjump.h"
 #include "optimizer.h"
 #include "eval.h"
+#include "mem.h"
 
 #include "memblocksobj.h"
 

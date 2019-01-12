@@ -23,8 +23,6 @@
 
 extern struct Type *const MFUNC_OBJ;
 
-struct Namespace;
-
 struct mfunc_param_s {
     str_t name;
     str_t cfname;

@@ -53,6 +53,7 @@
 #include "ternary.h"
 #include "opt_bit.h"
 #include "longjump.h"
+#include "mem.h"
 
 #include "listobj.h"
 #include "codeobj.h"

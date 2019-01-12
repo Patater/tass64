@@ -32,7 +32,6 @@
 #define ignore() while(pline[lpoint.pos]==0x20 || pline[lpoint.pos]==0x09) lpoint.pos++
 #define here() pline[lpoint.pos]
 
-struct Label;
 struct Obj;
 struct Listing;
 
