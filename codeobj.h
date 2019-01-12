@@ -35,9 +35,6 @@ typedef enum Code_types {
     D_DWORD = 4
 } Code_types;
 
-struct Namespace;
-struct Memblocks;
-
 typedef struct Code {
     Obj v;
     address_t size;

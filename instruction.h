@@ -23,7 +23,6 @@
 #include "inttypes.h"
 struct cpu_s;
 
-struct Error;
 struct Obj;
 
 extern MUST_CHECK struct Error *instruction(int, unsigned int, struct Obj *, linepos_t, struct linepos_s *);

@@ -30,8 +30,6 @@ extern size_t mbrtowc(wchar_t *, const char *, size_t, mbstate_t *);
 #elif __STDC_VERSION__ >= 199901L && !defined __VBCC__
 #include <wchar.h>
 #else
-#include "inttypes.h"
-
 typedef uint32_t wint_t;
 
 typedef struct {

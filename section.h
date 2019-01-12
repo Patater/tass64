@@ -21,7 +21,6 @@
 #include "avl.h"
 #include "stdbool.h"
 #include "str.h"
-#include "mem.h"
 
 struct Obj;
 struct Memblocks;

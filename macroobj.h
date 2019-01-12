@@ -27,8 +27,6 @@ extern struct Type *const SEGMENT_OBJ;
 extern struct Type *const STRUCT_OBJ;
 extern struct Type *const UNION_OBJ;
 
-struct file_list_s;
-
 struct macro_param_s {
     str_t cfname;
     str_t init;

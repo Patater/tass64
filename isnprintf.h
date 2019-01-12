@@ -22,7 +22,6 @@
 #include "inttypes.h"
 
 struct Funcargs;
-struct Obj;
 
 extern MUST_CHECK struct Obj *isnprintf(struct  Funcargs *, linepos_t);
 #endif

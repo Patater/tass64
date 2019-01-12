@@ -25,10 +25,6 @@
 
 extern struct Type *const ERROR_OBJ;
 
-struct Namespace;
-struct Oper;
-struct Register;
-
 typedef struct Error {
     Obj v;
     Error_types num;

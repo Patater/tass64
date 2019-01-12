@@ -39,8 +39,6 @@ typedef enum Func_types {
     TF_ABS, TF_TRUNC, TF_CEIL, TF_FLOOR, TF_ROUND
 } Func_types;
 
-struct Error;
-
 typedef struct Type {
     Obj v;
     Type_types type;
