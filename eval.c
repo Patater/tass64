@@ -32,6 +32,7 @@
 #include "values.h"
 #include "arguments.h"
 #include "optimizer.h"
+#include "unicodedata.h"
 
 #include "floatobj.h"
 #include "boolobj.h"

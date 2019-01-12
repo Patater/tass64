@@ -29,6 +29,7 @@
 #include "error.h"
 #include "strobj.h"
 #include "arguments.h"
+#include "unicodedata.h"
 
 #define REPLACEMENT_CHARACTER 0xfffd
 

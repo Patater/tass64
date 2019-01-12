@@ -22,6 +22,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "error.h"
+#include "unicodedata.h"
 
 #define U_CASEFOLD 1
 #define U_COMPAT 2
