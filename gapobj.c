@@ -18,7 +18,6 @@
 */
 #include "gapobj.h"
 #include <string.h>
-#include "error.h"
 #include "eval.h"
 #include "variables.h"
 #include "values.h"
@@ -28,7 +27,6 @@
 #include "intobj.h"
 #include "boolobj.h"
 #include "typeobj.h"
-#include "noneobj.h"
 #include "errorobj.h"
 
 static Type obj;

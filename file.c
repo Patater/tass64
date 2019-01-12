@@ -27,7 +27,6 @@
 #include "64tass.h"
 #include "unicode.h"
 #include "error.h"
-#include "strobj.h"
 #include "arguments.h"
 #include "unicodedata.h"
 

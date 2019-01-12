@@ -20,9 +20,7 @@
 #include "eval.h"
 #include <string.h>
 #include "math.h"
-#include "file.h"
 #include "section.h"
-#include "encoding.h"
 #include "macro.h"
 #include "variables.h"
 #include "64tass.h"
