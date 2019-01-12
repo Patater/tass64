@@ -202,19 +202,19 @@ static void unormalize(struct ubuff_s *d) {
     pos = 0;
     max = d->p - 1;
     while (pos < max) {
-        uchar_t ch1, ch2;
-        uint8_t cc1, cc2;
-        ch2 = d->data[pos + 1];
-        cc2 = uget_property(ch2)->combclass;
-        if (cc2 != 0) {
-            ch1 = d->data[pos];
-            cc1 = uget_property(ch1)->combclass;
-            if (cc1 > cc2) {
-                d->data[pos] = ch2;
-                d->data[pos + 1] = ch1;
-                if (pos != 0) {
-                    pos--;
-                    continue;
+        uchar_t ch2 = d->data[pos + 1];
+        if (ch2 >= 0x300) {
+            uint8_t cc2 = uget_property(ch2)->combclass;
+            if (cc2 != 0) {
+                uchar_t ch1 = d->data[pos];
+                uint8_t cc1 = uget_property(ch1)->combclass;
+                if (cc1 > cc2) {
+                    d->data[pos] = ch2;
+                    d->data[pos + 1] = ch1;
+                    if (pos != 0) {
+                        pos--;
+                        continue;
+                    }
                 }
             }
         }
