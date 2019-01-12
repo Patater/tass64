@@ -2673,6 +2673,7 @@ MUST_CHECK Obj *compile(void)
                     if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
                         waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, newmemp, newmembp);
                         push_dummy_context();
+                        waitfor->u.proc.label = NULL;
                     } else {         /* TODO: first time it should not compile */
                         push_context(((Code *)newlabel->value)->names);
                         newlabel->ref = false;
