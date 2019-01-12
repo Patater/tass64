@@ -25,7 +25,6 @@
 #include "arguments.h"
 
 #include "boolobj.h"
-#include "floatobj.h"
 #include "bytesobj.h"
 #include "intobj.h"
 #include "bitsobj.h"

@@ -22,7 +22,6 @@
 #include "unicode.h"
 
 #include "typeobj.h"
-#include "errorobj.h"
 #include "operobj.h"
 #include "strobj.h"
 

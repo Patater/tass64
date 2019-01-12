@@ -23,7 +23,6 @@
 
 #include "typeobj.h"
 #include "operobj.h"
-#include "noneobj.h"
 #include "strobj.h"
 #include "errorobj.h"
 
