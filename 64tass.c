@@ -54,6 +54,7 @@
 #include "opt_bit.h"
 #include "longjump.h"
 #include "mem.h"
+#include "unicodedata.h"
 
 #include "listobj.h"
 #include "codeobj.h"

@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include "attributes.h"
 #include "str.h"
-#include "unicodedata.h"
 #include "stdbool.h"
 
 struct ubuff_s {
