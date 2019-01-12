@@ -63,9 +63,10 @@ struct errorbuffer_s {
     size_t len;
     size_t header_pos;
     uint8_t *data;
+    struct avltree members;
 };
 
-static struct errorbuffer_s error_list = {0, 0, 0, NULL};
+static struct errorbuffer_s error_list;
 static struct avltree notdefines;
 
 typedef enum Severity_types {
@@ -78,6 +79,7 @@ struct errorentry_s {
     size_t line_len;
     const struct file_list_s *file_list;
     struct linepos_s epoint;
+    struct avltree_node node;
 };
 
 struct notdefines_s {
@@ -88,21 +90,18 @@ struct notdefines_s {
     struct avltree_node node;
 };
 
-static bool check_duplicate(const struct errorentry_s *nerr) {
-    size_t pos;
-    const struct errorentry_s *err;
-    for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
-        err = (const struct errorentry_s *)&error_list.data[pos];
-        if (err->severity != nerr->severity) continue;
-        if (err->file_list != nerr->file_list) continue;
-        if (err->line_len != nerr->line_len) continue;
-        if (err->error_len != nerr->error_len) continue;
-        if (err->epoint.line != nerr->epoint.line) continue;
-        if (err->epoint.pos != nerr->epoint.pos) continue;
-        if (memcmp(err + 1, nerr + 1, err->line_len + err->error_len) != 0) continue;
-        return true;
-    }
-    return false;
+static int duplicate_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+{
+    const struct errorentry_s *a = cavltree_container_of(aa, struct errorentry_s, node);
+    const struct errorentry_s *b = cavltree_container_of(bb, struct errorentry_s, node);
+
+    if (a->severity != b->severity) return a->severity - b->severity;
+    if (a->file_list != b->file_list) return a->file_list > b->file_list ? 1 : -1;
+    if (a->line_len != b->line_len) return a->line_len > b->line_len ? 1 : -1;
+    if (a->error_len != b->error_len) return a->error_len > b->error_len ? 1 : -1;
+    if (a->epoint.line != b->epoint.line) return a->epoint.line > b->epoint.line ? 1 : -1;
+    if (a->epoint.pos != b->epoint.pos) return a->epoint.pos > b->epoint.pos ? 1 : -1;
+    return memcmp(a + 1, b + 1, a->line_len + a->error_len);
 }
 
 static void close_error(void) {
@@ -111,19 +110,41 @@ static void close_error(void) {
         struct errorentry_s *err = (struct errorentry_s *)&error_list.data[error_list.header_pos];
         err->error_len = error_list.len - error_list.header_pos - (sizeof *err) - err->line_len;
         switch (err->severity) {
-        case SV_NOTE: break;
-        default: duplicate = check_duplicate(err);
+        case SV_NOTE: 
+            if (!duplicate) memset(&err->node, 0, sizeof err->node);
+            break;
+        default: 
+            duplicate = avltree_insert(&err->node, &error_list.members, duplicate_compare) != NULL;
         }
         if (duplicate) {
             error_list.len = error_list.header_pos;
         }
+        error_list.header_pos = ALIGN(error_list.len);
     }
+}
+
+static void error_extend(void) {
+    struct errorentry_s *err;
+    uint8_t *data = (uint8_t *)realloc(error_list.data, error_list.max);
+    size_t diff, pos;
+    if (data == NULL) err_msg_out_of_memory2();
+    diff = data - error_list.data;
+    if (diff == 0) return;
+    error_list.data = data;
+    for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
+        err = (struct errorentry_s *)&data[pos];
+        if (err->node.left != NULL) err->node.left = (struct avltree_node *)((uint8_t *)err->node.left + diff);
+        if (err->node.right != NULL) err->node.right = (struct avltree_node *)((uint8_t *)err->node.right + diff);
+        if (err->node.parent != NULL) err->node.parent = (struct avltree_node *)((uint8_t *)err->node.parent + diff);
+    }
+    if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((uint8_t *)error_list.members.root + diff);
+    if (error_list.members.first != NULL) error_list.members.first = (struct avltree_node *)((uint8_t *)error_list.members.first + diff);
+    if (error_list.members.last != NULL) error_list.members.last = (struct avltree_node *)((uint8_t *)error_list.members.last + diff);
 }
 
 static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len) {
     struct errorentry_s *err;
     close_error();
-    error_list.header_pos = ALIGN(error_list.len);
     error_list.len = error_list.header_pos + sizeof *err;
     if (error_list.len < sizeof *err) err_msg_out_of_memory2(); /* overflow */
     error_list.len += line_len;
@@ -131,8 +152,7 @@ static void new_error_msg_common(Severity_types severity, const struct file_list
     if (error_list.len > error_list.max) {
         error_list.max = error_list.len + 0x200;
         if (error_list.max < 0x200) err_msg_out_of_memory2(); /* overflow */
-        error_list.data = (uint8_t *)realloc(error_list.data, error_list.max);
-        if (error_list.data == NULL) err_msg_out_of_memory2();
+        error_extend();
     }
     err = (struct errorentry_s *)&error_list.data[error_list.header_pos];
     err->severity = severity;
@@ -208,8 +228,7 @@ void exitfile(void) {
 static void adderror2(const uint8_t *s, size_t len) {
     if (len + error_list.len > error_list.max) {
         error_list.max += (len > 0x200) ? len : 0x200;
-        error_list.data = (uint8_t *)realloc(error_list.data, error_list.max);
-        if (error_list.data == NULL) err_msg_out_of_memory2();
+        error_extend();
     }
     memcpy(error_list.data + error_list.len, s, len);
     error_list.len += len;
@@ -1213,7 +1232,7 @@ bool error_print() {
     warnings = errors = 0;
     close_error();
 
-    for (pos = 0; pos < error_list.len; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
+    for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (const struct errorentry_s *)&error_list.data[pos];
         switch (err->severity) {
         case SV_NONEERROR: anyerr = true; break;
@@ -1226,7 +1245,7 @@ bool error_print() {
 
     err2 = err3 = NULL;
     usenote = false;
-    for (pos = 0; pos < error_list.len; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
+    for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (const struct errorentry_s *)&error_list.data[pos];
         switch (err->severity) {
         case SV_NOTE:
@@ -1278,6 +1297,7 @@ bool error_print() {
 
 void error_reset(void) {
     error_list.len = error_list.header_pos = 0;
+    avltree_init(&error_list.members);
     current_file_list = &file_list;
     included_from = &file_list;
 }
@@ -1293,6 +1313,7 @@ void err_init(const char *name) {
     avltree_init(&file_list.members);
     error_list.len = error_list.max = error_list.header_pos = 0;
     error_list.data = NULL;
+    avltree_init(&error_list.members);
     current_file_list = &file_list;
     included_from = &file_list;
     avltree_init(&notdefines);
@@ -1413,7 +1434,7 @@ bool error_serious(void) {
     const struct errorentry_s *err;
     size_t pos;
     close_error();
-    for (pos = 0; pos < error_list.len; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
+    for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (const struct errorentry_s *)&error_list.data[pos];
         switch (err->severity) {
         case SV_NOTE:
