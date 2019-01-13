@@ -751,7 +751,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (toival(val, (ival_t *)&uval, 8, epoint2)) break;
         } else {
             if (touval(val, &uval, 8, epoint2)) {
-                if (adrgen == AG_SBYTE && diagnostics.pitfalls) {
+                if (adrgen == AG_SBYTE && diagnostics.pitfalls && val != &none_value->v) {
                     err = val->obj->ival(val, (ival_t *)&uval, 8, epoint2);
                     if (err != NULL) val_destroy(&err->v);
                     else if (once != pass) {
@@ -888,7 +888,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (toival(val, (ival_t *)&uval, 16, epoint2)) break;
         } else {
             if (touval(val, &uval, 16, epoint2)) {
-                if (adrgen == AG_SWORD && diagnostics.pitfalls) {
+                if (adrgen == AG_SWORD && diagnostics.pitfalls && val != &none_value->v) {
                     err = val->obj->ival(val, (ival_t *)&uval, 16, epoint2);
                     if (err != NULL) val_destroy(&err->v);
                     else if (once != pass) {
