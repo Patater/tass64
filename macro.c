@@ -371,7 +371,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
     return val;
 }
 
-Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epoint, uint8_t strength) {
+Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t epoint) {
     size_t i;
     Label *label;
     Obj *val;
@@ -450,7 +450,7 @@ Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epo
         star_tree = &s->tree;vline = 0;
         enterfile(mfunc->file_list->file, epoint);
         lpoint.line = mfunc->line;
-        new_waitfor(t, epoint);
+        new_waitfor(W_ENDF3, epoint);
         oldbottom = context_get_bottom();
         for (i = 0; i < mfunc->nslen; i++) {
             push_context(mfunc->namespaces[i]);
@@ -464,6 +464,7 @@ Obj *mfunc_recurse(Wait_types t, Mfunc *mfunc, Namespace *context, linepos_t epo
         for (i = 0; i < mfunc->nslen; i++) {
             pop_context();
         }
+        close_waitfor(W_ENDF3);
         star = s->addr;
         exitfile();
         star_tree = stree_old; vline = ovline;
@@ -725,6 +726,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         for (i = 0; i < mfunc->nslen; i++) {
             pop_context();
         }
+        close_waitfor(W_ENDF3);
         star = s->addr;
         temporary_label_branch--;
         lpoint = opoint;

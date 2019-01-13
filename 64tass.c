@@ -342,7 +342,7 @@ static void reset_waitfor(void) {
     new_waitfor(W_NONE, &lpos);
 }
 
-static bool close_waitfor(Wait_types what) {
+bool close_waitfor(Wait_types what) {
     if (waitfor->what == what) {
         waitfor_p--;
         waitfor = &waitfors[waitfor_p];
@@ -2950,7 +2950,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_ENDF: /* .endf */
                 if (close_waitfor(W_ENDF)) {
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                } else if (close_waitfor(W_ENDF3)) {
+                } else if (waitfor->what==W_ENDF3) { /* not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -4325,7 +4325,7 @@ MUST_CHECK Obj *compile(void)
                         val_destroy(&mfunc->v);
                         goto breakerr;
                     }
-                    val = mfunc_recurse(W_ENDF3, mfunc, (Namespace *)label->value, &epoint, strength);
+                    val = mfunc_recurse(mfunc, (Namespace *)label->value, strength, &epoint);
                     val_destroy(&mfunc->v);
                 } else val = macro_recurse(W_ENDM3, val, NULL, &epoint);
                 if (val != NULL) {
