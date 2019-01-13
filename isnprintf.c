@@ -585,7 +585,8 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
     str->len = return_value.len;
     str->chars = return_value.chars;
     if (return_value.len > sizeof str->u.val) {
-        str->u.hash = -1;
+        str->u.s.max = return_value.len;
+        str->u.s.hash = -1;
         if (returnsize > return_value.len) {
             uint8_t *d = (uint8_t *)realloc(return_value.data, return_value.len);
             if (d != NULL) {
