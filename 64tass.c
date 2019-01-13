@@ -2939,7 +2939,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     close_waitfor(W_ENDM);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                } else if (close_waitfor(W_ENDM3)) {
+                } else if (waitfor->what==W_ENDM3) { /* not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -2989,7 +2989,7 @@ MUST_CHECK Obj *compile(void)
                         break;
                     }
                     close_waitfor(W_ENDS);
-                } else if (close_waitfor(W_ENDS3) || close_waitfor(W_ENDS2)) {
+                } else if (waitfor->what==W_ENDS3 || close_waitfor(W_ENDS2)) { /* W_ENDS3 not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -3027,7 +3027,7 @@ MUST_CHECK Obj *compile(void)
                     if ((waitfor->skip & 1) != 0) union_close(&epoint);
                     close_waitfor(W_ENDU);
                     oaddr = current_address->address;
-                } else if (close_waitfor(W_ENDU3)) {
+                } else if (waitfor->what==W_ENDU3) { /* not closed here */
                     nobreak = false;
                     goto breakerr;
                 } else if (close_waitfor(W_ENDU2)) {
