@@ -28,7 +28,10 @@ typedef struct Bytes {
     uint8_t *data;
     union {
         uint8_t val[16];
-        int hash;
+        struct {
+            size_t max;
+            int hash;
+        } s;
     } u;
 } Bytes;
 
