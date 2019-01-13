@@ -234,7 +234,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
                 touch_label(l);
                 return val_reference(l->value);
             }
-            if (!referenceit) {
+            if (!referenceit || (constcreated && pass < max_pass)) {
                 return (Obj *)ref_none();
             }
             err = new_error(ERROR___NOT_DEFINED, &v2->epoint);
@@ -252,7 +252,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
                 touch_label(l);
                 return val_reference(l->value);
             }
-            if (!referenceit) {
+            if (!referenceit || (constcreated && pass < max_pass)) {
                 return (Obj *)ref_none();
             }
             count = v2->count;

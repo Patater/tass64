@@ -70,14 +70,18 @@ void select_opcodes(const struct cpu_s *cpumode) {
 }
 
 MUST_CHECK bool touval(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epoint) {
-    Error *err = v1->obj->uval(v1, uv, bits, epoint);
+    Error *err;
+    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    err = v1->obj->uval(v1, uv, bits, epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
     return true;
 }
 
 MUST_CHECK bool toival(Obj *v1, ival_t *iv, unsigned int bits, linepos_t epoint) {
-    Error *err = v1->obj->ival(v1, iv, bits, epoint);
+    Error *err;
+    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    err = v1->obj->ival(v1, iv, bits, epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
     return true;
