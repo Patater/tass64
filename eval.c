@@ -1660,51 +1660,69 @@ static bool get_exp2(int stop) {
         tphack:
             openclose--;
             if (identlist != 0) identlist--;
-            while (operp != 0) {
-                Oper *o = o_oper[operp - 1].val;
-                if (o == &o_PARENT || o == &o_FUNC) break;
-                if (o == &o_BRACKET || o == &o_INDEX) {err_msg2(ERROR______EXPECTED, "']'", &lpoint); goto error;}
-                if (o == &o_BRACE) {err_msg2(ERROR______EXPECTED, "'}'", &lpoint); goto error;}
-                push_oper(&o->v, &o_oper[--operp].epoint);
-            }
-            if (operp == 0) {err_msg2(ERROR______EXPECTED, "')' not", &lpoint); goto error;}
-            lpoint.pos++;
-            operp--;
-            push_oper((Obj *)((o_oper[operp].val == &o_PARENT) ? op : o_oper[operp].val), &o_oper[operp].epoint);
-            goto other;
+            do {
+                const char *mis;
+                if (operp != 0) {
+                    Oper *o = o_oper[operp - 1].val;
+                    switch (o->op) {
+                    case O_PARENT:
+                    case O_FUNC:
+                        lpoint.pos++;
+                        push_oper((Obj *)((o == &o_PARENT) ? op : o), &o_oper[--operp].epoint);
+                        goto other;
+                    case O_BRACKET:
+                    case O_INDEX: mis = "']'"; break;
+                    case O_BRACE: mis = "'}'"; break;
+                    default: push_oper(&o->v, &o_oper[--operp].epoint); continue;
+                    }
+                } else mis = "')' not";
+                err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
+            } while (true);
         case ']':
             op = &o_RBRACKET;
         lshack:
             openclose--;
             if (identlist != 0) identlist--;
-            while (operp != 0) {
-                Oper *o = o_oper[operp - 1].val;
-                if (o == &o_BRACKET || o == &o_INDEX) break;
-                if (o == &o_PARENT || o == &o_FUNC) {err_msg2(ERROR______EXPECTED, "')'", &lpoint); goto error;}
-                if (o == &o_BRACE) {err_msg2(ERROR______EXPECTED, "'}'", &lpoint); goto error;}
-                push_oper(&o->v, &o_oper[--operp].epoint);
-            }
-            if (operp == 0) {err_msg2(ERROR______EXPECTED, "']' not", &lpoint); goto error;}
-            lpoint.pos++;
-            operp--;
-            push_oper((Obj *)((o_oper[operp].val == &o_BRACKET) ? op : o_oper[operp].val), &o_oper[operp].epoint);
-            goto other;
+            do {
+                const char *mis;
+                if (operp != 0) {
+                    Oper *o = o_oper[operp - 1].val;
+                    switch (o->op) {
+                    case O_BRACKET:
+                    case O_INDEX:
+                        lpoint.pos++;
+                        push_oper((Obj *)((o == &o_BRACKET) ? op : o), &o_oper[--operp].epoint);
+                        goto other;
+                    case O_PARENT:
+                    case O_FUNC: mis = "')'"; break;
+                    case O_BRACE: mis = "'}'"; break;
+                    default: push_oper(&o->v, &o_oper[--operp].epoint); continue;
+                    }
+                } else mis = "']' not";
+                err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
+            } while (true);
         case '}':
             op = &o_RBRACE;
         brhack:
             openclose--;
-            while (operp != 0) {
-                Oper *o = o_oper[operp - 1].val;
-                if (o == &o_BRACE) break;
-                if (o == &o_BRACKET || o == &o_INDEX) {err_msg2(ERROR______EXPECTED, "']'", &lpoint); goto error;}
-                if (o == &o_PARENT || o == &o_FUNC) {err_msg2(ERROR______EXPECTED, "')'", &lpoint); goto error;}
-                push_oper(&o->v, &o_oper[--operp].epoint);
-            }
-            if (operp == 0) {err_msg2(ERROR______EXPECTED, "'}' not", &lpoint); goto error;}
-            lpoint.pos++;
-            operp--;
-            push_oper((Obj *)((o_oper[operp].val == &o_BRACE) ? op : o_oper[operp].val), &o_oper[operp].epoint);
-            goto other;
+            do {
+                const char *mis;
+                if (operp != 0) {
+                    Oper *o = o_oper[operp - 1].val;
+                    switch (o->op) {
+                    case O_BRACE:
+                        lpoint.pos++;
+                        push_oper((Obj *)((o == &o_BRACE) ? op : o), &o_oper[--operp].epoint);
+                        goto other;
+                    case O_PARENT:
+                    case O_FUNC: mis = "')'"; break;
+                    case O_BRACKET:
+                    case O_INDEX: mis = "']'"; break;
+                    default: push_oper(&o->v, &o_oper[--operp].epoint); continue;
+                    }
+                } else mis = "'}' not";
+                err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
+            } while (true);
         case 0:
         case ';':
             if (openclose != 0) {
