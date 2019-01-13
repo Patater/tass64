@@ -127,8 +127,8 @@ static void error_extend(void) {
     size_t diff, pos;
     if (data == NULL) err_msg_out_of_memory2();
     diff = data - error_list.data;
-    if (diff == 0) return;
     error_list.data = data;
+    if (diff == 0) return;
     for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (struct errorentry_s *)&data[pos];
         if (err->node.left != NULL) err->node.left = (struct avltree_node *)((uint8_t *)err->node.left + diff);
