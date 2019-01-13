@@ -898,23 +898,25 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_INDEX:
             {
                 unsigned int args = 0;
-                Funcargs *tmp = (Funcargs *)val_alloc(FUNCARGS_OBJ);
+                Funcargs tmp;
                 op = (op == O_FUNC) ? O_PARENT : O_BRACKET;
                 while (v1->val->obj != OPER_OBJ || ((Oper *)v1->val)->op != op) {
                     args++;
                     if (vsp <= args) goto syntaxe;
                     v1 = &values[vsp - 1 - args];
                 }
-                tmp->val = &values[vsp - args];
-                tmp->len = args; /* assumes no referencing */
                 if (v1 == values) goto syntaxe;
+                tmp.val = &values[vsp - args];
+                tmp.len = args; /* assumes no referencing */
+                vsp -= args + 1;
+                tmp.v.obj = FUNCARGS_OBJ;
                 v1--;
 
                 oper.op = op2;
                 oper.v1 = v1[1].val = v1->val;
-                oper.v2 = (Obj *)tmp;
+                oper.v2 = &tmp.v;
                 oper.epoint = &v1->epoint;
-                oper.epoint2 = (args != 0) ? &tmp->val->epoint : &o_out->epoint;
+                oper.epoint2 = (args != 0) ? &tmp.val->epoint : &o_out->epoint;
                 oper.epoint3 = &o_out->epoint;
                 oper.inplace = NULL;
                 if (op == O_BRACKET) {
@@ -922,9 +924,6 @@ static bool get_val2(struct eval_context_s *ev) {
                 } else {
                     v1->val = oper.v1->obj->calc2(&oper);
                 }
-                val_destroy(&tmp->v);
-
-                vsp -= args + 1;
                 continue;
             }
         case O_RBRACKET:
