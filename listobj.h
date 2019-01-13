@@ -30,7 +30,10 @@ typedef struct List {
     Obj v;
     size_t len;
     Obj **data;
-    Obj *val[5];
+    union {
+        size_t max;
+        Obj *val[5];
+    } u;
 } List;
 typedef struct List Tuple;
 typedef struct List Addrlist;

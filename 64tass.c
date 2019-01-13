@@ -1213,11 +1213,11 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
 static MUST_CHECK bool list_extend(List *lst) {
     Obj **vals;
     size_t o = lst->len, n;
-    if (lst->data == lst->val) {
+    if (lst->data == lst->u.val) {
         n = 16;
         vals = (Obj **)malloc(n * sizeof *lst->data);
         if (vals == NULL) return true;
-        memcpy(vals, lst->val, o * sizeof *lst->data);
+        memcpy(vals, lst->u.val, o * sizeof *lst->data);
     } else {
         if (o < 256) n = o * 2;
         else {
@@ -1230,6 +1230,7 @@ static MUST_CHECK bool list_extend(List *lst) {
     while (o < n) vals[o++] = (Obj *)ref_none();
     lst->data = vals;
     lst->len = n;
+    lst->u.max = n;
     return false;
 }
 
@@ -1237,14 +1238,17 @@ static void list_shrink(List *lst, size_t i) {
     size_t j = i;
     while (j < lst->len) val_destroy(lst->data[j++]);
     lst->len = i;
-    if (lst->data != lst->val) {
-        if (lst->len <= lenof(lst->val)) {
-            memcpy(lst->val, lst->data, lst->len * sizeof *lst->data);
+    if (lst->data != lst->u.val) {
+        if (lst->len <= lenof(lst->u.val)) {
+            memcpy(lst->u.val, lst->data, lst->len * sizeof *lst->data);
             free(lst->data);
-            lst->data = lst->val;
+            lst->data = lst->u.val;
         } else {
             Obj **v = (Obj **)realloc(lst->data, lst->len * sizeof *lst->data);
-            if (v != NULL) lst->data =v;
+            if (v != NULL) {
+                lst->data = v;
+                lst->u.max = lst->len;
+            }
         }
     }
 }
@@ -2385,7 +2389,7 @@ MUST_CHECK Obj *compile(void)
                             lst = new_tuple(old->len);
                             for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
                         } else {
-                            lst = new_tuple(lenof(lst->val));
+                            lst = new_tuple(lenof(lst->u.val));
                             for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                         }
                         label = ref_label(label);
@@ -3922,7 +3926,7 @@ MUST_CHECK Obj *compile(void)
                         lst = new_tuple(old->len);
                         for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
                     } else {
-                        lst = new_tuple(lenof(lst->val));
+                        lst = new_tuple(lenof(lst->u.val));
                         for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                     }
                     i = (prm == CMD_BFOR) ? for_command(NULL, lst, &epoint) : rept_command(NULL, lst, &epoint);
