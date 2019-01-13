@@ -135,6 +135,7 @@ static uint8_t *extend_str(Str *v, size_t ln) {
         if (tmp != NULL) {
             v->data = tmp;
             v->u.s.max = ln;
+            v->u.s.hash = -1;
         }
         return tmp;
     }
@@ -143,6 +144,7 @@ static uint8_t *extend_str(Str *v, size_t ln) {
         memcpy(tmp, v->u.val, v->len);
         v->data = tmp;
         v->u.s.max = ln;
+        v->u.s.hash = -1;
     }
     return tmp;
 }
