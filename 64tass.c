@@ -2315,6 +2315,7 @@ MUST_CHECK Obj *compile(void)
                         val = macro_recurse(W_ENDS, &structure->v, structure->names, &cmdpoint);
                         structure->retval = (val != NULL);
                         if (val != NULL) val_destroy(val);
+                        close_waitfor((prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2);
                         current_section->structrecursion--;
 
                         current_section->provides = provides; current_section->requires = requires; current_section->conflicts = conflicts;
@@ -2989,7 +2990,7 @@ MUST_CHECK Obj *compile(void)
                         break;
                     }
                     close_waitfor(W_ENDS);
-                } else if (waitfor->what==W_ENDS3 || close_waitfor(W_ENDS2)) { /* W_ENDS3 not closed here */
+                } else if (waitfor->what==W_ENDS3 || waitfor->what==W_ENDS2) { /* not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -3030,7 +3031,7 @@ MUST_CHECK Obj *compile(void)
                 } else if (waitfor->what==W_ENDU3) { /* not closed here */
                     nobreak = false;
                     goto breakerr;
-                } else if (close_waitfor(W_ENDU2)) {
+                } else if (waitfor->what==W_ENDU2) { /* not closed here */
                     nobreak = false;
                 } else {err_msg2(ERROR__MISSING_OPEN, ".union", &epoint); goto breakerr;}
                 break;
