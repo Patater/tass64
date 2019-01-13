@@ -456,10 +456,9 @@ FAST_CALL void pokeb(unsigned int byte) { /* poke_pos! */
 
 /* --------------------------------------------------------------------------- */
 static int get_command(void) {
-    unsigned int no, also = 0, felso, elozo;
+    unsigned int no, also, felso, elozo;
     const uint8_t *label;
     uint8_t tmp[10];
-    int s4;
     lpoint.pos++;
     label = pline + lpoint.pos;
     if (arguments.caseinsensitive) {
@@ -477,11 +476,12 @@ static int get_command(void) {
         }
     }
  
-    felso = sizeof(command)/sizeof(command[0]);
-    no = felso/2;
-    for (;;) {  /* do binary search */
+    also = 0;
+    felso = lenof(command);
+    no = lenof(command)/2;
+    do {  /* do binary search */
         const uint8_t *cmd2 = (const uint8_t *)command[no];
-        s4 = label[0] - cmd2[1];
+        int s4 = label[0] - cmd2[1];
         if (s4 == 0) {
             int l = 1;
             for (;;) {
@@ -500,13 +500,12 @@ static int get_command(void) {
                     } else if (label[l] <= '9' || (uint8_t)(label[l] - 'A') <= ('Z' - 'A') || label[l] == '_') return lenof(command);
                 }
                 lpoint.pos += l;
-                return (uint8_t)cmd2[0];
+                return cmd2[0];
             }
         }
         elozo = no;
         no = ((s4 >= 0) ? (felso + (also = no)) : (also + (felso = no)))/2;
-        if (elozo == no) break;
-    }
+    } while (elozo != no);
     return lenof(command);
 }
 
