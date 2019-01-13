@@ -1726,14 +1726,19 @@ static bool get_exp2(int stop) {
             goto error;
         }
         while (operp != 0) {
+            const char *mis;
             Oper *o = o_oper[operp - 1].val;
-            if (o == &o_PARENT || o == &o_FUNC) {err_msg2(ERROR______EXPECTED, "')'", &epoint); goto error;}
-            if (o == &o_BRACKET || o == &o_INDEX) {err_msg2(ERROR______EXPECTED,"']'", &epoint); goto error;}
-            if (o == &o_BRACE) {err_msg2(ERROR______EXPECTED, "'}'", &epoint); goto error;}
-            push_oper(&o->v, &o_oper[--operp].epoint);
+            switch (o->op) {
+            case O_PARENT:
+            case O_FUNC: mis = "')'"; break;
+            case O_BRACKET:
+            case O_INDEX: mis = "']'"; break;
+            case O_BRACE: mis = "'}'"; break;
+            default: push_oper(&o->v, &o_oper[--operp].epoint); continue;
+            }
+            err_msg2(ERROR______EXPECTED, mis, &epoint); goto error;
         }
-        if (operp == 0) return get_val2(eval);
-        err_msg2(ERROR_EXPRES_SYNTAX, NULL, &epoint);
+        return get_val2(eval);
     error:
         break;
     }
