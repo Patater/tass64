@@ -438,6 +438,7 @@ rest:
     }
     for (;;) {
         Oper *op;
+        Obj *val;
         ignore();ch = here(); epoint = lpoint;
 
         switch (ch) {
@@ -466,14 +467,17 @@ rest:
         if (l != NULL) {
             if (diagnostics.case_symbol && str_cmp(&ident, &l->name) != 0) err_msg_symbol_case(&ident, l, &epoint);
             touch_label(l);
-            push_oper(val_reference(l->value), &epoint);
+            val = val_reference(l->value);
+        } else if (constcreated && pass < max_pass) {
+            val = (Obj *)ref_none();
         } else {
             Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
             err->u.notdef.ident = ident;
             err->u.notdef.names = ref_namespace(current_context);
             err->u.notdef.down = true;
-            push_oper((Obj *)err, &epoint);
+            val = &err->v;
         }
+        push_oper(val, &epoint);
     other:
         if (stop != 2) ignore();
         ch = here(); epoint = lpoint;
@@ -1422,7 +1426,7 @@ static bool get_exp2(int stop) {
             if (get_label() != 0) {
                 bool down;
                 Label *l;
-                Error *err;
+                Obj *val;
                 str_t ident;
             as_ident:
                 if (pline[epoint.pos + 1] == '"' || pline[epoint.pos + 1] == '\'') {
@@ -1438,7 +1442,7 @@ static bool get_exp2(int stop) {
                     default: mode = BYTES_MODE_NULL_CHECK; break;
                     }
                     if (mode != BYTES_MODE_NULL_CHECK) {
-                        Obj *str = get_string(&epoint), *val;
+                        Obj *str = get_string(&epoint);
                         if (str->obj == STR_OBJ) {
                             epoint.pos++;
                             val = bytes_from_str((Str *)str, &epoint, mode);
@@ -1464,14 +1468,17 @@ static bool get_exp2(int stop) {
                 if (l != NULL) {
                     if (diagnostics.case_symbol && str_cmp(&ident, &l->name) != 0) err_msg_symbol_case(&ident, l, &epoint);
                     touch_label(l);
-                    push_oper(val_reference(l->value), &epoint);
-                    goto other;
+                    val = val_reference(l->value);
+                } else if (constcreated && pass < max_pass) {
+                    val = (Obj *)ref_none();
+                } else {
+                    Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
+                    err->u.notdef.ident = ident;
+                    err->u.notdef.names = ref_namespace(down ? current_context : cheap_context);
+                    err->u.notdef.down = down;
+                    val = &err->v;
                 }
-                err = new_error(ERROR___NOT_DEFINED, &epoint);
-                err->u.notdef.ident = ident;
-                err->u.notdef.names = ref_namespace(down ? current_context : cheap_context);
-                err->u.notdef.down = down;
-                push_oper(&err->v, &epoint);
+                push_oper(val, &epoint);
                 goto other;
             }
         tryanon:
@@ -1479,7 +1486,7 @@ static bool get_exp2(int stop) {
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_POS) opr.p--;
             if (db != opr.p) {
                 Label *l;
-                Error *err;
+                Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
                     Anonident *anonident = (Anonident *)val_alloc(ANONIDENT_OBJ);
                     anonident->count = db - opr.p - 1;
@@ -1490,21 +1497,24 @@ static bool get_exp2(int stop) {
                 l = find_anonlabel(db - opr.p -1);
                 if (l != NULL) {
                     touch_label(l);
-                    push_oper(val_reference(l->value), &opr.data[opr.p].epoint);
-                    goto other;
+                    val = val_reference(l->value);
+                } else if (constcreated && pass < max_pass) {
+                    val = (Obj *)ref_none();
+                } else {
+                    Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
+                    err->u.notdef.ident.len = (size_t)((ssize_t)db - (ssize_t)opr.p);
+                    err->u.notdef.ident.data = NULL;
+                    err->u.notdef.names = ref_namespace(current_context);
+                    err->u.notdef.down = true;
+                    val = &err->v;
                 }
-                err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                err->u.notdef.ident.len = (size_t)((ssize_t)db - (ssize_t)opr.p);
-                err->u.notdef.ident.data = NULL;
-                err->u.notdef.names = ref_namespace(current_context);
-                err->u.notdef.down = true;
-                push_oper(&err->v, &opr.data[opr.p].epoint);
+                push_oper(val, &opr.data[opr.p].epoint);
                 goto other;
             }
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_NEG) opr.p--;
             if (db != opr.p) {
                 Label *l;
-                Error *err;
+                Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
                     Anonident *anonident = (Anonident *)val_alloc(ANONIDENT_OBJ);
                     anonident->count = opr.p - db;
@@ -1515,15 +1525,18 @@ static bool get_exp2(int stop) {
                 l = find_anonlabel(opr.p - db);
                 if (l != NULL) {
                     touch_label(l);
-                    push_oper(val_reference(l->value), &opr.data[opr.p].epoint);
-                    goto other;
+                    val = val_reference(l->value);
+                } else if (constcreated && pass < max_pass) {
+                    val = (Obj *)ref_none();
+                } else {
+                    Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
+                    err->u.notdef.ident.len = (size_t)((ssize_t)opr.p - (ssize_t)db);
+                    err->u.notdef.ident.data = NULL;
+                    err->u.notdef.names = ref_namespace(current_context);
+                    err->u.notdef.down = true;
+                    val = &err->v;
                 }
-                err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                err->u.notdef.ident.len = (size_t)((ssize_t)opr.p - (ssize_t)db);
-                err->u.notdef.ident.data = NULL;
-                err->u.notdef.names = ref_namespace(current_context);
-                err->u.notdef.down = true;
-                push_oper(&err->v, &opr.data[opr.p].epoint);
+                push_oper(val, &opr.data[opr.p].epoint);
                 goto other;
             }
             if (opr.p != 0) {
