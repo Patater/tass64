@@ -60,8 +60,8 @@ dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h avl.h eval.h \
  stdbool.h error.h errors_e.h str.h variables.h intobj.h listobj.h \
  values.h strobj.h boolobj.h operobj.h typeobj.h noneobj.h errorobj.h
 encoding.o: encoding.c encoding.h avl.h stdbool.h inttypes.h errors_e.h \
- error.h attributes.h obj.h str.h ternary.h unicode.h values.h strobj.h \
- bytesobj.h typeobj.h errorobj.h
+ error.h attributes.h obj.h str.h ternary.h unicode.h values.h 64tass.h \
+ wait_e.h strobj.h bytesobj.h typeobj.h errorobj.h
 error.o: error.c error.h attributes.h stdbool.h errors_e.h avl.h obj.h \
  inttypes.h str.h wchar.h file.h 64tass.h wait_e.h unicode.h eval.h \
  arguments.h opcodes.h section.h strobj.h addressobj.h values.h \

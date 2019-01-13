@@ -22,6 +22,7 @@
 #include "ternary.h"
 #include "unicode.h"
 #include "values.h"
+#include "64tass.h"
 
 #include "strobj.h"
 #include "bytesobj.h"
@@ -36,6 +37,7 @@ struct encoding_s {
     bool empty;
     bool failed;
     ternary_tree escape;
+    size_t escape_length;
     struct avltree trans;
     struct avltree_node node;
 };
@@ -562,6 +564,7 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
         if (lasten->cfname.data == name->data) lasten->cfname = lasten->name;
         else str_cfcpy(&lasten->cfname, NULL);
         lasten->escape = NULL;
+        lasten->escape_length = SIZE_MAX;
         lasten->empty = true;
         lasten->failed = false;
         avltree_init(&lasten->trans);
@@ -588,6 +591,7 @@ struct trans_s *new_trans(struct trans_s *trans, struct encoding_s *enc)
     b = avltree_insert(&lasttr->node, &enc->trans, trans_compare);
     if (b == NULL) { /* new encoding */
         tmp = lasttr;
+        fixeddig = false;
         lasttr = NULL;
         enc->empty = false;
         return tmp;
@@ -662,8 +666,10 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
         lastes->strlen = v->len;
         lastes->len = i;
         lastes->data = d; /* unlock new */
+        if (v->len < enc->escape_length) enc->escape_length = v->len;
         lastes = NULL;
         enc->empty = false;
+        fixeddig = false;
         return false;
     }
     b->data = odata; /* unlock old */
@@ -729,7 +735,6 @@ void encode_error(Error_types no) {
 int encode_string(void) {
     uchar_t ch;
     unsigned int ln;
-    const struct escape_s *e;
     const struct avltree_node *c;
     const struct trans_s *t;
     struct trans_s tmp;
@@ -740,14 +745,16 @@ int encode_string(void) {
 next:
     if (encode_state.i >= encode_state.len) return EOF;
     encode_state.i2 = encode_state.i;
-    e = (struct escape_s *)ternary_search(actual_encoding->escape, encode_state.data + encode_state.i, encode_state.data + encode_state.len);
-    if (e != NULL && e->data != NULL) {
-        encode_state.i += e->strlen;
-        encode_state.data2 = e->data;
-        encode_state.len2 = e->len;
-        if (encode_state.len2 < 1) goto next;
-        encode_state.j = 1;
-        return e->data[0];
+    if (encode_state.len - encode_state.i >= actual_encoding->escape_length) {
+        const struct escape_s *e = (struct escape_s *)ternary_search(actual_encoding->escape, encode_state.data + encode_state.i, encode_state.data + encode_state.len);
+        if (e != NULL && e->data != NULL) {
+            encode_state.i += e->strlen;
+            encode_state.data2 = e->data;
+            encode_state.len2 = e->len;
+            if (encode_state.len2 < 1) goto next;
+            encode_state.j = 1;
+            return e->data[0];
+        }
     }
     ch = encode_state.data[encode_state.i];
     if ((ch & 0x80) != 0) ln = utf8in(encode_state.data + encode_state.i, &ch); else ln = 1;
