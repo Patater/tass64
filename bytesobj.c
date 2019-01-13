@@ -1011,6 +1011,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_INV: 
         if (op->inplace != &v1->v) return invert(v1, op->epoint3);
         v1->len = ~v1->len;
+        if (v1->data != v1->u.val) v1->u.s.hash = -1;
         return val_reference(&v1->v);
     case O_NEG:
         v = negate(v1, op->epoint3);
