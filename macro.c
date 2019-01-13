@@ -359,6 +359,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
         if (context != NULL) push_context(context);
         val = compile();
         if (context != NULL) pop_context();
+        close_waitfor(t);
         star = s->addr;
         exitfile();
         star_tree = stree_old; vline = ovline;
