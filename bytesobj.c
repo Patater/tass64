@@ -116,6 +116,10 @@ static uint8_t *extend_bytes(Bytes *v, size_t ln) {
         return v->u.val;
     }
     if (v->u.val != v->data) {
+        size_t ln2;
+        if (ln <= v->u.s.max) return v->data;
+        ln2 = ln + (ln < 1024 ? ln : 1024);
+        if (ln2 > ln) ln = ln2;
         tmp = (uint8_t *)realloc(v->data, ln);
         if (tmp != NULL) {
             v->data = tmp;
