@@ -250,22 +250,31 @@ bool mtranslate(void) {
 
 static size_t macro_param_find(void) {
     uint8_t q = 0, ch;
-    uint8_t pp = 0;
-    uint8_t par[256];
-
+    size_t pp = 0, pl = 64;
+    uint8_t pbuf[64];
+    uint8_t *par = pbuf;
     struct linepos_s opoint2, npoint2;
+
     opoint2.pos = lpoint.pos;
     while ((ch = here()) != 0 && (q != 0 || (ch != ';' && (ch != ',' || pp != 0)))) {
         if (ch == '"'  && (q & 2) == 0) { q ^= 1; }
         else if (ch == '\'' && (q & 1) == 0) { q ^= 2; }
         if (q == 0) {
-            if (ch == '(' || ch == '[' || ch == '{') par[pp++] = ch;
+            if (ch == '(' || ch == '[' || ch == '{') {
+                if (pp >= pl) {
+                    pl += 256;
+                    if (pl < 256) err_msg_out_of_memory();
+                    par = reallocx(par == pbuf ? NULL : par, pl);
+                }
+                par[pp++] = ch;
+            }
             else if (pp != 0 && ((ch == ')' && par[pp-1]=='(') || (ch == ']' && par[pp-1]=='[') || (ch == '}' && par[pp-1]=='{'))) pp--;
         }
         lpoint.pos++;
     }
     npoint2.pos = lpoint.pos;
     while (npoint2.pos > opoint2.pos && (pline[npoint2.pos-1] == 0x20 || pline[npoint2.pos-1] == 0x09)) npoint2.pos--;
+    if (par != pbuf) free(par);
     return npoint2.pos - opoint2.pos;
 }
 
