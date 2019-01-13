@@ -264,11 +264,13 @@ static size_t macro_param_find(void) {
                 if (pp >= pl) {
                     pl += 256;
                     if (pl < 256) err_msg_out_of_memory();
-                    par = reallocx(par == pbuf ? NULL : par, pl);
+                    if (par == pbuf) {
+                        par = (uint8_t *)mallocx(pl);
+                        memcpy(par, pbuf, pp);
+                    } else par = (uint8_t *)reallocx(par, pl);
                 }
                 par[pp++] = ch;
-            }
-            else if (pp != 0 && ((ch == ')' && par[pp-1]=='(') || (ch == ']' && par[pp-1]=='[') || (ch == '}' && par[pp-1]=='{'))) pp--;
+            } else if (pp != 0 && ((ch == ')' && par[pp-1]=='(') || (ch == ']' && par[pp-1]=='[') || (ch == '}' && par[pp-1]=='{'))) pp--;
         }
         lpoint.pos++;
     }
