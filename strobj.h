@@ -30,7 +30,10 @@ typedef struct Str {
     uint8_t *data;
     union {
         uint8_t val[16];
-        int hash;
+        struct {
+            size_t max;
+            int hash;
+        } s;
     } u;
 } Str;
 
