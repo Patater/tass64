@@ -519,12 +519,6 @@ static int trans_compare(const struct avltree_node *aa, const struct avltree_nod
     return 0;
 }
 
-static void trans_free(struct avltree_node *aa)
-{
-    struct trans_s *a = avltree_container_of(aa, struct trans_s, node);
-    free(a);
-}
-
 static int encoding_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct encoding_s *a = cavltree_container_of(aa, struct encoding_s, node);
@@ -546,7 +540,6 @@ static void encoding_free(struct avltree_node *aa)
     free((char *)a->name.data);
     if (a->name.data != a->cfname.data) free((uint8_t *)a->cfname.data);
     ternary_cleanup(a->escape, escape_free);
-    avltree_destroy(&a->trans, trans_free);
     free(a);
 }
 
@@ -580,13 +573,26 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
     return tmp;            /* already exists */
 }
 
+static struct transs_s {
+    struct trans_s transs[31];
+    struct transs_s *next;
+} *transs = NULL;
+
+static unsigned int transs_i = lenof(transs->transs);
+
 static struct trans_s *lasttr = NULL;
 struct trans_s *new_trans(struct trans_s *trans, struct encoding_s *enc, linepos_t epoint)
 {
     struct avltree_node *b;
     struct trans_s *tmp;
     if (lasttr == NULL) {
-        lasttr = (struct trans_s *)mallocx(sizeof *lasttr);
+        if (transs_i == lenof(transs->transs)) {
+            struct transs_s *old = transs;
+            transs = (struct transs_s *)mallocx(sizeof *transs);
+            transs->next = old;
+            transs_i = 0;
+        }
+        lasttr = &transs->transs[transs_i++];
     }
     lasttr->start = trans->start;
     lasttr->end = trans->end;
@@ -838,6 +844,11 @@ void destroy_encoding(void)
 {
     avltree_destroy(&encoding_tree, encoding_free);
     free(lasten);
-    free(lasttr);
     free(lastes);
+
+    while (transs != NULL) {
+        struct transs_s *old = transs;
+        transs = transs->next;
+        free(old);
+    }
 }
