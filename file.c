@@ -266,18 +266,10 @@ static int file_compare(const struct avltree_node *aa, const struct avltree_node
     return a->type - b->type;
 }
 
-static void star_free(struct avltree_node *aa)
-{
-    struct star_s *a = avltree_container_of(aa, struct star_s, node);
-
-    avltree_destroy(&a->tree, star_free);
-}
-
 static void file_free(struct avltree_node *aa)
 {
     struct file_s *a = avltree_container_of(aa, struct file_s, node);
 
-    avltree_destroy(&a->star, star_free);
     free(a->data);
     free(a->line);
     free(a->nomacro);
