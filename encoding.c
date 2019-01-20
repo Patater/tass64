@@ -116,6 +116,31 @@ static const struct trans2_s petscii_trans[] = {
     {0x2665,   0, 0xd3}, /* ♥ */
     {0x2666,   0, 0xda}, /* ♦ */
     {0x2713,   0, 0xba}, /* ✓ */
+    {0xfb70,   0, 0xd4}, /* 🭰 */
+    {0xfb71,   0, 0xc7}, /* 🭱 */
+    {0xfb72,   0, 0xc2}, /* 🭲 */
+    {0xfb73,   0, 0xdd}, /* 🭳 */
+    {0xfb74,   0, 0xc8}, /* 🭴 */
+    {0xfb75,   0, 0xd9}, /* 🭵 */
+    {0xfb76,   0, 0xc5}, /* 🭶 */
+    {0xfb77,   0, 0xc4}, /* 🭷 */
+    {0xfb78,   0, 0xc3}, /* 🭸 */
+    {0xfb79,   0, 0xc0}, /* 🭹 */
+    {0xfb7a,   0, 0xc6}, /* 🭺 */
+    {0xfb7b,   0, 0xd2}, /* 🭻 */
+    {0xfb7c,   0, 0xcc}, /* 🭼 */
+    {0xfb7d,   0, 0xcf}, /* 🭽 */
+    {0xfb7e,   0, 0xd0}, /* 🭾 */
+    {0xfb7f,   0, 0xba}, /* 🭿 */
+    {0xfb82,   0, 0xb7}, /* 🮂 */
+    {0xfb83,   0, 0xb8}, /* 🮃 */
+    {0xfb87,   0, 0xaa}, /* 🮇 */
+    {0xfb88,   0, 0xb6}, /* 🮈 */
+    {0xfb8c,   0, 0xdc}, /* 🮌 */
+    {0xfb8f,   0, 0xa8}, /* 🮏 */
+    {0xfb95,   0, 0xff}, /* 🮕 */
+    {0xfb98,   0, 0xdf}, /* 🮘 */
+    {0xfb99,   0, 0xa9}, /* 🮙 */
 };
 
 /* PETSCII codes, must be sorted */
@@ -399,6 +424,31 @@ static const struct trans2_s petscii_screen_trans[] = {
     {0x2665,   0, 0x53}, /* ♥ */
     {0x2666,   0, 0x5a}, /* ♦ */
     {0x2713,   0, 0x7a}, /* ✓ */
+    {0xfb70,   0, 0x54}, /* 🭰 */
+    {0xfb71,   0, 0x47}, /* 🭱 */
+    {0xfb72,   0, 0x42}, /* 🭲 */
+    {0xfb73,   0, 0x5d}, /* 🭳 */
+    {0xfb74,   0, 0x48}, /* 🭴 */
+    {0xfb75,   0, 0x59}, /* 🭵 */
+    {0xfb76,   0, 0x45}, /* 🭶 */
+    {0xfb77,   0, 0x44}, /* 🭷 */
+    {0xfb78,   0, 0x43}, /* 🭸 */
+    {0xfb79,   0, 0x40}, /* 🭹 */
+    {0xfb7a,   0, 0x46}, /* 🭺 */
+    {0xfb7b,   0, 0x52}, /* 🭻 */
+    {0xfb7c,   0, 0x4c}, /* 🭼 */
+    {0xfb7d,   0, 0x4f}, /* 🭽 */
+    {0xfb7e,   0, 0x50}, /* 🭾 */
+    {0xfb7f,   0, 0x7a}, /* 🭿 */
+    {0xfb82,   0, 0x77}, /* 🮂 */
+    {0xfb83,   0, 0x78}, /* 🮃 */
+    {0xfb87,   0, 0x6a}, /* 🮇 */
+    {0xfb88,   0, 0x76}, /* 🮈 */
+    {0xfb8c,   0, 0x5c}, /* 🮌 */
+    {0xfb8f,   0, 0x68}, /* 🮏 */
+    {0xfb95,   0, 0x5e}, /* 🮕 */
+    {0xfb98,   0, 0x5f}, /* 🮘 */
+    {0xfb99,   0, 0x69}, /* 🮙 */
 };
 
 /* petscii screen codes, must be sorted */
@@ -711,8 +761,10 @@ static void add_trans(const struct trans2_s *t, size_t ln, struct encoding_s *tm
     struct trans_s tmp2;
     struct linepos_s nopoint = {0, 0};
     for (i = 0; i < ln; i++) {
-        tmp2.start = t[i].start;
-        tmp2.end = t[i].start + t[i].length;
+        uint32_t start = t[i].start;
+        if (start >= 0x8000) start += 0x10000;
+        tmp2.start = start;
+        tmp2.end = start + t[i].length;
         tmp2.offset = t[i].offset;
         new_trans(&tmp2, tmp, &nopoint);
     }
