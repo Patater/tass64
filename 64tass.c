@@ -798,12 +798,14 @@ static void logical_close(linepos_t epoint) {
         current_address->l_union = waitfor->u.logical.laddr;
         diff = 0;
     } else {
-        diff = current_address->address - waitfor->u.logical.addr;
-        current_address->l_address.address = (waitfor->u.logical.laddr.address + diff) & 0xffff;
-        if (current_address->address > waitfor->u.logical.addr) {
-            if (current_address->l_address.address == 0) current_address->l_address.address = 0x10000;
-        }
-        current_address->l_address.bank = waitfor->u.logical.laddr.bank + (current_address->address & ~(address_t)0xffff) - (waitfor->u.logical.addr & ~(address_t)0xffff);
+        diff = (current_address->address - waitfor->u.logical.addr) & all_mem2;
+        if (diff != 0) {
+            if (waitfor->u.logical.laddr.address > 0xffff || diff > 0x10000 - waitfor->u.logical.laddr.address) {
+                current_address->l_address.address = ((waitfor->u.logical.laddr.address + diff - 1) & 0xffff) + 1;
+                err_msg_pc_wrap(epoint);
+            } else current_address->l_address.address = waitfor->u.logical.laddr.address + diff;
+        } else current_address->l_address.address = waitfor->u.logical.laddr.address;
+        current_address->l_address.bank = waitfor->u.logical.laddr.bank;
         if (current_address->l_address.bank > all_mem) {
             if (epoint != NULL) err_msg_big_address(epoint);
             current_address->l_address.bank &= all_mem;
