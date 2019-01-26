@@ -765,9 +765,13 @@ static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
         }
         if (*uninit != 0) {memskip(*uninit);*uninit = 0;}
         pokeb(ch2);
-        if (prm>=CMD_RTA) pokeb(ch2 >> 8);
-        if (prm>=CMD_LINT) pokeb(ch2 >> 16);
-        if (prm>=CMD_DINT) pokeb(ch2 >> 24);
+        if (prm >= CMD_RTA) {
+            pokeb(ch2 >> 8);
+            if (prm >= CMD_LINT) {
+                pokeb(ch2 >> 16);
+                if (prm >= CMD_DINT) pokeb(ch2 >> 24);
+            }
+        }
         if (iter == NULL) return warn;
     }
     val_destroy(&iter->v);
