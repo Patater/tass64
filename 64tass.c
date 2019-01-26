@@ -802,7 +802,7 @@ static void logical_close(linepos_t epoint) {
         if (diff != 0) {
             if (waitfor->u.logical.laddr.address > 0xffff || diff > 0x10000 - waitfor->u.logical.laddr.address) {
                 current_address->l_address.address = ((waitfor->u.logical.laddr.address + diff - 1) & 0xffff) + 1;
-                err_msg_pc_wrap(epoint);
+                if (epoint != NULL) err_msg_pc_wrap(epoint);
             } else current_address->l_address.address = waitfor->u.logical.laddr.address + diff;
         } else current_address->l_address.address = waitfor->u.logical.laddr.address;
         current_address->l_address.bank = waitfor->u.logical.laddr.bank;
