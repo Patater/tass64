@@ -91,7 +91,7 @@ const uint8_t *pline;           /* current line data */
 struct linepos_s lpoint;        /* position in current line */
 static uint8_t strength = 0;
 bool fixeddig, constcreated;
-unsigned int outputeor = 0; /* EOR value for final output (usually 0, except changed by .eor) */
+uint32_t outputeor = 0; /* EOR value for final output (usually 0, unless changed by .eor) */
 bool referenceit = true;
 const struct cpu_s *current_cpu;
 
@@ -434,24 +434,31 @@ static void memskip(address_t db) { /* poke_pos! */
 /*
  * output one byte
  */
-FAST_CALL void pokeb(unsigned int byte) { /* poke_pos! */
+FAST_CALL uint8_t *pokealloc(address_t db) { /* poke_pos! */
     if (current_address->moved) {
         if (current_address->address < current_address->start) err_msg2(ERROR_OUTOF_SECTION, NULL, poke_pos);
         if (current_address->wrapwarn) {err_msg_mem_wrap(poke_pos);current_address->wrapwarn = false;}
         current_address->moved = false;
     }
-    if (current_address->l_address.address > 0xffff) {
-        current_address->l_address.address = 0;
+    if (current_address->l_address.address > 0xffff || db > 0x10000 - current_address->l_address.address) {
+        current_address->l_address.address = ((current_address->l_address.address + db - 1) & 0xffff) + 1;
         err_msg_pc_wrap(poke_pos);
-    }
-    write_mem(current_address->mem, byte ^ outputeor);
-    current_address->address++;current_address->l_address.address++;
-    if ((current_address->address & ~all_mem2) != 0 || current_address->address == 0) {
-        current_address->wrapwarn = current_address->moved = true;
-        if (current_address->end <= all_mem2) current_address->end = all_mem2 + 1;
-        current_address->address = 0;
+    } else current_address->l_address.address += db;
+    if (db > (~current_address->address & all_mem2)) {
+        if (db - 1 + current_address->address == all_mem2) {
+            current_address->wrapwarn = current_address->moved = true;
+            if (current_address->end <= all_mem2) current_address->end = all_mem2 + 1;
+            current_address->address = 0;
+        } else {
+            if (current_address->start != 0) err_msg2(ERROR_OUTOF_SECTION, NULL, poke_pos);
+            if (current_address->end <= all_mem2) current_address->end = all_mem2 + 1;
+            current_address->moved = false;
+            current_address->address = (current_address->address + db) & all_mem2;
+            err_msg_mem_wrap(poke_pos);current_address->wrapwarn = false;
+        }
         memjmp(current_address->mem, current_address->address);
-    }
+    } else current_address->address += db;
+    return alloc_mem(current_address->mem, db);
 }
 
 /* --------------------------------------------------------------------------- */
@@ -536,12 +543,11 @@ static void const_assign(Label *label, Obj *val) {
 }
 
 struct textrecursion_s {
-    address_t uninit, sum;
-    unsigned int bl;
-    int ch2;
-    size_t max;
+    ssize_t len;
+    size_t sum, max;
     int prm;
     bool warn;
+    uint8_t buff[16];
 };
 
 static void textrecursion(struct textrecursion_s *trec, Obj *val) {
@@ -568,6 +574,7 @@ retry:
             val_destroy(tmp);
             break;
         }
+    case T_ERROR:
     case T_FLOAT:
     case T_INT:
     case T_BOOL:
@@ -595,10 +602,6 @@ retry:
             val_destroy(tmp);
             break;
         }
-    case T_ERROR:
-        err_msg_output((Error *)val);
-        if (trec->ch2 < -1) trec->ch2 = -1;
-        return;
     case T_NONE:
         trec->warn = true;
         return;
@@ -636,11 +639,12 @@ retry:
             break;
         case T_GAP:
         dogap:
-            if (trec->ch2 >= 0) {
-                if (trec->uninit != 0) { memskip(trec->uninit); trec->sum += trec->uninit; trec->uninit = 0; }
-                pokeb((unsigned int)trec->ch2); trec->sum++;
+            if (trec->len > 0) {
+                memcpy(pokealloc(trec->len), trec->buff, trec->len);
+                trec->len = 0;
             }
-            trec->ch2 = -1; trec->uninit++;
+            trec->len--;
+            trec->sum++;
             if (iter == NULL) return;
             break;
         case T_BYTES:
@@ -653,27 +657,29 @@ retry:
             /* fall through */
         default:
         doit:
-            if (trec->ch2 >= 0) {
-                if (trec->uninit != 0) { memskip(trec->uninit); trec->sum += trec->uninit; trec->uninit = 0; }
-                pokeb((unsigned int)trec->ch2); trec->sum++;
-            }
             if (touval(val2, &uval, 8, poke_pos)) uval = 256 + '?';
             switch (trec->prm) {
             case CMD_SHIFT:
                 if ((uval & 0x80) != 0) err_msg2(ERROR___NO_HIGH_BIT, NULL, poke_pos);
-                trec->ch2 = uval & 0x7f;
+                uval &= 0x7f;
                 break;
             case CMD_SHIFTL:
                 if ((uval & 0x80) != 0) err_msg2(ERROR___NO_HIGH_BIT, NULL, poke_pos);
-                trec->ch2 = (uval << 1) & 0xfe;
+                uval <<= 1;
                 break;
             case CMD_NULL:
                 if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, poke_pos);
                 /* fall through */
             default:
-                trec->ch2 = uval & 0xff;
                 break;
             }
+            if (trec->len < 0) { memskip(-trec->len); trec->len = 0; }
+            else if (trec->len >= (ssize_t)sizeof trec->buff) {
+                memcpy(pokealloc(trec->len), trec->buff, trec->len);
+                trec->len = 0;
+            }
+            trec->buff[trec->len++] = uval ^ outputeor;
+            trec->sum++;
             if (iter == NULL) return;
             break;
         case T_NONE:
@@ -684,19 +690,29 @@ retry:
     val_destroy(&iter->v);
 }
 
-static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
+struct byterecursion_s {
+    ssize_t len;
+    uint8_t buff[16];
+    bool warn;
+};
+
+static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int bits) {
     Iter *iter;
     iter_next_t iter_next;
     Obj *val2;
     uint32_t ch2;
     uval_t uv;
     ival_t iv;
-    bool warn = false;
     const Type *type = val->obj;
+
     if (type != LIST_OBJ && type != TUPLE_OBJ) {
         if (type == GAP_OBJ) {
-            *uninit += (unsigned int)abs(bits) / 8;
-            return false;
+            if (brec->len > 0) {
+                memcpy(pokealloc(brec->len), brec->buff, brec->len);
+                brec->len = 0;
+            }
+            brec->len -= (unsigned int)abs(bits) / 8;
+            return;
         }
         iter = NULL;
         if (type == NONE_OBJ) goto donone;
@@ -709,10 +725,14 @@ static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
         switch (val2->obj->type) {
         case T_LIST:
         case T_TUPLE:
-            if (byterecursion(val2, prm, uninit, bits)) warn = true;
+            byterecursion(val2, prm, brec, bits);
             continue;
         case T_GAP:
-            *uninit += (unsigned int)abs(bits) / 8;
+            if (brec->len > 0) {
+                memcpy(pokealloc(brec->len), brec->buff, brec->len);
+                brec->len = 0;
+            }
+            brec->len -= (unsigned int)abs(bits) / 8;
             continue;
         default:
         doit:
@@ -768,22 +788,23 @@ static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
             break;
         case T_NONE:
         donone:
-            warn = true;
+            brec->warn = true;
             ch2 = 0;
         }
-        if (*uninit != 0) {memskip(*uninit);*uninit = 0;}
-        pokeb(ch2);
+        if (brec->len < 0) {memskip(-brec->len);brec->len = 0;}
+        else if (brec->len >= (ssize_t)(sizeof brec->buff) - 4) {memcpy(pokealloc(brec->len), brec->buff, brec->len); brec->len = 0;}
+        ch2 ^= outputeor;
+        brec->buff[brec->len++] = ch2;
         if (prm >= CMD_RTA) {
-            pokeb(ch2 >> 8);
+            brec->buff[brec->len++] = ch2 >> 8;
             if (prm >= CMD_LINT) {
-                pokeb(ch2 >> 16);
-                if (prm >= CMD_DINT) pokeb(ch2 >> 24);
+                brec->buff[brec->len++] = ch2 >> 16;
+                if (prm >= CMD_DINT) brec->buff[brec->len++] = ch2 >> 24;
             }
         }
-        if (iter == NULL) return warn;
+        if (iter == NULL) return;
     }
     val_destroy(&iter->v);
-    return warn;
 }
 
 static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, struct linepos_s *epoints) {
@@ -3147,43 +3168,50 @@ MUST_CHECK Obj *compile(void)
                         }
                         if (here() == 0 || here() == ';') { err_msg_argnum(0, 1, 0, &epoint); goto breakerr; }
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                        trec.uninit = 0;
-                        trec.sum = 0;
-                        trec.ch2 = (prm == CMD_PTEXT) ? 0 : -2;
+                        if (prm == CMD_PTEXT) {
+                            trec.buff[0] = outputeor;
+                            trec.len = 1;
+                        } else trec.len = 0;
+                        trec.sum = trec.len;
                         trec.max = SIZE_MAX;
                         trec.prm = prm;
                         trec.warn = false;
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
+                            if (trec.len != 0) {
+                                if (trec.len > 0) memcpy(pokealloc(trec.len), trec.buff, trec.len);
+                                else if (trec.len < 0) memskip(-trec.len); 
+                                trec.len = 0;
+                            }
                             poke_pos = &vs->epoint;
                             textrecursion(&trec, vs->val);
-                            if (trec.warn) {
-                                err_msg_still_none(NULL, poke_pos);
-                                if (trec.ch2 < -1)  trec.ch2 = -1;
-                                trec.warn = false;
-                            }
+                            if (trec.warn) { err_msg_still_none(NULL, poke_pos); trec.warn = false; }
                         }
-                        if (trec.uninit != 0) {memskip(trec.uninit);trec.sum += trec.uninit;}
-                        if (trec.ch2 >= 0) {
-                            if (prm==CMD_SHIFT) trec.ch2 |= 0x80;
-                            if (prm==CMD_SHIFTL) trec.ch2 |= 0x01;
-                            pokeb((unsigned int)trec.ch2); trec.sum++;
-                        } else if (prm==CMD_SHIFT || prm==CMD_SHIFTL) {
-                            if (trec.uninit != 0) {
-                                err_msg2(ERROR___NO_LAST_GAP, NULL, poke_pos);
-                            } else if (trec.ch2 == -2) {
-                                err_msg2(ERROR__BYTES_NEEDED, NULL, &epoint);
+                        if (trec.len < 0) { memskip(-trec.len); trec.len = 0; }
+                        switch (prm) {
+                        case CMD_SHIFTL:
+                        case CMD_SHIFT:
+                            if (trec.len > 0) trec.buff[trec.len - 1] ^= (prm == CMD_SHIFT) ? 0x80 : 0x01;
+                            else if (trec.sum != 0) err_msg2(ERROR___NO_LAST_GAP, NULL, poke_pos);
+                            else err_msg2(ERROR__BYTES_NEEDED, NULL, &epoint);
+                            break;
+                        case CMD_NULL: 
+                            if (trec.len >= (ssize_t)sizeof trec.buff) {
+                                memcpy(pokealloc(trec.len), trec.buff, trec.len);
+                                trec.len = 0;
                             }
+                            trec.buff[trec.len++] = outputeor; break;
+                        default: break;
                         }
-                        if (prm==CMD_NULL) pokeb(0);
-                        if (prm==CMD_PTEXT) {
+                        if (trec.len > 0) memcpy(pokealloc(trec.len), trec.buff, trec.len);
+                        if (prm == CMD_PTEXT) {
                             if (trec.sum > 0x100) err_msg2(ERROR____PTEXT_LONG, &trec.sum, &epoint);
-                            write_mark_mem(current_address->mem, trec.sum-1);
+                            write_mark_mem(current_address->mem, (trec.sum-1) ^ outputeor);
                         }
                     } else if (prm<=CMD_DWORD) { /* .byte .word .int .rta .long */
-                        address_t uninit = 0;
                         int bits;
                         size_t ln;
                         struct values_s *vs;
+                        struct byterecursion_s brec;
                         if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                             signed char dtype;
                             switch (prm) {
@@ -3213,11 +3241,17 @@ MUST_CHECK Obj *compile(void)
                         case CMD_DWORD: bits = 32; break;
                         }
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
+                        brec.len = 0;
+                        brec.warn = false;
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             poke_pos = &vs->epoint;
-                            if (byterecursion(vs->val, prm, &uninit, bits)) err_msg_still_none(NULL, poke_pos);
+                            byterecursion(vs->val, prm, &brec, bits);
+                            if (brec.warn) { err_msg_still_none(NULL, poke_pos); brec.warn = false; }
+                            if (brec.len == 0) continue;
+                            if (brec.len > 0) memcpy(pokealloc(brec.len), brec.buff, brec.len);
+                            else memskip(-brec.len); 
+                            brec.len = 0; 
                         }
-                        if (uninit != 0) memskip(uninit);
                     } else if (prm==CMD_BINARY) { /* .binary */
                         char *path = NULL;
                         size_t foffset = 0;
@@ -3247,8 +3281,17 @@ MUST_CHECK Obj *compile(void)
                         if (path != NULL) {
                             struct file_s *cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, &epoint);
                             if (cfile2 != NULL) {
-                                for (; fsize != 0 && foffset < cfile2->len;fsize--) {
-                                    pokeb(cfile2->data[foffset]);foffset++;
+                                for (; fsize != 0 && foffset < cfile2->len;) {
+                                    size_t i, ln = cfile2->len - foffset;
+                                    uint8_t *d, *s = cfile2->data + foffset;
+                                    if (ln > fsize) ln = fsize;
+                                    if (ln > 65536) ln = 65536;
+                                    d = pokealloc((address_t)ln);
+                                    if (outputeor != 0) {
+                                        for (i = 0; i < ln; i++) d[i] = s[i] ^ outputeor;
+                                    } else memcpy(d, s, ln);
+                                    foffset += ln;
+                                    fsize -= ln;
                                 }
                             }
                             free(path);
@@ -3468,7 +3511,7 @@ MUST_CHECK Obj *compile(void)
                         break;
                     case CMD_EOR:
                         if (touval(vs->val, &uval, 8, &vs->epoint)) {}
-                        else outputeor = uval & 0xff;
+                        else outputeor = (uval & 0xff) * 0x01010101;
                         break;
                     case CMD_SEED:
                         random_reseed(vs->val, &vs->epoint);
@@ -3514,46 +3557,55 @@ MUST_CHECK Obj *compile(void)
                         get_mem(current_address->mem, &memp, &membp);
 
                         poke_pos = &vs->epoint;
-                        trec.uninit = 0;
+                        trec.len = 0;
                         trec.sum = 0;
-                        trec.ch2 = -2;
                         trec.max = db;
                         trec.prm = CMD_TEXT;
                         trec.warn = false;
                         textrecursion(&trec, vs->val);
                         if (trec.warn) {
                             err_msg_still_none(NULL, poke_pos);
-                            if (trec.ch2 < -1)  trec.ch2 = -1;
-                        }
-                        trec.sum += trec.uninit;
-                        if (trec.ch2 >= 0 && trec.sum < db) {
-                            pokeb((unsigned int)trec.ch2); trec.sum++;
                         }
 
                         db -= trec.sum;
                         if (db != 0) {
-                            if (trec.sum == 1 && trec.ch2 >= 0) {
-                                while ((db--) != 0) pokeb((unsigned int)trec.ch2); /* single byte shortcut */
-                            } else if (trec.sum == trec.uninit) {
-                                if (trec.ch2 == -2) err_msg2(ERROR__BYTES_NEEDED, NULL, poke_pos);
-                                trec.uninit += db; /* gap shortcut */
+                            if (trec.sum == 1 && trec.len == 1) {
+                                memset(pokealloc(db + 1), trec.buff[0], db + 1); /* single byte shortcut */
+                                trec.len = 0;
+                            } else if (trec.sum == (size_t)-trec.len) {
+                                if (trec.sum == 0) err_msg2(ERROR__BYTES_NEEDED, NULL, poke_pos);
+                                trec.len -= db; /* gap shortcut */
                             } else {
                                 size_t offs = 0;
+                                if (trec.len > 0) {
+                                    memcpy(pokealloc(trec.len), trec.buff, trec.len);
+                                    trec.len = 0;
+                                }
                                 while (db != 0) { /* pattern repeat */
                                     int ch;
                                     db--;
                                     ch = read_mem(current_address->mem, memp, membp, offs);
-                                    if (ch < 0) trec.uninit++;
-                                    else {
-                                        if (trec.uninit != 0) {memskip(trec.uninit); trec.uninit = 0;}
-                                        pokeb((unsigned int)ch);
+                                    if (ch < 0) {
+                                        if (trec.len > 0) {
+                                            memcpy(pokealloc(trec.len), trec.buff, trec.len);
+                                            trec.len = 0;
+                                        }
+                                        trec.len--;
+                                    } else {
+                                        if (trec.len < 0) {memskip(-trec.len); trec.len = 0;}
+                                        else if (trec.len >= (ssize_t)sizeof trec.buff) {
+                                            memcpy(pokealloc(trec.len), trec.buff, trec.len);
+                                            trec.len = 0;
+                                        }
+                                        trec.buff[trec.len++] = ch;
                                     }
                                     offs++;
                                     if (offs >= trec.sum) offs = 0;
                                 }
                             }
                         }
-                        if (trec.uninit != 0) memskip(trec.uninit);
+                        if (trec.len > 0) memcpy(pokealloc(trec.len), trec.buff, trec.len);
+                        else if (trec.len < 0) memskip(-trec.len);
                     } else if (db != 0) {
                         poke_pos = &epoint;
                         memskip(db);

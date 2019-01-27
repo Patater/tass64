@@ -505,13 +505,16 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 #endif
 }
 
-FAST_CALL void write_mem(Memblocks *memblocks, unsigned int c) {
-    if (memblocks->mem.p >= memblocks->mem.len) {
-        memblocks->mem.len += 0x1000;
+FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, size_t len) {
+    size_t p = memblocks->mem.p + len;
+    if (p < len) err_msg_out_of_memory(); /* overflow */
+    if (p > memblocks->mem.len) {
+        memblocks->mem.len = p + 0x1000;
         if (memblocks->mem.len < 0x1000) err_msg_out_of_memory(); /* overflow */
         memblocks->mem.data = (uint8_t *)reallocx(memblocks->mem.data, memblocks->mem.len);
     }
-    memblocks->mem.data[memblocks->mem.p++] = (uint8_t)c;
+    memblocks->mem.p = p;
+    return memblocks->mem.data + p - len;
 }
 
 static size_t omemp;
