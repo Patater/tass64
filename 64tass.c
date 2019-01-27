@@ -535,21 +535,29 @@ static void const_assign(Label *label, Obj *val) {
     label->value = val;
 }
 
-static bool textrecursion(Obj *val, int prm, int *ch2, address_t *uninit, address_t *sum, size_t max) {
+struct textrecursion_s {
+    address_t uninit, sum;
+    unsigned int bl;
+    int ch2;
+    size_t max;
+    int prm;
+};
+
+static bool textrecursion(struct textrecursion_s *trec, Obj *val) {
     Iter *iter;
     iter_next_t iter_next;
     Obj *val2 = NULL;
     uval_t uval;
     bool warn = false;
 
-    if (*sum >= max) return false;
+    if (trec->sum >= trec->max) return false;
 retry:
     switch (val->obj->type) {
     case T_STR:
         {
             Obj *tmp;
             Textconv_types m;
-            switch (prm) {
+            switch (trec->prm) {
             case CMD_SHIFTL:
             case CMD_SHIFT: m = BYTES_MODE_SHIFT_CHECK; break;
             case CMD_NULL: m = BYTES_MODE_NULL_CHECK; break;
@@ -589,7 +597,7 @@ retry:
         }
     case T_ERROR:
         err_msg_output((Error *)val);
-        if (*ch2 < -1) *ch2 = -1;
+        if (trec->ch2 < -1) trec->ch2 = -1;
         return false;
     case T_NONE:
         return true;
@@ -623,15 +631,15 @@ retry:
         case T_TUPLE:
         case T_STR:
         rec:
-            if (textrecursion(val2, prm, ch2, uninit, sum, max)) warn = true;
+            if (textrecursion(trec, val2)) warn = true;
             break;
         case T_GAP:
         dogap:
-            if (*ch2 >= 0) {
-                if (*uninit != 0) { memskip(*uninit); (*sum) += *uninit; *uninit = 0; }
-                pokeb((unsigned int)*ch2); (*sum)++;
+            if (trec->ch2 >= 0) {
+                if (trec->uninit != 0) { memskip(trec->uninit); trec->sum += trec->uninit; trec->uninit = 0; }
+                pokeb((unsigned int)trec->ch2); trec->sum++;
             }
-            *ch2 = -1; (*uninit)++;
+            trec->ch2 = -1; trec->uninit++;
             if (iter == NULL) return warn;
             break;
         case T_BYTES:
@@ -644,25 +652,25 @@ retry:
             /* fall through */
         default:
         doit:
-            if (*ch2 >= 0) {
-                if (*uninit != 0) { memskip(*uninit); (*sum) += *uninit; *uninit = 0; }
-                pokeb((unsigned int)*ch2); (*sum)++;
+            if (trec->ch2 >= 0) {
+                if (trec->uninit != 0) { memskip(trec->uninit); trec->sum += trec->uninit; trec->uninit = 0; }
+                pokeb((unsigned int)trec->ch2); trec->sum++;
             }
             if (touval(val2, &uval, 8, poke_pos)) uval = 256 + '?';
-            switch (prm) {
+            switch (trec->prm) {
             case CMD_SHIFT:
                 if ((uval & 0x80) != 0) err_msg2(ERROR___NO_HIGH_BIT, NULL, poke_pos);
-                *ch2 = uval & 0x7f;
+                trec->ch2 = uval & 0x7f;
                 break;
             case CMD_SHIFTL:
                 if ((uval & 0x80) != 0) err_msg2(ERROR___NO_HIGH_BIT, NULL, poke_pos);
-                *ch2 = (uval << 1) & 0xfe;
+                trec->ch2 = (uval << 1) & 0xfe;
                 break;
             case CMD_NULL:
                 if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, poke_pos);
                 /* fall through */
             default:
-                *ch2 = uval & 0xff;
+                trec->ch2 = uval & 0xff;
                 break;
             }
             if (iter == NULL) return warn;
@@ -670,7 +678,7 @@ retry:
         case T_NONE:
             warn = true;
         }
-        if (*sum >= max) break;
+        if (trec->sum >= trec->max) break;
     }
     val_destroy(&iter->v);
     return warn;
@@ -3126,47 +3134,50 @@ MUST_CHECK Obj *compile(void)
             case CMD_DWORD: /* .dword */
             case CMD_BINARY: if ((waitfor->skip & 1) != 0)
                 { /* .binary */
-                    address_t uninit = 0, sum = 0;
-
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     mark_mem(current_address->mem, current_address->address, star);
                     poke_pos = &epoint;
 
                     if (prm<CMD_BYTE) {    /* .text .ptext .shift .shiftl .null */
-                        int ch2 = -2;
                         size_t ln;
                         struct values_s *vs;
+                        struct textrecursion_s trec;
                         if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                             ((Code *)newlabel->value)->dtype = D_BYTE;
                         }
                         if (here() == 0 || here() == ';') { err_msg_argnum(0, 1, 0, &epoint); goto breakerr; }
-                        if (prm==CMD_PTEXT) ch2=0;
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
+                        trec.uninit = 0;
+                        trec.sum = 0;
+                        trec.ch2 = (prm == CMD_PTEXT) ? 0 : -2;
+                        trec.max = SIZE_MAX;
+                        trec.prm = prm;
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             poke_pos = &vs->epoint;
-                            if (textrecursion(vs->val, prm, &ch2, &uninit, &sum, SIZE_MAX)) {
+                            if (textrecursion(&trec, vs->val)) {
                                 err_msg_still_none(NULL, poke_pos);
-                                if (ch2 < -1)  ch2 = -1;
+                                if (trec.ch2 < -1)  trec.ch2 = -1;
                             }
                         }
-                        if (uninit != 0) {memskip(uninit);sum += uninit;}
-                        if (ch2 >= 0) {
-                            if (prm==CMD_SHIFT) ch2|=0x80;
-                            if (prm==CMD_SHIFTL) ch2|=0x01;
-                            pokeb((unsigned int)ch2); sum++;
+                        if (trec.uninit != 0) {memskip(trec.uninit);trec.sum += trec.uninit;}
+                        if (trec.ch2 >= 0) {
+                            if (prm==CMD_SHIFT) trec.ch2 |= 0x80;
+                            if (prm==CMD_SHIFTL) trec.ch2 |= 0x01;
+                            pokeb((unsigned int)trec.ch2); trec.sum++;
                         } else if (prm==CMD_SHIFT || prm==CMD_SHIFTL) {
-                            if (uninit != 0) {
+                            if (trec.uninit != 0) {
                                 err_msg2(ERROR___NO_LAST_GAP, NULL, poke_pos);
-                            } else if (ch2 == -2) {
+                            } else if (trec.ch2 == -2) {
                                 err_msg2(ERROR__BYTES_NEEDED, NULL, &epoint);
                             }
                         }
                         if (prm==CMD_NULL) pokeb(0);
                         if (prm==CMD_PTEXT) {
-                            if (sum > 0x100) err_msg2(ERROR____PTEXT_LONG, &sum, &epoint);
-                            write_mark_mem(current_address->mem, sum-1);
+                            if (trec.sum > 0x100) err_msg2(ERROR____PTEXT_LONG, &trec.sum, &epoint);
+                            write_mark_mem(current_address->mem, trec.sum-1);
                         }
                     } else if (prm<=CMD_DWORD) { /* .byte .word .int .rta .long */
+                        address_t uninit = 0;
                         int bits;
                         size_t ln;
                         struct values_s *vs;
@@ -3495,45 +3506,49 @@ MUST_CHECK Obj *compile(void)
                     }
                     mark_mem(current_address->mem, current_address->address, star);
                     if ((vs = get_val()) != NULL) {
-                        address_t uninit = 0, sum = 0;
+                        struct textrecursion_s trec;
                         size_t memp, membp;
-                        int ch2 = -2;
                         get_mem(current_address->mem, &memp, &membp);
 
                         poke_pos = &vs->epoint;
-                        if (textrecursion(vs->val, CMD_TEXT, &ch2, &uninit, &sum, db)) {
+                        trec.uninit = 0;
+                        trec.sum = 0;
+                        trec.ch2 = -2;
+                        trec.max = db;
+                        trec.prm = CMD_TEXT;
+                        if (textrecursion(&trec, vs->val)) {
                             err_msg_still_none(NULL, poke_pos);
-                            if (ch2 < -1)  ch2 = -1;
+                            if (trec.ch2 < -1)  trec.ch2 = -1;
                         }
-                        sum += uninit;
-                        if (ch2 >= 0 && sum < db) {
-                            pokeb((unsigned int)ch2); sum++;
+                        trec.sum += trec.uninit;
+                        if (trec.ch2 >= 0 && trec.sum < db) {
+                            pokeb((unsigned int)trec.ch2); trec.sum++;
                         }
 
-                        db -= sum;
+                        db -= trec.sum;
                         if (db != 0) {
-                            if (sum == 1 && ch2 >= 0) {
-                                while ((db--) != 0) pokeb((unsigned int)ch2); /* single byte shortcut */
-                            } else if (sum == uninit) {
-                                if (ch2 == -2) err_msg2(ERROR__BYTES_NEEDED, NULL, poke_pos);
-                                uninit += db; /* gap shortcut */
+                            if (trec.sum == 1 && trec.ch2 >= 0) {
+                                while ((db--) != 0) pokeb((unsigned int)trec.ch2); /* single byte shortcut */
+                            } else if (trec.sum == trec.uninit) {
+                                if (trec.ch2 == -2) err_msg2(ERROR__BYTES_NEEDED, NULL, poke_pos);
+                                trec.uninit += db; /* gap shortcut */
                             } else {
                                 size_t offs = 0;
                                 while (db != 0) { /* pattern repeat */
                                     int ch;
                                     db--;
                                     ch = read_mem(current_address->mem, memp, membp, offs);
-                                    if (ch < 0) uninit++;
+                                    if (ch < 0) trec.uninit++;
                                     else {
-                                        if (uninit != 0) {memskip(uninit); uninit = 0;}
+                                        if (trec.uninit != 0) {memskip(trec.uninit); trec.uninit = 0;}
                                         pokeb((unsigned int)ch);
                                     }
                                     offs++;
-                                    if (offs >= sum) offs = 0;
+                                    if (offs >= trec.sum) offs = 0;
                                 }
                             }
                         }
-                        if (uninit != 0) memskip(uninit);
+                        if (trec.uninit != 0) memskip(trec.uninit);
                     } else if (db != 0) {
                         poke_pos = &epoint;
                         memskip(db);
