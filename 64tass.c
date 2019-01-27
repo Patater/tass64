@@ -541,16 +541,16 @@ struct textrecursion_s {
     int ch2;
     size_t max;
     int prm;
+    bool warn;
 };
 
-static bool textrecursion(struct textrecursion_s *trec, Obj *val) {
+static void textrecursion(struct textrecursion_s *trec, Obj *val) {
     Iter *iter;
     iter_next_t iter_next;
     Obj *val2 = NULL;
     uval_t uval;
-    bool warn = false;
 
-    if (trec->sum >= trec->max) return false;
+    if (trec->sum >= trec->max) return;
 retry:
     switch (val->obj->type) {
     case T_STR:
@@ -584,7 +584,7 @@ retry:
         {
             Obj *tmp;
             size_t bits = ((Bits *)val)->bits;
-            if (bits == 0) return false;
+            if (bits == 0) return;
             if (bits <= 8) {
                 iter = NULL;
                 val2 = val;
@@ -598,14 +598,15 @@ retry:
     case T_ERROR:
         err_msg_output((Error *)val);
         if (trec->ch2 < -1) trec->ch2 = -1;
-        return false;
+        return;
     case T_NONE:
-        return true;
+        trec->warn = true;
+        return;
     case T_BYTES:
         {
             ssize_t len = ((Bytes *)val)->len;
             if (len < 0) len = ~len;
-            if (len == 0) return false;
+            if (len == 0) return;
             if (len == 1) {
                 iter = NULL;
                 val2 = val;
@@ -631,7 +632,7 @@ retry:
         case T_TUPLE:
         case T_STR:
         rec:
-            if (textrecursion(trec, val2)) warn = true;
+            textrecursion(trec, val2);
             break;
         case T_GAP:
         dogap:
@@ -640,7 +641,7 @@ retry:
                 pokeb((unsigned int)trec->ch2); trec->sum++;
             }
             trec->ch2 = -1; trec->uninit++;
-            if (iter == NULL) return warn;
+            if (iter == NULL) return;
             break;
         case T_BYTES:
             {
@@ -673,15 +674,14 @@ retry:
                 trec->ch2 = uval & 0xff;
                 break;
             }
-            if (iter == NULL) return warn;
+            if (iter == NULL) return;
             break;
         case T_NONE:
-            warn = true;
+            trec->warn = true;
         }
         if (trec->sum >= trec->max) break;
     }
     val_destroy(&iter->v);
-    return warn;
 }
 
 static bool byterecursion(Obj *val, int prm, address_t *uninit, int bits) {
@@ -3152,11 +3152,14 @@ MUST_CHECK Obj *compile(void)
                         trec.ch2 = (prm == CMD_PTEXT) ? 0 : -2;
                         trec.max = SIZE_MAX;
                         trec.prm = prm;
+                        trec.warn = false;
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             poke_pos = &vs->epoint;
-                            if (textrecursion(&trec, vs->val)) {
+                            textrecursion(&trec, vs->val);
+                            if (trec.warn) {
                                 err_msg_still_none(NULL, poke_pos);
                                 if (trec.ch2 < -1)  trec.ch2 = -1;
+                                trec.warn = false;
                             }
                         }
                         if (trec.uninit != 0) {memskip(trec.uninit);trec.sum += trec.uninit;}
@@ -3516,7 +3519,9 @@ MUST_CHECK Obj *compile(void)
                         trec.ch2 = -2;
                         trec.max = db;
                         trec.prm = CMD_TEXT;
-                        if (textrecursion(&trec, vs->val)) {
+                        trec.warn = false;
+                        textrecursion(&trec, vs->val);
+                        if (trec.warn) {
                             err_msg_still_none(NULL, poke_pos);
                             if (trec.ch2 < -1)  trec.ch2 = -1;
                         }
