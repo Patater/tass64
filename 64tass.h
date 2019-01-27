@@ -54,5 +54,5 @@ extern const struct cpu_s *current_cpu;
 extern void new_waitfor(Wait_types, linepos_t);
 extern bool close_waitfor(Wait_types);
 extern struct Obj *compile(void);
-extern FAST_CALL void pokeb(unsigned int);
+extern FAST_CALL uint8_t *pokealloc(address_t);
 #endif
