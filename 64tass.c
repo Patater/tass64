@@ -3134,6 +3134,7 @@ MUST_CHECK Obj *compile(void)
 
                     if (prm<CMD_BYTE) {    /* .text .ptext .shift .shiftl .null */
                         int ch2 = -2;
+                        size_t ln;
                         struct values_s *vs;
                         if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                             ((Code *)newlabel->value)->dtype = D_BYTE;
@@ -3141,7 +3142,7 @@ MUST_CHECK Obj *compile(void)
                         if (here() == 0 || here() == ';') { err_msg_argnum(0, 1, 0, &epoint); goto breakerr; }
                         if (prm==CMD_PTEXT) ch2=0;
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                        while ((vs = get_val()) != NULL) {
+                        for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             poke_pos = &vs->epoint;
                             if (textrecursion(vs->val, prm, &ch2, &uninit, &sum, SIZE_MAX)) {
                                 err_msg_still_none(NULL, poke_pos);
@@ -3167,6 +3168,7 @@ MUST_CHECK Obj *compile(void)
                         }
                     } else if (prm<=CMD_DWORD) { /* .byte .word .int .rta .long */
                         int bits;
+                        size_t ln;
                         struct values_s *vs;
                         if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                             signed char dtype;
@@ -3197,7 +3199,7 @@ MUST_CHECK Obj *compile(void)
                         case CMD_DWORD: bits = 32; break;
                         }
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                        while ((vs = get_val()) != NULL) {
+                        for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             poke_pos = &vs->epoint;
                             if (byterecursion(vs->val, prm, &uninit, bits)) err_msg_still_none(NULL, poke_pos);
                         }
@@ -3473,9 +3475,9 @@ MUST_CHECK Obj *compile(void)
                         ((Code *)newlabel->value)->dtype = D_BYTE;
                     }
                     if (!get_exp(0, 1, 2, &epoint)) goto breakerr;
+                    vs = get_val();
                     if (prm == CMD_ALIGN) {
                         address_t max = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? all_mem2 : all_mem;
-                        vs = get_val();
                         if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
                         else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
                         else if (uval > 1) {
@@ -3488,7 +3490,6 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                     } else {
-                        vs = get_val();
                         if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
                         else db = uval;
                     }
@@ -3551,10 +3552,10 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val();
                     if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) current_section->provides = ~(uval_t)0;
                     else current_section->provides = uval;
-                    vs = get_val();
+                    vs++;
                     if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) current_section->requires = 0;
                     else current_section->requires = uval;
-                    vs = get_val();
+                    vs++;
                     if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) current_section->conflicts = 0;
                     else current_section->conflicts = uval;
                 }
@@ -3568,7 +3569,7 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val();
                     if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
                     else if ((uval & current_section->provides) != uval) err_msg2(ERROR_REQUIREMENTS_, NULL, &epoint);
-                    vs = get_val();
+                    vs++;
                     if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
                     else if ((uval & current_section->provides) != 0) err_msg2(ERROR______CONFLICT, NULL, &epoint);
                 }
@@ -3593,8 +3594,9 @@ MUST_CHECK Obj *compile(void)
                         uint8_t *s;
                         Tuple *tmp = new_tuple(len);
                         vals = tmp->data;
-                        for (i = 0; i < len; i++) {
-                            vs = get_val(); val = vs->val;
+                        vs = get_val();
+                        for (i = 0; i < len; i++, vs++) {
+                            val = vs->val;
                             if (val == &none_value->v) val = (Obj *)ref_str(null_str);
                             else {
                                 val = STR_OBJ->create(val, &vs->epoint);
@@ -3625,7 +3627,7 @@ MUST_CHECK Obj *compile(void)
                         err_msg2((prm==CMD_CERROR || prm==CMD_ERROR)?ERROR__USER_DEFINED:ERROR_WUSER_DEFINED, v, &epoint);
                         val_destroy(&v->v);
                         val_destroy(&tmp->v);
-                    } else while (get_val() != NULL);
+                    }
                 }
                 break;
             case CMD_ENC: if ((waitfor->skip & 1) != 0)
