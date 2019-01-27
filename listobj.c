@@ -524,7 +524,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     if (o2->obj == LIST_OBJ) {
         iter_next_t iter_next;
         Iter *iter = o2->obj->getiter(o2);
-        bool error;
         size_t len = iter->len(iter);
 
         if (len == 0) {
@@ -537,14 +536,11 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             val_destroy(&iter->v);
             goto failed;
         }
-        error = true;
         iter_next = iter->next;
         for (i = 0; i < len && (o2 = iter_next(iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs2, epoint2);
             if (err != NULL) {
-                if (error) {err_msg_output(err); error = false;}
-                val_destroy(&err->v);
-                vals[i] = (Obj *)ref_none();
+                vals[i] = &err->v;
                 continue;
             }
             if (more) {

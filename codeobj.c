@@ -341,7 +341,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         Iter *iter = o2->obj->getiter(o2);
         size_t len1 = iter->len(iter);
         Tuple *v;
-        bool error;
 
         if (len1 == 0) {
             val_destroy(&iter->v);
@@ -349,14 +348,11 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         }
         v = new_tuple(len1);
         vals = v->data;
-        error = true;
         iter_next = iter->next;
         for (i = 0; i < len1 && (o2 = iter_next(iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs1, epoint2);
             if (err != NULL) {
-                if (error) {err_msg_output(err); error = false;}
-                val_destroy(&err->v);
-                vals[i] = (Obj *)ref_none();
+                vals[i] = &err->v;
                 continue;
             }
             vals[i] = code_item(v1, (ssize_t)offs1 + offs0, ln2);
