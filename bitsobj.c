@@ -431,7 +431,7 @@ MUST_CHECK Bits *bits_from_uval(uval_t i, unsigned int bits) {
     return return_bits(i, bits, false);
 }
 
-MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, size_t *ln2, linepos_t epoint) {
+MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint) {
     size_t i, j, k, sz;
     int bits;
     bdigit_t *d, uv;
@@ -461,7 +461,7 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, size_t *ln2, line
     }
     *ln = k;
     i = k - i;
-    *ln2 = i;
+
     if (i <= 2 * sizeof *d) {
         return (i == 0) ? val_reference(&null_bits->v) : (Obj *)return_bits(uv, i * 4, false);
     }
@@ -493,7 +493,7 @@ failed:
     return (Obj *)new_error_mem(epoint);
 }
 
-MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, size_t *ln2, linepos_t epoint) {
+MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint) {
     size_t i, j, k, sz;
     int bits;
     bdigit_t *d, uv;
@@ -518,7 +518,7 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, size_t *ln2, line
     }
     *ln = k;
     i = k - i;
-    *ln2 = i;
+
     if (i <= 8 * sizeof *d) {
         return (i == 0) ? val_reference(&null_bits->v) : (Obj *)return_bits(uv, i, false);
     }
