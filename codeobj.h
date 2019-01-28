@@ -44,7 +44,7 @@ typedef struct Code {
     signed char dtype;
     Obj *addr;
     struct Memblocks *memblocks;
-    size_t memp;
+    address_t memaddr;
     size_t membp;
     struct Namespace *names;
     uval_t requires;

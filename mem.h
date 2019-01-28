@@ -33,6 +33,6 @@ extern void memref(struct Memblocks *, struct Memblocks *);
 extern void memprint(struct Memblocks *);
 extern void output_mem(struct Memblocks *, const struct output_s *);
 extern FAST_CALL uint8_t *alloc_mem(struct Memblocks *, size_t);
-extern int read_mem(const struct Memblocks *, size_t, size_t, size_t);
-extern void get_mem(const struct Memblocks *, size_t *, size_t *);
+extern int read_mem(const struct Memblocks *, address_t, size_t, size_t);
+extern size_t get_mem(const struct Memblocks *);
 #endif

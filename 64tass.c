@@ -106,19 +106,19 @@ static struct waitfor_s {
             Obj *val;
             address_t addr;
             Label *label;
-            size_t memp, membp;
+            size_t membp;
         } logical;
         struct {
             struct section_address_s *section_address;
             Label *label;
-            size_t memp, membp;
+            size_t membp;
         } virtual;
         struct {
             struct section_s *section;
             struct section_address_s *section_address;
             address_t addr;
             Label *label;
-            size_t memp, membp;
+            size_t membp;
         } section;
         struct {
             bool unionmode;
@@ -128,23 +128,23 @@ static struct waitfor_s {
         struct {
             address_t addr;
             Label *label;
-            size_t memp, membp;
+            size_t membp;
         } weak;
         struct {
             address2_t laddr;
             address_t addr;
             Label *label;
-            size_t memp, membp;
+            size_t membp;
         } page;
         struct {
             address_t addr;
             Label *label;
-            size_t memp, membp;
+            size_t membp;
         } proc;
         struct {
             address_t addr;
             Label *label;
-            size_t memp, membp;
+            size_t membp;
         } block;
         struct {
             bool unionmode;
@@ -351,7 +351,7 @@ bool close_waitfor(Wait_types what) {
     return false;
 }
 
-static void set_size(const Label *label, address_t size, Memblocks *mem, size_t memp, size_t membp) {
+static void set_size(const Label *label, address_t size, Memblocks *mem, address_t oaddr, size_t membp) {
     Code *code = (Code *)label->value;
     if (code->v.obj != CODE_OBJ) return;
     size &= all_mem2;
@@ -367,7 +367,7 @@ static void set_size(const Label *label, address_t size, Memblocks *mem, size_t 
         val_destroy(&code->memblocks->v);
         code->memblocks = ref_memblocks(mem);
     }
-    code->memp = memp;
+    code->memaddr = oaddr;
     code->membp = membp;
 }
 
@@ -847,7 +847,7 @@ static void logical_close(linepos_t epoint) {
     val_destroy(current_address->l_address_val);
     current_address->l_address_val = waitfor->u.logical.val;
     if (waitfor->u.logical.label != NULL) {
-        set_size(waitfor->u.logical.label, diff, current_address->mem, waitfor->u.logical.memp, waitfor->u.logical.membp);
+        set_size(waitfor->u.logical.label, diff, current_address->mem, waitfor->u.logical.addr, waitfor->u.logical.membp);
         val_destroy(&waitfor->u.logical.label->v);
     }
     current_section->logicalrecursion--;
@@ -856,7 +856,7 @@ static void logical_close(linepos_t epoint) {
 static void virtual_close(linepos_t epoint) {
     if (waitfor->u.virtual.label != NULL) {
         address_t end = (current_address->end < current_address->address) ? current_address->address : current_address->end;
-        set_size(waitfor->u.virtual.label, end - current_address->start, current_address->mem, waitfor->u.virtual.memp, waitfor->u.virtual.membp);
+        set_size(waitfor->u.virtual.label, end - current_address->start, current_address->mem, current_address->start, waitfor->u.virtual.membp);
         val_destroy(&waitfor->u.virtual.label->v);
     }
     val_destroy(current_address->l_address_val);
@@ -871,7 +871,7 @@ static void virtual_close(linepos_t epoint) {
 
 static void section_close(linepos_t epoint) {
     if (waitfor->u.section.label != NULL) {
-        set_size(waitfor->u.section.label, current_address->address - waitfor->u.section.addr, current_address->mem, waitfor->u.section.memp, waitfor->u.section.membp);
+        set_size(waitfor->u.section.label, current_address->address - waitfor->u.section.addr, current_address->mem, waitfor->u.section.addr, waitfor->u.section.membp);
         val_destroy(&waitfor->u.section.label->v);
     }
     current_section = waitfor->u.section.section;
@@ -904,12 +904,12 @@ static const char *check_waitfor(void) {
         if (waitfor->u.switc.val != NULL) val_destroy(waitfor->u.switc.val);
         return ".endswitch";
     case W_WEAK2:
-        if (waitfor->u.weak.label != NULL) {set_size(waitfor->u.weak.label, current_address->address - waitfor->u.weak.addr, current_address->mem, waitfor->u.weak.memp, waitfor->u.weak.membp);val_destroy(&waitfor->u.weak.label->v);}
+        if (waitfor->u.weak.label != NULL) {set_size(waitfor->u.weak.label, current_address->address - waitfor->u.weak.addr, current_address->mem, waitfor->u.weak.addr, waitfor->u.weak.membp);val_destroy(&waitfor->u.weak.label->v);}
         strength--;
         /* fall through */
     case W_WEAK: return ".endweak";
     case W_ENDP2:
-        if (waitfor->u.page.label != NULL) {set_size(waitfor->u.page.label, current_address->address - waitfor->u.page.addr, current_address->mem, waitfor->u.page.memp, waitfor->u.page.membp);val_destroy(&waitfor->u.page.label->v);}
+        if (waitfor->u.page.label != NULL) {set_size(waitfor->u.page.label, current_address->address - waitfor->u.page.addr, current_address->mem, waitfor->u.page.addr, waitfor->u.page.membp);val_destroy(&waitfor->u.page.label->v);}
         /* fall through */
     case W_ENDP: return ".endp";
     case W_ENDM: 
@@ -922,10 +922,10 @@ static const char *check_waitfor(void) {
     case W_NEXT: return ".next";
     case W_PEND:
         pop_context();
-        if (waitfor->u.proc.label != NULL) {set_size(waitfor->u.proc.label, current_address->address - waitfor->u.proc.addr, current_address->mem, waitfor->u.proc.memp, waitfor->u.proc.membp);val_destroy(&waitfor->u.proc.label->v);}
+        if (waitfor->u.proc.label != NULL) {set_size(waitfor->u.proc.label, current_address->address - waitfor->u.proc.addr, current_address->mem, waitfor->u.proc.addr, waitfor->u.proc.membp);val_destroy(&waitfor->u.proc.label->v);}
         return ".pend";
     case W_BEND2:
-        if (waitfor->u.block.label != NULL) {set_size(waitfor->u.block.label, current_address->address - waitfor->u.block.addr, current_address->mem, waitfor->u.block.memp, waitfor->u.block.membp);val_destroy(&waitfor->u.block.label->v);}
+        if (waitfor->u.block.label != NULL) {set_size(waitfor->u.block.label, current_address->address - waitfor->u.block.addr, current_address->mem, waitfor->u.block.addr, waitfor->u.block.membp);val_destroy(&waitfor->u.block.label->v);}
         /* fall through */
     case W_BEND: 
         pop_context();
@@ -1183,7 +1183,7 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
     size_t size;
     Code *code;
     address_t oaddr;
-    size_t newmemp, newmembp;
+    size_t newmembp;
     Obj *val = *o;
 
     if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
@@ -1222,7 +1222,7 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
         val_destroy(val);
         *o = val = &code->v;
     }
-    get_mem(current_address->mem, &newmemp, &newmembp);
+    newmembp = get_mem(current_address->mem);
     code->apass = pass;
     push_context(((Code *)val)->names);
     nf = compile();
@@ -1240,7 +1240,7 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
         val_destroy(&code->memblocks->v);
         code->memblocks = ref_memblocks(current_address->mem);
     }
-    code->memp = newmemp;
+    code->memaddr = oaddr;
     code->membp = newmembp;
     return nf;
 }
@@ -1670,7 +1670,7 @@ MUST_CHECK Obj *compile(void)
     Obj *val;
 
     Label *newlabel = NULL;
-    size_t newmemp = 0, newmembp = 0;
+    size_t newmembp = 0;
     Label *tmp2 = NULL;
     Namespace *mycontext;
     address_t oaddr = 0;
@@ -2486,7 +2486,7 @@ MUST_CHECK Obj *compile(void)
                         current_section->structrecursion++;
 
                         oaddr = current_address->address;
-                        get_mem(current_address->mem, &newmemp, &newmembp);
+                        newmembp = get_mem(current_address->mem);
                         oldstart = current_address->start;
                         oldend = current_address->end;
                         oldl_start = current_address->l_start;
@@ -2574,7 +2574,7 @@ MUST_CHECK Obj *compile(void)
                         }
                         current_section->structrecursion--;
 
-                        if (!ret) set_size(label, ((current_address->end < current_address->address) ? current_address->address : current_address->end) - oaddr, current_address->mem, newmemp, newmembp);
+                        if (!ret) set_size(label, ((current_address->end < current_address->address) ? current_address->address : current_address->end) - oaddr, current_address->mem, oaddr, newmembp);
                         current_address->start = oldstart;
                         oldstart = current_address->unionmode ? current_address->end : current_address->address;
                         if (oldend > current_address->end) current_address->end = oldend;
@@ -2674,7 +2674,7 @@ MUST_CHECK Obj *compile(void)
                                 fixeddig = false;
                             }
                         }
-                        get_mem(current_address->mem, &newmemp, &newmembp);
+                        newmembp = get_mem(current_address->mem);
                         code->apass = pass;
                         newlabel->defpass = pass;
                         code->names->backr = code->names->forwr = 0;
@@ -2700,7 +2700,7 @@ MUST_CHECK Obj *compile(void)
                     code->names = new_namespace(current_file_list, &epoint);
                     code->requires = current_section->requires;
                     code->conflicts = current_section->conflicts;
-                    get_mem(current_address->mem, &newmemp, &newmembp);
+                    newmembp = get_mem(current_address->mem);
                 }
             }
             if (wht == '.') { /* .proc */
@@ -2710,24 +2710,24 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_PEND, &epoint);
                     if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
-                        waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, newmemp, newmembp);
+                        waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
                         push_dummy_context();
                         waitfor->u.proc.label = NULL;
                     } else {         /* TODO: first time it should not compile */
                         push_context(((Code *)newlabel->value)->names);
                         newlabel->ref = false;
-                        waitfor->u.proc.addr = current_address->address;waitfor->u.proc.memp = newmemp;waitfor->u.proc.membp = newmembp;waitfor->u.proc.label = ref_label(newlabel);
+                        waitfor->u.proc.addr = current_address->address;waitfor->u.proc.membp = newmembp;waitfor->u.proc.label = ref_label(newlabel);
                     }
                     newlabel = NULL;
                     goto finish;
                 case CMD_SECTION:
-                    waitfor->u.section.addr = current_address->address;waitfor->u.section.memp = newmemp;waitfor->u.section.membp = newmembp;waitfor->u.section.label = ref_label(newlabel);
+                    waitfor->u.section.addr = current_address->address;waitfor->u.section.membp = newmembp;waitfor->u.section.label = ref_label(newlabel);
                     listing_line(listing, epoint.pos);
                     newlabel->ref = false;
                     newlabel = NULL;
                     goto finish;
                 case CMD_VIRTUAL:
-                    waitfor->u.virtual.memp = newmemp;waitfor->u.virtual.membp = newmembp;waitfor->u.virtual.label = ref_label(newlabel);
+                    waitfor->u.virtual.membp = newmembp;waitfor->u.virtual.label = ref_label(newlabel);
                     listing_line(listing, epoint.pos);
                     newlabel->ref = false;
                     newlabel = NULL;
@@ -3013,7 +3013,7 @@ MUST_CHECK Obj *compile(void)
                     if ((waitfor->skip & 1) != 0) {
                         listing_line(listing, epoint.pos);
                         if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".proc", &epoint);
-                        if (waitfor->u.proc.label != NULL) {set_size(waitfor->u.proc.label, current_address->address - waitfor->u.proc.addr, current_address->mem, waitfor->u.proc.memp, waitfor->u.proc.membp);val_destroy(&waitfor->u.proc.label->v);}
+                        if (waitfor->u.proc.label != NULL) {set_size(waitfor->u.proc.label, current_address->address - waitfor->u.proc.addr, current_address->mem, waitfor->u.proc.addr, waitfor->u.proc.membp);val_destroy(&waitfor->u.proc.label->v);}
                     } else pop_context();
                     close_waitfor(W_PEND);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
@@ -3084,7 +3084,7 @@ MUST_CHECK Obj *compile(void)
                             err_msg_page((waitfor->u.page.laddr.address & 0xffff) | waitfor->u.page.laddr.bank, (current_address->l_address.address & 0xffff) | current_address->l_address.bank, &epoint);
                         }
                     }
-                    if (waitfor->u.page.label != NULL) {set_size(waitfor->u.page.label, current_address->address - waitfor->u.page.addr, current_address->mem, waitfor->u.page.memp, waitfor->u.page.membp);val_destroy(&waitfor->u.page.label->v);}
+                    if (waitfor->u.page.label != NULL) {set_size(waitfor->u.page.label, current_address->address - waitfor->u.page.addr, current_address->mem, waitfor->u.page.addr, waitfor->u.page.membp);val_destroy(&waitfor->u.page.label->v);}
                     close_waitfor(W_ENDP2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".page", &epoint); goto breakerr;}
                 break;
@@ -3111,7 +3111,7 @@ MUST_CHECK Obj *compile(void)
                 if (close_waitfor(W_BEND)) {
                     pop_context();
                 } else if (waitfor->what==W_BEND2) {
-                    if (waitfor->u.block.label != NULL) {set_size(waitfor->u.block.label, current_address->address - waitfor->u.block.addr, current_address->mem, waitfor->u.block.memp, waitfor->u.block.membp);val_destroy(&waitfor->u.block.label->v);}
+                    if (waitfor->u.block.label != NULL) {set_size(waitfor->u.block.label, current_address->address - waitfor->u.block.addr, current_address->mem, waitfor->u.block.addr, waitfor->u.block.membp);val_destroy(&waitfor->u.block.label->v);}
                     if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".block", &epoint);
                     close_waitfor(W_BEND2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".block", &epoint); goto breakerr;}
@@ -3129,7 +3129,7 @@ MUST_CHECK Obj *compile(void)
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (close_waitfor(W_WEAK)) {
                 } else if (waitfor->what==W_WEAK2) {
-                    if (waitfor->u.weak.label != NULL) {set_size(waitfor->u.weak.label, current_address->address - waitfor->u.weak.addr, current_address->mem, waitfor->u.weak.memp, waitfor->u.weak.membp);val_destroy(&waitfor->u.weak.label->v);}
+                    if (waitfor->u.weak.label != NULL) {set_size(waitfor->u.weak.label, current_address->address - waitfor->u.weak.addr, current_address->mem, waitfor->u.weak.addr, waitfor->u.weak.membp);val_destroy(&waitfor->u.weak.label->v);}
                     close_waitfor(W_WEAK2);
                     strength--;
                 } else {err_msg2(ERROR__MISSING_OPEN, ".weak", &epoint); goto breakerr;}
@@ -3338,7 +3338,7 @@ MUST_CHECK Obj *compile(void)
                     waitfor->u.logical.laddr = current_address->unionmode ? current_address->l_union : current_address->l_address;waitfor->u.logical.addr = current_address->address;waitfor->u.logical.val = val_reference(current_address->l_address_val);
                     if (newlabel == NULL) waitfor->u.logical.label = NULL;
                     else {
-                        waitfor->u.logical.memp = newmemp;waitfor->u.logical.membp = newmembp;waitfor->u.logical.label = ref_label(newlabel);
+                        waitfor->u.logical.membp = newmembp;waitfor->u.logical.label = ref_label(newlabel);
                         newlabel = NULL;
                     }
                     current_section->logicalrecursion++;
@@ -3395,7 +3395,7 @@ MUST_CHECK Obj *compile(void)
                     new_waitfor(W_BEND2, &epoint);
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         push_context(((Code *)newlabel->value)->names);
-                        waitfor->u.block.addr = current_address->address;waitfor->u.block.memp = newmemp;waitfor->u.block.membp = newmembp;waitfor->u.block.label = ref_label(newlabel);
+                        waitfor->u.block.addr = current_address->address;waitfor->u.block.membp = newmembp;waitfor->u.block.label = ref_label(newlabel);
                         newlabel = NULL;
                     } else {
                         Label *label;
@@ -3481,7 +3481,7 @@ MUST_CHECK Obj *compile(void)
                     new_waitfor(W_WEAK2, &epoint);
                     if (newlabel == NULL) waitfor->u.weak.label = NULL;
                     else {
-                        waitfor->u.weak.addr = current_address->address;waitfor->u.weak.memp = newmemp;waitfor->u.weak.membp = newmembp;waitfor->u.weak.label = ref_label(newlabel);
+                        waitfor->u.weak.addr = current_address->address;waitfor->u.weak.membp = newmembp;waitfor->u.weak.label = ref_label(newlabel);
                         newlabel = NULL;
                     }
                     strength++;
@@ -3553,8 +3553,7 @@ MUST_CHECK Obj *compile(void)
                     mark_mem(current_address->mem, current_address->address, star);
                     if ((vs = get_val()) != NULL) {
                         struct textrecursion_s trec;
-                        size_t memp, membp;
-                        get_mem(current_address->mem, &memp, &membp);
+                        size_t membp = get_mem(current_address->mem);
 
                         poke_pos = &vs->epoint;
                         trec.len = 0;
@@ -3584,7 +3583,7 @@ MUST_CHECK Obj *compile(void)
                                 while (db != 0) { /* pattern repeat */
                                     int ch;
                                     db--;
-                                    ch = read_mem(current_address->mem, memp, membp, offs);
+                                    ch = read_mem(current_address->mem, oaddr, membp, offs);
                                     if (ch < 0) {
                                         if (trec.len > 0) {
                                             memcpy(pokealloc(trec.len), trec.buff, trec.len);
@@ -4052,7 +4051,7 @@ MUST_CHECK Obj *compile(void)
                     waitfor->u.page.laddr = current_address->l_address;
                     if (newlabel == NULL) waitfor->u.page.label = NULL;
                     else {
-                        waitfor->u.page.addr = current_address->address;waitfor->u.page.memp = newmemp;waitfor->u.page.membp = newmembp;waitfor->u.page.label = ref_label(newlabel);
+                        waitfor->u.page.addr = current_address->address;waitfor->u.page.membp = newmembp;waitfor->u.page.label = ref_label(newlabel);
                         newlabel = NULL;
                     }
                 } else new_waitfor(W_ENDP, &epoint);
@@ -4503,7 +4502,7 @@ MUST_CHECK Obj *compile(void)
     finish:
         ignore();if (here() != 0 && here() != ';' && (waitfor->skip & 1) != 0) err_msg(ERROR_EXTRA_CHAR_OL,NULL);
     breakerr:
-        if (newlabel != NULL && !newlabel->update_after) set_size(newlabel, current_address->address - oaddr, current_address->mem, newmemp, newmembp);
+        if (newlabel != NULL && !newlabel->update_after) set_size(newlabel, current_address->address - oaddr, current_address->mem, oaddr, newmembp);
     }
 
     while (oldwaitforp < waitfor_p) {
