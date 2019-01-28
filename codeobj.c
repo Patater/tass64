@@ -261,7 +261,7 @@ static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
     offs = (size_t)offs2 * ln2;
     r = -1;
     for (val = i2 = 0; i2 < ln2; i2++, offs++) {
-        r = read_mem(v1->memblocks, v1->memp, v1->membp, offs);
+        r = read_mem(v1->memblocks, v1->memaddr, v1->membp, offs);
         if (r < 0) return (Obj *)ref_gap();
         val |= (uval_t)r << (i2 * 8);
     }
@@ -427,18 +427,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 str_t cf;
                 str_cfcpy(&cf, &v2->name);
                 if (str_cmp(&cf, &of) == 0) {
-                    size_t membp = v1->membp;
-                    const Memblocks *memblocks = v1->memblocks;
-                    address_t addr = v1->memp;
-
                     if (diagnostics.case_symbol && str_cmp(&v2->name, &cf) != 0) err_msg_symbol_case(&v2->name, NULL, &v2->epoint);
-
-                    if (membp < memblocks->p) {
-                        addr += memblocks->data[membp].addr;
-                    } else {
-                        addr += memblocks->lastaddr;
-                    }
-                    return (Obj *)int_from_uval(addr);
+                    return (Obj *)int_from_uval(v1->memaddr);
                 }
             }
         }

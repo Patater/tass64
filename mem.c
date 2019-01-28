@@ -528,32 +528,24 @@ void mark_mem(const Memblocks *memblocks, address_t adr, address_t adr2) {
     oaddr2 = adr2;
 }
 
-void get_mem(const Memblocks *memblocks, size_t *memp, size_t *membp) {
-    *memp = memblocks->mem.p;
-    *membp = memblocks->p;
+size_t get_mem(const Memblocks *memblocks) {
+    return memblocks->p;
 }
 
-int read_mem(const Memblocks *memblocks, size_t memp, size_t membp, size_t offs) {
-    size_t len;
-    if (memp >= memblocks->mem.p) return -1;
-    for (;;) {
-        if (membp < memblocks->p) {
-            len = memblocks->data[membp].len - (memp - memblocks->data[membp].p);
-        } else {
-            len = memblocks->mem.p - memp;
-        }
-        if (offs < len) return memblocks->mem.data[memp + offs];
-        offs -= len;
-        memp += len;
-        if (membp + 1 < memblocks->p) {
-            len = memblocks->data[membp + 1].addr - memblocks->data[membp].addr - memblocks->data[membp].len;
-        } else if (membp < memblocks->p) {
-            len = memblocks->lastaddr - memblocks->data[membp].addr - memblocks->data[membp].len;
-        } else return -1;
-        if (offs < len) return -1;
-        offs -= len;
-        membp++;
+int read_mem(const Memblocks *memblocks, address_t raddr, size_t membp, size_t offs) {
+    address_t addr, diff;
+    raddr = (raddr + offs) & all_mem2;
+    for (; membp < memblocks->p; membp++) {
+        addr = memblocks->data[membp].addr;
+        if (raddr < addr) continue;
+        diff = raddr - addr;
+        if (diff < memblocks->data[membp].len) return memblocks->mem.data[memblocks->data[membp].p + diff];
     }
+    addr = memblocks->lastaddr;
+    if (raddr < addr) return -1;
+    diff = raddr - addr;
+    if (diff < memblocks->mem.p - memblocks->lastp) return memblocks->mem.data[memblocks->lastp + diff];
+    return -1;
 }
 
 void write_mark_mem(Memblocks *memblocks, unsigned int c) {
