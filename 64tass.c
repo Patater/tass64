@@ -456,7 +456,6 @@ FAST_CALL uint8_t *pokealloc(address_t db) { /* poke_pos! */
             current_address->address = (current_address->address + db) & all_mem2;
             err_msg_mem_wrap(poke_pos);current_address->wrapwarn = false;
         }
-        memjmp(current_address->mem, current_address->address);
     } else current_address->address += db;
     return alloc_mem(current_address->mem, db);
 }
@@ -3285,7 +3284,6 @@ MUST_CHECK Obj *compile(void)
                                     size_t i, ln = cfile2->len - foffset;
                                     uint8_t *d, *s = cfile2->data + foffset;
                                     if (ln > fsize) ln = fsize;
-                                    if (ln > 65536) ln = 65536;
                                     d = pokealloc((address_t)ln);
                                     if (outputeor != 0) {
                                         for (i = 0; i < ln; i++) d[i] = s[i] ^ outputeor;
