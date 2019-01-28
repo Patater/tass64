@@ -95,7 +95,7 @@ MUST_CHECK Error *err_addressing(atype_t am, linepos_t epoint) {
     return v;
 }
 
-static Error *dump_instr(uint8_t cod, uint32_t adr, int ln, linepos_t epoint)  {
+static void dump_instr(uint8_t cod, uint32_t adr, int ln, linepos_t epoint)  {
     if (diagnostics.optimize) cpu_opt(cod, adr, ln, epoint);
     if (ln >= 0) {
         uint8_t *d;
@@ -112,7 +112,6 @@ static Error *dump_instr(uint8_t cod, uint32_t adr, int ln, linepos_t epoint)  {
         }
     }
     listing_instr(listing, cod, adr, ln);
-    return NULL;
 }
 
 MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoint, struct linepos_s *epoints) {
@@ -957,6 +956,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
 
     cod = cnmemonic[opr];
     if (opr == ADR_REG) cod = regopcode_table[cod][reg];
-    return dump_instr(cod ^ longbranch, adr, (int)ln, epoint);
+    dump_instr(cod ^ longbranch, adr, (int)ln, epoint);
+    return NULL;
 }
 
