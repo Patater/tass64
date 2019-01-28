@@ -507,14 +507,23 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 
 FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, size_t len) {
     size_t p = memblocks->mem.p + len;
+    uint8_t *d;
     if (p < len) err_msg_out_of_memory(); /* overflow */
     if (p > memblocks->mem.len) {
         memblocks->mem.len = p + 0x1000;
         if (memblocks->mem.len < 0x1000) err_msg_out_of_memory(); /* overflow */
         memblocks->mem.data = (uint8_t *)reallocx(memblocks->mem.data, memblocks->mem.len);
     }
+    d = memblocks->mem.data + memblocks->mem.p;
+    do {
+        size_t left = all_mem2 - (memblocks->lastaddr + memblocks->mem.p - memblocks->lastp);
+        if (len <= left) break;
+        memblocks->mem.p += left + 1;
+        len -= left + 1;
+        memjmp(memblocks, 0);
+    } while (true);
     memblocks->mem.p = p;
-    return memblocks->mem.data + p - len;
+    return d;
 }
 
 static size_t omemp;
