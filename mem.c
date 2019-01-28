@@ -561,33 +561,40 @@ void write_mark_mem(Memblocks *memblocks, unsigned int c) {
 }
 
 void list_mem(const Memblocks *memblocks) {
-    address_t myaddr;
-    size_t len;
-    bool first = true, print = true;
+    bool first = true;
+    size_t o = omemp;
+    address_t addr2 = oaddr;
 
-    for (;omemp <= memblocks->p;omemp++, first = false) {
-        if (omemp < memblocks->p) {
-            if (first && oaddr < memblocks->data[omemp].addr) {
-                len = 0; myaddr = oaddr; omemp--;
-            } else {
-                len = memblocks->data[omemp].len - (ptextaddr - memblocks->data[omemp].p);
-                myaddr = (memblocks->data[omemp].addr + memblocks->data[omemp].len - len) & all_mem;
-            }
+    for (; o <= memblocks->p; o++) {
+        size_t p;
+        address_t addr, len;
+
+        if (o < memblocks->p) {
+            addr = memblocks->data[o].addr;
+            p = memblocks->data[o].p;
+            len = memblocks->data[o].len;
         } else {
-            if (first && oaddr < memblocks->lastaddr) {
-                len = 0; myaddr = oaddr; omemp--;
-            } else {
-                myaddr = memblocks->lastaddr + (address_t)(ptextaddr - memblocks->lastp);
-                len = memblocks->mem.p - ptextaddr;
-                if (len == 0) {
-                    if (!print) continue;
-                    if (first) myaddr = oaddr;
-                    else myaddr = (memblocks->data[omemp-1].addr + memblocks->data[omemp-1].len) & all_mem;
-                }
-            }
+            addr = memblocks->lastaddr;
+            p = memblocks->lastp;
+            len = memblocks->mem.p - p;
         }
-        listing_mem(listing, memblocks->mem.data + ptextaddr, len, myaddr, ((oaddr2 + myaddr - oaddr) & 0xffff) | (oaddr2 & ~(address_t)0xffff));
-        print = false;
-        ptextaddr += len;
+
+        if (first) {
+            if (addr2 < addr) {
+                addr = addr2;
+                len = 0;
+                o--;
+            } else {
+                address_t diff = addr2 - addr;
+                if (diff > len) continue;
+                addr = addr2;
+                p += diff;
+                len -= diff;
+            }
+            first = false;
+        } else {
+            if (len == 0) continue;
+        }
+        listing_mem(listing, memblocks->mem.data + p, len, addr, ((oaddr2 + addr - addr2) & 0xffff) | (oaddr2 & ~(address_t)0xffff));
     }
 }
