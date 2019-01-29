@@ -3254,12 +3254,11 @@ MUST_CHECK Obj *compile(void)
                     } else if (prm==CMD_BINARY) { /* .binary */
                         char *path = NULL;
                         size_t foffset = 0;
-                        size_t fsize = all_mem2 + 1;
+                        size_t fsize = SIZE_MAX;
                         uval_t uval;
                         struct values_s *vs;
                         str_t filename;
 
-                        if (fsize == 0) fsize = all_mem2; /* overflow */
                         if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                             ((Code *)newlabel->value)->dtype = D_BYTE;
                         }
