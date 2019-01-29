@@ -372,7 +372,7 @@ static MUST_CHECK Obj *function_binary(Funcargs *vals, linepos_t epoint) {
     struct values_s *v = vals->val;
     Error *err;
     ival_t offs = 0;
-    size_t length = SIZE_MAX;
+    uval_t length = (uval_t)-1;
     char *path = NULL;
     str_t filename;
 
