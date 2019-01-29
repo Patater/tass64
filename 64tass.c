@@ -3253,9 +3253,8 @@ MUST_CHECK Obj *compile(void)
                         }
                     } else if (prm==CMD_BINARY) { /* .binary */
                         char *path = NULL;
-                        size_t foffset = 0;
+                        ival_t foffs = 0;
                         size_t fsize = SIZE_MAX;
-                        uval_t uval;
                         struct values_s *vs;
                         str_t filename;
 
@@ -3268,9 +3267,11 @@ MUST_CHECK Obj *compile(void)
                             path = get_path(&filename, current_file_list->file->realname);
                         }
                         if ((vs = get_val()) != NULL) {
-                            if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
-                            else foffset = uval;
+                            ival_t ival;
+                            if (toival(vs->val, &ival, 8 * sizeof ival, &vs->epoint)) {}
+                            else foffs = ival;
                             if ((vs = get_val()) != NULL) {
+                                uval_t uval;
                                 if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
                                 else fsize = uval;
                             }
@@ -3279,6 +3280,9 @@ MUST_CHECK Obj *compile(void)
                         if (path != NULL) {
                             struct file_s *cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, &epoint);
                             if (cfile2 != NULL) {
+                                size_t foffset;
+                                if (foffs < 0) foffset = (uval_t)-foffs < cfile2->len ? (cfile2->len - (uval_t)-foffs) : 0;
+                                else foffset = (uval_t)foffs;
                                 for (; fsize != 0 && foffset < cfile2->len;) {
                                     size_t i, ln = cfile2->len - foffset;
                                     uint8_t *d, *s = cfile2->data + foffset;

@@ -1007,7 +1007,7 @@ any(<expression>)
     Only booleans in a list are accepted with the `-Wstrict-bool' command line
     option.
 
-binary(<string expression>[, <expression>, ...])
+binary(<string expression>[, <offset>[, <length>]])
     Returns the binary file content as bytes.
 
     This function reads the content of a binary file as a byte string. It also
@@ -2117,9 +2117,11 @@ directory separator and use lower/uppercase consistently in file names!
             jmp menu.start
 
 .binary <filename>[, <offset>[, <length>]]
-    Include raw binary data from file. By using offset and length it's possible
-    to break out chunks of data from a file separately, like bitmap and colors
-    for example.
+    Include raw binary data from file.
+
+    By using offset and length it's possible to break out chunks of data from a
+    file separately, like bitmap and colors for example. Negative offsets are
+    calculated from the end of file.
 
             .binary "stuffz.bin"        ;simple include, all bytes
             .binary "stuffz.bin", 2     ;skip start address
