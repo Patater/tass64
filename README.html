@@ -1292,7 +1292,7 @@ parameters to functions.</p>
 
 <p>Only booleans in a list are accepted with the <q><a href="#o_Wstrict-bool"><tt>-Wstrict-bool</tt></a></q> command line option.</p>
 
-<dt><code><b>binary(</b>&lt;string expression&gt;[, &lt;expression&gt;, &hellip;]<b>)</b></code><a name="f_binary" href="#f_binary"></a>
+<dt><code><b>binary(</b>&lt;string expression&gt;[, &lt;offset&gt;[, &lt;length&gt;]]<b>)</b></code><a name="f_binary" href="#f_binary"></a>
 <dd>Returns the binary file content as bytes.
 <p>This function reads the content of a binary file as a <a href="#byte-string">byte string</a>. It also accepts optional offset and length parameters.
 <div><table border="0">
@@ -2507,8 +2507,11 @@ menu    <b class="k">.binclude</b> <span class="s">"menu.asm"</span>        <i>;
 </pre>
 
 <dt><code><b class="d">.binary</b></code> &lt;filename&gt;[, &lt;offset&gt;[, &lt;length&gt;]]<a name="d_binary" href="#d_binary"></a>
-<dd>Include raw binary data from file. By using offset and length it's possible to break out chunks of data from a
-file separately, like bitmap and colors for example.
+<dd>Include raw binary data from file.
+
+<p>By using offset and length it's possible to break out chunks of data from a
+file separately, like bitmap and colors for example. Negative offsets are calculated from the end of file.</p>
+
 <pre width=80>
         <b class="d">.binary</b> <span class="s">"stuffz.bin"</span>        <i>;simple include, all bytes</i>
         <b class="d">.binary</b> <span class="s">"stuffz.bin"</span>, <span>2</span>     <i>;skip start address</i>
