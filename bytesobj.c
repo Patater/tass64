@@ -1064,14 +1064,11 @@ static MUST_CHECK Obj *calc2_bytes(oper_t op) {
     case O_LSHIFT:
     case O_RSHIFT:
         {
-            Obj *tmp, *tmp2, *result;
+            Obj *tmp, *result;
             tmp = bits_from_bytes(v1, op->epoint);
-            tmp2 = bits_from_bytes(v2, op->epoint2);
             op->v1 = tmp;
-            op->v2 = tmp2;
             op->inplace = NULL;
             result = tmp->obj->calc2(op);
-            val_destroy(tmp2);
             val_destroy(tmp);
             return result;
         }
