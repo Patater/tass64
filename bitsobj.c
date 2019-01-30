@@ -1017,8 +1017,9 @@ static MUST_CHECK Obj *lshift(const Bits *vv1, uval_t s, linepos_t epoint) {
             o[i + 1] |= v1[i] >> (SHIFT - bit);
             o[i] = v1[i] << bit;
         }
+        if (vv1->len < 0) o[0] |= ((bdigit_t)1 << bit) - 1; 
     } else if (len1 != 0) memmove(o, v1, len1 * sizeof *o);
-    memset(v, 0, word * sizeof *v);
+    if (word != 0) memset(v, (vv1->len < 0) ? 0xff : 0x00, word * sizeof *v);
 
     vv->bits = bits;
     return normalize(vv, sz, (vv1->len < 0));
