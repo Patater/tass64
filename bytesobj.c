@@ -156,31 +156,25 @@ static MUST_CHECK Obj *negate(Bytes *v1, linepos_t epoint) {
     Bytes *v;
     if (v1->len == 0) return val_reference(&v1->v);
     if (v1->len < 0) {
-        for (i = 0; i < sz; i++) if (v1->data[i] != (uint8_t)~0) break;
+        for (i = 0; i < sz; i++) {
+            if (v1->data[i] != (uint8_t)~0) break;
+        }
         if (i == sz) return NULL;
         v = new_bytes2(sz);
         if (v == NULL) goto failed;
-        for (i = 0; i < sz; i++) {
-            if (v1->data[i] != (uint8_t)~0) {
-                v->data[i] = v1->data[i] + 1;
-                i++;
-                break;
-            }
-            v->data[i] = 0;
-        }
+        v->data[i] = v1->data[i] + 1;
     } else {
+        for (i = 0; i < sz; i++) {
+            if (v1->data[i] != 0) break;
+        }
+        if (i == sz) return val_reference(&v1->v);
         v = new_bytes2(sz);
         if (v == NULL) goto failed;
-        for (i = 0; i < sz; i++) {
-            if (v1->data[i] != 0) {
-                v->data[i] = v1->data[i] - 1;
-                i++;
-                break;
-            }
-            v->data[i] = (uint8_t)~0;
-        }
+        v->data[i] = v1->data[i] - 1;
     }
-    for (; i < sz; i++) v->data[i] = v1->data[i];
+    if (i != 0) memset(v->data, (v1->len) < 0 ? 0 : ~0, i);
+    i++;
+    if (i < sz) memcpy(v->data + i, v1->data + i, sz - i);
     v->len = ~v1->len;
     return &v->v;
 failed:
