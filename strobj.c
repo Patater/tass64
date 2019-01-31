@@ -375,9 +375,9 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-    case O_INV: tmp = bytes_from_str(v1, op->epoint, BYTES_MODE_TEXT); break;
     case O_NEG:
     case O_POS:
+    case O_INV: tmp = bytes_from_str(v1, op->epoint, BYTES_MODE_TEXT); break;
     case O_STRING: tmp = int_from_str(v1, op->epoint); break;
     default: return obj_oper_error(op);
     }
