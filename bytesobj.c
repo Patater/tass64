@@ -172,7 +172,7 @@ static MUST_CHECK Obj *negate(Bytes *v1, linepos_t epoint) {
         if (v == NULL) goto failed;
         v->data[i] = v1->data[i] - 1;
     }
-    if (i != 0) memset(v->data, (v1->len) < 0 ? 0 : ~0, i);
+    if (i != 0) memset(v->data, (v1->len < 0) ? 0 : ~0, i);
     i++;
     if (i < sz) memcpy(v->data + i, v1->data + i, sz - i);
     v->len = ~v1->len;
@@ -1236,6 +1236,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *tmp;
 
     if (op->op == &o_X) {
+        if (o2 == &none_value->v || o2->obj == ERROR_OBJ) return val_reference(o2);
         return repeat(op);
     }
     if (op->op == &o_LAND) {
