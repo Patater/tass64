@@ -785,6 +785,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *tmp;
 
     if (op->op == &o_X) {
+        if (v2 == &none_value->v || v2->obj == ERROR_OBJ) return val_reference(v2);
         return repeat(op);
     }
     if (op->op == &o_LAND || op->op == &o_LOR) {
