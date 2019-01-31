@@ -373,6 +373,15 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2, *result;
     Address *v1 = (Address *)op->v1, *v;
     atype_t am;
+    if (op->op == &o_LAND || op->op == &o_LOR) {
+        bool i;
+        result = truth(&v1->v, TRUTH_BOOL, op->epoint);
+        if (result->obj != BOOL_OBJ) return result;
+        i = (result == &true_value->v) != (op->op == &o_LOR);
+        val_destroy(result);
+        if (diagnostics.strict_bool) err_msg_bool_oper(op);
+        return val_reference(i ? o2 : &v1->v);
+    }
     switch (o2->obj->type) {
     case T_ADDRESS:
         {
