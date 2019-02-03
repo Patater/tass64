@@ -568,7 +568,7 @@ int read_mem(const Memblocks *memblocks, address_t raddr, size_t membp, size_t o
     if (diff > offs) return -1;
     offs -= diff;
     len = memblocks->mem.p - memblocks->lastp;
-    if (offs < len) return memblocks->mem.data[memblocks->lastp + diff];
+    if (offs < len) return memblocks->mem.data[memblocks->lastp + offs];
     return -1;
 }
 
