@@ -2075,7 +2075,6 @@ Repetitions
 
 .next
     Closing directive of .for, .bfor, .rept and .brept loop.
-
 .lbl
     Creates a special jump label that can be referenced by .goto
 .goto <labelname>
@@ -3451,21 +3450,21 @@ Other options
 Command line from file
 
 Command line arguments can be read from a file as well. This is useful to store
-    common options for multiple files in one place or to overcome the argument
-    list length limitations of some systems.
+common options for multiple files in one place or to overcome the argument list
+length limitations of some systems.
 
-    The filename needs to be prefixed with an at sign, so `@argsfile' reads
-    options from `argsfile'. It will only work if there's not another file
-    named `@argsfile'. The content is expanded in-place of `@argsfile'.
+The filename needs to be prefixed with an at sign, so `@argsfile' reads options
+from `argsfile'. It will only work if there's not another file named
+`@argsfile'. The content is expanded in-place of `@argsfile'.
 
-    Stored options must be separated by white space. Single or double quotes
-    can be used in case file names have white space in their names.
+Stored options must be separated by white space. Single or double quotes can be
+used in case file names have white space in their names.
 
-    Backslash can be used to escape the character following it and it must be
-    used to escape itself. Single and double quotes need to be escaped if
-    needed for string quoting.
+Backslash can be used to escape the character following it and it must be used
+to escape itself. Single and double quotes need to be escaped if needed for
+string quoting.
 
-    Forward slashes can be used as a portable path separation on all systems.
+Forward slashes can be used as a portable path separation on all systems.
 
 -------------------------------------------------------------------------------
 
