@@ -233,7 +233,7 @@ static uint8_t *z85_encode(uint8_t *dest, const uint8_t *src, size_t len) {
         tmp = src2[3] | (src2[2] << 8) | (src2[1] << 16) | (src2[0] << 24);
 
         for (j = 4; j > 0; j--) {
-            uint32_t div = tmp / 85; 
+            uint32_t div = tmp / 85;
             dest[j] = z85[tmp - div * 85];
             tmp = div;
         }
@@ -245,20 +245,20 @@ static uint8_t *z85_encode(uint8_t *dest, const uint8_t *src, size_t len) {
 
 const uint8_t z85_dec[93] = {
         68, 85, 84, 83, 82, 72, 85, 75, 76, 70, 65, 85, 63, 62, 69,
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  64, 85, 73, 66, 74, 71, 
-    81, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 
-    51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 77, 85, 78, 67, 85, 
-    85, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 
+    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  64, 85, 73, 66, 74, 71,
+    81, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+    51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 77, 85, 78, 67, 85,
+    85, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
     25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 79, 85, 80
 };
- 
+
 static const uint8_t *z85_decode(uint8_t *dest, const uint8_t *src, size_t len) {
     size_t i;
 
     for (i = 0; i < len; i += 4) {
         uint32_t tmp;
         unsigned int j;
-        
+
         tmp = z85_dec[src[0] - 33];
         for (j = 1; j < 5; j++) {
             tmp = tmp * 85 + z85_dec[src[j] - 33];
@@ -1006,7 +1006,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         if (v1->len < ~0) return (Obj *)bytes_from_u16(~((unsigned int)v1->data[0] << 8));
         return (Obj *)bytes_from_u16((v1->len < 0) ? ~0U : 0);
     case O_POS: return val_reference(&v1->v);
-    case O_INV: 
+    case O_INV:
         if (op->inplace != &v1->v) return invert(v1, op->epoint3);
         v1->len = ~v1->len;
         if (v1->data != v1->u.val) v1->u.s.hash = -1;

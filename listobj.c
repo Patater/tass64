@@ -392,7 +392,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                     for (i = 0; i < v1->len; i++) {
                         Obj *oo1 = op->v1 = v1->data[i];
                         Obj *oo2 = op->v2 = v2->data[i];
-                        Obj *val; 
+                        Obj *val;
                         op->inplace = (inplace == v1 && oo1->refcount == 1 && !minmax) ? oo1 : NULL;
                         val = op->v1->obj->calc2(op);
                         if (minmax) {

@@ -112,6 +112,6 @@ void foldobj_destroy(void) {
 #ifdef DEBUG
     if (fold_value->v.refcount != 1) fprintf(stderr, "fold %" PRIuSIZE "\n", fold_value->v.refcount - 1);
 #endif
- 
+
     val_destroy(&fold_value->v);
 }
