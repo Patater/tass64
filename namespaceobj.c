@@ -173,7 +173,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                 if (first) {
                     first = false;
                     continue;
-                } 
+                }
                 ln--;
                 chars--;
                 continue;

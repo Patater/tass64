@@ -481,7 +481,7 @@ static int get_command(void) {
             label = tmp;
         }
     }
- 
+
     also = 0;
     felso = lenof(command);
     no = lenof(command)/2;
@@ -899,7 +899,7 @@ static const char *check_waitfor(void) {
     case W_FI2:
     case W_FI: return ".fi";
     case W_SWITCH2:
-    case W_SWITCH: 
+    case W_SWITCH:
         if (waitfor->u.switc.val != NULL) val_destroy(waitfor->u.switc.val);
         return ".endswitch";
     case W_WEAK2:
@@ -911,7 +911,7 @@ static const char *check_waitfor(void) {
         if (waitfor->u.page.label != NULL) {set_size(waitfor->u.page.label, current_address->address - waitfor->u.page.addr, current_address->mem, waitfor->u.page.addr, waitfor->u.page.membp);val_destroy(&waitfor->u.page.label->v);}
         /* fall through */
     case W_ENDP: return ".endp";
-    case W_ENDM: 
+    case W_ENDM:
         if (waitfor->u.macro.val != NULL) val_destroy(waitfor->u.macro.val);
         return ".endm";
     case W_ENDF: return ".endf";
@@ -926,11 +926,11 @@ static const char *check_waitfor(void) {
     case W_BEND2:
         if (waitfor->u.block.label != NULL) {set_size(waitfor->u.block.label, current_address->address - waitfor->u.block.addr, current_address->mem, waitfor->u.block.addr, waitfor->u.block.membp);val_destroy(&waitfor->u.block.label->v);}
         /* fall through */
-    case W_BEND: 
+    case W_BEND:
         pop_context();
         return ".bend";
     case W_ENDN2:
-    case W_ENDN: 
+    case W_ENDN:
         pop_context();
         return ".endn";
     case W_ENDC: return ".endc";
@@ -1340,7 +1340,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                     } else foreach = true;
                 }
             } else lpoint.pos++;
-            if (foreach) { 
+            if (foreach) {
                 ignore();
                 epoint3 = lpoint;
                 if (!get_exp(0, 1, 0, &epoint3)) goto error;
@@ -1408,7 +1408,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (foreach) {
         if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
     } else {
-        if (here() != ',') {err_msg(ERROR______EXPECTED, "','"); 
+        if (here() != ',') {err_msg(ERROR______EXPECTED, "','");
         error:
             if (labels.p != 0 && labels.data != labels.val) free(labels.data);
             return i;
@@ -1613,7 +1613,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     uval_t cnt;
     Obj *nf;
     size_t i = 0;
- 
+
     if (diagnostics.optimize) cpu_opt_invalidate();
     listing_line(listing, epoint->pos);
     new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
@@ -2123,7 +2123,7 @@ MUST_CHECK Obj *compile(void)
                         listing_line(listing, 0);
                         new_waitfor(W_ENDN, &cmdpoint);
                         if (get_exp(0, 0, 1, &cmdpoint)) {
-                            vs = get_val(); 
+                            vs = get_val();
                             if (vs != NULL) {
                                 val = vs->val;
                                 val = (Obj *)get_namespace(val);
@@ -2472,11 +2472,11 @@ MUST_CHECK Obj *compile(void)
                         if (diagnostics.optimize) cpu_opt_invalidate();
                         listing_line(listing, cmdpoint.pos);
                         if (get_exp(1, 1, 0, &cmdpoint)) {
-                            struct values_s *vs = get_val(); 
+                            struct values_s *vs = get_val();
                             val = vs->val;
                             obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
                             if (val->obj != obj) {
-                                err_msg_wrong_type2(val, obj, &vs->epoint); 
+                                err_msg_wrong_type2(val, obj, &vs->epoint);
                                 val = NULL;
                             }
                         } else val = NULL;
@@ -3178,7 +3178,7 @@ MUST_CHECK Obj *compile(void)
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             if (trec.len != 0) {
                                 if (trec.len > 0) memcpy(pokealloc(trec.len), trec.buff, trec.len);
-                                else if (trec.len < 0) memskip(-trec.len); 
+                                else if (trec.len < 0) memskip(-trec.len);
                                 trec.len = 0;
                             }
                             poke_pos = &vs->epoint;
@@ -3193,7 +3193,7 @@ MUST_CHECK Obj *compile(void)
                             else if (trec.sum != 0) err_msg2(ERROR___NO_LAST_GAP, NULL, poke_pos);
                             else err_msg2(ERROR__BYTES_NEEDED, NULL, &epoint);
                             break;
-                        case CMD_NULL: 
+                        case CMD_NULL:
                             if (trec.len >= (ssize_t)sizeof trec.buff) {
                                 memcpy(pokealloc(trec.len), trec.buff, trec.len);
                                 trec.len = 0;
@@ -3248,8 +3248,8 @@ MUST_CHECK Obj *compile(void)
                             if (brec.warn) { err_msg_still_none(NULL, poke_pos); brec.warn = false; }
                             if (brec.len == 0) continue;
                             if (brec.len > 0) memcpy(pokealloc(brec.len), brec.buff, brec.len);
-                            else memskip(-brec.len); 
-                            brec.len = 0; 
+                            else memskip(-brec.len);
+                            brec.len = 0;
                         }
                     } else if (prm==CMD_BINARY) { /* .binary */
                         char *path = NULL;
@@ -4148,7 +4148,7 @@ MUST_CHECK Obj *compile(void)
                 if ((waitfor->skip & 1) != 0) {
                     listing_line(listing, 0);
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
-                } 
+                }
                 push_dummy_context();
                 new_waitfor(W_PEND, &epoint);
                 waitfor->skip = 0;waitfor->u.proc.label = NULL;
@@ -4602,7 +4602,7 @@ static int main2(int *argc2, char **argv2[]) {
     /* assemble the input file(s) */
     do {
         if (pass++>max_pass) {err_msg(ERROR_TOO_MANY_PASS, NULL);break;}
-        listing_pccolumn = false; 
+        listing_pccolumn = false;
         one_pass(argc, argv, opts, fin);
     } while (!fixeddig || constcreated);
 

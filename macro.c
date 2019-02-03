@@ -80,13 +80,13 @@ bool mtranslate(void) {
     q = p = 0; last = 0; fault = false;
     for (; (ch = here()) != 0; lpoint.pos++) {
         switch (ch) {
-        case '"': 
+        case '"':
             if ((q & 2) == 0) q ^= 1;
             break;
-        case '\'': 
+        case '\'':
             if ((q & 1) == 0) q ^= 2;
             break;
-        case ';': 
+        case ';':
             if (q == 0) q = 4;
             break;
         case '\\':
@@ -112,7 +112,7 @@ bool mtranslate(void) {
                     if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
                     mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                 }
-                if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
+                if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last);
                 if (param.len != 0) {
                     memcpy(mline->data + p, param.data, param.len);
                     p += param.len;
@@ -129,7 +129,7 @@ bool mtranslate(void) {
                     if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
                     mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                 }
-                if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
+                if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last);
                 if (all->len != 0) {
                     memcpy(mline->data + p, all->data, all->len);
                     p += all->len;
@@ -178,7 +178,7 @@ bool mtranslate(void) {
                         if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
                         mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                     }
-                    if (p != last) memcpy(mline->data + last, pline + e.pos - p + last, p - last); 
+                    if (p != last) memcpy(mline->data + last, pline + e.pos - p + last, p - last);
                     if (param.len != 0) {
                         memcpy(mline->data + p, param.data, param.len);
                         p += param.len;
@@ -206,7 +206,7 @@ bool mtranslate(void) {
                         if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
                         mline->data = (uint8_t *)reallocx(mline->data, mline->len);
                     }
-                    if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
+                    if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last);
                     if (param[j].len > 1 && param[j].data[0] == '"' && param[j].data[param[j].len-1]=='"') {
                         memcpy(mline->data + p, param[j].data + 1, param[j].len - 2);
                         p += param[j].len - 2;
@@ -231,10 +231,10 @@ bool mtranslate(void) {
             if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
             mline->data = (uint8_t *)reallocx(mline->data, mline->len);
         }
-        if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last); 
+        if (p != last) memcpy(mline->data + last, pline + lpoint.pos - p + last, p - last);
         while (p != 0 && (mline->data[p-1] == 0x20 || mline->data[p-1] == 0x09)) p--;
         mline->data[p] = 0;
-        llist = pline = fault ? (const uint8_t *)"" : mline->data; 
+        llist = pline = fault ? (const uint8_t *)"" : mline->data;
     } else {
         line_t lnum;
         if (cfile->nomacro == NULL) {

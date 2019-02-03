@@ -228,7 +228,7 @@ static MUST_CHECK Obj *get_bin(linepos_t epoint) {
     case 'e':
     case 'p':
         return get_exponent2(v, epoint);
-    default: 
+    default:
         return v;
     }
 }
@@ -255,7 +255,7 @@ static MUST_CHECK Obj *get_float(linepos_t epoint) {
     case 'e':
     case 'p':
         return get_exponent2(v, epoint);
-    default: 
+    default:
         return v;
     }
 }
@@ -393,7 +393,7 @@ static void extend_opr(struct opr_s *opr) {
         memcpy(data, opr->data, OPR_LEN * sizeof *opr->data);
         opr->data = data;
         return;
-    } 
+    }
     opr->data = (struct opr_data_s *)reallocx(opr->data, opr->l * sizeof *opr->data);
 }
 
@@ -422,7 +422,7 @@ rest:
     }
     switch (here()) {
     case 0:
-    case ';': 
+    case ';':
         if (opr.l != lenof(oprdata)) free(opr.data);
         return true;
     case '<': conv = &o_LOWER.v; cpoint = lpoint; lpoint.pos++;break;
@@ -484,11 +484,11 @@ rest:
             llen = get_label();
             if (llen == 1) {
                 switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
-                case 'x': 
+                case 'x':
                     opr.data[opr.p].epoint = epoint; opr.data[opr.p++].val = &o_COMMAX;
                     if (opr.p >= opr.l) extend_opr(&opr);
                     goto other;
-                case 'y': 
+                case 'y':
                     opr.data[opr.p].epoint = epoint; opr.data[opr.p++].val = &o_COMMAY;
                     if (opr.p >= opr.l) extend_opr(&opr);
                     goto other;
@@ -530,7 +530,7 @@ rest:
             if (conv != NULL) push_oper(conv, &cpoint);
             if (conv2 != NULL) push_oper(conv2, &cpoint);
             break;
-        default: 
+        default:
             err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
             goto error;
         }
@@ -1390,12 +1390,12 @@ static bool get_exp2(int stop) {
                 if (o == &o_SPLAT || o == &o_POS || o == &o_NEG) goto tryanon;
             }
             lpoint.pos++;push_oper((Obj *)ref_gap(), &epoint);goto other;
-        case '.': 
+        case '.':
             if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) {
                 if (pline[lpoint.pos + 1] == '.' && pline[lpoint.pos + 2] == '.') {
                     lpoint.pos += 3;push_oper((Obj *)ref_fold(), &epoint);goto other;
                 }
-                goto tryanon; 
+                goto tryanon;
             }
             /* fall through */
         case '0':

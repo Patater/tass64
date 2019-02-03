@@ -752,7 +752,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_BSWORD:
         uv = ldigit(v1);
         return (Obj *)bytes_from_u16((uint8_t)(uv >> 8) | (uint16_t)(uv << 8));
-    case O_INV: 
+    case O_INV:
         if (op->inplace != &v1->v) return invert(v1, op->epoint3);
         v1->len = ~v1->len;
         if (v1->data != v1->u.val) v1->u.hash = -1;
@@ -1017,7 +1017,7 @@ static MUST_CHECK Obj *lshift(const Bits *vv1, uval_t s, linepos_t epoint) {
             o[i + 1] |= v1[i] >> (SHIFT - bit);
             o[i] = v1[i] << bit;
         }
-        if (vv1->len < 0) o[0] |= ((bdigit_t)1 << bit) - 1; 
+        if (vv1->len < 0) o[0] |= ((bdigit_t)1 << bit) - 1;
     } else if (len1 != 0) memmove(o, v1, len1 * sizeof *o);
     if (word != 0) memset(v, (vv1->len < 0) ? 0xff : 0x00, word * sizeof *v);
 
@@ -1125,7 +1125,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
                 uv = (v1[j] >> (SHIFT - bits));
             }
             if (j < l) uv |= v1[j] << bits;
-            if (j < rbits) { 
+            if (j < rbits) {
                 v[i++] = uv; uv = 0; j++;
                 for (; j < rbits; j++) v[i++] = 0;
             }
