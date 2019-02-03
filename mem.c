@@ -543,17 +543,32 @@ size_t get_mem(const Memblocks *memblocks) {
 
 int read_mem(const Memblocks *memblocks, address_t raddr, size_t membp, size_t offs) {
     address_t addr, diff;
-    raddr = (raddr + offs) & all_mem2;
+    size_t len;
+    if (membp < memblocks->p) {
+        addr = memblocks->data[membp].addr;
+    } else {
+        addr = memblocks->lastaddr;
+    }
+    if (raddr > addr) {
+        offs += raddr - addr;
+        raddr = addr;
+    }
     for (; membp < memblocks->p; membp++) {
         addr = memblocks->data[membp].addr;
-        if (raddr < addr) continue;
-        diff = raddr - addr;
-        if (diff < memblocks->data[membp].len) return memblocks->mem.data[memblocks->data[membp].p + diff];
+        diff = (addr - raddr) & all_mem2;
+        if (diff > offs) return -1;
+        offs -= diff;
+        len = memblocks->data[membp].len;
+        if (offs < len) return memblocks->mem.data[memblocks->data[membp].p + offs];
+        offs -= len;
+        raddr = (addr + len) & all_mem2;
     }
     addr = memblocks->lastaddr;
-    if (raddr < addr) return -1;
-    diff = raddr - addr;
-    if (diff < memblocks->mem.p - memblocks->lastp) return memblocks->mem.data[memblocks->lastp + diff];
+    diff = (addr - raddr) & all_mem2;
+    if (diff > offs) return -1;
+    offs -= diff;
+    len = memblocks->mem.p - memblocks->lastp;
+    if (offs < len) return memblocks->mem.data[memblocks->lastp + diff];
     return -1;
 }
 
