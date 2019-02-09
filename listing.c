@@ -69,15 +69,6 @@ static void newline(Listing *ls) {
     ls->c = 0;
 }
 
-static void padding(Listing *ls, size_t t) {
-    if (ls->c >= t) newline(ls);
-    if (ls->tab_size > 1) {
-        ls->c -= ls->c % ls->tab_size;
-        while (ls->c + ls->tab_size <= t) { ls->c += ls->tab_size; putc('\t', ls->flist);}
-    }
-    while (ls->c < t) { ls->c++; putc(' ', ls->flist);}
-}
-
 static void padding2(Listing *ls, size_t t) {
     if (ls->c + ls->i >= t) {ls->s[ls->i++] = '\n'; flushbuf(ls); ls->c = 0;}
     ls->c += ls->i;
@@ -136,8 +127,9 @@ static void out_bit(Listing *ls, unsigned int cod, unsigned int c) {
 }
 
 static void out_txt(Listing *ls, const char *s) {
-    fputs(s, ls->flist);
-    ls->c += strlen(s);
+    while (*s != '\0') {
+        ls->s[ls->i++] = *s++;
+    }
 }
 
 MUST_CHECK Listing *listing_open(const char *filename, int argc, char *argv[]) {
@@ -193,23 +185,24 @@ MUST_CHECK Listing *listing_open(const char *filename, int argc, char *argv[]) {
     newline(ls);
     if (ls->linenum) {
         out_txt(ls, ";Line");
-        padding(ls, ls->columns.addr);
+        padding2(ls, ls->columns.addr);
     }
     out_txt(ls, ";Offset");
     if (ls->pccolumn) {
-        padding(ls, ls->columns.laddr);
+        padding2(ls, ls->columns.laddr);
         out_txt(ls, ";PC");
     }
-    padding(ls, ls->columns.hex);
+    padding2(ls, ls->columns.hex);
     out_txt(ls, ";Hex");
     if (ls->monitor) {
-        padding(ls, ls->columns.monitor);
+        padding2(ls, ls->columns.monitor);
         out_txt(ls, ";Monitor");
     }
     if (ls->source) {
-        padding(ls, ls->columns.source);
+        padding2(ls, ls->columns.source);
         out_txt(ls, ";Source");
     }
+    flushbuf(ls);
     newline(ls);
     return ls;
 }
@@ -226,16 +219,18 @@ void listing_close(Listing *ls) {
     free(ls);
 }
 
-static void printllist(Listing *ls) {
+static bool printllist(Listing *ls) {
     const uint8_t *c;
-    if (llist == NULL) return;
+    if (llist == NULL) return true;
     c = llist;
     while (*c == 0x20 || *c == 0x09) c++;
     if (*c != 0) {
-        padding(ls, ls->columns.source);
+        padding2(ls, ls->columns.source);
+        flushbuf(ls);
         printable_print(llist, ls->flist);
     }
     llist = NULL;
+    return *c == 0;
 }
 
 static void printdec(Listing *ls, uint32_t dec) {
@@ -247,16 +242,13 @@ static void printdec(Listing *ls, uint32_t dec) {
     for (; i < 9; i++) {
         uint32_t a = dec / d[i];
         dec = dec % d[i];
-        putc('0' + a, ls->flist);
-        ls->c++;
+        ls->s[ls->i++] = '0' + a;
     }
-    putc('0' + dec, ls->flist);
-    ls->c++;
+    ls->s[ls->i++] = '0' + dec;
 }
 
 static void printfile(Listing *ls) {
-    putc(':', ls->flist);
-    ls->c++;
+    ls->s[ls->i++] = ':';
     printdec(ls, ls->lastfile - 1);
 }
 
@@ -274,7 +266,8 @@ FAST_CALL void listing_equal(Listing *ls, Obj *val) {
     if (nolisting != 0 || !ls->source || temporary_label_branch != 0) return;
     if (ls->linenum) {
         printline(ls);
-        padding(ls, ls->columns.addr);
+        padding2(ls, ls->columns.addr);
+        flushbuf(ls);
     }
     putc('=', ls->flist);
     ls->c += val_print(val, ls->flist) + 1;
@@ -381,7 +374,8 @@ static void printmon(Listing *ls, unsigned int cod, int ln, uint32_t adr) {
 
 static void printsource(Listing *ls, linecpos_t pos) {
     while (llist[pos-1] == 0x20 || llist[pos-1] == 0x09) pos--;
-    padding(ls, ls->columns.source);
+    padding2(ls, ls->columns.source);
+    flushbuf(ls);
     printable_print2(llist, ls->flist, pos);
     newline(ls);
 }
@@ -407,17 +401,19 @@ void FAST_CALL listing_line(Listing *ls, linecpos_t pos) {
             padding2(ls, ls->columns.addr);
         }
         printaddr(ls, '.', current_address->address, (current_address->l_address.address & 0xffff) | current_address->l_address.bank);
-        flushbuf(ls);
     }
     if (ls->verbose) {
+        if (ls->i != 0) flushbuf(ls);
         if (llist[i] != 0) {
             if (ls->c == 0 && ls->linenum) printline(ls);
-            padding(ls, ls->columns.source);
+            padding2(ls, ls->columns.source);
+            flushbuf(ls);
             printable_print(llist, ls->flist);
         }
         newline(ls);
     } else {
-        if (ls->c != 0) printsource(ls, pos);
+        if (ls->c + ls->i != 0) printsource(ls, pos);
+        else if (ls->i != 0) flushbuf(ls);
     }
     llist = NULL;
 }
@@ -443,7 +439,6 @@ void FAST_CALL listing_line_cut(Listing *ls, linecpos_t pos) {
             padding2(ls, ls->columns.addr);
         }
         printaddr(ls, '.', current_address->address, (current_address->l_address.address & 0xffff) | current_address->l_address.bank);
-        flushbuf(ls);
         printsource(ls, pos);
     }
     llist = NULL;
@@ -453,7 +448,8 @@ void FAST_CALL listing_line_cut2(Listing *ls, linecpos_t pos) {
     if (ls == NULL || !ls->verbose || llist == NULL) return;
     if (nolisting == 0 && ls->source && temporary_label_branch == 0) {
         if (ls->linenum) printline(ls);
-        padding(ls, ls->columns.source);
+        padding2(ls, ls->columns.source);
+        flushbuf(ls);
         caret_print(llist, ls->flist, pos);
         printable_print(llist + pos, ls->flist);
         newline(ls);
@@ -490,8 +486,7 @@ void listing_instr(Listing *ls, uint8_t cod, uint32_t adr, int ln) {
             printmon(ls, cod, ln, adr);
         }
     }
-    flushbuf(ls);
-    if (ls->source) printllist(ls);
+    if (!ls->source || printllist(ls)) flushbuf(ls);
     newline(ls);
 }
 
@@ -544,8 +539,7 @@ void listing_mem(Listing *ls, const uint8_t *data, size_t len, address_t myaddr,
                     if (current.len != 0) {
                         printhex2(ls, current.len, current.data);
                     }
-                    flushbuf(ls);
-                    if (ls->source && print) printllist(ls);
+                    if (!ls->source || !print || printllist(ls)) flushbuf(ls);
                     newline(ls);
                     if (exitnow) return;
                     memcpy(&prev, &current, sizeof prev);
@@ -581,7 +575,8 @@ void listing_file(Listing *ls, const char *txt, const struct file_s *file) {
                 printfile(ls);
             }
         }
-        padding(ls, ls->columns.addr);
+        padding2(ls, ls->columns.addr);
+        flushbuf(ls);
     };
     fputs(txt, ls->flist);
     if (file != NULL) argv_print(file->realname, ls->flist);
