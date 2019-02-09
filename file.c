@@ -329,7 +329,7 @@ static inline uchar_t fromiso(uchar_t c) {
 static struct file_s *command_line = NULL;
 static struct file_s *lastfi = NULL;
 static struct ubuff_s last_ubuff;
-static uint16_t curfnum = 1;
+static uint16_t curfnum;
 struct file_s *openfile(const char *name, const char *base, int ftype, const str_t *val, linepos_t epoint) {
     struct avltree_node *b;
     struct file_s *tmp;
@@ -778,6 +778,7 @@ void destroy_file(void) {
 }
 
 void init_file(void) {
+    curfnum = 1;
     avltree_init(&file_tree);
     stars = (struct stars_s *)mallocx(sizeof *stars);
     stars->next = NULL;
