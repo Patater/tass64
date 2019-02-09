@@ -95,7 +95,7 @@ MUST_CHECK Error *err_addressing(atype_t am, linepos_t epoint) {
     return v;
 }
 
-static void dump_instr(uint8_t cod, uint32_t adr, int ln, linepos_t epoint)  {
+static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)  {
     if (diagnostics.optimize) cpu_opt(cod, adr, ln, epoint);
     if (ln >= 0) {
         uint8_t *d;
