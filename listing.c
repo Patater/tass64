@@ -238,15 +238,20 @@ static void printllist(Listing *ls) {
     llist = NULL;
 }
 
+static void printfile(Listing *ls) {
+    int l = fprintf(ls->flist, ":%u", (unsigned int)ls->lastfile - 1);
+    if (l > 0) ls->c += (unsigned int)l;
+}
+
 static void printline(Listing *ls) {
     int l2;
+    uint16_t curfile = current_file_list->file->uid;
     if (curfile < 2) return;
     l2 = fprintf(ls->flist, "%" PRIuline, lpoint.line);
     if (l2 > 0) ls->c += (unsigned int)l2;
     if (ls->lastfile == curfile) return;
-    l2 = fprintf(ls->flist, ":%u", (unsigned int)curfile - 1);
-    if (l2 > 0) ls->c += (unsigned int)l2;
     ls->lastfile = curfile;
+    printfile(ls);
 }
 
 FAST_CALL void listing_equal(Listing *ls, Obj *val) {
@@ -554,10 +559,14 @@ void listing_file(Listing *ls, const char *txt, const struct file_s *file) {
     if (ls == NULL) return;
     newline(ls);
     if (ls->linenum) {
-        int l = (file != NULL) ? fprintf(ls->flist, ":%u", (unsigned int)curfile - 1) : 0;
-        if (l > 0) ls->c += (unsigned int)l;
+        if (file != NULL) {
+            uint16_t curfile = file->uid;
+            if (ls->lastfile != curfile) {
+                ls->lastfile = file->uid;
+                printfile(ls);
+            }
+        }
         padding(ls, ls->columns.addr);
-        ls->lastfile = curfile;
     };
     fputs(txt, ls->flist);
     if (file != NULL) argv_print(file->realname, ls->flist);
