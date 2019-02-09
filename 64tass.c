@@ -4621,8 +4621,6 @@ int main2(int *argc2, char **argv2[]) {
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
     }
 
-    set_cpumode(arguments.cpumode);
-
     for (j = 0; j < arguments.symbol_output_len; j++) {
         const struct symbol_output_s *s = &arguments.symbol_output[j];
         size_t k;
