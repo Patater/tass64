@@ -31,7 +31,6 @@ struct ubuff_s {
 struct str_t;
 
 extern FAST_CALL unsigned int utf8in(const uint8_t *, uchar_t *);
-extern FAST_CALL unsigned int utf8rin(const uint8_t *, uchar_t *);
 extern FAST_CALL uint8_t *utf8out(uchar_t, uint8_t *);
 extern MUST_CHECK bool extend_ubuff(struct ubuff_s *);
 extern MUST_CHECK bool unfc(struct ubuff_s *);
