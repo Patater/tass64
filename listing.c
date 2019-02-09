@@ -297,12 +297,12 @@ static void printaddr(Listing *ls, char pre, address_t addr, address_t addr2) {
     }
 }
 
-static void printhex(Listing *ls, unsigned int cod, unsigned int eor, int ln, uint32_t adr) {
+static void printhex(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
     padding2(ls, ls->columns.hex);
-    out_hex(ls, cod ^ eor);
+    out_hex(ls, cod);
     while (ln > 0) {
         ls->s[ls->i++] = ' ';
-        out_hex(ls, adr ^ eor);
+        out_hex(ls, adr);
         adr >>= 8;
         ln--;
     }
@@ -485,7 +485,7 @@ void listing_instr(Listing *ls, uint8_t cod, uint32_t adr, int ln) {
     addr2 = (address_t)((int)current_address->address - ln - 1) & all_mem2;
     printaddr(ls, '.', addr2, addr);
     if (ln >= 0) {
-        printhex(ls, cod, outputeor, ln, adr);
+        printhex(ls, cod ^ outputeor, adr ^ outputeor, ln);
         if (ls->monitor) {
             printmon(ls, cod, ln, adr);
         }
