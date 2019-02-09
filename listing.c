@@ -463,13 +463,13 @@ FAST_CALL void listing_set_cpumode(Listing *ls, const struct cpu_s *cpumode) {
     ls->mnemonic = cpumode->mnemonic;
 }
 
-void listing_instr(Listing *ls, uint8_t cod, uint32_t adr, int ln) {
+void listing_instr(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
     address_t addr, addr2;
     if (nolisting != 0 || temporary_label_branch != 0) return;
     if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn) return;
-        addr = (((int)current_address->l_address.address - ln - 1) & 0xffff) | current_address->l_address.bank;
-        addr2 = (address_t)((int)current_address->address - ln - 1) & all_mem2;
+        addr = ((current_address->l_address.address - ln - 1) & 0xffff) | current_address->l_address.bank;
+        addr2 = (current_address->address - ln - 1) & all_mem2;
         if (addr2 != addr) listing_pccolumn = true;
         return;
     }
@@ -477,8 +477,8 @@ void listing_instr(Listing *ls, uint8_t cod, uint32_t adr, int ln) {
         if (llist != NULL) printline(ls);
         padding2(ls, ls->columns.addr);
     }
-    addr = (((int)current_address->l_address.address - ln - 1) & 0xffff) | current_address->l_address.bank;
-    addr2 = (address_t)((int)current_address->address - ln - 1) & all_mem2;
+    addr = ((current_address->l_address.address - ln - 1) & 0xffff) | current_address->l_address.bank;
+    addr2 = (current_address->address - ln - 1) & all_mem2;
     printaddr(ls, '.', addr2, addr);
     if (ln >= 0) {
         printhex(ls, cod ^ outputeor, adr ^ outputeor, ln);
