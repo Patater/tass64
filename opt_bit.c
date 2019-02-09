@@ -180,10 +180,6 @@ bool neq_bit(const Bit *a, const Bit *b) {
     return a->b != b->b && a->b != BU && b->b != BU;
 }
 
-Bit *ld_bit(Bit *a, Bit *UNUSED(b)) {
-    return ref_bit(a);
-}
-
 Bit *and_bit(Bit *a, Bit *b) {
     switch (a->b) {
     case B0:               /* 0 & 0 = 0 */

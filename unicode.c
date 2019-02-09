@@ -53,30 +53,6 @@ FAST_CALL unsigned int utf8in(const uint8_t *c, uchar_t *out) { /* only for inte
     return i;
 }
 
-FAST_CALL unsigned int utf8rin(const uint8_t *c, uchar_t *out) { /* only for internal use with validated utf-8! */
-    uchar_t ch;
-    unsigned int i, j;
-
-    if (c[-2] < 0xe0) {
-        ch = c[-2] ^ 0xc0;i = 2;
-    } else if (c[-3] < 0xf0) {
-        ch = c[-3] ^ 0xe0;i = 3;
-    } else if (c[-4] < 0xf8) {
-        ch = c[-4] ^ 0xf0;i = 4;
-    } else if (c[-5] < 0xfc) {
-        ch = c[-5] ^ 0xf8;i = 5;
-    } else {
-        ch = c[-6] ^ 0xfc;i = 6;
-    }
-
-    c -= i;
-    for (j = 1;j < i; j++) {
-        ch = (ch << 6) ^ c[j] ^ 0x80;
-    }
-    *out = ch;
-    return i;
-}
-
 FAST_CALL uint8_t *utf8out(uchar_t i, uint8_t *c) {
     if (i < 0x800) {
         *c++=0xc0 | (uint8_t)(i >> 6);
