@@ -20,7 +20,7 @@
 #define UNICODE_H
 #include <stdio.h>
 #include "attributes.h"
-#include "str.h"
+#include "inttypes.h"
 #include "stdbool.h"
 
 struct ubuff_s {
@@ -28,12 +28,14 @@ struct ubuff_s {
     size_t len, p;
 };
 
+struct str_t;
+
 extern FAST_CALL unsigned int utf8in(const uint8_t *, uchar_t *);
 extern FAST_CALL unsigned int utf8rin(const uint8_t *, uchar_t *);
 extern FAST_CALL uint8_t *utf8out(uchar_t, uint8_t *);
 extern MUST_CHECK bool extend_ubuff(struct ubuff_s *);
 extern MUST_CHECK bool unfc(struct ubuff_s *);
-extern MUST_CHECK bool unfkc(str_t *, const str_t *, int);
+extern MUST_CHECK bool unfkc(struct str_t *, const struct str_t *, int);
 extern size_t argv_print(const char *, FILE *);
 extern void printable_print(const uint8_t *, FILE *);
 extern size_t printable_print2(const uint8_t *, FILE *, size_t);

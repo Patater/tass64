@@ -55,4 +55,5 @@ extern void new_waitfor(Wait_types, linepos_t);
 extern bool close_waitfor(Wait_types);
 extern struct Obj *compile(void);
 extern FAST_CALL uint8_t *pokealloc(address_t);
+extern int main2(int *, char **[]);
 #endif
