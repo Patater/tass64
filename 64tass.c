@@ -155,7 +155,6 @@ static struct waitfor_s {
     } u;
 } *waitfors, *waitfor;
 
-uint16_t curfile;
 struct avltree *star_tree = NULL;
 
 static const char * const command[] = { /* must be sorted, first char is the ID */

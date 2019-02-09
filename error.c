@@ -47,6 +47,7 @@ bool print_use_bold = false;
 #endif
 
 struct file_list_s *current_file_list;
+uint16_t curfile;
 
 #define ALIGN(v) (((v) + (sizeof(int *) - 1)) & ~(sizeof(int *) - 1))
 
