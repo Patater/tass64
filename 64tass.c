@@ -155,6 +155,7 @@ static struct waitfor_s {
     } u;
 } *waitfors, *waitfor;
 
+static struct avltree star_root;
 struct avltree *star_tree = NULL;
 
 static const char * const command[] = { /* must be sorted, first char is the ID */
@@ -4514,6 +4515,8 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
     Obj *val;
     int i;
     size_t ln = root_section.address.mem->mem.p, ln2 = root_section.address.mem->p;
+    bool starexists;
+    struct star_s *s;
 
     fixeddig = true;constcreated = false;error_reset();random_reseed(&int_value[0]->v, NULL);
     val_destroy(&root_section.address.mem->v);
@@ -4529,11 +4532,14 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         current_address = &root_section.address;
         reset_section(current_section);
         init_macro();
+        star_tree = &star_root;
+        s = new_star(i, &starexists);
+        s->addr = 0;
+        star_tree = &s->tree;
 
         if (i == opts - 1) {
             if (fin->lines != 0) {
                 enterfile(fin, &nopoint);
-                star_tree = &fin->star;
                 listing_file(listing, ";******  Command line definitions", NULL);
                 val = compile();
                 if (val != NULL) val_destroy(val);
@@ -4548,7 +4554,6 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         cfile = openfile(argv[i], "", 0, NULL, &nopoint);
         if (cfile != NULL) {
             enterfile(cfile, &nopoint);
-            star_tree = &cfile->star;
             listing_file(listing, ";******  Processing input file: ", cfile);
             val = compile();
             if (val != NULL) val_destroy(val);
@@ -4570,6 +4575,7 @@ int main2(int *argc2, char **argv2[]) {
     int argc;
 
     err_init(*argv2[0]);
+    avltree_init(&star_root);
     objects_init();
     init_section();
     init_file();
