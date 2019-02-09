@@ -238,17 +238,32 @@ static void printllist(Listing *ls) {
     llist = NULL;
 }
 
+static void printdec(Listing *ls, uint32_t dec) {
+    static const uint32_t d[9] = {1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10};
+    unsigned int i;
+    for (i = 9; i > 0; i--) {
+        if (dec < d[i - 1]) break;
+    }
+    for (; i < 9; i++) {
+        uint32_t a = dec / d[i];
+        dec = dec % d[i];
+        putc('0' + a, ls->flist);
+        ls->c++;
+    }
+    putc('0' + dec, ls->flist);
+    ls->c++;
+}
+
 static void printfile(Listing *ls) {
-    int l = fprintf(ls->flist, ":%u", (unsigned int)ls->lastfile - 1);
-    if (l > 0) ls->c += (unsigned int)l;
+    putc(':', ls->flist);
+    ls->c++;
+    printdec(ls, ls->lastfile - 1);
 }
 
 static void printline(Listing *ls) {
-    int l2;
     uint16_t curfile = current_file_list->file->uid;
     if (curfile < 2) return;
-    l2 = fprintf(ls->flist, "%" PRIuline, lpoint.line);
-    if (l2 > 0) ls->c += (unsigned int)l2;
+    printdec(ls, lpoint.line);
     if (ls->lastfile == curfile) return;
     ls->lastfile = curfile;
     printfile(ls);
