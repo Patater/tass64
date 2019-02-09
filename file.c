@@ -365,7 +365,6 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
         lastfi->read_error = false;
         lastfi->portable = false;
         lastfi->pass = 0;
-        avltree_init(&lastfi->star);
         tmp = lastfi;
         lastfi = NULL;
         if (name != NULL) {

@@ -46,7 +46,6 @@ struct file_s {
     bool portable;
     uint8_t pass;
     Encoding_types encoding;
-    struct avltree star;
     struct avltree_node node;
 };
 
