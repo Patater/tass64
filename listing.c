@@ -531,16 +531,18 @@ void listing_mem(Listing *ls, const uint8_t *data, size_t len, address_t myaddr,
                         newline(ls);
                         repeat = 0;
                     }
-                    if (ls->linenum) {
-                        if (print) printline(ls);
-                        padding2(ls, ls->columns.addr);
+                    if (current.len != 0 || ls->source) {
+                        if (ls->linenum) {
+                            if (print) printline(ls);
+                            padding2(ls, ls->columns.addr);
+                        }
+                        printaddr(ls, '>', current.addr, current.addr2);
+                        if (current.len != 0) {
+                            printhex2(ls, current.len, current.data);
+                        }
+                        if (!ls->source || !print || printllist(ls)) flushbuf(ls);
+                        newline(ls);
                     }
-                    if (current.len != 0 || ls->source) printaddr(ls, '>', current.addr, current.addr2);
-                    if (current.len != 0) {
-                        printhex2(ls, current.len, current.data);
-                    }
-                    if (!ls->source || !print || printllist(ls)) flushbuf(ls);
-                    newline(ls);
                     if (exitnow) return;
                     memcpy(&prev, &current, sizeof prev);
                     print = false;
