@@ -35,6 +35,7 @@ struct file_list_s {
 };
 
 extern struct file_list_s *current_file_list;
+extern uint16_t curfile;
 
 #if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE || _POSIX_VERSION || _POSIX2_VERSION
 #define COLOR_OUTPUT
