@@ -47,7 +47,6 @@ bool print_use_bold = false;
 #endif
 
 struct file_list_s *current_file_list;
-uint16_t curfile;
 
 #define ALIGN(v) (((v) + (sizeof(int *) - 1)) & ~(sizeof(int *) - 1))
 
@@ -216,12 +215,10 @@ void enterfile(struct file_s *file, linepos_t epoint) {
     } else {
         current_file_list = avltree_container_of(b, struct file_list_s, node);
     }
-    curfile = (current_file_list->file != NULL) ? current_file_list->file->uid : 1;
 }
 
 void exitfile(void) {
     if (current_file_list->parent != NULL) current_file_list = current_file_list->parent;
-    curfile = (current_file_list->file != NULL) ? current_file_list->file->uid : 1;
 }
 
 static void adderror2(const uint8_t *s, size_t len) {
