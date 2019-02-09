@@ -535,7 +535,7 @@ void listing_mem(Listing *ls, const uint8_t *data, size_t len, address_t myaddr,
                         if (print) printline(ls);
                         padding2(ls, ls->columns.addr);
                     }
-                    printaddr(ls, '>', current.addr, current.addr2);
+                    if (current.len != 0 || ls->source) printaddr(ls, '>', current.addr, current.addr2);
                     if (current.len != 0) {
                         printhex2(ls, current.len, current.data);
                     }
