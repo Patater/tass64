@@ -299,6 +299,8 @@ static void tfree(void) {
     if (unfc(NULL)) {}
     if (unfkc(NULL, NULL, 0)) {}
     str_cfcpy(NULL, NULL);
+    free_macro();
+    free(waitfors);
 }
 
 static void status(void) {
@@ -309,8 +311,6 @@ static void status(void) {
         if (!errors) sectionprint();
     }
     tfree();
-    free_macro();
-    free(waitfors);
 }
 
 void new_waitfor(Wait_types what, linepos_t epoint) {
@@ -4586,8 +4586,6 @@ int main2(int *argc2, char **argv2[]) {
     opts = testarg(argc2, argv2, fin); argc = *argc2; argv = *argv2;
     if (opts <= 0) {
         tfree();
-        free_macro();
-        free(waitfors);
         return (opts < 0) ? EXIT_FAILURE : EXIT_SUCCESS;
     }
     init_encoding(arguments.to_ascii);
