@@ -40,6 +40,7 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "noneobj.h"
+#include "identobj.h"
 
 #ifdef COLOR_OUTPUT
 bool print_use_color = false;
@@ -584,7 +585,6 @@ static void notdefines_free(struct avltree_node *aa) {
 static struct notdefines_s *lastnd = NULL;
 static void err_msg_not_defined3(const Error *err) {
     Namespace *l = err->u.notdef.names;
-    const str_t *name = &err->u.notdef.ident;
     struct notdefines_s *tmp2;
     struct avltree_node *b;
 
@@ -594,7 +594,8 @@ static void err_msg_not_defined3(const Error *err) {
         lastnd = (struct notdefines_s *)mallocx(sizeof *lastnd);
     }
 
-    if (name->data != NULL) {
+    if (err->u.notdef.ident->obj == IDENT_OBJ) {
+        const str_t *name = &((Ident *)err->u.notdef.ident)->name;
         str_cfcpy(&lastnd->cfname, name);
         lastnd->file_list = l->file_list;
         lastnd->epoint = l->epoint;
@@ -614,18 +615,8 @@ static void err_msg_not_defined3(const Error *err) {
     }
 
     new_error_msg_err(err);
-    adderror("not defined");
-    if (name->data != NULL) {
-        str_name(name->data, name->len);
-    } else {
-        ssize_t count = (ssize_t)name->len;
-        adderror(" '");
-        while (count != 0) {
-            adderror((count > 0) ? "+" : "-");
-            count += (count > 0) ? -1 : 1;
-        }
-        adderror("'");
-    }
+    adderror("not defined ");
+    err_msg_variable(err->u.notdef.ident, &err->epoint);
 
     if (l->file_list == NULL) {
         struct linepos_s nopoint = {0, 0};
@@ -645,7 +636,7 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     err.line = NULL;
     err.u.notdef.down = down;
     err.u.notdef.names = l;
-    err.u.notdef.ident = *name;
+    err.u.notdef.ident = (Obj *)new_ident(name, epoint);
     err_msg_not_defined3(&err);
 }
 
