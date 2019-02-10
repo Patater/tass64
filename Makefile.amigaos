@@ -140,7 +140,7 @@ mem.o: mem.c mem.h attributes.h stdbool.h inttypes.h error.h errors_e.h \
  memblocksobj.h obj.h
 mfuncobj.o: mfuncobj.c mfuncobj.h obj.h attributes.h inttypes.h str.h \
  values.h eval.h stdbool.h error.h errors_e.h avl.h macro.h wait_e.h \
- typeobj.h namespaceobj.h operobj.h listobj.h
+ file.h typeobj.h namespaceobj.h operobj.h listobj.h
 my_getopt.o: my_getopt.c my_getopt.h stdbool.h unicode.h attributes.h \
  inttypes.h error.h errors_e.h avl.h
 namespaceobj.o: namespaceobj.c namespaceobj.h obj.h attributes.h \
