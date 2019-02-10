@@ -37,7 +37,7 @@ Type *const ANONIDENT_OBJ = &anonident_obj;
 Ident *new_ident(const str_t *name, linepos_t epoint) {
     Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
     if ((size_t)(name->data - current_file_list->file->data) < current_file_list->file->len) idn->name = *name;
-    else if (name->len < sizeof idn->val) {
+    else if (name->len <= sizeof idn->val) {
         idn->name.data = idn->val;
         idn->name.len = name->len;
         memcpy(idn->val, name->data, name->len);
