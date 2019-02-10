@@ -2474,7 +2474,7 @@ MUST_CHECK Obj *compile(void)
                             }
                         } else val = NULL;
                         ret = (val != NULL) && ((Struct *)val)->retval;
-                        ignore();if (here() == ',') lpoint.pos++;
+                        if (here() == ',') lpoint.pos++;
                         current_section->structrecursion++;
 
                         oaddr = current_address->address;
@@ -3644,55 +3644,57 @@ MUST_CHECK Obj *compile(void)
             case CMD_ERROR:
             case CMD_CERROR: if ((waitfor->skip & 1) != 0)
                 { /* .warn .cwarn .error .cerror */
-                    bool writeit = true;
+                    size_t i, len, len2, chars;
+                    Str *v;
+                    Obj **vals;
+                    uint8_t *s;
+                    Tuple *tmp;
                     struct values_s *vs;
                     listing_line(listing, epoint.pos);
-                    if (!get_exp(0, (prm == CMD_CWARN || prm == CMD_CERROR) ? 1 : 0, 0, &epoint)) goto breakerr;
                     if (prm == CMD_CWARN || prm == CMD_CERROR) {
-                        vs = get_val();
-                        if (tobool(vs, &writeit)) writeit = false;
+                        bool writeit;
+                        if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
+                        if (tobool(get_val(), &writeit) || !writeit) goto breakerr;
+                        if (here() == ',') lpoint.pos++;
                     }
-                    if (writeit) {
-                        size_t i, len = get_val_remaining(), len2 = 0, chars = 0;
-                        Str *v;
-                        Obj **vals;
-                        uint8_t *s;
-                        Tuple *tmp = new_tuple(len);
-                        vals = tmp->data;
-                        vs = get_val();
-                        for (i = 0; i < len; i++, vs++) {
-                            val = vs->val;
-                            if (val == &none_value->v) val = (Obj *)ref_str(null_str);
-                            else {
-                                val = STR_OBJ->create(val, &vs->epoint);
-                                if (val->obj != STR_OBJ) {
-                                    if (val == &none_value->v) err_msg_still_none(NULL, &vs->epoint);
-                                    else if (val->obj == ERROR_OBJ) err_msg_output((Error *)val);
-                                    val_destroy(val);
-                                    val = (Obj *)ref_str(null_str);
-                                } else {
-                                    Str *str = (Str *)val;
-                                    len2 += str->len;
-                                    if (len2 < str->len) err_msg_out_of_memory(); /* overflow */
-                                    chars += str->chars;
-                                }
-                            }
-                            vals[i] = val;
-                        }
-                        v = new_str(len2);
-                        v->chars = chars;
-                        s = v->data;
-                        for (i = 0; i < len; i++) {
-                            Str *str = (Str *)vals[i];
-                            if (str->len != 0) {
-                                memcpy(s, str->data, str->len);
-                                s += str->len;
+                    if (!get_exp(0, 0, 0, &epoint)) goto breakerr;
+                    len = get_val_remaining();
+                    tmp = new_tuple(len);
+                    vals = tmp->data;
+                    vs = get_val();
+                    len2 = 0; chars = 0;
+                    for (i = 0; i < len; i++, vs++) {
+                        val = vs->val;
+                        if (val == &none_value->v) val = (Obj *)ref_str(null_str);
+                        else {
+                            val = STR_OBJ->create(val, &vs->epoint);
+                            if (val->obj != STR_OBJ) {
+                                if (val == &none_value->v) err_msg_still_none(NULL, &vs->epoint);
+                                else if (val->obj == ERROR_OBJ) err_msg_output((Error *)val);
+                                val_destroy(val);
+                                val = (Obj *)ref_str(null_str);
+                            } else {
+                                Str *str = (Str *)val;
+                                len2 += str->len;
+                                if (len2 < str->len) err_msg_out_of_memory(); /* overflow */
+                                chars += str->chars;
                             }
                         }
-                        err_msg2((prm==CMD_CERROR || prm==CMD_ERROR)?ERROR__USER_DEFINED:ERROR_WUSER_DEFINED, v, &epoint);
-                        val_destroy(&v->v);
-                        val_destroy(&tmp->v);
+                        vals[i] = val;
                     }
+                    v = new_str(len2);
+                    v->chars = chars;
+                    s = v->data;
+                    for (i = 0; i < len; i++) {
+                        Str *str = (Str *)vals[i];
+                        if (str->len != 0) {
+                            memcpy(s, str->data, str->len);
+                            s += str->len;
+                        }
+                    }
+                    err_msg2((prm==CMD_CERROR || prm==CMD_ERROR)?ERROR__USER_DEFINED:ERROR_WUSER_DEFINED, v, &epoint);
+                    val_destroy(&v->v);
+                    val_destroy(&tmp->v);
                 }
                 break;
             case CMD_ENC: if ((waitfor->skip & 1) != 0)
@@ -4180,7 +4182,7 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, 0);
                     if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
                     vs = get_val(); val = vs->val;
-                    ignore();if (here() == ',') lpoint.pos++;
+                    if (here() == ',') lpoint.pos++;
                     obj = (prm == CMD_DUNION) ? UNION_OBJ : STRUCT_OBJ;
                     if (val->obj != obj) {err_msg_wrong_type2(val, obj, &vs->epoint); goto breakerr;}
                     current_section->structrecursion++;
