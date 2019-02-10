@@ -636,7 +636,7 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     err.line = NULL;
     err.u.notdef.down = down;
     err.u.notdef.names = l;
-    err.u.notdef.ident = (Obj *)new_ident(name, epoint);
+    err.u.notdef.ident = (Obj *)new_ident(name);
     err_msg_not_defined3(&err);
 }
 

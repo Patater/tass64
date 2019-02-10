@@ -34,7 +34,7 @@ static Type anonident_obj;
 Type *const IDENT_OBJ = &ident_obj;
 Type *const ANONIDENT_OBJ = &anonident_obj;
 
-Ident *new_ident(const str_t *name, linepos_t epoint) {
+Ident *new_ident(const str_t *name) {
     Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
     if ((size_t)(name->data - current_file_list->file->data) < current_file_list->file->len) idn->name = *name;
     else if (name->len <= sizeof idn->val) {
@@ -43,14 +43,12 @@ Ident *new_ident(const str_t *name, linepos_t epoint) {
         memcpy(idn->val, name->data, name->len);
     } else str_cpy(&idn->name, name);
     idn->file_list = current_file_list;
-    idn->epoint = *epoint;
     return idn;
 }
 
-Anonident *new_anonident(int32_t count, linepos_t epoint) {
+Anonident *new_anonident(int32_t count) {
     Anonident *anonident = (Anonident *)val_alloc(ANONIDENT_OBJ);
     anonident->count = count;
-    anonident->epoint = *epoint;
     return anonident;
 }
 
