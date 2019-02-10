@@ -1283,10 +1283,8 @@ static void list_shrink(List *lst, size_t i) {
 
 static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     int wht;
-    line_t lin, xlin;
-    struct linepos_s apoint, bpoint = {0, 0};
+    line_t lin;
     int nopos = -1;
-    struct oper_s tmp;
     struct linepos_s epoint2, epoint3;
     uint8_t *expr;
     struct {
@@ -1300,7 +1298,6 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     struct avltree *stree_old;
     line_t ovline, lvline;
     bool starexists, foreach = false;
-    size_t lentmp;
     Iter *iter = NULL;
     size_t i = 0;
     labels.p = 0;
@@ -1427,14 +1424,15 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             Obj *val2;
 
             while ((val2 = iter_next(iter)) != NULL) {
+                if (nopos < 0) nopos = 0;
+                else if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
                 if (labels.p == 1) {
                     val_destroy(label->value);
                     label->value = val_reference(val2);
                 } else {
                     Iter *iter2 = val2->obj->getiter(val2);
-                    iter_next_t iter2_next;
+                    iter_next_t iter2_next = iter2->next;
                     size_t j;
-                    iter2_next = iter2->next;
                     for (j = 0; j < labels.p && (val2 = iter2_next(iter2)) != NULL; j++) {
                         val_destroy(labels.data[j]->value);
                         labels.data[j]->value = val_reference(val2);
@@ -1453,16 +1451,17 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 if (nf == NULL || waitfor->u.cmd_rept.breakout) {
                     break;
                 }
-                if ((waitfor->skip & 1) != 0 && val2 != NULL) listing_line_cut(listing, waitfor->epoint.pos);
             }
             val_destroy(&iter->v);
         }
         if (labels.p != 0 && labels.data != labels.val) free(labels.data);
         expr = NULL;
     } else {
+        struct linepos_s apoint = lpoint, bpoint = {0, 0};
+        line_t xlin = lpoint.line;
+        struct oper_s tmp;
         const uint8_t *oldpline = pline;
-        xlin = lpoint.line; apoint = lpoint;
-        lentmp = strlen((const char *)pline) + 1;
+        size_t lentmp = strlen((const char *)pline) + 1;
         expr = (uint8_t *)mallocx(lentmp);
         memcpy(expr, pline, lentmp); label = NULL;
         new_waitfor(W_NEXT2, epoint);
