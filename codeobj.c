@@ -427,7 +427,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 str_t cf;
                 str_cfcpy(&cf, &v2->name);
                 if (str_cmp(&cf, &of) == 0) {
-                    if (diagnostics.case_symbol && str_cmp(&v2->name, &cf) != 0) err_msg_symbol_case(&v2->name, NULL, &v2->epoint);
+                    if (diagnostics.case_symbol && str_cmp(&v2->name, &cf) != 0) err_msg_symbol_case(&v2->name, NULL, op->epoint2);
                     return (Obj *)int_from_uval(v1->memaddr);
                 }
             }

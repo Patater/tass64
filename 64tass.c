@@ -1777,7 +1777,7 @@ MUST_CHECK Obj *compile(void)
                 if (!error) {
                     Namespace *context = get_namespace(tmp2->value);
                     if (context == NULL) {
-                        Ident *idn = new_ident(&labelname, &epoint);
+                        Ident *idn = new_ident(&labelname);
                         epoint.pos--;
                         err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
                         val_destroy(&idn->v);

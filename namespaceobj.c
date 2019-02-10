@@ -230,14 +230,14 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
             Ident *v2 = (Ident *)o2;
             l = find_label2(&v2->name, v1);
             if (l != NULL) {
-                if (diagnostics.case_symbol && str_cmp(&v2->name, &l->name) != 0) err_msg_symbol_case(&v2->name, l, &v2->epoint);
+                if (diagnostics.case_symbol && str_cmp(&v2->name, &l->name) != 0) err_msg_symbol_case(&v2->name, l, op->epoint2);
                 touch_label(l);
                 return val_reference(l->value);
             }
             if (!referenceit || (constcreated && pass < max_pass)) {
                 return (Obj *)ref_none();
             }
-            err = new_error(ERROR___NOT_DEFINED, &v2->epoint);
+            err = new_error(ERROR___NOT_DEFINED, op->epoint2);
             err->u.notdef.names = ref_namespace(v1);
             err->u.notdef.ident = (Obj *)ref_ident(v2);
             err->u.notdef.down = false;
@@ -254,7 +254,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
             if (!referenceit || (constcreated && pass < max_pass)) {
                 return (Obj *)ref_none();
             }
-            err = new_error(ERROR___NOT_DEFINED, &v2->epoint);
+            err = new_error(ERROR___NOT_DEFINED, op->epoint2);
             err->u.notdef.names = ref_namespace(v1);
             err->u.notdef.ident = (Obj *)ref_anonident(v2);
             err->u.notdef.down = false;
