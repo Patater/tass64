@@ -3911,6 +3911,7 @@ MUST_CHECK Obj *compile(void)
                     if (f->open>1) {
                         err_msg2(ERROR_FILERECURSION, NULL, &epoint);
                     } else {
+                        Wait_types what;
                         bool starexists;
                         struct star_s *s = new_star(vline, &starexists);
                         struct avltree *stree_old = star_tree;
@@ -3958,7 +3959,9 @@ MUST_CHECK Obj *compile(void)
                         enterfile(f, &epoint);
                         lpoint.line = vline = 0;
                         star_tree = &s->tree;
+                        what = waitfor->what; waitfor->what = W_NONE;
                         val = compile();
+                        waitfor->what = what;
                         if (prm == CMD_BINCLUDE) pop_context();
                         if (val != NULL) val_destroy(val);
                         lpoint.line = lin; vline = vlin;
