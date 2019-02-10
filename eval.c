@@ -464,7 +464,7 @@ rest:
             val = (Obj *)ref_none();
         } else {
             Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
-            err->u.notdef.ident = ident;
+            err->u.notdef.ident = (Obj *)new_ident(&ident, &epoint);
             err->u.notdef.names = ref_namespace(current_context);
             err->u.notdef.down = true;
             val = &err->v;
@@ -1444,16 +1444,12 @@ static bool get_exp2(int stop) {
                         goto other;
                     }
                 }
-                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
-                    Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
-                    idn->name.data = pline + epoint.pos;
-                    idn->name.len = lpoint.pos - epoint.pos;
-                    idn->epoint = epoint;
-                    push_oper(&idn->v, &epoint);
-                    goto other;
-                }
                 ident.data = pline + epoint.pos;
                 ident.len = lpoint.pos - epoint.pos;
+                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
+                    push_oper((Obj *)new_ident(&ident, &epoint), &epoint);
+                    goto other;
+                }
                 down = (ident.data[0] != '_');
                 l = down ? find_label(&ident, NULL) : find_label2(&ident, cheap_context);
                 if (l != NULL) {
@@ -1464,7 +1460,7 @@ static bool get_exp2(int stop) {
                     val = (Obj *)ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
-                    err->u.notdef.ident = ident;
+                    err->u.notdef.ident = (Obj *)new_ident(&ident, &epoint);
                     err->u.notdef.names = ref_namespace(down ? current_context : cheap_context);
                     err->u.notdef.down = down;
                     val = &err->v;
@@ -1479,10 +1475,7 @@ static bool get_exp2(int stop) {
                 Label *l;
                 Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
-                    Anonident *anonident = (Anonident *)val_alloc(ANONIDENT_OBJ);
-                    anonident->count = db - opr.p - 1;
-                    anonident->epoint = opr.data[opr.p].epoint;
-                    push_oper(&anonident->v, &opr.data[opr.p].epoint);
+                    push_oper((Obj *)new_anonident(db - opr.p - 1, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                     goto other;
                 }
                 l = find_anonlabel(db - opr.p -1);
@@ -1493,8 +1486,7 @@ static bool get_exp2(int stop) {
                     val = (Obj *)ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                    err->u.notdef.ident.len = (size_t)((ssize_t)db - (ssize_t)opr.p);
-                    err->u.notdef.ident.data = NULL;
+                    err->u.notdef.ident = (Obj *)new_anonident(db - opr.p - 1, &opr.data[opr.p].epoint);
                     err->u.notdef.names = ref_namespace(current_context);
                     err->u.notdef.down = true;
                     val = &err->v;
@@ -1507,10 +1499,7 @@ static bool get_exp2(int stop) {
                 Label *l;
                 Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
-                    Anonident *anonident = (Anonident *)val_alloc(ANONIDENT_OBJ);
-                    anonident->count = opr.p - db;
-                    anonident->epoint = opr.data[opr.p].epoint;
-                    push_oper(&anonident->v, &opr.data[opr.p].epoint);
+                    push_oper((Obj *)new_anonident(opr.p - db, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                     goto other;
                 }
                 l = find_anonlabel(opr.p - db);
@@ -1521,8 +1510,7 @@ static bool get_exp2(int stop) {
                     val = (Obj *)ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                    err->u.notdef.ident.len = (size_t)((ssize_t)opr.p - (ssize_t)db);
-                    err->u.notdef.ident.data = NULL;
+                    err->u.notdef.ident = (Obj *)new_anonident(opr.p - db, &opr.data[opr.p].epoint);
                     err->u.notdef.names = ref_namespace(current_context);
                     err->u.notdef.down = true;
                     val = &err->v;
@@ -1538,11 +1526,10 @@ static bool get_exp2(int stop) {
                 if (opr.data[opr.p - 1].val == &o_SPLAT) {
                     opr.p--;
                     if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
-                        Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
-                        idn->name.data = pline + opr.data[opr.p].epoint.pos;
-                        idn->name.len = 1;
-                        idn->epoint = opr.data[opr.p].epoint;
-                        push_oper(&idn->v, &opr.data[opr.p].epoint);
+                        str_t ident;
+                        ident.data = pline + opr.data[opr.p].epoint.pos;
+                        ident.len = 1;
+                        push_oper((Obj *)new_ident(&ident, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                         goto other;
                     }
                     push_oper(get_star(), &opr.data[opr.p].epoint);
@@ -1557,11 +1544,10 @@ static bool get_exp2(int stop) {
             opr.p--;
             lpoint.pos = epoint.pos;
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
-                Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
-                idn->name.data = pline + opr.data[opr.p].epoint.pos;
-                idn->name.len = 1;
-                idn->epoint = opr.data[opr.p].epoint;
-                push_oper(&idn->v, &opr.data[opr.p].epoint);
+                str_t ident;
+                ident.data = pline + opr.data[opr.p].epoint.pos;
+                ident.len = 1;
+                push_oper((Obj *)new_ident(&ident, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                 goto other;
             }
             push_oper(get_star(), &opr.data[opr.p].epoint);

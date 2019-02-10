@@ -38,7 +38,7 @@ typedef struct Error {
             Obj *v2;
         } invoper;
         struct {
-            str_t ident;
+            Obj *ident;
             struct Namespace *names;
             bool down;
         } notdef;

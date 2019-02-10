@@ -239,14 +239,13 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
             }
             err = new_error(ERROR___NOT_DEFINED, &v2->epoint);
             err->u.notdef.names = ref_namespace(v1);
-            err->u.notdef.ident = v2->name;
+            err->u.notdef.ident = (Obj *)ref_ident(v2);
             err->u.notdef.down = false;
             return &err->v;
         }
     case T_ANONIDENT:
         {
             Anonident *v2 = (Anonident *)o2;
-            ssize_t count;
             l = find_anonlabel2(v2->count, v1);
             if (l != NULL) {
                 touch_label(l);
@@ -255,12 +254,9 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
             if (!referenceit || (constcreated && pass < max_pass)) {
                 return (Obj *)ref_none();
             }
-            count = v2->count;
-            if (count >= 0) count++;
             err = new_error(ERROR___NOT_DEFINED, &v2->epoint);
             err->u.notdef.names = ref_namespace(v1);
-            err->u.notdef.ident.len = (size_t)count;
-            err->u.notdef.ident.data = NULL;
+            err->u.notdef.ident = (Obj *)ref_anonident(v2);
             err->u.notdef.down = false;
             return &err->v;
         }
