@@ -54,6 +54,7 @@ struct file_list_s *current_file_list;
 static unsigned int errors = 0, warnings = 0;
 
 static struct file_list_s file_list;
+static struct file_s file_list_file;
 static const struct file_list_s *included_from = &file_list;
 static const char *prgname;
 
@@ -165,7 +166,7 @@ static void new_error_msg(Severity_types severity, const struct file_list_s *fli
     size_t line_len;
     switch (severity) {
     case SV_NOTE: line_len = 0; break;
-    default: line_len = ((epoint->line == lpoint.line) && flist->file != NULL && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
+    default: line_len = ((epoint->line == lpoint.line) && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
     }
     new_error_msg_common(severity, flist, epoint, line_len);
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], pline, line_len);
@@ -1298,6 +1299,9 @@ void err_init(const char *name) {
     file_lists->next = NULL;
     file_listsp = 0;
     lastfl = &file_lists->file_lists[file_listsp];
+    file_list_file.name = "";
+    file_list_file.realname = file_list_file.name;
+    file_list.file = &file_list_file;
     avltree_init(&file_list.members);
     error_list.len = error_list.max = error_list.header_pos = 0;
     error_list.data = NULL;

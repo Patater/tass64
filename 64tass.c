@@ -4623,18 +4623,14 @@ int main2(int *argc2, char **argv2[]) {
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
     }
 
-    if (arguments.symbol_output_len > 0) {
-        enterfile(fin, &nopoint);
-        for (j = 0; j < arguments.symbol_output_len; j++) {
-            const struct symbol_output_s *s = &arguments.symbol_output[j];
-            size_t k;
-            for (k = 0; k < j; k++) {
-                const struct symbol_output_s *s2 = &arguments.symbol_output[k];
-                if (strcmp(s->name, s2->name) == 0) break;
-            }
-            if (labelprint(s, k != j)) break;
+    for (j = 0; j < arguments.symbol_output_len; j++) {
+        const struct symbol_output_s *s = &arguments.symbol_output[j];
+        size_t k;
+        for (k = 0; k < j; k++) {
+            const struct symbol_output_s *s2 = &arguments.symbol_output[k];
+            if (strcmp(s->name, s2->name) == 0) break;
         }
-        exitfile();
+        if (labelprint(s, k != j)) break;
     }
     if (arguments.make != NULL) makefile(argc - opts, argv + opts);
 
