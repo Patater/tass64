@@ -492,16 +492,14 @@ void get_func_params(Mfunc *v) {
         label.data = pline + lpoint.pos;
         label.len = get_label();
         if (label.len != 0) {
-            str_t *cf;
             if (label.len > 1 && label.data[0] == '_' && label.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &label, &new_mfunc.param[i].epoint);break;}
             if ((size_t)(label.data - v->file_list->file->data) < v->file_list->file->len) new_mfunc.param[i].name = label;
             else str_cpy(&new_mfunc.param[i].name, &label);
-            cf = &new_mfunc.param[i].cfname;
-            str_cfcpy(cf, &label);
-            if (cf->data != label.data) str_cfcpy(cf, NULL);
-            else *cf = label;
+            str_cfcpy(&new_mfunc.param[i].cfname, &label);
+            if (new_mfunc.param[i].cfname.data != label.data) str_cfcpy(&new_mfunc.param[i].cfname, NULL);
+            else new_mfunc.param[i].cfname = new_mfunc.param[i].name;
             for (j = 0; j < i; j++) if (new_mfunc.param[j].name.data != NULL) {
-                if (str_cmp(&new_mfunc.param[j].cfname, cf) == 0) break;
+                if (str_cmp(&new_mfunc.param[j].cfname, &new_mfunc.param[i].cfname) == 0) break;
             }
             if (j != i) {
                 err_msg_double_definedo(v->file_list, &new_mfunc.param[j].epoint, &label, &new_mfunc.param[i].epoint);
