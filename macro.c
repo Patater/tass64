@@ -735,9 +735,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
     exitfile();
     if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(context);
     val_destroy(&context->v);
-
-    if (retval != NULL) return retval;
-    return (Obj *)ref_tuple(null_tuple);
+    return retval;
 }
 
 void init_macro(void) {
