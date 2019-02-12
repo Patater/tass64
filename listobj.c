@@ -596,7 +596,7 @@ failed:
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o1 = op->v1, *o2 = op->v2;
     List *v1 = (List *)o1;
-    size_t i = 0;
+    size_t i, len;
     Obj **vals;
 
     if (op->op == &o_X) {
@@ -613,13 +613,15 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
         return val_reference(o2);
     }
+    len = v1->len;
     if (o2->obj == FOLD_OBJ) {
-        if (v1->len != 0) {
+        if (len != 0) {
             Obj *val;
             bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX);
-            val = val_reference(v1->data[v1->len - 1]);
-            for (i = 1; i < v1->len; i++) {
-                Obj *oo1 = v1->data[v1->len - i - 1];
+            val = val_reference(v1->data[len - 1]);
+            v1->len = 0;
+            for (i = 1; i < len; i++) {
+                Obj *oo1 = v1->data[len - i - 1];
                 Obj *oo2 = val;
                 op->v1 = oo1;
                 op->v2 = oo2;
@@ -631,11 +633,12 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 }
                 val_destroy(oo2);
             }
+            v1->len = len;
             return val;
         }
         return (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint);
     }
-    if (v1->len != 0) {
+    if (len != 0) {
         bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o1);
         List *list;
         if (inplace) {
@@ -643,10 +646,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             vals = list->data;
         } else {
             list = (List *)val_alloc(o1->obj);
-            vals = lnew(list, v1->len);
+            vals = lnew(list, len);
             if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }
-        for (;i < v1->len; i++) {
+        v1->len = 0;
+        for (i = 0; i < len; i++) {
             Obj *val;
             Obj *oo1 = v1->data[i];
             op->v1 = oo1;
@@ -660,9 +664,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (inplace) val_destroy(vals[i]);
             vals[i] = val;
         }
+        v1->len = len;
         return &list->v;
     }
-    return val_reference(o1);
+    return val_reference((o1->obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
 }
 
 static MUST_CHECK Obj *rcalc2(oper_t op) {
