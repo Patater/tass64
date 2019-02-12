@@ -673,7 +673,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *o1 = op->v1, *o2 = op->v2;
     List *v2 = (List *)o2;
-    size_t i = 0;
+    size_t i = 0, len;
     Obj **vals;
 
     if (op->op == &o_IN) {
@@ -700,12 +700,14 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     if (o1 == &none_value->v || o1->obj == ERROR_OBJ) {
         return o1->obj->calc2(op);
     }
+    len = v2->len;
     if (o1->obj == FOLD_OBJ) {
-        if (v2->len != 0) {
+        if (len != 0) {
             Obj *val;
             bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX);
             val = val_reference(v2->data[0]);
-            for (i = 1; i < v2->len; i++) {
+            v2->len = 0;
+            for (i = 1; i < len; i++) {
                 Obj *oo1 = val;
                 Obj *oo2 = v2->data[i];
                 op->v1 = oo1;
@@ -718,11 +720,12 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
                 }
                 val_destroy(oo1);
             }
+            v2->len = len;
             return val;
         }
         return (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint2);
     }
-    if (v2->len != 0) {
+    if (len != 0) {
         bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o2);
         List *v;
         if (inplace) {
@@ -730,10 +733,11 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             vals = v->data;
         } else {
             v = (List *)val_alloc(o2->obj);
-            vals = lnew(v, v2->len);
+            vals = lnew(v, len);
             if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }
-        for (;i < v2->len; i++) {
+        v2->len = 0;
+        for (;i < len; i++) {
             Obj *val;
             Obj *oo2 = v2->data[i];
             op->v2 = oo2;
@@ -747,9 +751,10 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             if (inplace) val_destroy(vals[i]);
             vals[i] = val;
         }
+        v2->len = len;
         return &v->v;
     }
-    return val_reference(o2);
+    return val_reference((o2->obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
 }
 
 static void init(Type *obj) {
