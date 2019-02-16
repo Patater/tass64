@@ -704,13 +704,12 @@ Uninitialized memory holes without previous content are not saved unless it's
 really necessary for the output format, in that case it's replaced with zeros.
 
 It's not just data generation statements (e.g. .byte) that can create
-uninitialized memory, but .fill, .align, .offs or address manipulation as well.
+uninitialized memory, but .fill, .align or address manipulation as well.
 
 *       = $200          ;bytes as necessary
         .word ?         ;2 bytes
         .fill 10        ;10 bytes
         .align 64       ;bytes as necessary
-        .offs 16        ;16 bytes
 
 Booleans
 
@@ -1347,8 +1346,7 @@ it does not need to be.
     >0a00                                                   .byte
 
 .offs <expression>
-    Add an offset to the compile offset (create a gap). The program counter
-    stays the same as before.
+    Sets the compile offset relative to the program counter.
 
     Popular in old TASM code where this was the only way to create relocated
     code, otherwise it's use is not recommended as there are easier to use
@@ -1356,9 +1354,9 @@ it does not need to be.
 
     ;Offset PC       Bytes          Disassembly     Source
                                                     *       = $1000
-    .1000                           nop                     .byte
+    .1000           ea              nop                     nop
                                                             .offs 100
-    .1064   1000                    nop                     .byte
+    .1065   1001    ea              nop                     nop
 
 .logical <expression>
 .here

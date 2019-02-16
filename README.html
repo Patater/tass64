@@ -906,7 +906,7 @@ it's really necessary for the output format, in that case it's replaced with
 zeros.</p>
 
 <p>It's not just data generation statements (e.g. <a href="#d_byte"><code>.byte</code></a>) that can
-create uninitialized memory, but <a href="#d_fill"><code>.fill</code></a>, <a href="#d_align"><code>.align</code></a>, <a href="#d_offs"><code>.offs</code></a> or address manipulation as
+create uninitialized memory, but <a href="#d_fill"><code>.fill</code></a>, <a href="#d_align"><code>.align</code></a> or address manipulation as
 well.</p>
 
 <pre width=80>
@@ -914,7 +914,6 @@ well.</p>
 	<b class="d">.word</b> <span>?</span>         <i>;2 bytes</i>
 	<b class="d">.fill</b> <span>10</span>        <i>;10 bytes</i>
 	<b class="k">.align</b> <span>64</span>       <i>;bytes as necessary</i>
-	<b class="k">.offs</b> <span>16</span>        <i>;16 bytes</i>
 </pre>
 
 <h3>Booleans<a name="booleans" href="#booleans"></a></h3>
@@ -1721,17 +1720,16 @@ will match the requested address in the expression.
 &gt;0a00							<b class="d">.byte</b>
 </pre>
 <dt><code><b class="k">.offs</b></code> &lt;expression&gt;<a name="d_offs" href="#d_offs"></a>
-<dd>Add an offset to the compile offset (create a gap). The program counter
-stays the same as before.
+<dd>Sets the compile offset relative to the program counter.
 <p>Popular in old TASM code where this was the only way to create
 relocated code, otherwise it's use is not recommended as there are easier
 to use alternatives below.</p>
 <pre width=80>
 <i>;Offset PC       Bytes          Disassembly     Source</i>
 						*	<b>=</b> <span>$1000</span>
-.1000		 		nop			<b class="d">.byte</b>
+.1000		ea		nop			<b>nop</b>
 							<b class="k">.offs</b> <span>100</span>
-.1064	1000	 		nop			<b class="d">.byte</b>
+.1065	1001	ea		nop			<b>nop</b>
 </pre>
 <dt><code><b class="k">.logical</b></code> &lt;expression&gt;<a name="d_logical" href="#d_logical"></a>
 <dt><code><b class="k">.here</b></code><a name="d_here" href="#d_here"></a>

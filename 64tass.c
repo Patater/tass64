@@ -3310,9 +3310,8 @@ MUST_CHECK Obj *compile(void)
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (toival(vs->val, &ival, 8 * sizeof ival, &vs->epoint)) break;
-                    if (ival != 0) {
-                        current_address->address = (address_t)((int)current_address->address + ival);
-                        current_address->address &= all_mem2;
+                    if (current_address->address != ((address_t)(star + ival) & all_mem2)) {
+                        current_address->address = (address_t)(star + ival) & all_mem2;
                         memjmp(current_address->mem, current_address->address);
                     }
                 }
