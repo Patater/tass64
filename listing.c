@@ -473,6 +473,7 @@ void listing_instr(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
         if (addr2 != addr) listing_pccolumn = true;
         return;
     }
+    if (ln < 0 && !ls->source) return;
     if (ls->linenum) {
         if (llist != NULL) printline(ls);
         padding2(ls, ls->columns.addr);
