@@ -857,7 +857,6 @@ static bool get_val2(struct eval_context_s *ev) {
     size_t vsp = 0;
     size_t i;
     Oper_types op;
-    Oper *op2;
     struct values_s *v1, *v2;
     bool stop = (ev->gstop == 3 || ev->gstop == 4);
     struct values_s *o_out;
@@ -881,8 +880,8 @@ static bool get_val2(struct eval_context_s *ev) {
         }
 
         if (val == &o_COMMA.v || val == &o_COLON2.v) continue;
-        op2 = (Oper *)val;
-        op = op2->op;
+        oper.op = (Oper *)val;
+        op = oper.op->op;
         if (vsp == 0) goto syntaxe;
         v1 = &values[vsp - 1];
         switch (op) {
@@ -904,7 +903,6 @@ static bool get_val2(struct eval_context_s *ev) {
                 tmp.v.obj = FUNCARGS_OBJ;
                 v1--;
 
-                oper.op = op2;
                 oper.v1 = v1[1].val = v1->val;
                 oper.v2 = &tmp.v;
                 oper.epoint = &v1->epoint;
@@ -1089,7 +1087,6 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_NEG:     /* -  */
         case O_POS:     /* +  */
         case O_LNOT:    /* !  */
-            oper.op = op2;
             oper.v1 = v1->val;
             oper.v2 = NULL;
             oper.epoint = &v1->epoint;
@@ -1212,7 +1209,6 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_MAX: /* >? */
             v2 = v1; v1 = &values[--vsp - 1];
             if (vsp == 0) goto syntaxe;
-            oper.op = op2;
             oper.v1 = v1->val;
             oper.v2 = v2->val;
             oper.epoint = &v1->epoint;
@@ -1240,7 +1236,6 @@ static bool get_val2(struct eval_context_s *ev) {
             return false;
         }
 
-        oper.op = op2;
         oper.v1 = v1->val;
         oper.v2 = v2->val;
         oper.epoint = &v1->epoint;
