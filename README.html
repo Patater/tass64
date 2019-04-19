@@ -3442,6 +3442,13 @@ are not supported the result will be decimal.</p>
 <p>This option gives a warning for instructions which were modified by the long branch function.
 Less intrusive than disabling long branches and see where it fails.</p>
 
+<dt><b>-Wmacro-prefix</b><a name="o_Wmacro-prefix" href="#o_Wmacro-prefix"></a>
+<dd>Warn about macro call without prefix.
+<p>Such macro calls can easily be mistaken to be labels if invoked without parameters.
+Also it's hard to notice that an unchanged call turned into label after the
+definition got renamed. This warning helps to find such calls so that prefixes
+can be added.</p>
+
 <dt><b>-Wno-deprecated</b><a name="o_Wdeprecated" href="#o_Wdeprecated"></a>
 <dd>Don't warn about deprecated features.
 <p>Unfortunately there were some features added previously which shouldn't have

@@ -77,6 +77,7 @@ extern void err_msg_unused_variable(struct Label *);
 extern void err_msg_not_defined(const struct str_t *, linepos_t);
 extern void err_msg_not_defined2(const struct str_t *, struct Namespace *, bool, linepos_t);
 extern void err_msg_symbol_case(const struct str_t *, struct Label *, linepos_t);
+extern void err_msg_macro_prefix(linepos_t);
 extern void err_msg_address_mismatch(int, int, linepos_t);
 extern void err_msg_file(Error_types, const char *, linepos_t);
 extern void err_msg_output(const struct Error *);
