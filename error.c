@@ -903,6 +903,11 @@ void err_msg_symbol_case(const str_t *labelname1, Label *l, linepos_t epoint) {
     if (l != NULL) err_msg_double_note(l->file_list, &l->epoint, &l->name);
 }
 
+void err_msg_macro_prefix(linepos_t epoint) {
+    new_error_msg2(diagnostic_errors.macro_prefix, epoint);
+    adderror("macro call without prefix [-Wmacro-prefix]");
+}
+
 static const char * const opr_names[ADR_LEN] = {
     "", /* ADR_REG */
     "", /* ADR_IMPLIED */

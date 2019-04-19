@@ -99,6 +99,7 @@ struct diagnostics_s {
     bool altmode;
     bool page;
     bool type_mixing;
+    bool macro_prefix;
 };
 
 extern int testarg(int *, char ***, struct file_s *);

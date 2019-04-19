@@ -2609,6 +2609,7 @@ MUST_CHECK Obj *compile(void)
                         const Type *obj = tmp2->value->obj;
                         if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
                         if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
+                            if (diagnostics.macro_prefix && (here() == 0 || here() == ';')) err_msg_macro_prefix(&epoint);
                             touch_label(tmp2);
                             labelname.len = 0;val = tmp2->value; goto as_macro;
                         }
@@ -4492,6 +4493,10 @@ MUST_CHECK Obj *compile(void)
                     const Type *obj = tmp2->value->obj;
                     if (diagnostics.case_symbol && str_cmp(&opname, &tmp2->name) != 0) err_msg_symbol_case(&opname, tmp2, &epoint);
                     if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
+                        if (diagnostics.macro_prefix) {
+                            ignore();
+                            if (here() == 0 || here() == ';') err_msg_macro_prefix(&epoint);
+                        }
                         touch_label(tmp2);
                         val = tmp2->value;goto as_macro;
                     }
