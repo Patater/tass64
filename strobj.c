@@ -471,15 +471,6 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
                 v1->chars += v2->chars;
                 return val_reference(&v1->v);
             }
-            if (op->inplace == &v2->v) {
-                s = extend_str(v2, ln);
-                if (s == NULL) break;
-                memmove(s + v1->len, v2->data, v2->len);
-                memcpy(s, v1->data, v1->len);
-                v2->len = ln;
-                v2->chars += v1->chars;
-                return val_reference(&v2->v);
-            }
             v = new_str2(ln);
             if (v == NULL) break;
             v->chars = v1->chars + v2->chars;
