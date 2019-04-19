@@ -3674,6 +3674,8 @@ last byte must not be gap
     .shift or .shiftl needs a normal byte at the end
 logarithm of non-positive number
     only positive numbers have a logarithm
+macro call without prefix
+    macro call was found without a prefix and without parameters
 more than a single character
     no more than a single character is allowed
 more than two characters
