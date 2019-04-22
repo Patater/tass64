@@ -43,7 +43,7 @@ static void tern_free(union tern_u *tern) {
     terns_free = tern;
 }
 
-static union tern_u *terns_alloc() {
+static union tern_u *terns_alloc(void) {
     size_t i;
     struct terns_s *old = terns;
     terns = (struct terns_s *)mallocx(sizeof *terns);
