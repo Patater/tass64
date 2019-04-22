@@ -1235,7 +1235,7 @@ static bool different_line(const struct errorentry_s *err, const struct errorent
     return memcmp(err + 1, err2 + 1, err->line_len) != 0;
 }
 
-bool error_print() {
+bool error_print(void) {
     const struct errorentry_s *err, *err2, *err3;
     size_t pos;
     bool noneerr = false, anyerr = false, usenote;
@@ -1370,14 +1370,14 @@ void fatal_error(const char *txt) {
     putc('\n', stderr);
 }
 
-void err_msg_out_of_memory2(void)
+NO_RETURN void err_msg_out_of_memory2(void)
 {
     fatal_error("out of memory");
     fatal_error(NULL);
     exit(EXIT_FAILURE);
 }
 
-void err_msg_out_of_memory(void)
+NO_RETURN void err_msg_out_of_memory(void)
 {
     error_print();
     err_msg_out_of_memory2();

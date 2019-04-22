@@ -44,7 +44,7 @@ struct include_list_s {
 };
 
 static struct include_list_s include_list;
-struct include_list_s *include_list_last = &include_list;
+static struct include_list_s *include_list_last = &include_list;
 
 static struct avltree file_tree;
 
