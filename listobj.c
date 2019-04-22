@@ -441,6 +441,15 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                 i = v1->len;
                 v1->len = ln;
                 v = (List *)val_reference(o1);
+            } else if (op->inplace == &v2->v) {
+                vals = lextend(v2, ln);
+                if (vals == NULL) goto failed;
+                memmove(vals + v1->len, v2->data, v2->len * sizeof *v2->data);
+                v2->len = ln;
+                for (i = 0; i < v1->len; i++) {
+                    vals[i] = val_reference(v1->data[i]);
+                }
+                return val_reference(o2);
             } else {
                 v = (List *)val_alloc(o1->obj);
                 vals = lnew(v, ln);
