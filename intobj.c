@@ -359,7 +359,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         }
         return &v->v;
     case O_NEG:
-        if (op->inplace != &v1->v) return (Obj *)negate(v1, op->epoint3);
+        if (op->inplace != &v1->v) return negate(v1, op->epoint3);
         v1->len = -v1->len;
         return val_reference(&v1->v);
     case O_POS: return (Obj *)ref_int(v1);

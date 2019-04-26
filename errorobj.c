@@ -49,7 +49,7 @@ static FAST_CALL void destroy(Obj *o1) {
         val_destroy(v1->u.intconv.val);
         return;
     case ERROR___NOT_DEFINED:
-        val_destroy((Obj *)v1->u.notdef.ident);
+        val_destroy(v1->u.notdef.ident);
         val_destroy((Obj *)v1->u.notdef.names);
         return;
     case ERROR__NOT_KEYVALUE:
