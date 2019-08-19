@@ -864,7 +864,7 @@ const char * const addr_modes[ADR_LEN] = {
     "()",     /* ADR_ZP_I */
     " ",      /* ADR_REL_L */
     " ",      /* ADR_REL */
-    " ",      /* ADR_MOVE */
+    "#",      /* ADR_MOVE */
     " ,r",    /* ADR_ZP_R */
     "(,r),y", /* ADR_ZP_R_I_Y */
     " ",      /* ADR_BIT_ZP */
