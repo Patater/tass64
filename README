@@ -4220,7 +4220,8 @@ STP DB                                  TCD 5B
 TCS 1B                                  TDC 7B
 TSC 3B                                  TXY 9B
 TYX BB                                  WAI CB
-XBA EB                                  XCE FB
+WDM 42                                  XBA EB
+XCE FB
 
                               Additional aliases
 CSP 02                                  CLP C2
