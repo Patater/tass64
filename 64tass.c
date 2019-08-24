@@ -4116,16 +4116,16 @@ MUST_CHECK Obj *compile(void)
             case CMD_BREAK: if ((waitfor->skip & 1) != 0)
                 { /* .continue, .break, .continueif, .breakif */
                     size_t wp;
-                    bool nok;
+                    bool nok, doit = true;
                     listing_line(listing, epoint.pos);
                     if (prm == CMD_CONTINUEIF || prm == CMD_BREAKIF) {
                         if (get_exp(0, 1, 1, &epoint)) { 
                             struct values_s *vs = get_val(); 
                             bool truth, result = tobool(vs, &truth);
                             if (prm == CMD_BREAKIF) {
-                                if (!result && !truth) break;
+                                if (!result && !truth) doit = false;
                             } else {
-                                if (result || !truth) break;
+                                if (result || !truth) doit = false;
                             }
                         }
                     }
@@ -4133,8 +4133,10 @@ MUST_CHECK Obj *compile(void)
                     nok = true;
                     while ((wp--) != 0) {
                         if (waitfors[wp].what == W_NEXT2) {
-                            if (wp != 0 && (prm == CMD_BREAK || prm == CMD_BREAKIF)) waitfors[wp].u.cmd_rept.breakout = true;
-                            for (;wp <= waitfor_p; wp++) waitfors[wp].skip = 0;
+                            if (doit) {
+                                if (wp != 0 && (prm == CMD_BREAK || prm == CMD_BREAKIF)) waitfors[wp].u.cmd_rept.breakout = true;
+                                for (;wp <= waitfor_p; wp++) waitfors[wp].skip = 0;
+                            }
                             nok = false;
                             break;
                         }
