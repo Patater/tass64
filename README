@@ -2064,10 +2064,16 @@ within.
     Exit current repetition loop immediately.
 .breakif <condition>
     Exit current repetition loop immediately if the condition holds.
+
+    It's a shorthand for a .if .break .fi sequence.
+
 .continue
     Continue current repetition loop's next iteration.
 .continueif <condition>
     Continue current repetition loop's next iteration if the condition holds.
+
+    It's a shorthand for a .if .continue .fi sequence.
+
 .next
     Closing directive of .for, .bfor, .rept, .brept, .while and .bwhile loop.
 .lbl
