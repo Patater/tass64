@@ -171,6 +171,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x50" "binclude",
     "\x39" "block",
     "\x5a" "break",
+    "\x66" "breakif",
     "\x62" "brept",
     "\x65" "bwhile",
     "\x05" "byte",
@@ -181,6 +182,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x36" "check",
     "\x1b" "comment",
     "\x59" "continue",
+    "\x67" "continueif",
     "\x37" "cpu",
     "\x33" "cwarn",
     "\x28" "databank",
@@ -279,7 +281,7 @@ typedef enum Command_types {
     CMD_BINCLUDE, CMD_FUNCTION, CMD_ENDF, CMD_SWITCH, CMD_CASE, CMD_DEFAULT,
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
-    CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE
+    CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -460,18 +462,18 @@ FAST_CALL uint8_t *pokealloc(address_t db) { /* poke_pos! */
 static int get_command(void) {
     unsigned int no, also, felso, elozo;
     const uint8_t *label;
-    uint8_t tmp[10];
+    uint8_t tmp[12];
     lpoint.pos++;
     label = pline + lpoint.pos;
     if (arguments.caseinsensitive) {
         int i, j;
-        for (i = j = 0; i < 10; i++) {
+        for (i = j = 0; i < (int)sizeof tmp; i++) {
             if ((uint8_t)(label[i] - 'a') <= ('z' - 'a')) continue;
             if ((uint8_t)(label[i] - 'A') > ('Z' - 'A')) break;
             while (j < i) { tmp[j] = label[j]; j++; }
             tmp[j++] = label[i] | 0x20;
         }
-        if ((unsigned int)(i - 2) >= (10 - 2)) return lenof(command);
+        if ((unsigned int)(i - 2) >= (sizeof tmp - 2)) return lenof(command);
         if (j != 0) {
             while (j <= i) { tmp[j] = label[j]; j++; }
             label = tmp;
@@ -4108,15 +4110,30 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 } else new_waitfor(W_NEXT, &epoint);
                 break;
+            case CMD_CONTINUEIF:
+            case CMD_BREAKIF:
             case CMD_CONTINUE:
             case CMD_BREAK: if ((waitfor->skip & 1) != 0)
-                { /* .continue, .break */
-                    size_t wp = waitfor_p + 1;
-                    bool nok = true;
+                { /* .continue, .break, .continueif, .breakif */
+                    size_t wp;
+                    bool nok;
                     listing_line(listing, epoint.pos);
+                    if (prm == CMD_CONTINUEIF || prm == CMD_BREAKIF) {
+                        if (get_exp(0, 1, 1, &epoint)) { 
+                            struct values_s *vs = get_val(); 
+                            bool truth, result = tobool(vs, &truth);
+                            if (prm == CMD_BREAKIF) {
+                                if (!result && !truth) break;
+                            } else {
+                                if (result || !truth) break;
+                            }
+                        }
+                    }
+                    wp = waitfor_p + 1;
+                    nok = true;
                     while ((wp--) != 0) {
                         if (waitfors[wp].what == W_NEXT2) {
-                            if (wp != 0 && prm == CMD_BREAK) waitfors[wp].u.cmd_rept.breakout = true;
+                            if (wp != 0 && (prm == CMD_BREAK || prm == CMD_BREAKIF)) waitfors[wp].u.cmd_rept.breakout = true;
                             for (;wp <= waitfor_p; wp++) waitfors[wp].skip = 0;
                             nok = false;
                             break;

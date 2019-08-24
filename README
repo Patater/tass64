@@ -2062,8 +2062,12 @@ within.
 
 .break
     Exit current repetition loop immediately.
+.breakif <condition>
+    Exit current repetition loop immediately if the condition holds.
 .continue
     Continue current repetition loop's next iteration.
+.continueif <condition>
+    Continue current repetition loop's next iteration if the condition holds.
 .next
     Closing directive of .for, .bfor, .rept, .brept, .while and .bwhile loop.
 .lbl
@@ -4312,15 +4316,15 @@ Appendix
 Assembler directives
 
 .addr .al .align .as .assert .autsiz .bend .binary .binclude .bfor .block
-.break .brept .bwhile .byte .case .cdef .cerror .char .check .comment .continue
-.cpu .cwarn .databank .default .dint .dpage .dsection .dstruct .dunion .dword
-.edef .else .elsif .enc .end .endc .endf .endif .endm .endn .endp .ends
-.endswitch .endu .endv .endweak .eor .error .fi .fill .for .function .goto
-.here .hidemac .if .ifeq .ifmi .ifne .ifpl .include .lbl .lint .logical .long
-.macro .mansiz .namespace .next .null .offs .option .page .pend .proc .proff
-.pron .ptext .rept .rta .section .seed .segment .send .shift .shiftl .showmac
-.sint .struct .switch .text .union .var .virtual .warn .weak .while .word .xl
-.xs
+.break .breakif .brept .bwhile .byte .case .cdef .cerror .char .check .comment
+.continue .continueif .cpu .cwarn .databank .default .dint .dpage .dsection
+.dstruct .dunion .dword .edef .else .elsif .enc .end .endc .endf .endif .endm
+.endn .endp .ends .endswitch .endu .endv .endweak .eor .error .fi .fill .for
+.function .goto .here .hidemac .if .ifeq .ifmi .ifne .ifpl .include .lbl .lint
+.logical .long .macro .mansiz .namespace .next .null .offs .option .page .pend
+.proc .proff .pron .ptext .rept .rta .section .seed .segment .send .shift
+.shiftl .showmac .sint .struct .switch .text .union .var .virtual .warn .weak
+.while .word .xl .xs
 
 -------------------------------------------------------------------------------
 

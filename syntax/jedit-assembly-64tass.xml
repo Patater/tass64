@@ -48,6 +48,7 @@
                         <KEYWORD3>.bfor</KEYWORD3>
                         <KEYWORD3>.block</KEYWORD3>
                         <KEYWORD3>.break</KEYWORD3>
+                        <KEYWORD3>.breakif</KEYWORD3>
                         <KEYWORD3>.brept</KEYWORD3>
                         <KEYWORD3>.bwhile</KEYWORD3>
                         <KEYWORD3>.case</KEYWORD3>
@@ -56,6 +57,7 @@
                         <KEYWORD3>.check</KEYWORD3>
                         <KEYWORD3>.comment</KEYWORD3>
                         <KEYWORD3>.continue</KEYWORD3>
+                        <KEYWORD3>.continueif</KEYWORD3>
                         <KEYWORD3>.cpu</KEYWORD3>
                         <KEYWORD3>.cwarn</KEYWORD3>
                         <KEYWORD3>.databank</KEYWORD3>
