@@ -338,7 +338,7 @@ static const char * const terr_error[] = {
     "empty encoding, add something or correct name",
     "closing directive '",
     "opening directive '",
-    "must be within a '.for' or '.rept' loop"
+    "must be used within a loop"
 };
 
 static const char * const terr_fatal[] = {
