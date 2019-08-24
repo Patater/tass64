@@ -2451,16 +2451,20 @@ variables in the condition might not be in the same scope as the loop body.</p>
 <dt><code><b class="k">.breakif</b> &lt;condition&gt;</code><a name="d_breakif" href="#d_breakif"></a>
 <dd>Exit current repetition loop immediately if the condition holds.
 
+<p>It's a shorthand for a <code>.if .break .fi</code> sequence.</p>
+
 <dt><code><b class="k">.continue</b></code><a name="d_continue" href="#d_continue"></a>
 <dd>Continue current repetition loop's next iteration.
 
 <dt><code><b class="k">.continueif</b> &lt;condition&gt;</code><a name="d_continueif" href="#d_continueif"></a>
 <dd>Continue current repetition loop's next iteration if the condition holds.
 
+<p>It's a shorthand for a <code>.if .continue .fi</code> sequence.</p>
+
 <dt><code><b class="k">.next</b></code><a name="d_next" href="#d_next"></a>
 <dd>Closing directive of <a href="#d_for"><code>.for</code></a>,
 <a href="#d_bfor"><code>.bfor</code></a>, <a href="#d_rept"><code>.rept</code></a>,
-<a href="#d_brept"><code>.brept</code>, <a href="#d_while"><code>.while</code></a>
+<a href="#d_brept"><code>.brept</code></a>, <a href="#d_while"><code>.while</code></a>
 and <a href="#d_while"><code>.bwhile</code></a> loop.
 
 <dt><code><b class="k">.lbl</b></code><a name="d_lbl" href="#d_lbl"></a>
