@@ -117,6 +117,7 @@ context default lightgray
     keyword whole .bfor brightcyan
     keyword whole .block brightcyan
     keyword whole .break brightcyan
+    keyword whole .breakif brightcyan
     keyword whole .brept brightcyan
     keyword whole .bwhile brightcyan
     keyword whole .case brightcyan
@@ -125,6 +126,7 @@ context default lightgray
     keyword whole .check brightcyan
     keyword whole .comment brightcyan
     keyword whole .continue brightcyan
+    keyword whole .continueif brightcyan
     keyword whole .cpu brightcyan
     keyword whole .cwarn brightcyan
     keyword whole .databank brightcyan

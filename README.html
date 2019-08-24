@@ -2448,8 +2448,14 @@ variables in the condition might not be in the same scope as the loop body.</p>
 <dt><code><b class="k">.break</b></code><a name="d_break" href="#d_break"></a>
 <dd>Exit current repetition loop immediately.
 
+<dt><code><b class="k">.breakif</b> &lt;condition&gt;</code><a name="d_breakif" href="#d_breakif"></a>
+<dd>Exit current repetition loop immediately if the condition holds.
+
 <dt><code><b class="k">.continue</b></code><a name="d_continue" href="#d_continue"></a>
 <dd>Continue current repetition loop's next iteration.
+
+<dt><code><b class="k">.continueif</b> &lt;condition&gt;</code><a name="d_continueif" href="#d_continueif"></a>
+<dd>Continue current repetition loop's next iteration if the condition holds.
 
 <dt><code><b class="k">.next</b></code><a name="d_next" href="#d_next"></a>
 <dd>Closing directive of <a href="#d_for"><code>.for</code></a>,
@@ -5116,6 +5122,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_bfor">.bfor</a>
 <a href="#d_block">.block</a>
 <a href="#d_break">.break</a>
+<a href="#d_breakif">.breakif</a>
 <a href="#d_brept">.brept</a>
 <a href="#d_bwhile">.bwhile</a>
 <a href="#d_byte">.byte</a>
@@ -5126,6 +5133,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_check">.check</a>
 <a href="#d_comment">.comment</a>
 <a href="#d_continue">.continue</a>
+<a href="#d_continueif">.continueif</a>
 <a href="#d_cpu">.cpu</a>
 <a href="#d_cwarn">.cwarn</a>
 <a href="#d_databank">.databank</a>
