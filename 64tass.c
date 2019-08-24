@@ -4115,8 +4115,8 @@ MUST_CHECK Obj *compile(void)
             case CMD_CONTINUE:
             case CMD_BREAK: if ((waitfor->skip & 1) != 0)
                 { /* .continue, .break, .continueif, .breakif */
-                    size_t wp;
-                    bool nok, doit = true;
+                    size_t wp = waitfor_p + 1;
+                    bool nok = true, doit = true;
                     listing_line(listing, epoint.pos);
                     if (prm == CMD_CONTINUEIF || prm == CMD_BREAKIF) {
                         if (get_exp(0, 1, 1, &epoint)) { 
@@ -4129,8 +4129,6 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                     }
-                    wp = waitfor_p + 1;
-                    nok = true;
                     while ((wp--) != 0) {
                         if (waitfors[wp].what == W_NEXT2) {
                             if (doit) {
