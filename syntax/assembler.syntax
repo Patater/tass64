@@ -118,6 +118,7 @@ context default lightgray
     keyword whole .block brightcyan
     keyword whole .break brightcyan
     keyword whole .brept brightcyan
+    keyword whole .bwhile brightcyan
     keyword whole .case brightcyan
     keyword whole .cdef brightcyan
     keyword whole .cerror brightcyan
@@ -187,6 +188,7 @@ context default lightgray
     keyword whole .virtual brightcyan
     keyword whole .warn brightcyan
     keyword whole .weak brightcyan
+    keyword whole .while brightcyan
     keyword whole .xl brightcyan
     keyword whole .xs brightcyan
 

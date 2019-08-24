@@ -2378,17 +2378,25 @@ statement.</p>
 </pre>
 
 <h3>Repetitions<a name="repetitions" href="#repetitions"></a></h3>
+
+<p>The following directives are used to repeat code or data.</p>
+<p>The regular non-scoped variants cover most cases except when normal labels
+are required as those will be double defined.</p>
+<p>Scoped variants (those starting with the letter b) create a new scope
+for each iteration. This allows normal labels without collision but it's a bit more
+resource intensive.</p>
+<p>If the scoped variant is prefixed with a label then the list of individual scopes for
+each iteration will be assigned to it. This allows accessing labels within.</p>
+
 <dl class="dir">
 <dt><code><b class="k">.for</b></code> [&lt;assignment&gt;], [&lt;condition&gt;], [&lt;assignment&gt;]<a name="d_for" href="#d_for"></a>
 <dt><code><b class="k">.bfor</b></code> [&lt;assignment&gt;], [&lt;condition&gt;], [&lt;assignment&gt;]<a name="d_bfor" href="#d_bfor"></a>
 <dt><code><b class="k">.next</b></code>
 <dd>Assign initial value, loop while the condition is true and modify value.
 
-<p>The <code>.for</code> directive is more useful calculate data as normal labels will be double defined when used.</p>
-<p>The <code>.bfor</code> directive creates a new scope for each iteration therefore it also works with normal labels but is a bit more resource intensive.</p>
-<p>If the <code>.bfor</code> directive was prefixed with a label then individual scopes are accessible
-through that label using indexing, otherwise these are not accessible. Variable access needs
-dot notation in addition of course.</p>
+<p>First a variable is set, usually this is used for counting. This is optional, the variable may be set already before the loop.</p>
+<p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.</p>
+<p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.</p>
 
 <pre width=80>
         <b>ldx</b> #<span>0</span>
@@ -2399,10 +2407,6 @@ lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <sp
         <b>dex</b>
         <b>bne</b> <u>lp</u>
 </pre>
-
-<p>First a variable is set, usually this is used for counting. This is optional, the variable may be set already before the loop.</p>
-<p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.</p>
-<p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.</p>
 
 <dt><code><b class="k">.for</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;
 <dt><code><b class="k">.bfor</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;
@@ -2421,12 +2425,6 @@ lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <sp
 <dt><code><b class="k">.next</b></code>
 <dd>Repeat enclosed lines the specified number of times.
 
-<p>The <code>.rept</code> directive is useful to repeat data definitions as normal labels will be double defined when used.</p>
-<p>The <code>.brept</code> directive creates a new scope for each repetition therefore it also works with normal labels but is a bit more resource intensive.</p>
-<p>If the <code>.brept</code> directive was prefixed with a label the scopes are accessible
-through that label using indexing, otherwise not at all. Variable access needs
-dot notation in addition of course.</p>
-
 <pre width=80>
         <b class="k">.rept</b> <span>100</span>
 -	<b>inx</b>
@@ -2439,24 +2437,25 @@ label	<b>jmp</b> <u>label</u>        <i>;not a duplicate definition</i>
 	<b>jmp</b> <u>lst</u>[<span>5</span>].<u>label</u> <i>;use label of 6th iteration</i>
 </pre>
 
-<dt><code><b class="k">.break</b></code><a name="d_break" href="#d_break"></a>
-<dd>Exit current loop immediately.
+<dt><code><b class="k">.while</b></code> &lt;condition&gt;<a name="d_while" href="#d_while"></a>
+<dt><code><b class="k">.bwhile</b></code> &lt;condition&gt;<a name="d_bwhile" href="#d_bwhile"></a>
+<dt><code><b class="k">.next</b></code>
+<dd>Repeat enclosed lines until the condition holds.
 
-<p>Can be used inside <a href="#d_for"><code>.for</code></a>,
-<a href="#d_bfor"><code>.bfor</code></a>, <a href="#d_rept"><code>.rept</code></a>
-and <a href="#d_brept"><code>.brept</code></a> to terminate the loop immediately.</p>
+<p>Works as expected however the scoped variant might be tricky to use as
+variables in the condition might not be in the same scope as the loop body.</p>
+
+<dt><code><b class="k">.break</b></code><a name="d_break" href="#d_break"></a>
+<dd>Exit current repetition loop immediately.
 
 <dt><code><b class="k">.continue</b></code><a name="d_continue" href="#d_continue"></a>
-<dd>Continue current loop's next iteration.
-
-<p>Can be used inside <a href="#d_for"><code>.for</code></a>,
-<a href="#d_bfor"><code>.bfor</code></a>, <a href="#d_rept"><code>.rept</code></a>
-and <a href="#d_brept"><code>.brept</code></a> to start the next iteration immediately.</p>
+<dd>Continue current repetition loop's next iteration.
 
 <dt><code><b class="k">.next</b></code><a name="d_next" href="#d_next"></a>
 <dd>Closing directive of <a href="#d_for"><code>.for</code></a>,
-<a href="#d_bfor"><code>.bfor</code></a>, <a href="#d_rept"><code>.rept</code></a>
-and <a href="#d_brept"><code>.brept</code></a> loop.
+<a href="#d_bfor"><code>.bfor</code></a>, <a href="#d_rept"><code>.rept</code></a>,
+<a href="#d_brept"><code>.brept</code>, <a href="#d_while"><code>.while</code></a>
+and <a href="#d_while"><code>.bwhile</code></a> loop.
 
 <dt><code><b class="k">.lbl</b></code><a name="d_lbl" href="#d_lbl"></a>
 <dd>Creates a special jump label that can be referenced by <a href="#d_goto"><code>.goto</code></a>
@@ -4011,7 +4010,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>more than a single character<dd>no more than a single character is allowed
 <dt>more than two characters<dd>no more than two characters are allowed
 <dt>most significant bit must be clear in byte<dd>for .shift and .shiftl only 7 bit "bytes" are valid
-<dt>must be within a '.for' or '.rept' loop<dd>.break or .continue must be used within a loop
+<dt>must be used within a loop<dd>.break or .continue must be used within a loop
 <dt>negative number raised on fractional power<dd>can't calculate this
 <dt>no ? addressing mode for opcode<dd>this addressing mode is not valid for this instruction
 <dt>not a bank 0 address<dd>value must be a bank zero address
@@ -5118,6 +5117,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_block">.block</a>
 <a href="#d_break">.break</a>
 <a href="#d_brept">.brept</a>
+<a href="#d_bwhile">.bwhile</a>
 <a href="#d_byte">.byte</a>
 <a href="#d_case">.case</a>
 <a href="#d_cdef">.cdef</a>
@@ -5202,6 +5202,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_virtual">.virtual</a>
 <a href="#d_warn">.warn</a>
 <a href="#d_weak">.weak</a>
+<a href="#d_while">.while</a>
 <a href="#d_word">.word</a>
 <a href="#d_xl">.xl</a>
 <a href="#d_xs">.xs</a>

@@ -172,6 +172,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x39" "block",
     "\x5a" "break",
     "\x62" "brept",
+    "\x65" "bwhile",
     "\x05" "byte",
     "\x54" "case",
     "\x4e" "cdef",
@@ -256,6 +257,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x60" "virtual",
     "\x2b" "warn",
     "\x57" "weak",
+    "\x64" "while",
     "\x0a" "word",
     "\x24" "xl",
     "\x23" "xs",
@@ -277,7 +279,7 @@ typedef enum Command_types {
     CMD_BINCLUDE, CMD_FUNCTION, CMD_ENDF, CMD_SWITCH, CMD_CASE, CMD_DEFAULT,
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
-    CMD_BREPT, CMD_BFOR
+    CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -1660,6 +1662,76 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     return i;
 }
 
+static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
+    uint8_t *expr;
+    Obj *nf = NULL;
+    struct star_s *s;
+    struct avltree *stree_old;
+    line_t ovline, lvline;
+    bool starexists;
+    size_t i = 0;
+    struct linepos_s apoint;
+    line_t xlin;
+    const uint8_t *oldpline;
+
+    if (diagnostics.optimize) cpu_opt_invalidate();
+    listing_line(listing, epoint->pos);
+    new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
+
+    s = new_star(vline, &starexists); stree_old = star_tree; ovline = vline;
+    if (starexists && s->addr != star) {
+        if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+        fixeddig = false;
+    }
+    s->addr = star;
+    star_tree = &s->tree; lvline = vline = 0;
+
+    apoint = lpoint;
+    xlin = lpoint.line;
+    oldpline = pline;
+    if ((size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+        size_t lentmp = strlen((const char *)pline) + 1;
+        expr = (uint8_t *)mallocx(lentmp);
+        memcpy(expr, pline, lentmp);
+        pline = expr;
+    } else expr = (uint8_t *)oldpline;
+    new_waitfor(W_NEXT2, epoint);
+    waitfor->u.cmd_rept.breakout = false;
+    for (;;) {
+        struct values_s *vs;
+        bool truth;
+        if (!get_exp(1, 1, 1, &apoint)) break;
+        vs = get_val();
+        if (tobool(vs, &truth)) break;
+        if (!truth) break;
+        if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+        waitfor->skip = 1;lvline = vline;
+        if (lst != NULL) {
+            if (i >= lst->len && list_extend(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+            else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
+            else nf = tuple_scope(newlabel, &lst->data[i]);
+            i++;
+        } else nf = compile();
+        xlin = lpoint.line;
+        if (nf == NULL || waitfor->u.cmd_rept.breakout) break;
+        pline = expr;
+        lpoint = apoint;
+    }
+    pline = oldpline;
+    if (expr == oldpline) expr = NULL;
+    lpoint.line = xlin;
+    
+    if (nf != NULL) {
+        if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
+        else listing_line_cut2(listing, waitfor->epoint.pos);
+    }
+    close_waitfor(W_NEXT2);
+    free(expr);
+    if (nf != NULL) close_waitfor(W_NEXT);
+    star_tree = stree_old; vline = ovline + vline - lvline;
+    return i;
+}
+
 MUST_CHECK Obj *compile(void)
 {
     int wht;
@@ -2383,6 +2455,7 @@ MUST_CHECK Obj *compile(void)
                     break;
                 case CMD_BREPT:
                 case CMD_BFOR:
+                case CMD_BWHILE:
                     { /* .bfor */
                         List *lst;
                         bool labelexists;
@@ -2423,7 +2496,7 @@ MUST_CHECK Obj *compile(void)
                             for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                         }
                         label = ref_label(label);
-                        i = (prm == CMD_BFOR) ? for_command(label, lst, &cmdpoint) : rept_command(label, lst, &cmdpoint);
+                        i = (prm == CMD_BFOR) ? for_command(label, lst, &cmdpoint) : (prm == CMD_BREPT) ? rept_command(label, lst, &cmdpoint) : while_command(label, lst, &cmdpoint);
                         if (lst->len > i) list_shrink(lst, i);
                         const_assign(label, &lst->v);
                         val_destroy(&label->v);
@@ -3002,7 +3075,7 @@ MUST_CHECK Obj *compile(void)
                     nobreak = false;
                 } else if (close_waitfor(W_NEXT3)) {
                     pop_context();
-                } else {err_msg2(ERROR__MISSING_OPEN, ".for' or '.rept", &epoint); goto breakerr;}
+                } else {err_msg2(ERROR__MISSING_OPEN, ".for', '.rept' or '.while", &epoint); goto breakerr;}
                 break;
             case CMD_PEND: /* .pend */
                 if (waitfor->what==W_PEND) {
@@ -3979,6 +4052,7 @@ MUST_CHECK Obj *compile(void)
                 }
                 break;
             case CMD_BREPT:
+            case CMD_BWHILE:
             case CMD_BFOR: if ((waitfor->skip & 1) != 0)
                 { /* .bfor */
                     List *lst;
@@ -4010,7 +4084,7 @@ MUST_CHECK Obj *compile(void)
                         lst = new_tuple(lenof(lst->u.val));
                         for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                     }
-                    i = (prm == CMD_BFOR) ? for_command(NULL, lst, &epoint) : rept_command(NULL, lst, &epoint);
+                    i = (prm == CMD_BFOR) ? for_command(NULL, lst, &epoint) : (prm == CMD_BREPT) ? rept_command(NULL, lst, &epoint) : while_command(NULL, lst, &epoint);
                     if (lst->len > i) list_shrink(lst, i);
                     const_assign(label, &lst->v);
                     goto breakerr;
@@ -4025,6 +4099,12 @@ MUST_CHECK Obj *compile(void)
             case CMD_REPT: if ((waitfor->skip & 1) != 0)
                 { /* .for */
                     rept_command(NULL, NULL, &epoint);
+                    goto breakerr;
+                } else new_waitfor(W_NEXT, &epoint);
+                break;
+            case CMD_WHILE: if ((waitfor->skip & 1) != 0)
+                { /* .while */
+                    while_command(NULL, NULL, &epoint);
                     goto breakerr;
                 } else new_waitfor(W_NEXT, &epoint);
                 break;
