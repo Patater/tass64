@@ -103,48 +103,62 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
     size_t args = vals->len;
     size_t j;
     for (j = 0; j < args; j++) {
-        const Type *objt = v[j].val->obj;
-        if (objt == TUPLE_OBJ || objt == LIST_OBJ) {
-            List *v1 = (List *)v[j].val, *vv;
+        const Type *objt2, *objt = v[j].val->obj;
+        if (objt->iterable) {
+            Iter *iter = objt->getiter(v[j].val);
+            size_t ln = iter->len(iter);
             Obj *oval[3];
+            Iter *iters[3];
             size_t k;
             for (k = j + 1; k < args; k++) {
                 oval[k] = v[k].val;
-                if (oval[k]->obj == LIST_OBJ || oval[k]->obj == TUPLE_OBJ) {
-                    List *v2 = (List *)v[k].val;
-                    if (v2->len != 1 && v2->len != v1->len) {
-                        Error *err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
-                        err->u.broadcast.v1 = v1->len;
-                        err->u.broadcast.v2 = v2->len;
+                objt2 = oval[k]->obj;
+                if (objt2->iterable) {
+                    Error *err;
+                    Iter *iter2 = objt2->getiter(oval[k]);
+                    size_t ln2 = iter2->len(iter2);
+                    if (ln2 != 1) {
+                        iters[k] = iter2;
+                        if (ln2 == ln) continue;
+                        for (; k > j; k--) {
+                            if (iters[k] != NULL) val_destroy(&iters[k]->v);
+                            v[k].val = oval[k];
+                        }
+                        err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
+                        err->u.broadcast.v1 = ln;
+                        err->u.broadcast.v2 = ln2;
                         return &err->v;
                     }
-                    if (diagnostics.type_mixing && v[k].val->obj != objt) err_msg_type_mixing(&v[j].epoint);
+                    v[k].val = iter2->next(iter2);
+                    val_destroy(&iter2->v);
                 }
+                iters[k] = NULL;
             }
-            if (v1->len != 0) {
+            if (ln != 0) {
+                iter_next_t iter_next;
                 size_t i;
                 Obj **vals2, *o1 = v[j].val;
-                vv = (List *)val_alloc(objt);
-                vals2 = list_create_elements(vv, v1->len);
-                for (i = 0; i < v1->len; i++) {
-                    v[j].val = v1->data[i];
+                List *vv;
+                vv = (List *)val_alloc(objt == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+                vv->data = vals2 = list_create_elements(vv, ln);
+                iter_next = iter->next;
+                for (i = 0; (v[j].val = iter_next(iter)) != NULL; i++) {
                     for (k = j + 1; k < args; k++) {
-                        if (oval[k]->obj == LIST_OBJ || oval[k]->obj == TUPLE_OBJ) {
-                            List *v2 = (List *)oval[k];
-                            v[k].val = v2->data[(v2->len == 1) ? 0 : i];
-                        }
+                        if (iters[k] != NULL) v[k].val = iters[k]->next(iters[k]);
                     }
                     vals2[i] = gen_broadcast(vals, epoint, f);
                 }
+                val_destroy(&iter->v);
                 vv->len = i;
-                vv->data = vals2;
                 v[j].val = o1;
-                for (i = j + 1; i < args; i++) {
-                    v[i].val = oval[i];
+                for (k = j + 1; k < args; k++) {
+                    if (iters[k] != NULL) val_destroy(&iters[k]->v);
+                    v[k].val = oval[k];
                 }
                 return &vv->v;
             }
-            return val_reference(&v1->v);
+            val_destroy(&iter->v);
+            return val_reference(objt == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
         }
     }
     return f(vals, epoint);
