@@ -38,6 +38,7 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "addressobj.h"
+#include "iterobj.h"
 
 static Type obj;
 

@@ -28,6 +28,7 @@
 #include "bytesobj.h"
 #include "typeobj.h"
 #include "errorobj.h"
+#include "iterobj.h"
 
 struct encoding_s *actual_encoding;
 

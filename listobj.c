@@ -32,6 +32,7 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "foldobj.h"
+#include "iterobj.h"
 
 static Type list_obj;
 static Type tuple_obj;
