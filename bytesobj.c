@@ -51,7 +51,6 @@ static inline size_t byteslen(const Bytes *v1) {
     return (len < 0) ? (size_t)~len : (size_t)len;
 }
 
-static MUST_CHECK Obj *bytes_from_bits(const Bits *, linepos_t);
 static MUST_CHECK Obj *bytes_from_int(const Int *, linepos_t);
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
@@ -574,7 +573,7 @@ MUST_CHECK Bytes *bytes_from_uval(uval_t i, unsigned int bytes) {
     return v;
 }
 
-static MUST_CHECK Obj *bytes_from_bits(const Bits *v1, linepos_t epoint) {
+MUST_CHECK Obj *bytes_from_bits(const Bits *v1, linepos_t epoint) {
     size_t i, sz, len1;
     uint8_t *d;
     Bytes *v;

@@ -594,7 +594,7 @@ retry:
                 val2 = val;
                 goto doit;
             }
-            tmp = BYTES_OBJ->create(val, poke_pos);
+            tmp = bytes_from_bits((Bits *)val, poke_pos);
             iter = tmp->obj->getiter(tmp);
             val_destroy(tmp);
             break;
