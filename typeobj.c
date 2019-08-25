@@ -105,7 +105,7 @@ static MUST_CHECK Obj *apply_convert(Obj *o2, const Type *v1, linepos_t epoint) 
         if (v2->iterable) {
             iter_next_t iter_next;
             Iter *iter = v2->getiter(o2);
-            size_t i, len = iter->len(iter);
+            size_t i, len = iter->len;
             Obj **vals;
             List *v;
 

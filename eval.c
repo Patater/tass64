@@ -821,7 +821,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am) {
     if (o1->obj->iterable) {
         iter_next_t iter_next;
         Iter *iter = o1->obj->getiter(o1);
-        size_t i, len = iter->len(iter);
+        size_t i, len = iter->len;
         List *v;
         Obj **vals;
 
@@ -1118,7 +1118,7 @@ static bool get_val2(struct eval_context_s *ev) {
             if (v1->val->obj->iterable || v1->val->obj == ADDRLIST_OBJ) {
                 iter_next_t iter_next;
                 Iter *iter = v1->val->obj->getiter(v1->val);
-                size_t k, len = iter->len(iter);
+                size_t k, len = iter->len;
                 size_t len2 = vsp + len;
                 Obj *tmp;
 

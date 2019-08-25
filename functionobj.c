@@ -106,7 +106,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
         const Type *objt2, *objt = v[j].val->obj;
         if (objt->iterable) {
             Iter *iter = objt->getiter(v[j].val);
-            size_t ln = iter->len(iter);
+            size_t ln = iter->len;
             Obj *oval[3];
             Iter *iters[3];
             size_t k;
@@ -116,7 +116,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                 if (objt2->iterable) {
                     Error *err;
                     Iter *iter2 = objt2->getiter(oval[k]);
-                    size_t ln2 = iter2->len(iter2);
+                    size_t ln2 = iter2->len;
                     if (ln2 != 1) {
                         iters[k] = iter2;
                         if (ln2 == ln) continue;
@@ -436,7 +436,7 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
     if (typ->iterable) {
         iter_next_t iter_next;
         Iter *iter = typ->getiter(o1);
-        size_t len = iter->len(iter);
+        size_t len = iter->len;
         List *v;
         size_t i;
         Obj **vals;

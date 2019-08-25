@@ -218,10 +218,6 @@ static MUST_CHECK Obj *invalid_size(Obj *v1, linepos_t epoint) {
     return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_SIZE);
 }
 
-static size_t invalid_iter_len(Iter *v1) {
-    return 1 - v1->val;
-}
-
 static FAST_CALL MUST_CHECK Obj *invalid_next(Iter *v1) {
     if (v1->val != 0) return NULL;
     v1->val = 1;
@@ -234,7 +230,7 @@ static MUST_CHECK Iter *invalid_getiter(Obj *v1) {
     v->val = 0;
     v->data = val_reference(v1);
     v->next = invalid_next;
-    v->len = invalid_iter_len;
+    v->len = 1;
     return v;
 }
 

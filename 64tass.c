@@ -1441,7 +1441,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                         val_destroy(labels.data[j]->value);
                         labels.data[j]->value = val_reference(val2);
                     }
-                    j += iter2->len(iter2);
+                    j = iter2->len;
                     if (j != labels.p) err_msg_cant_unpack(labels.p, j, epoint);
                 }
                 lpoint.line = lin;
