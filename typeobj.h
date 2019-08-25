@@ -66,7 +66,7 @@ typedef struct Type {
     Obj *(*function)(Obj *, Func_types, linepos_t) MUST_CHECK;
     Obj *(*len)(Obj *, linepos_t) MUST_CHECK;
     Obj *(*size)(Obj *, linepos_t) MUST_CHECK;
-    Iter *(*getiter)(Obj *) MUST_CHECK;
+    struct Iter *(*getiter)(Obj *) MUST_CHECK;
 } Type;
 
 extern void typeobj_init(void);

@@ -52,6 +52,7 @@
 #include "errorobj.h"
 #include "identobj.h"
 #include "foldobj.h"
+#include "iterobj.h"
 
 size_t get_label(void) {
     uchar_t ch;

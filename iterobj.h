@@ -16,24 +16,25 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-#ifndef FOLDOBJ_H
-#define FOLDOBJ_H
+#ifndef ITERDOBJ_H
+#define ITERDOBJ_H
 #include "obj.h"
 
-extern struct Type *const FOLD_OBJ;
+extern struct Type *const ITER_OBJ;
 
-typedef struct Fold {
+struct Iter;
+typedef FAST_CALL MUST_CHECK Obj *(*iter_next_t)(struct Iter *);
+typedef size_t (*iter_len_t)(struct Iter *);
+
+typedef struct Iter {
     Obj v;
-    int *dummy;
-} Fold;
+    Obj *iter;
+    size_t val;
+    Obj *data;
+    iter_next_t next;
+    iter_len_t len;
+} Iter;
 
-extern Fold *fold_value;
-
-extern void foldobj_init(void);
-extern void foldobj_destroy(void);
-
-static inline Fold *ref_fold(void) {
-    fold_value->v.refcount++; return fold_value;
-}
+extern void iterobj_init(void);
 
 #endif

@@ -28,7 +28,7 @@
 
 static Type obj;
 
-Type *FOLD_OBJ = &obj;
+Type *const FOLD_OBJ = &obj;
 Fold *fold_value;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {

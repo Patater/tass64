@@ -30,6 +30,7 @@
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
+#include "iterobj.h"
 
 static Type obj;
 

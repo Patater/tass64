@@ -72,6 +72,7 @@
 #include "memblocksobj.h"
 #include "identobj.h"
 #include "dictobj.h"
+#include "iterobj.h"
 
 struct Listing *listing = NULL;
 int temporary_label_branch; /* function declaration in function context, not good */

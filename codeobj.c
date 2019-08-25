@@ -41,6 +41,7 @@
 #include "errorobj.h"
 #include "memblocksobj.h"
 #include "identobj.h"
+#include "iterobj.h"
 
 static Type obj;
 
