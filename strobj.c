@@ -259,10 +259,6 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(v1->chars);
 }
 
-static size_t iter_len(Iter *v1) {
-    return ((Str *)v1->data)->chars - v1->val;
-}
-
 static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     Str *iter;
     const Str *str = (Str *)v1->data;
@@ -293,7 +289,7 @@ static MUST_CHECK Iter *getiter(Obj *v1) {
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
-    v->len = iter_len;
+    v->len = ((Str *)v1)->chars;
     return v;
 }
 
@@ -564,7 +560,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         Iter *iter = o2->obj->getiter(o2);
         size_t i;
 
-        len2 = iter->len(iter);
+        len2 = iter->len;
         if (len2 == 0) {
             val_destroy(&iter->v);
             return (Obj *)ref_str(null_str);

@@ -32,7 +32,7 @@ typedef struct Iter {
     size_t val;
     Obj *data;
     iter_next_t next;
-    iter_len_t len;
+    size_t len;
 } Iter;
 
 extern void iterobj_init(void);

@@ -292,17 +292,13 @@ static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     return vv1->data[v1->val++];
 }
 
-static size_t iter_len(Iter *v1) {
-    return ((List *)v1->data)->len - v1->val;
-}
-
 static MUST_CHECK Iter *getiter(Obj *v1) {
     Iter *v = (Iter *)val_alloc(ITER_OBJ);
     v->iter = NULL;
     v->val = 0;
     v->data = val_reference(v1);
     v->next = next;
-    v->len = iter_len;
+    v->len = ((List *)v1)->len;
     return v;
 }
 
@@ -539,7 +535,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     if (o2->obj->iterable) {
         iter_next_t iter_next;
         Iter *iter = o2->obj->getiter(o2);
-        size_t len = iter->len(iter);
+        size_t len = iter->len;
 
         if (len == 0) {
             val_destroy(&iter->v);
