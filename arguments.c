@@ -86,7 +86,6 @@ struct diagnostics_s diagnostics = {
     false,       /* long_branch */
     false,       /* altmode */
     true,        /* page */
-    true,        /* type_mixing */
     false        /* macro_prefix */
 };
 
@@ -121,7 +120,6 @@ struct diagnostics_s diagnostic_errors = {
     false,       /* long_branch */
     false,       /* altmode */
     true,        /* page */
-    true,        /* type_mixing */
     false        /* macro_prefix */
 };
 
@@ -157,7 +155,6 @@ static struct diagnostics_s diagnostic_all = {
     false,       /* long_branch */
     false,       /* altmode */
     true,        /* page */
-    true,        /* type_mixing */
     false        /* macro_prefix */
 };
 
@@ -193,7 +190,6 @@ static struct diagnostics_s diagnostic_error_all = {
     true,        /* long_branch */
     true,        /* altmode */
     true,        /* page */
-    true,        /* type_mixing */
     true         /* macro_prefix */
 };
 
@@ -231,7 +227,6 @@ static const struct w_options_s w_options[] = {
     {"long-branch",     &diagnostics.long_branch},
     {"altmode",         &diagnostics.altmode},
     {"page",            &diagnostics.page},
-    {"type-mixing",     &diagnostics.type_mixing},
     {"macro-prefix",    &diagnostics.macro_prefix},
     {NULL,              NULL}
 };

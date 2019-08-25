@@ -390,7 +390,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                         v = ref_list(v1);
                         vals = v1->data;
                         inplace = v1;
-                    } else if (op->inplace == &v2->v) {
+                    } else if (o1->obj == o2->obj && op->inplace == &v2->v) {
                         v = ref_list(v2);
                         vals = v2->data;
                         inplace = v2;
@@ -452,7 +452,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                 i = v1->len;
                 v1->len = ln;
                 v = (List *)val_reference(o1);
-            } else if (op->inplace == &v2->v) {
+            } else if (o1->obj == o2->obj && op->inplace == &v2->v) {
                 vals = lextend(v2, ln);
                 if (vals == NULL) goto failed;
                 memmove(vals + v1->len, v2->data, v2->len * sizeof *v2->data);
@@ -618,7 +618,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         return o2->obj->rcalc2(op);
     }
     if (o2->obj == TUPLE_OBJ || o2->obj == LIST_OBJ) {
-        if (diagnostics.type_mixing && o1->obj != o2->obj) err_msg_type_mixing(op->epoint3);
         return calc2_list(op);
     }
     if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
@@ -700,7 +699,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         return (Obj *)ref_bool(false_value);
     }
     if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
-        if (diagnostics.type_mixing && o1->obj != o2->obj) err_msg_type_mixing(op->epoint3);
         return calc2_list(op);
     }
     if (o1 == &none_value->v || o1->obj == ERROR_OBJ) {
