@@ -16,8 +16,8 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-#ifndef ITERDOBJ_H
-#define ITERDOBJ_H
+#ifndef ITEROBJ_H
+#define ITEROBJ_H
 #include "obj.h"
 
 extern struct Type *const ITER_OBJ;
