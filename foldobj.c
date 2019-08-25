@@ -62,13 +62,12 @@ static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t ma
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *v2 = op->v2;
-    switch (v2->obj->type) {
-    case T_TUPLE:
-    case T_LIST:
+    if (v2->obj->iterable) {
         if (op->op != &o_MEMBER && op->op != &o_X) {
             return v2->obj->rcalc2(op);
         }
-        break;
+    }
+    switch (v2->obj->type) {
     case T_NONE:
     case T_ERROR:
         return val_reference(v2);
@@ -80,17 +79,17 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
 static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *v1 = op->v1;
-    switch (op->v1->obj->type) {
-    case T_TUPLE:
-    case T_LIST:
+    if (v1->obj->iterable) {
         if (op->op != &o_IN) {
             return v1->obj->calc2(op);
         }
-        break;
+    }
+    switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR:
         return val_reference(v1);
-    default: break;
+    default:
+        break;
     }
     return obj_oper_error(op);
 }
