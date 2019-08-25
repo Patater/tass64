@@ -114,7 +114,6 @@ extern void NO_RETURN err_msg_out_of_memory(void);
 extern void error_status(void);
 extern bool error_serious(void);
 extern linecpos_t interstring_position(linepos_t, const uint8_t *, size_t);
-extern void err_msg_type_mixing(linepos_t);
 
 static inline MALLOC void *mallocx(size_t l) {
     void *m = malloc(l);

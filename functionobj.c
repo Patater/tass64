@@ -124,10 +124,10 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                             if (iters[k] != NULL) val_destroy(&iters[k]->v);
                             v[k].val = oval[k];
                         }
+                        val_destroy(&iter->v);
                         err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
                         err->u.broadcast.v1 = ln;
                         err->u.broadcast.v2 = ln2;
-                        val_destroy(&iter->v);
                         return &err->v;
                     }
                     v[k].val = iter2->next(iter2);
