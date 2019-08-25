@@ -418,7 +418,7 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
     Obj *err;
     double real;
 
-    if (typ == TUPLE_OBJ || typ == LIST_OBJ) {
+    if (typ->iterable) {
         iter_next_t iter_next;
         Iter *iter = typ->getiter(o1);
         size_t len = iter->len(iter);

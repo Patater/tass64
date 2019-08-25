@@ -291,6 +291,7 @@ static FAST_CALL bool funcargs_same(const Obj *o1, const Obj *o2) {
 }
 
 void obj_init(Type *obj) {
+    obj->iterable = false;
     obj->create = invalid_create;
     obj->destroy = NULL;
     obj->garbage = NULL;

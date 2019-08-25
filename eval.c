@@ -817,40 +817,34 @@ MUST_CHECK Obj *sliceparams(const struct List *v2, size_t len2, uval_t *olen, iv
 }
 
 static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am) {
-    switch (o1->obj->type) {
-    case T_ADDRESS:
-        {
-            Address *v1 = (Address *)o1;
-            return (Obj *)new_address(val_reference(v1->val), am | (v1->type << 4));
-        }
-    case T_LIST:
-    case T_TUPLE:
-        {
-            iter_next_t iter_next;
-            Iter *iter = o1->obj->getiter(o1);
-            size_t i, len = iter->len(iter);
-            List *v;
-            Obj **vals;
+    if (o1->obj->iterable) {
+        iter_next_t iter_next;
+        Iter *iter = o1->obj->getiter(o1);
+        size_t i, len = iter->len(iter);
+        List *v;
+        Obj **vals;
 
-            if (len == 0) {
-                val_destroy(&iter->v);
-                return val_reference(o1->obj == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
-            }
-
-            v = (List *)val_alloc(o1->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
-            vals = list_create_elements(v, len);
-            iter_next = iter->next;
-            for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
-                vals[i] = apply_addressing(o1, am);
-            }
+        if (len == 0) {
             val_destroy(&iter->v);
-            v->len = i;
-            v->data = vals;
-            return &v->v;
+            return val_reference(o1->obj == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
         }
-    default:
-        return (Obj *)new_address(val_reference(o1), am);
+
+        v = (List *)val_alloc(o1->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+        vals = list_create_elements(v, len);
+        iter_next = iter->next;
+        for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
+            vals[i] = apply_addressing(o1, am);
+        }
+        val_destroy(&iter->v);
+        v->len = i;
+        v->data = vals;
+        return &v->v;
     }
+    if (o1->obj == ADDRESS_OBJ) {
+        Address *v1 = (Address *)o1;
+        return (Obj *)new_address(val_reference(v1->val), am | (v1->type << 4));
+    }
+    return (Obj *)new_address(val_reference(o1), am);
 }
 
 static bool get_val2(struct eval_context_s *ev) {
@@ -1120,7 +1114,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     continue;
                 }
             }
-            if (v1->val->obj == TUPLE_OBJ || v1->val->obj == LIST_OBJ || v1->val->obj == ADDRLIST_OBJ) {
+            if (v1->val->obj->iterable || v1->val->obj == ADDRLIST_OBJ) {
                 iter_next_t iter_next;
                 Iter *iter = v1->val->obj->getiter(v1->val);
                 size_t k, len = iter->len(iter);

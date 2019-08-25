@@ -620,6 +620,7 @@ retry:
 
     iter_next = iter->next;
     while ((val2 = iter_next(iter)) != NULL) {
+        if (val2->obj->iterable) goto rec;
         switch (val2->obj->type) {
         case T_BITS:
             {
@@ -628,8 +629,6 @@ retry:
                 if (bits <= 8) goto doit;
             }
             /* fall through */
-        case T_LIST:
-        case T_TUPLE:
         case T_STR:
         rec:
             textrecursion(trec, val2);
@@ -702,7 +701,7 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
     ival_t iv;
     const Type *type = val->obj;
 
-    if (type != LIST_OBJ && type != TUPLE_OBJ) {
+    if (!type->iterable) {
         if (type == GAP_OBJ) {
             if (brec->len > 0) {
                 memcpy(pokealloc(brec->len), brec->buff, brec->len);
@@ -719,11 +718,11 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
     iter = type->getiter(val);
     iter_next = iter->next;
     while ((val2 = iter_next(iter)) != NULL) {
-        switch (val2->obj->type) {
-        case T_LIST:
-        case T_TUPLE:
+        if (val2->obj->iterable) {
             byterecursion(val2, prm, brec, bits);
             continue;
+        }
+        switch (val2->obj->type) {
         case T_GAP:
             if (brec->len > 0) {
                 memcpy(pokealloc(brec->len), brec->buff, brec->len);
@@ -811,7 +810,7 @@ static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, st
     bool was = false;
     iter_next = iter->next;
     while ((o1 = iter_next(iter)) != NULL) {
-        if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
+        if (o1->obj->iterable) {
             if (instrecursion(o1, prm, w, epoint, epoints)) was = true;
         } else {
             err = instruction(prm, w, o1, epoint, epoints);
@@ -4556,7 +4555,7 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(3, 0, 0, NULL)) goto breakerr;
                         val = get_vals_addrlist(epoints);
                     }
-                    if (val->obj == TUPLE_OBJ || val->obj == LIST_OBJ) {
+                    if (val->obj->iterable) {
                         epoints[1] = epoints[0];
                         epoints[2] = epoints[0];
                         if (!instrecursion(val, prm, w, &epoint, epoints)) {
