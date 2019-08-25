@@ -349,7 +349,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     epoint2 = &args->val[indx].epoint;
 
     if (o2 == &none_value->v) return val_reference(o2);
-    if (o2->obj == LIST_OBJ) {
+    if (o2->obj->iterable) {
         iter_next_t iter_next;
         Iter *iter = o2->obj->getiter(o2);
         size_t i, len2 = iter->len(iter);
@@ -360,7 +360,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             val_destroy(&iter->v);
             return val_reference(&null_list->v);
         }
-        v = (List *)val_alloc(LIST_OBJ);
+        v = new_list();
         v->data = vals = list_create_elements(v, len2);
         pair_oper.epoint3 = epoint2;
         iter_next = iter->next;

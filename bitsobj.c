@@ -1174,7 +1174,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
 
     ln = vv1->bits;
 
-    if (o2->obj == LIST_OBJ) {
+    if (o2->obj->iterable) {
         iter_next_t iter_next;
         Iter *iter = o2->obj->getiter(o2);
         size_t len1 = iter->len(iter);

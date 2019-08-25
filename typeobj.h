@@ -42,6 +42,7 @@ typedef enum Func_types {
 typedef struct Type {
     Obj v;
     Type_types type;
+    bool iterable;
     const char *name;
     struct Slot **slot;
     size_t length;
