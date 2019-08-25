@@ -794,6 +794,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference(i ? v2 : &v1->v);
     }
+    if (v2->obj->iterable) {
+        if (op->op != &o_MEMBER) {
+            return v2->obj->rcalc2(op);
+        }
+    }
     switch (v2->obj->type) {
     case T_STR: return calc2_str(op);
     case T_BOOL:
@@ -831,10 +836,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             val_destroy(tmp);
             return result;
         }
-    case T_TUPLE:
-    case T_LIST:
     case T_GAP:
-    case T_REGISTER:
     case T_DICT:
         if (op->op != &o_MEMBER) {
             return v2->obj->rcalc2(op);
