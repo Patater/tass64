@@ -1290,7 +1290,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     line_t lin;
     int nopos = -1;
     struct linepos_s epoint2, epoint3;
-    uint8_t *expr;
+    uint8_t *expr, *expr2;
     struct {
         size_t p, len;
         Label **data;
@@ -1459,12 +1459,13 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             val_destroy(&iter->v);
         }
         if (labels.p != 0 && labels.data != labels.val) free(labels.data);
-        expr = NULL;
+        expr = expr2 = NULL;
     } else {
         struct linepos_s apoint = lpoint, bpoint = {0, 0};
         line_t xlin = lpoint.line;
         struct oper_s tmp;
-        const uint8_t *oldpline = pline;
+        const uint8_t *oldpline = pline, *oldpline2 = pline;
+        expr2 = (uint8_t *)oldpline2;
         if ((size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
             size_t lentmp = strlen((const char *)pline) + 1;
             expr = (uint8_t *)mallocx(lentmp);
@@ -1476,7 +1477,6 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         waitfor->u.cmd_rept.breakout = false;
         tmp.op = NULL;
         for (;;) {
-            lpoint = apoint;
             if (here() != ',' && here() != 0) {
                 struct values_s *vs;
                 bool truth;
@@ -1488,6 +1488,13 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             if (nopos < 0) {
                 ignore();if (here() != ',') {err_msg(ERROR______EXPECTED, "','"); break;}
                 lpoint.pos++;ignore();
+                oldpline2 = pline;
+                if (pline != expr && (size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+                    size_t lentmp = strlen((const char *)pline) + 1;
+                    expr2 = (uint8_t *)mallocx(lentmp);
+                    memcpy(expr2, pline, lentmp);
+                    pline = expr2;
+                } else expr2 = (uint8_t *)oldpline2;
                 if (here() == 0 || here() == ';') {bpoint.pos = 0; nopos = 0;}
                 else bpoint = lpoint;
             } else {
@@ -1501,9 +1508,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 i++;
             } else nf = compile();
             xlin = lpoint.line;
-            pline = expr;
-            lpoint.line = lin;
             if (nf == NULL || waitfor->u.cmd_rept.breakout) break;
+            pline = expr2;
             if (nopos < 0) {
                 str_t varname;
                 Namespace *context;
@@ -1595,9 +1601,12 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 label->value = val;
                 label->usepass = 0;
             }
+            pline = expr;
+            lpoint = apoint;
         }
         pline = oldpline;
         if (expr == oldpline) expr = NULL;
+        if (expr2 == oldpline2) expr2 = NULL;
         lpoint.line = xlin;
     }
     if (nf != NULL) {
@@ -1606,6 +1615,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     }
     close_waitfor(W_NEXT2);
     free(expr);
+    free(expr2);
     if (nf != NULL) close_waitfor(W_NEXT);
     star_tree = stree_old; vline = ovline + vline - lvline;
     return i;
