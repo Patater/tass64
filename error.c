@@ -435,7 +435,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             adderror("immediate addressing mode suggested [-Wimmediate]");
             break;
         case ERROR_LEADING_ZEROS:
-            new_error_msg2(diagnostic_errors.immediate, epoint);
+            new_error_msg2(diagnostic_errors.leading_zeros, epoint);
             adderror("leading zeros ignored [-Wleading-zeros]");
             break;
         case ERROR_DIRECTIVE_IGN:
