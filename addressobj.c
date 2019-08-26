@@ -529,27 +529,17 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_GAP:
         am = v2->type;
         switch (op->op->op) {
-        case O_CMP:
-        case O_EQ:
-        case O_NE:
-        case O_MIN:
-        case O_LT:
-        case O_LE:
-        case O_MAX:
-        case O_GT:
-        case O_GE:
-            if (am == A_NONE) {
-                op->v2 = v2->val;
-                op->inplace = NULL;
-                return t1->calc2(op);
-            }
-            break;
         default:
             if (am == A_NONE) {
                 op->v2 = v2->val;
                 op->inplace = NULL;
                 return t1->calc2(op);
             }
+            break;
+        case O_MUL:
+        case O_OR:
+        case O_XOR:
+        case O_AND:
             if (check_addr2(am)) break;
             goto ok;
         case O_ADD:
