@@ -545,8 +545,32 @@ struct textrecursion_s {
     size_t sum, max;
     int prm;
     bool warn;
+    Error_types error;
     uint8_t buff[16];
 };
+
+static void textdump(struct textrecursion_s *trec, uval_t uval) {
+    switch (trec->prm) {
+    case CMD_SHIFT:
+        if ((uval & 0x80) != 0) trec->error = ERROR___NO_HIGH_BIT;
+        uval &= 0x7f;
+        break;
+    case CMD_SHIFTL:
+        if ((uval & 0x80) != 0) trec->error = ERROR___NO_HIGH_BIT;
+        uval <<= 1;
+        break;
+    case CMD_NULL:
+        if (uval == 0) trec->error = ERROR_NO_ZERO_VALUE;
+        /* fall through */
+    default:
+        break;
+    }
+    if (trec->len >= (ssize_t)sizeof trec->buff) {
+        memcpy(pokealloc(trec->len), trec->buff, trec->len);
+        trec->len = 0;
+    }
+    trec->buff[trec->len++] = uval ^ outputeor;
+}
 
 static void textrecursion(struct textrecursion_s *trec, Obj *val) {
     Iter *iter;
@@ -568,9 +592,9 @@ retry:
             default: m = BYTES_MODE_TEXT; break;
             }
             tmp = bytes_from_str((Str *)val, poke_pos, m);
-            iter = tmp->obj->getiter(tmp);
+            textrecursion(trec, tmp);
             val_destroy(tmp);
-            break;
+            return;
         }
     case T_ERROR:
     case T_FLOAT:
@@ -596,25 +620,17 @@ retry:
                 goto doit;
             }
             tmp = bytes_from_bits((Bits *)val, poke_pos);
-            iter = tmp->obj->getiter(tmp);
+            textrecursion(trec, tmp);
             val_destroy(tmp);
-            break;
+            return;
         }
     case T_NONE:
         trec->warn = true;
         return;
     case T_BYTES:
-        {
-            ssize_t len = ((Bytes *)val)->len;
-            if (len < 0) len = ~len;
-            if (len == 0) return;
-            if (len == 1) {
-                iter = NULL;
-                val2 = val;
-                goto doit;
-            }
-        }
-        /* fall through */
+        iter = NULL;
+        val2 = val;
+        goto dobytes;
     default:
         iter = val->obj->getiter(val);
     }
@@ -645,38 +661,36 @@ retry:
             if (iter == NULL) return;
             break;
         case T_BYTES:
+        dobytes:
             {
-                ssize_t len = ((Bytes *)val2)->len;
-                if (len < 0) len = ~len;
-                if (len == 0) break;
-                if (len > 1) goto rec;
+                Bytes *bytes = (Bytes *)val2;
+                ssize_t len = bytes->len;
+                if (len != 0) {
+                    size_t i, len2, len3;
+                    if (len < 0) {
+                        len2 = (size_t)~len;
+                        outputeor = ~outputeor;
+                    } else {
+                        len2 = (size_t)len;
+                    }
+                    len3 = trec->max - trec->sum;
+                    if (len2 > len3) len2 = len3;
+                    trec->sum += len2;
+                    if (trec->len < 0) { memskip(-trec->len); trec->len = 0; }
+                    for (i = 0; i < len2; i++) {
+                        textdump(trec, bytes->data[i]);
+                    }
+                    if (len < 0) outputeor = ~outputeor;
+                }
             }
-            /* fall through */
+            if (iter == NULL) return;
+            break;
         default:
         doit:
             if (touval(val2, &uval, 8, poke_pos)) uval = 256 + '?';
-            switch (trec->prm) {
-            case CMD_SHIFT:
-                if ((uval & 0x80) != 0) err_msg2(ERROR___NO_HIGH_BIT, NULL, poke_pos);
-                uval &= 0x7f;
-                break;
-            case CMD_SHIFTL:
-                if ((uval & 0x80) != 0) err_msg2(ERROR___NO_HIGH_BIT, NULL, poke_pos);
-                uval <<= 1;
-                break;
-            case CMD_NULL:
-                if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, poke_pos);
-                /* fall through */
-            default:
-                break;
-            }
-            if (trec->len < 0) { memskip(-trec->len); trec->len = 0; }
-            else if (trec->len >= (ssize_t)sizeof trec->buff) {
-                memcpy(pokealloc(trec->len), trec->buff, trec->len);
-                trec->len = 0;
-            }
-            trec->buff[trec->len++] = uval ^ outputeor;
             trec->sum++;
+            if (trec->len < 0) { memskip(-trec->len); trec->len = 0; }
+            textdump(trec, uval);
             if (iter == NULL) return;
             break;
         case T_NONE:
@@ -3257,6 +3271,7 @@ MUST_CHECK Obj *compile(void)
                         trec.max = SIZE_MAX;
                         trec.prm = prm;
                         trec.warn = false;
+                        trec.error = ERROR__USER_DEFINED;
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             if (trec.len != 0) {
                                 if (trec.len > 0) memcpy(pokealloc(trec.len), trec.buff, trec.len);
@@ -3266,6 +3281,7 @@ MUST_CHECK Obj *compile(void)
                             poke_pos = &vs->epoint;
                             textrecursion(&trec, vs->val);
                             if (trec.warn) { err_msg_still_none(NULL, poke_pos); trec.warn = false; }
+                            if (trec.error != ERROR__USER_DEFINED) { err_msg2(trec.error, NULL, poke_pos); trec.error = ERROR__USER_DEFINED;}
                         }
                         if (trec.len < 0) { memskip(-trec.len); trec.len = 0; }
                         switch (prm) {
@@ -3643,10 +3659,10 @@ MUST_CHECK Obj *compile(void)
                         trec.max = db;
                         trec.prm = CMD_TEXT;
                         trec.warn = false;
+                        trec.error = ERROR__USER_DEFINED;
                         textrecursion(&trec, vs->val);
-                        if (trec.warn) {
-                            err_msg_still_none(NULL, poke_pos);
-                        }
+                        if (trec.warn) err_msg_still_none(NULL, poke_pos);
+                        if (trec.error != ERROR__USER_DEFINED) err_msg2(trec.error, NULL, poke_pos);
 
                         db -= trec.sum;
                         if (db != 0) {
