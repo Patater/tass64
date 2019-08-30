@@ -667,10 +667,12 @@ retry:
                 ssize_t len = bytes->len;
                 if (len != 0) {
                     size_t i, len2, len3;
+                    int inv;
                     if (len < 0) {
+                        inv = ~0;
                         len2 = (size_t)~len;
-                        outputeor = ~outputeor;
                     } else {
+                        inv = 0;
                         len2 = (size_t)len;
                     }
                     len3 = trec->max - trec->sum;
@@ -678,9 +680,8 @@ retry:
                     trec->sum += len2;
                     if (trec->len < 0) { memskip(-trec->len); trec->len = 0; }
                     for (i = 0; i < len2; i++) {
-                        textdump(trec, bytes->data[i]);
+                        textdump(trec, bytes->data[i] ^ inv);
                     }
-                    if (len < 0) outputeor = ~outputeor;
                 }
             }
             if (iter == NULL) return;
