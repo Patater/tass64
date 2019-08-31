@@ -67,16 +67,14 @@ static MALLOC ternary_node *tern_alloc(void) {
 /* Non-recursive so we don't waste stack space/time on large
    insertions. */
 
-ternary_tree *ternary_insert(ternary_tree *root, const uint8_t *s, const uint8_t *end)
+ternary_tree *ternary_insert(ternary_tree *pcurr, const uint8_t *s, const uint8_t *end)
 {
     uchar_t spchar;
-    ternary_tree curr, *pcurr;
-    if (s == end) return NULL;
+    ternary_tree curr;
+  
     spchar = *s;
     if ((spchar & 0x80) != 0) s += utf8in(s, &spchar); else s++;
 
-    /* Start at the root. */
-    pcurr = root;
     /* Loop until we find the right position */
     while ((curr = *pcurr) != NULL)
     {
@@ -99,26 +97,24 @@ ternary_tree *ternary_insert(ternary_tree *root, const uint8_t *s, const uint8_t
        the string, into the tree rooted at curr */
     for (;;) {
         /* Allocate the memory for the node, and fill it in */
-        *pcurr = tern_alloc();
-        if (pcurr == NULL) return NULL;
-        curr = *pcurr;
+        curr = tern_alloc();
         curr->splitchar = spchar;
         curr->lokid = curr->hikid = curr->eqkid = NULL;
+        *pcurr = curr;
+        pcurr = &curr->eqkid;
 
         /* Place nodes until we hit the end of the string.
            When we hit it, place the data in the right place, and
            return.
            */
         if ((~spchar) == 0) {
-            curr->eqkid = NULL;
-            return &curr->eqkid;
+            return pcurr;
         }
         if (s == end) spchar = ~(uchar_t)0;
         else {
             spchar = *s;
             if ((spchar & 0x80) != 0) s += utf8in(s, &spchar); else s++;
         }
-        pcurr = &(curr->eqkid);
     }
 }
 
@@ -134,17 +130,16 @@ void ternary_cleanup(ternary_tree p, ternary_free_fn_t f)
 }
 
 /* Non-recursive find of a string in the ternary tree */
-void *ternary_search(const ternary_node *p, const uint8_t *s, size_t *len)
+void *ternary_search(const ternary_node *curr, const uint8_t *s, size_t *len)
 {
-    const ternary_node *curr;
     uchar_t spchar;
     const ternary_node *last = NULL;
     size_t len2 = *len;
     const uint8_t *end = s + len2;
-    if (s == end) return NULL;
+
     spchar = *s;
     if ((spchar & 0x80) != 0) s += utf8in(s, &spchar); else s++;
-    curr = p;
+
     while (curr != NULL) {
         if (spchar == curr->splitchar) {
             if ((~spchar) == 0) return (void *)curr->eqkid;
