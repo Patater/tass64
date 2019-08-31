@@ -59,7 +59,9 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Function *v1 = (Function *)o1;
-    *hs = v1->name_hash;
+    int h = v1->name_hash;
+    if (h < 0) v1->name_hash = h = str_hash(&v1->name);
+    *hs = h;
     return NULL;
 }
 
@@ -774,7 +776,7 @@ void functionobj_names(void) {
         func->name.data = (const uint8_t *)builtin_functions[i].name;
         func->name.len = strlen(builtin_functions[i].name);
         func->func = builtin_functions[i].func;
-        func->name_hash = str_hash(&func->name);
+        func->name_hash = -1;
         new_builtin(builtin_functions[i].name, &func->v);
     }
 }
