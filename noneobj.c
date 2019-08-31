@@ -26,7 +26,10 @@
 static Type obj;
 
 Type *const NONE_OBJ = &obj;
-None *none_value;
+
+static None noneval = { { &obj, 1}, NULL };
+
+None *none_value = &noneval;
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return o1 == o2;
@@ -105,14 +108,10 @@ void noneobj_init(void) {
     obj.function = function;
     obj.len = len;
     obj.size = size;
-
-    none_value = (None *)val_alloc(NONE_OBJ);
 }
 
 void noneobj_destroy(void) {
 #ifdef DEBUG
     if (none_value->v.refcount != 1) fprintf(stderr, "none %" PRIuSIZE "\n", none_value->v.refcount - 1);
 #endif
-
-    val_destroy(&none_value->v);
 }
