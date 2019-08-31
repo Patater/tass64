@@ -731,7 +731,7 @@ static ssize_t icmp(const Bits *vv1, const Bits *vv2) {
     return 0;
 }
 
-static bdigit_t ldigit(const Bits *v1) {
+static inline unsigned int ldigit(const Bits *v1) {
     ssize_t ln = v1->len;
     if (ln > 0) return v1->data[0];
     if (ln == 0) return 0;
@@ -743,16 +743,14 @@ static bdigit_t ldigit(const Bits *v1) {
 static MUST_CHECK Obj *calc1(oper_t op) {
     Bits *v1 = (Bits *)op->v1;
     Obj *tmp, *v;
-    bdigit_t uv;
     switch (op->op->op) {
-    case O_BANK: return (Obj *)bytes_from_u8(ldigit(v1) >> 16);
-    case O_HIGHER: return (Obj *)bytes_from_u8(ldigit(v1) >> 8);
-    case O_LOWER: return (Obj *)bytes_from_u8(ldigit(v1));
-    case O_HWORD: return (Obj *)bytes_from_u16(ldigit(v1) >> 8);
-    case O_WORD: return (Obj *)bytes_from_u16(ldigit(v1));
+    case O_BANK:
+    case O_HIGHER:
+    case O_LOWER:
+    case O_HWORD:
+    case O_WORD:
     case O_BSWORD:
-        uv = ldigit(v1);
-        return (Obj *)bytes_from_u16((uint8_t)(uv >> 8) | (uint16_t)(uv << 8));
+        return bytes_calc1(op->op->op, ldigit(v1));
     case O_INV:
         if (op->inplace != &v1->v) return invert(v1, op->epoint3);
         v1->len = ~v1->len;

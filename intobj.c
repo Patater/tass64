@@ -324,15 +324,20 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)ref_int(int_value[(v1->len > 0) ? 1 : 0]);
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
+static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool inplace, linepos_t epoint) {
     Int *v1 = (Int *)o1;
-    return (v1->len >= 0 || f != TF_ABS) ? (Obj *)ref_int(v1) : negate(v1, epoint);
+    if (v1->len >= 0 || f != TF_ABS) return (Obj *)ref_int(v1);
+    if (inplace) {
+        v1->len = -v1->len;
+        return val_reference(&v1->v);
+    }
+    return negate(v1, epoint);
 }
 
 static void iadd(const Int *, const Int *, Int *);
 static void isub(const Int *, const Int *, Int *);
 
-static digit_t ldigit(const Int *v1) {
+static inline unsigned int ldigit(const Int *v1) {
     ssize_t len = v1->len;
     if (len < 0) return -v1->data[0];
     return (len != 0) ? v1->data[0] : 0;
@@ -340,16 +345,14 @@ static digit_t ldigit(const Int *v1) {
 
 static MUST_CHECK Obj *calc1(oper_t op) {
     Int *v1 = (Int *)op->v1, *v;
-    digit_t uv;
     switch (op->op->op) {
-    case O_BANK: return (Obj *)bytes_from_u8(ldigit(v1) >> 16);
-    case O_HIGHER: return (Obj *)bytes_from_u8(ldigit(v1) >> 8);
-    case O_LOWER: return (Obj *)bytes_from_u8(ldigit(v1));
-    case O_HWORD: return (Obj *)bytes_from_u16(ldigit(v1) >> 8);
-    case O_WORD: return (Obj *)bytes_from_u16(ldigit(v1));
+    case O_BANK:
+    case O_HIGHER:
+    case O_LOWER:
+    case O_HWORD:
+    case O_WORD:
     case O_BSWORD:
-        uv = ldigit(v1);
-        return (Obj *)bytes_from_u16((uint8_t)(uv >> 8) | (uint16_t)(uv << 8));
+        return bytes_calc1(op->op->op, ldigit(v1));
     case O_INV:
         v = new_int();
         if (v1->len < 0) isub(v1, int_value[1], v);
