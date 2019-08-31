@@ -112,6 +112,12 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
             Obj *oval[3];
             Iter *iters[3];
             size_t k;
+            oval[j] = v[j].val;
+            if (ln == 1) {
+                v[j].val = iter->next(iter);
+                val_destroy(&iter->v);
+                iters[j] = NULL;
+            } else iters[j] = iter;
             for (k = j + 1; k < args; k++) {
                 oval[k] = v[k].val;
                 objt2 = oval[k]->obj;
@@ -122,11 +128,16 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                     if (ln2 != 1) {
                         iters[k] = iter2;
                         if (ln2 == ln) continue;
+                        if (ln == 1) {
+                            ln = ln2;
+                            continue;
+                        }
                         for (; k > j; k--) {
                             if (iters[k] != NULL) val_destroy(&iters[k]->v);
                             v[k].val = oval[k];
                         }
-                        val_destroy(&iter->v);
+                        if (iters[j] != NULL) val_destroy(&iters[j]->v);
+                        v[j].val = oval[j];
                         err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
                         err->u.broadcast.v1 = ln;
                         err->u.broadcast.v2 = ln2;
@@ -138,23 +149,17 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                 iters[k] = NULL;
             }
             if (ln != 0) {
-                iter_next_t iter_next;
                 size_t i;
-                Obj **vals2, *o1 = v[j].val;
-                List *vv;
-                vv = (List *)val_alloc(objt == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
-                vv->data = vals2 = list_create_elements(vv, ln);
-                iter_next = iter->next;
-                for (i = 0; (v[j].val = iter_next(iter)) != NULL; i++) {
-                    for (k = j + 1; k < args; k++) {
+                List *vv = (List *)val_alloc(objt == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+                Obj **vals2 = vv->data = list_create_elements(vv, ln);
+                for (i = 0; i < ln; i++) {
+                    for (k = j; k < args; k++) {
                         if (iters[k] != NULL) v[k].val = iters[k]->next(iters[k]);
                     }
                     vals2[i] = gen_broadcast(vals, epoint, f);
                 }
-                val_destroy(&iter->v);
                 vv->len = i;
-                v[j].val = o1;
-                for (k = j + 1; k < args; k++) {
+                for (k = j; k < args; k++) {
                     if (iters[k] != NULL) val_destroy(&iters[k]->v);
                     v[k].val = oval[k];
                 }
