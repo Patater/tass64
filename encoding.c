@@ -715,7 +715,7 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
 
     if (b == NULL) { /* new escape */
         if (i == 1) {
-            b = (struct escape_s *)(identmap + *d);
+            b = (struct escape_s *)(identmap + tmp.val[0]);
         } else {
             b = (struct escape_s *)mallocx(sizeof *b);
             if (d == tmp.val) {
@@ -736,6 +736,7 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
         return false;
     }
     *b2 = b;
+    if (i == 1) return b != (struct escape_s *)(identmap + tmp.val[0]);
     ret = (i != b->len || memcmp(d, b->data, i) != 0);
     if (tmp.val != d) free(d);
     return ret;            /* already exists */
