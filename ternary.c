@@ -67,7 +67,7 @@ static MALLOC ternary_node *tern_alloc(void) {
 /* Non-recursive so we don't waste stack space/time on large
    insertions. */
 
-void *ternary_insert(ternary_tree *root, const uint8_t *s, const uint8_t *end, void *data, bool replace)
+ternary_tree *ternary_insert(ternary_tree *root, const uint8_t *s, const uint8_t *end)
 {
     uchar_t spchar;
     ternary_tree curr, *pcurr;
@@ -85,9 +85,7 @@ void *ternary_insert(ternary_tree *root, const uint8_t *s, const uint8_t *end, v
             /* Handle the case of a string we already have */
             if ((~spchar) == 0)
             {
-                if (replace)
-                    curr->eqkid = (ternary_tree) data;
-                return (void *) curr->eqkid;
+                return &curr->eqkid;
             }
             if (s == end) spchar = ~(uchar_t)0;
             else {
@@ -112,8 +110,8 @@ void *ternary_insert(ternary_tree *root, const uint8_t *s, const uint8_t *end, v
            return.
            */
         if ((~spchar) == 0) {
-            curr->eqkid = (ternary_tree) data;
-            return data;
+            curr->eqkid = NULL;
+            return &curr->eqkid;
         }
         if (s == end) spchar = ~(uchar_t)0;
         else {
@@ -138,11 +136,13 @@ void ternary_cleanup(ternary_tree p, ternary_free_fn_t f)
 }
 
 /* Non-recursive find of a string in the ternary tree */
-void *ternary_search (const ternary_node *p, const uint8_t *s, const uint8_t *end)
+void *ternary_search(const ternary_node *p, const uint8_t *s, size_t *len)
 {
     const ternary_node *curr;
     uchar_t spchar;
     const ternary_node *last = NULL;
+    size_t len2 = *len;
+    const uint8_t *end = s + len2;
     if (s == end) return NULL;
     spchar = *s;
     if ((spchar & 0x80) != 0) s += utf8in(s, &spchar); else s++;
@@ -162,6 +162,7 @@ void *ternary_search (const ternary_node *p, const uint8_t *s, const uint8_t *en
     while (last != NULL && (~last->splitchar) != 0) {
         last = last->hikid;
     }
+    *len = len2 - (end - s) - 1;
     return (last != NULL) ? (void *)last->eqkid : NULL;
 }
 

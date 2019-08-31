@@ -44,7 +44,7 @@ void destroy_ternary(void);
    already there, and replace is 0.
    Otherwise, replaces if it it exists, inserts if it doesn't, and
    returns the data you passed in. */
-void *ternary_insert (ternary_tree *, const uint8_t *, const uint8_t *, void *, bool);
+ternary_tree *ternary_insert(ternary_tree *, const uint8_t *, const uint8_t *);
 
 typedef void (*ternary_free_fn_t)(void *);
 
@@ -54,5 +54,5 @@ void ternary_cleanup (ternary_tree, ternary_free_fn_t);
 
 /* Search the ternary tree for string S, returning the data associated
    with it if found. */
-void *ternary_search (const ternary_node *, const uint8_t *, const uint8_t *);
+void *ternary_search (const ternary_node *, const uint8_t *, size_t *);
 #endif
