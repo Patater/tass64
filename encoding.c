@@ -594,7 +594,7 @@ static void encoding_free(struct avltree_node *aa)
 
     free((char *)a->name.data);
     if (a->name.data != a->cfname.data) free((uint8_t *)a->cfname.data);
-    ternary_cleanup(a->escape, escape_free);
+    if (a->escape != NULL) ternary_cleanup(a->escape, escape_free);
     free(a);
 }
 

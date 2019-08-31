@@ -125,14 +125,12 @@ ternary_tree *ternary_insert(ternary_tree *root, const uint8_t *s, const uint8_t
 /* Free the ternary search tree rooted at p. */
 void ternary_cleanup(ternary_tree p, ternary_free_fn_t f)
 {
-    if (p != NULL) {
-        ternary_cleanup(p->lokid, f);
-        if ((~p->splitchar) != 0) {
-            ternary_cleanup(p->eqkid, f);
-        } else f(p->eqkid);
-        ternary_cleanup(p->hikid, f);
-        tern_free((union tern_u *)p);
-    }
+    if (p->lokid != NULL) ternary_cleanup(p->lokid, f);
+    if ((~p->splitchar) != 0) {
+        ternary_cleanup(p->eqkid, f);
+    } else f(p->eqkid);
+    if (p->hikid != NULL) ternary_cleanup(p->hikid, f);
+    tern_free((union tern_u *)p);
 }
 
 /* Non-recursive find of a string in the ternary tree */
