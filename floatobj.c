@@ -151,7 +151,7 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)ref_int(int_value[(v1->real > 0.0) ? 1 : 0]);
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool inplace, linepos_t UNUSED(epoint)) {
     double r = ((Float *)o1)->real;
     switch (f) {
     case TF_ABS: if (r >= 0.0) return val_reference(o1); r = -r; break;
@@ -161,6 +161,10 @@ static MUST_CHECK Obj *function(Obj *o1, Func_types f, linepos_t UNUSED(epoint))
     case TF_CEIL: r = ceil(r); break;
     default: break;
     }
+    if (inplace) {
+        ((Float *)o1)->real = r;
+        return val_reference(o1);
+    } 
     return (Obj *)new_float(r);
 }
 

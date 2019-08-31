@@ -63,7 +63,7 @@ typedef struct Type {
     struct Error *(*uval2)(Obj *, uval_t *, unsigned int, linepos_t) MUST_CHECK;
     Obj *(*address)(Obj *, uint32_t *) FAST_CALL;
     Obj *(*sign)(Obj *, linepos_t) MUST_CHECK;
-    Obj *(*function)(Obj *, Func_types, linepos_t) MUST_CHECK;
+    Obj *(*function)(Obj *, Func_types, bool, linepos_t) MUST_CHECK;
     Obj *(*len)(Obj *, linepos_t) MUST_CHECK;
     Obj *(*size)(Obj *, linepos_t) MUST_CHECK;
     struct Iter *(*getiter)(Obj *) MUST_CHECK;

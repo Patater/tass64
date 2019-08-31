@@ -249,7 +249,7 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
     return ret;
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types UNUSED(f), linepos_t epoint) {
+static MUST_CHECK Obj *function(Obj *o1, Func_types UNUSED(f), bool UNUSED(inplace), linepos_t epoint) {
     Str *v1 = (Str *)o1;
     return int_from_str(v1, epoint);
 }

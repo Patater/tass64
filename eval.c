@@ -909,6 +909,10 @@ static bool get_val2(struct eval_context_s *ev) {
                 } else {
                     v1->val = oper.v1->obj->calc2(&oper);
                 }
+                while ((args--) != 0) {
+                    val_destroy(tmp.val[args].val);
+                    tmp.val[args].val = NULL;
+                }
                 continue;
             }
         case O_RBRACKET:

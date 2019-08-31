@@ -324,7 +324,7 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)ref_int(int_value[(v1->len > 0) ? 1 : 0]);
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, linepos_t epoint) {
+static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
     Int *v1 = (Int *)o1;
     return (v1->len >= 0 || f != TF_ABS) ? (Obj *)ref_int(v1) : negate(v1, epoint);
 }

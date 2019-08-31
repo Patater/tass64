@@ -206,7 +206,7 @@ static MUST_CHECK Obj *invalid_sign(Obj *v1, linepos_t epoint) {
     return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_SIGN);
 }
 
-static MUST_CHECK Obj *invalid_function(Obj *v1, Func_types f, linepos_t epoint) {
+static MUST_CHECK Obj *invalid_function(Obj *v1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
     return (Obj *)generic_invalid(v1, epoint, (f == TF_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
 }
 

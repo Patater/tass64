@@ -76,7 +76,7 @@ static MUST_CHECK Obj *sign(Obj *v1, linepos_t UNUSED(epoint)) {
     return val_reference(v1);
 }
 
-static MUST_CHECK Obj *function(Obj *v1, Func_types UNUSED(f), linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *function(Obj *v1, Func_types UNUSED(f), bool UNUSED(inplace), linepos_t UNUSED(epoint)) {
     return val_reference(v1);
 }
 
