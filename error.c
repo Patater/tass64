@@ -448,6 +448,10 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             adderror((const char *)prm);
             adderror("' [-Wfloat-compare]");
             break;
+        case ERROR___FLOAT_ROUND:
+            new_error_msg2(diagnostic_errors.float_round, epoint);
+            adderror("implicit floating point rounding [-Wfloat-round]");
+            break;
         case ERROR___LONG_BRANCH:
             new_error_msg2(diagnostic_errors.long_branch, epoint);
             adderror("long branch used [-Wlong-branch]");

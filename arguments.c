@@ -86,7 +86,8 @@ struct diagnostics_s diagnostics = {
     false,       /* long_branch */
     false,       /* altmode */
     true,        /* page */
-    false        /* macro_prefix */
+    false,       /* macro_prefix */
+    false        /* float_round */
 };
 
 struct diagnostics_s diagnostic_errors = {
@@ -120,7 +121,8 @@ struct diagnostics_s diagnostic_errors = {
     false,       /* long_branch */
     false,       /* altmode */
     true,        /* page */
-    false        /* macro_prefix */
+    false,       /* macro_prefix */
+    false        /* float_round */
 };
 
 static struct diagnostics_s diagnostic_no_all;
@@ -155,7 +157,8 @@ static struct diagnostics_s diagnostic_all = {
     false,       /* long_branch */
     false,       /* altmode */
     true,        /* page */
-    false        /* macro_prefix */
+    false,       /* macro_prefix */
+    true         /* float_round */
 };
 
 static struct diagnostics_s diagnostic_no_error_all;
@@ -190,7 +193,8 @@ static struct diagnostics_s diagnostic_error_all = {
     true,        /* long_branch */
     true,        /* altmode */
     true,        /* page */
-    true         /* macro_prefix */
+    true,        /* macro_prefix */
+    true         /* float_round */
 };
 
 struct w_options_s {
@@ -228,6 +232,7 @@ static const struct w_options_s w_options[] = {
     {"altmode",         &diagnostics.altmode},
     {"page",            &diagnostics.page},
     {"macro-prefix",    &diagnostics.macro_prefix},
+    {"float-round",     &diagnostics.float_round},
     {NULL,              NULL}
 };
 
@@ -548,6 +553,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "  -Wmacro-prefix        Warn about unprefixed macro calls\n"
                "  -Wno-deprecated       No deprecated feature warnings\n"
                "  -Wno-float-compare    No approximate compare warnings\n"
+               "  -Wno-float-round      No implicit rounding warnings\n"
                "  -Wno-ignored          No directive ignored warnings\n"
                "  -Wno-jmp-bug          No jmp ($xxff) bug warning\n"
                "  -Wno-label-left       No warning about strange labels\n"
