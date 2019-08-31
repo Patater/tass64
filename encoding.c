@@ -743,19 +743,14 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
 }
 
 static void add_esc(const char *s, struct encoding_s *enc) {
-    str_t tmp;
-    Bytes *tmp2;
-    struct linepos_s nopoint = {0, 0};
-    tmp2 = new_bytes(1);
-    tmp2->len = 1;
+    const uint8_t **b;
     while (s[1] != 0) {
-        tmp.data = (uint8_t *)s + 1;
-        tmp.len = strlen(s + 1);
-        tmp2->data[0] = (uint8_t)s[0];
-        new_escape(&tmp, (Obj *)tmp2, enc, &nopoint);
-        s += tmp.len + 2;
+        size_t len = strlen(s + 1);
+        b = (const uint8_t **)ternary_insert(&enc->escape, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
+        if (b == NULL) err_msg_out_of_memory();
+        *b = identmap + (uint8_t)s[0];
+        s += len + 2;
     }
-    val_destroy(&tmp2->v);
 }
 
 static void add_trans(const struct trans2_s *t, size_t ln, struct encoding_s *tmp) {
