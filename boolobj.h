@@ -23,9 +23,11 @@
 
 extern struct Type *const BOOL_OBJ;
 
+struct Str;
+
 typedef struct Bool {
     Obj v;
-    const char *name;
+    struct Str *repr;
 } Bool;
 
 extern Bool *true_value;

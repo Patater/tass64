@@ -22,9 +22,11 @@
 
 extern struct Type *const GAP_OBJ;
 
+struct Str;
+
 typedef struct Gap {
     Obj v;
-    int *dummy;
+    struct Str *repr;
 } Gap;
 
 extern Gap *gap_value;

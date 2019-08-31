@@ -29,7 +29,9 @@
 static Type obj;
 
 Type *const FOLD_OBJ = &obj;
-Fold *fold_value;
+
+static Fold foldval = { { &obj, 1 }, NULL };
+Fold *fold_value = &foldval;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
@@ -103,14 +105,10 @@ void foldobj_init(void) {
     obj.repr = repr;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;
-
-    fold_value = (Fold *)val_alloc(FOLD_OBJ);
 }
 
 void foldobj_destroy(void) {
 #ifdef DEBUG
     if (fold_value->v.refcount != 1) fprintf(stderr, "fold %" PRIuSIZE "\n", fold_value->v.refcount - 1);
 #endif
-
-    val_destroy(&fold_value->v);
 }
