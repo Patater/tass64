@@ -744,11 +744,13 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
 
 static void add_esc(const char *s, struct encoding_s *enc) {
     const uint8_t **b;
+    enc->empty = s[1] != 0;
     while (s[1] != 0) {
         size_t len = strlen(s + 1);
         b = (const uint8_t **)ternary_insert(&enc->escape, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
         if (b == NULL) err_msg_out_of_memory();
         *b = identmap + (uint8_t)s[0];
+        if (enc->escape_length > len) enc->escape_length = len;
         s += len + 2;
     }
 }
