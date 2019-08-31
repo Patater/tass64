@@ -53,6 +53,7 @@ static inline size_t byteslen(const Bytes *v1) {
 }
 
 static MUST_CHECK Obj *bytes_from_int(const Int *, linepos_t);
+static MUST_CHECK Bytes *bytes_from_u8(unsigned int i);
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     Obj *err, *ret;
@@ -540,7 +541,7 @@ failed:
     return (Obj *)new_error_mem(epoint);
 }
 
-MUST_CHECK Bytes *bytes_from_u8(unsigned int i) {
+static MUST_CHECK Bytes *bytes_from_u8(unsigned int i) {
     Bytes *v;
     i &= 0xff;
     v = bytes_value[i];
@@ -553,12 +554,24 @@ MUST_CHECK Bytes *bytes_from_u8(unsigned int i) {
     return ref_bytes(v);
 }
 
-MUST_CHECK Bytes *bytes_from_u16(unsigned int i) {
+static MUST_CHECK Bytes *bytes_from_u16(unsigned int i) {
     Bytes *v = new_bytes(2);
     v->len = 2;
     v->data[0] = (uint8_t)i;
     v->data[1] = (uint8_t)(i >> 8);
     return v;
+}
+
+MUST_CHECK Obj *bytes_calc1(Oper_types op, unsigned int val) {
+    switch (op) {
+    case O_BANK: val >>= 8; /* fall through */
+    case O_HIGHER: val >>= 8; /* fall through */
+    case O_LOWER: 
+    default: return (Obj *)bytes_from_u8(val);
+    case O_HWORD: val >>= 8; /* fall through */
+    case O_WORD: return (Obj *)bytes_from_u16(val);
+    case O_BSWORD: return (Obj *)bytes_from_u16((uint8_t)(val >> 8) | (uint16_t)(val << 8));
+    }
 }
 
 MUST_CHECK Bytes *bytes_from_uval(uval_t i, unsigned int bytes) {

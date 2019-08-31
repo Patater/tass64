@@ -60,9 +60,9 @@ extern MALLOC Bytes *new_bytes(size_t);
 
 struct Str;
 struct Bits;
+enum Oper_types;
 
-extern MUST_CHECK Bytes *bytes_from_u8(unsigned int);
-extern MUST_CHECK Bytes *bytes_from_u16(unsigned int);
+extern MUST_CHECK Obj *bytes_calc1(enum Oper_types, unsigned int);
 extern MUST_CHECK Bytes *bytes_from_uval(uval_t, unsigned int);
 extern MUST_CHECK Obj *bytes_from_str(const struct Str *, linepos_t, Textconv_types);
 extern MUST_CHECK Obj *bytes_from_bits(const struct Bits *, linepos_t);

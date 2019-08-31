@@ -186,7 +186,6 @@ static MUST_CHECK Obj *float_from_double_inplace(double d, oper_t op) {
 static MUST_CHECK Obj *calc1(oper_t op) {
     Float *v1 = (Float *)op->v1;
     double real = v1->real;
-    uval_t val;
     switch (op->op->op) {
     case O_BANK:
     case O_HIGHER:
@@ -196,17 +195,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_BSWORD:
         real = floor(real);
         if (diagnostics.float_round && real != v1->real) err_msg2(ERROR___FLOAT_ROUND, NULL, op->epoint3);
-        val = (uval_t)((ival_t)real);
-        switch (op->op->op) {
-        case O_BANK: val >>= 8; /* fall through */
-        case O_HIGHER: val >>= 8; /* fall through */
-        case O_LOWER: return (Obj *)bytes_from_u8(val);
-        case O_HWORD: val >>= 8; /* fall through */
-        case O_WORD: return (Obj *)bytes_from_u16(val);
-        case O_BSWORD: return (Obj *)bytes_from_u16((uint8_t)(val >> 8) | (uint16_t)(val << 8));
-        default: break;
-        }
-        break;
+        return bytes_calc1(op->op->op, (unsigned int)((ival_t)real));
     case O_INV: 
         return float_from_double_inplace(-0.5 / ((double)((uint32_t)1 << (8 * sizeof(uint32_t) - 1))) - real, op);
     case O_NEG: 

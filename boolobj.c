@@ -123,11 +123,12 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     if (diagnostics.strict_bool && op->op != &o_LNOT) err_msg_bool_oper(op);
     switch (op->op->op) {
     case O_BANK:
-    case O_HIGHER: return (Obj *)bytes_from_u8(0);
-    case O_LOWER: return (Obj *)bytes_from_u8(v1 ? 1 : 0);
-    case O_HWORD: return (Obj *)bytes_from_u16(0);
-    case O_WORD: return (Obj *)bytes_from_u16(v1 ? 1 : 0);
-    case O_BSWORD: return (Obj *)bytes_from_u16(v1 ? 0x100 : 0);
+    case O_HIGHER:
+    case O_LOWER:
+    case O_HWORD:
+    case O_WORD:
+    case O_BSWORD:
+        return bytes_calc1(op->op->op, v1 ? 1u : 0u);
     case O_INV: return (Obj *)ibits_from_bool(v1);
     case O_NEG: return v1 ? (Obj *)ibits_from_bool(false) : (Obj *)ref_bits(bits_value[0]);
     case O_POS: return (Obj *)ref_bits(bits_value[v1 ? 1 : 0]);
