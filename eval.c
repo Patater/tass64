@@ -1083,7 +1083,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_POS:     /* +  */
         case O_LNOT:    /* !  */
             oper.v1 = v1->val;
-            oper.v2 = NULL;
+            oper.v2 = &none_value->v;
             oper.epoint = &v1->epoint;
             oper.epoint3 = &o_out->epoint;
             oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;

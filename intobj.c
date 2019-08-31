@@ -366,7 +366,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_STRING:
         {
             Obj *o = repr(&v1->v, op->epoint, SIZE_MAX);
-            return (o != NULL) ? o : (Obj *)new_error_mem(op->epoint);
+            return (o != NULL) ? o : (Obj *)new_error_mem(op->epoint3);
         }
     case O_LNOT:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
@@ -1596,16 +1596,21 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
         return (Obj *)v;
     case O_EXP:
         if (v2->len < 0) {
-            double d1, d2;
-            val = float_from_int(v1, op->epoint);
-            if (val->obj != FLOAT_OBJ) return val;
-            d1 = ((Float *)val)->real;
-            val_destroy(val);
-            val = float_from_int(v2, op->epoint2);
-            if (val->obj != FLOAT_OBJ) return val;
-            d2 = ((Float *)val)->real;
-            val_destroy(val);
-            return calc2_double(op, d1, d2);
+            Obj *vv1, *vv2;
+            vv1 = float_from_int(v1, op->epoint);
+            if (vv1->obj != FLOAT_OBJ) return vv1;
+            vv2 = float_from_int(v2, op->epoint2);
+            if (vv2->obj != FLOAT_OBJ) {
+                val_destroy(vv1);
+                return vv2;
+            }
+            op->v1 = vv1;
+            op->v2 = vv2;
+            op->inplace = (vv1->refcount == 1) ? vv1 : NULL;
+            val = calc2_double(op, ((Float *)vv1)->real, ((Float *)vv2)->real);
+            val_destroy(vv1);
+            val_destroy(vv2);
+            return val;
         }
         return (Obj *)power(v1, v2);
     case O_LSHIFT:
