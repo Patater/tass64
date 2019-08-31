@@ -770,10 +770,10 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)ref_int(int_value[0]);
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, linepos_t epoint) {
+static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
     Bytes *v1 = (Bytes *)o1;
     Obj *tmp = int_from_bytes(v1, epoint);
-    Obj *ret = tmp->obj->function(tmp, f, epoint);
+    Obj *ret = tmp->obj->function(tmp, f, tmp->refcount == 1, epoint);
     val_destroy(tmp);
     return ret;
 }

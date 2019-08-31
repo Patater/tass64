@@ -319,14 +319,14 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
     return v->obj->sign(v, epoint);
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, linepos_t epoint) {
+static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
     Address *v1 = (Address *)o1;
     Obj *v;
     if (v1->type != A_NONE && v1->val != &none_value->v && v1->val->obj != ERROR_OBJ) {
-        return DEFAULT_OBJ->function(o1, f, epoint);
+        return DEFAULT_OBJ->function(o1, f, false, epoint);
     }
     v = v1->val;
-    return v->obj->function(v, f, epoint);
+    return v->obj->function(v, f, false, epoint);
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {

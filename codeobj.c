@@ -199,13 +199,13 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
     return v->obj->sign(v, epoint);
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, linepos_t epoint) {
+static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
     Code *v1 = (Code *)o1;
     Obj *v;
     Error *err = access_check(v1, epoint);
     if (err != NULL) return &err->v;
     v = v1->addr;
-    return v->obj->function(v, f, epoint);
+    return v->obj->function(v, f, false, epoint);
 }
 
 MUST_CHECK Obj *int_from_code(Code *v1, linepos_t epoint) {

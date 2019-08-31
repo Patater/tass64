@@ -429,57 +429,8 @@ static MUST_CHECK Obj *function_binary(Funcargs *vals, linepos_t epoint) {
     return (Obj *)ref_none();
 }
 
-static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint) {
-    const Type *typ = o1->obj;
-    Obj *err;
-    double real;
-
-    if (typ->iterable) {
-        iter_next_t iter_next;
-        Iter *iter = typ->getiter(o1);
-        size_t len = iter->len;
-        List *v;
-        size_t i;
-        Obj **vals;
-
-        if (len == 0) {
-            val_destroy(&iter->v);
-            return val_reference(typ == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
-        }
-
-        v = (List *)val_alloc(typ == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
-        v->data = vals = list_create_elements(v, len);
-        iter_next = iter->next;
-        for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
-            vals[i] = apply_func(o1, func, epoint);
-        }
-        val_destroy(&iter->v);
-        v->len = i;
-        return &v->v;
-    }
-    switch (func) {
-    case F_SIZE: return typ->size(o1, epoint);
-    case F_SIGN: return typ->sign(o1, epoint);
-    case F_CEIL: return typ->function(o1, TF_CEIL, epoint);
-    case F_FLOOR: return typ->function(o1, TF_FLOOR, epoint);
-    case F_ROUND: return typ->function(o1, TF_ROUND, epoint);
-    case F_TRUNC: return typ->function(o1, TF_TRUNC, epoint);
-    case F_ABS: return typ->function(o1, TF_ABS, epoint);
-    case F_REPR:
-        {
-            Obj *v = typ->repr(o1, epoint, SIZE_MAX);
-            return v != NULL ? v : (Obj *)new_error_mem(epoint);
-        }
-    default: break;
-    }
-    if (typ == FLOAT_OBJ) {
-        real = ((Float *)o1)->real;
-    } else {
-        err = FLOAT_OBJ->create(o1, epoint);
-        if (err->obj != FLOAT_OBJ) return err;
-        real = ((Float *)err)->real;
-        val_destroy(err);
-    }
+static MUST_CHECK Obj *apply_func2(Obj *o1, Function_types func, bool inplace, linepos_t epoint) {
+    double real = ((Float *)o1)->real;
     switch (func) {
     case F_SQRT:
         if (real < 0.0) {
@@ -525,7 +476,72 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, linepos_t epoint
     case F_TANH: real = tanh(real);break;
     default: real = HUGE_VAL; break; /* can't happen */
     }
-    return float_from_double(real, epoint);
+    if (!inplace || real == HUGE_VAL || real == -HUGE_VAL) return float_from_double(real, epoint);
+    ((Float *)o1)->real = real;
+    return val_reference(o1);
+}
+
+static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, bool inplace, linepos_t epoint) {
+    const Type *typ = o1->obj;
+    Obj *err;
+
+    if (typ->iterable) {
+        List *v;
+        size_t i, len;
+        Obj **vals;
+
+        if (!inplace || (typ != TUPLE_OBJ && typ != LIST_OBJ)) {
+            iter_next_t iter_next;
+            Iter *iter = typ->getiter(o1);
+            len = iter->len;
+            if (len == 0) {
+                val_destroy(&iter->v);
+                return val_reference(typ == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
+            }
+            v = (List *)val_alloc(typ == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+            v->data = vals = list_create_elements(v, len);
+            iter_next = iter->next;
+            for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
+                vals[i] = apply_func(o1, func, inplace && (o1->refcount == 1), epoint);
+            }
+            val_destroy(&iter->v);
+            v->len = i;
+            return &v->v;
+        } 
+        v = (List *)val_reference(o1);
+        len = v->len;
+        vals = v->data;
+        for (i = 0; i < len; i++) {
+            o1 = vals[i];
+            vals[i] = apply_func(o1, func, o1->refcount == 1, epoint);
+            val_destroy(o1);
+        }
+        return &v->v;
+    }
+    switch (func) {
+    case F_SIZE: return typ->size(o1, epoint);
+    case F_SIGN: return typ->sign(o1, epoint);
+    case F_CEIL: return typ->function(o1, TF_CEIL, inplace, epoint);
+    case F_FLOOR: return typ->function(o1, TF_FLOOR, inplace, epoint);
+    case F_ROUND: return typ->function(o1, TF_ROUND, inplace, epoint);
+    case F_TRUNC: return typ->function(o1, TF_TRUNC, inplace, epoint);
+    case F_ABS: return typ->function(o1, TF_ABS, inplace, epoint);
+    case F_REPR:
+        {
+            Obj *v = typ->repr(o1, epoint, SIZE_MAX);
+            return v != NULL ? v : (Obj *)new_error_mem(epoint);
+        }
+    default: break;
+    }
+    if (typ != FLOAT_OBJ) {
+        Obj *val;
+        err = FLOAT_OBJ->create(o1, epoint);
+        if (err->obj != FLOAT_OBJ) return err;
+        val = apply_func2(err, func, err->refcount == 1, epoint);
+        val_destroy(err);
+        return val;
+    }
+    return apply_func2(o1, func, inplace, epoint);
 }
 
 static MUST_CHECK Obj *to_real(struct values_s *v, double *r) {
@@ -673,7 +689,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     case F_ALL: return v[0].val->obj->truth(v[0].val, TRUTH_ALL, &v[0].epoint);
                     case F_LEN: return v[0].val->obj->len(v[0].val, &v[0].epoint);
                     case F_SORT: return function_sort(v[0].val, &v[0].epoint);
-                    default: return apply_func(v[0].val, func, &v[0].epoint);
+                    default: return apply_func(v[0].val, func, v[0].val->refcount == 1, &v[0].epoint);
                     }
                 }
             default: break;
