@@ -379,7 +379,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     default: return obj_oper_error(op);
     }
     op->v1 = tmp;
-    op->inplace = NULL;
+    op->inplace = (tmp->refcount == 1) ? tmp : NULL;
     v = tmp->obj->calc1(op);
     val_destroy(tmp);
     return v;
