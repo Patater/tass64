@@ -4665,7 +4665,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         set_cpumode(arguments.cpumode); if (pass == 1 && i == opts - 1) constcreated = false;
         star = databank = dpage = strength = 0;longaccu = longindex = autosize = false;actual_encoding = new_encoding(&none_enc, &nopoint);
         allowslowbranch = true; longbranchasjmp = false; temporary_label_branch = 0;
-        reset_waitfor();lpoint.line = vline = 0;outputeor = 0;
+        reset_waitfor();lpoint.line = vline = 0;outputeor = 0; pline = (const uint8_t *)"";
         reset_context();
         current_section = &root_section;
         current_address = &root_section.address;
