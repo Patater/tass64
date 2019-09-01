@@ -177,17 +177,17 @@ static bool portability(const str_t *name, linepos_t epoint) {
         return false;
     }
 #else
-    size_t i;
-    const uint8_t *c = name->data;
-    for (i = 0; i < name->len; i++) {
-        if (strchr("\\:*?\"<>|", c[i]) != NULL) {
+    const char *c;
+    if (name->len > 0) {
+        for (c = "\\:*?\"<>|"; *c != '\0'; c++) {
+            if (memchr(name->data, *c, name->len) == NULL) continue;
             err_msg2(ERROR__RESERVED_CHR, name, epoint);
             return false;
         }
-    }
-    if (name->len > 0 && name->data[0] == '/') {
-        err_msg2(ERROR_ABSOLUTE_PATH, name, epoint);
-        return false;
+        if (name->data[0] == '/') {
+            err_msg2(ERROR_ABSOLUTE_PATH, name, epoint);
+            return false;
+        }
     }
 #endif
     return true;
