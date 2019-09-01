@@ -131,8 +131,11 @@ bool mtranslate(void) {
                 p2 = lpoint.pos;
                 str_cfcpy(&cf, &param);
                 for (j = 0; j < macro->argc; j++) {
-                    if (macro->param[j].cfname.data == NULL) continue;
-                    if (str_cmp(&macro->param[j].cfname, &cf) == 0) break;
+                    const uint8_t *data;
+                    if (macro->param[j].cfname.len != cf.len) continue;
+                    data = macro->param[j].cfname.data;
+                    if (data[0] != cf.data[0]) continue;
+                    if (memcmp(data, cf.data, cf.len) == 0) break;
                 }
                 if (j < macro->argc) break;
                 lpoint.pos -= param.len + 1;
