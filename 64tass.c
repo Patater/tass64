@@ -1812,1036 +1812,1040 @@ MUST_CHECK Obj *compile(void)
         }
         star = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
         wht = here();
-        switch (wht) {
-        case '*':
-            lpoint.pos++;
-            switch (here()) {
-            case ' ':
-            case '\t':
-            case ';':
-            case '=':
-            case '\0':
-                labelname.data = (const uint8_t *)"*";labelname.len = 1;
-                goto hh;
-            default:
-                lpoint.pos--;
-            }
-            break;
-        case '-':
-        case '+':
-            lpoint.pos++;
-            switch (here()) {
-            case ' ':
-            case '\t':
-            case ';':
-            case '\0':
-                if (sizeof(anonident) != sizeof(anonident.dir) + sizeof(anonident.padding) + sizeof(anonident.count)) memset(&anonident, 0, sizeof anonident);
-                else memset(anonident.padding, 0, sizeof anonident.padding);
-                anonident.dir = (uint8_t)wht;
-                anonident.count = (int32_t)((wht == '-') ? current_context->backr++ : current_context->forwr++);
-                labelname.data = (const uint8_t *)&anonident;labelname.len = sizeof anonident;
-                goto hh;
-            default:
-                lpoint.pos--;
-            }
-            break;
-        default:
-            break;
-        }
-        labelname.data = pline + lpoint.pos; labelname.len = get_label();
-        if (labelname.len != 0) {
-            struct linepos_s cmdpoint;
-            bool islabel, error;
-            islabel = false; error = (waitfor->skip & 1) == 0;
-            while (here() == '.' && pline[lpoint.pos+1] != '.') {
-                if (!error) {
-                    if (!islabel) {
-                        if (labelname.data[0] != '_') {
-                            tmp2 = find_label(&labelname, NULL);
-                            if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, true, &epoint); error = true;}
-                        } else {
-                            tmp2 = find_label2(&labelname, cheap_context);
-                            if (tmp2 == NULL) {err_msg_not_defined2(&labelname, cheap_context, false, &epoint); error = true;}
-                        }
-                    } else {
-                        tmp2 = find_label2(&labelname, mycontext);
-                        if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, false, &epoint); error = true;}
-                    }
-                    if (tmp2 != NULL) {
-                        if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
-                        tmp2->usepass = pass; /* touch_label(tmp2) */
-                    }
-                }
-                lpoint.pos++; islabel = true; epoint = lpoint;
-                labelname.data = pline + lpoint.pos; labelname.len = get_label();
-                if (labelname.len == 0) {
-                    if (!error) err_msg2(ERROR______EXPECTED, "a symbol is", &lpoint);
-                    goto breakerr;
-                }
-                if (!error) {
-                    Namespace *context = get_namespace(tmp2->value);
-                    if (context == NULL) {
-                        Ident *idn = new_ident(&labelname);
-                        epoint.pos--;
-                        err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
-                        val_destroy(&idn->v);
-                        error = true;
-                    } else mycontext = context;
-                }
-            }
-            if (!islabel && labelname.data[0] == '_') {
-                mycontext = cheap_context;
-            }
-            if (here() == ':' && pline[lpoint.pos + 1] != '=') {islabel = true; lpoint.pos++;}
-            if (!islabel && labelname.len == 3 && (prm = lookup_opcode(labelname.data)) >=0) {
-                if (!error) goto as_opcode; else continue;
-            }
-            if (false) {
-            hh: islabel = true; error = (waitfor->skip & 1) == 0;
-            }
-            ignore();wht = here();
-            if (error) {epoint = lpoint; goto jn;} /* skip things if needed */
-            if (labelname.len > 1 && labelname.data[0] == '_' && labelname.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint); goto breakerr;}
-            while (wht != 0 && !arguments.tasmcomp) {
-                bool minmax;
-                Label *label;
-                struct oper_s tmp;
-                Obj *result2, *val2;
-                struct linepos_s epoint2, epoint3;
-                int wht2 = pline[lpoint.pos + 1];
-
-                if (wht2 == '=') {
-                    if (wht == ':') {
-                        if (labelname.data[0] == '*') {
-                            lpoint.pos++;
-                            goto starassign;
-                        }
-                        lpoint.pos += 2;
-                        ignore();
-                        goto itsvar;
-                    }
-                    tmp.op = oper_from_token(wht);
-                    if (tmp.op == NULL) break;
-                    epoint3 = lpoint;
-                    lpoint.pos += 2;
-                } else if (wht2 != 0 && pline[lpoint.pos + 2] == '=') {
-                    tmp.op = oper_from_token2(wht, wht2);
-                    if (tmp.op == NULL) break;
-                    epoint3 = lpoint;
-                    lpoint.pos += 3;
-                } else break;
-
-                if (labelname.data[0] == '-') {current_context->backr--;((struct anonident_s *)labelname.data)->count--;}
-                else if (labelname.data[0] == '+') {current_context->forwr--;((struct anonident_s *)labelname.data)->count--;}
-                ignore();
-                epoint2 = lpoint;
-                if (labelname.data[0] == '*') {
-                    label = NULL;
-                    if (diagnostics.optimize) cpu_opt_invalidate();
-                    val = get_star_value(current_address->l_address_val);
-                } else if (tmp.op == &o_COND) {
-                    label = NULL; val = NULL;
-                } else {
-                    label = find_label3(&labelname, mycontext, strength);
-                    if (label == NULL) {
-                        if (tmp.op == &o_MUL) {
-                            if (diagnostics.star_assign) {
-                                err_msg_star_assign(&epoint3);
-                                if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
+        if (wht >= 'A') {
+            labelname.data = pline + lpoint.pos; 
+            labelname.len = get_label();
+            if (labelname.len != 0) {
+                struct linepos_s cmdpoint;
+                bool islabel, error;
+                islabel = false; error = (waitfor->skip & 1) == 0;
+                while (here() == '.' && pline[lpoint.pos+1] != '.') {
+                    if (!error) {
+                        if (!islabel) {
+                            if (labelname.data[0] != '_') {
+                                tmp2 = find_label(&labelname, NULL);
+                                if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, true, &epoint); error = true;}
+                            } else {
+                                tmp2 = find_label2(&labelname, cheap_context);
+                                if (tmp2 == NULL) {err_msg_not_defined2(&labelname, cheap_context, false, &epoint); error = true;}
                             }
-                            lpoint.pos = epoint3.pos;
-                            wht = '*';
-                            break;
+                        } else {
+                            tmp2 = find_label2(&labelname, mycontext);
+                            if (tmp2 == NULL) {err_msg_not_defined2(&labelname, mycontext, false, &epoint); error = true;}
                         }
-                        err_msg_not_defined2(&labelname, mycontext, false, &epoint);
+                        if (tmp2 != NULL) {
+                            if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
+                            tmp2->usepass = pass; /* touch_label(tmp2) */
+                        }
+                    }
+                    lpoint.pos++; islabel = true; epoint = lpoint;
+                    labelname.data = pline + lpoint.pos; labelname.len = get_label();
+                    if (labelname.len == 0) {
+                        if (!error) err_msg2(ERROR______EXPECTED, "a symbol is", &lpoint);
                         goto breakerr;
                     }
-                    if (label->constant) {
-                        if (tmp.op == &o_MUL) {
-                            if (diagnostics.star_assign) {
-                                err_msg_star_assign(&epoint3);
-                                if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
-                            }
-                            lpoint.pos = epoint3.pos;
-                            wht = '*';
-                            break;
-                        }
-                        err_msg_not_variable(label, &labelname, &epoint); goto breakerr;
-                        goto breakerr;
+                    if (!error) {
+                        Namespace *context = get_namespace(tmp2->value);
+                        if (context == NULL) {
+                            Ident *idn = new_ident(&labelname);
+                            epoint.pos--;
+                            err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
+                            val_destroy(&idn->v);
+                            error = true;
+                        } else mycontext = context;
                     }
-                    if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
-                    val = label->value;
-                    label->usepass = 0;
                 }
-                if (here() == 0 || here() == ';') val2 = (Obj *)ref_addrlist(null_addrlist);
-                else {
-                    struct linepos_s epoints[3];
-                    bool oldreferenceit = referenceit;
-                    referenceit &= 1; /* not good... */
-                    if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                    val2 = get_vals_addrlist(epoints);
-                    referenceit = oldreferenceit;
+                if (!islabel && labelname.data[0] == '_') {
+                    mycontext = cheap_context;
                 }
-                oaddr = current_address->address;
-                if (val == NULL) {
-                    bool labelexists;
-                    label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                    if (labelexists) {
-                        if (label->constant) {
-                            err_msg_not_variable(label, &labelname, &epoint); goto breakerr;
-                            val_destroy(val2);
-                            goto breakerr;
-                        }
-                        if (label->defpass != pass) {
-                            label->ref = false;
-                            label->defpass = pass;
-                        } else {
-                            val_destroy(val2);
-                            goto finish;
-                        }
-                        label->owner = false;
-                        if (label->file_list != current_file_list) {
-                            label_move(label, &labelname, current_file_list);
-                        }
-                        label->epoint = epoint;
-                        val_destroy(label->value);
-                        label->value = val2;
-                        label->usepass = 0;
-                    } else {
-                        label->constant = false;
-                        label->owner = false;
-                        label->value = val2;
-                        label->epoint = epoint;
-                    }
-                    goto finish;
+                if (here() == ':' && pline[lpoint.pos + 1] != '=') {islabel = true; lpoint.pos++;}
+                if (!islabel && labelname.len == 3 && (prm = lookup_opcode(labelname.data)) >=0) {
+                    if (!error) goto as_opcode; else continue;
                 }
-                minmax = (tmp.op == &o_MIN) || (tmp.op == &o_MAX);
-                tmp.v1 = val;
-                tmp.v2 = val2;
-                tmp.epoint = &epoint;
-                tmp.epoint2 = &epoint2;
-                tmp.epoint3 = &epoint3;
-                tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
-                result2 = tmp.v1->obj->calc2(&tmp);
-                if (minmax) {
-                    if (result2 == &true_value->v) val_replace(&result2, val);
-                    else if (result2 == &false_value->v) val_replace(&result2, val2);
+                if (false) {
+                hh: islabel = true; error = (waitfor->skip & 1) == 0;
                 }
-                val_destroy(val2);
-                if (label != NULL) {
-                    listing_equal(listing, result2);
-                    if (label->file_list != current_file_list) {
-                        label_move(label, &labelname, current_file_list);
-                    }
-                    label->epoint = epoint;
-                    val_destroy(label->value);
-                    label->value = result2;
-                } else {
-                    val_destroy(val);
-                    starhandle(result2, &epoint, &epoint2);
-                }
-                goto finish;
-            }
-            switch (wht) {
-            case '=':
-                { /* variable */
-                    struct linepos_s epoints[3];
+                ignore();wht = here();
+                if (error) {epoint = lpoint; goto jn;} /* skip things if needed */
+                if (labelname.len > 1 && labelname.data[0] == '_' && labelname.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint); goto breakerr;}
+                while (wht != 0 && !arguments.tasmcomp) {
+                    bool minmax;
                     Label *label;
-                    bool labelexists;
-                starassign:
+                    struct oper_s tmp;
+                    Obj *result2, *val2;
+                    struct linepos_s epoint2, epoint3;
+                    int wht2 = pline[lpoint.pos + 1];
+
+                    if (wht2 == '=') {
+                        if (wht == ':') {
+                            if (labelname.data[0] == '*') {
+                                lpoint.pos++;
+                                goto starassign;
+                            }
+                            lpoint.pos += 2;
+                            ignore();
+                            goto itsvar;
+                        }
+                        tmp.op = oper_from_token(wht);
+                        if (tmp.op == NULL) break;
+                        epoint3 = lpoint;
+                        lpoint.pos += 2;
+                    } else if (wht2 != 0 && pline[lpoint.pos + 2] == '=') {
+                        tmp.op = oper_from_token2(wht, wht2);
+                        if (tmp.op == NULL) break;
+                        epoint3 = lpoint;
+                        lpoint.pos += 3;
+                    } else break;
+
+                    if (labelname.data[0] == '-') {current_context->backr--;((struct anonident_s *)labelname.data)->count--;}
+                    else if (labelname.data[0] == '+') {current_context->forwr--;((struct anonident_s *)labelname.data)->count--;}
+                    ignore();
+                    epoint2 = lpoint;
                     if (labelname.data[0] == '*') {
                         label = NULL;
                         if (diagnostics.optimize) cpu_opt_invalidate();
-                    } else label = find_label3(&labelname, mycontext, strength);
-                    lpoint.pos++; ignore();
-                    epoints[0] = lpoint; /* for no elements! */
-                    if (here() == 0 || here() == ';') {
-                        if (labelname.data[0] == '*') {
-                            err_msg(ERROR______EXPECTED, "an expression is");
+                        val = get_star_value(current_address->l_address_val);
+                    } else if (tmp.op == &o_COND) {
+                        label = NULL; val = NULL;
+                    } else {
+                        label = find_label3(&labelname, mycontext, strength);
+                        if (label == NULL) {
+                            if (tmp.op == &o_MUL) {
+                                if (diagnostics.star_assign) {
+                                    err_msg_star_assign(&epoint3);
+                                    if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
+                                }
+                                lpoint.pos = epoint3.pos;
+                                wht = '*';
+                                break;
+                            }
+                            err_msg_not_defined2(&labelname, mycontext, false, &epoint);
                             goto breakerr;
                         }
-                        val = (Obj *)ref_addrlist(null_addrlist);
-                    } else {
-                        bool oldreferenceit = referenceit;
-                        if (label != NULL && !label->ref) {
-                            referenceit = false;
+                        if (label->constant) {
+                            if (tmp.op == &o_MUL) {
+                                if (diagnostics.star_assign) {
+                                    err_msg_star_assign(&epoint3);
+                                    if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
+                                }
+                                lpoint.pos = epoint3.pos;
+                                wht = '*';
+                                break;
+                            }
+                            err_msg_not_variable(label, &labelname, &epoint); goto breakerr;
+                            goto breakerr;
                         }
+                        if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
+                        val = label->value;
+                        label->usepass = 0;
+                    }
+                    if (here() == 0 || here() == ';') val2 = (Obj *)ref_addrlist(null_addrlist);
+                    else {
+                        struct linepos_s epoints[3];
+                        bool oldreferenceit = referenceit;
+                        referenceit &= 1; /* not good... */
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                        val = get_vals_addrlist(epoints);
+                        val2 = get_vals_addrlist(epoints);
                         referenceit = oldreferenceit;
                     }
-                    if (labelname.data[0] == '*') {
-                        starhandle(val, &epoint, &epoints[0]);
-                        goto finish;
-                    }
-                    if (label != NULL) {
-                        labelexists = true;
-                    } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                     oaddr = current_address->address;
-                    listing_equal(listing, val);
-                    label->ref = false;
-                    if (labelexists) {
-                        if (label->defpass == pass) {
-                            val_destroy(val);
-                            err_msg_double_defined(label, &labelname, &epoint);
-                        } else {
-                            if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
+                    if (val == NULL) {
+                        bool labelexists;
+                        label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                        if (labelexists) {
+                            if (label->constant) {
+                                err_msg_not_variable(label, &labelname, &epoint); goto breakerr;
+                                val_destroy(val2);
+                                goto breakerr;
                             }
-                            label->constant = true;
+                            if (label->defpass != pass) {
+                                label->ref = false;
+                                label->defpass = pass;
+                            } else {
+                                val_destroy(val2);
+                                goto finish;
+                            }
                             label->owner = false;
                             if (label->file_list != current_file_list) {
                                 label_move(label, &labelname, current_file_list);
                             }
                             label->epoint = epoint;
-                            const_assign(label, val);
+                            val_destroy(label->value);
+                            label->value = val2;
+                            label->usepass = 0;
+                        } else {
+                            label->constant = false;
+                            label->owner = false;
+                            label->value = val2;
+                            label->epoint = epoint;
                         }
-                    } else {
-                        if (!constcreated && temporary_label_branch == 0) {
-                            if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                            constcreated = true;
+                        goto finish;
+                    }
+                    minmax = (tmp.op == &o_MIN) || (tmp.op == &o_MAX);
+                    tmp.v1 = val;
+                    tmp.v2 = val2;
+                    tmp.epoint = &epoint;
+                    tmp.epoint2 = &epoint2;
+                    tmp.epoint3 = &epoint3;
+                    tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
+                    result2 = tmp.v1->obj->calc2(&tmp);
+                    if (minmax) {
+                        if (result2 == &true_value->v) val_replace(&result2, val);
+                        else if (result2 == &false_value->v) val_replace(&result2, val2);
+                    }
+                    val_destroy(val2);
+                    if (label != NULL) {
+                        listing_equal(listing, result2);
+                        if (label->file_list != current_file_list) {
+                            label_move(label, &labelname, current_file_list);
                         }
-                        label->constant = true;
-                        label->owner = false;
-                        label->value = val;
                         label->epoint = epoint;
+                        val_destroy(label->value);
+                        label->value = result2;
+                    } else {
+                        val_destroy(val);
+                        starhandle(result2, &epoint, &epoint2);
                     }
                     goto finish;
                 }
-            case '.':
-                cmdpoint = lpoint;
-                prm = get_command();
-                ignore();
-                if (labelname.data[0] == '*') {
-                    err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint);
-                    newlabel = NULL; epoint = cmdpoint; goto as_command;
-                }
-                switch (prm) {
-                case CMD_VAR: /* variable */
-                    {
+                switch (wht) {
+                case '=':
+                    { /* variable */
+                        struct linepos_s epoints[3];
                         Label *label;
                         bool labelexists;
-                    itsvar:
-                        label = find_label3(&labelname, mycontext, strength);
-                        if (here() == 0 || here() == ';') val = (Obj *)ref_addrlist(null_addrlist);
-                        else {
-                            struct linepos_s epoints[3];
+                    starassign:
+                        if (labelname.data[0] == '*') {
+                            label = NULL;
+                            if (diagnostics.optimize) cpu_opt_invalidate();
+                        } else label = find_label3(&labelname, mycontext, strength);
+                        lpoint.pos++; ignore();
+                        epoints[0] = lpoint; /* for no elements! */
+                        if (here() == 0 || here() == ';') {
+                            if (labelname.data[0] == '*') {
+                                err_msg(ERROR______EXPECTED, "an expression is");
+                                goto breakerr;
+                            }
+                            val = (Obj *)ref_addrlist(null_addrlist);
+                        } else {
                             bool oldreferenceit = referenceit;
-                            referenceit &= 1; /* not good... */
+                            if (label != NULL && !label->ref) {
+                                referenceit = false;
+                            }
                             if (!get_exp(0, 0, 0, NULL)) goto breakerr;
                             val = get_vals_addrlist(epoints);
                             referenceit = oldreferenceit;
                         }
+                        if (labelname.data[0] == '*') {
+                            starhandle(val, &epoint, &epoints[0]);
+                            goto finish;
+                        }
                         if (label != NULL) {
                             labelexists = true;
-                            if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
                         } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                         oaddr = current_address->address;
                         listing_equal(listing, val);
+                        label->ref = false;
                         if (labelexists) {
-                            if (label->constant) {
-                                err_msg_double_defined(label, &labelname, &epoint);
+                            if (label->defpass == pass) {
                                 val_destroy(val);
+                                err_msg_double_defined(label, &labelname, &epoint);
                             } else {
-                                if (label->defpass != pass) {
-                                    label->ref = false;
-                                    label->defpass = pass;
-                                } else {
-                                    if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
+                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
                                 }
+                                label->constant = true;
                                 label->owner = false;
                                 if (label->file_list != current_file_list) {
                                     label_move(label, &labelname, current_file_list);
                                 }
                                 label->epoint = epoint;
-                                val_destroy(label->value);
-                                label->value = val;
-                                label->usepass = 0;
+                                const_assign(label, val);
                             }
                         } else {
-                            label->constant = false;
+                            if (!constcreated && temporary_label_branch == 0) {
+                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                constcreated = true;
+                            }
+                            label->constant = true;
                             label->owner = false;
                             label->value = val;
                             label->epoint = epoint;
                         }
                         goto finish;
                     }
-                case CMD_LBL:
-                    { /* label */
-                        Label *label;
-                        Lbl *lbl;
-                        bool labelexists;
-                        listing_line(listing, 0);
-                        label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        lbl = (Lbl *)val_alloc(LBL_OBJ);
-                        lbl->sline = epoint.line;
-                        lbl->waitforp = waitfor_p;
-                        lbl->file_list = current_file_list;
-                        lbl->parent = current_context;
-                        if (labelexists) {
-                            if (label->defpass == pass) {
-                                val_destroy(&lbl->v);
-                                err_msg_double_defined(label, &labelname, &epoint);
+                case '.':
+                    cmdpoint = lpoint;
+                    prm = get_command();
+                    ignore();
+                    if (labelname.data[0] == '*') {
+                        err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint);
+                        newlabel = NULL; epoint = cmdpoint; goto as_command;
+                    }
+                    switch (prm) {
+                    case CMD_VAR: /* variable */
+                        {
+                            Label *label;
+                            bool labelexists;
+                        itsvar:
+                            label = find_label3(&labelname, mycontext, strength);
+                            if (here() == 0 || here() == ';') val = (Obj *)ref_addrlist(null_addrlist);
+                            else {
+                                struct linepos_s epoints[3];
+                                bool oldreferenceit = referenceit;
+                                referenceit &= 1; /* not good... */
+                                if (!get_exp(0, 0, 0, NULL)) goto breakerr;
+                                val = get_vals_addrlist(epoints);
+                                referenceit = oldreferenceit;
+                            }
+                            if (label != NULL) {
+                                labelexists = true;
+                                if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
+                            } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            oaddr = current_address->address;
+                            listing_equal(listing, val);
+                            if (labelexists) {
+                                if (label->constant) {
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                    val_destroy(val);
+                                } else {
+                                    if (label->defpass != pass) {
+                                        label->ref = false;
+                                        label->defpass = pass;
+                                    } else {
+                                        if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
+                                    }
+                                    label->owner = false;
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    val_destroy(label->value);
+                                    label->value = val;
+                                    label->usepass = 0;
+                                }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                label->constant = false;
+                                label->owner = false;
+                                label->value = val;
+                                label->epoint = epoint;
+                            }
+                            goto finish;
+                        }
+                    case CMD_LBL:
+                        { /* label */
+                            Label *label;
+                            Lbl *lbl;
+                            bool labelexists;
+                            listing_line(listing, 0);
+                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            lbl = (Lbl *)val_alloc(LBL_OBJ);
+                            lbl->sline = epoint.line;
+                            lbl->waitforp = waitfor_p;
+                            lbl->file_list = current_file_list;
+                            lbl->parent = current_context;
+                            if (labelexists) {
+                                if (label->defpass == pass) {
+                                    val_destroy(&lbl->v);
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                } else {
+                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    label->constant = true;
+                                    label->owner = true;
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    const_assign(label, &lbl->v);
+                                }
+                            } else {
+                                if (!constcreated && temporary_label_branch == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                if (label->file_list != current_file_list) {
-                                    label_move(label, &labelname, current_file_list);
-                                }
+                                label->value = &lbl->v;
                                 label->epoint = epoint;
-                                const_assign(label, &lbl->v);
                             }
-                        } else {
-                            if (!constcreated && temporary_label_branch == 0) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
-                            }
-                            label->constant = true;
-                            label->owner = true;
-                            label->value = &lbl->v;
-                            label->epoint = epoint;
+                            if (!arguments.tasmcomp && diagnostics.deprecated) err_msg2(ERROR______OLD_GOTO, NULL, &cmdpoint);
+                            label->ref = false;
+                            goto finish;
                         }
-                        if (!arguments.tasmcomp && diagnostics.deprecated) err_msg2(ERROR______OLD_GOTO, NULL, &cmdpoint);
-                        label->ref = false;
-                        goto finish;
-                    }
-                case CMD_NAMESPACE:
-                    { /* namespace */
-                        Label *label;
-                        struct values_s *vs;
-                        bool labelexists;
-                        listing_line(listing, 0);
-                        new_waitfor(W_ENDN, &cmdpoint);
-                        if (get_exp(0, 0, 1, &cmdpoint)) {
-                            vs = get_val();
-                            if (vs != NULL) {
-                                val = vs->val;
-                                val = (Obj *)get_namespace(val);
-                                if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
+                    case CMD_NAMESPACE:
+                        { /* namespace */
+                            Label *label;
+                            struct values_s *vs;
+                            bool labelexists;
+                            listing_line(listing, 0);
+                            new_waitfor(W_ENDN, &cmdpoint);
+                            if (get_exp(0, 0, 1, &cmdpoint)) {
+                                vs = get_val();
+                                if (vs != NULL) {
+                                    val = vs->val;
+                                    val = (Obj *)get_namespace(val);
+                                    if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
+                                } else val = NULL;
                             } else val = NULL;
-                        } else val = NULL;
-                        label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        if (labelexists) {
-                            if (label->defpass == pass) err_msg_double_defined(label, &labelname, &epoint);
-                            else {
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            if (labelexists) {
+                                if (label->defpass == pass) err_msg_double_defined(label, &labelname, &epoint);
+                                else {
+                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    label->constant = true;
+                                    label->owner = (val == NULL);
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    if (val != NULL) const_assign(label, val_reference(val));
+                                    else {
+                                        label->defpass = pass;
+                                        if (label->value->obj != NAMESPACE_OBJ) {
+                                            val_destroy(label->value);
+                                            label->value = (Obj *)new_namespace(current_file_list, &epoint);
+                                        } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
+                                    }
+                                }
+                            } else {
+                                if (!constcreated && temporary_label_branch == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
                                 label->constant = true;
                                 label->owner = (val == NULL);
-                                if (label->file_list != current_file_list) {
-                                    label_move(label, &labelname, current_file_list);
-                                }
+                                label->value = (val != NULL) ? val_reference(val) : (Obj *)new_namespace(current_file_list, &epoint);
                                 label->epoint = epoint;
-                                if (val != NULL) const_assign(label, val_reference(val));
-                                else {
-                                    label->defpass = pass;
-                                    if (label->value->obj != NAMESPACE_OBJ) {
-                                        val_destroy(label->value);
-                                        label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                    } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
-                                }
                             }
-                        } else {
-                            if (!constcreated && temporary_label_branch == 0) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
-                            }
-                            label->constant = true;
-                            label->owner = (val == NULL);
-                            label->value = (val != NULL) ? val_reference(val) : (Obj *)new_namespace(current_file_list, &epoint);
-                            label->epoint = epoint;
+                            if (label->value->obj == NAMESPACE_OBJ) {
+                                push_context((Namespace *)label->value);
+                                waitfor->what = W_ENDN2;
+                            } else push_context(current_context);
+                            label->ref = false;
+                            goto finish;
                         }
-                        if (label->value->obj == NAMESPACE_OBJ) {
-                            push_context((Namespace *)label->value);
-                            waitfor->what = W_ENDN2;
-                        } else push_context(current_context);
-                        label->ref = false;
-                        goto finish;
-                    }
-                case CMD_MACRO:/* .macro */
-                case CMD_SEGMENT:
-                    {
-                        Label *label;
-                        Macro *macro;
-                        Type *obj = (prm == CMD_MACRO) ? MACRO_OBJ : SEGMENT_OBJ;
-                        bool labelexists;
-                        listing_line(listing, 0);
-                        new_waitfor(W_ENDM, &cmdpoint);waitfor->skip = 0;
-                        label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        macro = (Macro *)val_alloc(obj);
-                        macro->file_list = current_file_list;
-                        macro->line = epoint.line;
-                        macro->recursion_pass = 0;
-                        get_macro_params(&macro->v);
-                        if (labelexists) {
-                            macro->retval = (label->value->obj == obj) && ((Macro *)label->value)->retval;
-                            if (label->defpass == pass) {
-                                waitfor->u.cmd_macro.val = &macro->v;
-                                err_msg_double_defined(label, &labelname, &epoint);
+                    case CMD_MACRO:/* .macro */
+                    case CMD_SEGMENT:
+                        {
+                            Label *label;
+                            Macro *macro;
+                            Type *obj = (prm == CMD_MACRO) ? MACRO_OBJ : SEGMENT_OBJ;
+                            bool labelexists;
+                            listing_line(listing, 0);
+                            new_waitfor(W_ENDM, &cmdpoint);waitfor->skip = 0;
+                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            macro = (Macro *)val_alloc(obj);
+                            macro->file_list = current_file_list;
+                            macro->line = epoint.line;
+                            macro->recursion_pass = 0;
+                            get_macro_params(&macro->v);
+                            if (labelexists) {
+                                macro->retval = (label->value->obj == obj) && ((Macro *)label->value)->retval;
+                                if (label->defpass == pass) {
+                                    waitfor->u.cmd_macro.val = &macro->v;
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                } else {
+                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    label->constant = true;
+                                    label->owner = true;
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    const_assign(label, &macro->v);
+                                    waitfor->u.cmd_macro.val = val_reference(label->value);
+                                }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                macro->retval = false;
+                                if (!constcreated && temporary_label_branch == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                if (label->file_list != current_file_list) {
-                                    label_move(label, &labelname, current_file_list);
-                                }
+                                label->value = &macro->v;
                                 label->epoint = epoint;
-                                const_assign(label, &macro->v);
-                                waitfor->u.cmd_macro.val = val_reference(label->value);
+                                waitfor->u.cmd_macro.val = val_reference(&macro->v);
                             }
-                        } else {
-                            macro->retval = false;
-                            if (!constcreated && temporary_label_branch == 0) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
-                            }
-                            label->constant = true;
-                            label->owner = true;
-                            label->value = &macro->v;
-                            label->epoint = epoint;
-                            waitfor->u.cmd_macro.val = val_reference(&macro->v);
+                            label->ref = false;
+                            goto finish;
                         }
-                        label->ref = false;
-                        goto finish;
-                    }
-                case CMD_FUNCTION:
-                    {
-                        Label *label;
-                        Mfunc *mfunc;
-                        bool labelexists;
-                        listing_line(listing, 0);
-                        new_waitfor(W_ENDF, &cmdpoint);waitfor->skip = 0;
-                        if (temporary_label_branch != 0) {err_msg2(ERROR___NOT_ALLOWED, ".function", &cmdpoint);goto breakerr;}
-                        label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        mfunc = (Mfunc *)val_alloc(MFUNC_OBJ);
-                        mfunc->file_list = current_file_list;
-                        mfunc->line = epoint.line;
-                        mfunc->recursion_pass = 0;
-                        mfunc->argc = 0;
-                        mfunc->param = NULL; /* might be recursive through init */
-                        mfunc->nslen = 0;
-                        mfunc->namespaces = NULL;
-                        if (labelexists) {
-                            if (label->defpass == pass) {
-                                val_destroy(&mfunc->v);
-                                err_msg_double_defined(label, &labelname, &epoint);
+                    case CMD_FUNCTION:
+                        {
+                            Label *label;
+                            Mfunc *mfunc;
+                            bool labelexists;
+                            listing_line(listing, 0);
+                            new_waitfor(W_ENDF, &cmdpoint);waitfor->skip = 0;
+                            if (temporary_label_branch != 0) {err_msg2(ERROR___NOT_ALLOWED, ".function", &cmdpoint);goto breakerr;}
+                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            mfunc = (Mfunc *)val_alloc(MFUNC_OBJ);
+                            mfunc->file_list = current_file_list;
+                            mfunc->line = epoint.line;
+                            mfunc->recursion_pass = 0;
+                            mfunc->argc = 0;
+                            mfunc->param = NULL; /* might be recursive through init */
+                            mfunc->nslen = 0;
+                            mfunc->namespaces = NULL;
+                            if (labelexists) {
+                                if (label->defpass == pass) {
+                                    val_destroy(&mfunc->v);
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                } else {
+                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    label->constant = true;
+                                    label->owner = true;
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    get_func_params(mfunc);
+                                    get_namespaces(mfunc);
+                                    const_assign(label, &mfunc->v);
+                                }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                if (!constcreated && temporary_label_branch == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                if (label->file_list != current_file_list) {
-                                    label_move(label, &labelname, current_file_list);
-                                }
+                                label->value = &mfunc->v;
                                 label->epoint = epoint;
                                 get_func_params(mfunc);
                                 get_namespaces(mfunc);
-                                const_assign(label, &mfunc->v);
                             }
-                        } else {
-                            if (!constcreated && temporary_label_branch == 0) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
-                            }
-                            label->constant = true;
-                            label->owner = true;
-                            label->value = &mfunc->v;
-                            label->epoint = epoint;
-                            get_func_params(mfunc);
-                            get_namespaces(mfunc);
+                            label->ref = false;
+                            goto finish;
                         }
-                        label->ref = false;
-                        goto finish;
-                    }
-                case CMD_STRUCT:
-                case CMD_UNION:
-                    {
-                        Label *label;
-                        Struct *structure;
-                        struct section_address_s section_address, *oldsection_address = current_address;
-                        uval_t provides = current_section->provides, requires = current_section->requires, conflicts = current_section->conflicts;
-                        bool labelexists, doubledef = false;
-                        Type *obj = (prm == CMD_STRUCT) ? STRUCT_OBJ : UNION_OBJ;
+                    case CMD_STRUCT:
+                    case CMD_UNION:
+                        {
+                            Label *label;
+                            Struct *structure;
+                            struct section_address_s section_address, *oldsection_address = current_address;
+                            uval_t provides = current_section->provides, requires = current_section->requires, conflicts = current_section->conflicts;
+                            bool labelexists, doubledef = false;
+                            Type *obj = (prm == CMD_STRUCT) ? STRUCT_OBJ : UNION_OBJ;
 
-                        if (diagnostics.optimize) cpu_opt_invalidate();
-                        new_waitfor((prm==CMD_STRUCT) ? W_ENDS : W_ENDU, &cmdpoint);waitfor->skip = 0;
-                        label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            if (diagnostics.optimize) cpu_opt_invalidate();
+                            new_waitfor((prm==CMD_STRUCT) ? W_ENDS : W_ENDU, &cmdpoint);waitfor->skip = 0;
+                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
 
-                        current_section->provides = ~(uval_t)0;current_section->requires = current_section->conflicts = 0;
-                        section_address.wrapwarn = section_address.moved = false;
-                        section_address.unionmode = (prm == CMD_UNION);
-                        section_address.address = section_address.start = section_address.end = 0;
-                        section_address.l_start.address = section_address.l_start.bank = 0;
-                        section_address.l_union.address = section_address.l_union.bank = 0;
-                        section_address.l_address.address = section_address.l_address.bank = 0;
-                        section_address.l_address_val = (Obj *)ref_int(int_value[0]);
-                        section_address.mem = new_memblocks(0, 0);
-                        section_address.mem->lastaddr = 0;
-                        current_address = &section_address;
+                            current_section->provides = ~(uval_t)0;current_section->requires = current_section->conflicts = 0;
+                            section_address.wrapwarn = section_address.moved = false;
+                            section_address.unionmode = (prm == CMD_UNION);
+                            section_address.address = section_address.start = section_address.end = 0;
+                            section_address.l_start.address = section_address.l_start.bank = 0;
+                            section_address.l_union.address = section_address.l_union.bank = 0;
+                            section_address.l_address.address = section_address.l_address.bank = 0;
+                            section_address.l_address_val = (Obj *)ref_int(int_value[0]);
+                            section_address.mem = new_memblocks(0, 0);
+                            section_address.mem->lastaddr = 0;
+                            current_address = &section_address;
 
-                        structure = (Struct *)val_alloc(obj);
-                        structure->file_list = current_file_list;
-                        structure->line = epoint.line;
-                        structure->recursion_pass = 0;
-                        get_macro_params(&structure->v);
-                        if (labelexists) {
-                            structure->retval = (label->value->obj == obj) && ((Struct *)label->value)->retval;
-                            if (label->defpass == pass) {
-                                doubledef = true;
-                                structure->size = 0;
-                                structure->names = new_namespace(current_file_list, &epoint);
-                                err_msg_double_defined(label, &labelname, &epoint);
+                            structure = (Struct *)val_alloc(obj);
+                            structure->file_list = current_file_list;
+                            structure->line = epoint.line;
+                            structure->recursion_pass = 0;
+                            get_macro_params(&structure->v);
+                            if (labelexists) {
+                                structure->retval = (label->value->obj == obj) && ((Struct *)label->value)->retval;
+                                if (label->defpass == pass) {
+                                    doubledef = true;
+                                    structure->size = 0;
+                                    structure->names = new_namespace(current_file_list, &epoint);
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                } else {
+                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    label->constant = true;
+                                    label->owner = true;
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    if (label->value->obj == obj) {
+                                        Struct *prev = (Struct *)label->value;
+                                        structure->size = prev->size;
+                                        structure->names = ref_namespace(prev->names);
+                                        structure->names->backr = structure->names->forwr = 0;
+                                    } else {
+                                        structure->size = 0;
+                                        structure->names = new_namespace(current_file_list, &epoint);
+                                    }
+                                    const_assign(label, &structure->v);
+                                    structure = (Struct *)label->value;
+                                }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                structure->retval = false;
+                                if (!constcreated && temporary_label_branch == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
                                 label->constant = true;
                                 label->owner = true;
-                                if (label->file_list != current_file_list) {
-                                    label_move(label, &labelname, current_file_list);
-                                }
+                                label->value = &structure->v;
                                 label->epoint = epoint;
-                                if (label->value->obj == obj) {
-                                    Struct *prev = (Struct *)label->value;
-                                    structure->size = prev->size;
-                                    structure->names = ref_namespace(prev->names);
-                                    structure->names->backr = structure->names->forwr = 0;
-                                } else {
-                                    structure->size = 0;
-                                    structure->names = new_namespace(current_file_list, &epoint);
-                                }
-                                const_assign(label, &structure->v);
-                                structure = (Struct *)label->value;
+                                structure->size = 0;
+                                structure->names = new_namespace(current_file_list, &epoint);
                             }
-                        } else {
-                            structure->retval = false;
-                            if (!constcreated && temporary_label_branch == 0) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
+                            label->ref = false;
+                            listing_line(listing, cmdpoint.pos);
+                            current_section->structrecursion++;
+                            waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
+                            waitfor->skip = 1;
+                            val = macro_recurse(W_ENDS, &structure->v, structure->names, &cmdpoint);
+                            structure->retval = (val != NULL);
+                            if (val != NULL) val_destroy(val);
+                            close_waitfor((prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2);
+                            current_section->structrecursion--;
+
+                            current_section->provides = provides; current_section->requires = requires; current_section->conflicts = conflicts;
+                            current_address = oldsection_address;
+                            if (current_address->l_address.bank > all_mem) {
+                                err_msg_big_address(&cmdpoint);
+                                current_address->l_address.bank &= all_mem;
+                            }
+
+                            if (doubledef) val_destroy(&structure->v);
+                            else {
+                                address_t end = (section_address.end < section_address.address) ? section_address.address : section_address.end;
+                                if (structure->size != (end & all_mem2)) {
+                                    structure->size = end & all_mem2;
+                                    if (label->usepass >= pass) {
+                                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &label->epoint);
+                                        fixeddig = false;
+                                    }
+                                }
+                            }
+                            val_destroy(section_address.l_address_val);
+                            val_destroy(&section_address.mem->v);
+                            goto breakerr;
+                        }
+                    case CMD_SECTION:
+                        if (section_start(&cmdpoint)) goto breakerr;
+                        star = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
+                        break;
+                    case CMD_VIRTUAL:
+                        if (virtual_start(&cmdpoint)) goto breakerr;
+                        star = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
+                        break;
+                    case CMD_BREPT:
+                    case CMD_BFOR:
+                    case CMD_BWHILE:
+                        { /* .bfor */
+                            List *lst;
+                            bool labelexists;
+                            size_t i;
+                            Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            if (labelexists) {
+                                if (label->defpass == pass) {
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                    epoint = cmdpoint;
+                                    goto as_command;
+                                } else {
+                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->defpass = pass;
+                                }
+                            } else {
+                                if (!constcreated && temporary_label_branch == 0) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                label->value = (Obj *)ref_none();
                             }
                             label->constant = true;
                             label->owner = true;
-                            label->value = &structure->v;
                             label->epoint = epoint;
-                            structure->size = 0;
-                            structure->names = new_namespace(current_file_list, &epoint);
-                        }
-                        label->ref = false;
-                        listing_line(listing, cmdpoint.pos);
-                        current_section->structrecursion++;
-                        waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
-                        waitfor->skip = 1;
-                        val = macro_recurse(W_ENDS, &structure->v, structure->names, &cmdpoint);
-                        structure->retval = (val != NULL);
-                        if (val != NULL) val_destroy(val);
-                        close_waitfor((prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2);
-                        current_section->structrecursion--;
-
-                        current_section->provides = provides; current_section->requires = requires; current_section->conflicts = conflicts;
-                        current_address = oldsection_address;
-                        if (current_address->l_address.bank > all_mem) {
-                            err_msg_big_address(&cmdpoint);
-                            current_address->l_address.bank &= all_mem;
-                        }
-
-                        if (doubledef) val_destroy(&structure->v);
-                        else {
-                            address_t end = (section_address.end < section_address.address) ? section_address.address : section_address.end;
-                            if (structure->size != (end & all_mem2)) {
-                                structure->size = end & all_mem2;
-                                if (label->usepass >= pass) {
-                                    if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &label->epoint);
-                                    fixeddig = false;
-                                }
-                            }
-                        }
-                        val_destroy(section_address.l_address_val);
-                        val_destroy(&section_address.mem->v);
-                        goto breakerr;
-                    }
-                case CMD_SECTION:
-                    if (section_start(&cmdpoint)) goto breakerr;
-                    star = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
-                    break;
-                case CMD_VIRTUAL:
-                    if (virtual_start(&cmdpoint)) goto breakerr;
-                    star = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
-                    break;
-                case CMD_BREPT:
-                case CMD_BFOR:
-                case CMD_BWHILE:
-                    { /* .bfor */
-                        List *lst;
-                        bool labelexists;
-                        size_t i;
-                        Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        if (labelexists) {
-                            if (label->defpass == pass) {
-                                err_msg_double_defined(label, &labelname, &epoint);
-                                epoint = cmdpoint;
-                                goto as_command;
+                            label->ref = false;
+                            if (label->value->obj == TUPLE_OBJ) {
+                                List *old = (List *)label->value;
+                                lst = new_tuple(old->len);
+                                for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
                             } else {
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
-                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                    constcreated = true;
-                                }
-                                if (label->file_list != current_file_list) {
-                                    label_move(label, &labelname, current_file_list);
-                                }
-                                label->defpass = pass;
+                                lst = new_tuple(lenof(lst->u.val));
+                                for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
                             }
-                        } else {
-                            if (!constcreated && temporary_label_branch == 0) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
-                            }
-                            label->value = (Obj *)ref_none();
+                            label = ref_label(label);
+                            i = (prm == CMD_BFOR) ? for_command(label, lst, &cmdpoint) : (prm == CMD_BREPT) ? rept_command(label, lst, &cmdpoint) : while_command(label, lst, &cmdpoint);
+                            if (lst->len > i) list_shrink(lst, i);
+                            const_assign(label, &lst->v);
+                            val_destroy(&label->v);
+                            goto breakerr;
                         }
-                        label->constant = true;
-                        label->owner = true;
-                        label->epoint = epoint;
-                        label->ref = false;
-                        if (label->value->obj == TUPLE_OBJ) {
-                            List *old = (List *)label->value;
-                            lst = new_tuple(old->len);
-                            for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
-                        } else {
-                            lst = new_tuple(lenof(lst->u.val));
-                            for (i = 0; i < lst->len; i++) lst->data[i] = (Obj *)ref_none();
-                        }
-                        label = ref_label(label);
-                        i = (prm == CMD_BFOR) ? for_command(label, lst, &cmdpoint) : (prm == CMD_BREPT) ? rept_command(label, lst, &cmdpoint) : while_command(label, lst, &cmdpoint);
-                        if (lst->len > i) list_shrink(lst, i);
-                        const_assign(label, &lst->v);
-                        val_destroy(&label->v);
-                        goto breakerr;
-                    }
-                case CMD_DSTRUCT: /* .dstruct */
-                case CMD_DUNION:
-                    {
-                        address_t oldstart, oldend;
-                        address2_t oldl_start, oldl_union;
-                        bool oldunionmode;
-                        bool labelexists, ret;
-                        Type *obj;
-                        Namespace *context;
-                        Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        if (labelexists) {
-                            if (label->defpass == pass) {
-                                err_msg_double_defined(label, &labelname, &epoint);
-                                epoint = cmdpoint;
-                                goto as_command;
-                            } else {
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
-                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                    constcreated = true;
-                                }
-                                if (label->file_list != current_file_list) {
-                                    label_move(label, &labelname, current_file_list);
-                                }
-                            }
-                        } else {
-                            if (!constcreated && temporary_label_branch == 0) {
-                                if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                constcreated = true;
-                            }
-                            label->value = (Obj *)ref_none();
-                        }
-                        label->constant = true;
-                        label->owner = true;
-                        label->epoint = epoint;
-                        label->ref = false;
-
-                        if (diagnostics.optimize) cpu_opt_invalidate();
-                        listing_line(listing, cmdpoint.pos);
-                        if (get_exp(1, 1, 0, &cmdpoint)) {
-                            struct values_s *vs = get_val();
-                            val = vs->val;
-                            obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
-                            if (val->obj != obj) {
-                                err_msg_wrong_type2(val, obj, &vs->epoint);
-                                val = NULL;
-                            }
-                        } else val = NULL;
-                        ret = (val != NULL) && ((Struct *)val)->retval;
-                        if (here() == ',') lpoint.pos++;
-                        current_section->structrecursion++;
-
-                        oaddr = current_address->address;
-                        newmembp = get_mem(current_address->mem);
-                        oldstart = current_address->start;
-                        oldend = current_address->end;
-                        oldl_start = current_address->l_start;
-                        oldl_union = current_address->l_union;
-                        oldunionmode = current_address->unionmode;
-                        current_address->start = current_address->end = current_address->address;
-                        current_address->l_start = current_address->l_address;
-                        current_address->l_union = current_address->l_address;
-                        current_address->unionmode = (prm == CMD_DUNION);
-
-                        if (!ret) {
-                            Code *code = (Code *)label->value;
-                            if (labelexists && code->v.obj == CODE_OBJ) {
-                                Obj *tmp = get_star_value(current_address->l_address_val);
-                                if (!tmp->obj->same(tmp, code->addr)) {
-                                    val_destroy(code->addr); code->addr = tmp;
-                                    if (label->usepass >= pass) {
-                                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                        fixeddig = false;
+                    case CMD_DSTRUCT: /* .dstruct */
+                    case CMD_DUNION:
+                        {
+                            address_t oldstart, oldend;
+                            address2_t oldl_start, oldl_union;
+                            bool oldunionmode;
+                            bool labelexists, ret;
+                            Type *obj;
+                            Namespace *context;
+                            Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            if (labelexists) {
+                                if (label->defpass == pass) {
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                    epoint = cmdpoint;
+                                    goto as_command;
+                                } else {
+                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
                                     }
-                                } else val_destroy(tmp);
-                                if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                }
+                            } else {
+                                if (!constcreated && temporary_label_branch == 0) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                label->value = (Obj *)ref_none();
+                            }
+                            label->constant = true;
+                            label->owner = true;
+                            label->epoint = epoint;
+                            label->ref = false;
+
+                            if (diagnostics.optimize) cpu_opt_invalidate();
+                            listing_line(listing, cmdpoint.pos);
+                            if (get_exp(1, 1, 0, &cmdpoint)) {
+                                struct values_s *vs = get_val();
+                                val = vs->val;
+                                obj = (prm == CMD_DSTRUCT) ? STRUCT_OBJ : UNION_OBJ;
+                                if (val->obj != obj) {
+                                    err_msg_wrong_type2(val, obj, &vs->epoint);
+                                    val = NULL;
+                                }
+                            } else val = NULL;
+                            ret = (val != NULL) && ((Struct *)val)->retval;
+                            if (here() == ',') lpoint.pos++;
+                            current_section->structrecursion++;
+
+                            oaddr = current_address->address;
+                            newmembp = get_mem(current_address->mem);
+                            oldstart = current_address->start;
+                            oldend = current_address->end;
+                            oldl_start = current_address->l_start;
+                            oldl_union = current_address->l_union;
+                            oldunionmode = current_address->unionmode;
+                            current_address->start = current_address->end = current_address->address;
+                            current_address->l_start = current_address->l_address;
+                            current_address->l_union = current_address->l_address;
+                            current_address->unionmode = (prm == CMD_DUNION);
+
+                            if (!ret) {
+                                Code *code = (Code *)label->value;
+                                if (labelexists && code->v.obj == CODE_OBJ) {
+                                    Obj *tmp = get_star_value(current_address->l_address_val);
+                                    if (!tmp->obj->same(tmp, code->addr)) {
+                                        val_destroy(code->addr); code->addr = tmp;
+                                        if (label->usepass >= pass) {
+                                            if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                            fixeddig = false;
+                                        }
+                                    } else val_destroy(tmp);
+                                    if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                        code->requires = current_section->requires;
+                                        code->conflicts = current_section->conflicts;
+                                        code->offs = 0;
+                                        if (label->usepass >= pass) {
+                                            if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                            fixeddig = false;
+                                        }
+                                    }
+                                    code->apass = pass;
+                                    label->defpass = pass;
+                                    code->names->backr = code->names->forwr = 0;
+                                } else {
+                                    val_destroy(&code->v);
+                                    code = new_code();
+                                    label->value = (Obj *)code;
+                                    code->addr = get_star_value(current_address->l_address_val);
+                                    code->size = 0;
+                                    code->offs = 0;
+                                    code->dtype = D_NONE;
+                                    code->pass = 0;
+                                    code->apass = pass;
+                                    code->memblocks = ref_memblocks(current_address->mem);
+                                    code->names = new_namespace(current_file_list, &epoint);
                                     code->requires = current_section->requires;
                                     code->conflicts = current_section->conflicts;
-                                    code->offs = 0;
-                                    if (label->usepass >= pass) {
-                                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                        fixeddig = false;
-                                    }
                                 }
-                                code->apass = pass;
-                                label->defpass = pass;
-                                code->names->backr = code->names->forwr = 0;
+                                context = code->names;
                             } else {
-                                val_destroy(&code->v);
-                                code = new_code();
-                                label->value = (Obj *)code;
-                                code->addr = get_star_value(current_address->l_address_val);
-                                code->size = 0;
-                                code->offs = 0;
-                                code->dtype = D_NONE;
-                                code->pass = 0;
-                                code->apass = pass;
-                                code->memblocks = ref_memblocks(current_address->mem);
-                                code->names = new_namespace(current_file_list, &epoint);
-                                code->requires = current_section->requires;
-                                code->conflicts = current_section->conflicts;
-                            }
-                            context = code->names;
-                        } else {
-                            Label *label2;
-                            bool labelexists2;
-                            str_t tmpname;
-                            if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                            else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                            anonident2.type = '#';
-                            anonident2.star_tree = star_tree;
-                            anonident2.vline = vline;
-                            tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
-                            label2 = new_label(&tmpname, mycontext, strength, &labelexists2, current_file_list);
-                            if (labelexists2) {
-                                if (label2->defpass == pass) err_msg_double_defined(label2, &tmpname, &epoint);
-                                label2->constant = true;
-                                label2->owner = true;
-                                label2->defpass = pass;
-                                if (label2->value->obj != NAMESPACE_OBJ) {
-                                    val_destroy(label2->value);
+                                Label *label2;
+                                bool labelexists2;
+                                str_t tmpname;
+                                if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
+                                else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
+                                anonident2.type = '#';
+                                anonident2.star_tree = star_tree;
+                                anonident2.vline = vline;
+                                tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                                label2 = new_label(&tmpname, mycontext, strength, &labelexists2, current_file_list);
+                                if (labelexists2) {
+                                    if (label2->defpass == pass) err_msg_double_defined(label2, &tmpname, &epoint);
+                                    label2->constant = true;
+                                    label2->owner = true;
+                                    label2->defpass = pass;
+                                    if (label2->value->obj != NAMESPACE_OBJ) {
+                                        val_destroy(label2->value);
+                                        label2->value = (Obj *)new_namespace(current_file_list, &epoint);
+                                    } else ((Namespace *)label2->value)->backr = ((Namespace *)label2->value)->forwr = 0;
+                                } else {
+                                    label2->constant = true;
+                                    label2->owner = true;
                                     label2->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                } else ((Namespace *)label2->value)->backr = ((Namespace *)label2->value)->forwr = 0;
-                            } else {
-                                label2->constant = true;
-                                label2->owner = true;
-                                label2->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                label2->epoint = epoint;
+                                    label2->epoint = epoint;
+                                }
+                                context = (Namespace *)label2->value;
                             }
-                            context = (Namespace *)label2->value;
-                        }
-                        label = ref_label(label);
-                        if (val != NULL) {
-                            val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &cmdpoint);
+                            label = ref_label(label);
                             if (val != NULL) {
-                                if (ret) const_assign(label, val);
-                                else val_destroy(val);
+                                val = macro_recurse((prm == CMD_DSTRUCT) ? W_ENDS3 : W_ENDU3, val, context, &cmdpoint);
+                                if (val != NULL) {
+                                    if (ret) const_assign(label, val);
+                                    else val_destroy(val);
+                                }
                             }
-                        }
-                        current_section->structrecursion--;
+                            current_section->structrecursion--;
 
-                        if (!ret) set_size(label, ((current_address->end < current_address->address) ? current_address->address : current_address->end) - oaddr, current_address->mem, oaddr, newmembp);
-                        current_address->start = oldstart;
-                        oldstart = current_address->unionmode ? current_address->end : current_address->address;
-                        if (oldend > current_address->end) current_address->end = oldend;
-                        current_address->l_start = oldl_start;
-                        current_address->l_union = oldl_union;
-                        current_address->unionmode = oldunionmode;
-                        if (oldstart > current_address->address) {
-                            poke_pos = &epoint;
-                            memskip(oldstart - current_address->address);
-                        }
-                        val_destroy(&label->v);
-                        goto breakerr;
-                    }
-                }
-                break;
-            }
-            {
-                bool labelexists = false;
-                Code *code;
-                if (labelname.data[0] == '*') {
-                    err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint);
-                    newlabel = NULL;
-                    epoint = lpoint;
-                    goto jn;
-                }
-                if (!islabel) {
-                    Namespace *parent;
-                    bool down = (labelname.data[0] != '_');
-                    if (down) {
-                        parent = mycontext;
-                        tmp2 = find_label(&labelname, &parent);
-                    } else {
-                        parent = cheap_context;
-                        tmp2 = find_label2(&labelname, cheap_context);
-                    }
-                    if (tmp2 != NULL) {
-                        const Type *obj = tmp2->value->obj;
-                        if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
-                        if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
-                            if (diagnostics.macro_prefix && (here() == 0 || here() == ';')) err_msg_macro_prefix(&epoint);
-                            touch_label(tmp2);
-                            labelname.len = 0;val = tmp2->value; goto as_macro;
-                        }
-                        if (parent == mycontext && tmp2->strength == strength) {
-                            newlabel = tmp2;
-                            labelexists = true;
+                            if (!ret) set_size(label, ((current_address->end < current_address->address) ? current_address->address : current_address->end) - oaddr, current_address->mem, oaddr, newmembp);
+                            current_address->start = oldstart;
+                            oldstart = current_address->unionmode ? current_address->end : current_address->address;
+                            if (oldend > current_address->end) current_address->end = oldend;
+                            current_address->l_start = oldl_start;
+                            current_address->l_union = oldl_union;
+                            current_address->unionmode = oldunionmode;
+                            if (oldstart > current_address->address) {
+                                poke_pos = &epoint;
+                                memskip(oldstart - current_address->address);
+                            }
+                            val_destroy(&label->v);
+                            goto breakerr;
                         }
                     }
+                    break;
                 }
-                if (!labelexists) newlabel = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                oaddr = current_address->address;
-                if (labelexists) {
-                    if (newlabel->defpass == pass) {
-                        err_msg_double_defined(newlabel, &labelname, &epoint);
+                {
+                    bool labelexists = false;
+                    Code *code;
+                    if (labelname.data[0] == '*') {
+                        err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint);
                         newlabel = NULL;
-                        if (wht == '.') {
-                            epoint = cmdpoint;
-                            goto as_command;
-                        }
                         epoint = lpoint;
                         goto jn;
                     }
-                    if (!newlabel->update_after && newlabel->value->obj != CODE_OBJ) {
-                        val_destroy(newlabel->value);
-                        labelexists = false;
-                        newlabel->defpass = pass;
-                    }
-                }
-                if (labelexists) {
-                    if (!constcreated && temporary_label_branch == 0 && newlabel->defpass != pass - 1) {
-                        if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
-                        constcreated = true;
-                    }
-                    newlabel->constant = true;
-                    newlabel->owner = true;
-                    if (newlabel->file_list != current_file_list) {
-                        label_move(newlabel, &labelname, current_file_list);
-                    }
-                    newlabel->epoint = epoint;
-                    if (!newlabel->update_after) {
-                        Obj *tmp;
-                        if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
-                        tmp = get_star_value(current_address->l_address_val);
-                        code = (Code *)newlabel->value;
-                        if (!tmp->obj->same(tmp, code->addr)) {
-                            val_destroy(code->addr); code->addr = tmp;
-                            if (newlabel->usepass >= pass) {
-                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
-                                fixeddig = false;
+                    if (!islabel) {
+                        Namespace *parent;
+                        bool down = (labelname.data[0] != '_');
+                        if (down) {
+                            parent = mycontext;
+                            tmp2 = find_label(&labelname, &parent);
+                        } else {
+                            parent = cheap_context;
+                            tmp2 = find_label2(&labelname, cheap_context);
+                        }
+                        if (tmp2 != NULL) {
+                            const Type *obj = tmp2->value->obj;
+                            if (diagnostics.case_symbol && str_cmp(&labelname, &tmp2->name) != 0) err_msg_symbol_case(&labelname, tmp2, &epoint);
+                            if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
+                                if (diagnostics.macro_prefix && (here() == 0 || here() == ';')) err_msg_macro_prefix(&epoint);
+                                touch_label(tmp2);
+                                labelname.len = 0;val = tmp2->value; goto as_macro;
                             }
-                        } else val_destroy(tmp);
-                        if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
-                            code->requires = current_section->requires;
-                            code->conflicts = current_section->conflicts;
-                            code->offs = 0;
-                            if (newlabel->usepass >= pass) {
-                                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
-                                fixeddig = false;
+                            if (parent == mycontext && tmp2->strength == strength) {
+                                newlabel = tmp2;
+                                labelexists = true;
                             }
                         }
-                        newmembp = get_mem(current_address->mem);
+                    }
+                    if (!labelexists) newlabel = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                    oaddr = current_address->address;
+                    if (labelexists) {
+                        if (newlabel->defpass == pass) {
+                            err_msg_double_defined(newlabel, &labelname, &epoint);
+                            newlabel = NULL;
+                            if (wht == '.') {
+                                epoint = cmdpoint;
+                                goto as_command;
+                            }
+                            epoint = lpoint;
+                            goto jn;
+                        }
+                        if (!newlabel->update_after && newlabel->value->obj != CODE_OBJ) {
+                            val_destroy(newlabel->value);
+                            labelexists = false;
+                            newlabel->defpass = pass;
+                        }
+                    }
+                    if (labelexists) {
+                        if (!constcreated && temporary_label_branch == 0 && newlabel->defpass != pass - 1) {
+                            if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
+                            constcreated = true;
+                        }
+                        newlabel->constant = true;
+                        newlabel->owner = true;
+                        if (newlabel->file_list != current_file_list) {
+                            label_move(newlabel, &labelname, current_file_list);
+                        }
+                        newlabel->epoint = epoint;
+                        if (!newlabel->update_after) {
+                            Obj *tmp;
+                            if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
+                            tmp = get_star_value(current_address->l_address_val);
+                            code = (Code *)newlabel->value;
+                            if (!tmp->obj->same(tmp, code->addr)) {
+                                val_destroy(code->addr); code->addr = tmp;
+                                if (newlabel->usepass >= pass) {
+                                    if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
+                                    fixeddig = false;
+                                }
+                            } else val_destroy(tmp);
+                            if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                code->requires = current_section->requires;
+                                code->conflicts = current_section->conflicts;
+                                code->offs = 0;
+                                if (newlabel->usepass >= pass) {
+                                    if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
+                                    fixeddig = false;
+                                }
+                            }
+                            newmembp = get_mem(current_address->mem);
+                            code->apass = pass;
+                            newlabel->defpass = pass;
+                            code->names->backr = code->names->forwr = 0;
+                        }
+                    } else {
+                        if (diagnostics.optimize) cpu_opt_invalidate();
+                        code = new_code();
+                        if (!constcreated && temporary_label_branch == 0) {
+                            if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
+                            constcreated = true;
+                        }
+                        newlabel->constant = true;
+                        newlabel->owner = true;
+                        newlabel->value = (Obj *)code;
+                        newlabel->epoint = epoint;
+                        code->addr = get_star_value(current_address->l_address_val);
+                        code->size = 0;
+                        code->offs = 0;
+                        code->dtype = D_NONE;
+                        code->pass = 0;
                         code->apass = pass;
-                        newlabel->defpass = pass;
-                        code->names->backr = code->names->forwr = 0;
+                        code->memblocks = ref_memblocks(current_address->mem);
+                        code->names = new_namespace(current_file_list, &epoint);
+                        code->requires = current_section->requires;
+                        code->conflicts = current_section->conflicts;
+                        newmembp = get_mem(current_address->mem);
                     }
-                } else {
-                    if (diagnostics.optimize) cpu_opt_invalidate();
-                    code = new_code();
-                    if (!constcreated && temporary_label_branch == 0) {
-                        if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
-                        constcreated = true;
-                    }
-                    newlabel->constant = true;
-                    newlabel->owner = true;
-                    newlabel->value = (Obj *)code;
-                    newlabel->epoint = epoint;
-                    code->addr = get_star_value(current_address->l_address_val);
-                    code->size = 0;
-                    code->offs = 0;
-                    code->dtype = D_NONE;
-                    code->pass = 0;
-                    code->apass = pass;
-                    code->memblocks = ref_memblocks(current_address->mem);
-                    code->names = new_namespace(current_file_list, &epoint);
-                    code->requires = current_section->requires;
-                    code->conflicts = current_section->conflicts;
-                    newmembp = get_mem(current_address->mem);
                 }
-            }
-            if (wht == '.') { /* .proc */
-                epoint = cmdpoint;
-                switch (prm) {
-                case CMD_PROC:
-                    listing_line(listing, epoint.pos);
-                    new_waitfor(W_PEND, &epoint);
-                    if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
-                        waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
-                        push_dummy_context();
-                        waitfor->u.cmd_proc.label = NULL;
-                    } else {         /* TODO: first time it should not compile */
-                        push_context(((Code *)newlabel->value)->names);
+                if (wht == '.') { /* .proc */
+                    epoint = cmdpoint;
+                    switch (prm) {
+                    case CMD_PROC:
+                        listing_line(listing, epoint.pos);
+                        new_waitfor(W_PEND, &epoint);
+                        if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
+                            waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
+                            push_dummy_context();
+                            waitfor->u.cmd_proc.label = NULL;
+                        } else {         /* TODO: first time it should not compile */
+                            push_context(((Code *)newlabel->value)->names);
+                            newlabel->ref = false;
+                            waitfor->u.cmd_proc.addr = current_address->address;waitfor->u.cmd_proc.membp = newmembp;waitfor->u.cmd_proc.label = ref_label(newlabel);
+                        }
+                        newlabel = NULL;
+                        goto finish;
+                    case CMD_SECTION:
+                        waitfor->u.cmd_section.addr = current_address->address;waitfor->u.cmd_section.membp = newmembp;waitfor->u.cmd_section.label = ref_label(newlabel);
+                        listing_line(listing, epoint.pos);
                         newlabel->ref = false;
-                        waitfor->u.cmd_proc.addr = current_address->address;waitfor->u.cmd_proc.membp = newmembp;waitfor->u.cmd_proc.label = ref_label(newlabel);
+                        newlabel = NULL;
+                        goto finish;
+                    case CMD_VIRTUAL:
+                        waitfor->u.cmd_virtual.membp = newmembp;waitfor->u.cmd_virtual.label = ref_label(newlabel);
+                        listing_line(listing, epoint.pos);
+                        newlabel->ref = false;
+                        newlabel = NULL;
+                        goto finish;
                     }
-                    newlabel = NULL;
-                    goto finish;
-                case CMD_SECTION:
-                    waitfor->u.cmd_section.addr = current_address->address;waitfor->u.cmd_section.membp = newmembp;waitfor->u.cmd_section.label = ref_label(newlabel);
-                    listing_line(listing, epoint.pos);
                     newlabel->ref = false;
-                    newlabel = NULL;
-                    goto finish;
-                case CMD_VIRTUAL:
-                    waitfor->u.cmd_virtual.membp = newmembp;waitfor->u.cmd_virtual.label = ref_label(newlabel);
-                    listing_line(listing, epoint.pos);
-                    newlabel->ref = false;
-                    newlabel = NULL;
-                    goto finish;
+                    goto as_command;
                 }
+                if (labelname.len == 3 && !newlabel->ref && epoint.pos != 0 && !islabel && diagnostics.label_left) {
+                    unsigned int i;
+                    for (i = 0; i < 3; i++) {
+                        uint8_t c = labelname.data[i] | arguments.caseinsensitive;
+                        if ((c < 'a') || (c > 'z')) break;
+                    }
+                    if (i == 3) err_msg_label_left(&epoint);
+                }
+                epoint = lpoint;
                 newlabel->ref = false;
-                goto as_command;
             }
-            if (labelname.len == 3 && !newlabel->ref && epoint.pos != 0 && !islabel && diagnostics.label_left) {
-                unsigned int i;
-                for (i = 0; i < 3; i++) {
-                    uint8_t c = labelname.data[i] | arguments.caseinsensitive;
-                    if ((c < 'a') || (c > 'z')) break;
+        } else {
+            switch (wht) {
+            case '*':
+                lpoint.pos++;
+                switch (here()) {
+                case ' ':
+                case '\t':
+                case ';':
+                case '=':
+                case '\0':
+                    labelname.data = (const uint8_t *)"*";labelname.len = 1;
+                    goto hh;
+                default:
+                    lpoint.pos--;
                 }
-                if (i == 3) err_msg_label_left(&epoint);
+                break;
+            case '-':
+            case '+':
+                lpoint.pos++;
+                switch (here()) {
+                case ' ':
+                case '\t':
+                case ';':
+                case '\0':
+                    if (sizeof(anonident) != sizeof(anonident.dir) + sizeof(anonident.padding) + sizeof(anonident.count)) memset(&anonident, 0, sizeof anonident);
+                    else memset(anonident.padding, 0, sizeof anonident.padding);
+                    anonident.dir = (uint8_t)wht;
+                    anonident.count = (int32_t)((wht == '-') ? current_context->backr++ : current_context->forwr++);
+                    labelname.data = (const uint8_t *)&anonident;labelname.len = sizeof anonident;
+                    goto hh;
+                default:
+                    lpoint.pos--;
+                }
+                break;
+            default:
+                break;
             }
-            epoint = lpoint;
-            newlabel->ref = false;
         }
         jn:
         switch (wht) {

@@ -1559,43 +1559,44 @@ static bool get_exp2(int stop) {
         switch (ch) {
         case ',':
             lpoint.pos++;
-            llen = get_label();
-            if (llen == 1 && pline[epoint.pos + 2] != '"' && pline[epoint.pos + 2] != '\'') {
-                switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
-                case 'x': op = &o_COMMAX; break;
-                case 'y': op = &o_COMMAY; break;
-                case 'z': op = &o_COMMAZ; break;
-                case 'r': op = &o_COMMAR; break;
-                case 's': op = &o_COMMAS; break;
-                case 'd': op = &o_COMMAD; break;
-                case 'b': op = &o_COMMAB; break;
-                case 'k': op = &o_COMMAK; break;
-                default: op = &o_COMMA; break;
+            if (pline[lpoint.pos] >= 'A') {
+                llen = get_label();
+                if (llen == 1 && pline[epoint.pos + 2] != '"' && pline[epoint.pos + 2] != '\'') {
+                    switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
+                    case 'x': op = &o_COMMAX; break;
+                    case 'y': op = &o_COMMAY; break;
+                    case 'z': op = &o_COMMAZ; break;
+                    case 'r': op = &o_COMMAR; break;
+                    case 's': op = &o_COMMAS; break;
+                    case 'd': op = &o_COMMAD; break;
+                    case 'b': op = &o_COMMAB; break;
+                    case 'k': op = &o_COMMAK; break;
+                    default: op = NULL; break;
+                    }
+                    if (op != NULL) {
+                        prec = o_HASH.prio;
+                        while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio && opr.data[opr.p - 1].val != &o_COLON2 && opr.data[opr.p - 1].val != &o_COND) {
+                            opr.p--;
+                            push_oper((Obj *)opr.data[opr.p].val, &opr.data[opr.p].epoint);
+                        }
+                        opr.data[opr.p].epoint = epoint;
+                        opr.data[opr.p++].val = op;
+                        if (opr.p >= opr.l) extend_opr(&opr);
+                        goto other;
+                    } 
                 }
-            } else op = &o_COMMA;
-            prec = op->prio;
-            if (op == &o_COMMA) {
-                while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
-                    opr.p--;
-                    push_oper((Obj *)opr.data[opr.p].val, &opr.data[opr.p].epoint);
-                }
-            } else {
-                prec = o_HASH.prio;
-                while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio && opr.data[opr.p - 1].val != &o_COLON2 && opr.data[opr.p - 1].val != &o_COND) {
-                    opr.p--;
-                    push_oper((Obj *)opr.data[opr.p].val, &opr.data[opr.p].epoint);
-                }
-                opr.data[opr.p].epoint = epoint;
-                opr.data[opr.p++].val = op;
-                if (opr.p >= opr.l) extend_opr(&opr);
-                goto other;
+            } else llen = 0;
+            prec = o_COMMA.prio;
+            while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
+                opr.p--;
+                push_oper((Obj *)opr.data[opr.p].val, &opr.data[opr.p].epoint);
             }
             if (opr.p == 0) {
                 if (stop == 1) {lpoint = epoint;break;}
             }
             push_oper(&o_COMMA.v, &epoint);
             opr.data[opr.p].epoint = epoint;
-            opr.data[opr.p++].val = op;
+            opr.data[opr.p++].val = &o_COMMA;
             if (opr.p >= opr.l) extend_opr(&opr);
             if (llen != 0) {
                 epoint.pos++;
