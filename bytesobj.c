@@ -186,11 +186,20 @@ failed:
     return (Obj *)new_error_mem(epoint);
 }
 
+static FAST_CALL NO_INLINE bool bytes_same(const Bytes *v1, const Bytes *v2) {
+    return memcmp(v1->data, v2->data, byteslen(v2)) == 0;
+}
+
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Bytes *v1 = (const Bytes *)o1, *v2 = (const Bytes *)o2;
-    return o2->obj == BYTES_OBJ && v1->len == v2->len && (
-            v1->data == v2->data ||
-            memcmp(v1->data, v2->data, byteslen(v2)) == 0);
+    if (o1->obj != o2->obj || v1->len != v2->len) return false;
+    switch (v1->len) {
+    case ~0:
+    case 0: return true;
+    case ~1:
+    case 1: return v1->data[0] == v2->data[0];
+    default: return bytes_same(v1, v2);
+    }
 }
 
 static bool to_bool(const Bytes *v1) {

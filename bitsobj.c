@@ -210,14 +210,18 @@ static MALLOC Bits *return_bits(bdigit_t c, size_t blen, bool neg) {
     return vv;
 }
 
+static FAST_CALL NO_INLINE bool bits_same(const Bits *v1, const Bits *v2) {
+    return memcmp(v1->data, v2->data, bitslen(v1) * sizeof *v1->data) == 0;
+}
+
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Bits *v1 = (const Bits *)o1, *v2 = (const Bits *)o2;
-    if (o2->obj != BITS_OBJ || v1->len != v2->len || v1->bits != v2->bits) return false;
+    if (o1->obj != o2->obj || ((v1->len ^ v2->len) | (v1->bits ^ v2->bits)) != 0) return false;
     switch (v1->len) {
     case 0: return true;
     case -1:
     case 1: return v1->data[0] == v2->data[0];
-    default: return memcmp(v1->data, v2->data, bitslen(v1) * sizeof *v1->data) == 0;
+    default: return bits_same(v1, v2);
     }
 }
 

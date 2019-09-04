@@ -135,14 +135,18 @@ static MUST_CHECK Int *return_int(digit_t c, bool neg) {
     return vv;
 }
 
+static FAST_CALL NO_INLINE bool int_same(const Int *v1, const Int *v2) {
+    return memcmp(v1->data, v2->data, intlen(v1) * sizeof *v1->data) == 0;
+}
+
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Int *v1 = (const Int *)o1, *v2 = (const Int *)o2;
-    if (o2->obj != INT_OBJ || v1->len != v2->len) return false;
+    if (o1->obj != o2->obj || v1->len != v2->len) return false;
     switch (v1->len) {
     case 0: return true;
     case -1:
     case 1: return v1->data[0] == v2->data[0];
-    default: return memcmp(v1->data, v2->data, intlen(v1) * sizeof *v1->data) == 0;
+    default: return int_same(v1, v2);
     }
 }
 
