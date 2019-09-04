@@ -62,10 +62,18 @@ static FAST_CALL void destroy(Obj *o1) {
     if (v1->u.val != v1->data) str_destroy(v1);
 }
 
+static FAST_CALL NO_INLINE bool str_same(const Str *v1, const Str *v2) {
+    return memcmp(v1->data, v2->data, v2->len) == 0;
+}
+
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Str *v1 = (const Str *)o1, *v2 = (const Str *)o2;
-    return o2->obj == STR_OBJ && v1->len == v2->len && (
-            v1->data == v2->data || memcmp(v1->data, v2->data, v2->len) == 0);
+    if (o1->obj != o2->obj || v1->len != v2->len) return false;
+    switch (v1->len) {
+    case 0: return true;
+    case 1: return v1->data[0] == v2->data[0];
+    default: return v1->data == v2->data || str_same(v1, v2);
+    }
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
