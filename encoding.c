@@ -557,7 +557,7 @@ static const struct trans2_s no_screen_trans[] = {
     {0x00FF,   0, 0x5E},
 };
 
-static int trans_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int trans_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct trans_s *a = cavltree_container_of(aa, struct trans_s, node);
     const struct trans_s *b = cavltree_container_of(bb, struct trans_s, node);
@@ -571,7 +571,7 @@ static int trans_compare(const struct avltree_node *aa, const struct avltree_nod
     return 0;
 }
 
-static int encoding_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int encoding_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct encoding_s *a = cavltree_container_of(aa, struct encoding_s, node);
     const struct encoding_s *b = cavltree_container_of(bb, struct encoding_s, node);

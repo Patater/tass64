@@ -165,7 +165,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
 
 static struct oper_s pair_oper;
 
-static int pair_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int pair_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct pair_s *a = cavltree_container_of(aa, struct pair_s, node);
     const struct pair_s *b = cavltree_container_of(bb, struct pair_s, node);

@@ -90,7 +90,7 @@ struct notdefines_s {
     struct avltree_node node;
 };
 
-static int duplicate_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int duplicate_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct errorentry_s *a = cavltree_container_of(aa, struct errorentry_s, node);
     const struct errorentry_s *b = cavltree_container_of(bb, struct errorentry_s, node);
@@ -211,7 +211,7 @@ static void new_error_msg2(bool type, linepos_t epoint) {
     new_error_msg(type ? SV_ERROR : SV_WARNING, current_file_list, epoint);
 }
 
-static int file_list_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int file_list_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct file_list_s *a = cavltree_container_of(aa, struct file_list_s, node);
     const struct file_list_s *b = cavltree_container_of(bb, struct file_list_s, node);
@@ -600,7 +600,7 @@ static void err_msg_invalid_conv(const Error *err) {
     adderror(" is not possible");
 }
 
-static int notdefines_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int notdefines_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct notdefines_s *a = cavltree_container_of(aa, struct notdefines_s, node);
     const struct notdefines_s *b = cavltree_container_of(bb, struct notdefines_s, node);
