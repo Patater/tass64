@@ -47,13 +47,17 @@ Tuple *null_tuple;
 List *null_list;
 Addrlist *null_addrlist;
 
+static FAST_CALL NO_INLINE void list_destroy(List *v1) {
+    free(v1->data);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     List *v1 = (List *)o1;
     size_t i;
     for (i = 0; i < v1->len; i++) {
         val_destroy(v1->data[i]);
     }
-    if (v1->u.val != v1->data) free(v1->data);
+    if (v1->u.val != v1->data) list_destroy(v1);
 }
 
 static FAST_CALL void garbage(Obj *o1, int j) {
