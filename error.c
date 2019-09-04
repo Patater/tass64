@@ -168,7 +168,6 @@ static void error_extend(void) {
     }
     if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((uint8_t *)error_list.members.root + diff);
     if (error_list.members.first != NULL) error_list.members.first = (struct avltree_node *)((uint8_t *)error_list.members.first + diff);
-    if (error_list.members.last != NULL) error_list.members.last = (struct avltree_node *)((uint8_t *)error_list.members.last + diff);
 }
 
 static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len) {
