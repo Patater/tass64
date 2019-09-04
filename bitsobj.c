@@ -79,9 +79,13 @@ static inline size_t bitslen(const Bits *v1) {
     return (len < 0) ? (size_t)~len : (size_t)len;
 }
 
+static FAST_CALL NO_INLINE void bits_destroy(Bits *v1) {
+    free(v1->data);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Bits *v1 = (Bits *)o1;
-    if (v1->u.val != v1->data) free(v1->data);
+    if (v1->u.val != v1->data) bits_destroy(v1);
 }
 
 static MALLOC Bits *new_bits(size_t len) {

@@ -33,9 +33,13 @@ static Type obj;
 
 Type *const REGISTER_OBJ = &obj;
 
+static FAST_CALL NO_INLINE void register_destroy(Register *v1) {
+    free(v1->data);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Register *v1 = (Register *)o1;
-    if (v1->val != v1->data) free(v1->data);
+    if (v1->val != v1->data) register_destroy(v1);
 }
 
 static inline MALLOC Register *new_register(void) {

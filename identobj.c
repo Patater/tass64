@@ -52,10 +52,14 @@ Anonident *new_anonident(int32_t count) {
     return anonident;
 }
 
+static FAST_CALL NO_INLINE void ident_destroy(Ident *v1) {
+    free((char *)v1->name.data);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Ident *v1 = (Ident *)o1;
     const struct file_s *cfile = v1->file_list->file;
-    if ((size_t)(v1->name.data - cfile->data) >= cfile->len && v1->name.data != v1->val) free((char *)v1->name.data);
+    if ((size_t)(v1->name.data - cfile->data) >= cfile->len && v1->name.data != v1->val) ident_destroy(v1);
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
