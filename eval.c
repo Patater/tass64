@@ -54,16 +54,16 @@
 #include "foldobj.h"
 #include "iterobj.h"
 
-static FAST_CALL NO_INLINE size_t get_label_start(const uint8_t *s) {
-    size_t l;
+static FAST_CALL NO_INLINE unsigned int get_label_start(const uint8_t *s) {
+    unsigned int l;
     uchar_t ch;
     if (!arguments.to_ascii) return 0;
     l = utf8in(s, &ch);
     return ((uget_property(ch)->property & id_Start) != 0) ? l : 0;
 }
 
-static FAST_CALL NO_INLINE size_t get_label_continue(const uint8_t *s) {
-    size_t l;
+static FAST_CALL NO_INLINE unsigned int get_label_continue(const uint8_t *s) {
+    unsigned int l;
     uchar_t ch;
     if (!arguments.to_ascii) return 0;
     l = utf8in(s, &ch);
@@ -71,13 +71,14 @@ static FAST_CALL NO_INLINE size_t get_label_continue(const uint8_t *s) {
 }
 
 FAST_CALL size_t get_label(const uint8_t *s) {
-    size_t i, l;
+    size_t i;
     if (((uint8_t)((*s | 0x20) - 'a')) > 'z' - 'a' && *s != '_') {
         if (*s < 0x80) return 0;
         i = get_label_start(s);
         if (i == 0) return 0;
     } else i = 1;
     for (;;) {
+        unsigned int l;
         if (((uint8_t)((s[i] | 0x20) - 'a')) <= 'z' - 'a' || (s[i] ^ 0x30) < 10 || s[i] == '_') {
             i++;
             continue;
