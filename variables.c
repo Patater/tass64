@@ -618,14 +618,17 @@ static Namespace *find_space(const char *here, bool use) {
     pline = (const uint8_t *)here;
     lpoint.pos = 0;
     do {
-        labelname.data = pline + lpoint.pos; labelname.len = get_label();
+        labelname.data = pline + lpoint.pos; labelname.len = get_label(labelname.data);
         if (labelname.len == 0) return NULL;
+        lpoint.pos += labelname.len;
         l = find_label2(&labelname, space);
         if (l == NULL) return NULL;
         space = get_namespace(l->value);
         if (space == NULL) return NULL;
         lpoint.pos++;
     } while (labelname.data[labelname.len] == '.');
+
+    if (labelname.data[labelname.len] != 0) return NULL;
 
     if (use) {
         l->usepass = pass;
