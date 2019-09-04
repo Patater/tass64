@@ -54,65 +54,39 @@
 #include "foldobj.h"
 #include "iterobj.h"
 
-size_t get_label(void) {
+static FAST_CALL NO_INLINE size_t get_label_start(const uint8_t *s) {
+    size_t l;
     uchar_t ch;
-    unsigned int l;
-    const struct properties_s *prop;
-    const uint8_t *s = pline + lpoint.pos;
-    const uint8_t *e;
-    static const uint8_t typ[256] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 0 */
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 1 */
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, /* 2 */
-        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, /* 3 */
-        0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 4 */
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 2, /* 5 */
-        0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, /* 6 */
-        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, /* 7 */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* 8 */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* 9 */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* a */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* b */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* c */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* d */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, /* e */
-        3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3  /* f */
-    };
+    if (!arguments.to_ascii) return 0;
+    l = utf8in(s, &ch);
+    return ((uget_property(ch)->property & id_Start) != 0) ? l : 0;
+}
 
-    switch (typ[*s]) {
-    default:
-    case 1:
-    case 0: return 0;
-    case 2:
-        e = s;
-        s++;
-        break;
-    case 3:
-        if (!arguments.to_ascii) return 0;
-        l = utf8in(s, &ch);
-        prop = uget_property(ch);
-        if ((prop->property & id_Start) == 0) return 0;
-        e = s;
-        s += l;
-    }
+static FAST_CALL NO_INLINE size_t get_label_continue(const uint8_t *s) {
+    size_t l;
+    uchar_t ch;
+    if (!arguments.to_ascii) return 0;
+    l = utf8in(s, &ch);
+    return ((uget_property(ch)->property & (id_Continue | id_Start)) != 0) ? l : 0;
+}
+
+FAST_CALL size_t get_label(const uint8_t *s) {
+    size_t i, l;
+    if (((uint8_t)((*s | 0x20) - 'a')) > 'z' - 'a' && *s != '_') {
+        if (*s < 0x80) return 0;
+        i = get_label_start(s);
+        if (i == 0) return 0;
+    } else i = 1;
     for (;;) {
-        switch (typ[*s]) {
-        default:
-        case 0: break;
-        case 1:
-        case 2: s++; continue;
-        case 3:
-            if (!arguments.to_ascii) break;
-            l = utf8in(s, &ch);
-            prop = uget_property(ch);
-            if ((prop->property & (id_Continue | id_Start)) == 0) break;
-            s += l;
+        if (((uint8_t)((s[i] | 0x20) - 'a')) <= 'z' - 'a' || (s[i] ^ 0x30) < 10 || s[i] == '_') {
+            i++;
             continue;
         }
-        break;
+        if (s[i] < 0x80) return i;
+        l = get_label_continue(s + i);
+        if (l == 0) return i;
+        i += l;
     }
-    lpoint.pos = (linecpos_t)(s - pline);
-    return (size_t)(s - e);
 }
 
 static MUST_CHECK Obj *get_dec(linepos_t epoint) {
@@ -432,6 +406,7 @@ rest:
     for (;;) {
         Oper *op;
         Obj *val;
+        size_t ln;
         ignore();ch = here(); epoint = lpoint;
 
         switch (ch) {
@@ -446,11 +421,13 @@ rest:
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             push_oper(get_dec(&epoint), &epoint);goto other;
         default:
-            if (get_label() == 0) {
+            ln = get_label(pline + lpoint.pos);
+            if (ln == 0) {
                 if (opr.p != 0) epoint = opr.data[opr.p - 1].epoint;
                 err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
                 goto error;
             }
+            lpoint.pos += ln;
             break;
         }
     as_ident:
@@ -482,7 +459,8 @@ rest:
         switch (ch) {
         case ',':
             lpoint.pos++;
-            llen = get_label();
+            llen = get_label(pline + lpoint.pos);
+            lpoint.pos += llen;
             if (llen == 1) {
                 switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
                 case 'x':
@@ -1408,11 +1386,13 @@ static bool get_exp2(int stop) {
             }
             goto tryanon;
         default:
-            if (get_label() != 0) {
+            llen = get_label(pline + lpoint.pos);
+            if (llen != 0) {
                 bool down;
                 Label *l;
                 Obj *val;
                 str_t ident;
+                lpoint.pos += llen;
             as_ident:
                 if (pline[epoint.pos + 1] == '"' || pline[epoint.pos + 1] == '\'') {
                     Textconv_types mode;
@@ -1560,7 +1540,8 @@ static bool get_exp2(int stop) {
         case ',':
             lpoint.pos++;
             if (pline[lpoint.pos] >= 'A') {
-                llen = get_label();
+                llen = get_label(pline + lpoint.pos);
+                lpoint.pos += llen;
                 if (llen == 1 && pline[epoint.pos + 2] != '"' && pline[epoint.pos + 2] != '\'') {
                     switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
                     case 'x': op = &o_COMMAX; break;
@@ -1769,7 +1750,9 @@ static bool get_exp2(int stop) {
         case '\t':
         case ' ': break;
         default:
-            switch (get_label()) {
+            llen = get_label(pline + lpoint.pos);
+            lpoint.pos += llen;
+            switch (llen) {
             case 1: if ((pline[epoint.pos] | arguments.caseinsensitive) == 'x') {if (pline[lpoint.pos] == '=') {lpoint.pos++; op = &o_X_ASSIGN;} else op = &o_X;goto push2a;} break;
             case 2: if ((pline[epoint.pos] | arguments.caseinsensitive) == 'i' &&
                         (pline[epoint.pos + 1] | arguments.caseinsensitive) == 'n') {op = &o_IN;goto push2a;} break;

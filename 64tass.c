@@ -985,8 +985,9 @@ static bool section_start(linepos_t epoint) {
 
     new_waitfor(W_SEND, epoint);waitfor->u.cmd_section.section = current_section;waitfor->u.cmd_section.section_address = current_address;
     opoint = lpoint;
-    sectionname.data = pline + lpoint.pos; sectionname.len = get_label();
+    sectionname.data = pline + lpoint.pos; sectionname.len = get_label(sectionname.data);
     if (sectionname.len == 0) {err_msg2(ERROR_LABEL_REQUIRE, NULL, &opoint); return true;}
+    lpoint.pos += sectionname.len;
     tmp = find_new_section(&sectionname);
     if (tmp->usepass == 0 || tmp->defpass < pass - 1) {
         size_t ln = tmp->address.mem->mem.p, ln2 = tmp->address.mem->p;
@@ -1330,9 +1331,9 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         str_t varname;
         epoint2 = lpoint;
 
-        varname.data = pline + lpoint.pos; varname.len = get_label();
+        varname.data = pline + lpoint.pos; varname.len = get_label(varname.data);
         if (varname.len == 0) break;
-
+        lpoint.pos += varname.len;
         if (varname.len > 1 && varname.data[0] == '_' && varname.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &varname, &epoint2); goto error;}
         ignore(); wht = here();
         if (wht == ',') {
@@ -1343,11 +1344,11 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             if (wht != '=' || foreach) {
                 if (wht == ':' && pline[lpoint.pos + 1] == '=' && !arguments.tasmcomp && !foreach) lpoint.pos += 2;
                 else {
-                    size_t l = get_label();
-                    if (l != 2 || (pline[lpoint.pos-2] | arguments.caseinsensitive) != 'i' || (pline[lpoint.pos-1] | arguments.caseinsensitive) != 'n') {
-                        lpoint.pos -= l;
+                    if ((pline[lpoint.pos] | arguments.caseinsensitive) != 'i' || (pline[lpoint.pos+1] | arguments.caseinsensitive) != 'n' || get_label(pline + lpoint.pos) != 2) {
                         err_msg(ERROR______EXPECTED, foreach ? "',' or 'in'" : "':=' or ',' or 'in'"); goto error;
-                    } else foreach = true;
+                    }
+                    lpoint.pos += 2;
+                    foreach = true;
                 }
             } else lpoint.pos++;
             if (foreach) {
@@ -1530,8 +1531,9 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 Namespace *context;
                 bool labelexists;
                 lpoint = bpoint;
-                varname.data = pline + lpoint.pos; varname.len = get_label();
+                varname.data = pline + lpoint.pos; varname.len = get_label(varname.data);
                 if (varname.len == 0) {err_msg2(ERROR_LABEL_REQUIRE, NULL, &bpoint);break;}
+                lpoint.pos += varname.len;
                 if (varname.len > 1 && varname.data[0] == '_' && varname.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &varname, &bpoint); break;}
                 ignore(); wht = here();
                 while (wht != 0 && !arguments.tasmcomp) {
@@ -1814,10 +1816,11 @@ MUST_CHECK Obj *compile(void)
         wht = here();
         if (wht >= 'A') {
             labelname.data = pline + lpoint.pos; 
-            labelname.len = get_label();
+            labelname.len = get_label(labelname.data);
             if (labelname.len != 0) {
                 struct linepos_s cmdpoint;
                 bool islabel, error;
+                lpoint.pos += labelname.len;
                 islabel = false; error = (waitfor->skip & 1) == 0;
                 while (here() == '.' && pline[lpoint.pos+1] != '.') {
                     if (!error) {
@@ -1839,11 +1842,12 @@ MUST_CHECK Obj *compile(void)
                         }
                     }
                     lpoint.pos++; islabel = true; epoint = lpoint;
-                    labelname.data = pline + lpoint.pos; labelname.len = get_label();
+                    labelname.data = pline + lpoint.pos; labelname.len = get_label(labelname.data);
                     if (labelname.len == 0) {
                         if (!error) err_msg2(ERROR______EXPECTED, "a symbol is", &lpoint);
                         goto breakerr;
                     }
+                    lpoint.pos += labelname.len;
                     if (!error) {
                         Namespace *context = get_namespace(tmp2->value);
                         if (context == NULL) {
@@ -3139,13 +3143,14 @@ MUST_CHECK Obj *compile(void)
             case CMD_SEND: /* .send */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (close_waitfor(W_SEND)) {
-                    get_label();
+                    lpoint.pos += get_label(pline + lpoint.pos);
                 } else if (waitfor->what==W_SEND2) {
                     str_t sectionname;
                     epoint = lpoint;
-                    sectionname.data = pline + lpoint.pos; sectionname.len = get_label();
+                    sectionname.data = pline + lpoint.pos; sectionname.len = get_label(sectionname.data);
                     if (sectionname.len != 0) {
                         str_t cf;
+                        lpoint.pos += sectionname.len;
                         str_cfcpy(&cf, &sectionname);
                         if (str_cmp(&cf, &current_section->cfname) != 0) {
                             char *s = (char *)mallocx(current_section->name.len + 1);
@@ -3813,7 +3818,8 @@ MUST_CHECK Obj *compile(void)
                     encname.len = 0;
                     if (pline[lpoint.pos] != '"' && pline[lpoint.pos] != '\'') { /* will be removed to allow variables */
                         if (diagnostics.deprecated) err_msg2(ERROR_______OLD_ENC, NULL, &lpoint);
-                        encname.data = pline + lpoint.pos; encname.len = get_label();
+                        encname.data = pline + lpoint.pos; encname.len = get_label(encname.data);
+                        lpoint.pos += encname.len;
                     }
                     if (encname.len == 0) {
                         struct values_s *vs;
@@ -4193,8 +4199,9 @@ MUST_CHECK Obj *compile(void)
                     struct values_s *vs;
                     str_t optname, cf;
                     listing_line(listing, epoint.pos);
-                    optname.data = pline + lpoint.pos; optname.len = get_label();
+                    optname.data = pline + lpoint.pos; optname.len = get_label(optname.data);
                     if (optname.len == 0) { err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
+                    lpoint.pos += optname.len;
                     ignore();if (here() != '=') {err_msg(ERROR______EXPECTED, "'='"); goto breakerr;}
                     epoint = lpoint;
                     lpoint.pos++;
@@ -4353,8 +4360,9 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, epoint.pos);
                     if (current_section->structrecursion != 0) { err_msg2(ERROR___NOT_ALLOWED, ".dsection", &epoint); goto breakerr; }
                     epoint = lpoint;
-                    sectionname.data = pline + lpoint.pos; sectionname.len = get_label();
+                    sectionname.data = pline + lpoint.pos; sectionname.len = get_label(sectionname.data);
                     if (sectionname.len == 0) {err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
+                    lpoint.pos += sectionname.len;
                     tmp3=new_section(&sectionname);
                     if (tmp3->defpass == pass) {
                         err_msg_double_definedo(tmp3->file_list, &tmp3->epoint, &sectionname, &epoint);
@@ -4556,7 +4564,8 @@ MUST_CHECK Obj *compile(void)
                 bool down;
 
                 if (newlabel != NULL && newlabel->value->obj == CODE_OBJ && labelname.len != 0 && labelname.data[0] != '_' && labelname.data[0] != '+' && labelname.data[0] != '-' && mycontext == current_context) {val_destroy(&cheap_context->v);cheap_context = ref_namespace(((Code *)newlabel->value)->names);}
-                opname.data = pline + lpoint.pos; opname.len = get_label();
+                opname.data = pline + lpoint.pos; opname.len = get_label(opname.data);
+                lpoint.pos += opname.len;
                 if (opname.len == 3 && (prm = lookup_opcode(opname.data)) >= 0) {
                     Error *err;
                     struct linepos_s oldlpoint;

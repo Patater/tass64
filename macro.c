@@ -116,13 +116,15 @@ bool mtranslate(void) {
             if (j == ('{' - '1')) {
                 lpoint.pos = p2 + 2;
                 param.data = pline + lpoint.pos;
-                param.len = get_label();
+                param.len = get_label(param.data);
+                lpoint.pos += param.len;
                 if (pline[lpoint.pos] == '}') lpoint.pos++;
                 else param.len = 0;
             } else {
                 lpoint.pos = p2 + 1;
                 param.data = pline + lpoint.pos;
-                param.len = get_label();
+                param.len = get_label(param.data);
+                lpoint.pos += param.len;
             }
             if (param.len != 0) {
                 Macro *macro = (Macro *)macro_parameters.current->macro;
@@ -493,8 +495,9 @@ void get_func_params(Mfunc *v) {
         }
         new_mfunc.param[i].epoint = lpoint;
         label.data = pline + lpoint.pos;
-        label.len = get_label();
+        label.len = get_label(label.data);
         if (label.len != 0) {
+            lpoint.pos += label.len;
             if (label.len > 1 && label.data[0] == '_' && label.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &label, &new_mfunc.param[i].epoint);break;}
             if ((size_t)(label.data - v->file_list->file->data) < v->file_list->file->len) new_mfunc.param[i].name = label;
             else str_cpy(&new_mfunc.param[i].name, &label);
@@ -565,9 +568,10 @@ void get_macro_params(Obj *v) {
         }
         epoints[i] = lpoint;
         label.data = pline + lpoint.pos;
-        label.len = get_label();
+        label.len = get_label(label.data);
         if (label.len != 0) {
             str_t cf;
+            lpoint.pos += label.len;
             if (label.len > 1 && label.data[0] == '_' && label.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &label, &epoints[i]);new_macro.param[i].cfname.len = 0; new_macro.param[i].cfname.data = NULL;}
             str_cfcpy(&cf, &label);
             if (cf.data == label.data) {

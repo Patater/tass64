@@ -133,14 +133,15 @@ struct section_s *find_this_section(const char *here) {
     pline = (const uint8_t *)here;
     lpoint.pos = 0;
     do {
-        labelname.data = pline + lpoint.pos; labelname.len = get_label();
+        labelname.data = pline + lpoint.pos; labelname.len = get_label(labelname.data);
         if (labelname.len == 0) return NULL;
+        lpoint.pos += labelname.len;
         space = find_section(&labelname, space);
         if (space == NULL) return NULL;
         lpoint.pos++;
     } while (labelname.data[labelname.len] == '.');
 
-    return space;
+    return labelname.data[labelname.len] != 0 ? NULL : space;
 }
 
 void reset_section(struct section_s *section) {
