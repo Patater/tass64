@@ -156,7 +156,11 @@ size_t context_get_bottom(void) {
 
 /* --------------------------------------------------------------------------- */
 
-static int label_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL NO_INLINE int str_compare(const str_t *s1, const str_t *s2) {
+    return memcmp(s1->data, s2->data, s1->len);
+}
+
+static FAST_CALL NO_INLINE int label_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct namespacekey_s *a = cavltree_container_of(aa, struct namespacekey_s, node);
     const struct namespacekey_s *b = cavltree_container_of(bb, struct namespacekey_s, node);
@@ -167,10 +171,10 @@ static int label_compare(const struct avltree_node *aa, const struct avltree_nod
     s2 = &b->key->cfname;
     if (s1->len != s2->len) return s1->len > s2->len ? 1 : -1;
     if (s1->data == s2->data) return 0;
-    return memcmp(s1->data, s2->data, s1->len);
+    return str_compare(s1, s2);
 }
 
-static int label_compare2(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int label_compare2(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct namespacekey_s *a = cavltree_container_of(aa, struct namespacekey_s, node);
     const struct namespacekey_s *b = cavltree_container_of(bb, struct namespacekey_s, node);

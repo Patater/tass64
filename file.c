@@ -246,7 +246,7 @@ failed:
     return f;
 }
 
-static int star_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int star_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct star_s *a = cavltree_container_of(aa, struct star_s, node);
     const struct star_s *b = cavltree_container_of(bb, struct star_s, node);
@@ -255,7 +255,7 @@ static int star_compare(const struct avltree_node *aa, const struct avltree_node
     return 0;
 }
 
-static int file_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int file_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct file_s *a = cavltree_container_of(aa, struct file_s, node);
     const struct file_s *b = cavltree_container_of(bb, struct file_s, node);

@@ -34,7 +34,7 @@ struct section_s *current_section = &root_section;
 struct section_address_s *current_address = &root_section.address;
 static struct section_s *prev_section = &root_section;
 
-static int section_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int section_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct section_s *a = cavltree_container_of(aa, struct section_s, node);
     const struct section_s *b = cavltree_container_of(bb, struct section_s, node);

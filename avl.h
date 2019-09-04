@@ -23,6 +23,7 @@
 #define AVL_H
 
 #include <stddef.h>
+#include "attributes.h"
 
 /*
  * The definition has been stolen from the Linux kernel.
@@ -51,7 +52,7 @@ struct avltree_node {
         int balance;            /* balance factor [-2:+2] */
 };
 
-typedef int (*avltree_cmp_fn_t)(const struct avltree_node *, const struct avltree_node *);
+typedef FAST_CALL int (*avltree_cmp_fn_t)(const struct avltree_node *, const struct avltree_node *);
 typedef void (*avltree_free_fn_t)(struct avltree_node *);
 
 struct avltree {

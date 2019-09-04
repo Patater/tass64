@@ -20,7 +20,7 @@
 #include "section.h"
 #include "error.h"
 
-static int longjump_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static FAST_CALL int longjump_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct longjump_s *a = cavltree_container_of(aa, struct longjump_s, node);
     const struct longjump_s *b = cavltree_container_of(bb, struct longjump_s, node);
