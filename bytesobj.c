@@ -78,9 +78,13 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     return (Obj *)new_error_conv(v1, BYTES_OBJ, epoint);
 }
 
+static FAST_CALL NO_INLINE void bytes_destroy(Bytes *v1) {
+    free(v1->data);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Bytes *v1 = (Bytes *)o1;
-    if (v1->u.val != v1->data) free(v1->data);
+    if (v1->u.val != v1->data) bytes_destroy(v1);
 }
 
 MALLOC Bytes *new_bytes(size_t ln) {

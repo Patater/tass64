@@ -71,9 +71,13 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     return (Obj *)new_error_conv(v1, INT_OBJ, epoint);
 }
 
+static FAST_CALL NO_INLINE void int_destroy(Int *v1) {
+    free(v1->data);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Int *v1 = (Int *)o1;
-    if (v1->val != v1->data) free(v1->data);
+    if (v1->val != v1->data) int_destroy(v1);
 }
 
 static inline MALLOC Int *new_int(void) {

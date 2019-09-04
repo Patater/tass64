@@ -53,9 +53,13 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     }
 }
 
+static FAST_CALL NO_INLINE void str_destroy(Str *v1) {
+    free(v1->data);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Str *v1 = (Str *)o1;
-    if (v1->u.val != v1->data) free(v1->data);
+    if (v1->u.val != v1->data) str_destroy(v1);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
