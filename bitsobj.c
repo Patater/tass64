@@ -828,7 +828,9 @@ static MUST_CHECK Obj *and_(const Bits *vv1, const Bits *vv2, linepos_t epoint) 
     vv->bits = blen;
     v = vv->data;
 
-    if (neg1) {
+    if (sz == 0) {
+        v[0] = 0;
+    } else if (neg1) {
         if (neg2) {
             for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
             for (; i < len1; i++) v[i] = v1[i];
@@ -890,7 +892,9 @@ static MUST_CHECK Obj *or_(const Bits *vv1, const Bits *vv2, linepos_t epoint) {
     vv->bits = blen;
     v = vv->data;
 
-    if (neg1) {
+    if (sz == 0) {
+        v[0] = 0;
+    } else if (neg1) {
         if (neg2) {
             for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
         } else {
