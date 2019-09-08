@@ -755,7 +755,7 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
     digit_t *v1, *v, *v2;
     Int *vv;
 
-    if (vv1->len == 0) return val_reference(&vv1->v);
+    if (vv1->len == 0) return val_reference(&int_value[0]->v);
     sz = word = s / SHIFT;
     bit = s % SHIFT;
     if (bit != 0) sz++;
