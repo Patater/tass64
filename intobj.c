@@ -727,7 +727,8 @@ static MUST_CHECK Int *int_gen(ssize_t i) {
     return v;
 }
 
-static MUST_CHECK Int *power(const Int *vv1, const Int *vv2) {
+static inline MUST_CHECK Int *power(oper_t op) {
+    const Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
     int j;
     bool neg = false;
     size_t i;
@@ -747,7 +748,8 @@ static MUST_CHECK Int *power(const Int *vv1, const Int *vv2) {
     return v;
 }
 
-static MUST_CHECK Obj *ilshift(const Int *vv1, uval_t s, linepos_t epoint) {
+static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
+    const Int *vv1 = (Int *)op->v1;
     size_t i, len1, sz;
     unsigned int word, bit;
     digit_t *v1, *v, *v2;
@@ -776,10 +778,11 @@ static MUST_CHECK Obj *ilshift(const Int *vv1, uval_t s, linepos_t epoint) {
 failed2:
     vv->data = NULL;
     val_destroy(&vv->v);
-    return (Obj *)new_error_mem(epoint);
+    return (Obj *)new_error_mem(op->epoint3);
 }
 
-static MUST_CHECK Obj *irshift(Int *vv1, uval_t s, linepos_t epoint) {
+static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
+    const Int *vv1 = (Int *)op->v1;
     size_t i, sz;
     unsigned int word, bit;
     bool neg;
@@ -831,7 +834,7 @@ static MUST_CHECK Obj *irshift(Int *vv1, uval_t s, linepos_t epoint) {
 failed2:
     vv->data = NULL;
     val_destroy(&vv->v);
-    return (Obj *)new_error_mem(epoint);
+    return (Obj *)new_error_mem(op->epoint3);
 }
 
 static inline MUST_CHECK Obj *and_(oper_t op) {
@@ -1632,17 +1635,17 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
             val_destroy(vv2);
             return val;
         }
-        return (Obj *)power(v1, v2);
+        return (Obj *)power(op);
     case O_LSHIFT:
         err = ival((Obj *)v2, &shift, 8 * sizeof shift, op->epoint2);
         if (err != NULL) return &err->v;
         if (shift == 0) return val_reference(&v1->v);
-        return (shift < 0) ? irshift(v1, (uval_t)-shift, op->epoint3) : ilshift(v1, (uval_t)shift, op->epoint3);
+        return (shift < 0) ? rshift(op, (uval_t)-shift) : lshift(op, (uval_t)shift);
     case O_RSHIFT:
         err = ival((Obj *)v2, &shift, 8 * sizeof shift, op->epoint2);
         if (err != NULL) return &err->v;
         if (shift == 0) return val_reference(&v1->v);
-        return (shift < 0) ? ilshift(v1, (uval_t)-shift, op->epoint3) : irshift(v1, (uval_t)shift, op->epoint3);
+        return (shift < 0) ? lshift(op, (uval_t)-shift) : rshift(op, (uval_t)shift);
     case O_AND: return and_(op);
     case O_OR: return or_(op);
     case O_XOR: return xor_(op);
