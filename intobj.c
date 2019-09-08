@@ -139,6 +139,16 @@ static MUST_CHECK Int *return_int(digit_t c, bool neg) {
     return vv;
 }
 
+static MUST_CHECK Int *return_int_inplace(Int *vv, digit_t c, bool neg) {
+    if (vv->data != vv->val) {
+        int_destroy(vv);
+        vv->data = vv->val;
+    }
+    vv->val[0] = c;
+    vv->len = c == 0 ? 0 : neg ? -1 : 1;
+    return ref_int(vv);
+}
+
 static FAST_CALL NO_INLINE bool int_same(const Int *v1, const Int *v2) {
     return memcmp(v1->data, v2->data, intlen(v1) * sizeof *v1->data) == 0;
 }
@@ -566,7 +576,8 @@ static void imul(const Int *vv1, const Int *vv2, Int *vv) {
     vv->len = (ssize_t)i;
 }
 
-static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t epoint) {
+static MUST_CHECK Obj *idivrem(oper_t op, bool divrem) {
+    Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
     size_t len1, len2;
     bool neg, negr;
     digit_t *v1, *v2, *v;
@@ -574,7 +585,7 @@ static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t 
 
     len2 = intlen(vv2);
     if (len2 == 0) {
-        return (Obj *)new_error(ERROR_DIVISION_BY_Z, epoint);
+        return (Obj *)new_error(ERROR_DIVISION_BY_Z, op->epoint3);
     }
     len1 = intlen(vv1);
     v1 = vv1->data;
@@ -592,9 +603,10 @@ static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t 
             if (divrem) {
                 digit_t t = v1[0] / n;
                 if (neg && v1[0] != t * n) t++;
-                return (Obj *)return_int(t, neg);
+                return (Obj *)(op->inplace == &vv1->v ? return_int_inplace(vv1, t, neg) : return_int(t, neg));
             }
-            return (Obj *)return_int(v1[0] % n, negr);
+            n = v1[0] % n;
+            return (Obj *)(op->inplace == &vv1->v ? return_int_inplace(vv1, n, negr) : return_int(n, negr));
         }
         r = 0;
         if (divrem) {
@@ -620,7 +632,7 @@ static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t 
             h = (digit_t)(r / n);
             r -= (twodigits_t)h * n;
         }
-        return (Obj *)return_int((digit_t)r, negr);
+        return (Obj *)(op->inplace == &vv1->v ? return_int_inplace(vv1, (digit_t)r, negr) : return_int((digit_t)r, negr));
     } else {
         size_t i, k;
         unsigned int d;
@@ -797,7 +809,7 @@ failed:
 }
 
 static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
-    const Int *vv1 = (Int *)op->v1;
+    Int *vv1 = (Int *)op->v1;
     size_t i, sz;
     unsigned int word, bit;
     bool neg;
@@ -805,8 +817,14 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
     Int *vv;
 
     switch (vv1->len) {
-    case 1: if (s < SHIFT) return (Obj *)return_int(vv1->val[0] >> s, false); /* fall through */
-    case 0: return val_reference(&int_value[0]->v);
+    case 1: 
+        if (s < SHIFT) {
+            digit_t d = vv1->val[0] >> s;
+            return (Obj *)(op->inplace == &vv1->v ? return_int_inplace(vv1, d, false) : return_int(d, false));
+        }
+        /* fall through */
+    case 0: 
+        return val_reference(&int_value[0]->v);
     default: break;
     }
 
@@ -851,7 +869,7 @@ failed2:
 }
 
 static inline MUST_CHECK Obj *and_(oper_t op) {
-    const Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
+    Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
     digit_t *v1, *v2, *v;
@@ -865,10 +883,11 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
         c = neg1 ? -vv1->val[0] : vv1->val[0];
         c &= neg2 ? -vv2->val[0] : vv2->val[0];
         if (!neg2) neg1 = false;
-        return (Obj *)return_int(neg1 ? -c : c, neg1);
+        if (neg1) c = -c;
+        return (Obj *)(op->inplace == &vv1->v ? return_int_inplace(vv1, c, neg1) : return_int(c, neg1));
     }
     if (len1 < len2) {
-        const Int *tmp = vv1; vv1 = vv2; vv2 = tmp;
+        Int *tmp = vv1; vv1 = vv2; vv2 = tmp;
         i = len1; len1 = len2; len2 = i;
     }
     v1 = vv1->data; v2 = vv2->data;
@@ -960,7 +979,7 @@ failed2:
 }
 
 static inline MUST_CHECK Obj *or_(oper_t op) {
-    const Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
+    Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
     digit_t *v1, *v2, *v;
@@ -974,10 +993,11 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
         c = neg1 ? -vv1->val[0] : vv1->val[0];
         c |= neg2 ? -vv2->val[0] : vv2->val[0];
         if (neg2) neg1 = true;
-        return (Obj *)return_int(neg1 ? -c : c, neg1);
+        if (neg1) c = -c;
+        return (Obj *)(op->inplace == &vv1->v ? return_int_inplace(vv1, c, neg1) : return_int(c, neg1));
     }
     if (len1 < len2) {
-        const Int *tmp = vv1; vv1 = vv2; vv2 = tmp;
+        Int *tmp = vv1; vv1 = vv2; vv2 = tmp;
         i = len1; len1 = len2; len2 = i;
     }
     v1 = vv1->data; v2 = vv2->data;
@@ -1073,7 +1093,7 @@ failed2:
 }
 
 static inline MUST_CHECK Obj *xor_(oper_t op) {
-    const Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
+    Int *vv1 = (Int *)op->v1, *vv2 = (Int *)op->v2;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
     digit_t *v1, *v2, *v;
@@ -1087,10 +1107,11 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
         c = neg1 ? -vv1->val[0] : vv1->val[0];
         c ^= neg2 ? -vv2->val[0] : vv2->val[0];
         if (neg2) neg1 = !neg1;
-        return (Obj *)return_int(neg1 ? -c : c, neg1);
+        if (neg1) c = -c;
+        return (Obj *)(op->inplace == &vv1->v ? return_int_inplace(vv1, c, neg1) : return_int(c, neg1));
     }
     if (len1 < len2) {
-        const Int *tmp = vv1; vv1 = vv2; vv2 = tmp;
+        Int *tmp = vv1; vv1 = vv2; vv2 = tmp;
         i = len1; len1 = len2; len2 = i;
     }
     v1 = vv1->data; v2 = vv2->data;
@@ -1612,9 +1633,9 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
         } else imul(v1, v2, v);
         return (Obj *)v;
     case O_DIV:
-        return idivrem(v1, v2, true, op->epoint3);
+        return idivrem(op, true);
     case O_MOD:
-        val = idivrem(v1, v2, false, op->epoint3);
+        val = idivrem(op, false);
         if (val->obj != INT_OBJ) return val;
         v = (Int *)val;
         if (v->len !=0 && (v->len ^ v2->len) < 0) {
