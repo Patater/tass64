@@ -706,27 +706,57 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 }
                 len2 = (size_t)(p - v1->data) - len2;
             }
-            v = new_str2(len2);
-            if (v == NULL) goto failed;
+            if (op->inplace == o1) {
+                v = ref_str(v1);
+                v->len = len2;
+                if (v->data != v->u.val && len2 <= sizeof v->u.val) {
+                    memcpy(v->u.val, v1->data + offs, len2);
+                    free(v->data);
+                    v->data = v->u.val;
+                } else {
+                    if (offs != 0) memmove(v->data, v1->data + offs, len2);
+                }
+            } else {
+                v = new_str2(len2);
+                if (v == NULL) goto failed;
+                memcpy(v->data, v1->data + offs, len2);
+            }
             v->chars = length;
-            memcpy(v->data, v1->data + offs, len2);
             return &v->v;
         }
         if (v1->len == v1->chars) {
             size_t i;
-            v = new_str2(length);
-            if (v == NULL) goto failed;
-            p2 = v->data;
+            if (step > 0 && op->inplace == o1) {
+                v = ref_str(v1);
+                if (v->data != v->u.val && length <= sizeof v->u.val) {
+                    p2 = v->u.val;
+                } else {
+                    p2 = v->data;
+                }
+                v->len = length;
+            } else {
+                v = new_str2(length);
+                if (v == NULL) goto failed;
+                p2 = v->data;
+            }
             for (i = 0; i < length; i++) {
                 p2[i] = v1->data[offs];
                 offs += step;
+            }
+            if (p2 != v->data) {
+                free(v->data);
+                v->data = p2;
             }
         } else {
             ival_t i, k;
             size_t j;
             uint8_t *o;
-            v = new_str2(v1->len);
-            if (v == NULL) goto failed;
+            if (step > 0 && op->inplace == o1) {
+                v = ref_str(v1);
+            } else {
+                v = new_str2(v1->len);
+                if (v == NULL) goto failed;
+            }
             o = p2 = v->data;
             p = v1->data;
             for (i = 0; i < offs; i++) {
@@ -735,7 +765,10 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             if (step > 0) {
                 for (k = i; i < end; i++) {
                     j = utf8len(*p);
-                    if (i == k) {memcpy(p2, p, j);p2 += j; k += step;}
+                    if (i != k) {
+                        for (offs2 = 0; offs2 < j; offs2++) p2[offs2] = p[offs2];
+                        p2 += j; k += step;
+                    }
                     p += j;
                 }
             } else {
@@ -769,19 +802,36 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     if (err != NULL) return &err->v;
 
     if (v1->len == v1->chars) {
-        v = new_str2(1);
-        if (v == NULL) goto failed;
-        v->chars = 1;
-        v->data[0] = v1->data[offs2];
-        return &v->v;
+        p = v1->data + offs2;
+        len1 = 1;
+    } else {
+        p = v1->data;
+        for (; offs2 != 0; offs2--) p += utf8len(*p);
+        len1 = utf8len(*p);
     }
-    p = v1->data;
-    while ((offs2--) != 0) p += utf8len(*p);
-    len1 = utf8len(*p);
-    v = new_str2(len1);
-    if (v == NULL) goto failed;
+
+    if (op->inplace == o1) {
+        v = ref_str(v1);
+        if (v->data != v->u.val) {
+            p2 = v->u.val;
+        } else {
+            p2 = v->data;
+        }
+        v->len = len1;
+    } else {
+        v = new_str2(len1);
+        if (v == NULL) goto failed;
+        p2 = v->data;
+    }
     v->chars = 1;
-    memcpy(v->data, p, len1);
+    p2[0] = p[0];
+    if (len1 > 1) {
+        for (offs2 = 1; offs2 < len1; offs2++) p2[offs2] = p[offs2];
+    }
+    if (p2 != v->data) {
+        free(v->data);
+        v->data = p2;
+    }
     return &v->v;
 failed2:
     val_destroy(&v->v);
