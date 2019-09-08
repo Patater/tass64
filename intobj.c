@@ -1689,7 +1689,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         tmp = int_from_str((Str *)v2, op->epoint2);
     conv:
         op->v2 = tmp;
-        op->inplace = NULL;
+        if (op->inplace != NULL && op->inplace->refcount != 1) op->inplace = NULL;
         ret = calc2(op);
         val_destroy(tmp);
         return ret;
