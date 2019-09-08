@@ -88,18 +88,6 @@ static FAST_CALL void destroy(Obj *o1) {
     if (v1->u.val != v1->data) bits_destroy(v1);
 }
 
-static MALLOC Bits *new_bits(size_t len) {
-    Bits *v = (Bits *)val_alloc(BITS_OBJ);
-    if (len <= lenof(v->u.val)) {
-        v->data = v->u.val;
-        return v;
-    }
-    if (len > SIZE_MAX / sizeof *v->data) err_msg_out_of_memory(); /* overflow */
-    v->u.hash = -1;
-    v->data = (bdigit_t *)mallocx(len * sizeof *v->data);
-    return v;
-}
-
 static MALLOC Bits *new_bits2(size_t len) {
     Bits *v = (Bits *)val_alloc(BITS_OBJ);
     if (len > lenof(v->u.val)) {
@@ -1484,22 +1472,10 @@ void bitsobj_init(void) {
     obj.rcalc2 = rcalc2;
     obj.slice = slice;
 
-    null_bits = new_bits(0);
-    null_bits->len = 0;
-    null_bits->bits = 0;
-    null_bits->data[0] = 0;
-    inv_bits = new_bits(0);
-    inv_bits->len = ~0;
-    inv_bits->bits = 0;
-    inv_bits->data[0] = 0;
-    bits_value[0] = new_bits(0);
-    bits_value[0]->len = 0;
-    bits_value[0]->bits = 1;
-    bits_value[0]->data[0] = 0;
-    bits_value[1] = new_bits(1);
-    bits_value[1]->len = 1;
-    bits_value[1]->bits = 1;
-    bits_value[1]->data[0] = 1;
+    null_bits = return_bits(0, 0, false);
+    inv_bits = return_bits(0, 0, true);
+    bits_value[0] = return_bits(0, 1, false);
+    bits_value[1] = return_bits(1, 1, false);
 }
 
 void bitsobj_names(void) {
