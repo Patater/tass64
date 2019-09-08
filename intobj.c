@@ -749,28 +749,37 @@ static inline MUST_CHECK Int *power(oper_t op) {
 }
 
 static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
-    const Int *vv1 = (Int *)op->v1;
+    Int *vv1 = (Int *)op->v1;
     size_t i, len1, sz;
     unsigned int word, bit;
     digit_t *v1, *v, *v2;
     Int *vv;
 
-    word = s / SHIFT;
+    if (vv1->len == 0) return val_reference(&vv1->v);
+    sz = word = s / SHIFT;
     bit = s % SHIFT;
-    v1 = vv1->data;
+    if (bit != 0) sz++;
     len1 = intlen(vv1);
-    sz = len1 + word;
-    if (bit > 0) sz++;
-    vv = new_int();
-    v = inew2(vv, sz);
-    if (v == NULL) goto failed2;
+    sz += len1;
+    if (sz < len1) goto failed; /* overflow */
+    if (op->inplace == &vv1->v && sz <= lenof(vv->val)) {
+        vv = ref_int(vv1);
+        v = vv->data;
+    } else {
+        vv = new_int();
+        v = inew2(vv, sz);
+        if (v == NULL) goto failed2;
+    }
+    v1 = vv1->data;
     v2 = v + word;
     if (bit != 0) {
-        v2[len1] = 0;
-        for (i = len1; (i--) != 0;) {
-            v2[i + 1] |= v1[i] >> (SHIFT - bit);
-            v2[i] = v1[i] << bit;
+        digit_t d = 0;
+        for (i = len1; i != 0;) {
+            digit_t d2 = v1[--i];
+            v2[i + 1] = d | (d2 >> (SHIFT - bit));
+            d = d2 << bit;
         }
+        v2[0] = d;
     } else if (len1 != 0) memcpy(v2, v1, len1 * sizeof *v2);
     if (word != 0) memset(v, 0, word * sizeof *v);
 
@@ -778,6 +787,7 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
 failed2:
     vv->data = NULL;
     val_destroy(&vv->v);
+failed:
     return (Obj *)new_error_mem(op->epoint3);
 }
 
