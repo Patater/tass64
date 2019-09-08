@@ -796,14 +796,18 @@ MUST_CHECK Obj *sliceparams(const struct List *v2, size_t len2, uval_t *olen, iv
     return NULL;
 }
 
-static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am) {
+static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace) {
     if (o1->obj->iterable) {
         iter_next_t iter_next;
-        Iter *iter = o1->obj->getiter(o1);
-        size_t i, len = iter->len;
+        Iter *iter;
+        size_t i, len;
         List *v;
         Obj **vals;
 
+        if (o1->refcount != 1) inplace = false;
+
+        iter = o1->obj->getiter(o1);
+        len = iter->len;
         if (len == 0) {
             val_destroy(&iter->v);
             return val_reference(o1->obj == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
@@ -813,7 +817,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am) {
         vals = list_create_elements(v, len);
         iter_next = iter->next;
         for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
-            vals[i] = apply_addressing(o1, am);
+            vals[i] = apply_addressing(o1, am, inplace);
         }
         val_destroy(&iter->v);
         v->len = i;
@@ -822,6 +826,10 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am) {
     }
     if (o1->obj == ADDRESS_OBJ) {
         Address *v1 = (Address *)o1;
+        if (inplace && o1->refcount) {
+            v1->type = am | (v1->type << 4);
+            return val_reference(o1);
+        }
         return (Obj *)new_address(val_reference(v1->val), am | (v1->type << 4));
     }
     return (Obj *)new_address(val_reference(o1), am);
@@ -929,7 +937,9 @@ static bool get_val2(struct eval_context_s *ev) {
                             }
                         }
                         am = (op == O_BRACKET) ? A_LI : A_I;
-                        v1->val = apply_addressing(values[vsp].val, am);
+                        v1->val = apply_addressing(values[vsp].val, am, true);
+                        val_destroy(values[vsp].val);
+                        values[vsp].val = NULL;
                         continue;
                     }
                     if (tup) {
@@ -1086,7 +1096,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_HASH_SIGNED: am = A_IMMEDIATE_SIGNED; goto addr; /* #+ */
         case O_HASH: am = A_IMMEDIATE;                          /* #  */
         addr:
-            val = apply_addressing(v1->val, am);
+            val = apply_addressing(v1->val, am, true);
             val_destroy(v1->val); v1->val = val;
             if (op == O_HASH || op == O_HASH_SIGNED) v1->epoint = o_out->epoint;
             continue;
@@ -1846,7 +1856,7 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
             }
             if (am != A_NONE) {
                 val_destroy(val2);
-                val2 = apply_addressing(list->data[i - 1], am);
+                val2 = apply_addressing(list->data[i - 1], am, true);
                 val_destroy(list->data[i - 1]);
                 list->data[i - 1] = val2;
                 continue;
