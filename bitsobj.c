@@ -1055,7 +1055,7 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
     Bits *vv1 = (Bits *)op->v1;
     size_t i, sz, bits, len1;
     unsigned int bit, word;
-    bdigit_t *v1, *v, *o;
+    bdigit_t *v1, *v, *v2;
     Bits *vv;
 
     sz = word = s / SHIFT;
@@ -1075,17 +1075,17 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
     vv->bits = bits;
     v = vv->data;
     v1 = vv1->data;
-    o = &v[word];
+    v2 = v + word;
     if (bit != 0) {
-        digit_t d = 0;
+        bdigit_t d = 0;
         for (i = len1; i != 0;) {
-            digit_t d2 = v1[--i];
-            o[i + 1] = d | (d2 >> (SHIFT - bit));
+            bdigit_t d2 = v1[--i];
+            v2[i + 1] = d | (d2 >> (SHIFT - bit));
             d = d2 << bit;
         }
         if (vv1->len < 0) d |= ((bdigit_t)1 << bit) - 1;
-        o[0] = d;
-    } else if (len1 != 0) memmove(o, v1, len1 * sizeof *o);
+        v2[0] = d;
+    } else if (len1 != 0) memmove(v2, v1, len1 * sizeof *v2);
     if (word != 0) memset(v, (vv1->len < 0) ? ~0 : 0, word * sizeof *v);
 
     return normalize(vv, sz, (vv1->len < 0));
