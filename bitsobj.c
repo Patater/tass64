@@ -761,7 +761,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_STRING:
         tmp = int_from_bits(v1, op->epoint);
         op->v1 = tmp;
-        op->inplace = NULL;
+        op->inplace = (tmp->refcount == 1) ? tmp : NULL;
         v = tmp->obj->calc1(op);
         val_destroy(tmp);
         return v;
@@ -1413,7 +1413,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         }
         tmp = int_from_bits(v1, op->epoint);
         op->v1 = tmp;
-        op->inplace = NULL;
+        op->inplace = (tmp->refcount == 1) ? tmp : NULL;
         result = tmp->obj->calc2(op);
         val_destroy(tmp);
         return result;

@@ -1582,7 +1582,7 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
     case O_GT: return truth_reference(icmp(op) > 0);
     case O_GE: return truth_reference(icmp(op) >= 0);
     case O_ADD:
-        v = new_int();
+        v = (op->inplace == &v1->v) ? ref_int(v1) : new_int();
         if (v1->len < 0) {
             if (v2->len < 0) {
                 iadd(v1, v2, v);
@@ -1594,7 +1594,7 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
         }
         return &v->v;
     case O_SUB:
-        v = new_int();
+        v = (op->inplace == &v1->v) ? ref_int(v1) : new_int();
         if (v1->len < 0) {
             if (v2->len < 0) isub(v1, v2, v);
             else iadd(v1, v2, v);
@@ -1605,7 +1605,7 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
         }
         return (Obj *)v;
     case O_MUL:
-        v = new_int();
+        v = (op->inplace == &v1->v) ? ref_int(v1) : new_int();
         if ((v1->len ^ v2->len) < 0) {
             imul(v1, v2, v);
             v->len = -v->len;
