@@ -429,7 +429,7 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             tmp2 = bytes_from_str(v2, op->epoint2, BYTES_MODE_TEXT);
             op->v1 = tmp;
             op->v2 = tmp2;
-            op->inplace = NULL;
+            op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
             val_destroy(tmp2);
             val_destroy(tmp);
@@ -894,7 +894,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Obj *result;
             tmp = bytes_from_str(v1, op->epoint, BYTES_MODE_TEXT);
             op->v1 = tmp;
-            op->inplace = NULL;
+            op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
             val_destroy(tmp);
             return result;

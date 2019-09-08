@@ -838,7 +838,7 @@ static MUST_CHECK Iter *getiter(Obj *v1) {
 }
 
 static inline MUST_CHECK Obj *and_(oper_t op) {
-    const Bytes *vv1 = (Bytes *)op->v1, *vv2 = (Bytes *)op->v2;
+    Bytes *vv1 = (Bytes *)op->v1, *vv2 = (Bytes *)op->v2;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
     uint8_t *v1, *v2, *v;
@@ -846,15 +846,21 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     len1 = byteslen(vv1); len2 = byteslen(vv2);
 
     if (len1 < len2) {
-        const Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
+        Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
         i = len1; len1 = len2; len2 = i;
     }
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
     sz = neg2 ? len1 : len2;
     if (sz == 0) return val_reference((neg1 && neg2) ? &inv_bytes->v : &null_bytes->v);
-    vv = new_bytes2(sz);
-    if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
+    if (op->inplace == &vv1->v) {
+        vv = ref_bytes(vv1);
+    } else if (op->inplace == &vv2->v && len1 == len2) {
+        vv = ref_bytes(vv2);
+    } else {
+        vv = new_bytes2(sz);
+        if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
+    }
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
 
@@ -880,7 +886,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
 }
 
 static inline MUST_CHECK Obj *or_(oper_t op) {
-    const Bytes *vv1 = (Bytes *)op->v1, *vv2 = (Bytes *)op->v2;
+    Bytes *vv1 = (Bytes *)op->v1, *vv2 = (Bytes *)op->v2;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
     uint8_t *v1, *v2, *v;
@@ -888,15 +894,21 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
     len1 = byteslen(vv1); len2 = byteslen(vv2);
 
     if (len1 < len2) {
-        const Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
+        Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
         i = len1; len1 = len2; len2 = i;
     }
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
     sz = neg2 ? len2 : len1;
     if (sz == 0) return val_reference((neg1 || neg2) ? &inv_bytes->v : &null_bytes->v);
-    vv = new_bytes2(sz);
-    if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
+    if (op->inplace == &vv1->v) {
+        vv = ref_bytes(vv1);
+    } else if (op->inplace == &vv2->v && len1 == len2) {
+        vv = ref_bytes(vv2);
+    } else {
+        vv = new_bytes2(sz);
+        if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
+    }
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
 
@@ -923,7 +935,7 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
 }
 
 static inline MUST_CHECK Obj *xor_(oper_t op) {
-    const Bytes *vv1 = (Bytes *)op->v1, *vv2 = (Bytes *)op->v2;
+    Bytes *vv1 = (Bytes *)op->v1, *vv2 = (Bytes *)op->v2;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
     uint8_t *v1, *v2, *v;
@@ -931,15 +943,21 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
     len1 = byteslen(vv1); len2 = byteslen(vv2);
 
     if (len1 < len2) {
-        const Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
+        Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
         i = len1; len1 = len2; len2 = i;
     }
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
     sz = len1;
     if (sz == 0) return val_reference((neg1 != neg2) ? &inv_bytes->v : &null_bytes->v);
-    vv = new_bytes2(sz);
-    if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
+    if (op->inplace == &vv1->v) {
+        vv = ref_bytes(vv1);
+    } else if (op->inplace == &vv2->v && len1 == len2) {
+        vv = ref_bytes(vv2);
+    } else {
+        vv = new_bytes2(sz);
+        if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
+    }
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
 
