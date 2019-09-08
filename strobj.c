@@ -414,7 +414,7 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             tmp2 = int_from_str(v2, op->epoint2);
             op->v1 = tmp;
             op->v2 = tmp2;
-            op->inplace = NULL;
+            op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
             val_destroy(tmp2);
             val_destroy(tmp);
