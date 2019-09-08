@@ -470,20 +470,29 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_STR:
     case T_BYTES:
     case T_ADDRESS:
-        op->v1 = v1->addr;
-        op->inplace = NULL;
         switch (op->op->op) {
         case O_ADD:
         case O_SUB:
             {
+                Obj *result;
+                bool inplace;
                 ival_t iv;
                 err = o2->obj->ival(o2, &iv, 31, op->epoint2);
                 if (err != NULL) return &err->v;
-                v = new_code();
-                memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
-                v->memblocks = ref_memblocks(v1->memblocks);
-                v->names = ref_namespace(v1->names);
-                v->addr = op->v1->obj->calc2(op);
+                inplace = (op->inplace == &v1->v);
+                if (inplace) {
+                    v = (Code *)val_reference(&v1->v);
+                } else {
+                    v = new_code();
+                    memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
+                    v->memblocks = ref_memblocks(v1->memblocks);
+                    v->names = ref_namespace(v1->names);
+                }
+                op->v1 = v1->addr;
+                op->inplace = (inplace && v1->addr->refcount == 1) ? v1->addr : NULL;
+                result = op->v1->obj->calc2(op);
+                if (inplace) val_destroy(v1->addr);
+                v->addr = result;
                 switch (op->op->op) {
                 case O_ADD: v->offs += iv; break;
                 case O_SUB: v->offs -= iv; break;
@@ -498,6 +507,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         }
         err = access_check(v1, op->epoint);
         if (err != NULL) return &err->v;
+        op->v1 = v1->addr;
+        op->inplace = (op->inplace == &v1->v && v1->addr->refcount == 1) ? v1->addr : NULL;
         return op->v1->obj->calc2(op);
     default:
         return o2->obj->rcalc2(op);
