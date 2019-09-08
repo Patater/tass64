@@ -112,14 +112,14 @@ failed2:
     return (Obj *)new_error_mem(epoint);
 }
 
-static MUST_CHECK Obj *normalize(Int *v, digit_t *d, size_t sz, bool neg) {
+static MUST_CHECK Obj *normalize(Int *v, size_t sz, bool neg) {
+    digit_t *d = v->data;
     while (sz != 0 && d[sz - 1] == 0) sz--;
     if (v->val != d && sz <= (ssize_t)lenof(v->val)) {
         memcpy(v->val, d, sz * sizeof *d);
         free(d);
-        d = v->val;
+        v->data = v->val;
     }
-    v->data = d;
     /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
     v->len = neg ? -(ssize_t)sz : (ssize_t)sz;
     return &v->v;
@@ -595,7 +595,7 @@ static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t 
         r = 0;
         if (divrem) {
             vv = new_int();
-            v = inew(vv, len1);
+            vv->data = v = inew(vv, len1);
             for (i = len1; (i--) != 0;) {
                 digit_t h;
                 r = (r << SHIFT) | v1[i];
@@ -608,7 +608,7 @@ static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t 
                     if ((v[i] = v[i] + 1) >= 1) break;
                 }
             }
-            return normalize(vv, v, len1, neg);
+            return normalize(vv, len1, neg);
         }
         for (i = len1; (i--) != 0;) {
             digit_t h;
@@ -702,7 +702,8 @@ static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t 
                 memcpy(&vv->val, a, k * sizeof *a);
                 a = vv->val;
             }
-            return normalize(vv, a, k, neg);
+            vv->data = a;
+            return normalize(vv, k, neg);
         }
 
         if (d != 0) {
@@ -715,7 +716,8 @@ static MUST_CHECK Obj *idivrem(Int *vv1, const Int *vv2, bool divrem, linepos_t 
             memcpy(&vv->val, v0, len2 * sizeof *v0);
             v0 = vv->val;
         }
-        return normalize(vv, v0, len2, negr);
+        vv->data = v0;
+        return normalize(vv, len2, negr);
     }
 }
 
@@ -767,7 +769,7 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
         v = vv->data;
     } else {
         vv = new_int();
-        v = inew2(vv, sz);
+        vv->data = v = inew2(vv, sz);
         if (v == NULL) goto failed2;
     }
     v1 = vv1->data;
@@ -783,9 +785,8 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
     } else if (len1 != 0) memcpy(v2, v1, len1 * sizeof *v2);
     if (word != 0) memset(v, 0, word * sizeof *v);
 
-    return normalize(vv, v, sz, vv1->len < 0);
+    return normalize(vv, sz, vv1->len < 0);
 failed2:
-    vv->data = NULL;
     val_destroy(&vv->v);
 failed:
     return (Obj *)new_error_mem(op->epoint3);
@@ -822,7 +823,7 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
         sz = (size_t)vv1->len - word;
         vv = new_int();
     }
-    v = inew2(vv, sz);
+    vv->data = v = inew2(vv, sz);
     if (v == NULL) goto failed2;
     v1 = vv1->data + word;
     if (bit != 0) {
@@ -834,15 +835,13 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
     } else if (sz != 0) memcpy(v, v1, sz * sizeof *v);
 
     if (neg) {
-        vv->data = v;
         vv->len = (ssize_t)sz;
         iadd(int_value[1], vv, vv);
         vv->len = -vv->len;
         return &vv->v;
     }
-    return normalize(vv, v, sz, false);
+    return normalize(vv, sz, false);
 failed2:
-    vv->data = NULL;
     val_destroy(&vv->v);
     return (Obj *)new_error_mem(op->epoint3);
 }
@@ -874,7 +873,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     sz = neg2 ? len1 : len2;
     if (neg1 && neg2) sz++;
     vv = new_int();
-    v = inew2(vv, sz);
+    vv->data = v = inew2(vv, sz);
     if (v == NULL) goto failed2;
 
     if (neg1) {
@@ -950,9 +949,8 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
             for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
         }
     }
-    return normalize(vv, v, sz, neg1 && neg2);
+    return normalize(vv, sz, neg1 && neg2);
 failed2:
-    vv->data = NULL;
     val_destroy(&vv->v);
     return (Obj *)new_error_mem(op->epoint3);
 }
@@ -984,7 +982,7 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
     sz = neg2 ? len2 : len1;
     if (neg1 || neg2) sz++;
     vv = new_int();
-    v = inew2(vv, sz);
+    vv->data = v = inew2(vv, sz);
     if (v == NULL) goto failed2;
 
     if (neg1) {
@@ -1064,9 +1062,8 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
             for (; i < len1; i++) v[i] = v1[i];
         }
     }
-    return normalize(vv, v, sz, neg1 || neg2);
+    return normalize(vv, sz, neg1 || neg2);
 failed2:
-    vv->data = NULL;
     val_destroy(&vv->v);
     return (Obj *)new_error_mem(op->epoint3);
 }
@@ -1097,7 +1094,7 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
 
     sz = (neg1 != neg2) ? (len1 + 1) : len1;
     vv = new_int();
-    v = inew2(vv, sz);
+    vv->data = v = inew2(vv, sz);
     if (v == NULL) goto failed2;
 
     if (neg1) {
@@ -1189,9 +1186,8 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
             for (; i < len1; i++) v[i] = v1[i];
         }
     }
-    return normalize(vv, v, sz, neg1 != neg2);
+    return normalize(vv, sz, neg1 != neg2);
 failed2:
-    vv->data = NULL;
     val_destroy(&vv->v);
     return (Obj *)new_error_mem(op->epoint3);
 }
@@ -1300,7 +1296,7 @@ MUST_CHECK Obj *int_from_bytes(const Bytes *v1, linepos_t epoint) {
     if ((len1 % sizeof *d) != 0) sz++;
 
     v = new_int();
-    d = inew2(v, sz);
+    v->data = d = inew2(v, sz);
     if (d == NULL) goto failed2;
 
     uv = bits = j = i = 0;
@@ -1334,9 +1330,8 @@ MUST_CHECK Obj *int_from_bytes(const Bytes *v1, linepos_t epoint) {
         if (bits != 0) d[j] = uv;
     }
 
-    return normalize(v, d, sz, inv);
+    return normalize(v, sz, inv);
 failed2:
-    v->data = NULL;
     val_destroy(&v->v);
     return (Obj *)new_error_mem(epoint);
 }
@@ -1358,7 +1353,7 @@ MUST_CHECK Obj *int_from_bits(const Bits *v1, linepos_t epoint) {
     sz = inv ? (size_t)-v1->len : (size_t)v1->len; /* it's - for the additional length  */
     if (sz == 0 && inv) goto failed; /* overflow */
     v = new_int();
-    d = inew2(v, sz);
+    v->data = d = inew2(v, sz);
     if (d == NULL) goto failed2;
 
     b = v1->data;
@@ -1373,9 +1368,8 @@ MUST_CHECK Obj *int_from_bits(const Bits *v1, linepos_t epoint) {
         d[i] = c ? 1 : 0;
     } else memcpy(d, b, sz * sizeof *d);
 
-    return normalize(v, d, sz, inv);
+    return normalize(v, sz, inv);
 failed2:
-    v->data = NULL;
     val_destroy(&v->v);
 failed:
     return (Obj *)new_error_mem(epoint);
@@ -1558,7 +1552,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linep
     }
 
     sz = (size_t)(end2 - d);
-    return normalize(v, d, sz, false);
+    return normalize(v, sz, false);
 failed2:
     val_destroy(&v->v);
     return (Obj *)new_error_mem(epoint);
