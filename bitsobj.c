@@ -724,7 +724,8 @@ static MUST_CHECK Obj *bits_from_int(const Int *v1, linepos_t epoint) {
     return normalize(v, sz, inv);
 }
 
-static ssize_t icmp(const Bits *vv1, const Bits *vv2) {
+static ssize_t icmp(oper_t op) {
+    const Bits *vv1 = (Bits *)op->v1, *vv2 = (Bits *)op->v2;
     ssize_t i;
     size_t j;
     bdigit_t a, b;
@@ -785,7 +786,8 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     return obj_oper_error(op);
 }
 
-static MUST_CHECK Obj *and_(const Bits *vv1, const Bits *vv2, linepos_t epoint) {
+static inline MUST_CHECK Obj *and_(oper_t op) {
+    const Bits *vv1 = (Bits *)op->v1, *vv2 = (Bits *)op->v2;
     size_t blen1, blen2, blen;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
@@ -824,7 +826,7 @@ static MUST_CHECK Obj *and_(const Bits *vv1, const Bits *vv2, linepos_t epoint) 
 
     sz = neg2 ? len1 : len2;
     vv = new_bits2(sz);
-    if (vv == NULL) return (Obj *)new_error_mem(epoint);
+    if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
     vv->bits = blen;
     v = vv->data;
 
@@ -849,7 +851,8 @@ static MUST_CHECK Obj *and_(const Bits *vv1, const Bits *vv2, linepos_t epoint) 
     return normalize(vv, sz, neg1 && neg2);
 }
 
-static MUST_CHECK Obj *or_(const Bits *vv1, const Bits *vv2, linepos_t epoint) {
+static inline MUST_CHECK Obj *or_(oper_t op) {
+    const Bits *vv1 = (Bits *)op->v1, *vv2 = (Bits *)op->v2;
     size_t blen1, blen2, blen;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
@@ -888,7 +891,7 @@ static MUST_CHECK Obj *or_(const Bits *vv1, const Bits *vv2, linepos_t epoint) {
 
     sz = neg2 ? len2 : len1;
     vv = new_bits2(sz);
-    if (vv == NULL) return (Obj *)new_error_mem(epoint);
+    if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
     vv->bits = blen;
     v = vv->data;
 
@@ -913,7 +916,8 @@ static MUST_CHECK Obj *or_(const Bits *vv1, const Bits *vv2, linepos_t epoint) {
     return normalize(vv, sz, neg1 || neg2);
 }
 
-static MUST_CHECK Obj *xor_(const Bits *vv1, const Bits *vv2, linepos_t epoint) {
+static inline MUST_CHECK Obj *xor_(oper_t op) {
+    const Bits *vv1 = (Bits *)op->v1, *vv2 = (Bits *)op->v2;
     size_t blen1, blen2, blen;
     size_t i, len1, len2, sz;
     bool neg1, neg2;
@@ -940,7 +944,7 @@ static MUST_CHECK Obj *xor_(const Bits *vv1, const Bits *vv2, linepos_t epoint) 
 
     sz = len1;
     vv = new_bits2(sz);
-    if (vv == NULL) return (Obj *)new_error_mem(epoint);
+    if (vv == NULL) return (Obj *)new_error_mem(op->epoint3);
     vv->bits = blen;
     v = vv->data;
 
@@ -950,7 +954,8 @@ static MUST_CHECK Obj *xor_(const Bits *vv1, const Bits *vv2, linepos_t epoint) 
     return normalize(vv, sz, neg1 != neg2);
 }
 
-static MUST_CHECK Obj *concat(Bits *vv1, Bits *vv2, linepos_t epoint) {
+static inline MUST_CHECK Obj *concat(oper_t op) {
+    Bits *vv1 = (Bits *)op->v1, *vv2 = (Bits *)op->v2;
     size_t blen;
     size_t sz, bits, i, j, rbits, l;
     bdigit_t *v1, *v, uv;
@@ -1000,7 +1005,7 @@ static MUST_CHECK Obj *concat(Bits *vv1, Bits *vv2, linepos_t epoint) {
     vv->bits = blen;
     return normalize(vv, i, (vv1->len < 0));
 failed:
-    return (Obj *)new_error_mem(epoint);
+    return (Obj *)new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *lshift(const Bits *vv1, uval_t s, linepos_t epoint) {
@@ -1070,25 +1075,24 @@ static MUST_CHECK Obj *rshift(const Bits *vv1, uval_t s, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *calc2_bits(oper_t op) {
-    Bits *v1 = (Bits *)op->v1, *v2 = (Bits *)op->v2;
     ssize_t val;
     switch (op->op->op) {
     case O_CMP:
-        val = icmp(v1, v2);
+        val = icmp(op);
         if (val < 0) return (Obj *)ref_int(minus1_value);
         return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-    case O_EQ: return truth_reference(icmp(v1, v2) == 0);
-    case O_NE: return truth_reference(icmp(v1, v2) != 0);
+    case O_EQ: return truth_reference(icmp(op) == 0);
+    case O_NE: return truth_reference(icmp(op) != 0);
     case O_MIN:
-    case O_LT: return truth_reference(icmp(v1, v2) < 0);
-    case O_LE: return truth_reference(icmp(v1, v2) <= 0);
+    case O_LT: return truth_reference(icmp(op) < 0);
+    case O_LE: return truth_reference(icmp(op) <= 0);
     case O_MAX:
-    case O_GT: return truth_reference(icmp(v1, v2) > 0);
-    case O_GE: return truth_reference(icmp(v1, v2) >= 0);
-    case O_AND: return and_(v1, v2, op->epoint3);
-    case O_OR: return or_(v1, v2, op->epoint3);
-    case O_XOR: return xor_(v1, v2, op->epoint3);
-    case O_CONCAT: return concat(v1, v2, op->epoint3);
+    case O_GT: return truth_reference(icmp(op) > 0);
+    case O_GE: return truth_reference(icmp(op) >= 0);
+    case O_AND: return and_(op);
+    case O_OR: return or_(op);
+    case O_XOR: return xor_(op);
+    case O_CONCAT: return concat(op);
     case O_IN: return obj_oper_error(op); /* TODO */
     default: return NULL;
     }

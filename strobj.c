@@ -364,7 +364,8 @@ MALLOC Str *new_str(size_t ln) {
     return v;
 }
 
-static int icmp(Str *v1, Str *v2) {
+static int icmp(oper_t op) {
+    const Str *v1 = (Str *)op->v1, *v2 = (Str *)op->v2;
     int h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
     if (h != 0) return h;
     if (v1->len < v2->len) return -1;
@@ -449,17 +450,17 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             return result;
         }
     case O_CMP:
-        val = icmp(v1, v2);
+        val = icmp(op);
         if (val < 0) return (Obj *)ref_int(minus1_value);
         return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-    case O_EQ: return truth_reference(icmp(v1, v2) == 0);
-    case O_NE: return truth_reference(icmp(v1, v2) != 0);
+    case O_EQ: return truth_reference(icmp(op) == 0);
+    case O_NE: return truth_reference(icmp(op) != 0);
     case O_MIN:
-    case O_LT: return truth_reference(icmp(v1, v2) < 0);
-    case O_LE: return truth_reference(icmp(v1, v2) <= 0);
+    case O_LT: return truth_reference(icmp(op) < 0);
+    case O_LE: return truth_reference(icmp(op) <= 0);
     case O_MAX:
-    case O_GT: return truth_reference(icmp(v1, v2) > 0);
-    case O_GE: return truth_reference(icmp(v1, v2) >= 0);
+    case O_GT: return truth_reference(icmp(op) > 0);
+    case O_GE: return truth_reference(icmp(op) >= 0);
     case O_CONCAT:
         if (v1->len == 0) {
             return (Obj *)ref_str(v2);
