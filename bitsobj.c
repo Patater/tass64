@@ -1390,9 +1390,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     switch (o2->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        op->v2 = (Obj *)bits_value[(Bool *)o2 == true_value ? 1 : 0];
-        op->inplace = NULL;
-        return calc2(op);
+        op->v2 = tmp = (Obj *)ref_bits(bits_value[(Bool *)o2 == true_value ? 1 : 0]);
+        if (op->inplace != NULL && op->inplace->refcount != 1) op->inplace = NULL;
+        result = calc2(op);
+        val_destroy(tmp);
+        return result;
     case T_BITS:
         result = calc2_bits(op);
         if (result != NULL) return result;
@@ -1434,9 +1436,11 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     switch (o1->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        op->v1 = (Obj *)bits_value[(Bool *)o1 == true_value ? 1 : 0];
+        op->v1 = tmp = (Obj *)ref_bits(bits_value[(Bool *)o1 == true_value ? 1 : 0]);
         op->inplace = NULL;
-        return calc2(op);
+        result = calc2(op);
+        val_destroy(tmp);
+        return result;
     case T_BITS:
         result = calc2_bits(op);
         if (result != NULL) return result;

@@ -394,7 +394,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_LNOT:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         op->v1 = v1->addr;
-        op->inplace = NULL;
+        op->inplace = (op->inplace == &v1->v && v1->addr->refcount == 1) ? v1->addr : NULL;
         return op->v1->obj->calc1(op);
     case O_BANK:
     case O_HIGHER:
@@ -409,7 +409,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         err = access_check(v1, op->epoint);
         if (err != NULL) return &err->v;
         op->v1 = v1->addr;
-        op->inplace = NULL;
+        op->inplace = (op->inplace == &v1->v && v1->addr->refcount == 1) ? v1->addr : NULL;
         return op->v1->obj->calc1(op);
     default: break;
     }
@@ -458,7 +458,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (err != NULL) return &err->v;
             op->v1 = v1->addr;
             op->v2 = v2->addr;
-            op->inplace = NULL;
+            op->inplace = (op->inplace == &v1->v && v1->addr->refcount == 1) ? v1->addr : NULL;
             return op->v1->obj->calc2(op);
         }
     case T_BOOL:
