@@ -142,7 +142,8 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     return &v->v;
 }
 
-static inline int icmp(const Register *v1, const Register *v2) {
+static inline int icmp(oper_t op) {
+    const Register *v1 = (Register *)op->v1, *v2 = (Register *)op->v2;
     int h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
     if (h != 0) return h;
     if (v1->len < v2->len) return -1;
@@ -150,8 +151,7 @@ static inline int icmp(const Register *v1, const Register *v2) {
 }
 
 static MUST_CHECK Obj *calc2_register(oper_t op) {
-    Register *v1 = (Register *)op->v1, *v2 = (Register *)op->v2;
-    int val = icmp(v1, v2);
+    int val = icmp(op);
     switch (op->op->op) {
     case O_CMP:
         if (val < 0) return (Obj *)ref_int(minus1_value);
