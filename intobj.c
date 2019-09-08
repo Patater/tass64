@@ -116,7 +116,11 @@ static MUST_CHECK Obj *normalize(Int *v, size_t sz, bool neg) {
     digit_t *d = v->data;
     while (sz != 0 && d[sz - 1] == 0) sz--;
     if (v->val != d && sz <= (ssize_t)lenof(v->val)) {
-        memcpy(v->val, d, sz * sizeof *d);
+        if (sz != 0) {
+            memcpy(v->val, d, sz * sizeof *d);
+        } else {
+            v->val[0] = 0;
+        }
         free(d);
         v->data = v->val;
     }
