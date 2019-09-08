@@ -1224,25 +1224,52 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         err = (Error *)sliceparams((Colonlist *)o2, len1, &length, &offs, &end, &step, epoint2);
         if (err != NULL) return &err->v;
 
-        if (length == 0) {
+        switch (length) {
+        case 0:
             return (Obj *)ref_bytes(null_bytes);
+        case 1:
+            return (Obj *)bytes_from_u8(v1->data[offs] ^ inv);
         }
         if (step == 1 && inv == 0) {
             if (length == byteslen(v1)) {
                 return (Obj *)ref_bytes(v1); /* original bytes */
             }
-            if (length == 1) return (Obj *)bytes_from_u8(v1->data[offs]);
-            v = new_bytes2(length);
-            if (v == NULL) goto failed;
-            memcpy(v->data, v1->data + offs, length);
+            if (op->inplace == o1) {
+                v = ref_bytes(v1);
+                if (v->data != v->u.val && length <= sizeof v->u.val) {
+                    p2 = v->u.val;
+                    memcpy(p2, v1->data + offs, length);
+                } else {
+                    p2 = v->data;
+                    if (offs != 0) memmove(p2, v1->data + offs, length);
+                }
+            } else {
+                v = new_bytes2(length);
+                if (v == NULL) goto failed;
+                p2 = v->data;
+                memcpy(p2, v1->data + offs, length);
+            }
         } else {
-            v = new_bytes2(length);
-            if (v == NULL) goto failed;
-            p2 = v->data;
+            if (step > 0 && op->inplace == o1) {
+                v = ref_bytes(v1);
+                if (v->data != v->u.val && length <= sizeof v->u.val) {
+                    p2 = v->u.val;
+                } else {
+                    p2 = v->data;
+                }
+            } else {
+                v = new_bytes2(length);
+                if (v == NULL) goto failed;
+                p2 = v->data;
+            }
             for (i = 0; i < length; i++) {
                 p2[i] = v1->data[offs] ^ inv;
                 offs += step;
             }
+        }
+        if (p2 != v->data) {
+            free(v->data);
+            v->data = p2;
         }
         v->len = (ssize_t)length;
         return &v->v;
