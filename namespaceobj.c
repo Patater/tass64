@@ -34,6 +34,7 @@
 #include "identobj.h"
 #include "codeobj.h"
 #include "macroobj.h"
+#include "mfuncobj.h"
 
 static Type obj;
 
@@ -78,6 +79,8 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_UNION:
     case T_STRUCT:
         return val_reference(&((Struct *)v1)->names->v);
+    case T_MFUNC:
+        return val_reference(&((Mfunc *)v1)->names->v);
     default: break;
     }
     return (Obj *)new_error_conv(v1, NAMESPACE_OBJ, epoint);
@@ -308,6 +311,8 @@ Namespace *get_namespace(const Obj *o) {
     case T_UNION:
     case T_STRUCT:
         return ((Struct *)o)->names;
+    case T_MFUNC:
+        return ((Mfunc *)o)->names;
     case T_NAMESPACE:
         return (Namespace *)o;
     default:

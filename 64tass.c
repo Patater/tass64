@@ -2303,6 +2303,7 @@ MUST_CHECK Obj *compile(void)
                             mfunc->namespaces = NULL;
                             if (labelexists) {
                                 if (label->defpass == pass) {
+                                    mfunc->names = new_namespace(current_file_list, &epoint);
                                     val_destroy(&mfunc->v);
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
@@ -2314,6 +2315,13 @@ MUST_CHECK Obj *compile(void)
                                     label->owner = true;
                                     if (label->file_list != current_file_list) {
                                         label_move(label, &labelname, current_file_list);
+                                    }
+                                    if (label->value->obj == MFUNC_OBJ) {
+                                        Mfunc *prev = (Mfunc *)label->value;
+                                        mfunc->names = ref_namespace(prev->names);
+                                        mfunc->names->backr = mfunc->names->forwr = 0;
+                                    } else {
+                                        mfunc->names = new_namespace(current_file_list, &epoint);
                                     }
                                     label->epoint = epoint;
                                     get_func_params(mfunc);
@@ -2331,6 +2339,7 @@ MUST_CHECK Obj *compile(void)
                                 label->epoint = epoint;
                                 get_func_params(mfunc);
                                 get_namespaces(mfunc);
+                                mfunc->names = new_namespace(current_file_list, &epoint);
                             }
                             label->ref = false;
                             goto finish;

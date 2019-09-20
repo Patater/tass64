@@ -352,7 +352,7 @@ Label *find_anonlabel2(int32_t count, Namespace *context) {
 }
 
 /* --------------------------------------------------------------------------- */
-Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *exists, struct file_list_s *cflist) {
+Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *exists, const struct file_list_s *cflist) {
     struct avltree_node *b;
     Label *tmp;
     if (lastlb2 == NULL) {
@@ -389,7 +389,7 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
     return avltree_container_of(b, struct namespacekey_s, node)->key;            /* already exists */
 }
 
-void label_move(Label *label, const str_t *name, struct file_list_s *cflist) {
+void label_move(Label *label, const str_t *name, const struct file_list_s *cflist) {
     bool cfsame = (label->cfname.data == label->name.data);
     if ((size_t)(label->name.data - label->file_list->file->data) < label->file_list->file->len) {
         if ((size_t)(name->data - cflist->file->data) < cflist->file->len) label->name = *name;

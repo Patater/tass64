@@ -30,7 +30,7 @@ typedef struct Label {
     str_t cfname;
 
     Obj *value;
-    struct file_list_s *file_list;
+    const struct file_list_s *file_list;
     struct linepos_s epoint;
     bool ref;
     bool update_after;
