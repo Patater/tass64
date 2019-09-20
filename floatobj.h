@@ -39,7 +39,6 @@ static inline MUST_CHECK Float *new_float(double d) {
 
 struct oper_s;
 
-extern MUST_CHECK Obj *calc2_double(struct oper_s *, double, double);
 extern MUST_CHECK Obj *float_from_double(double, linepos_t);
 
 #endif
