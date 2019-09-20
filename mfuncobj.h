@@ -38,7 +38,7 @@ typedef struct Mfunc {
     line_t line;
     uint8_t recursion_pass;
     size_t nslen;
-    struct Namespace **namespaces;
+    struct Namespace **namespaces, *names;
 } Mfunc;
 
 extern void mfuncobj_init(void);
