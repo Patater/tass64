@@ -1278,7 +1278,8 @@ static MUST_CHECK bool list_extend(List *lst) {
     while (o < n) vals[o++] = (Obj *)ref_none();
     lst->data = vals;
     lst->len = n;
-    lst->u.max = n;
+    lst->u.s.max = n;
+    lst->u.s.hash = -1;
     return false;
 }
 
@@ -1295,7 +1296,8 @@ static void list_shrink(List *lst, size_t i) {
             Obj **v = (Obj **)realloc(lst->data, lst->len * sizeof *lst->data);
             if (v != NULL) {
                 lst->data = v;
-                lst->u.max = lst->len;
+                lst->u.s.max = lst->len;
+                lst->u.s.hash = -1;
             }
         }
     }
