@@ -31,8 +31,11 @@ typedef struct List {
     size_t len;
     Obj **data;
     union {
-        size_t max;
         Obj *val[5];
+        struct {
+            size_t max;
+            int hash;
+        } s;
     } u;
 } List;
 typedef struct List Tuple;
