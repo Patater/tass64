@@ -2741,7 +2741,9 @@ MUST_CHECK Obj *compile(void)
                         newlabel->constant = true;
                         newlabel->owner = true;
                         newlabel->epoint = epoint;
-                        if (!newlabel->update_after) {
+                        if (newlabel->update_after) {
+                            newlabel->update_after = false;
+                        } else {
                             Obj *tmp;
                             if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
                             tmp = get_star_value(current_address->l_address_val);
@@ -2765,7 +2767,6 @@ MUST_CHECK Obj *compile(void)
                             newmembp = get_mem(current_address->mem);
                             code->apass = pass;
                             newlabel->defpass = pass;
-                            newlabel->update_after = false;
                             code->names->backr = code->names->forwr = 0;
                         }
                     } else {
