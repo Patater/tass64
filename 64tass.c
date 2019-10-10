@@ -2186,42 +2186,44 @@ MUST_CHECK Obj *compile(void)
                         }
                     case CMD_NAMESPACE:
                         { /* namespace */
-                            Label *label;
-                            struct values_s *vs;
                             bool labelexists;
+                            Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            if (labelexists) {
+                                if (label->defpass == pass) {
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                    epoint = cmdpoint;
+                                    goto as_command;
+                                }
+                            }
                             listing_line(listing, 0);
                             new_waitfor(W_ENDN, &cmdpoint);
                             if (get_exp(0, 0, 1, &cmdpoint)) {
-                                vs = get_val();
+                                struct values_s *vs = get_val();
                                 if (vs != NULL) {
                                     val = vs->val;
                                     val = (Obj *)get_namespace(val);
                                     if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
                                 } else val = NULL;
                             } else val = NULL;
-                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             if (labelexists) {
-                                if (label->defpass == pass) err_msg_double_defined(label, &labelname, &epoint);
+                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                label->constant = true;
+                                label->owner = (val == NULL);
+                                if (label->file_list != current_file_list) {
+                                    label_move(label, &labelname, current_file_list);
+                                }
+                                label->epoint = epoint;
+                                label->ref = false;
+                                if (val != NULL) const_assign(label, val_reference(val));
                                 else {
-                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
-                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
-                                        constcreated = true;
-                                    }
-                                    label->constant = true;
-                                    label->owner = (val == NULL);
-                                    if (label->file_list != current_file_list) {
-                                        label_move(label, &labelname, current_file_list);
-                                    }
-                                    label->epoint = epoint;
-                                    label->ref = false;
-                                    if (val != NULL) const_assign(label, val_reference(val));
-                                    else {
-                                        label->defpass = pass;
-                                        if (label->value->obj != NAMESPACE_OBJ) {
-                                            val_destroy(label->value);
-                                            label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                        } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
-                                    }
+                                    label->defpass = pass;
+                                    if (label->value->obj != NAMESPACE_OBJ) {
+                                        val_destroy(label->value);
+                                        label->value = (Obj *)new_namespace(current_file_list, &epoint);
+                                    } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
                                 }
                             } else {
                                 if (!constcreated && temporary_label_branch == 0) {
