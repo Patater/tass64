@@ -2765,6 +2765,7 @@ MUST_CHECK Obj *compile(void)
                             newmembp = get_mem(current_address->mem);
                             code->apass = pass;
                             newlabel->defpass = pass;
+                            newlabel->update_after = false;
                             code->names->backr = code->names->forwr = 0;
                         }
                     } else {
@@ -2797,7 +2798,10 @@ MUST_CHECK Obj *compile(void)
                     case CMD_PROC:
                         listing_line(listing, epoint.pos);
                         new_waitfor(W_PEND, &epoint);
-                        if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
+                        if (newlabel->value->obj != CODE_OBJ) {
+                            waitfor->skip = 0; push_dummy_context();
+                            waitfor->u.cmd_proc.label = NULL;
+                        } else if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
                             waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
                             push_dummy_context();
                             waitfor->u.cmd_proc.label = NULL;
