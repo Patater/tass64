@@ -2713,6 +2713,9 @@ MUST_CHECK Obj *compile(void)
                             epoint = lpoint;
                             goto jn;
                         }
+                        if (newlabel->file_list != current_file_list) {
+                            label_move(newlabel, &labelname, current_file_list);
+                        }
                         if (!newlabel->update_after && newlabel->value->obj != CODE_OBJ) {
                             val_destroy(newlabel->value);
                             labelexists = false;
@@ -2726,9 +2729,6 @@ MUST_CHECK Obj *compile(void)
                         }
                         newlabel->constant = true;
                         newlabel->owner = true;
-                        if (newlabel->file_list != current_file_list) {
-                            label_move(newlabel, &labelname, current_file_list);
-                        }
                         newlabel->epoint = epoint;
                         if (!newlabel->update_after) {
                             Obj *tmp;
