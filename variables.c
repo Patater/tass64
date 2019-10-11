@@ -420,6 +420,9 @@ void unused_check(Namespace *members) {
         case T_NAMESPACE:
             ns = (Namespace *)o;
             break;
+        case T_MFUNC:
+            ns = ((Mfunc *)o)->names;
+            break;
         default:
             ns = NULL;
             break;
