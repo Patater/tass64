@@ -4726,21 +4726,23 @@ This is a Unicode to PETSCII screen code mapping, including escape sequences for
 <tr><th width="4%">ASL<td width="46%">0A
 <th width="4%">BGE<td width="46%">B0
 <tr><th>BLT<td>90
-<th>GCC<td>4C 90
-<tr><th>GCS<td>4C B0
-<th>GEQ<td>4C F0
-<tr><th>GGE<td>4C B0
-<th>GLT<td>4C 90
-<tr><th>GMI<td>30 4C
-<th>GNE<td>4C D0
-<tr><th>GPL<td>10 4C
-<th>GVC<td>4C 50
-<tr><th>GVS<td>4C 70
-<th>LSR<td>4A
-<tr><th>ROL<td>2A
-<th>ROR<td>6A
-<tr><th>SHL<td>06 0A 0E 16 1E
-<th>SHR<td>46 4A 4E 56 5E
+<th>CPA<td>C1 C5 C9 CD D1 D5 D9 DD
+<tr><th>GCC<td>4C 90
+<th>GCS<td>4C B0
+<tr><th>GEQ<td>4C F0
+<th>GGE<td>4C B0
+<tr><th>GLT<td>4C 90
+<th>GMI<td>30 4C
+<tr><th>GNE<td>4C D0
+<th>GPL<td>10 4C
+<tr><th>GVC<td>4C 50
+<th>GVS<td>4C 70
+<tr><th>LSR<td>4A
+<th>ROL<td>2A
+<tr><th>ROR<td>6A
+<th>SHL<td>06 0A 0E 16 1E
+<tr><th>SHR<td>46 4A 4E 56 5E
+<th><td>
 </tbody>
 </table></div>
 
@@ -4873,9 +4875,11 @@ This is a Unicode to PETSCII screen code mapping, including escape sequences for
 <caption>Additional aliases and pseudo instructions</caption>
 <tbody>
 <tr><th width="4%">CLR<td width="46%">64 74 9C 9E
-<th width="4%">DEA<td width="46%">3A
-<tr><th>GRA<td>4C 80
-<th>INA<td>1A
+<th width="4%">CPA<td>D2
+<tr><th>DEA<td width="46%">3A
+<th>GRA<td>4C 80
+<tr><th>INA<td>1A
+<th><td>
 </tbody>
 </table></div>
 
@@ -4967,16 +4971,16 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <div><table width="100%" class="opcodes">
 <caption>Additional aliases</caption>
 <tbody>
-<tr><th width="4%">CSP<td width="46%">02
-<th width="4%">CLP<td width="46%">C2
-<tr><th>HLT<td width="46%">DB
-<th>JML<td>5C DC
-<tr><th>SWA<td>EB
-<th>TAD<td>5B
-<tr><th>TAS<td>1B
-<th>TDA<td>7B
-<tr><th>TSA<td>3B
-<th><td>
+<tr><th width="4%">CLP<td width="46%">C2
+<th width="4%">CPA<td>C3 C7 CF D3 D7 DF
+<tr><th>CSP<td width="46%">02
+<th>HLT<td width="46%">DB
+<tr><th>JML<td>5C DC
+<th>SWA<td>EB
+<tr><th>TAD<td>5B
+<th>TAS<td>1B
+<tr><th>TDA<td>7B
+<th>TSA<td>3B
 </tbody>
 </table></div>
 
@@ -5041,7 +5045,9 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <caption>Additional aliases</caption>
 <tbody>
 <tr><th width="4%">CLP<td width="46%">C2
-<th width="4%">HLT<td width="46%">DB
+<th width="4%">CPA<td>C3 C7 D3 D7
+<tr><th>HLT<td width="46%">DB
+<th><td>
 </tbody>
 </table></div>
 
