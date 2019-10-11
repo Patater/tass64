@@ -4114,14 +4114,15 @@ TXS 9A                                  TYA 98
 
                          Aliases, pseudo instructions
 ASL 0A                                  BGE B0
-BLT 90                                  GCC 4C 90
-GCS 4C B0                               GEQ 4C F0
-GGE 4C B0                               GLT 4C 90
-GMI 30 4C                               GNE 4C D0
-GPL 10 4C                               GVC 4C 50
-GVS 4C 70                               LSR 4A
-ROL 2A                                  ROR 6A
-SHL 06 0A 0E 16 1E                      SHR 46 4A 4E 56 5E
+BLT 90                                  CPA C1 C5 C9 CD D1 D5 D9 DD
+GCC 4C 90                               GCS 4C B0
+GEQ 4C F0                               GGE 4C B0
+GLT 4C 90                               GMI 30 4C
+GNE 4C D0                               GPL 10 4C
+GVC 4C 50                               GVS 4C 70
+LSR 4A                                  ROL 2A
+ROR 6A                                  SHL 06 0A 0E 16 1E
+SHR 46 4A 4E 56 5E
 
 -------------------------------------------------------------------------------
 
@@ -4194,8 +4195,9 @@ STA 92                                  STZ 64 74 9C 9E
 TRB 14 1C                               TSB 04 0C
 
                   Additional aliases and pseudo instructions
-CLR 64 74 9C 9E                         DEA 3A
-GRA 4C 80                               INA 1A
+CLR 64 74 9C 9E                         CPA D2
+DEA 3A                                  GRA 4C 80
+INA 1A
 
 -------------------------------------------------------------------------------
 
@@ -4252,11 +4254,11 @@ WDM 42                                  XBA EB
 XCE FB
 
                               Additional aliases
-CSP 02                                  CLP C2
-HLT DB                                  JML 5C DC
-SWA EB                                  TAD 5B
-TAS 1B                                  TDA 7B
-TSA 3B
+CLP C2                                  CPA C3 C7 CF D3 D7 DF
+CSP 02                                  HLT DB
+JML 5C DC                               SWA EB
+TAD 5B                                  TAS 1B
+TDA 7B                                  TSA 3B
 
 -------------------------------------------------------------------------------
 
@@ -4291,7 +4293,8 @@ WAI CB                                  XBA EB
 XCE FB                                  ZEA 8F
 
                               Additional aliases
-CLP C2                                  HLT DB
+CLP C2                                  CPA C3 C7 D3 D7
+HLT DB
 
 -------------------------------------------------------------------------------
 
