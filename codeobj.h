@@ -59,9 +59,10 @@ static inline MUST_CHECK Code *new_code(void) {
     return (Code *)val_alloc(CODE_OBJ);
 }
 
-extern MUST_CHECK Obj *int_from_code(Code *, linepos_t);
-extern MUST_CHECK Obj *float_from_code(Code *, linepos_t);
-extern MUST_CHECK Obj *bits_from_code(Code *, linepos_t);
-extern MUST_CHECK Obj *bytes_from_code(Code *, linepos_t);
-extern MUST_CHECK Obj *tuple_from_code(const Code *, struct Type *, linepos_t);
+extern MUST_CHECK Obj *get_code_value(const Code *, linepos_t);
+extern MUST_CHECK Obj *int_from_code(const Code *, linepos_t);
+extern MUST_CHECK Obj *float_from_code(const Code *, linepos_t);
+extern MUST_CHECK Obj *bits_from_code(const Code *, linepos_t);
+extern MUST_CHECK Obj *bytes_from_code(const Code *, linepos_t);
+extern MUST_CHECK Obj *tuple_from_code(const Code *, const struct Type *, linepos_t);
 #endif

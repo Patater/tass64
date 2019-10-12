@@ -125,6 +125,12 @@ static MUST_CHECK Obj *get_code_address(const Code *v1, linepos_t epoint) {
     return get_star_value(addr, v1->typ);
 }
 
+MUST_CHECK Obj *get_code_value(const Code *v1, linepos_t epoint) {
+    Error *err = access_check(v1, epoint);
+    if (err != NULL) return &err->v;
+    return get_code_address(v1, epoint);
+}
+
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     Code *v1 = (Code *)o1;
     Obj *v, *result;
@@ -222,7 +228,7 @@ static FAST_CALL Obj *address(Obj *o1, uint32_t *am) {
     return o1;
 }
 
-MUST_CHECK Obj *float_from_code(Code *v1, linepos_t epoint) {
+MUST_CHECK Obj *float_from_code(const Code *v1, linepos_t epoint) {
     Obj *v, *result;
     Error *err = access_check(v1, epoint);
     if (err != NULL) return &err->v;
@@ -254,7 +260,7 @@ static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), lin
     return result;
 }
 
-MUST_CHECK Obj *int_from_code(Code *v1, linepos_t epoint) {
+MUST_CHECK Obj *int_from_code(const Code *v1, linepos_t epoint) {
     Obj *v, *result;
     Error *err = access_check(v1, epoint);
     if (err != NULL) return &err->v;
@@ -292,7 +298,7 @@ static MUST_CHECK Obj *size(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(calc_size(v1));
 }
 
-MUST_CHECK Obj *bits_from_code(Code *v1, linepos_t epoint) {
+MUST_CHECK Obj *bits_from_code(const Code *v1, linepos_t epoint) {
     Obj *v, *result;
     Error *err = access_check(v1, epoint);
     if (err != NULL) return &err->v;
@@ -302,7 +308,7 @@ MUST_CHECK Obj *bits_from_code(Code *v1, linepos_t epoint) {
     return result;
 }
 
-MUST_CHECK Obj *bytes_from_code(Code *v1, linepos_t epoint) {
+MUST_CHECK Obj *bytes_from_code(const Code *v1, linepos_t epoint) {
     Obj *v, *result;
     Error *err = access_check(v1, epoint);
     if (err != NULL) return &err->v;
@@ -330,7 +336,7 @@ static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
     return (v1->dtype < 0) ? (Obj *)int_from_ival((ival_t)val) : (Obj *)int_from_uval(val);
 }
 
-MUST_CHECK Obj *tuple_from_code(const Code *v1, Type *typ, linepos_t epoint) {
+MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ, linepos_t epoint) {
     address_t ln, ln2;
     size_t  i;
     ssize_t offs;

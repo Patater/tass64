@@ -580,6 +580,7 @@ static void textrecursion(struct textrecursion_s *trec, Obj *val) {
 
     if (trec->sum >= trec->max) return;
 
+retry:
     switch (val->obj->type) {
     case T_STR:
         {
@@ -600,10 +601,24 @@ static void textrecursion(struct textrecursion_s *trec, Obj *val) {
     case T_FLOAT:
     case T_INT:
     case T_BOOL:
-    case T_CODE:
         iter = NULL;
         val2 = val;
         goto doit;
+    case T_CODE:
+        {
+            Obj *tmp = get_code_value((Code *)val, poke_pos);
+            textrecursion(trec, tmp);
+            val_destroy(tmp);
+            return;
+        }
+    case T_ADDRESS:
+        if (((Address *)val)->type != A_NONE) {
+            iter = NULL;
+            val2 = val;
+            goto doit;
+        }
+        val = ((Address *)val)->val;
+        goto retry;
     case T_GAP:
         iter = NULL;
         goto dogap;
@@ -645,6 +660,8 @@ static void textrecursion(struct textrecursion_s *trec, Obj *val) {
             }
             /* fall through */
         case T_STR:
+        case T_CODE:
+        case T_ADDRESS:
         rec:
             textrecursion(trec, val2);
             break;
