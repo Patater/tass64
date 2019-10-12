@@ -104,6 +104,9 @@ void noneobj_init(void) {
     obj.slice = slice;
     obj.ival = ival;
     obj.uval = uval;
+    obj.uval2 = uval;
+    obj.iaddress = ival;
+    obj.uaddress = uval;
     obj.sign = sign;
     obj.function = function;
     obj.len = len;
