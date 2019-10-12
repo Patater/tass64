@@ -764,16 +764,15 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
         default:
         doit:
             if (prm == CMD_RTA || prm == CMD_ADDR) {
-                atype_t am;
-                Obj *tmp = val2->obj->address(val2, &am);
-                if (touval(tmp, &uv, (am == A_KR) ? 16 : all_mem_bits, poke_pos)) {
+                atype_t am = val2->obj->address(val2);
+                if (touaddress(val2, &uv, (am == A_KR) ? 16 : all_mem_bits, poke_pos)) {
                     ch2 = 0;
                     break;
                 }
                 uv &= all_mem;
                 switch (am) {
                 case A_NONE:
-                    if ((current_address->l_address.bank ^ uv) > 0xffff) err_msg2(ERROR_CANT_CROSS_BA, tmp, poke_pos);
+                    if ((current_address->l_address.bank ^ uv) > 0xffff) err_msg2(ERROR_CANT_CROSS_BA, val2, poke_pos);
                     break;
                 case A_KR:
                     break;
@@ -1061,7 +1060,8 @@ static bool virtual_start(linepos_t epoint) {
         if (!get_exp(0, 0, 1, epoint)) {retval = true;break;}
         vs = get_val();
         if (vs == NULL) break;
-        if (touval(vs->val->obj->address(vs->val, &am), &uval, all_mem_bits, &vs->epoint)) {retval = true; break;}
+        if (touaddress(vs->val, &uval, all_mem_bits, &vs->epoint)) {retval = true; break;}
+        am = vs->val->obj->address(vs->val);
         if (am != A_NONE && check_addr(am)) {
             err_msg_output_and_destroy(err_addressing(am, &vs->epoint));
             retval = true;
@@ -1103,10 +1103,11 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
     do {
         {
             address_t max = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? all_mem2 : all_mem;
-            if (touval(val->obj->address(val, &am), &uval, (max == 0xffff) ? 16 : (max == 0xffffff) ? 24 : 32, epoint2)) {
+            if (touaddress(val, &uval, (max == 0xffff) ? 16 : (max == 0xffffff) ? 24 : 32, epoint2)) {
                 break;
             }
         }
+        am = val->obj->address(val);
         if (am != A_NONE && check_addr(am)) {
             err_msg_output_and_destroy(err_addressing(am, epoint2));
             break;
@@ -3497,7 +3498,8 @@ MUST_CHECK Obj *compile(void)
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     tmp = vs->val;
-                    if (touval(tmp->obj->address(tmp, &am), &uval, all_mem_bits, &vs->epoint)) break;
+                    if (touaddress(tmp, &uval, all_mem_bits, &vs->epoint)) break;
+                    am = tmp->obj->address(tmp);
                     if (am != A_NONE && check_addr(am)) {
                         err_msg_output_and_destroy(err_addressing(am, &vs->epoint));
                         break;

@@ -167,18 +167,11 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
     return result;
 }
 
-static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
+static MUST_CHECK Error *iaddress(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
     Code *v1 = (Code *)o1;
     address_t addr;
-    atype_t am;
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
-    v1->typ->obj->address(v1->typ, &am);
-    if (am != A_NONE) {
-        v = new_error(ERROR______CANT_INT, epoint);
-        v->u.obj = get_code_address(v1, epoint);
-        return v;
-    }
     addr = code_address(v1);
     *iv = (ival_t)addr;
     if ((addr >> (bits - 1)) != 0) {
@@ -191,18 +184,11 @@ static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t 
     return v;
 }
 
-static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t epoint) {
+static MUST_CHECK Error *uaddress(Obj *o1, uval_t *uv, unsigned int bits, linepos_t epoint) {
     Code *v1 = (Code *)o1;
     address_t addr;
-    atype_t am;
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
-    v1->typ->obj->address(v1->typ, &am);
-    if (am != A_NONE) {
-        v = new_error(ERROR______CANT_INT, epoint);
-        v->u.obj = get_code_address(v1, epoint);
-        return v;
-    }
     addr = code_address(v1);
     *uv = addr;
     if ((addr >> bits) == 0) {
@@ -215,17 +201,30 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
     return v;
 }
 
-static FAST_CALL Obj *address(Obj *o1, uint32_t *am) {
+static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
+    Code *v1 = (Code *)o1;
+    if (v1->typ->obj->address(v1->typ) != A_NONE) {
+        Error *v = new_error(ERROR______CANT_INT, epoint);
+        v->u.obj = get_code_address(v1, epoint);
+        return v;
+    }
+    return iaddress(o1, iv, bits, epoint);
+}
+
+static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t epoint) {
+    Code *v1 = (Code *)o1;
+    if (v1->typ->obj->address(v1->typ) != A_NONE) {
+        Error *v = new_error(ERROR______CANT_INT, epoint);
+        v->u.obj = get_code_address(v1, epoint);
+        return v;
+    }
+    return uaddress(o1, uv, bits, epoint);
+}
+
+static FAST_CALL uint32_t address(const Obj *o1) {
     Code *v1 = (Code *)o1;
     Obj *v = v1->typ;
-    v = v->obj->address(v, am);
-    if ((v1->requires & ~current_section->provides) != 0) {
-        return o1;
-    }
-    if ((v1->conflicts & current_section->provides) != 0) {
-        return o1;
-    }
-    return o1;
+    return v->obj->address(v);
 }
 
 MUST_CHECK Obj *float_from_code(const Code *v1, linepos_t epoint) {
@@ -685,6 +684,8 @@ void codeobj_init(void) {
     obj.ival = ival;
     obj.uval = uval;
     obj.address = address;
+    obj.iaddress = iaddress;
+    obj.uaddress = uaddress;
     obj.sign = sign;
     obj.function = function;
     obj.len = len;

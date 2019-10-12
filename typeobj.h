@@ -61,7 +61,9 @@ typedef struct Type {
     struct Error *(*ival)(Obj *, ival_t *, unsigned int, linepos_t) MUST_CHECK;
     struct Error *(*uval)(Obj *, uval_t *, unsigned int, linepos_t) MUST_CHECK;
     struct Error *(*uval2)(Obj *, uval_t *, unsigned int, linepos_t) MUST_CHECK;
-    Obj *(*address)(Obj *, uint32_t *) FAST_CALL;
+    uint32_t (*address)(const Obj *) FAST_CALL;
+    struct Error *(*iaddress)(Obj *, ival_t *, unsigned int, linepos_t) MUST_CHECK;
+    struct Error *(*uaddress)(Obj *, uval_t *, unsigned int, linepos_t) MUST_CHECK;
     Obj *(*sign)(Obj *, linepos_t) MUST_CHECK;
     Obj *(*function)(Obj *, Func_types, bool, linepos_t) MUST_CHECK;
     Obj *(*len)(Obj *, linepos_t) MUST_CHECK;
