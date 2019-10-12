@@ -73,8 +73,11 @@ struct diagnostics_s {
     bool optimize;
     bool implied_reg;
     bool jmp_bug;
-    bool pc_wrap;
-    bool mem_wrap;
+    struct {
+        bool pc;
+        bool mem;
+        bool addr;
+    } wrap;
     bool label_left;
     bool branch_page;
     bool deprecated;

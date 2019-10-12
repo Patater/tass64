@@ -3500,6 +3500,16 @@ would need round().</p>
 <p>To avoid unexpected rounding this option helps to find those places where no
 explicit rounding was done.</p>
 
+<dt><b>-Wno-addr-wrap</b><a name="o_Waddr-wrap" href="#o_Waddr-wrap"></a>
+<dd>Don't warn about memory location address space around.
+<p>Applying offsets to memory locations may result in addresses which end up
+outside of the processors address space.</p>
+
+<p>For example <code>"tmp"</code> is at <code>$1000</code> and then it's
+addressed as <code>lda tmp-$2000</code> then the result will be <code>lda $f000</code>
+or <code>lda $fff000</code> depending on the CPU. If this is fine then this
+warning can be disabled otherwise it can be made into an error.</p>
+
 <dt><b>-Wno-ignored</b><a name="o_Wignored" href="#o_Wignored"></a>
 <dd>Don't warn about ignored directives.
 
@@ -3982,6 +3992,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>label not on left side<dd>check if an instruction name was not mistyped and if the current CPU has it, or remove white space before label
 <dt>leading zeros ignored<dd>leading zeros in front of decimals are redundant and don't denote an octal number
 <dt>long branch used<dd>branch distance was too long so long branch was used (bxx &lowast;+5 jmp)
+<dt>memory location address overflow<dd>the calculated memory location address ended up outside of the processors address space
 <dt>please use format("%d", ...) as '^' will change it's meaning<dd>this operator will be changed to mean the bank byte later, please update your sources
 <dt>please use quotes now to allow expressions in future<dd>the directive will allow expressions later and the parameter will be a string
 <dt>possible jmp ($xxff) bug<dd>some 6502 variants read don't increment the high byte on page cross and this may be unexpected

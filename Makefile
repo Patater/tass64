@@ -72,7 +72,7 @@ codeobj.o: codeobj.c codeobj.h obj.h attributes.h inttypes.h values.h \
  variables.h error.h errors_e.h arguments.h boolobj.h floatobj.h \
  namespaceobj.h listobj.h intobj.h bitsobj.h bytesobj.h oper_e.h \
  operobj.h gapobj.h typeobj.h noneobj.h errorobj.h memblocksobj.h \
- identobj.h iterobj.h
+ identobj.h iterobj.h addressobj.h
 dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h avl.h eval.h \
  stdbool.h error.h errors_e.h variables.h str.h intobj.h listobj.h \
  values.h strobj.h boolobj.h operobj.h oper_e.h typeobj.h noneobj.h \
@@ -168,7 +168,7 @@ namespaceobj.o: namespaceobj.c namespaceobj.h obj.h attributes.h \
  inttypes.h avl.h variables.h stdbool.h str.h eval.h error.h errors_e.h \
  arguments.h 64tass.h wait_e.h listobj.h values.h strobj.h operobj.h \
  oper_e.h typeobj.h noneobj.h labelobj.h errorobj.h identobj.h codeobj.h \
- macroobj.h
+ macroobj.h mfuncobj.h
 noneobj.o: noneobj.c noneobj.h obj.h attributes.h inttypes.h eval.h \
  stdbool.h values.h typeobj.h errorobj.h errors_e.h str.h
 obj.o: obj.c obj.h attributes.h inttypes.h eval.h stdbool.h error.h \
