@@ -359,6 +359,9 @@ void floatobj_init(void) {
     obj.repr = repr;
     obj.ival = ival;
     obj.uval = uval;
+    obj.uval2 = uval;
+    obj.iaddress = ival;
+    obj.uaddress = uval;
     obj.sign = sign;
     obj.function = function;
     obj.calc1 = calc1;

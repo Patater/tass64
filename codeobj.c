@@ -683,6 +683,7 @@ void codeobj_init(void) {
     obj.str = str;
     obj.ival = ival;
     obj.uval = uval;
+    obj.uval2 = uval;
     obj.address = address;
     obj.iaddress = iaddress;
     obj.uaddress = uaddress;

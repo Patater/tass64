@@ -978,6 +978,9 @@ void strobj_init(void) {
     obj.str = str;
     obj.ival = ival;
     obj.uval = uval;
+    obj.uval2 = uval;
+    obj.iaddress = ival;
+    obj.uaddress = uval;
     obj.sign = sign;
     obj.function = function;
     obj.len = len;
