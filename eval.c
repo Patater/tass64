@@ -833,7 +833,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
     }
     if (o1->obj == ADDRESS_OBJ) {
         Address *v1 = (Address *)o1;
-        if (inplace && o1->refcount) {
+        if (inplace && o1->refcount == 1) {
             v1->type = am | (v1->type << 4);
             return val_reference(o1);
         }
@@ -1103,8 +1103,12 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_HASH_SIGNED: am = A_IMMEDIATE_SIGNED; goto addr; /* #+ */
         case O_HASH: am = A_IMMEDIATE;                          /* #  */
         addr:
-            val = apply_addressing(v1->val, am, true);
-            val_destroy(v1->val); v1->val = val;
+            if (v1->val->obj != ADDRESS_OBJ && !v1->val->obj->iterable) {
+                v1->val = (Obj *)new_address(v1->val, am);
+            } else {
+                val = apply_addressing(v1->val, am, true);
+                val_destroy(v1->val); v1->val = val;
+            }
             if (op == O_HASH || op == O_HASH_SIGNED) v1->epoint = o_out->epoint;
             continue;
         case O_SPLAT:   /* *  */
