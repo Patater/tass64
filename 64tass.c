@@ -1216,7 +1216,7 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
         Obj *tmp = current_address->l_address_val;
         code = (Code *)val;
         if (!tmp->obj->same(tmp, code->typ)) {
-            val_destroy(code->typ); code->typ = tmp;
+            val_destroy(code->typ); code->typ = val_reference(tmp);
             if (newlabel->usepass >= pass) {
                 if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
                 fixeddig = false;
@@ -2602,7 +2602,7 @@ MUST_CHECK Obj *compile(void)
                                 if (labelexists && code->v.obj == CODE_OBJ) {
                                     Obj *tmp = current_address->l_address_val;
                                     if (!tmp->obj->same(tmp, code->typ)) {
-                                        val_destroy(code->typ); code->typ = tmp;
+                                        val_destroy(code->typ); code->typ = val_reference(tmp);
                                         if (label->usepass >= pass) {
                                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                             fixeddig = false;
@@ -2764,7 +2764,7 @@ MUST_CHECK Obj *compile(void)
                             tmp = current_address->l_address_val;
                             code = (Code *)newlabel->value;
                             if (!tmp->obj->same(tmp, code->typ)) {
-                                val_destroy(code->typ); code->typ = tmp;
+                                val_destroy(code->typ); code->typ = val_reference(tmp);
                                 if (newlabel->usepass >= pass) {
                                     if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
                                     fixeddig = false;
@@ -3511,7 +3511,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     val_destroy(current_address->l_address_val);
                     tmp = vs->val;
-                    current_address->l_address_val = val_reference(tmp->obj == CODE_OBJ ? ((Code *)tmp)->typ : tmp);
+                    current_address->l_address_val = get_star_value(0, tmp);
                 } else new_waitfor(W_HERE, &epoint);
                 break;
             case CMD_VIRTUAL: if ((waitfor->skip & 1) != 0)
