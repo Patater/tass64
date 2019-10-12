@@ -579,7 +579,7 @@ static void textrecursion(struct textrecursion_s *trec, Obj *val) {
     uval_t uval;
 
     if (trec->sum >= trec->max) return;
-retry:
+
     switch (val->obj->type) {
     case T_STR:
         {
@@ -600,12 +600,10 @@ retry:
     case T_FLOAT:
     case T_INT:
     case T_BOOL:
+    case T_CODE:
         iter = NULL;
         val2 = val;
         goto doit;
-    case T_CODE:
-        val = ((Code *)val)->addr;
-        goto retry;
     case T_GAP:
         iter = NULL;
         goto dogap;
@@ -1056,7 +1054,7 @@ static bool virtual_start(linepos_t epoint) {
         section_address->address = uval;
         section_address->l_address.address = uval & 0xffff;
         section_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
-        section_address->l_address_val = val_reference(tmp == NULL ? &int_value[0]->v : (tmp->obj == CODE_OBJ) ? ((Code *)tmp)->addr : tmp);
+        section_address->l_address_val = get_star_value(0, tmp);
     } while (false);
 
     if (tmp == NULL) {
@@ -1100,10 +1098,8 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
             current_address->l_address.address = uval & 0xffff;
             current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
             val_destroy(current_address->l_address_val);
-            if (val->obj == CODE_OBJ) {
-                current_address->l_address_val = val_reference(((Code *)val)->addr);
-                val_destroy(val);
-            } else current_address->l_address_val = val;
+            current_address->l_address_val = get_star_value(0, val);
+            val_destroy(val);
             addr = (address_t)uval & all_mem2;
             if (current_address->address != addr) {
                 current_address->address = addr;
@@ -1126,10 +1122,8 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
         current_address->l_address.address = uval & 0xffff;
         current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
         val_destroy(current_address->l_address_val);
-        if (val->obj == CODE_OBJ) {
-            current_address->l_address_val = val_reference(((Code *)val)->addr);
-            val_destroy(val);
-        } else current_address->l_address_val = val;
+        current_address->l_address_val = get_star_value(0, val);
+        val_destroy(val);
         return;
     } while (false);
     val_destroy(val);
@@ -1202,16 +1196,17 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
     if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
     oaddr = current_address->address;
     if (val->obj == CODE_OBJ) {
-        Obj *tmp = get_star_value(current_address->l_address_val);
+        Obj *tmp = current_address->l_address_val;
         code = (Code *)val;
-        if (!tmp->obj->same(tmp, code->addr)) {
-            val_destroy(code->addr); code->addr = tmp;
+        if (!tmp->obj->same(tmp, code->typ)) {
+            val_destroy(code->typ); code->typ = tmp;
             if (newlabel->usepass >= pass) {
                 if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &newlabel->epoint);
                 fixeddig = false;
             }
-        } else val_destroy(tmp);
-        if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+        }
+        if (code->addr != star || code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+            code->addr = star;
             code->requires = current_section->requires;
             code->conflicts = current_section->conflicts;
             code->offs = 0;
@@ -1223,7 +1218,8 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
         code->names->backr = code->names->forwr = 0;
     } else {
         code = new_code();
-        code->addr = get_star_value(current_address->l_address_val);
+        code->addr = star;
+        code->typ = val_reference(current_address->l_address_val);
         code->size = 0;
         code->offs = 0;
         code->dtype = D_NONE;
@@ -1910,7 +1906,7 @@ MUST_CHECK Obj *compile(void)
                     if (labelname.data[0] == '*') {
                         label = NULL;
                         if (diagnostics.optimize) cpu_opt_invalidate();
-                        val = get_star_value(current_address->l_address_val);
+                        val = get_star_value(star, current_address->l_address_val);
                     } else if (tmp.op == &o_COND) {
                         label = NULL; val = NULL;
                     } else {
@@ -2587,15 +2583,16 @@ MUST_CHECK Obj *compile(void)
                             if (!ret && !doubledef) {
                                 Code *code = (Code *)label->value;
                                 if (labelexists && code->v.obj == CODE_OBJ) {
-                                    Obj *tmp = get_star_value(current_address->l_address_val);
-                                    if (!tmp->obj->same(tmp, code->addr)) {
-                                        val_destroy(code->addr); code->addr = tmp;
+                                    Obj *tmp = current_address->l_address_val;
+                                    if (!tmp->obj->same(tmp, code->typ)) {
+                                        val_destroy(code->typ); code->typ = tmp;
                                         if (label->usepass >= pass) {
                                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                             fixeddig = false;
                                         }
-                                    } else val_destroy(tmp);
-                                    if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                    }
+                                    if (code->addr != star || code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                        code->addr = star;
                                         code->requires = current_section->requires;
                                         code->conflicts = current_section->conflicts;
                                         code->offs = 0;
@@ -2611,7 +2608,8 @@ MUST_CHECK Obj *compile(void)
                                     val_destroy(&code->v);
                                     code = new_code();
                                     label->value = (Obj *)code;
-                                    code->addr = get_star_value(current_address->l_address_val);
+                                    code->addr = star;
+                                    code->typ = val_reference(current_address->l_address_val);
                                     code->size = 0;
                                     code->offs = 0;
                                     code->dtype = D_NONE;
@@ -2746,16 +2744,17 @@ MUST_CHECK Obj *compile(void)
                         } else {
                             Obj *tmp;
                             if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
-                            tmp = get_star_value(current_address->l_address_val);
+                            tmp = current_address->l_address_val;
                             code = (Code *)newlabel->value;
-                            if (!tmp->obj->same(tmp, code->addr)) {
-                                val_destroy(code->addr); code->addr = tmp;
+                            if (!tmp->obj->same(tmp, code->typ)) {
+                                val_destroy(code->typ); code->typ = tmp;
                                 if (newlabel->usepass >= pass) {
                                     if (fixeddig && pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
                                     fixeddig = false;
                                 }
-                            } else val_destroy(tmp);
-                            if (code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                            }
+                            if (code->addr != star || code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
+                                code->addr = star;
                                 code->requires = current_section->requires;
                                 code->conflicts = current_section->conflicts;
                                 code->offs = 0;
@@ -2780,7 +2779,8 @@ MUST_CHECK Obj *compile(void)
                         newlabel->owner = true;
                         newlabel->value = (Obj *)code;
                         newlabel->epoint = epoint;
-                        code->addr = get_star_value(current_address->l_address_val);
+                        code->addr = star;
+                        code->typ = val_reference(current_address->l_address_val);
                         code->size = 0;
                         code->offs = 0;
                         code->dtype = D_NONE;
@@ -3494,7 +3494,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     val_destroy(current_address->l_address_val);
                     tmp = vs->val;
-                    current_address->l_address_val = val_reference(tmp->obj == CODE_OBJ ? ((Code *)tmp)->addr : tmp);
+                    current_address->l_address_val = val_reference(tmp->obj == CODE_OBJ ? ((Code *)tmp)->typ : tmp);
                 } else new_waitfor(W_HERE, &epoint);
                 break;
             case CMD_VIRTUAL: if ((waitfor->skip & 1) != 0)

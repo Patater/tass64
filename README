@@ -3084,6 +3084,17 @@ default, the others are disabled.
     To avoid unexpected rounding this option helps to find those places where
     no explicit rounding was done.
 
+-Wno-addr-wrap
+    Don't warn about memory location address space around.
+
+    Applying offsets to memory locations may result in addresses which end up
+    outside of the processors address space.
+
+    For example "tmp" is at $1000 and then it's addressed as lda tmp-$2000 then
+    the result will be lda $f000 or lda $fff000 depending on the CPU. If this
+    is fine then this warning can be disabled otherwise it can be made into an
+    error.
+
 -Wno-ignored
     Don't warn about ignored directives.
 -Wno-jmp-bug
@@ -3589,6 +3600,9 @@ leading zeros ignored
     number
 long branch used
     branch distance was too long so long branch was used (bxx *+5 jmp)
+memory location address overflow
+    the calculated memory location address ended up outside of the processors
+    address space
 please use format("%d", ...) as '^' will change it's meaning
     this operator will be changed to mean the bank byte later, please update
     your sources

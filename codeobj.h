@@ -38,11 +38,12 @@ typedef enum Code_types {
 typedef struct Code {
     Obj v;
     address_t size;
+    address_t addr;
     ival_t offs;
     uint8_t pass;
     uint8_t apass;
     signed char dtype;
-    Obj *addr;
+    Obj *typ;
     struct Memblocks *memblocks;
     address_t memaddr;
     size_t membp;

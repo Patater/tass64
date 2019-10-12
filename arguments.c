@@ -61,8 +61,11 @@ struct diagnostics_s diagnostics = {
     false,       /* optimize */
     false,       /* implied_reg */
     true,        /* jmp_bug */
-    true,        /* pc_wrap */
-    true,        /* mem_wrap */
+    {
+        true,        /* pc_wrap */
+        true,        /* mem_wrap */
+        true,        /* addr_wrap */
+    },
     true,        /* label_left */
     false,       /* branch_page */
     true,        /* deprecated */
@@ -96,8 +99,11 @@ struct diagnostics_s diagnostic_errors = {
     false,       /* optimize */
     false,       /* implied_reg */
     false,       /* jmp_bug */
-    false,       /* pc_wrap */
-    false,       /* mem_wrap */
+    {
+        false,       /* pc_wrap */
+        false,       /* mem_wrap */
+        false,       /* addr_wrap */
+    },
     false,       /* label_left */
     false,       /* branch_page */
     false,       /* deprecated */
@@ -132,8 +138,11 @@ static struct diagnostics_s diagnostic_all = {
     false,       /* optimize */
     true,        /* implied_reg */
     true,        /* jmp_bug */
-    true,        /* pc_wrap */
-    true,        /* mem_wrap */
+    {
+        true,        /* pc_wrap */
+        true,        /* mem_wrap */
+        true,        /* addr_wrap */
+    },
     true,        /* label_left */
     false,       /* branch_page */
     true,        /* deprecated */
@@ -168,8 +177,11 @@ static struct diagnostics_s diagnostic_error_all = {
     true,        /* optimize */
     true,        /* implied_reg */
     true,        /* jmp_bug */
-    true,        /* pc_wrap */
-    true,        /* mem_wrap */
+    {
+        true,        /* pc_wrap */
+        true,        /* mem_wrap */
+        true,        /* addr_wrap */
+    },
     true,        /* label_left */
     true,        /* branch_page */
     true,        /* deprecated */
@@ -208,8 +220,9 @@ static const struct w_options_s w_options[] = {
     {"strict-bool",     &diagnostics.strict_bool},
     {"implied-reg",     &diagnostics.implied_reg},
     {"jmp-bug",         &diagnostics.jmp_bug},
-    {"pc-wrap",         &diagnostics.pc_wrap},
-    {"mem-wrap",        &diagnostics.mem_wrap},
+    {"pc-wrap",         &diagnostics.wrap.pc},
+    {"mem-wrap",        &diagnostics.wrap.mem},
+    {"addr-wrap",       &diagnostics.wrap.addr},
     {"label-left",      &diagnostics.label_left},
     {"branch-page",     &diagnostics.branch_page},
     {"deprecated",      &diagnostics.deprecated},
@@ -551,6 +564,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "  -Wleading-zeros       Warn for ignored leading zeros\n"
                "  -Wlong-branch         Warn when a long branch is used\n"
                "  -Wmacro-prefix        Warn about unprefixed macro calls\n"
+               "  -Wno-addr-wrap        No memory address overflow warning\n"
                "  -Wno-deprecated       No deprecated feature warnings\n"
                "  -Wno-float-compare    No approximate compare warnings\n"
                "  -Wno-float-round      No implicit rounding warnings\n"

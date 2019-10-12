@@ -286,41 +286,41 @@ void touch_label(Label *tmp) {
     tmp->usepass = pass;
 }
 
-static uval_t bitscalc(Bits *val) {
+static uval_t bitscalc(address_t addr, Bits *val) {
     size_t b = val->bits;
-    if (b >= 8 * sizeof(star)) return (uval_t)b;
-    if ((star >> b) == 0) return (uval_t)b;
-    if (star <= 0xff) return 8;
-    if (star <= 0xffff) return 16;
+    if (b >= 8 * sizeof(addr)) return (uval_t)b;
+    if ((addr >> b) == 0) return (uval_t)b;
+    if (addr <= 0xff) return 8;
+    if (addr <= 0xffff) return 16;
     return all_mem_bits;
 }
 
-static uval_t bytescalc(Bytes *val) {
+static uval_t bytescalc(address_t addr, Bytes *val) {
     size_t b = val->len < 0 ? (size_t)~val->len : (size_t)val->len;
-    if (b >= 8 * sizeof(star)) return (uval_t)b;
-    if ((star >> (b << 3)) == 0) return (uval_t)b;
-    if (star <= 0xff) return 1;
-    if (star <= 0xffff) return 2;
+    if (b >= 8 * sizeof(addr)) return (uval_t)b;
+    if ((addr >> (b << 3)) == 0) return (uval_t)b;
+    if (addr <= 0xff) return 1;
+    if (addr <= 0xffff) return 2;
     return all_mem_bits >> 3;
 }
 
-MUST_CHECK Obj *get_star_value(Obj *val) {
+MUST_CHECK Obj *get_star_value(address_t addr, Obj *val) {
     switch (val->obj->type) {
-    case T_BITS: return (Obj *)bits_from_uval(star, bitscalc((Bits *)val));
-    case T_CODE: return get_star_value(((Code *)val)->addr);
+    case T_BITS: return (Obj *)bits_from_uval(addr, bitscalc(addr, (Bits *)val));
+    case T_CODE: return get_star_value(addr, ((Code *)val)->typ);
     default:
     case T_BOOL:
-    case T_INT: return (Obj *)int_from_uval(star);
-    case T_FLOAT: return (Obj *)new_float(star + (((Float *)val)->real - trunc(((Float *)val)->real)));
-    case T_STR: return (Obj *)bytes_from_uval(star, all_mem_bits >> 3);
-    case T_BYTES: return (Obj *)bytes_from_uval(star, bytescalc((Bytes *)val));
-    case T_ADDRESS: return (Obj *)new_address(get_star_value(((Address *)val)->val), ((Address *)val)->type);
+    case T_INT: return (Obj *)int_from_uval(addr);
+    case T_FLOAT: return (Obj *)new_float(addr + (((Float *)val)->real - trunc(((Float *)val)->real)));
+    case T_STR: return (Obj *)bytes_from_uval(addr, all_mem_bits >> 3);
+    case T_BYTES: return (Obj *)bytes_from_uval(addr, bytescalc(addr, (Bytes *)val));
+    case T_ADDRESS: return (Obj *)new_address(get_star_value(addr, ((Address *)val)->val), ((Address *)val)->type);
     }
 }
 
 static MUST_CHECK Obj *get_star(void) {
     if (diagnostics.optimize) cpu_opt_invalidate();
-    return get_star_value(current_address->l_address_val);
+    return get_star_value(star, current_address->l_address_val);
 }
 
 static size_t evxnum, evx_p;
