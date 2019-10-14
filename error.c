@@ -1094,19 +1094,37 @@ void err_msg_jmp_bug(linepos_t epoint) {
 void err_msg_pc_wrap(linepos_t epoint) {
     if (!diagnostics.wrap.pc) return;
     new_error_msg2(diagnostic_errors.wrap.pc, epoint);
-    adderror("processor program counter overflow [-Wpc-wrap]");
+    adderror("processor program counter overflow [-Wwrap-pc]");
 }
 
 void err_msg_mem_wrap(linepos_t epoint) {
     if (!diagnostics.wrap.mem) return;
     new_error_msg2(diagnostic_errors.wrap.mem, epoint);
-    adderror("compile offset overflow [-Wmem-wrap]");
+    adderror("compile offset overflow [-Wwrap-mem]");
 }
 
 void err_msg_addr_wrap(linepos_t epoint) {
     if (!diagnostics.wrap.addr) return;
     new_error_msg2(diagnostic_errors.wrap.addr, epoint);
-    adderror("memory location address overflow [-Waddr-wrap]");
+    adderror("memory location address overflow [-Wwrap-addr]");
+}
+
+void err_msg_dpage_wrap(linepos_t epoint) {
+    if (!diagnostics.wrap.dpage) return;
+    new_error_msg2(diagnostic_errors.wrap.dpage, epoint);
+    adderror("direct page address overflow [-Wwrap-dpage]");
+}
+
+void err_msg_bank0_wrap(linepos_t epoint) {
+    if (!diagnostics.wrap.bank0) return;
+    new_error_msg2(diagnostic_errors.wrap.bank0, epoint);
+    adderror("bank 0 address overflow [-Wwrap-bank0]");
+}
+
+void err_msg_pbank_wrap(linepos_t epoint) {
+    if (!diagnostics.wrap.pbank) return;
+    new_error_msg2(diagnostic_errors.wrap.pbank, epoint);
+    adderror("program bank address overflow [-Wwrap-pbank]");
 }
 
 void err_msg_label_left(linepos_t epoint) {

@@ -62,9 +62,12 @@ struct diagnostics_s diagnostics = {
     false,       /* implied_reg */
     true,        /* jmp_bug */
     {
-        true,        /* pc_wrap */
-        true,        /* mem_wrap */
-        true,        /* addr_wrap */
+        true,    /* wrap-pc */
+        true,    /* wrap-mem */
+        true,    /* wrap-addr */
+        true,    /* wrap-dpage */
+        true,    /* wrap-bank0 */
+        true,    /* wrap-pbank */
     },
     true,        /* label_left */
     false,       /* branch_page */
@@ -100,9 +103,12 @@ struct diagnostics_s diagnostic_errors = {
     false,       /* implied_reg */
     false,       /* jmp_bug */
     {
-        false,       /* pc_wrap */
-        false,       /* mem_wrap */
-        false,       /* addr_wrap */
+        false,   /* wrap-pc */
+        false,   /* wrap-mem */
+        false,   /* wrap-addr */
+        false,   /* wrap-dpage */
+        false,   /* wrap-bank0 */
+        false,   /* wrap-pbank */
     },
     false,       /* label_left */
     false,       /* branch_page */
@@ -139,9 +145,12 @@ static struct diagnostics_s diagnostic_all = {
     true,        /* implied_reg */
     true,        /* jmp_bug */
     {
-        true,        /* pc_wrap */
-        true,        /* mem_wrap */
-        true,        /* addr_wrap */
+        true,    /* wrap-pc */
+        true,    /* wrap-mem */
+        true,    /* wrap-addr */
+        true,    /* wrap-dpage */
+        true,    /* wrap-bank0 */
+        true,    /* wrap-pbank */
     },
     true,        /* label_left */
     false,       /* branch_page */
@@ -178,9 +187,12 @@ static struct diagnostics_s diagnostic_error_all = {
     true,        /* implied_reg */
     true,        /* jmp_bug */
     {
-        true,        /* pc_wrap */
-        true,        /* mem_wrap */
-        true,        /* addr_wrap */
+        true,    /* wrap-pc */
+        true,    /* wrap-mem */
+        true,    /* wrap-addr */
+        true,    /* wrap-dpage */
+        true,    /* wrap-bank0 */
+        true,    /* wrap-pbank */
     },
     true,        /* label_left */
     true,        /* branch_page */
@@ -222,7 +234,12 @@ static const struct w_options_s w_options[] = {
     {"jmp-bug",         &diagnostics.jmp_bug},
     {"pc-wrap",         &diagnostics.wrap.pc},
     {"mem-wrap",        &diagnostics.wrap.mem},
-    {"addr-wrap",       &diagnostics.wrap.addr},
+    {"wrap-pc",         &diagnostics.wrap.pc},
+    {"wrap-mem",        &diagnostics.wrap.mem},
+    {"wrap-addr",       &diagnostics.wrap.addr},
+    {"wrap-dpage",      &diagnostics.wrap.dpage},
+    {"wrap-bank0",      &diagnostics.wrap.bank0},
+    {"wrap-pbank",      &diagnostics.wrap.pbank},
     {"label-left",      &diagnostics.label_left},
     {"branch-page",     &diagnostics.branch_page},
     {"deprecated",      &diagnostics.deprecated},
@@ -564,16 +581,19 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "  -Wleading-zeros       Warn for ignored leading zeros\n"
                "  -Wlong-branch         Warn when a long branch is used\n"
                "  -Wmacro-prefix        Warn about unprefixed macro calls\n"
-               "  -Wno-addr-wrap        No memory address overflow warning\n"
                "  -Wno-deprecated       No deprecated feature warnings\n"
                "  -Wno-float-compare    No approximate compare warnings\n"
                "  -Wno-float-round      No implicit rounding warnings\n"
                "  -Wno-ignored          No directive ignored warnings\n"
                "  -Wno-jmp-bug          No jmp ($xxff) bug warning\n"
                "  -Wno-label-left       No warning about strange labels\n"
-               "  -Wno-mem-wrap         No offset overflow warning\n"
                "  -Wno-page             No page crossing error\n"
-               "  -Wno-pc-wrap          No PC overflow warning\n"
+               "  -Wno-wrap-addr        No memory address overflow warning\n"
+               "  -Wno-wrap-bank0       No bank0 overflow warning\n"
+               "  -Wno-wrap-dpage       No direct page overflow warning\n"
+               "  -Wno-wrap-mem         No offset overflow warning\n"
+               "  -Wno-wrap-pbank       No program bank overflow warning\n"
+               "  -Wno-wrap-pc          No PC overflow warning\n"
                "  -Wno-pitfalls         No common pitfall notes\n"
                "  -Wno-portable         No portability warnings\n"
                "  -Wno-star-assign      No label multiply warnings\n"

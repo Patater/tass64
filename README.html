@@ -3500,16 +3500,6 @@ would need round().</p>
 <p>To avoid unexpected rounding this option helps to find those places where no
 explicit rounding was done.</p>
 
-<dt><b>-Wno-addr-wrap</b><a name="o_Waddr-wrap" href="#o_Waddr-wrap"></a>
-<dd>Don't warn about memory location address space around.
-<p>Applying offsets to memory locations may result in addresses which end up
-outside of the processors address space.</p>
-
-<p>For example <code>"tmp"</code> is at <code>$1000</code> and then it's
-addressed as <code>lda tmp-$2000</code> then the result will be <code>lda $f000</code>
-or <code>lda $fff000</code> depending on the CPU. If this is fine then this
-warning can be disabled otherwise it can be made into an error.</p>
-
 <dt><b>-Wno-ignored</b><a name="o_Wignored" href="#o_Wignored"></a>
 <dd>Don't warn about ignored directives.
 
@@ -3525,14 +3515,6 @@ implied addressing mode instructions and you don't want to put them in the first
 column.</p>
 <p>This check is there to catch typos, unsupported implied instructions, or
 unknown aliases and not for enforcing label placement.</p>
-
-<dt><b>-Wno-mem-wrap</b><a name="o_Wmem-wrap" href="#o_Wmem-wrap"></a>
-<dd>Don't warn for compile offset wrap around.
-<p>Continue from the beginning of image file once it's end was reached.</p>
-
-<dt><b>-Wno-pc-wrap</b><a name="o_Wpc-wrap" href="#o_Wpc-wrap"></a>
-<dd>Don't warn for program counter wrap around.
-<p>Continue from the beginning of program bank once it's end was reached.</p>
 
 <dt><b>-Wno-pitfalls</b><a name="o_Wpitfalls" href="#o_Wpitfalls"></a>
 <dd>Don't note about common pitfalls.
@@ -3658,6 +3640,63 @@ still need them.</p>
 
 <p>Symbols which appear in a default 64tass symbol list file and their root
 symbols are treated as used for exporting purposes.</p>
+
+<dt><b>-Wno-wrap-addr</b><a name="o_Wwrap-addr" href="#o_Wwrap-addr"></a>
+<dd>Don't warn about memory location address space wrap around.
+<p>Applying offsets to memory locations may result in addresses which end up
+outside of the processors address space.</p>
+
+<p>For example <code>"tmp"</code> is at <code>$1000</code> and then it's
+addressed as <code>lda tmp-$2000</code> then the result will be <code>lda $f000</code>
+or <code>lda $fff000</code> depending on the CPU. If this is fine then this
+warning can be disabled otherwise it can be made into an error by using
+<code>-Werror=wrap-addr</code>.</p>
+
+<dt><b>-Wno-wrap-bank0</b><a name="o_Wwrap-bank0" href="#o_Wwrap-bank0"></a>
+<dd>Don't warn for bank 0 wrap around.
+<p>Adding an offset to a bank 0 address may end up outside of bank 0. If this
+happens a warning is issued and the address wraps around.</p>
+
+<p>The warning may be ignored using this command line parameter. Alternatively
+it could be turned into an error by using <code>-Werror=wrap-bank0</code>.</p>
+
+<dt><b>-Wno-wrap-dpage</b><a name="o_Wwrap-dpage" href="#o_Wwrap-dpage"></a>
+<dd>Don't warn for direct page wrap around.
+<p>Adding an offset to a direct page address may end up outside of the direct
+page. For a 65816 or 65EL02 an alternative addressing mode is used but on other
+processors if this happens a warning is issued and the address wraps
+around.</p>
+
+<p>The warning may be ignored using this command line parameter. Alternatively
+it could be turned into an error by using <code>-Werror=wrap-dpage</code>.</p>
+
+<dt><b>-Wno-wrap-mem</b><a name="o_Wwrap-mem" href="#o_Wwrap-mem"></a>
+<dd>Don't warn for compile offset wrap around.
+<p>While assembling the compile offset may reach the end of memory image. If
+this happens a warning is issued and the compile offset is set to the start of
+image.</p>
+
+<p>The warning may be ignored using this command line parameter. Alternatively
+it could be turned into an error by using <code>-Werror=wrap-mem</code>.</p>
+
+<p>The image size depends on the output format. See the <a href="#commandline-output">Output options</a> section above.</p>
+
+<dt><b>-Wno-wrap-pc</b><a name="o_Wwrap-pc" href="#o_Wwrap-pc"></a>
+<dd>Don't warn for program counter wrap around.
+<p>While assembling the program counter may reach the end of the current
+program bank.  If this happens a warning is issued and the address wraps
+around.</p>
+
+<p>The warning may be ignored using this command line parameter. Alternatively
+it could be turned into an error by using <code>-Werror=wrap-pc</code>.</p>
+
+<dt><b>-Wno-wrap-pbank</b><a name="o_Wwrap-pbank" href="#o_Wwrap-pbank"></a>
+<dd>Don't warn for program bank address calculation wrap around.
+<p>Adding an offset to a program bank address may end up outside of the current
+program bank. If this happens a warning is issued and the address wraps around.</p>
+
+<p>The warning may be ignored using this command line parameter. Alternatively
+it could be turned into an error by using <code>-Werror=wrap-pbank</code>.</p>
 
 </dl>
 
@@ -3973,6 +4012,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <h3>Warnings<a name="messages-warnings" href="#messages-warnings"></a></h3>
 <dl class="errorlist">
 <dt>approximate floating point<dd>floating point comparisons are not exact and the numbers were close but maybe not quite
+<dt>bank 0 address overflow<dd>the calculated memory location address ended up outside of bank 0 and is now wrapped.
 <dt>case ignored, value already handled<dd>this value was already used in an earlier case so here it's ignored
 <dt>compile offset overflow<dd>compile continues at the bottom ($0000) as end of compile area was reached
 <dt>constant result, possibly changeable to 'lda'<dd>a pre-calculated value could be loaded instead as the result seems to be always the same
@@ -3982,6 +4022,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>deprecated equal operator, use '==' instead<dd>single equal sign for comparisons is going away soon, update source
 <dt>deprecated modulo operator, use '%' instead<dd>double slash for modulo is going away soon, update source
 <dt>deprecated not equal operator, use '!=' instead<dd>non-standard not equal operators which will stop working in the future, update source
+<dt>direct page address overflow<dd>the calculated memory location address ended up outside of direct page and is now wrapped.
 <dt>directive ignored<dd>an assembler directive was ignored for compatibility reasons
 <dt>expected ? values but got ? to unpack<dd>the number of variables must match the number of values when unpacking
 <dt>immediate addressing mode suggested<dd>numeric constant was used as an address which was likely meant as an immediate value
@@ -4000,6 +4041,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>possibly redundant if last 'jsr' is changed to 'jmp'<dd>tail call elimination possibility was detected
 <dt>possibly redundant indexing with a constant value<dd>the index register used seems to be constant and there's a way to eliminate indexing by a constant offset
 <dt>processor program counter overflow<dd>pc address was set back to the start of actual 64&nbsp;KiB program bank as end of bank was reached
+<dt>program bank address overflow<dd>the calculated memory location address ended up outside of the current program bank and is now wrapped.
 <dt>symbol case mismatch '?'<dd>the symbol is matching case insensitively but it's not all letters are exactly the same
 <dt>the file's real name is not '?'<dd>check if all characters match including their case as this is not the real name of the file
 <dt>this name uses reserved characters '?'<dd>do not use \ : * ? " &lt; &gt; | in file names as some operating systems don't like these
