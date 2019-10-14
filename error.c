@@ -355,10 +355,10 @@ static const char * const terr_fatal[] = {
     "too many passes"
 };
 
-static void err_msg_variable(Obj *val, linepos_t epoint) {
+static void err_msg_variable(Obj *val) {
     Obj *err;
     adderror(val->obj->name);
-    err = val->obj->str(val, epoint, 40);
+    err = val->obj->str(val, NULL, 40);
     if (err != NULL) {
         if (err->obj == STR_OBJ) {
             Str *str = (Str *)err;
@@ -521,7 +521,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR__NOT_DATABANK:
         case ERROR_CANT_CROSS_BA:
             adderror(terr_error[no - 0x40]);
-            if (prm != NULL) err_msg_variable((Obj *)prm, epoint);
+            if (prm != NULL) err_msg_variable((Obj *)prm);
             break;
         case ERROR___UNKNOWN_CPU:
             adderror("unknown processor '");
@@ -571,15 +571,15 @@ void err_msg_big_address(linepos_t epoint) {
     Obj *val = get_star_value(addr, current_address->l_address_val);
     new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("address not in processor address space ");
-    err_msg_variable(val, epoint);
+    err_msg_variable(val);
     val_destroy(val);
 }
 
-static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val, linepos_t epoint) {
+static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val) {
     char msg2[256];
     sprintf(msg2, msg, bits);
     adderror(msg2);
-    err_msg_variable(val, epoint);
+    err_msg_variable(val);
 }
 
 static void err_msg_invalid_conv(const Error *err) {
@@ -590,7 +590,7 @@ static void err_msg_invalid_conv(const Error *err) {
     }
     new_error_msg_err(err);
     adderror("conversion of ");
-    err_msg_variable(v1, &err->epoint);
+    err_msg_variable(v1);
     adderror(" to ");
     adderror(err->u.conv.t->name);
     adderror(" is not possible");
@@ -646,7 +646,7 @@ static void err_msg_not_defined3(const Error *err) {
 
     new_error_msg_err(err);
     adderror("not defined ");
-    err_msg_variable(err->u.notdef.ident, &err->epoint);
+    err_msg_variable(err->u.notdef.ident);
 
     if (l->file_list == NULL) {
         struct linepos_s nopoint = {0, 0};
@@ -713,13 +713,13 @@ static void err_msg_cant_broadcast(const char *msg, size_t v1, size_t v2) {
     adderror(msg2);
 }
 
-static void err_msg_invalid_oper2(const Oper *op, Obj *v1, Obj *v2, linepos_t epoint) {
+static void err_msg_invalid_oper2(const Oper *op, Obj *v1, Obj *v2) {
     adderror(op->name);
     adderror("' of ");
-    err_msg_variable(v1, epoint);
+    err_msg_variable(v1);
     if (v2 != NULL) {
         adderror(" and ");
-        err_msg_variable(v2, epoint);
+        err_msg_variable(v2);
     }
     adderror(" not possible");
 }
@@ -737,7 +737,7 @@ static void err_msg_invalid_oper3(const Error *err) {
     }
 
     new_error_msg_err(err);
-    err_msg_invalid_oper2(err->u.invoper.op, v1, v2, &err->epoint);
+    err_msg_invalid_oper2(err->u.invoper.op, v1, v2);
 }
 
 static void err_msg_still_none2(const Error *err) {
@@ -757,7 +757,7 @@ void err_msg_output(const Error *val) {
     case ERROR____STILL_NONE: err_msg_still_none2(val); break;
     case ERROR_____CANT_IVAL:
     case ERROR_____CANT_UVAL:
-    case ERROR______NOT_UVAL: new_error_msg_err(val); err_msg_big_integer(terr_error[val->num - 0x40], val->u.intconv.bits, val->u.intconv.val, &val->epoint);break;
+    case ERROR______NOT_UVAL: new_error_msg_err(val); err_msg_big_integer(terr_error[val->num - 0x40], val->u.intconv.bits, val->u.intconv.val);break;
     case ERROR____NO_FORWARD:
     case ERROR_REQUIREMENTS_:
     case ERROR______CONFLICT:
@@ -794,7 +794,7 @@ void err_msg_output(const Error *val) {
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
-    case ERROR_____KEY_ERROR: new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_msg_variable(val->u.obj, &val->epoint);break;
+    case ERROR_____KEY_ERROR: new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_msg_variable(val->u.obj);break;
     default: break;
     }
 }
@@ -1064,19 +1064,19 @@ void err_msg_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {
 void err_msg_bool(Error_types no, Obj *o, linepos_t epoint) {
     new_error_msg2(diagnostic_errors.strict_bool, epoint);
     adderror(terr_error[no - 0x40]);
-    err_msg_variable(o, epoint);
+    err_msg_variable(o);
     adderror(" [-Wstrict-bool]");
 }
 
 void err_msg_bool_val(Error_types no, unsigned int bits, Obj *o, linepos_t epoint) {
     new_error_msg2(diagnostic_errors.strict_bool, epoint);
-    err_msg_big_integer(terr_error[no - 0x40], bits, o, epoint);
+    err_msg_big_integer(terr_error[no - 0x40], bits, o);
     adderror(" [-Wstrict-bool]");
 }
 
 void err_msg_bool_oper(oper_t op) {
     new_error_msg2(diagnostic_errors.strict_bool, op->epoint3);
-    err_msg_invalid_oper2(op->op, op->v1, op->v2, op->epoint3);
+    err_msg_invalid_oper2(op->op, op->v1, op->v2);
     adderror(" [-Wstrict-bool]");
 }
 
