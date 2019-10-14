@@ -175,9 +175,11 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
     Code *v1 = (Code *)o1;
     Obj *v, *result;
-    Error *err = access_check(v1, epoint);
-    if (err != NULL) return &err->v;
-    v = get_code_address(v1, epoint);
+    if (epoint != NULL) {
+        Error *err = access_check(v1, epoint);
+        if (err != NULL) return &err->v;
+        v = get_code_address(v1, epoint);
+    } else v = get_star_value(code_address(v1), v1->typ);
     result = v->obj->str(v, epoint, maxsize);
     val_destroy(v);
     return result;
