@@ -131,6 +131,22 @@ MUST_CHECK Obj *get_code_value(const Code *v1, linepos_t epoint) {
     return get_code_address(v1, epoint);
 }
 
+MUST_CHECK Error *code_uaddress(Obj *o1, uval_t *uv, uval_t *uv2, linepos_t epoint) {
+    unsigned int bits = all_mem_bits;
+    Code *v1 = (Code *)o1;
+    Error *v = access_check(v1, epoint);
+    if (v != NULL) return v;
+    *uv = v1->addr + v1->offs;
+    *uv2 = v1->addr;
+    if ((*uv2 >> bits) == 0) {
+        return NULL;
+    }
+    v = new_error(ERROR_____CANT_UVAL, epoint);
+    v->u.intconv.bits = bits;
+    v->u.intconv.val = get_code_address(v1, epoint);
+    return v;
+}
+
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     Code *v1 = (Code *)o1;
     Obj *v, *result;

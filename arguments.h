@@ -77,6 +77,9 @@ struct diagnostics_s {
         bool pc;
         bool mem;
         bool addr;
+        bool dpage;
+        bool bank0;
+        bool pbank;
     } wrap;
     bool label_left;
     bool branch_page;
