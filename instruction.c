@@ -753,7 +753,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (val2->obj == CODE_OBJ) {
                 if (code_uaddress(val2, &uval, &uval2, epoint2)) break;
             } else {
-                if (touaddress(val2, &uval, all_mem_bits, epoint2)) break;
+                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
                 uval2 = uval;
             }
             if (opcode == c65el02.opcode || opcode == w65816.opcode) uval2 = uval;
@@ -781,7 +781,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (val2->obj == CODE_OBJ) {
                 if (code_uaddress(val2, &uval, &uval2, epoint2)) break;
             } else {
-                if (touaddress(val2, &uval, all_mem_bits, epoint2)) break;
+                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
                 uval2 = uval;
             }
             uval2 &= all_mem;
@@ -804,7 +804,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (val2->obj == CODE_OBJ) {
                 if (code_uaddress(val2, &uval, &uval2, epoint2)) break;
             } else {
-                if (touaddress(val2, &uval, all_mem_bits, epoint2)) break;
+                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
                 uval2 = uval;
             }
             if ((current_address->l_address.bank ^ uval2) <= 0xffff) {
@@ -851,81 +851,97 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
         break;
     case AG_DB2: /* 2 choice data bank */
     case AG_DB3: /* 3 choice data bank */
-        if (w == 3) {/* auto length */
+        {
             uval_t uval2;
             Obj *val2 = (val->obj == ADDRESS_OBJ) ? ((Address *)val)->val : val;
-            if (val2->obj == CODE_OBJ) {
-                if (code_uaddress(val2, &uval, &uval2, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
-            } else {
-                if (touaddress(val2, &uval, all_mem_bits, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
-                else uval2 = uval;
-            }
 
             if (w == 3) {/* auto length */
-                uval_t uval3;
-                uval2 &= all_mem;
-                uval3 = (opcode == c65el02.opcode || opcode == w65816.opcode) ? (uval & all_mem) : uval2;
-                if (diagnostics.altmode) {
-                    if (uval3 <= 0xffff && dpage <= 0xffff && (uint16_t)(uval3 - dpage) <= 0xff) w = 0;
-                    else if (databank == ((uval & all_mem) >> 16) || adrgen != AG_DB3) w = 1;
-                    else w = 2;
+                if (val2->obj == CODE_OBJ) {
+                    if (code_uaddress(val2, &uval, &uval2, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
+                } else {
+                    if (touaddress(val, &uval, all_mem_bits, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
+                    else uval2 = uval;
                 }
+                if (w == 3) {/* auto length */
+                    uval_t uval3;
+                    uval2 &= all_mem;
+                    uval3 = (opcode == c65el02.opcode || opcode == w65816.opcode) ? (uval & all_mem) : uval2;
+                    if (diagnostics.altmode) {
+                        if (uval3 <= 0xffff && dpage <= 0xffff && (uint16_t)(uval3 - dpage) <= 0xff) w = 0;
+                        else if (databank == ((uval & all_mem) >> 16) || adrgen != AG_DB3) w = 1;
+                        else w = 2;
+                    }
 
-                if (cnmemonic[opr] != ____ && uval3 <= 0xffff && dpage <= 0xffff && (uint16_t)(uval3 - dpage) <= 0xff) {
-                    if (diagnostics.immediate && opr == ADR_ZP && (cnmemonic[ADR_IMMEDIATE] != ____ || prm == 0) && val->obj != CODE_OBJ && val->obj != ADDRESS_OBJ) err_msg2(ERROR_NONIMMEDCONST, NULL, epoint2);
-                    else if (w != 3 && w != 0) err_msg_address_mismatch(opr-0, opr-w, epoint2);
-                    adr = uval - dpage; w = 0;
-                    if (opcode == c65el02.opcode || opcode == w65816.opcode) {
+                    if (cnmemonic[opr] != ____ && uval3 <= 0xffff && dpage <= 0xffff && (uint16_t)(uval3 - dpage) <= 0xff) {
+                        if (diagnostics.immediate && opr == ADR_ZP && (cnmemonic[ADR_IMMEDIATE] != ____ || prm == 0) && val->obj != CODE_OBJ && val->obj != ADDRESS_OBJ) err_msg2(ERROR_NONIMMEDCONST, NULL, epoint2);
+                        else if (w != 3 && w != 0) err_msg_address_mismatch(opr-0, opr-w, epoint2);
+                        adr = uval - dpage; w = 0;
+                        if (opcode == c65el02.opcode || opcode == w65816.opcode) {
+                            if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
+                        } else {
+                            if (adr > 0xff) err_msg_dpage_wrap(epoint2);
+                        }
+                    } else if (cnmemonic[opr - 1] != ____ && databank == ((uval & all_mem) >> 16)) {
+                        if (w != 3 && w != 1) err_msg_address_mismatch(opr-1, opr-w, epoint2);
+                        adr = uval; w = 1;
+                        if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
+                    } else if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) {
+                        if (w != 3 && w != 2) err_msg_address_mismatch(opr-2, opr-w, epoint2);
+                        adr = uval; w = 2;
                         if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
                     } else {
-                        if (adr > 0xff) err_msg_dpage_wrap(epoint2);
+                        w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
+                        err_msg2((w != 0) ? ERROR__NOT_DATABANK : ERROR____NOT_DIRECT, val, epoint2);
                     }
-                } else if (cnmemonic[opr - 1] != ____ && databank == ((uval & all_mem) >> 16)) {
-                    if (w != 3 && w != 1) err_msg_address_mismatch(opr-1, opr-w, epoint2);
-                    adr = uval; w = 1;
-                    if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
-                } else if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) {
-                    if (w != 3 && w != 2) err_msg_address_mismatch(opr-2, opr-w, epoint2);
-                    adr = uval; w = 2;
-                    if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
+                }
+            } else {
+                uval_t uval3;
+                if (val2->obj == CODE_OBJ) {
+                    if (code_uaddress(val2, &uval, &uval2, epoint2)) goto err;
                 } else {
-                    w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
-                    err_msg2((w != 0) ? ERROR__NOT_DATABANK : ERROR____NOT_DIRECT, val, epoint2);
+                    if (touaddress(val, &uval, all_mem_bits, epoint2)) goto err;
+                    uval2 = uval;
+                }
+
+                switch (w) {
+                case 0:
+                    if (cnmemonic[opr] == ____) return new_error(ERROR__NO_BYTE_ADDR, epoint);
+                    uval2 &= all_mem;
+                    uval3 = (opcode == c65el02.opcode || opcode == w65816.opcode) ? (uval & all_mem) : uval2;
+                    if (uval3 <= 0xffff) {
+                        adr = uval - dpage;
+                        if (dpage > 0xffff || (uint16_t)(uval3 - dpage) > 0xff) err_msg2(ERROR____NOT_DIRECT, val, epoint2);
+                        else if (opcode == c65el02.opcode || opcode == w65816.opcode) {
+                            if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
+                        } else {
+                            if (adr > 0xff) err_msg_dpage_wrap(epoint2);
+                        }
+                        break;
+                    }
+                    err_msg2(ERROR_____NOT_BANK0, val, epoint2);
+                    break;
+                case 1:
+                    if (cnmemonic[opr - 1] == ____) return new_error(ERROR__NO_WORD_ADDR, epoint);
+                    uval &= all_mem;
+                    adr = uval;
+                    if (databank != (uval >> 16)) err_msg2(ERROR__NOT_DATABANK, val, epoint2);
+                    else if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
+                    break;
+                case 2:
+                    if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) { 
+                        adr = uval & all_mem;
+                        if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
+                        break;
+                    }
+                    /* fall through */
+                default: 
+                    return new_error(ERROR__NO_LONG_ADDR, epoint);
                 }
             }
-        } else {
-            switch (w) {
-            case 0:
-                if (cnmemonic[opr] == ____) return new_error(ERROR__NO_BYTE_ADDR, epoint);
-                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
-                uval &= all_mem;
-                if (uval <= 0xffff) {
-                    adr = (uint16_t)(uval - dpage);
-                    if (adr > 0xff || dpage > 0xffff) err_msg2(ERROR____NOT_DIRECT, val, epoint2);
-                    break;
-                }
-                err_msg2(ERROR_____NOT_BANK0, val, epoint2);
-                break;
-            case 1:
-                if (cnmemonic[opr - 1] == ____) return new_error(ERROR__NO_WORD_ADDR, epoint);
-                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
-                uval &= all_mem;
-                adr = uval;
-                if (databank != (uval >> 16)) err_msg2(ERROR__NOT_DATABANK, val, epoint2);
-                break;
-            case 2:
-                if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) { 
-                    if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
-                    adr = uval & all_mem;
-                    break;
-                }
-                /* fall through */
-            default: 
-                return new_error(ERROR__NO_LONG_ADDR, epoint);
-            }
+        err:
+            opr = (Adr_types)(opr - w); ln = w + 1;
+            break;
         }
-        opr = (Adr_types)(opr - w); ln = w + 1;
-        break;
     case AG_SINT:
     case AG_SWORD:
     case AG_WORD: /* word only */
