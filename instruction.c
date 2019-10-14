@@ -812,6 +812,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             }
         }
         break;
+    case AG_DB2: /* 2 choice data bank */
     case AG_DB3: /* 3 choice data bank */
         if (w == 3) {/* auto length */
             if (touaddress(val, &uval, all_mem_bits, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
@@ -819,7 +820,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 uval &= all_mem;
                 if (diagnostics.altmode) {
                     if (uval <= 0xffff && dpage <= 0xffff && (uint16_t)(uval - dpage) <= 0xff) w = 0;
-                    else if (databank == (uval >> 16)) w = 1;
+                    else if (databank == (uval >> 16) || adrgen != AG_DB3) w = 1;
                     else w = 2;
                 }
 
@@ -830,7 +831,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 } else if (cnmemonic[opr - 1] != ____ && databank == (uval >> 16)) {
                     if (w != 3 && w != 1) err_msg_address_mismatch(opr-1, opr-w, epoint2);
                     adr = uval; w = 1;
-                } else if (cnmemonic[opr - 2] != ____) {
+                } else if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) {
                     if (w != 3 && w != 2) err_msg_address_mismatch(opr-2, opr-w, epoint2);
                     adr = uval; w = 2;
                 } else {
@@ -859,58 +860,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 if (databank != (uval >> 16)) err_msg2(ERROR__NOT_DATABANK, val, epoint2);
                 break;
             case 2:
-                if (cnmemonic[opr - 2] == ____) return new_error(ERROR__NO_LONG_ADDR, epoint);
+                if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) { 
                 if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
                 adr = uval & all_mem;
                 break;
-            default: return new_error(ERROR__NO_LONG_ADDR, epoint); /* can't happen */
-            }
-        }
-        opr = (Adr_types)(opr - w); ln = w + 1;
-        break;
-    case AG_DB2: /* 2 choice data bank */
-        if (w == 3) {/* auto length */
-            if (touaddress(val, &uval, all_mem_bits, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
-            else {
-                uval &= all_mem;
-                if (diagnostics.altmode) {
-                    if (uval <= 0xffff && dpage <= 0xffff && (uint16_t)(uval - dpage) <= 0xff) w = 0;
-                    else if (databank == (uval >> 16)) w = 1;
-                    else w = 2;
                 }
-
-                if (cnmemonic[opr] != ____ && uval <= 0xffff && dpage <= 0xffff && (uint16_t)(uval - dpage) <= 0xff) {
-                    if (w != 3 && w != 0) err_msg_address_mismatch(opr-0, opr-w, epoint2);
-                    adr = uval - dpage; w = 0;
-                } else if (cnmemonic[opr - 1] != ____ && databank == (uval >> 16)) {
-                    if (w != 3 && w != 1) err_msg_address_mismatch(opr-1, opr-w, epoint2);
-                    adr = uval; w = 1;
-                } else {
-                    w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
-                    err_msg2((w != 0) ? ERROR__NOT_DATABANK : ERROR____NOT_DIRECT, val, epoint2);
-                }
-            }
-        } else {
-            switch (w) {
-            case 0:
-                if (cnmemonic[opr] == ____) return new_error(ERROR__NO_BYTE_ADDR, epoint);
-                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
-                uval &= all_mem;
-                if (uval <= 0xffff) {
-                    adr = (uint16_t)(uval - dpage);
-                    if (adr > 0xff || dpage > 0xffff) err_msg2(ERROR____NOT_DIRECT, val, epoint2);
-                    break;
-                }
-                err_msg2(ERROR_____NOT_BANK0, val, epoint2);
-                break;
-            case 1:
-                if (cnmemonic[opr - 1] == ____) return new_error(ERROR__NO_WORD_ADDR, epoint);
-                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
-                uval &= all_mem;
-                adr = uval;
-                if (databank != (uval >> 16)) err_msg2(ERROR__NOT_DATABANK, val, epoint2);
-                break;
-            default: return new_error(ERROR__NO_LONG_ADDR, epoint);
+                /* fall through */
+            default: 
+                return new_error(ERROR__NO_LONG_ADDR, epoint);
             }
         }
         opr = (Adr_types)(opr - w); ln = w + 1;
