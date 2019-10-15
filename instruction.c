@@ -865,7 +865,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 if (w == 3) {/* auto length */
                     uval_t uval3;
                     uval2 &= all_mem;
-                    uval3 = (opcode == c65el02.opcode || opcode == w65816.opcode) ? (uval & all_mem) : uval2;
+                    uval3 = (opr == ADR_ZP || opcode == c65el02.opcode || opcode == w65816.opcode) ? (uval & all_mem) : uval2;
                     if (diagnostics.altmode) {
                         if (uval3 <= 0xffff && dpage <= 0xffff && (uint16_t)(uval3 - dpage) <= 0xff) w = 0;
                         else if (databank == ((uval & all_mem) >> 16) || adrgen != AG_DB3) w = 1;
