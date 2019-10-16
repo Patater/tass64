@@ -461,10 +461,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 s = new_star(vline + 1, &labelexists);
 
                 oadr = uval;
-                oval = val;
-                if (labelexists && oval->obj == ADDRESS_OBJ) {
-                    oval = ((Address *)oval)->val;
-                }
+                oval = val->obj == ADDRESS_OBJ ? ((Address *)val)->val : val;
                 if (labelexists && oval->obj == CODE_OBJ && pass != ((Code *)oval)->apass && cnmemonic[ADR_REL_L] == ____) { /* not for 65CE02! */
                     adr = (uint16_t)(uval - s->addr);
                 } else {
@@ -488,7 +485,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                                 }
                             }
                             cpu_opt_long_branch(cnmemonic[ADR_REL]);
-                            dump_instr(cnmemonic[ADR_REL] ^ 0x20, labelexists ? ((uint16_t)(s->addr - star - 2)) : 3, 1, epoint);
+                            dump_instr(cnmemonic[ADR_REL] ^ 0x20, labelexists ? ((uint16_t)(s->addr - current_address->l_address.address - 2)) : 3, 1, epoint);
                             lj->dest = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
                             lj->defpass = pass;
                             if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint);
@@ -542,11 +539,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                                 err = instruction(current_cpu->jmp, w, vals, epoint, epoints);
                                 cpu_opt_long_branch(0);
                             branchend:
-                                if (labelexists && s->addr != ((current_address->l_address.address & 0xffff) | current_address->l_address.bank)) {
-                                    if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
-                                    fixeddig = false;
+                                {
+                                    address_t st = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
+                                    if (labelexists && s->addr != st) {
+                                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+                                        fixeddig = false;
+                                    }
+                                    s->addr = st;
                                 }
-                                s->addr = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
                                 return err;
                             }
                         }
@@ -604,11 +604,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                     }
                 }
             branchok:
-                if (labelexists && s->addr != ((star + 1 + ln) & all_mem)) {
-                    if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
-                    fixeddig = false;
+                {
+                    address_t st = ((current_address->l_address.address + 1 + ln) & 0xffff) | current_address->l_address.bank;
+                    if (labelexists && s->addr != st) {
+                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+                        fixeddig = false;
+                    }
+                    s->addr = st;
                 }
-                s->addr = (star + 1 + ln) & all_mem;
                 if (opr == ADR_BIT_ZP_REL) adr = xadr | (adr << 8);
                 adrgen = AG_NONE; break;
             }
