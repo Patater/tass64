@@ -156,7 +156,7 @@ static MUST_CHECK Obj *list_create(Obj *o1, linepos_t epoint) {
     case T_ERROR:
     case T_LIST: return val_reference(o1);
     case T_TUPLE: return tuple_from_list((List *)o1, LIST_OBJ, epoint);
-    case T_CODE: return tuple_from_code((Code *)o1, LIST_OBJ, epoint);
+    case T_CODE: return tuple_from_code((Code *)o1, LIST_OBJ);
     default: break;
     }
     return (Obj *)new_error_conv(o1, LIST_OBJ, epoint);
@@ -168,7 +168,7 @@ static MUST_CHECK Obj *tuple_create(Obj *o1, linepos_t epoint) {
     case T_ERROR:
     case T_TUPLE: return val_reference(o1);
     case T_LIST: return tuple_from_list((List *)o1, TUPLE_OBJ, epoint);
-    case T_CODE: return tuple_from_code((Code *)o1, TUPLE_OBJ, epoint);
+    case T_CODE: return tuple_from_code((Code *)o1, TUPLE_OBJ);
     default: break;
     }
     return (Obj *)new_error_conv(o1, TUPLE_OBJ, epoint);

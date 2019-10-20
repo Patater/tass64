@@ -353,7 +353,7 @@ static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
     return (v1->dtype < 0) ? (Obj *)int_from_ival((ival_t)val) : (Obj *)int_from_uval(val);
 }
 
-MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ, linepos_t epoint) {
+MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
     address_t ln, ln2;
     size_t  i;
     ssize_t offs;

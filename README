@@ -3827,8 +3827,6 @@ some operation '?' of type '?' and type '?' not possible
     can't do this calculation with these values
 square root of negative number
     can't calculate the square root of a negative number
-too early to reference
-    processing still ongoing, can't access this yet
 too large for a ? bit signed/unsigned integer
     value out of range
 unknown processor '?'
