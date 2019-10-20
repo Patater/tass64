@@ -20,6 +20,7 @@
 #define MFUNCOBJ_H
 #include "obj.h"
 #include "str.h"
+#include "stdbool.h"
 
 extern struct Type *const MFUNC_OBJ;
 
@@ -36,6 +37,7 @@ typedef struct Mfunc {
     struct mfunc_param_s *param;
     struct file_list_s *file_list;
     line_t line;
+    bool retval;
     uint8_t recursion_pass;
     size_t nslen;
     struct Namespace **namespaces, *names;
