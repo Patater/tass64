@@ -19,7 +19,6 @@
 #include "values.h"
 #include <string.h>
 #include "obj.h"
-#include "64tass.h"
 
 #include "unicode.h"
 #include "error.h"
@@ -145,18 +144,13 @@ FAST_CALL void val_replace(Obj **val, Obj *val2) {
 }
 
 size_t val_print(Obj *v1, FILE *f) {
-    bool oldreferenceit = referenceit;
-    Obj *err;
     struct linepos_s nopoint = {0, 0};
     size_t len;
-    referenceit = false;
-    err = v1->obj->repr(v1, &nopoint, SIZE_MAX);
-    if (err != NULL) {
-        if (err->obj == STR_OBJ) len = printable_print2(((Str *)err)->data, f, ((Str *)err)->len);
-        else len = printable_print2((const uint8_t *)err->obj->name, f, strlen(err->obj->name));
-        val_destroy(err);
-    } else len = 0;
-    referenceit = oldreferenceit;
+    Obj *err = v1->obj->repr(v1, &nopoint, SIZE_MAX);
+    if (err == NULL) return 0;
+    if (err->obj == STR_OBJ) len = printable_print2(((Str *)err)->data, f, ((Str *)err)->len);
+    else len = printable_print2((const uint8_t *)err->obj->name, f, strlen(err->obj->name));
+    val_destroy(err);
     return len;
 }
 

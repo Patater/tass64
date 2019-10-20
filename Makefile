@@ -206,8 +206,8 @@ typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
 unicodedata.o: unicodedata.c unicodedata.h attributes.h inttypes.h
 unicode.o: unicode.c unicode.h attributes.h inttypes.h stdbool.h wchar.h \
  wctype.h error.h errors_e.h avl.h unicodedata.h str.h
-values.o: values.c values.h attributes.h obj.h inttypes.h 64tass.h \
- stdbool.h wait_e.h unicode.h error.h errors_e.h avl.h strobj.h typeobj.h
+values.o: values.c values.h attributes.h obj.h inttypes.h unicode.h \
+ stdbool.h error.h errors_e.h avl.h strobj.h typeobj.h
 variables.o: variables.c variables.h stdbool.h str.h inttypes.h unicode.h \
  attributes.h 64tass.h wait_e.h file.h avl.h obj.h error.h errors_e.h \
  values.h arguments.h eval.h boolobj.h floatobj.h namespaceobj.h strobj.h \
