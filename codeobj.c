@@ -360,10 +360,6 @@ MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ, linepos_t epoin
     List *v;
     Obj **vals;
 
-    if (v1->pass != pass) {
-        return (Obj *)new_error(ERROR____NO_FORWARD, epoint);
-    }
-
     ln2 = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
     if (ln2 == 0) ln2 = 1;
     ln = calc_size(v1) / ln2;
@@ -404,10 +400,6 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     }
     o2 = args->val[indx].val;
     epoint2 = &args->val[indx].epoint;
-
-    if (v1->pass != pass) {
-        return (Obj *)new_error(ERROR____NO_FORWARD, op->epoint);
-    }
 
     ln2 = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
     if (ln2 == 0) ln2 = 1;
@@ -617,10 +609,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         size_t i;
         ssize_t offs;
         Obj *tmp, *result;
-
-        if (v2->pass != pass) {
-            return (Obj *)new_error(ERROR____NO_FORWARD, op->epoint2);
-        }
 
         ln2 = (v2->dtype < 0) ? (address_t)-v2->dtype : (address_t)v2->dtype;
         if (ln2 == 0) ln2 = 1;

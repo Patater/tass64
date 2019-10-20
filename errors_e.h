@@ -78,7 +78,6 @@ typedef enum Error_types {
     ERROR__EMPTY_STRING,
     ERROR____EMPTY_LIST,
     ERROR__NOT_ONE_CHAR,
-    ERROR____NO_FORWARD,
     ERROR_REQUIREMENTS_,
     ERROR______CONFLICT,
     ERROR___INDEX_RANGE,
