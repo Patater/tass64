@@ -146,7 +146,7 @@ mem.o: mem.c mem.h attributes.h stdbool.h inttypes.h error.h errors_e.h \
  avl.h file.h str.h 64tass.h wait_e.h listing.h arguments.h values.h \
  memblocksobj.h obj.h
 mfuncobj.o: mfuncobj.c mfuncobj.h obj.h attributes.h inttypes.h str.h \
- values.h eval.h stdbool.h error.h errors_e.h avl.h macro.h wait_e.h \
+ stdbool.h values.h eval.h error.h errors_e.h avl.h macro.h wait_e.h \
  file.h typeobj.h namespaceobj.h operobj.h oper_e.h listobj.h
 my_getopt.o: my_getopt.c my_getopt.h stdbool.h unicode.h attributes.h \
  inttypes.h error.h errors_e.h avl.h

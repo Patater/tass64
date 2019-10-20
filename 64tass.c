@@ -152,6 +152,9 @@ static struct waitfor_s {
         } cmd_macro;
         struct {
             Obj *val;
+        } cmd_function;
+        struct {
+            Obj *val;
         } cmd_switch;
     } u;
 } *waitfors, *waitfor;
@@ -941,7 +944,9 @@ static const char *check_waitfor(void) {
     case W_ENDM:
         if (waitfor->u.cmd_macro.val != NULL) val_destroy(waitfor->u.cmd_macro.val);
         return ".endm";
-    case W_ENDF: return ".endf";
+    case W_ENDF: 
+        if (waitfor->u.cmd_function.val != NULL) val_destroy(waitfor->u.cmd_function.val);
+        return ".endf";
     case W_NEXT3:
         pop_context();
         /* fall through */
@@ -2324,9 +2329,10 @@ MUST_CHECK Obj *compile(void)
                             mfunc->nslen = 0;
                             mfunc->namespaces = NULL;
                             if (labelexists) {
+                                mfunc->retval = (label->value->obj == MFUNC_OBJ) && ((Mfunc *)label->value)->retval;
                                 if (label->defpass == pass) {
+                                    waitfor->u.cmd_function.val = &mfunc->v;
                                     mfunc->names = new_namespace(current_file_list, &epoint);
-                                    val_destroy(&mfunc->v);
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
                                     if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
@@ -2350,8 +2356,10 @@ MUST_CHECK Obj *compile(void)
                                     get_func_params(mfunc);
                                     get_namespaces(mfunc);
                                     const_assign(label, &mfunc->v);
+                                    waitfor->u.cmd_function.val = val_reference(label->value);
                                 }
                             } else {
+                                mfunc->retval = false;
                                 if (!constcreated && temporary_label_branch == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
@@ -2364,6 +2372,7 @@ MUST_CHECK Obj *compile(void)
                                 get_func_params(mfunc);
                                 get_namespaces(mfunc);
                                 mfunc->names = new_namespace(current_file_list, &epoint);
+                                waitfor->u.cmd_function.val = val_reference(&mfunc->v);
                             }
                             goto finish;
                         }
@@ -3136,7 +3145,12 @@ MUST_CHECK Obj *compile(void)
                 } else err_msg2(ERROR__MISSING_OPEN, ".macro' or '.segment", &epoint);
                 goto breakerr;
             case CMD_ENDF: /* .endf */
-                if (close_waitfor(W_ENDF)) {
+                if (waitfor->what==W_ENDF) {
+                    if (waitfor->u.cmd_function.val != NULL) {
+                        ((Mfunc *)waitfor->u.cmd_function.val)->retval = (here() != 0 && here() != ';');
+                        val_destroy(waitfor->u.cmd_function.val);
+                    }
+                    close_waitfor(W_ENDF);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 } else if (waitfor->what==W_ENDF3) { /* not closed here */
                     nobreak = false;
@@ -4310,6 +4324,7 @@ MUST_CHECK Obj *compile(void)
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                 }
                 new_waitfor(W_ENDF, &epoint);
+                waitfor->u.cmd_function.val = NULL;
                 waitfor->skip = 0;
                 break;
             case CMD_VAR: /* .var */
@@ -4525,7 +4540,6 @@ MUST_CHECK Obj *compile(void)
                 default : err_msg_wrong_type2(val, NULL, &vs->epoint); goto breakerr;
                 }
             as_macro:
-                listing_line_cut(listing, epoint.pos);
                 if (val->obj == MACRO_OBJ || val->obj == STRUCT_OBJ || val->obj == UNION_OBJ) {
                     Namespace *context;
                     if (newlabel != NULL && !((Macro *)val)->retval && newlabel->value->obj == CODE_OBJ) {
@@ -4557,6 +4571,11 @@ MUST_CHECK Obj *compile(void)
                             label->epoint = epoint;
                         }
                         context = (Namespace *)label->value;
+                    }
+                    if (newlabel != NULL && ((Macro *)val)->retval) {
+                        listing_equal(listing, newlabel->value);
+                    } else {
+                        listing_line_cut(listing, epoint.pos);
                     }
                     val = macro_recurse(val->obj == MACRO_OBJ ? W_ENDM3 : val->obj == STRUCT_OBJ ? W_ENDS3 : W_ENDU3, val, context, &epoint);
                 } else if (val->obj == MFUNC_OBJ) {
@@ -4592,9 +4611,21 @@ MUST_CHECK Obj *compile(void)
                         val_destroy(&mfunc->v);
                         goto breakerr;
                     }
+                    if (newlabel != NULL && ((Mfunc *)val)->retval) {
+                        listing_equal(listing, newlabel->value);
+                    } else {
+                        listing_line_cut(listing, epoint.pos);
+                    }
                     val = mfunc_recurse(mfunc, (Namespace *)label->value, strength, &epoint);
                     val_destroy(&mfunc->v);
-                } else val = macro_recurse(W_ENDM3, val, NULL, &epoint);
+                } else { /* segment */
+                    if (newlabel != NULL && ((Macro *)val)->retval) {
+                        listing_equal(listing, newlabel->value);
+                    } else {
+                        listing_line_cut(listing, epoint.pos);
+                    }
+                    val = macro_recurse(W_ENDM3, val, NULL, &epoint);
+                }
                 if (val != NULL) {
                     if (newlabel != NULL) {
                         newlabel->update_after = true;
