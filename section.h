@@ -60,7 +60,7 @@ struct section_s {
     bool declared;
     struct section_s *parent;
     struct section_s *next;
-    struct file_list_s *file_list;
+    const struct file_list_s *file_list;
     struct optimizer_s *optimizer;
     struct linepos_s epoint;
     struct avltree members;

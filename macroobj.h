@@ -36,7 +36,7 @@ typedef struct Macro {
     Obj v;
     size_t argc;
     struct macro_param_s *param;
-    struct file_list_s *file_list;
+    const struct file_list_s *file_list;
     line_t line;
     bool retval;
     uint8_t recursion_pass;
@@ -47,7 +47,7 @@ typedef struct Struct {
     Obj v;
     size_t argc;
     struct macro_param_s *param;
-    struct file_list_s *file_list;
+    const struct file_list_s *file_list;
     line_t line;
     bool retval;
     uint8_t recursion_pass;
