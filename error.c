@@ -307,7 +307,6 @@ static const char * const terr_error[] = {
     "empty string not allowed",
     "empty list not allowed",
     "more than a single character",
-    "too early to reference",
     "requirements not met",
     "conflict",
     "index out of range ",
@@ -758,7 +757,6 @@ void err_msg_output(const Error *val) {
     case ERROR_____CANT_IVAL:
     case ERROR_____CANT_UVAL:
     case ERROR______NOT_UVAL: new_error_msg_err(val); err_msg_big_integer(terr_error[val->num - 0x40], val->u.intconv.bits, val->u.intconv.val);break;
-    case ERROR____NO_FORWARD:
     case ERROR_REQUIREMENTS_:
     case ERROR______CONFLICT:
     case ERROR_NOT_TWO_CHARS:
