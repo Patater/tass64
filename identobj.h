@@ -30,7 +30,7 @@ typedef struct Ident {
     Obj v;
     str_t name;
     uint8_t val[16];
-    struct file_list_s *file_list;
+    const struct file_list_s *file_list;
 } Ident;
 
 typedef struct Anonident {

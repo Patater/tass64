@@ -35,7 +35,7 @@ typedef struct Mfunc {
     Obj v;
     size_t argc;
     struct mfunc_param_s *param;
-    struct file_list_s *file_list;
+    const struct file_list_s *file_list;
     line_t line;
     bool retval;
     uint8_t recursion_pass;

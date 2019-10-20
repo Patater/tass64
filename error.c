@@ -963,7 +963,7 @@ void err_msg_double_defined(Label *l, const str_t *labelname2, linepos_t epoint2
     err_msg_double_note(l->file_list, &l->epoint, labelname2);
 }
 
-void err_msg_double_definedo(struct file_list_s *cflist, linepos_t epoint, const str_t *labelname2, linepos_t epoint2) {
+void err_msg_double_definedo(const struct file_list_s *cflist, linepos_t epoint, const str_t *labelname2, linepos_t epoint2) {
     err_msg_double_defined2("duplicate definition", SV_ERROR, current_file_list, labelname2, epoint2);
     err_msg_double_note(cflist, epoint, labelname2);
 }
