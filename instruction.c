@@ -105,6 +105,15 @@ MUST_CHECK bool toiaddress(Obj *v1, ival_t *iv, unsigned int bits, linepos_t epo
     return true;
 }
 
+static MUST_CHECK bool tocode_uaddress(Obj *v1, uval_t *uv, uval_t *uv2, linepos_t epoint) {
+    Error *err;
+    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    err = code_uaddress(v1, uv, uv2, epoint);
+    if (err == NULL) return false;
+    err_msg_output_and_destroy(err);
+    return true;
+}
+
 MUST_CHECK Error *err_addressing(atype_t am, linepos_t epoint) {
     Error *v;
     if (am > MAX_ADDRESS_MASK) return new_error(ERROR__ADDR_COMPLEX, epoint);
@@ -756,7 +765,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             ln = 1;
             val2 = (val->obj == ADDRESS_OBJ) ? ((Address *)val)->val : val;
             if (val2->obj == CODE_OBJ) {
-                if (code_uaddress(val2, &uval, &uval2, epoint2)) break;
+                if (tocode_uaddress(val2, &uval, &uval2, epoint2)) break;
             } else {
                 if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
                 uval2 = uval;
@@ -784,7 +793,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             ln = 2;
             val2 = (val->obj == ADDRESS_OBJ) ? ((Address *)val)->val : val;
             if (val2->obj == CODE_OBJ) {
-                if (code_uaddress(val2, &uval, &uval2, epoint2)) break;
+                if (tocode_uaddress(val2, &uval, &uval2, epoint2)) break;
             } else {
                 if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
                 uval2 = uval;
@@ -807,7 +816,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             ln = 2;
             val2 = (val->obj == ADDRESS_OBJ) ? ((Address *)val)->val : val;
             if (val2->obj == CODE_OBJ) {
-                if (code_uaddress(val2, &uval, &uval2, epoint2)) break;
+                if (tocode_uaddress(val2, &uval, &uval2, epoint2)) break;
             } else {
                 if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
                 uval2 = uval;
@@ -862,7 +871,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
 
             if (w == 3) {/* auto length */
                 if (val2->obj == CODE_OBJ) {
-                    if (code_uaddress(val2, &uval, &uval2, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
+                    if (tocode_uaddress(val2, &uval, &uval2, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
                 } else {
                     if (touaddress(val, &uval, all_mem_bits, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
                     else uval2 = uval;
@@ -902,7 +911,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             } else {
                 uval_t uval3;
                 if (val2->obj == CODE_OBJ) {
-                    if (code_uaddress(val2, &uval, &uval2, epoint2)) goto err;
+                    if (tocode_uaddress(val2, &uval, &uval2, epoint2)) goto err;
                 } else {
                     if (touaddress(val, &uval, all_mem_bits, epoint2)) goto err;
                     uval2 = uval;
