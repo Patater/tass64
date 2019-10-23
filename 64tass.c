@@ -1344,7 +1344,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     labels.p = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    if (lst != NULL) listing_equal(listing, &lst->v);
+    if (lst != NULL) listing_equal2(listing, &lst->v, epoint->pos);
     else listing_line(listing, epoint->pos);
     new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
 
@@ -1666,7 +1666,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     size_t i = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    if (lst != NULL) listing_equal(listing, &lst->v);
+    if (lst != NULL) listing_equal2(listing, &lst->v, epoint->pos);
     else listing_line(listing, epoint->pos);
     new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
     if (!get_exp(0, 1, 1, epoint)) cnt = 0;
@@ -1727,7 +1727,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     const uint8_t *oldpline;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    if (lst != NULL) listing_equal(listing, &lst->v);
+    if (lst != NULL) listing_equal2(listing, &lst->v, epoint->pos);
     else listing_line(listing, epoint->pos);
     new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
 
