@@ -32,6 +32,7 @@ extern const uint8_t *llist;
 extern MUST_CHECK struct Listing *listing_open(const char *, int, char *[]);
 extern void listing_close(struct Listing *);
 extern FAST_CALL void listing_equal(struct Listing *, struct Obj *);
+extern FAST_CALL void listing_equal2(struct Listing *, struct Obj *, linecpos_t);
 extern FAST_CALL void listing_line(struct Listing *, linecpos_t);
 extern FAST_CALL void listing_line_cut(struct Listing *, linecpos_t);
 extern FAST_CALL void listing_line_cut2(struct Listing *, linecpos_t);
