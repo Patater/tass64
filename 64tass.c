@@ -2824,16 +2824,20 @@ MUST_CHECK Obj *compile(void)
                     epoint = cmdpoint;
                     switch (prm) {
                     case CMD_PROC:
-                        listing_line(listing, epoint.pos);
                         new_waitfor(W_PEND, &epoint);
                         if (newlabel->value->obj != CODE_OBJ) {
+                            listing_line(listing, 0);
                             waitfor->skip = 0; push_dummy_context();
                             waitfor->u.cmd_proc.label = NULL;
                         } else if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
-                            waitfor->skip = 0; set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
+                            listing_line(listing, 0);
+                            waitfor->skip = 0; 
+                            set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
+                            ((Code *)newlabel->value)->pass = 1;
                             push_dummy_context();
                             waitfor->u.cmd_proc.label = NULL;
                         } else {         /* TODO: first time it should not compile */
+                            listing_line(listing, epoint.pos);
                             push_context(((Code *)newlabel->value)->names);
                             newlabel->ref = false;
                             waitfor->u.cmd_proc.addr = current_address->address;waitfor->u.cmd_proc.membp = newmembp;waitfor->u.cmd_proc.label = ref_label(newlabel);

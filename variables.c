@@ -507,6 +507,9 @@ static void labelprint2(const struct avltree *members, FILE *flab, int labelmode
         case T_SEGMENT:
         case T_UNION:
         case T_STRUCT: continue;
+        case T_CODE:
+            if (((Code *)l->value)->pass != ((Code *)l->value)->apass) continue;
+            break;
         default:break;
         }
         if (labelmode == LABEL_VICE) {
