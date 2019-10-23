@@ -27,7 +27,7 @@ typedef enum Output_types {
 } Output_types;
 
 typedef enum Symbollist_types {
-    LABEL_64TASS, LABEL_VICE, LABEL_DUMP
+    LABEL_64TASS, LABEL_VICE, LABEL_DUMP, LABEL_EXPORT
 } Symbollist_types;
 
 struct file_s;

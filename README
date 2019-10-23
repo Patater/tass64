@@ -3386,10 +3386,18 @@ Symbol listing
     This option may be used multiple times. In this case the format and root
     scope options must be placed before using this option.
 
-    64tass --vice-labels -l all.l --labels-root=export -l myexport.inc source.asm
+    64tass --vice-labels -l all.l --export-labels --labels-root=export -l myexport.inc source.asm
 
     This writes symbols for VICE into `all.l' and symbols from scope `export'
     into `myexport.inc'.
+
+--export-labels
+    List labels in a 64tass readable format.
+
+    The difference to normal symbol listing is that 64tass assumes these
+    symbols will be used in another source. In practice this means that any
+    .proc/.pend blocks appearing in the symbol file will always be compiled
+    even if unused otherwise.
 
 --vice-labels
     List labels in a VICE readable format.
