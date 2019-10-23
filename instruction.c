@@ -655,6 +655,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
         case 2:
             addrlist = (Addrlist *)vals;
             if (cnmemonic[ADR_MOVE] != ____) {
+                if (w != 3 && w != 1) return new_error((w == 0) ? ERROR__NO_BYTE_ADDR : ERROR__NO_LONG_ADDR, epoint);
                 val = addrlist->data[0];
                 if (touaddress(val, &uval, 8, epoint2)) {}
                 else {
