@@ -1344,7 +1344,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     labels.p = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    listing_line(listing, epoint->pos);
+    if (lst != NULL) listing_equal(listing, &lst->v);
+    else listing_line(listing, epoint->pos);
     new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
 
     do { /* label */
@@ -1665,7 +1666,8 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     size_t i = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    listing_line(listing, epoint->pos);
+    if (lst != NULL) listing_equal(listing, &lst->v);
+    else listing_line(listing, epoint->pos);
     new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
     if (!get_exp(0, 1, 1, epoint)) cnt = 0;
     else {
@@ -1725,7 +1727,8 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     const uint8_t *oldpline;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    listing_line(listing, epoint->pos);
+    if (lst != NULL) listing_equal(listing, &lst->v);
+    else listing_line(listing, epoint->pos);
     new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
 
     s = new_star(vline, &starexists); stree_old = star_tree; ovline = vline;
