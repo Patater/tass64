@@ -685,7 +685,7 @@ void ref_labels(void) {
         Namespace *space;
         struct avltree_node *n;
 
-        if (output->mode != LABEL_64TASS) continue;
+        if (output->mode != LABEL_EXPORT) continue;
         space = find_space(output->space, true);
         if (space == NULL) continue;
 

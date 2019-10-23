@@ -352,6 +352,7 @@ static const struct my_option long_options[] = {
     {"output"           , my_required_argument, NULL, 'o'},
     {"output-section"   , my_required_argument, NULL,  0x114},
     {"error"            , my_required_argument, NULL, 'E'},
+    {"export-labels"    , my_no_argument      , NULL,  0x115},
     {"vice-labels"      , my_no_argument      , NULL,  0x10b},
     {"dump-labels"      , my_no_argument      , NULL,  0x10d},
     {"labels-root"      , my_required_argument, NULL,  0x113},
@@ -514,6 +515,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                       symbol_output.mode = LABEL_64TASS;
                       symbol_output.space = NULL;
                       break;
+            case 0x115: symbol_output.mode = LABEL_EXPORT; break;
             case 0x10b: symbol_output.mode = LABEL_VICE; break;
             case 0x10d: symbol_output.mode = LABEL_DUMP; break;
             case 0x113: symbol_output.space = my_optarg; break;
@@ -541,10 +543,10 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "        [--atari-xex] [--apple-ii] [--intel-hex] [--s-record] [--nonlinear]\n"
                "        [--tasm-compatible] [--quiet] [--no-warn] [--long-address] [--m65c02]\n"
                "        [--m6502] [--m65xx] [--m65dtv02] [--m65816] [--m65el02] [--mr65c02]\n"
-               "        [--mw65c02] [--m65ce02] [--m4510] [--labels=<file>] [--vice-labels]\n"
-               "        [--dump-labels] [--list=<file>] [--no-monitor] [--no-source]\n"
-               "        [--line-numbers] [--tab-size=<value>] [--verbose-list] [-W<option>]\n"
-               "        [--errors=<file>] [--output=<file>] [--help] [--usage]\n"
+               "        [--mw65c02] [--m65ce02] [--m4510] [--labels=<file>] [--export-labels]\n"
+               "        [--vice-labels] [--dump-labels] [--list=<file>] [--no-monitor]\n"
+               "        [--no-source] [--line-numbers] [--tab-size=<value>] [--verbose-list]\n"
+               "        [-W<option>] [--errors=<file>] [--output=<file>] [--help] [--usage]\n"
                "        [--version] SOURCES");
                    return 0;
 
@@ -635,6 +637,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "\n"
                " Source listing and labels:\n"
                "  -l, --labels=<file>   List labels into <file>\n"
+               "      --export-labels   Export for other source\n"
                "      --vice-labels     Labels in VICE format\n"
                "      --dump-labels     Dump for debugging\n"
                "      --labels-root=<l> List from scope <l> only\n"
