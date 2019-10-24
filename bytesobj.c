@@ -1267,7 +1267,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 } else {
                     p2 = v->data;
                     if (offs != 0) memmove(p2, v1->data + offs, length);
-                    v->u.s.hash = -1;
+                    if (v->data != v->u.val) v->u.s.hash = -1;
                 }
             } else {
                 v = new_bytes2(length);
@@ -1282,7 +1282,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                     p2 = v->u.val;
                 } else {
                     p2 = v->data;
-                    v->u.s.hash = -1;
+                    if (v->data != v->u.val) v->u.s.hash = -1;
                 }
             } else {
                 v = new_bytes2(length);
