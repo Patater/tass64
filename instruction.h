@@ -32,7 +32,7 @@ extern MUST_CHECK bool touval(struct Obj *, uval_t *, unsigned int, linepos_t);
 extern MUST_CHECK bool toival(struct Obj *, ival_t *, unsigned int, linepos_t);
 extern MUST_CHECK bool touaddress(struct Obj *, uval_t *, unsigned int, linepos_t);
 extern MUST_CHECK bool toiaddress(struct Obj *, ival_t *, unsigned int, linepos_t);
-extern MUST_CHECK struct Error *err_addressing(uint32_t, linepos_t);
+extern MUST_CHECK struct Error *err_addressing(uint32_t, linepos_t, uint32_t);
 
 extern bool longaccu, longindex, autosize;
 extern uint32_t dpage;

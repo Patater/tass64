@@ -731,7 +731,19 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     err_msg_not_defined3(&err);
 }
 
-static void err_msg_no_addressing(atype_t addrtype) {
+static void err_opcode(uint32_t cod) {
+    adderror(" addressing mode ");
+    if (cod != 0) {
+        char tmp[18];
+        memcpy(tmp, "for opcode 'xxx'", sizeof tmp);
+        tmp[12] = cod >> 16;
+        tmp[13] = cod >> 8;
+        tmp[14] = cod;
+        adderror(tmp);
+    } else adderror("accepted");
+}
+
+static void err_msg_no_addressing(atype_t addrtype, uint32_t cod) {
     adderror("no");
     if (addrtype == A_NONE) adderror(" implied");
     for (; (addrtype & MAX_ADDRESS_MASK) != 0; addrtype <<= 4) {
@@ -753,19 +765,21 @@ static void err_msg_no_addressing(atype_t addrtype) {
         }
         adderror(txt);
     }
-    adderror(" addressing mode for opcode");
+    err_opcode(cod);
 }
 
-static void err_msg_no_register(Register *val) {
+static void err_msg_no_register(Register *val, uint32_t cod) {
     adderror("no register '");
     adderror2(val->data, val->len);
-    adderror("' addressing mode for opcode");
+    adderror("'");
+    err_opcode(cod);
 }
 
-static void err_msg_no_lot_operand(size_t opers) {
+static void err_msg_no_lot_operand(size_t opers, uint32_t cod) {
     char msg2[256];
-    sprintf(msg2, "no %" PRIuSIZE " operand addressing mode for opcode", opers);
+    sprintf(msg2, "no %" PRIuSIZE " operand", opers);
     adderror(msg2);
+    err_opcode(cod);
 }
 
 static void err_msg_cant_broadcast(const char *msg, size_t v1, size_t v2) {
@@ -842,9 +856,9 @@ void err_msg_output(const Error *val) {
     case ERROR_OUT_OF_MEMORY:
     case ERROR__ADDR_COMPLEX:
     case ERROR_DIVISION_BY_Z: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); break;
-    case ERROR_NO_ADDRESSING: more = new_error_msg_err(val); err_msg_no_addressing(val->u.addressing);break;
-    case ERROR___NO_REGISTER: more = new_error_msg_err(val); err_msg_no_register(val->u.reg);break;
-    case ERROR___NO_LOT_OPER: more = new_error_msg_err(val); err_msg_no_lot_operand(val->u.opers);break;
+    case ERROR_NO_ADDRESSING: more = new_error_msg_err(val); err_msg_no_addressing(val->u.addressing.am, val->u.addressing.cod);break;
+    case ERROR___NO_REGISTER: more = new_error_msg_err(val); err_msg_no_register(val->u.reg.reg, val->u.reg.cod);break;
+    case ERROR___NO_LOT_OPER: more = new_error_msg_err(val); err_msg_no_lot_operand(val->u.opers.num, val->u.opers.cod);break;
     case ERROR_CANT_BROADCAS: more = new_error_msg_err(val); err_msg_cant_broadcast(terr_error[val->num - 0x40], val->u.broadcast.v1, val->u.broadcast.v2);break;
     case ERROR__NOT_KEYVALUE:
     case ERROR__NOT_HASHABLE:
@@ -1154,10 +1168,10 @@ void err_msg_bool_oper(oper_t op) {
     adderror(" [-Wstrict-bool]");
 }
 
-void err_msg_implied_reg(linepos_t epoint) {
+void err_msg_implied_reg(linepos_t epoint, uint32_t cod) {
     Severity_types severity = diagnostic_errors.implied_reg ? SV_ERROR : SV_WARNING;
     bool more = new_error_msg(severity, current_file_list, epoint);
-    err_msg_no_addressing(A_NONE);
+    err_msg_no_addressing(A_NONE, cod);
     adderror(" [-Wimplied-reg]");
     if (more) new_error_msg_more();
 }
