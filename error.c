@@ -80,6 +80,7 @@ struct errorentry_s {
     size_t line_len;
     const struct file_list_s *file_list;
     struct linepos_s epoint;
+    linecpos_t pos;
     struct avltree_node node;
 };
 
@@ -171,7 +172,7 @@ static void error_extend(void) {
     if (error_list.members.first != NULL) error_list.members.first = (struct avltree_node *)((uint8_t *)error_list.members.first + diff);
 }
 
-static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len) {
+static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len, size_t pos) {
     struct errorentry_s *err;
     close_error();
     error_list.len = error_list.header_pos + sizeof *err;
@@ -188,7 +189,9 @@ static void new_error_msg_common(Severity_types severity, const struct file_list
     err->error_len = 0;
     err->line_len = line_len;
     err->file_list = flist;
-    err->epoint = *epoint;
+    err->epoint.line = epoint->line;
+    err->epoint.pos = pos;
+    err->pos = epoint->pos;
 }
 
 static struct {
@@ -204,7 +207,7 @@ static bool new_error_msg(Severity_types severity, const struct file_list_s *fli
         struct linepos_s opoint;
         const struct file_list_s *eflist = macro_error_translate(&opoint, epoint->pos);
         if (eflist != NULL) {
-            new_error_msg_common(severity, eflist, &opoint, 0);
+            new_error_msg_common(severity, eflist, &opoint, 0, opoint.pos);
             new_error_msg_more_param.severity = severity;
             new_error_msg_more_param.flist = flist;
             new_error_msg_more_param.epoint = epoint;
@@ -215,7 +218,7 @@ static bool new_error_msg(Severity_types severity, const struct file_list_s *fli
     case SV_NOTE: line_len = 0; break;
     default: line_len = ((epoint->line == lpoint.line) && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
     }
-    new_error_msg_common(severity, flist, epoint, line_len);
+    new_error_msg_common(severity, flist, epoint, line_len, macro_error_translate2(epoint->pos));
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], pline, line_len);
     return false;
 }
@@ -226,12 +229,12 @@ static bool new_error_msg_err(const Error *err) {
         struct linepos_s opoint;
         const struct file_list_s *eflist = macro_error_translate(&opoint, err->epoint.pos);
         if (eflist != NULL) {
-            new_error_msg_common(SV_ERROR, eflist, &opoint, 0);
+            new_error_msg_common(SV_ERROR, eflist, &opoint, 0, opoint.pos);
             return true;
         }
     }
     line_len = (err->line != NULL) ? (strlen((const char *)err->line) + 1) : 0;
-    new_error_msg_common(SV_ERROR, err->file_list, &err->epoint, line_len);
+    new_error_msg_common(SV_ERROR, err->file_list, &err->epoint, line_len, macro_error_translate2(err->epoint.pos));
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], err->line, line_len);
     return false;
 }
@@ -621,7 +624,7 @@ static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val) {
 
 static void new_error_msg_err_more(const Error *err) {
     size_t line_len = (err->line != NULL) ? (strlen((const char *)err->line) + 1) : 0;
-    new_error_msg_common(SV_NOTE, err->file_list, &err->epoint, line_len);
+    new_error_msg_common(SV_NOTE, err->file_list, &err->epoint, line_len, macro_error_translate2(err->epoint.pos));
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], err->line, line_len);
     adderror("original location in an expanded macro was here");
 }
@@ -634,7 +637,7 @@ static void new_error_msg_more() {
     case SV_NOTE: line_len = 0; break;
     default: line_len = ((epoint->line == lpoint.line) && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
     }
-    new_error_msg_common(SV_NOTE, flist, epoint, line_len);
+    new_error_msg_common(SV_NOTE, flist, epoint, line_len, macro_error_translate2(epoint->pos));
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], pline, line_len);
     adderror("original location in an expanded macro was here");
 }
@@ -1324,7 +1327,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
         putc(' ', f);
         printable_print(line, f);
         fputs("\n ", f);
-        caret_print(line, f, epoint->pos);
+        caret_print(line, f, err->pos);
         fputs(print_use_color ? "\33[01;32m^\33[m\33[K\n" : "^\n", f);
     }
 }

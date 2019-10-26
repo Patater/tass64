@@ -41,7 +41,7 @@
 static int functionrecursion;
 
 struct macro_rpos_s {
-    size_t pos, len, param;
+    size_t opos, olen, pos, len, param;
 };
 
 struct macro_pline_s {
@@ -100,10 +100,27 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
     return ret;
 }
 
+size_t macro_error_translate2(size_t pos) {
+    const struct macro_pline_s *mline = &macro_parameters.current->pline;
+    if (macro_parameters.p != 0 && pline == mline->data) {
+        size_t i, pos2 = pos;
+        for (i = 0; i < mline->rp; i++) {
+            const struct macro_rpos_s *rpositions = &mline->rpositions[i];
+            if (rpositions->pos > pos2) break;
+            if (rpositions->pos + rpositions->len > pos2) {
+                pos = rpositions->opos;
+                break;
+            }
+            pos = pos + rpositions->olen - rpositions->len;
+        }
+    }
+    return pos;
+}
+
 /* ------------------------------------------------------------------------------ */
 bool mtranslate(void) {
     unsigned int q;
-    size_t j, n;
+    size_t j, n, op;
     size_t p, p2;
     size_t last, last2;
     struct macro_pline_s *mline;
@@ -145,12 +162,14 @@ bool mtranslate(void) {
             j = (uint8_t)(pline[p2 + 1] - '1');
             if (j < 9) {   /* \1..\9 */
                 p += p2 - last2;
+                op = p2;
                 p2 += 2;
                 break;
             }
             if (j == ('@' - '1')) { /* \@ gives complete parameter list */
                 j = SIZE_MAX;
                 p += p2 - last2;
+                op = p2;
                 p2 += 2;
                 break;
             }
@@ -171,6 +190,7 @@ bool mtranslate(void) {
                 Macro *macro = (Macro *)macro_parameters.current->macro;
                 str_t cf;
                 p += p2 - last2;
+                op = p2;
                 p2 = lpoint.pos;
                 str_cfcpy(&cf, &param);
                 for (j = 0; j < macro->argc; j++) {
@@ -195,6 +215,7 @@ bool mtranslate(void) {
                 j = (uint8_t)(pline[p2 + 1] - '1');
                 if (j < 9) { /* @1..@9 */
                     p += p2 - last2;
+                    op = p2;
                     p2 += 2;
                     break;
                 }
@@ -236,6 +257,8 @@ bool mtranslate(void) {
             if (mline->rlen < 8) err_msg_out_of_memory(); /* overflow */
             mline->rpositions = (struct macro_rpos_s *)reallocx(mline->rpositions, mline->rlen * sizeof *mline->rpositions);
         }
+        mline->rpositions[n].opos = op;
+        mline->rpositions[n].olen = p2 - op;
         mline->rpositions[n].pos = p;
         mline->rpositions[n].param = j;
         mline->rpositions[n++].len = param.len;
