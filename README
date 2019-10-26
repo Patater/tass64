@@ -3795,7 +3795,7 @@ must be used within a loop
     .break or .continue must be used within a loop
 negative number raised on fractional power
     can't calculate this
-no ? addressing mode for opcode
+no ? addressing mode for opcode 'xxx'
     this addressing mode is not valid for this instruction
 not a bank 0 address
     value must be a bank zero address

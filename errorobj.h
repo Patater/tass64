@@ -62,6 +62,9 @@ typedef struct Error {
             size_t num, cod;
         } opers;
         struct {
+            size_t cod;
+        } addresssize;
+        struct {
             size_t v1;
             size_t v2;
         } broadcast;
