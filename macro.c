@@ -72,25 +72,28 @@ static struct {
 bool in_macro;
 
 const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t pos) {
-    size_t p = macro_parameters.p;
-    const struct file_list_s *flist = current_file_list, *ret = NULL;
-    while (p != 0) {
-        p--;
-        const struct macro_pline_s *mline = &macro_parameters.params[p].pline;
-        size_t i;
-        for (i = 0; i < mline->rp; i++) {
-            size_t c = pos - mline->rpositions[i].pos;
-            if (c < mline->rpositions[i].len) {
-                size_t param = mline->rpositions[i].param;
-                pos = (param != SIZE_MAX ? macro_parameters.params[p].param[param].pos : macro_parameters.params[p].all.pos) + c;
-                opoint->pos = pos;
-                opoint->line = flist->epoint.line;
-                ret = flist->parent;
-                flist = ret;
-                break;
+    const struct file_list_s *ret = NULL;
+    if (pline == macro_parameters.current->pline.data) {
+        const struct file_list_s *flist = current_file_list;
+        size_t p = macro_parameters.p;
+        while (p != 0) {
+            p--;
+            const struct macro_pline_s *mline = &macro_parameters.params[p].pline;
+            size_t i;
+            for (i = 0; i < mline->rp; i++) {
+                size_t c = pos - mline->rpositions[i].pos;
+                if (c < mline->rpositions[i].len) {
+                    size_t param = mline->rpositions[i].param;
+                    pos = (param != SIZE_MAX ? macro_parameters.params[p].param[param].pos : macro_parameters.params[p].all.pos) + c;
+                    opoint->pos = pos;
+                    opoint->line = flist->epoint.line;
+                    ret = flist->parent;
+                    flist = ret;
+                    break;
+                }
             }
+            if (i == mline->rp) break;
         }
-        if (i == mline->rp) break;
     }
     return ret;
 }
