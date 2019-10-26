@@ -114,12 +114,12 @@ static MUST_CHECK bool tocode_uaddress(Obj *v1, uval_t *uv, uval_t *uv2, linepos
     return true;
 }
 
-MUST_CHECK Error *err_addressing(atype_t am, linepos_t epoint, uint32_t cod) {
+MUST_CHECK Error *err_addressing(atype_t am, linepos_t epoint, int prm) {
     Error *v;
     if (am > MAX_ADDRESS_MASK) return new_error(ERROR__ADDR_COMPLEX, epoint);
     v = new_error(ERROR_NO_ADDRESSING, epoint);
     v->u.addressing.am = am;
-    v->u.addressing.cod = cod;
+    v->u.addressing.cod = (prm >= 0) ? mnemonic[prm] : 0;
     return v;
 }
 
@@ -430,7 +430,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 adrgen = AG_IMP; opr = ADR_IMPLIED;
                 break;
             }
-            return err_addressing(A_NONE, epoint, mnemonic[prm]);
+            return err_addressing(A_NONE, epoint, prm);
         case 1:
             addrlist = (Addrlist *)vals;
             val = addrlist->data[0];
@@ -446,7 +446,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                     break;
                 }
                 if (am > MAX_ADDRESS_MASK) return new_error(ERROR__ADDR_COMPLEX, epoint2);
-                return err_addressing(am, epoint2, mnemonic[prm]);
+                return err_addressing(am, epoint2, prm);
             }
             if (val->obj == REGISTER_OBJ) {
                 Register *cpureg = (Register *)val;
@@ -687,7 +687,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 if (touaddress(val, &uval, 8, epoint2)) {}
                 else {
                     am = val->obj->address(val);
-                    if (am != A_NONE && am != A_IMMEDIATE) err_msg_output_and_destroy(err_addressing(am, epoint2, mnemonic[prm]));
+                    if (am != A_NONE && am != A_IMMEDIATE) err_msg_output_and_destroy(err_addressing(am, epoint2, prm));
                     else adr = (uval & 0xff) << 8;
                 }
                 epoint2 = &epoints[1];
@@ -695,7 +695,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 if (touaddress(val, &uval, 8, epoint2)) {}
                 else {
                     am = val->obj->address(val);
-                    if (am != A_NONE && am != A_IMMEDIATE) err_msg_output_and_destroy(err_addressing(am, epoint2, mnemonic[prm]));
+                    if (am != A_NONE && am != A_IMMEDIATE) err_msg_output_and_destroy(err_addressing(am, epoint2, prm));
                     else adr |= uval & 0xff;
                 }
                 ln = 2;
@@ -712,7 +712,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 if (am == A_DR) {
                     adrgen = AG_BYTE;
                 } else {
-                    if (am != A_NONE) err_msg_output_and_destroy(err_addressing(am, epoint2, mnemonic[prm]));
+                    if (am != A_NONE) err_msg_output_and_destroy(err_addressing(am, epoint2, prm));
                     adrgen = AG_ZP;
                 }
                 opr = ADR_BIT_ZP;
@@ -741,7 +741,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                     if (touaddress(val, &uval, 8, epoint2)) {}
                     else adr = uval & 0xff;
                 } else {
-                    if (am != A_NONE) err_msg_output_and_destroy(err_addressing(am, epoint2, mnemonic[prm]));
+                    if (am != A_NONE) err_msg_output_and_destroy(err_addressing(am, epoint2, prm));
                     else if (touaddress(val, &uval, all_mem_bits, epoint2)) {}
                     else {
                         uval &= all_mem;

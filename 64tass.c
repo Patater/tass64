@@ -780,7 +780,7 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
                 case A_KR:
                     break;
                 default:
-                    err_msg_output_and_destroy(err_addressing(am, poke_pos, 0));
+                    err_msg_output_and_destroy(err_addressing(am, poke_pos, -1));
                 }
                 ch2 = (prm == CMD_RTA) ? (uv - 1) : uv;
                 break;
@@ -1068,7 +1068,7 @@ static bool virtual_start(linepos_t epoint) {
         if (touaddress(vs->val, &uval, all_mem_bits, &vs->epoint)) {retval = true; break;}
         am = vs->val->obj->address(vs->val);
         if (am != A_NONE && check_addr(am)) {
-            err_msg_output_and_destroy(err_addressing(am, &vs->epoint, 0));
+            err_msg_output_and_destroy(err_addressing(am, &vs->epoint, -1));
             retval = true;
             break;
         }
@@ -1114,7 +1114,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
         }
         am = val->obj->address(val);
         if (am != A_NONE && check_addr(am)) {
-            err_msg_output_and_destroy(err_addressing(am, epoint2, 0));
+            err_msg_output_and_destroy(err_addressing(am, epoint2, -1));
             break;
         }
         if (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) {
@@ -3521,7 +3521,7 @@ MUST_CHECK Obj *compile(void)
                     if (touaddress(tmp, &uval, all_mem_bits, &vs->epoint)) break;
                     am = tmp->obj->address(tmp);
                     if (am != A_NONE && check_addr(am)) {
-                        err_msg_output_and_destroy(err_addressing(am, &vs->epoint, 0));
+                        err_msg_output_and_destroy(err_addressing(am, &vs->epoint, -1));
                         break;
                     }
                     if (current_address->unionmode) {
