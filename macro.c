@@ -61,6 +61,7 @@ struct macro_params_s {
     size_t len, size;
     struct macro_value_s *param, all;
     struct macro_pline_s pline;
+    bool used;
     Obj *macro;
 };
 
@@ -93,6 +94,7 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
                 }
             }
             if (i == mline->rp) break;
+            if (p > 0 && !macro_parameters.params[p - 1].used) break;
         }
     }
     return ret;
@@ -336,6 +338,9 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
         macro_parameters.current->pline.rpositions = NULL;
         macro_parameters.current->pline.rp = 0;
         macro_parameters.current->pline.rlen = 0;
+    }
+    if (macro_parameters.p > 0) {
+        macro_parameters.params[macro_parameters.p - 1].used = (pline == macro_parameters.params[macro_parameters.p - 1].pline.data);
     }
     macro_parameters.current = &macro_parameters.params[macro_parameters.p];
     macro_parameters.current->macro = val_reference(&macro->v);
