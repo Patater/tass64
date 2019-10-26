@@ -192,7 +192,7 @@ bool mtranslate(void) {
         case 0: 
             if (param.data == NULL) {
                 lpoint.pos = last2 + p - last;
-                err_msg_missing_argument(current_file_list, &lpoint, j);
+                err_msg_missing_argument(&lpoint, j);
                 fault = true;
             }
             break;
