@@ -983,10 +983,10 @@ static const char * const order_suffix[4] = {
     "st", "nd", "rd", "th"
 };
 
-void err_msg_missing_argument(struct file_list_s *cflist, linepos_t epoint, size_t n) {
+void err_msg_missing_argument(linepos_t epoint, size_t n) {
     char msg2[4];
     int i = n % 10;
-    new_error_msg(SV_ERROR, cflist->parent, &cflist->epoint);
+    new_error_msg(SV_ERROR, current_file_list->parent, &current_file_list->epoint);
     msg2[0] = n + '1';
     memcpy(msg2 + 1, order_suffix[i < 4 ? i : 3], 3);
     adderror(msg2);
