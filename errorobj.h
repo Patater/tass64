@@ -51,9 +51,16 @@ typedef struct Error {
             Obj *val;
         } conv;
         Obj *obj;
-        uint32_t addressing;
-        struct Register *reg;
-        size_t opers;
+        struct {
+            uint32_t am, cod;
+        } addressing;
+        struct {
+            struct Register *reg;
+            uint32_t cod;
+        } reg;
+        struct {
+            size_t num, cod;
+        } opers;
         struct {
             size_t v1;
             size_t v2;

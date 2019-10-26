@@ -41,7 +41,7 @@ static FAST_CALL void destroy(Obj *o1) {
         if (v1->u.invoper.v2 != NULL) val_destroy(v1->u.invoper.v2);
         return;
     case ERROR___NO_REGISTER:
-        val_destroy(&v1->u.reg->v);
+        val_destroy(&v1->u.reg.reg->v);
         return;
     case ERROR_____CANT_UVAL:
     case ERROR_____CANT_IVAL:
@@ -99,7 +99,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
         }
         break;
     case ERROR___NO_REGISTER:
-        v = &v1->u.reg->v;
+        v = &v1->u.reg.reg->v;
         break;
     case ERROR_____CANT_UVAL:
     case ERROR_____CANT_IVAL:
