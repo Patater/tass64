@@ -357,9 +357,9 @@ static const char * const terr_error[] = {
     "can't get size of ",
     "can't get boolean value of ",
     "not iterable ",
-    "no byte sized addressing mode for opcode",
-    "no word sized addressing mode for opcode",
-    "no long sized addressing mode for opcode",
+    "no byte sized",
+    "no word sized",
+    "no long sized",
     "not a direct page address ",
     "not a data bank address ",
     "not a bank 0 address ",
@@ -849,9 +849,6 @@ void err_msg_output(const Error *val) {
     case ERROR__BYTES_NEEDED:
     case ERROR___NO_LAST_GAP:
     case ERROR__NOT_ONE_CHAR:
-    case ERROR__NO_BYTE_ADDR:
-    case ERROR__NO_WORD_ADDR:
-    case ERROR__NO_LONG_ADDR:
     case ERROR_NO_ZERO_VALUE:
     case ERROR_OUT_OF_MEMORY:
     case ERROR__ADDR_COMPLEX:
@@ -860,6 +857,9 @@ void err_msg_output(const Error *val) {
     case ERROR___NO_REGISTER: more = new_error_msg_err(val); err_msg_no_register(val->u.reg.reg, val->u.reg.cod);break;
     case ERROR___NO_LOT_OPER: more = new_error_msg_err(val); err_msg_no_lot_operand(val->u.opers.num, val->u.opers.cod);break;
     case ERROR_CANT_BROADCAS: more = new_error_msg_err(val); err_msg_cant_broadcast(terr_error[val->num - 0x40], val->u.broadcast.v1, val->u.broadcast.v2);break;
+    case ERROR__NO_BYTE_ADDR:
+    case ERROR__NO_WORD_ADDR:
+    case ERROR__NO_LONG_ADDR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_opcode(val->u.addresssize.cod); break;
     case ERROR__NOT_KEYVALUE:
     case ERROR__NOT_HASHABLE:
     case ERROR_____CANT_SIGN:
