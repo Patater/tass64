@@ -30,6 +30,7 @@
 #include "arguments.h"
 #include "opcodes.h"
 #include "section.h"
+#include "macro.h"
 
 #include "strobj.h"
 #include "addressobj.h"
@@ -190,24 +191,55 @@ static void new_error_msg_common(Severity_types severity, const struct file_list
     err->epoint = *epoint;
 }
 
-static void new_error_msg(Severity_types severity, const struct file_list_s *flist, linepos_t epoint) {
+static struct {
+    Severity_types severity;
+    const struct file_list_s *flist;
+    linepos_t epoint;
+} new_error_msg_more_param;
+
+static void new_error_msg_more(void);
+static bool new_error_msg(Severity_types severity, const struct file_list_s *flist, linepos_t epoint) {
     size_t line_len;
+    if (in_macro && flist == current_file_list && epoint->line == lpoint.line) {
+        struct linepos_s opoint;
+        const struct file_list_s *eflist = macro_error_translate(&opoint, epoint->pos);
+        if (eflist != NULL) {
+            new_error_msg_common(severity, eflist, &opoint, 0);
+            new_error_msg_more_param.severity = severity;
+            new_error_msg_more_param.flist = flist;
+            new_error_msg_more_param.epoint = epoint;
+            return true;
+        }
+    }
     switch (severity) {
     case SV_NOTE: line_len = 0; break;
     default: line_len = ((epoint->line == lpoint.line) && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
     }
     new_error_msg_common(severity, flist, epoint, line_len);
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], pline, line_len);
+    return false;
 }
 
-static void new_error_msg_err(const Error *err) {
-    size_t line_len = (err->line != NULL) ? (strlen((const char *)err->line) + 1) : 0;
+static bool new_error_msg_err(const Error *err) {
+    size_t line_len;
+    if (in_macro && err->file_list == current_file_list && err->epoint.line == lpoint.line) {
+        struct linepos_s opoint;
+        const struct file_list_s *eflist = macro_error_translate(&opoint, err->epoint.pos);
+        if (eflist != NULL) {
+            new_error_msg_common(SV_ERROR, eflist, &opoint, 0);
+            return true;
+        }
+    }
+    line_len = (err->line != NULL) ? (strlen((const char *)err->line) + 1) : 0;
     new_error_msg_common(SV_ERROR, err->file_list, &err->epoint, line_len);
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], err->line, line_len);
+    return false;
 }
 
 static void new_error_msg2(bool type, linepos_t epoint) {
-    new_error_msg(type ? SV_ERROR : SV_WARNING, current_file_list, epoint);
+    Severity_types severity = type ? SV_ERROR : SV_WARNING;
+    bool more = new_error_msg(severity, current_file_list, epoint);
+    if (more) new_error_msg_more();
 }
 
 static FAST_CALL int file_list_compare(const struct avltree_node *aa, const struct avltree_node *bb)
@@ -384,7 +416,7 @@ static void str_name(const uint8_t *data, size_t len) {
 }
 
 void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
-
+    bool more;
     if (no < 0x40) {
         switch (no) {
         case ERROR___OPTIMIZABLE:
@@ -455,8 +487,9 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             adderror("long branch used [-Wlong-branch]");
             break;
         case ERROR_WUSER_DEFINED:
-            new_error_msg(SV_WARNING, current_file_list, epoint);
+            more = new_error_msg(SV_WARNING, current_file_list, epoint);
             adderror2(((const Str *)prm)->data, ((const Str *)prm)->len);
+            if (more) new_error_msg_more();
             break;
 #ifdef _WIN32
         case ERROR___INSENSITIVE:
@@ -473,8 +506,9 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             adderror("' [-Wportable]");
             break;
         default:
-            new_error_msg(SV_WARNING, current_file_list, epoint);
+            more = new_error_msg(SV_WARNING, current_file_list, epoint);
             adderror(terr_warning[no]);
+            if (more) new_error_msg_more();
             break;
         }
         return;
@@ -482,7 +516,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
 
     if (no < 0xc0) {
         char line[1024];
-        new_error_msg(SV_ERROR, current_file_list, epoint);
+        more = new_error_msg(SV_ERROR, current_file_list, epoint);
         switch (no) {
         case ERROR_BRANCH_TOOFAR:
             sprintf(line,"branch too far by %+d bytes", *(const int *)prm); adderror(line);
@@ -530,10 +564,11 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         default:
             adderror(terr_error[no - 0x40]);
         }
+        if (more) new_error_msg_more();
         return;
     }
 
-    new_error_msg(SV_FATAL, current_file_list, epoint);
+    more = new_error_msg(SV_FATAL, current_file_list, epoint);
     switch (no) {
     case ERROR_UNKNOWN_OPTIO:
         adderror("unknown option '");
@@ -553,6 +588,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
     default:
         adderror(terr_fatal[no - 0xc0]);
     }
+    if (more) new_error_msg_more();
 }
 
 void err_msg(Error_types no, const void* prm) {
@@ -560,18 +596,20 @@ void err_msg(Error_types no, const void* prm) {
 }
 
 static void err_msg_str_name(const char *msg, const str_t *name, linepos_t epoint) {
-    new_error_msg(SV_ERROR, current_file_list, epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror(msg);
     if (name != NULL) str_name(name->data, name->len);
+    if (more) new_error_msg_more();
 }
 
 void err_msg_big_address(linepos_t epoint) {
     address_t addr = (current_address->l_address.address & 0xffff) | current_address->l_address.bank;
     Obj *val = get_star_value(addr, current_address->l_address_val);
-    new_error_msg(SV_ERROR, current_file_list, epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("address not in processor address space ");
     err_msg_variable(val);
     val_destroy(val);
+    if (more) new_error_msg_more();
 }
 
 static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val) {
@@ -581,18 +619,40 @@ static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val) {
     err_msg_variable(val);
 }
 
-static void err_msg_invalid_conv(const Error *err) {
+static void new_error_msg_err_more(const Error *err) {
+    size_t line_len = (err->line != NULL) ? (strlen((const char *)err->line) + 1) : 0;
+    new_error_msg_common(SV_NOTE, err->file_list, &err->epoint, line_len);
+    if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], err->line, line_len);
+    adderror("original location in an expanded macro was here");
+}
+
+static void new_error_msg_more() {
+    const struct file_list_s *flist = new_error_msg_more_param.flist;
+    linepos_t epoint = new_error_msg_more_param.epoint;
+    size_t line_len;
+    switch (new_error_msg_more_param.severity) {
+    case SV_NOTE: line_len = 0; break;
+    default: line_len = ((epoint->line == lpoint.line) && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
+    }
+    new_error_msg_common(SV_NOTE, flist, epoint, line_len);
+    if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], pline, line_len);
+    adderror("original location in an expanded macro was here");
+}
+
+static bool err_msg_invalid_conv(const Error *err) {
+    bool more;
     Obj *v1 = err->u.conv.val;
     if (v1->obj == ERROR_OBJ) {
         err_msg_output((const Error *)v1);
-        return;
+        return false;
     }
-    new_error_msg_err(err);
+    more = new_error_msg_err(err);
     adderror("conversion of ");
     err_msg_variable(v1);
     adderror(" to ");
     adderror(err->u.conv.t->name);
     adderror(" is not possible");
+    return more;
 }
 
 static FAST_CALL int notdefines_compare(const struct avltree_node *aa, const struct avltree_node *bb)
@@ -616,6 +676,7 @@ static void err_msg_not_defined3(const Error *err) {
     Namespace *l = err->u.notdef.names;
     struct notdefines_s *tmp2;
     struct avltree_node *b;
+    bool more;
 
     if (constcreated && pass < max_pass) return;
 
@@ -643,9 +704,10 @@ static void err_msg_not_defined3(const Error *err) {
         }
     }
 
-    new_error_msg_err(err);
+    more = new_error_msg_err(err);
     adderror("not defined ");
     err_msg_variable(err->u.notdef.ident);
+    if (more) new_error_msg_err_more(err);
 
     if (l->file_list == NULL) {
         struct linepos_s nopoint = {0, 0};
@@ -725,6 +787,7 @@ static void err_msg_invalid_oper2(const Oper *op, Obj *v1, Obj *v2) {
 
 static void err_msg_invalid_oper3(const Error *err) {
     Obj *v1 = err->u.invoper.v1, *v2;
+    bool more;
     if (v1->obj == ERROR_OBJ) {
         err_msg_output((const Error *)v1);
         return;
@@ -735,28 +798,32 @@ static void err_msg_invalid_oper3(const Error *err) {
         return;
     }
 
-    new_error_msg_err(err);
+    more = new_error_msg_err(err);
     err_msg_invalid_oper2(err->u.invoper.op, v1, v2);
+    if (more) new_error_msg_err_more(err);
 }
 
-static void err_msg_still_none2(const Error *err) {
+static bool err_msg_still_none2(const Error *err) {
     struct errorentry_s *e;
-    if ((constcreated || !fixeddig) && pass < max_pass) return;
-    new_error_msg_err(err);
+    bool more;
+    if ((constcreated || !fixeddig) && pass < max_pass) return false;
+    more = new_error_msg_err(err);
     e = (struct errorentry_s *)&error_list.data[error_list.header_pos];
     e->severity = SV_NONEERROR;
     adderror("can't calculate this");
+    return more;
 }
 
 void err_msg_output(const Error *val) {
+    bool more = false;
     switch (val->num) {
     case ERROR___NOT_DEFINED: err_msg_not_defined3(val);break;
-    case ERROR__INVALID_CONV: err_msg_invalid_conv(val);break;
+    case ERROR__INVALID_CONV: more = err_msg_invalid_conv(val);break;
     case ERROR__INVALID_OPER: err_msg_invalid_oper3(val);break;
-    case ERROR____STILL_NONE: err_msg_still_none2(val); break;
+    case ERROR____STILL_NONE: more = err_msg_still_none2(val); break;
     case ERROR_____CANT_IVAL:
     case ERROR_____CANT_UVAL:
-    case ERROR______NOT_UVAL: new_error_msg_err(val); err_msg_big_integer(terr_error[val->num - 0x40], val->u.intconv.bits, val->u.intconv.val);break;
+    case ERROR______NOT_UVAL: more = new_error_msg_err(val); err_msg_big_integer(terr_error[val->num - 0x40], val->u.intconv.bits, val->u.intconv.val); break;
     case ERROR_REQUIREMENTS_:
     case ERROR______CONFLICT:
     case ERROR_NOT_TWO_CHARS:
@@ -774,11 +841,11 @@ void err_msg_output(const Error *val) {
     case ERROR_NO_ZERO_VALUE:
     case ERROR_OUT_OF_MEMORY:
     case ERROR__ADDR_COMPLEX:
-    case ERROR_DIVISION_BY_Z: new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); break;
-    case ERROR_NO_ADDRESSING: new_error_msg_err(val); err_msg_no_addressing(val->u.addressing);break;
-    case ERROR___NO_REGISTER: new_error_msg_err(val); err_msg_no_register(val->u.reg);break;
-    case ERROR___NO_LOT_OPER: new_error_msg_err(val); err_msg_no_lot_operand(val->u.opers);break;
-    case ERROR_CANT_BROADCAS: new_error_msg_err(val); err_msg_cant_broadcast(terr_error[val->num - 0x40], val->u.broadcast.v1, val->u.broadcast.v2);break;
+    case ERROR_DIVISION_BY_Z: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); break;
+    case ERROR_NO_ADDRESSING: more = new_error_msg_err(val); err_msg_no_addressing(val->u.addressing);break;
+    case ERROR___NO_REGISTER: more = new_error_msg_err(val); err_msg_no_register(val->u.reg);break;
+    case ERROR___NO_LOT_OPER: more = new_error_msg_err(val); err_msg_no_lot_operand(val->u.opers);break;
+    case ERROR_CANT_BROADCAS: more = new_error_msg_err(val); err_msg_cant_broadcast(terr_error[val->num - 0x40], val->u.broadcast.v1, val->u.broadcast.v2);break;
     case ERROR__NOT_KEYVALUE:
     case ERROR__NOT_HASHABLE:
     case ERROR_____CANT_SIGN:
@@ -792,9 +859,10 @@ void err_msg_output(const Error *val) {
     case ERROR_LOG_NON_POSIT:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
-    case ERROR_____KEY_ERROR: new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_msg_variable(val->u.obj);break;
+    case ERROR_____KEY_ERROR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_msg_variable(val->u.obj);break;
     default: break;
     }
+    if (more) new_error_msg_err_more(val);
 }
 
 void err_msg_output_and_destroy(Error *val) {
@@ -803,7 +871,7 @@ void err_msg_output_and_destroy(Error *val) {
 }
 
 void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
-    new_error_msg(SV_ERROR, current_file_list, epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("wrong type '");
     adderror(val->obj->name);
     if (expected != NULL) {
@@ -811,6 +879,7 @@ void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
         adderror(expected->name);
     }
     adderror("'");
+    if (more) new_error_msg_more();
 }
 
 void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
@@ -825,9 +894,10 @@ void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
 
 void err_msg_cant_unpack(size_t expect, size_t got, linepos_t epoint) {
     char line[1024];
-    new_error_msg(SV_ERROR, current_file_list, epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     sprintf(line, "expected %" PRIuSIZE " values but got %" PRIuSIZE " to unpack", expect, got);
     adderror(line);
+    if (more) new_error_msg_more();
 }
 
 void err_msg_cant_calculate(const str_t *name, linepos_t epoint) {
@@ -835,9 +905,10 @@ void err_msg_cant_calculate(const str_t *name, linepos_t epoint) {
 }
 
 void err_msg_cant_calculate2(const str_t *name, const struct file_list_s *flist, linepos_t epoint) {
-    new_error_msg(SV_ERROR, flist, epoint);
+    bool more = new_error_msg(SV_ERROR, flist, epoint);
     adderror("can't calculate stable value");
     str_name(name->data, name->len);
+    if (more) new_error_msg_more();
 }
 
 void err_msg_still_none(const str_t *name, linepos_t epoint) {
@@ -948,9 +1019,10 @@ void err_msg_address_mismatch(int a, int b, linepos_t epoint) {
 }
 
 static void err_msg_double_defined2(const char *msg, Severity_types severity, const struct file_list_s *cflist, const str_t *labelname2, linepos_t epoint2) {
-    new_error_msg(severity, cflist, epoint2);
+    bool more = new_error_msg(severity, cflist, epoint2);
     adderror(msg);
     str_name(labelname2->data, labelname2->len);
+    if (more) new_error_msg_more();
 }
 
 void err_msg_not_variable(Label *l, const str_t *labelname2, linepos_t epoint2) {
@@ -986,25 +1058,29 @@ static const char * const order_suffix[4] = {
 void err_msg_missing_argument(linepos_t epoint, size_t n) {
     char msg2[4];
     int i = n % 10;
-    new_error_msg(SV_ERROR, current_file_list->parent, &current_file_list->epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list->parent, &current_file_list->epoint);
     msg2[0] = n + '1';
     memcpy(msg2 + 1, order_suffix[i < 4 ? i : 3], 3);
     adderror(msg2);
     adderror(" argument is missing");
+    if (more) new_error_msg_more();
     new_error_msg(SV_NOTE, current_file_list, epoint);
     adderror("argument reference was here");
 }
 
 void err_msg_unknown_argument(const str_t *labelname, linepos_t epoint) {
-    new_error_msg(SV_ERROR, current_file_list, epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("unknown argument name");
     str_name(labelname->data, labelname->len);
+    if (more) new_error_msg_more();
 }
 
 static void err_msg_unused(const char *msg, bool error, Label *l) {
-    new_error_msg(error ? SV_ERROR : SV_WARNING, l->file_list, &l->epoint);
+    Severity_types severity = error ? SV_ERROR : SV_WARNING;
+    bool more = new_error_msg(severity, l->file_list, &l->epoint);
     adderror(msg);
     str_name(l->name.data, l->name.len);
+    if (more) new_error_msg_more();
 }
 
 void err_msg_unused_macro(Label *l) {
@@ -1041,8 +1117,7 @@ void err_msg_invalid_oper(const Oper *op, Obj *v1, Obj *v2, linepos_t epoint) {
 void err_msg_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {
     size_t n;
     char line[1024];
-
-    new_error_msg(SV_ERROR, current_file_list, epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("expected ");
     n = min;
     if (min == max) adderror("exactly ");
@@ -1057,6 +1132,7 @@ void err_msg_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {
         sprintf(line, ", got %" PRIuSIZE, num);
         adderror(line);
     }
+    if (more) new_error_msg_more();
 }
 
 void err_msg_bool(Error_types no, Obj *o, linepos_t epoint) {
@@ -1079,9 +1155,11 @@ void err_msg_bool_oper(oper_t op) {
 }
 
 void err_msg_implied_reg(linepos_t epoint) {
-    new_error_msg(diagnostic_errors.implied_reg ? SV_ERROR : SV_WARNING, current_file_list, epoint);
+    Severity_types severity = diagnostic_errors.implied_reg ? SV_ERROR : SV_WARNING;
+    bool more = new_error_msg(severity, current_file_list, epoint);
     err_msg_no_addressing(A_NONE);
     adderror(" [-Wimplied-reg]");
+    if (more) new_error_msg_more();
 }
 
 void err_msg_jmp_bug(linepos_t epoint) {
@@ -1163,12 +1241,13 @@ void err_msg_alias(uint32_t a, uint32_t b, linepos_t epoint) {
 
 void err_msg_unknown_char(uchar_t ch, const str_t *name, linepos_t epoint) {
     uint8_t line[256], *s = line;
-    new_error_msg(SV_ERROR, current_file_list, epoint);
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("can't encode character '");
     if (ch != 0 && ch < 0x80) *s++ = (uint8_t)ch; else s = utf8out(ch, s);
     sprintf((char *)s, "' ($%02" PRIx32 ") in encoding '", ch); adderror((char *)line);
     adderror2(name->data, name->len);
     adderror("'");
+    if (more) new_error_msg_more();
 }
 
 static const uint8_t *printline(const struct file_list_s *cfile, linepos_t epoint, const uint8_t *line, FILE *f) {
@@ -1408,6 +1487,7 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
     size_t n, i = 0;
     ssize_t l;
     int err = errno;
+    bool more;
 
 #ifdef _WIN32
     setlocale(LC_ALL, "");
@@ -1415,7 +1495,7 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
     s = strerror(err);
     n = strlen(s);
 
-    new_error_msg(SV_FATAL, current_file_list, epoint);
+    more = new_error_msg(SV_FATAL, current_file_list, epoint);
     adderror(terr_fatal[no - 0xc0]);
     adderror(" '");
     adderror(prm);
@@ -1440,6 +1520,7 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
 #ifdef _WIN32
     setlocale(LC_ALL, "C");
 #endif
+    if (more) new_error_msg_more();
 }
 
 void error_status(void) {
