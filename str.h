@@ -21,8 +21,8 @@
 #include "inttypes.h"
 
 typedef struct str_t {
-    size_t len;
     const uint8_t *data;
+    size_t len;
 } str_t;
 
 extern int str_hash(const str_t *);

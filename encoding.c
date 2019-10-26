@@ -864,8 +864,8 @@ next:
 void init_encoding(bool toascii)
 {
     struct encoding_s *tmp;
-    static const str_t none_enc = {4, (const uint8_t *)"none"};
-    static const str_t screen_enc = {6, (const uint8_t *)"screen"};
+    static const str_t none_enc = {(const uint8_t *)"none", 4};
+    static const str_t screen_enc = {(const uint8_t *)"screen", 6};
     struct linepos_s nopoint = {0, 0};
 
     avltree_init(&encoding_tree);

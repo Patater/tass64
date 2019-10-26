@@ -4260,8 +4260,8 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_OPTION: if ((waitfor->skip & 1) != 0)
                 { /* .option */
-                    static const str_t branch_across = {24, (const uint8_t *)"allow_branch_across_page"};
-                    static const str_t longjmp = {22, (const uint8_t *)"auto_longbranch_as_jmp"};
+                    static const str_t branch_across = {(const uint8_t *)"allow_branch_across_page", 24};
+                    static const str_t longjmp = {(const uint8_t *)"auto_longbranch_as_jmp", 22};
                     struct values_s *vs;
                     str_t optname, cf;
                     listing_line(listing, epoint.pos);
@@ -4740,7 +4740,7 @@ MUST_CHECK Obj *compile(void)
 }
 
 static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
-    static const str_t none_enc = {4, (const uint8_t *)"none"};
+    static const str_t none_enc = {(const uint8_t *)"none", 4};
     static struct linepos_s nopoint = {0, 0};
     struct file_s *cfile;
     Obj *val;
