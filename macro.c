@@ -55,6 +55,7 @@ struct macro_value_s {
     const uint8_t *data;
     size_t len;
     size_t pos;
+    bool init;
 };
 
 struct macro_params_s {
@@ -85,7 +86,12 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
                 size_t c = pos - mline->rpositions[i].pos;
                 if (c < mline->rpositions[i].len) {
                     size_t param = mline->rpositions[i].param;
-                    pos = (param != SIZE_MAX ? macro_parameters.params[p].param[param].pos : macro_parameters.params[p].all.pos) + c;
+                    if (param != SIZE_MAX) {
+                        if (macro_parameters.params[p].param[param].init) return ret;
+                        pos = macro_parameters.params[p].param[param].pos + c;
+                    } else {
+                        pos = macro_parameters.params[p].all.pos + c;
+                    }
                     opoint->pos = pos;
                     opoint->line = flist->epoint.line;
                     ret = flist->parent;
@@ -392,7 +398,8 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
             param->pos = lpoint.pos;
             param->data = pline + lpoint.pos;
             param->len = macro_param_find();
-            if (param->len == 0) {
+            param->init = (param->len == 0);
+            if (param->init) {
                 if (p < macro->argc) {
                     param->data = macro->param[p].init.data;
                     param->len = macro->param[p].init.len;
