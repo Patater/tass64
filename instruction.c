@@ -141,8 +141,259 @@ static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)
     listing_instr(listing, cod, adr, ln);
 }
 
+typedef enum Adrgen { 
+    AG_ZP, AG_B0, AG_PB, AG_PB2, AG_BYTE, AG_SBYTE, AG_CHAR, AG_DB3, AG_DB2,
+    AG_WORD, AG_SWORD, AG_SINT, AG_RELPB, AG_RELL, AG_IMP, AG_NONE 
+} Adrgen;
+
+static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned int w, Adr_types *opr) {
+    Adrgen adrgen;
+    uint8_t cod;
+    switch (am) {
+    case A_IMMEDIATE_SIGNED:
+    case A_IMMEDIATE:
+        if ((cod = cnmemonic[(*opr = ADR_IMMEDIATE)]) == ____ && prm != 0) { /* 0x69 hack */
+            return AG_NONE;
+        }
+        switch (cod) {
+        case 0xE0:
+        case 0xC0:
+        case 0xA2:
+        case 0xA0:  /* cpx cpy ldx ldy */
+            adrgen = ((w == 1 || longindex) && w != 0) ? ((am == A_IMMEDIATE) ? AG_SWORD : AG_SINT) : ((am == A_IMMEDIATE) ? AG_SBYTE: AG_CHAR);
+            break;
+        case 0xF4: /* pea/phw #$ffff */
+            adrgen = (am == A_IMMEDIATE) ? AG_SWORD : AG_SINT;
+            break;
+        case 0x32:
+        case 0x42: /* sac sir/wdm */
+            if (opcode == c65dtv02.opcode) {
+                if (am != A_IMMEDIATE) return AG_NONE;
+                adrgen = AG_BYTE;
+                break;
+            }
+            adrgen = (am == A_IMMEDIATE) ? AG_SBYTE : AG_CHAR;
+            break;
+        case 0xC2:
+        case 0xE2:
+        case 0xEF:  /* sep rep mmu */
+            if (opcode == w65816.opcode || opcode == c65el02.opcode) {
+                if (am != A_IMMEDIATE) return AG_NONE;
+                adrgen = AG_BYTE;
+                break;
+            }
+            /* fall through */
+        case 0x00:
+        case 0x02: /* brk cop */
+            adrgen = (am == A_IMMEDIATE) ? AG_SBYTE : AG_CHAR;
+            break;
+        default:
+            adrgen = ((w == 1 || longaccu) && w != 0) ? ((am == A_IMMEDIATE) ? AG_SWORD : AG_SINT) : ((am == A_IMMEDIATE) ? AG_SBYTE: AG_CHAR);
+        }
+        break;
+    case (A_IMMEDIATE << 4) | A_BR: /* lda #$ffff,b */
+    case A_BR:
+        if (cnmemonic[ADR_ADDR] != ____ && cnmemonic[ADR_ADDR] != 0x4C && cnmemonic[ADR_ADDR] != 0x20 && cnmemonic[ADR_ADDR] != 0xF4) {/* jmp $ffff, jsr $ffff, pea */
+            adrgen = AG_WORD; *opr = ADR_ADDR; /* lda $ffff,b */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 4) | A_KR:
+    case A_KR:
+        if (cnmemonic[ADR_REL] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_REL;
+            break;
+        }
+        if (cnmemonic[ADR_REL_L] != ____) {
+            adrgen = AG_RELPB; *opr = ADR_REL_L; /* brl */
+            break;
+        }
+        if (cnmemonic[ADR_ADDR] == 0x4C || cnmemonic[ADR_ADDR] == 0x20) {/* jmp $ffff, jsr $ffff */
+            adrgen = AG_WORD; *opr = ADR_ADDR; /* jmp $ffff */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 4) | A_DR:           /* lda #$ff,d */
+    case A_DR:
+        if (cnmemonic[ADR_ZP] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP; /* lda $ff,d */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 8) | (A_BR << 4) | A_XR: /* lda #$ffff,b,x */
+    case (A_BR << 4) | A_XR:
+        if (cnmemonic[ADR_ADDR_X] != ____) {
+            adrgen = AG_WORD; *opr = ADR_ADDR_X; /* lda $ffff,b,x */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 8) | (A_DR << 4) | A_XR: /* lda #$ff,d,x */
+    case (A_DR << 4) | A_XR:
+        if (cnmemonic[ADR_ZP_X] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_X; /* lda $ff,d,x */
+            break;
+        }
+        return AG_NONE;
+    case A_XR:
+        if (cnmemonic[ADR_ZP_X] != ____ || cnmemonic[ADR_ADDR_X] != ____ || cnmemonic[ADR_LONG_X] != ____) {
+            adrgen = AG_DB3; *opr = ADR_ZP_X; /* lda $ff,x lda $ffff,x lda $ffffff,x */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 8) | (A_BR << 4) | A_YR:/* ldx #$ffff,b,y */
+    case (A_BR << 4) | A_YR:
+        if (cnmemonic[ADR_ADDR_Y] != ____) {
+            adrgen = AG_WORD; *opr = ADR_ADDR_Y; /* ldx $ffff,b,y */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 8) | (A_DR << 4) | A_YR:/* ldx #$ff,d,y */
+    case (A_DR << 4) | A_YR:
+        if (cnmemonic[ADR_ZP_Y] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_Y; /* ldx $ff,d,y */
+            break;
+        }
+        return AG_NONE;
+    case A_YR:
+        if (cnmemonic[ADR_ZP_Y] != ____ || cnmemonic[ADR_ADDR_Y] != ____) {
+            adrgen = AG_DB2; *opr = ADR_ZP_Y; /* lda $ff,y lda $ffff,y lda $ffffff,y */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 4) | A_SR:           /* lda #$ff,s */
+    case A_SR:
+        if (cnmemonic[ADR_ZP_S] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_S; /* lda $ff,s */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 4) | A_RR:           /* lda #$ff,r */
+    case A_RR:
+        if (cnmemonic[ADR_ZP_R] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_R; /* lda $ff,r */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_I << 4) | A_YR:/* lda (#$ff,d),y */
+    case (A_DR << 8) | (A_I << 4) | A_YR:
+        if (cnmemonic[ADR_ZP_I_Y] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_I_Y; /* lda ($ff,d),y */
+            break;
+        }
+        return AG_NONE;
+    case (A_I << 4) | A_YR:
+        if (cnmemonic[ADR_ZP_I_Y] != ____) {
+            adrgen = AG_ZP; *opr = ADR_ZP_I_Y; /* lda ($ff),y */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_I << 4) | A_ZR:/* lda (#$ff,d),z */
+    case (A_DR << 8) | (A_I << 4) | A_ZR:
+        if (cnmemonic[ADR_ZP_I_Z] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_I_Z; /* lda ($ff,d),z */
+            break;
+        }
+        return AG_NONE;
+    case (A_I << 4) | A_ZR:
+        if (cnmemonic[ADR_ZP_I_Z] != ____) {
+            adrgen = AG_ZP; *opr = ADR_ZP_I_Z; /* lda ($ff),z */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE_SIGNED << 12) | (A_SR << 8) | (A_I << 4) | A_YR:/* lda (#+$ff,s),y */
+    case (A_IMMEDIATE << 12) | (A_SR << 8) | (A_I << 4) | A_YR:/* lda (#$ff,s),y */
+    case (A_SR << 8) | (A_I << 4) | A_YR:
+        if (cnmemonic[ADR_ZP_S_I_Y] != ____) {
+            adrgen = (opcode == c65ce02.opcode) ? AG_CHAR : AG_BYTE; *opr = ADR_ZP_S_I_Y; /* lda ($ff,s),y */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 12) | (A_RR << 8) | (A_I << 4) | A_YR:/* lda (#$ff,r),y */
+    case (A_RR << 8) | (A_I << 4) | A_YR:
+        if (cnmemonic[ADR_ZP_R_I_Y] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_R_I_Y; /* lda ($ff,r),y */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_LI << 4) | A_YR:/* lda [#$ff,d],y */
+    case (A_DR << 8) | (A_LI << 4) | A_YR:
+        if (cnmemonic[ADR_ZP_LI_Y] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_LI_Y; /* lda [$ff,d],y */
+            break;
+        }
+        return AG_NONE;
+    case (A_LI << 4) | A_YR:
+        if (cnmemonic[ADR_ZP_LI_Y] != ____) {
+            adrgen = AG_ZP; *opr = ADR_ZP_LI_Y; /* lda [$ff],y */
+            break;
+        }
+        return AG_NONE;
+    case (A_XR << 4) | A_I:
+        if (cnmemonic[ADR_ADDR_X_I] == 0x7C || cnmemonic[ADR_ADDR_X_I] == 0xFC || cnmemonic[ADR_ADDR_X_I] == 0x23) {/* jmp ($ffff,x) jsr ($ffff,x) */
+            adrgen = AG_PB; *opr = ADR_ADDR_X_I; /* jmp ($ffff,x) */
+            break;
+        }
+        if (cnmemonic[ADR_ZP_X_I] != ____) {
+            adrgen = AG_ZP; *opr = ADR_ZP_X_I; /* lda ($ff,x) */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 12) | (A_KR << 8) | (A_XR << 4) | A_I: /* jmp (#$ffff,k,x) */
+    case (A_KR << 8) | (A_XR << 4) | A_I:
+        if (cnmemonic[ADR_ADDR_X_I] == 0x7C || cnmemonic[ADR_ADDR_X_I] == 0xFC || cnmemonic[ADR_ADDR_X_I] == 0x23) {/* jmp ($ffff,x) jsr ($ffff,x) */
+            adrgen = AG_WORD; *opr = ADR_ADDR_X_I; /* jmp ($ffff,k,x) */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_XR << 4) | A_I:/* lda (#$ff,d,x) */
+    case (A_DR << 8) | (A_XR << 4) | A_I:
+        if (cnmemonic[ADR_ZP_X_I] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_X_I; /* lda ($ff,d,x) */
+            break;
+        }
+        return AG_NONE;
+    case A_I:
+        if (cnmemonic[ADR_ADDR_I] == 0x6C || cnmemonic[ADR_ADDR_I] == 0x22) {/* jmp ($ffff), jsr ($ffff) */
+            adrgen = AG_B0; *opr = ADR_ADDR_I; /* jmp ($ffff) */
+            break;
+        }
+        if (cnmemonic[ADR_ZP_I] != ____) {
+            adrgen = AG_ZP; *opr = ADR_ZP_I; /* lda ($ff) */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 8) | (A_DR << 4) | A_I: /* lda (#$ff,d) */
+    case (A_DR << 4) | A_I:
+        if (cnmemonic[ADR_ZP_I] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_I; /* lda ($ff,d) */
+            break;
+        }
+        return AG_NONE;
+    case A_LI:
+        if (cnmemonic[ADR_ADDR_LI] == 0xDC) { /* jmp [$ffff] */
+            adrgen = AG_B0; *opr = ADR_ADDR_LI; /* jmp [$ffff] */
+            break;
+        }
+        if (cnmemonic[ADR_ZP_LI] != ____) {
+            adrgen = AG_ZP; *opr = ADR_ZP_LI; /* lda [$ff] */
+            break;
+        }
+        return AG_NONE;
+    case (A_IMMEDIATE << 8) | (A_DR << 4) | A_LI: /* lda [#$ff,d] */
+    case (A_DR << 4) | A_LI:
+        if (cnmemonic[ADR_ZP_LI] != ____) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_LI; /* lda [$ff,d] */
+            break;
+        }
+        return AG_NONE;
+    default:
+        return AG_NONE;
+    }
+    return adrgen;
+}
+
 MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoint, struct linepos_s *epoints) {
-    enum { AG_ZP, AG_B0, AG_PB, AG_PB2, AG_BYTE, AG_SBYTE, AG_CHAR, AG_DB3, AG_DB2, AG_WORD, AG_SWORD, AG_SINT, AG_RELPB, AG_RELL, AG_IMP, AG_NONE } adrgen;
+    Adrgen adrgen;
     static unsigned int once;
     Adr_types opr;
     Reg_types reg;
@@ -177,252 +428,18 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             val = addrlist->data[0];
         single:
             am = val->obj->address(val);
-            switch (am) {
-            case A_IMMEDIATE_SIGNED:
-            case A_IMMEDIATE:
-                if ((cod = cnmemonic[(opr = ADR_IMMEDIATE)]) == ____ && prm != 0) { /* 0x69 hack */
-                    return err_addressing(am, epoint2);
-                }
-                switch (cod) {
-                case 0xE0:
-                case 0xC0:
-                case 0xA2:
-                case 0xA0:  /* cpx cpy ldx ldy */
-                    adrgen = ((w == 1 || longindex) && w != 0) ? ((am == A_IMMEDIATE) ? AG_SWORD : AG_SINT) : ((am == A_IMMEDIATE) ? AG_SBYTE: AG_CHAR);
-                    break;
-                case 0xF4: /* pea/phw #$ffff */
-                    adrgen = (am == A_IMMEDIATE) ? AG_SWORD : AG_SINT;
-                    break;
-                case 0x32:
-                case 0x42: /* sac sir/wdm */
-                    if (opcode == c65dtv02.opcode) {
-                        if (am != A_IMMEDIATE) return err_addressing(am, epoint2);
-                        adrgen = AG_BYTE;
-                        break;
+            if (am != A_NONE) {
+                adrgen = adrmatch(cnmemonic, prm, am, w, &opr);
+                if (adrgen != AG_NONE) {
+                    if (opr == ADR_REL) {
+                        ln = 1; longbranch = 0;
+                        goto justrel2;
                     }
-                    adrgen = (am == A_IMMEDIATE) ? AG_SBYTE : AG_CHAR;
-                    break;
-                case 0xC2:
-                case 0xE2:
-                case 0xEF:  /* sep rep mmu */
-                    if (opcode == w65816.opcode || opcode == c65el02.opcode) {
-                        if (am != A_IMMEDIATE) return err_addressing(am, epoint2);
-                        adrgen = AG_BYTE;
-                        break;
-                    }
-                    /* fall through */
-                case 0x00:
-                case 0x02: /* brk cop */
-                    adrgen = (am == A_IMMEDIATE) ? AG_SBYTE : AG_CHAR;
-                    break;
-                default:
-                    adrgen = ((w == 1 || longaccu) && w != 0) ? ((am == A_IMMEDIATE) ? AG_SWORD : AG_SINT) : ((am == A_IMMEDIATE) ? AG_SBYTE: AG_CHAR);
-                }
-                break;
-            case (A_IMMEDIATE << 4) | A_BR: /* lda #$ffff,b */
-            case A_BR:
-                if (cnmemonic[ADR_ADDR] != ____ && cnmemonic[ADR_ADDR] != 0x4C && cnmemonic[ADR_ADDR] != 0x20 && cnmemonic[ADR_ADDR] != 0xF4) {/* jmp $ffff, jsr $ffff, pea */
-                    adrgen = AG_WORD; opr = ADR_ADDR; /* lda $ffff,b */
                     break;
                 }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 4) | A_KR:
-            case A_KR:
-                if (cnmemonic[ADR_REL] != ____) {
-                    ln = 1; opr = ADR_REL;
-                    longbranch = 0;
-                    goto justrel2;
-                }
-                if (cnmemonic[ADR_REL_L] != ____) {
-                    adrgen = AG_RELPB; opr = ADR_REL_L; /* brl */
-                    break;
-                }
-                if (cnmemonic[ADR_ADDR] == 0x4C || cnmemonic[ADR_ADDR] == 0x20) {/* jmp $ffff, jsr $ffff */
-                    adrgen = AG_WORD; opr = ADR_ADDR; /* jmp $ffff */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 4) | A_DR:           /* lda #$ff,d */
-            case A_DR:
-                if (cnmemonic[ADR_ZP] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP; /* lda $ff,d */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 8) | (A_BR << 4) | A_XR: /* lda #$ffff,b,x */
-            case (A_BR << 4) | A_XR:
-                if (cnmemonic[ADR_ADDR_X] != ____) {
-                    adrgen = AG_WORD; opr = ADR_ADDR_X; /* lda $ffff,b,x */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 8) | (A_DR << 4) | A_XR: /* lda #$ff,d,x */
-            case (A_DR << 4) | A_XR:
-                if (cnmemonic[ADR_ZP_X] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_X; /* lda $ff,d,x */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case A_XR:
-                if (cnmemonic[ADR_ZP_X] != ____ || cnmemonic[ADR_ADDR_X] != ____ || cnmemonic[ADR_LONG_X] != ____) {
-                    adrgen = AG_DB3; opr = ADR_ZP_X; /* lda $ff,x lda $ffff,x lda $ffffff,x */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 8) | (A_BR << 4) | A_YR:/* ldx #$ffff,b,y */
-            case (A_BR << 4) | A_YR:
-                if (cnmemonic[ADR_ADDR_Y] != ____) {
-                    adrgen = AG_WORD; opr = ADR_ADDR_Y; /* ldx $ffff,b,y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 8) | (A_DR << 4) | A_YR:/* ldx #$ff,d,y */
-            case (A_DR << 4) | A_YR:
-                if (cnmemonic[ADR_ZP_Y] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_Y; /* ldx $ff,d,y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case A_YR:
-                if (cnmemonic[ADR_ZP_Y] != ____ || cnmemonic[ADR_ADDR_Y] != ____) {
-                    adrgen = AG_DB2; opr = ADR_ZP_Y; /* lda $ff,y lda $ffff,y lda $ffffff,y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 4) | A_SR:           /* lda #$ff,s */
-            case A_SR:
-                if (cnmemonic[ADR_ZP_S] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_S; /* lda $ff,s */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 4) | A_RR:           /* lda #$ff,r */
-            case A_RR:
-                if (cnmemonic[ADR_ZP_R] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_R; /* lda $ff,r */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_I << 4) | A_YR:/* lda (#$ff,d),y */
-            case (A_DR << 8) | (A_I << 4) | A_YR:
-                if (cnmemonic[ADR_ZP_I_Y] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_I_Y; /* lda ($ff,d),y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_I << 4) | A_YR:
-                if (cnmemonic[ADR_ZP_I_Y] != ____) {
-                    adrgen = AG_ZP; opr = ADR_ZP_I_Y; /* lda ($ff),y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_I << 4) | A_ZR:/* lda (#$ff,d),z */
-            case (A_DR << 8) | (A_I << 4) | A_ZR:
-                if (cnmemonic[ADR_ZP_I_Z] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_I_Z; /* lda ($ff,d),z */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_I << 4) | A_ZR:
-                if (cnmemonic[ADR_ZP_I_Z] != ____) {
-                    adrgen = AG_ZP; opr = ADR_ZP_I_Z; /* lda ($ff),z */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE_SIGNED << 12) | (A_SR << 8) | (A_I << 4) | A_YR:/* lda (#+$ff,s),y */
-            case (A_IMMEDIATE << 12) | (A_SR << 8) | (A_I << 4) | A_YR:/* lda (#$ff,s),y */
-            case (A_SR << 8) | (A_I << 4) | A_YR:
-                if (cnmemonic[ADR_ZP_S_I_Y] != ____) {
-                    adrgen = (opcode == c65ce02.opcode) ? AG_CHAR : AG_BYTE; opr = ADR_ZP_S_I_Y; /* lda ($ff,s),y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 12) | (A_RR << 8) | (A_I << 4) | A_YR:/* lda (#$ff,r),y */
-            case (A_RR << 8) | (A_I << 4) | A_YR:
-                if (cnmemonic[ADR_ZP_R_I_Y] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_R_I_Y; /* lda ($ff,r),y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_LI << 4) | A_YR:/* lda [#$ff,d],y */
-            case (A_DR << 8) | (A_LI << 4) | A_YR:
-                if (cnmemonic[ADR_ZP_LI_Y] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_LI_Y; /* lda [$ff,d],y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_LI << 4) | A_YR:
-                if (cnmemonic[ADR_ZP_LI_Y] != ____) {
-                    adrgen = AG_ZP; opr = ADR_ZP_LI_Y; /* lda [$ff],y */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_XR << 4) | A_I:
-                if (cnmemonic[ADR_ADDR_X_I] == 0x7C || cnmemonic[ADR_ADDR_X_I] == 0xFC || cnmemonic[ADR_ADDR_X_I] == 0x23) {/* jmp ($ffff,x) jsr ($ffff,x) */
-                    adrgen = AG_PB; opr = ADR_ADDR_X_I; /* jmp ($ffff,x) */
-                    break;
-                }
-                if (cnmemonic[ADR_ZP_X_I] != ____) {
-                    adrgen = AG_ZP; opr = ADR_ZP_X_I; /* lda ($ff,x) */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 12) | (A_KR << 8) | (A_XR << 4) | A_I: /* jmp (#$ffff,k,x) */
-            case (A_KR << 8) | (A_XR << 4) | A_I:
-                if (cnmemonic[ADR_ADDR_X_I] == 0x7C || cnmemonic[ADR_ADDR_X_I] == 0xFC || cnmemonic[ADR_ADDR_X_I] == 0x23) {/* jmp ($ffff,x) jsr ($ffff,x) */
-                    adrgen = AG_WORD; opr = ADR_ADDR_X_I; /* jmp ($ffff,k,x) */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_XR << 4) | A_I:/* lda (#$ff,d,x) */
-            case (A_DR << 8) | (A_XR << 4) | A_I:
-                if (cnmemonic[ADR_ZP_X_I] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_X_I; /* lda ($ff,d,x) */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case A_I:
-                if (cnmemonic[ADR_ADDR_I] == 0x6C || cnmemonic[ADR_ADDR_I] == 0x22) {/* jmp ($ffff), jsr ($ffff) */
-                    adrgen = AG_B0; opr = ADR_ADDR_I; /* jmp ($ffff) */
-                    break;
-                }
-                if (cnmemonic[ADR_ZP_I] != ____) {
-                    adrgen = AG_ZP; opr = ADR_ZP_I; /* lda ($ff) */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 8) | (A_DR << 4) | A_I: /* lda (#$ff,d) */
-            case (A_DR << 4) | A_I:
-                if (cnmemonic[ADR_ZP_I] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_I; /* lda ($ff,d) */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case A_LI:
-                if (cnmemonic[ADR_ADDR_LI] == 0xDC) { /* jmp [$ffff] */
-                    adrgen = AG_B0; opr = ADR_ADDR_LI; /* jmp [$ffff] */
-                    break;
-                }
-                if (cnmemonic[ADR_ZP_LI] != ____) {
-                    adrgen = AG_ZP; opr = ADR_ZP_LI; /* lda [$ff] */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case (A_IMMEDIATE << 8) | (A_DR << 4) | A_LI: /* lda [#$ff,d] */
-            case (A_DR << 4) | A_LI:
-                if (cnmemonic[ADR_ZP_LI] != ____) {
-                    adrgen = AG_BYTE; opr = ADR_ZP_LI; /* lda [$ff,d] */
-                    break;
-                }
-                return err_addressing(am, epoint2);
-            case A_NONE:
-                goto noneaddr;
-            default:
                 if (am > MAX_ADDRESS_MASK) return new_error(ERROR__ADDR_COMPLEX, epoint2);
-                return err_addressing(am, epoint2); /* non-existing */
+                return err_addressing(am, epoint2);
             }
-            break;
-        noneaddr:
             if (val->obj == REGISTER_OBJ) {
                 Register *cpureg = (Register *)val;
                 cod = cnmemonic[(opr = ADR_REG)];
