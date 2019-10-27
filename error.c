@@ -1408,7 +1408,6 @@ bool error_print(void) {
             }
             err3 = err2;
             err2 = err;
-            usenote = false;
             continue;
         case SV_WARNING:
             if (!arguments.warning) {
