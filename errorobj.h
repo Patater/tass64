@@ -30,6 +30,7 @@ typedef struct Error {
     Error_types num;
     const struct file_list_s *file_list;
     struct linepos_s epoint;
+    linecpos_t caret;
     const uint8_t *line;
     union {
         struct {
