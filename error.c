@@ -1137,8 +1137,8 @@ void err_msg_unused_variable(Label *l) {
 void err_msg_invalid_oper(const Oper *op, Obj *v1, Obj *v2, linepos_t epoint) {
     Error *err = new_error(ERROR__INVALID_OPER, epoint);
     err->u.invoper.op = op;
-    err->u.invoper.v1 = (v1->refcount != 0) ? val_reference(v1) : v1;
-    err->u.invoper.v2 = (v2->refcount != 0) ? val_reference(v2) : v2;
+    err->u.invoper.v1 = (v1 != NULL) ? ((v1->refcount != 0) ? val_reference(v1) : v1) : NULL;
+    err->u.invoper.v2 = (v2 != NULL) ? ((v2->refcount != 0) ? val_reference(v2) : v2) : NULL;
     err_msg_invalid_oper3(err);
     val_destroy(&err->v);
 }
