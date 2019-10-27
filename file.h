@@ -45,6 +45,7 @@ struct file_s {
     bool read_error;
     bool portable;
     uint8_t pass;
+    uint8_t entercount;
     Encoding_types encoding;
     struct avltree_node node;
 };

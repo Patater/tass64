@@ -287,6 +287,7 @@ void enterfile(struct file_s *file, linepos_t epoint) {
     } else {
         current_file_list = avltree_container_of(b, struct file_list_s, node);
     }
+    current_file_list->pass = pass;
 }
 
 void exitfile(void) {
@@ -1298,6 +1299,11 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
         if (cflist != included_from) {
             included_from = cflist;
             while (included_from->parent != &file_list) {
+                if (included_from->file->entercount != 1) break;
+                included_from = included_from->parent;
+            }
+            if (included_from->parent != &file_list) included_from = cflist;
+            while (included_from->parent != &file_list) {
                 fputs((included_from == cflist) ? "In file included from " : "                      ", f);
                 if (print_use_color) fputs("\33[01m", f);
                 printable_print((const uint8_t *)included_from->parent->file->realname, f);
@@ -1360,12 +1366,32 @@ static bool different_line(const struct errorentry_s *err, const struct errorent
     return memcmp(err + 1, err2 + 1, err->line_len) != 0;
 }
 
+static void walkfilelist(struct file_list_s *cflist) {
+    struct avltree_node *n;
+
+    for (n = avltree_first(&cflist->members); n != NULL; n = avltree_next(n)) {
+        struct file_list_s *l = avltree_container_of(n, struct file_list_s, node);
+        if (l->file->entercount > 1 || l->pass != pass) continue;
+        l->file->entercount++;
+        walkfilelist(l);
+    }
+}
+
 bool error_print(void) {
     const struct errorentry_s *err, *err2, *err3;
     size_t pos;
     bool noneerr = false, anyerr = false, usenote;
     FILE *ferr;
     struct linepos_s nopoint = {0, 0};
+
+    if (error_list.header_pos != 0) {
+        struct avltree_node *n;
+        for (n = avltree_first(&file_list.members); n != NULL; n = avltree_next(n)) {
+            struct file_list_s *l = avltree_container_of(n, struct file_list_s, node);
+            if (l->file->entercount > 1 || l->pass != pass) continue;
+            walkfilelist(l);
+        }
+    }
 
     if (arguments.error != NULL) {
         ferr = dash_name(arguments.error) ? stdout : file_open(arguments.error, "wt");

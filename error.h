@@ -32,6 +32,7 @@ struct file_list_s {
     struct avltree_node node;
     struct file_list_s *parent;
     struct avltree members;
+    uint8_t pass;
 };
 
 extern struct file_list_s *current_file_list;
