@@ -3570,29 +3570,42 @@ Forward slashes can be used as a portable path separation on all systems.
 
 Messages
 
-Faults and warnings encountered are sent to standard error for logging. To
-redirect them into a file append `2>filename.log' after the command, or use the
-`-E' command line option. The message format is the following:
+Faults and warnings encountered are sent to the standard error for logging. To
+redirect them to a file append `2>filename.log' after the command or use the `
+-E' command line option. The message format is the following:
 
 <filename>:<line>:<character>: <severity>: <message>
 
   * filename: The name and path of source file where the error happened.
-  * line: Line number of file, starts from 1.
+  * line: Line number in file, starts from 1.
   * character: Character in line, starts from 1. Tabs are not expanded.
   * severity: Note, warning, error or fatal.
   * message: The fault message itself.
 
-The faulty line may be displayed after the message with a caret pointing to the
-error location.
+The faulty line will be displayed after the message with a caret pointing to
+the error location unless this is disabled by using `--no-caret-diag' option.
 
-a.asm:3:21: error: not defined 'label'
+a.asm:3:21: error: not defined ident 'label'
                  lda label
                      ^
 a.asm:3:21: note: searched in the global scope
 
-Lines containing macros are expanded whenever possible, but due to internal
-limitations referenced lines in relation to the actual fault will display
-without them.
+This is helpful for macro expansions as it displays the processed line which
+usually looks different to the one in the original source file.
+
+Error buried deep in included files or macros display a backtrace of files
+after an `In file included from' text where all the files and positions
+involved are listed down to the main file.
+
+In file included from main.asm:3:3:
+included.asm:2:11: error: not defined ident 'test'
+                #macro1 test
+                        ^
+In file included from included.asm:2:3,
+                      main.asm:3:3:
+macros.asm:3:7: note: original location in an expanded macro was here
+                lda test
+                    ^
 
 Messages ending with `[-Wxxx]' are user controllable. This means that using
 `-Wno-xxx' on the command line will silence them and `-Werror=xxx' will turn
