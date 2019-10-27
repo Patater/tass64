@@ -365,6 +365,7 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
         lastfi->read_error = false;
         lastfi->portable = false;
         lastfi->pass = 0;
+        lastfi->entercount = 0;
         tmp = lastfi;
         lastfi = NULL;
         if (name != NULL) {
