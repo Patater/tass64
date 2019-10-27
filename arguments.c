@@ -324,19 +324,26 @@ static const char *short_options = "wqnbfXaTCBicxtel:L:I:M:msV?o:D:E:W:";
 
 static const struct my_option long_options[] = {
     {"no-warn"          , my_no_argument      , NULL, 'w'},
+    {"warn"             , my_no_argument      , NULL,  0x11f},
+    {"no-quiet"         , my_no_argument      , NULL,  0x120},
     {"quiet"            , my_no_argument      , NULL, 'q'},
     {"nonlinear"        , my_no_argument      , NULL, 'n'},
     {"nostart"          , my_no_argument      , NULL, 'b'},
     {"flat"             , my_no_argument      , NULL, 'f'},
+    {"no-long-address"  , my_no_argument      , NULL,  0x121},
     {"long-address"     , my_no_argument      , NULL, 'X'},
     {"atari-xex"        , my_no_argument      , NULL,  0x107},
     {"apple-ii"         , my_no_argument      , NULL,  0x108},
     {"intel-hex"        , my_no_argument      , NULL,  0x10e},
     {"s-record"         , my_no_argument      , NULL,  0x10f},
     {"cbm-prg"          , my_no_argument      , NULL,  0x10c},
+    {"no-ascii"         , my_no_argument      , NULL,  0x11e},
     {"ascii"            , my_no_argument      , NULL, 'a'},
+    {"no-tasm-compatible",my_no_argument      , NULL,  0x11d},
     {"tasm-compatible"  , my_no_argument      , NULL, 'T'},
+    {"no-case-sensitive", my_no_argument      , NULL,  0x11c},
     {"case-sensitive"   , my_no_argument      , NULL, 'C'},
+    {"no-long-branch"   , my_no_argument      , NULL,  0x11b},
     {"long-branch"      , my_no_argument      , NULL, 'B'},
     {"m65xx"            , my_no_argument      , NULL,  0x101},
     {"m6502"            , my_no_argument      , NULL, 'i'},
@@ -357,11 +364,16 @@ static const struct my_option long_options[] = {
     {"dump-labels"      , my_no_argument      , NULL,  0x10d},
     {"labels-root"      , my_required_argument, NULL,  0x113},
     {"list"             , my_required_argument, NULL, 'L'},
+    {"no-verbose-list"  , my_no_argument      , NULL,  0x11a},
     {"verbose-list"     , my_no_argument      , NULL,  0x110},
     {"no-monitor"       , my_no_argument      , NULL, 'm'},
+    {"monitor"          , my_no_argument      , NULL,  0x119},
     {"no-source"        , my_no_argument      , NULL, 's'},
+    {"source"           , my_no_argument      , NULL,  0x118},
+    {"no-line-numbers"  , my_no_argument      , NULL,  0x117},
     {"line-numbers"     , my_no_argument      , NULL,  0x112},
     {"no-caret-diag"    , my_no_argument      , NULL,  0x10a},
+    {"caret-diag"       , my_no_argument      , NULL,  0x116},
     {"tab-size"         , my_required_argument, NULL,  0x109},
     {"version"          , my_no_argument      , NULL, 'V'},
     {"usage"            , my_no_argument      , NULL,  0x102},
@@ -461,8 +473,11 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                 if (woption(my_optarg)) goto exit;
                 break;
             case 'w':arguments.warning = false;break;
+            case 0x11f:arguments.warning = true;break;
             case 'q':arguments.quiet = false;break;
+            case 0x120:arguments.quiet = true;break;
             case 'X':arguments.output.longaddr = true;break;
+            case 0x121:arguments.output.longaddr = false;break;
             case 'n':arguments.output.mode = OUTPUT_NONLINEAR;break;
             case 0x107:arguments.output.mode = OUTPUT_XEX;break;
             case 0x108:arguments.output.mode = OUTPUT_APPLE;break;
@@ -472,9 +487,12 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case 'b':arguments.output.mode = OUTPUT_RAW;break;
             case 'f':arguments.output.mode = OUTPUT_FLAT;break;
             case 'a':arguments.to_ascii = true;break;
+            case 0x11e:arguments.to_ascii = false;break;
             case 'T':arguments.tasmcomp = true;break;
+            case 0x11d:arguments.tasmcomp = false;break;
             case 'o':arguments.output.name = my_optarg;break;
             case 0x114: arguments.output.section = my_optarg; break;
+            case 0x116:arguments.caret = true;break;
             case 0x10a:arguments.caret = false;break;
             case 'D':
                 {
@@ -498,6 +516,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                 }
                 break;
             case 'B': arguments.longbranch = true;break;
+            case 0x11b: arguments.longbranch = false;break;
             case 0x101: arguments.cpumode = &c6502;break;
             case 'i': arguments.cpumode = &c6502i;break;
             case 'c': arguments.cpumode = &c65c02;break;
@@ -524,10 +543,15 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case 'M': arguments.make = my_optarg;break;
             case 'I': include_list_add(my_optarg);break;
             case 'm': arguments.monitor = false;break;
+            case 0x119: arguments.monitor = true;break;
             case 's': arguments.source = false;break;
+            case 0x118: arguments.source = true;break;
             case 0x112: arguments.linenum = true;break;
+            case 0x117: arguments.linenum = false;break;
             case 'C': arguments.caseinsensitive = 0;break;
+            case 0x11c: arguments.caseinsensitive = 0x20;break;
             case 0x110: arguments.verbose = true;break;
+            case 0x11a: arguments.verbose = false;break;
             case 0x109:
                 {
                     char *s;
