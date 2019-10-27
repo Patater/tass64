@@ -3992,30 +3992,43 @@ needed for string quoting.</p>
 <hr>
 <h2>Messages<a name="messages" href="#messages"></a></h2>
 
-<p>Faults and warnings encountered are sent to standard error for logging. To
-redirect them into a file append <q>2&gt;filename.log</q> after the
-command, or use the <q><a href="#o_error"><code>-E</code></a></q> command
+<p>Faults and warnings encountered are sent to the standard error for logging. To
+redirect them to a file append <q>2&gt;filename.log</q> after the
+command or use the <q><a href="#o_error"><code>-E</code></a></q> command
 line option. The message format is the following:</p>
 <p>&lt;filename&gt;:&lt;line&gt;:&lt;character&gt;: &lt;severity&gt;: &lt;message&gt;</p>
 <ul>
 <li>filename: The name and path of source file where the error happened.
-<li>line: Line number of file, starts from 1.
+<li>line: Line number in file, starts from 1.
 <li>character: Character in line, starts from 1. Tabs are not expanded.
 <li>severity: Note, warning, error or fatal.
 <li>message: The fault message itself.
 </ul>
-<p>The faulty line may be displayed after the message with a caret pointing to the error location.</p>
+<p>The faulty line will be displayed after the message with a caret pointing to
+the error location unless this is disabled by using <q><a
+href="#o_no-caret-diag"><code>--no-caret-diag</code></a></q> option.</p>
 
-<pre width=80><strong>a.asm:3:21: <span style="color:red">error:</span> not defined 'label'</strong>
+<pre width=80><strong>a.asm:3:21: <span style="color:red">error:</span> not defined ident 'label'</strong>
                  lda label
                      <strong><span style="color:green">^</span></strong>
 <strong>a.asm:3:21: <span style="color:gray">note:</span></strong> searched in the global scope</pre>
-<p>Lines containing macros are expanded whenever possible, but due to
-internal limitations referenced lines in relation to the actual fault
-will display without them.</p>
-<p>Messages ending with <q>[-Wxxx]</q> are user controllable. This means
-that using <q>-Wno-xxx</q> on the command line will silence them and
-<q>-Werror=xxx</q> will turn them it into a fault. See <a
+<p>This is helpful for macro expansions as it displays the processed line which usually
+looks different to the one in the original source file.</p>
+Error buried deep in included files or macros display a backtrace of files after an <q>In
+file included from</q> text where all the files and positions involved are listed down to the main file.
+<pre width=80>In file included from <strong>main.asm:3:3</strong>:
+<strong>included.asm:2:11: <span style="color:red">error:</span> not defined ident 'test'</strong>
+ 		#macro1 test
+ 		        <strong><span style="color:green">^</span></strong>
+In file included from <strong>included.asm:2:3</strong>,
+                      <strong>main.asm:3:3</strong>:
+<strong>macros.asm:3:7: <span style="color:gray">note:</span></strong> original location in an expanded macro was here
+ 		lda test
+ 		    <strong><span style="color:green">^</span></strong>
+</pre>
+<p>Messages ending with <q><code>[-Wxxx]</code></q> are user controllable. This means
+that using <q><code>-Wno-xxx</code></q> on the command line will silence them and
+<q><code>-Werror=xxx</code></q> will turn them it into a fault. See <a
 href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <h3>Warnings<a name="messages-warnings" href="#messages-warnings"></a></h3>
 <dl class="errorlist">
