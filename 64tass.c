@@ -1201,7 +1201,12 @@ static MUST_CHECK Obj *tuple_scope_light(Obj **o, linepos_t epoint) {
     if (val->obj != NAMESPACE_OBJ) {
         val_destroy(val);
         *o = val = (Obj *)new_namespace(current_file_list, epoint);
-    } else ((Namespace *)val)->backr = ((Namespace *)val)->forwr = 0;
+    } else {
+        Namespace *names = (Namespace *)val;
+        names->backr = names->forwr = 0;
+        names->file_list = current_file_list;
+        names->epoint = *epoint;
+    }
     push_context((Namespace *)val);
     nf = compile();
     pop_context();
@@ -1239,6 +1244,8 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
             }
         }
         code->names->backr = code->names->forwr = 0;
+        code->names->file_list = current_file_list;
+        code->names->epoint = newlabel->epoint;
     } else {
         code = new_code();
         code->addr = star;
@@ -2252,7 +2259,12 @@ MUST_CHECK Obj *compile(void)
                                     if (label->value->obj != NAMESPACE_OBJ) {
                                         val_destroy(label->value);
                                         label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                    } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
+                                    } else {
+                                        Namespace *names = (Namespace *)label->value;
+                                        names->backr = names->forwr = 0;
+                                        names->file_list = current_file_list;
+                                        names->epoint = epoint;
+                                    }
                                 }
                             } else {
                                 label->value = (val != NULL) ? val_reference(val) : (Obj *)new_namespace(current_file_list, &epoint);
@@ -2350,6 +2362,8 @@ MUST_CHECK Obj *compile(void)
                                         Mfunc *prev = (Mfunc *)label->value;
                                         mfunc->names = ref_namespace(prev->names);
                                         mfunc->names->backr = mfunc->names->forwr = 0;
+                                        mfunc->names->file_list = current_file_list;
+                                        mfunc->names->epoint = epoint;
                                     } else {
                                         mfunc->names = new_namespace(current_file_list, &epoint);
                                     }
@@ -2433,6 +2447,8 @@ MUST_CHECK Obj *compile(void)
                                         structure->size = prev->size;
                                         structure->names = ref_namespace(prev->names);
                                         structure->names->backr = structure->names->forwr = 0;
+                                        structure->names->file_list = current_file_list;
+                                        structure->names->epoint = epoint;
                                     } else {
                                         structure->size = 0;
                                         structure->names = new_namespace(current_file_list, &epoint);
@@ -2633,6 +2649,8 @@ MUST_CHECK Obj *compile(void)
                                     code->apass = pass;
                                     label->defpass = pass;
                                     code->names->backr = code->names->forwr = 0;
+                                    code->names->file_list = current_file_list;
+                                    code->names->epoint = epoint;
                                 } else {
                                     val_destroy(&code->v);
                                     code = new_code();
@@ -2669,7 +2687,12 @@ MUST_CHECK Obj *compile(void)
                                     if (label2->value->obj != NAMESPACE_OBJ) {
                                         val_destroy(label2->value);
                                         label2->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                    } else ((Namespace *)label2->value)->backr = ((Namespace *)label2->value)->forwr = 0;
+                                    } else {
+                                        Namespace *names = (Namespace *)label2->value;
+                                        names->backr = names->forwr = 0;
+                                        names->file_list = current_file_list;
+                                        names->epoint = epoint;
+                                    }
                                 } else {
                                     label2->constant = true;
                                     label2->owner = true;
@@ -2796,6 +2819,8 @@ MUST_CHECK Obj *compile(void)
                             code->apass = pass;
                             newlabel->defpass = pass;
                             code->names->backr = code->names->forwr = 0;
+                            code->names->file_list = current_file_list;
+                            code->names->epoint = epoint;
                         }
                     } else {
                         if (diagnostics.optimize) cpu_opt_invalidate();
@@ -3591,7 +3616,12 @@ MUST_CHECK Obj *compile(void)
                             if (label->value->obj != NAMESPACE_OBJ) {
                                 val_destroy(label->value);
                                 label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                            } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
+                            } else {
+                                Namespace *names = (Namespace *)label->value;
+                                names->backr = names->forwr = 0;
+                                names->file_list = current_file_list;
+                                names->epoint = epoint;
+                            }
                         } else {
                             label->constant = true;
                             label->owner = true;
@@ -3635,7 +3665,12 @@ MUST_CHECK Obj *compile(void)
                             if (label->value->obj != NAMESPACE_OBJ) {
                                 val_destroy(label->value);
                                 label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                            } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
+                            } else {
+                                Namespace *names = (Namespace *)label->value;
+                                names->backr = names->forwr = 0;
+                                names->file_list = current_file_list;
+                                names->epoint = epoint;
+                            }
                         }
                     } else {
                         label->constant = true;
@@ -4129,7 +4164,12 @@ MUST_CHECK Obj *compile(void)
                                     if (label->value->obj != NAMESPACE_OBJ) {
                                         val_destroy(label->value);
                                         label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                                    } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
+                                    } else {
+                                        Namespace *names = (Namespace *)label->value;
+                                        names->backr = names->forwr = 0;
+                                        names->file_list = current_file_list;
+                                        names->epoint = epoint;
+                                    }
                                 } else {
                                     label->constant = true;
                                     label->owner = true;
@@ -4569,7 +4609,12 @@ MUST_CHECK Obj *compile(void)
                             if (label->value->obj != NAMESPACE_OBJ) {
                                 val_destroy(label->value);
                                 label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                            } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
+                            } else {
+                                Namespace *names = (Namespace *)label->value;
+                                names->backr = names->forwr = 0;
+                                names->file_list = current_file_list;
+                                names->epoint = epoint;
+                            }
                         } else {
                             label->constant = true;
                             label->owner = true;
@@ -4604,7 +4649,12 @@ MUST_CHECK Obj *compile(void)
                         if (label->value->obj != NAMESPACE_OBJ) {
                             val_destroy(label->value);
                             label->value = (Obj *)new_namespace(current_file_list, &epoint);
-                        } else ((Namespace *)label->value)->backr = ((Namespace *)label->value)->forwr = 0;
+                        } else {
+                            Namespace *names = (Namespace *)label->value;
+                            names->backr = names->forwr = 0;
+                            names->file_list = current_file_list;
+                            names->epoint = epoint;
+                        }
                     } else {
                         label->constant = true;
                         label->owner = true;
