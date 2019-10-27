@@ -23,6 +23,7 @@
 #include "error.h"
 #include "64tass.h"
 #include "file.h"
+#include "macro.h"
 
 #include "typeobj.h"
 #include "registerobj.h"
@@ -166,7 +167,9 @@ MALLOC Error *new_error(Error_types num, linepos_t epoint) {
     Error *v = (Error *)val_alloc(ERROR_OBJ);
     v->num = num;
     v->file_list = current_file_list;
-    v->epoint = *epoint;
+    v->epoint.line = epoint->line;
+    v->caret = epoint->pos;
+    v->epoint.pos = macro_error_translate2(epoint->pos);
     if ((size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
         size_t ln = strlen((const char *)pline) + 1;
         uint8_t *l = (uint8_t *)malloc(ln);
