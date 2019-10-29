@@ -30,7 +30,7 @@
 
 struct arguments_s arguments = {
     true,        /* warning */
-    true,        /* caret */
+    CARET_ALWAYS,/* caret */
     true,        /* quiet */
     false,       /* to_ascii */
     true,        /* monitor */
@@ -373,6 +373,7 @@ static const struct my_option long_options[] = {
     {"no-line-numbers"  , my_no_argument      , NULL,  0x117},
     {"line-numbers"     , my_no_argument      , NULL,  0x112},
     {"no-caret-diag"    , my_no_argument      , NULL,  0x10a},
+    {"macro-caret-diag" , my_no_argument      , NULL,  0x122},
     {"caret-diag"       , my_no_argument      , NULL,  0x116},
     {"tab-size"         , my_required_argument, NULL,  0x109},
     {"version"          , my_no_argument      , NULL, 'V'},
@@ -492,8 +493,9 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case 0x11d:arguments.tasmcomp = false;break;
             case 'o':arguments.output.name = my_optarg;break;
             case 0x114: arguments.output.section = my_optarg; break;
-            case 0x116:arguments.caret = true;break;
-            case 0x10a:arguments.caret = false;break;
+            case 0x116:arguments.caret = CARET_ALWAYS;break;
+            case 0x122:arguments.caret = CARET_MACRO;break;
+            case 0x10a:arguments.caret = CARET_NEVER;break;
             case 'D':
                 {
                     size_t len = strlen(my_optarg) + 1;
@@ -592,6 +594,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "  -T, --tasm-compatible Enable TASM compatible mode\n"
                "  -w, --no-warn         Suppress warnings\n"
                "      --no-caret-diag   Suppress source line display\n"
+               "      --macro-caret-diag Source lines in macros only\n"
                "\n"
                " Diagnostic options:\n"
                "  -Wall                 Enable most diagnostic warnings\n"

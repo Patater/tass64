@@ -1341,7 +1341,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
     print_use_bold = false;
 #endif
     putc('\n', f);
-    if (arguments.caret && caret && line != NULL) {
+    if (arguments.caret != CARET_NEVER && caret && line != NULL) {
         putc(' ', f);
         printable_print(line, f);
         fputs("\n ", f);
@@ -1429,7 +1429,7 @@ bool error_print(void) {
                         err->line_len != err3->line_len || err->error_len != err3->error_len ||
                         err->epoint.line != err3->epoint.line || err->epoint.pos != err3->epoint.pos ||
                         memcmp(err + 1, err3 + 1, err->line_len + err->error_len) != 0) {
-                    print_error(ferr, err3, different_line(err, err3));
+                    print_error(ferr, err3, (arguments.caret == CARET_ALWAYS || err3->line_len != 0) && different_line(err, err3));
                 }
             }
             err3 = err2;
@@ -1456,13 +1456,13 @@ bool error_print(void) {
             errors++;
             break;
         }
-        if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
+        if (err3 != NULL) print_error(ferr, err3, (arguments.caret == CARET_ALWAYS || err3->line_len != 0) && different_line(err2, err3));
         err3 = err2;
         err2 = err;
         usenote = true;
     }
-    if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
-    if (err2 != NULL) print_error(ferr, err2, true);
+    if (err3 != NULL) print_error(ferr, err3, (arguments.caret == CARET_ALWAYS || err3->line_len != 0) && different_line(err2, err3));
+    if (err2 != NULL) print_error(ferr, err2, (arguments.caret == CARET_ALWAYS || err2->line_len != 0));
     color_detect(stderr);
     if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
     return errors != 0;
