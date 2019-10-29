@@ -3355,8 +3355,20 @@ FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
 <dt><b>--no-caret-diag</b><a name="o_no-caret-diag" href="#o_no-caret-diag"></a>
 <dd>Suppress displaying of faulty source line and fault position after
 fault messages.
+<p>This is for cases where the fault log is automatically processed and no one
+ever looks at it and therefore there's no point to display the source lines.</p>
 <pre width=80>
 64tass --no-caret-diag a.asm
+</pre>
+
+<dt><b>--macro-caret-diag</b><a name="o_macro-caret-diag" href="#o_macro-caret-diag"></a>
+<dd>Restrict source line and fault position display to macro expansions only.
+<p>This is for cases where the fault log is processed by an editor which also
+displays the compilation output somewhere. Only lines which are the result of
+macro processing will be output to aid debugging. Those which would just
+duplicate what's in the source editor window will be not.</p>
+<pre width=80>
+64tass --macro-caret-diag a.asm
 </pre>
 
 <dt><b>-q</b><a name="o_q"></a>, <b>--quiet</b><a name="o_quiet" href="#o_quiet"></a>

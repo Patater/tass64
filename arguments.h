@@ -30,6 +30,10 @@ typedef enum Symbollist_types {
     LABEL_64TASS, LABEL_VICE, LABEL_DUMP, LABEL_EXPORT
 } Symbollist_types;
 
+typedef enum Caret_types {
+    CARET_ALWAYS, CARET_MACRO, CARET_NEVER
+} Caret_types;
+
 struct file_s;
 
 struct output_s {
@@ -47,7 +51,7 @@ struct symbol_output_s {
 
 struct arguments_s {
     bool warning;
-    bool caret;
+    Caret_types caret;
     bool quiet;
     bool to_ascii;
     bool monitor;

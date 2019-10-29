@@ -2921,7 +2921,21 @@ Operation options
     Suppress displaying of faulty source line and fault position after fault
     messages.
 
+    This is for cases where the fault log is automatically processed and no one
+    ever looks at it and therefore there's no point to display the source
+    lines.
+
     64tass --no-caret-diag a.asm
+
+--macro-caret-diag
+    Restrict source line and fault position display to macro expansions only.
+
+    This is for cases where the fault log is processed by an editor which also
+    displays the compilation output somewhere. Only lines which are the result
+    of macro processing will be output to aid debugging. Those which would just
+    duplicate what's in the source editor window will be not.
+
+    64tass --macro-caret-diag a.asm
 
 -q, --quiet
     Suppress messages. Disables header and summary messages.
