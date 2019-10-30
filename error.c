@@ -807,11 +807,10 @@ static void err_msg_cant_broadcast(const char *msg, size_t v1, size_t v2) {
 }
 
 static void err_msg_invalid_oper2(const Oper *op, Obj *v1, Obj *v2) {
-    bool in = (op == &o_IN);
     adderror(op->name);
-    adderror(in ? "' on " : "' of ");
-    err_msg_variable(in ? v2 : v1);
-    if (v2 != NULL && op != &o_MEMBER && op != &o_X && !in) {
+    adderror("' of ");
+    err_msg_variable(v1);
+    if (v2 != NULL) {
         adderror(" and ");
         err_msg_variable(v2);
     }
