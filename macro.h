@@ -38,6 +38,6 @@ extern void init_macro(void);
 extern void free_macro(void);
 extern void get_macro_params(struct Obj *);
 extern void get_func_params(struct Mfunc *);
-extern const struct file_list_s *macro_error_translate(struct linepos_s *, linecpos_t);
+extern const struct file_list_s *macro_error_translate(struct linepos_s *, size_t);
 extern size_t macro_error_translate2(size_t);
 #endif
