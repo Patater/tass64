@@ -752,7 +752,7 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
 static void err_opcode(uint32_t cod) {
     adderror(" addressing mode ");
     if (cod != 0) {
-        char tmp[18];
+        char tmp[17];
         memcpy(tmp, "for opcode 'xxx'", sizeof tmp);
         tmp[12] = cod >> 16;
         tmp[13] = cod >> 8;
