@@ -584,7 +584,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "64tass Turbo Assembler Macro V" VERSION "\n"
                "\n"
                "  -a, --ascii           Source is not in PETASCII\n"
-               "  -B, --long-branch     Automatic bxx *+3 jmp $xxxx\n"
+               "  -B, --long-branch     Automatic bxx *+5 jmp $xxxx\n"
                "  -C, --case-sensitive  Case sensitive labels\n"
                "  -D <label>=<value>    Define <label> to <value>\n"
                "  -E, --error=<file>    Place errors into <file>\n"
