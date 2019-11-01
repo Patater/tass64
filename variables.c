@@ -517,6 +517,7 @@ static void labelprint2(const struct avltree *members, FILE *flab, int labelmode
             size_t i, j = l->name.len;
             const uint8_t *d = l->name.data;
 
+            if (!l->constant) continue;
             for (i = 0; i < j; i++) {
                 uint8_t c = d[i];
                 if (c < '0') break;
