@@ -135,8 +135,7 @@ static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)
     if (ln >= 0) {
         uint8_t *d;
         uint32_t temp;
-        poke_pos = epoint;
-        d = pokealloc(ln + 1);
+        d = pokealloc(ln + 1, epoint);
         temp = adr ^ outputeor;
         switch (ln) {
         case 4: d[4] = temp >> 24; /* fall through */
