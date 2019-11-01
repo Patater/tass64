@@ -200,24 +200,23 @@ static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct 
     address_t pos, end;
     unsigned int i;
 
-    if (memblocks->p != 0) {
-        pos = memblocks->data[0].addr;
-        if (output->mode == OUTPUT_CBM || output->mode == OUTPUT_APPLE) {
-            putlw(pos, fout);
-        }
-        if (output->mode == OUTPUT_APPLE) {
-            end = memblocks->data[memblocks->p - 1].addr + memblocks->data[memblocks->p - 1].len;
-            end -= pos;
-            putlw(end, fout);
-        } else if (output->mode == OUTPUT_CBM) {
-            if (output->longaddr) putc(pos >> 16,fout);
-        }
-        for (i = 0; i < memblocks->p; i++) {
-            const struct memblock_s *block = &memblocks->data[i];
-            padding(block->addr - pos, fout);
-            if (fwrite(memblocks->mem.data + block->p, block->len, 1, fout) == 0) return;
-            pos = block->addr + block->len;
-        }
+    if (memblocks->p == 0) return;
+    pos = memblocks->data[0].addr;
+    if (output->mode == OUTPUT_CBM || output->mode == OUTPUT_APPLE) {
+        putlw(pos, fout);
+    }
+    if (output->mode == OUTPUT_APPLE) {
+        end = memblocks->data[memblocks->p - 1].addr + memblocks->data[memblocks->p - 1].len;
+        end -= pos;
+        putlw(end, fout);
+    } else if (output->mode == OUTPUT_CBM) {
+        if (output->longaddr) putc(pos >> 16,fout);
+    }
+    for (i = 0; i < memblocks->p; i++) {
+        const struct memblock_s *block = &memblocks->data[i];
+        padding(block->addr - pos, fout);
+        if (fwrite(memblocks->mem.data + block->p, block->len, 1, fout) == 0) return;
+        pos = block->addr + block->len;
     }
 }
 
@@ -275,40 +274,40 @@ static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks) {
     address_t start, size;
     unsigned int i, last;
 
-    if (memblocks->p != 0) {
-        i = 0;
-        start = memblocks->data[i].addr;
-        size = memblocks->data[i].len;
-        last = i;
-        for (i++; i < memblocks->p; i++) {
-            const struct memblock_s *block = &memblocks->data[i];
-            if (block->addr != start + size) {
-                if (last == 0 || start == 0xffff) putlw(0xffff, fout);
-                putlw(start, fout);
-                putlw(start + size - 1, fout);
-                while (last < i) {
-                    const struct memblock_s *b = &memblocks->data[last++];
-                    if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
-                }
-                start = block->addr;
-                size = 0;
+    if (memblocks->p == 0) return;
+    i = 0;
+    start = memblocks->data[i].addr;
+    size = memblocks->data[i].len;
+    last = i;
+    for (i++; i < memblocks->p; i++) {
+        const struct memblock_s *block = &memblocks->data[i];
+        if (block->addr != start + size) {
+            if (last == 0 || start == 0xffff) putlw(0xffff, fout);
+            putlw(start, fout);
+            putlw(start + size - 1, fout);
+            while (last < i) {
+                const struct memblock_s *b = &memblocks->data[last++];
+                if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
             }
-            size += block->len;
+            start = block->addr;
+            size = 0;
         }
-        if (last == 0 || start == 0xffff) putlw(0xffff, fout);
-        putlw(start, fout);
-        putlw(start + size - 1, fout);
-        while (last < i) {
-            const struct memblock_s *b = &memblocks->data[last++];
-            if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
-        }
+        size += block->len;
+    }
+    if (last == 0 || start == 0xffff) putlw(0xffff, fout);
+    putlw(start, fout);
+    putlw(start + size - 1, fout);
+    while (last < i) {
+        const struct memblock_s *b = &memblocks->data[last++];
+        if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
     }
 }
 
-static void hexput(FILE *fout, unsigned int b) {
+static unsigned int hexput(FILE *fout, unsigned int b) {
     const char *hex = "0123456789ABCDEF";
     putc(hex[(b >> 4) & 0xf], fout);
     putc(hex[b & 0xf], fout);
+    return b;
 }
 
 struct ihex_s {
@@ -319,15 +318,14 @@ struct ihex_s {
 };
 
 static void output_mem_ihex_line(FILE *fout, unsigned int length, address_t address, unsigned int type, const uint8_t *data) {
-    unsigned int i, sum = length + address + (address >> 8) + type;
+    unsigned int i, sum;
     putc(':', fout);
-    hexput(fout, length);
-    hexput(fout, address >> 8);
-    hexput(fout, address);
-    hexput(fout, type);
+    sum = hexput(fout, length);
+    sum += hexput(fout, address >> 8);
+    sum += hexput(fout, address);
+    sum += hexput(fout, type);
     for (i = 0; i < length; i++) {
-        hexput(fout, data[i]);
-        sum += data[i];
+        sum += hexput(fout, data[i]);
     }
     hexput(fout, -sum);
     putc('\n', fout);
@@ -359,35 +357,34 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
     struct ihex_s ihex;
     size_t i;
 
-    if (memblocks->p != 0) {
-        ihex.file = fout;
-        ihex.address = 0;
-        ihex.segment = 0;
-        ihex.length = 0;
-        for (i = 0; i < memblocks->p; i++) {
-            const struct memblock_s *b = &memblocks->data[i];
-            const uint8_t *d = memblocks->mem.data + b->p;
-            address_t addr = b->addr;
-            size_t blen = b->len;
-            if (blen != 0 && ihex.address + ihex.length != addr) {
-                if (ihex.length != 0) output_mem_ihex_data(&ihex);
-                ihex.address = addr;
-            }
-            while (blen != 0) {
-                size_t left = (sizeof ihex.data) - ihex.length;
-                size_t copy = blen > left ? left : blen;
-                memcpy(ihex.data + ihex.length, d, copy);
-                ihex.length += copy;
-                d += copy;
-                blen -= copy;
-                if (ihex.length == sizeof ihex.data) {
-                    output_mem_ihex_data(&ihex);
-                }
+    if (memblocks->p == 0) return;
+    ihex.file = fout;
+    ihex.address = 0;
+    ihex.segment = 0;
+    ihex.length = 0;
+    for (i = 0; i < memblocks->p; i++) {
+        const struct memblock_s *b = &memblocks->data[i];
+        const uint8_t *d = memblocks->mem.data + b->p;
+        address_t addr = b->addr;
+        size_t blen = b->len;
+        if (blen != 0 && ihex.address + ihex.length != addr) {
+            if (ihex.length != 0) output_mem_ihex_data(&ihex);
+            ihex.address = addr;
+        }
+        while (blen != 0) {
+            size_t left = (sizeof ihex.data) - ihex.length;
+            size_t copy = blen > left ? left : blen;
+            memcpy(ihex.data + ihex.length, d, copy);
+            ihex.length += copy;
+            d += copy;
+            blen -= copy;
+            if (ihex.length == sizeof ihex.data) {
+                output_mem_ihex_data(&ihex);
             }
         }
-        if (ihex.length != 0) output_mem_ihex_data(&ihex);
-        output_mem_ihex_line(fout, 0, 0, 1, NULL);
     }
+    if (ihex.length != 0) output_mem_ihex_data(&ihex);
+    output_mem_ihex_line(fout, 0, 0, 1, NULL);
 }
 
 struct srecord_s {
@@ -399,19 +396,16 @@ struct srecord_s {
 };
 
 static void output_mem_srec_line(struct srecord_s *srec) {
-    unsigned int i;
-    unsigned int sum = srec->length + srec->address + (srec->address >> 8) + (srec->address >> 16) + (srec->address >> 24);
+    unsigned int i, sum;
     putc('S', srec->file);
     putc(srec->length ? ('1' + srec->type) : ('9' - srec->type), srec->file);
-    sum += srec->type + 3;
-    hexput(srec->file, srec->length + srec->type + 3);
-    if (srec->type > 1) hexput(srec->file, srec->address >> 24);
-    if (srec->type > 0) hexput(srec->file, srec->address >> 16);
-    hexput(srec->file, srec->address >> 8);
-    hexput(srec->file, srec->address);
+    sum = hexput(srec->file, srec->length + srec->type + 3);
+    if (srec->type > 1) sum += hexput(srec->file, srec->address >> 24);
+    if (srec->type > 0) sum += hexput(srec->file, srec->address >> 16);
+    sum += hexput(srec->file, srec->address >> 8);
+    sum += hexput(srec->file, srec->address);
     for (i = 0; i < srec->length; i++) {
-        hexput(srec->file, srec->data[i]);
-        sum += srec->data[i];
+        sum += hexput(srec->file, srec->data[i]);
     }
     hexput(srec->file, ~sum);
     putc('\n', srec->file);
@@ -423,45 +417,44 @@ static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
     struct srecord_s srec;
     size_t i;
 
-    if (memblocks->p != 0) {
-        srec.file = fout;
-        srec.type = 0;
-        srec.address = 0;
-        srec.length = 0;
-        for (i = 0; i < memblocks->p; i++) {
-            const struct memblock_s *b = &memblocks->data[i];
-            size_t end = b->addr + b->len - 1;
-            if (end >= 0x10000 && srec.type < 1) srec.type = 1;
-            if (end >= 0x1000000 && srec.type < 2) {
-                srec.type = 2;
-                break;
-            }
+    if (memblocks->p == 0) return;
+    srec.file = fout;
+    srec.type = 0;
+    srec.address = 0;
+    srec.length = 0;
+    for (i = 0; i < memblocks->p; i++) {
+        const struct memblock_s *b = &memblocks->data[i];
+        size_t end = b->addr + b->len - 1;
+        if (end >= 0x10000 && srec.type < 1) srec.type = 1;
+        if (end >= 0x1000000 && srec.type < 2) {
+            srec.type = 2;
+            break;
         }
-        for (i = 0; i < memblocks->p; i++) {
-            const struct memblock_s *b = &memblocks->data[i];
-            const uint8_t *d = memblocks->mem.data + b->p;
-            address_t addr = b->addr;
-            size_t blen = b->len;
-            if (blen != 0 && srec.address + srec.length != addr) {
-                if (srec.length != 0) output_mem_srec_line(&srec);
-                srec.address = addr;
-            }
-            while (blen != 0) {
-                size_t left = (sizeof srec.data) - srec.length;
-                size_t copy = blen > left ? left : blen;
-                memcpy(srec.data + srec.length, d, copy);
-                srec.length += copy;
-                d += copy;
-                blen -= copy;
-                if (srec.length == sizeof srec.data) {
-                    output_mem_srec_line(&srec);
-                }
-            }
-        }
-        if (srec.length != 0) output_mem_srec_line(&srec);
-        srec.address = memblocks->data[0].addr;
-        output_mem_srec_line(&srec);
     }
+    for (i = 0; i < memblocks->p; i++) {
+        const struct memblock_s *b = &memblocks->data[i];
+        const uint8_t *d = memblocks->mem.data + b->p;
+        address_t addr = b->addr;
+        size_t blen = b->len;
+        if (blen != 0 && srec.address + srec.length != addr) {
+            if (srec.length != 0) output_mem_srec_line(&srec);
+            srec.address = addr;
+        }
+        while (blen != 0) {
+            size_t left = (sizeof srec.data) - srec.length;
+            size_t copy = blen > left ? left : blen;
+            memcpy(srec.data + srec.length, d, copy);
+            srec.length += copy;
+            d += copy;
+            blen -= copy;
+            if (srec.length == sizeof srec.data) {
+                output_mem_srec_line(&srec);
+            }
+        }
+    }
+    if (srec.length != 0) output_mem_srec_line(&srec);
+    srec.address = memblocks->data[0].addr;
+    output_mem_srec_line(&srec);
 }
 
 void output_mem(Memblocks *memblocks, const struct output_s *output) {
