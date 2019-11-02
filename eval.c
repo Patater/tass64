@@ -53,6 +53,7 @@
 #include "identobj.h"
 #include "foldobj.h"
 #include "iterobj.h"
+#include "memblocksobj.h"
 
 static FAST_CALL NO_INLINE unsigned int get_label_start(const uint8_t *s) {
     unsigned int l;
@@ -318,9 +319,24 @@ MUST_CHECK Obj *get_star_value(address_t addr, Obj *val) {
     }
 }
 
-static MUST_CHECK Obj *get_star(void) {
+MUST_CHECK Obj *get_star(linepos_t epoint) {
+    Code *code;
     if (diagnostics.optimize) cpu_opt_invalidate();
-    return get_star_value(star, current_address->l_address_val);
+    code = new_code();
+    code->addr = star;
+    code->typ = val_reference(current_address->l_address_val);
+    code->size = 0;
+    code->offs = 0;
+    code->dtype = D_NONE;
+    code->pass = pass;
+    code->apass = pass;
+    code->memblocks = ref_memblocks(current_address->mem);
+    code->names = new_namespace(current_file_list, epoint);
+    code->requires = current_section->requires;
+    code->conflicts = current_section->conflicts;
+    code->memaddr = current_address->address;
+    code->membp = 0;
+    return &code->v;
 }
 
 static size_t evxnum, evx_p;
@@ -422,7 +438,7 @@ rest:
         case '$': push_oper(get_hex(&epoint), &epoint);goto other;
         case '%': push_oper(get_bin(&epoint), &epoint);goto other;
         case '"': push_oper(get_string(&epoint), &epoint);goto other;
-        case '*': lpoint.pos++;push_oper(get_star(), &epoint);goto other;
+        case '*': lpoint.pos++;push_oper(get_star(&epoint), &epoint);goto other;
         case '0':
             if (diagnostics.leading_zeros && pline[lpoint.pos + 1] >= '0' && pline[lpoint.pos + 1] <= '9') err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
             /* fall through */
@@ -1530,7 +1546,7 @@ static bool get_exp2(int stop) {
                         push_oper((Obj *)new_ident(&ident), &opr.data[opr.p].epoint);
                         goto other;
                     }
-                    push_oper(get_star(), &opr.data[opr.p].epoint);
+                    push_oper(get_star(&opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                     goto other;
                 }
                 epoint = opr.data[opr.p - 1].epoint;
@@ -1548,7 +1564,7 @@ static bool get_exp2(int stop) {
                 push_oper((Obj *)new_ident(&ident), &opr.data[opr.p].epoint);
                 goto other;
             }
-            push_oper(get_star(), &opr.data[opr.p].epoint);
+            push_oper(get_star(&opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
             goto other;
         }
         lpoint.pos++;
