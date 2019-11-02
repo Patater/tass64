@@ -460,6 +460,12 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     return code_item(v1, (ssize_t)offs1 + offs0, ln2);
 }
 
+static inline address_t ldigit(Code *v1, linepos_t epoint) {
+    address_t addr = code_address(v1);
+    if (v1->addr + v1->offs != addr) err_msg_addr_wrap(epoint);
+    return addr;
+}
+
 static MUST_CHECK Obj *calc1(oper_t op) {
     Obj *v, *result;
     Error *err;
@@ -479,6 +485,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
+        return bytes_calc1(op->op->op, ldigit(v1, op->epoint));
     case O_STRING:
     case O_INV:
     case O_NEG:
