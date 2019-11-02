@@ -537,6 +537,14 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (err != NULL) return &err->v;
             err = access_check(v2, op->epoint2);
             if (err != NULL) return &err->v;
+            if (op->op->op == O_SUB) {
+                address_t addr1 = code_address(v1);
+                address_t addr2 = code_address(v2);
+                if (v1->addr + v1->offs != addr1) err_msg_addr_wrap(op->epoint);
+                if (v2->addr + v2->offs != addr2) err_msg_addr_wrap(op->epoint2);
+                if (addr2 > addr1) err_msg_addr_wrap(op->epoint3);
+                return (Obj *)int_from_size((addr1 - addr2) & all_mem);
+            }
             tmp1 = get_code_address(v1, op->epoint);
             tmp2 = get_code_address(v2, op->epoint2);
             op->v1 = tmp1;
