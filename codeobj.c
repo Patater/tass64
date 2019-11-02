@@ -551,8 +551,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 address_t addr2 = code_address(v2);
                 if (v1->addr + v1->offs != addr1) err_msg_addr_wrap(op->epoint);
                 if (v2->addr + v2->offs != addr2) err_msg_addr_wrap(op->epoint2);
-                if (addr2 > addr1) err_msg_addr_wrap(op->epoint3);
-                return (Obj *)int_from_size((addr1 - addr2) & all_mem);
+                return (Obj *)int_from_ival(addr1 - addr2);
             }
             tmp1 = get_code_address(v1, op->epoint);
             tmp2 = get_code_address(v2, op->epoint2);
