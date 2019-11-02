@@ -3829,6 +3829,8 @@ VICE monitor. Therefore simple numeric constants will not show up unless
 converted to an address first.</p>
 <p>VICE symbols may only contain ASCII letters, numbers and underscore. Symbols
 not meeting this requirement will be omitted.</p>
+<p>If a memory location has several symbols only one will be included in the
+label list.</p>
 <pre width=80>
 64tass --vice-labels -l labels.l a.asm
 *       <b>=</b> <span>$1000</span>
@@ -3839,6 +3841,27 @@ al 1000 .label
 </pre>
 <p><b>For now colons are used as scope delimiter due to a VICE limitation, but
 this will be changed to dots in the future.</b></p>
+
+<dt><b>--vice-labels-numeric</b><a name="o_vice-labels-numeric" href="#o_vice-labels-numeric"></a>
+<dd>List address like symbols in a VICE readable format including numeric constants.
+<p>The normal VICE label list does not include symbols like <code>chrout =
+$ffd2</code> or <code>keybuff = 631</code> as these are numeric constants and
+not memory addresses.</p>
+<p>Of course there are ways around that. For example:</p>
+<pre width=80>
+chrout  <b>=</b> <span class="k">address</span>(<span>$ffd2</span>)
+keybuff <b>=</b> <span class="k">address</span>(<span>631</span>)
+*       <b>=</b> <span>$ffd2</span>
+chrout  <b class="d">.fill</b> <span>3</span>
+*       <b>=</b> <span>631</span>
+keybuff <b class="d">.fill</b> <span>10</span>
+</pre>
+<p>For those who don't want to waste time on explicitly marking addresses as
+such there's an easy way out by using this command line option.</p>
+
+<p>The tradeoff is that depending on the coding style the label list will become
+polluted by non-address constants to various degrees. However if one mostly
+uses numeric constants for addresses only this may be acceptable.</p>
 
 <dt><b>--dump-labels</b><a name="o_dump-labels" href="#o_dump-labels"></a>
 <dd>List labels for debugging.

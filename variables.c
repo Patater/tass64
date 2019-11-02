@@ -534,7 +534,7 @@ static void labelprint2(const struct avltree *members, FILE *flab, int labelmode
             break;
         default:break;
         }
-        if (labelmode == LABEL_VICE) {
+        if (labelmode == LABEL_VICE || labelmode == LABEL_VICE_NUMERIC) {
             Obj *val;
             size_t i, j = l->name.len;
             const uint8_t *d = l->name.data;
@@ -553,7 +553,7 @@ static void labelprint2(const struct avltree *members, FILE *flab, int labelmode
             if (i != j) continue;
 
             val = l->value;
-            if (val->obj == ADDRESS_OBJ || val->obj == CODE_OBJ) {
+            if (val->obj == ADDRESS_OBJ || val->obj == CODE_OBJ || (labelmode == LABEL_VICE_NUMERIC && (val->obj == BITS_OBJ || val->obj == INT_OBJ))) {
                 struct linepos_s epoint;
                 uval_t uv;
                 Error *err = val->obj->uval(val, &uv, 24, &epoint);
@@ -697,7 +697,7 @@ bool labelprint(const struct symbol_output_s *output, bool append) {
         err_msg2(ERROR____LABEL_ROOT, &labelname, &nopoint);
     } else if (output->mode == LABEL_DUMP) {
         labeldump(space, flab);
-    } else if (output->mode == LABEL_VICE) {
+    } else if (output->mode == LABEL_VICE || output->mode == LABEL_VICE_NUMERIC) {
         vice_addresses = (struct vice_addresses_s *)mallocx(sizeof *vice_addresses);
         vice_addresses->next = NULL;
         vice_addrp = 0;
