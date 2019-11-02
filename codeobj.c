@@ -480,12 +480,13 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         val_destroy(v);
         return result;
     case O_BANK:
+        return bytes_calc1(op->op->op, ldigit(v1, op->epoint));
     case O_HIGHER:
     case O_LOWER:
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, ldigit(v1, op->epoint));
+        return bytes_calc1(op->op->op, code_address(v1));
     case O_STRING:
     case O_INV:
     case O_NEG:
