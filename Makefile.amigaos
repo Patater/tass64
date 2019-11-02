@@ -80,7 +80,7 @@ eval.o: eval.c eval.h attributes.h inttypes.h stdbool.h math.h section.h \
  floatobj.h obj.h boolobj.h intobj.h bitsobj.h strobj.h codeobj.h \
  bytesobj.h oper_e.h addressobj.h listobj.h dictobj.h registerobj.h \
  namespaceobj.h operobj.h gapobj.h typeobj.h noneobj.h labelobj.h \
- errorobj.h identobj.h foldobj.h iterobj.h
+ errorobj.h identobj.h foldobj.h iterobj.h memblocksobj.h
 file.o: file.c file.h attributes.h stdbool.h inttypes.h avl.h str.h \
  wchar.h 64tass.h wait_e.h unicode.h error.h errors_e.h arguments.h \
  unicodedata.h
