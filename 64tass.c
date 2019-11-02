@@ -1939,7 +1939,7 @@ MUST_CHECK Obj *compile(void)
                     if (labelname.data[0] == '*') {
                         label = NULL;
                         if (diagnostics.optimize) cpu_opt_invalidate();
-                        val = get_star(&epoint);
+                        val = get_star();
                     } else if (tmp.op == &o_COND) {
                         label = NULL; val = NULL;
                     } else {

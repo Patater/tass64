@@ -48,7 +48,7 @@ extern void eval_enter(void);
 extern void eval_leave(void);
 extern FAST_CALL size_t get_label(const uint8_t *);
 extern MUST_CHECK struct Obj *get_star_value(address_t, struct Obj *);
-extern MUST_CHECK struct Obj *get_star(linepos_t);
+extern MUST_CHECK struct Obj *get_star(void);
 extern struct Obj *get_vals_tuple(void);
 extern struct Obj *get_vals_addrlist(struct linepos_s *);
 extern MUST_CHECK struct Error *indexoffs(struct Obj *, size_t, size_t *, linepos_t);
