@@ -319,7 +319,7 @@ MUST_CHECK Obj *get_star_value(address_t addr, Obj *val) {
     }
 }
 
-MUST_CHECK Obj *get_star(linepos_t epoint) {
+MUST_CHECK Obj *get_star(void) {
     Code *code;
     if (diagnostics.optimize) cpu_opt_invalidate();
     code = new_code();
@@ -331,7 +331,7 @@ MUST_CHECK Obj *get_star(linepos_t epoint) {
     code->pass = pass;
     code->apass = pass;
     code->memblocks = ref_memblocks(current_address->mem);
-    code->names = new_namespace(current_file_list, epoint);
+    code->names = ref_namespace(current_context);
     code->requires = current_section->requires;
     code->conflicts = current_section->conflicts;
     code->memaddr = current_address->address;
@@ -438,7 +438,7 @@ rest:
         case '$': push_oper(get_hex(&epoint), &epoint);goto other;
         case '%': push_oper(get_bin(&epoint), &epoint);goto other;
         case '"': push_oper(get_string(&epoint), &epoint);goto other;
-        case '*': lpoint.pos++;push_oper(get_star(&epoint), &epoint);goto other;
+        case '*': lpoint.pos++;push_oper(get_star(), &epoint);goto other;
         case '0':
             if (diagnostics.leading_zeros && pline[lpoint.pos + 1] >= '0' && pline[lpoint.pos + 1] <= '9') err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
             /* fall through */
@@ -1546,7 +1546,7 @@ static bool get_exp2(int stop) {
                         push_oper((Obj *)new_ident(&ident), &opr.data[opr.p].epoint);
                         goto other;
                     }
-                    push_oper(get_star(&opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
+                    push_oper(get_star(), &opr.data[opr.p].epoint);
                     goto other;
                 }
                 epoint = opr.data[opr.p - 1].epoint;
@@ -1564,7 +1564,7 @@ static bool get_exp2(int stop) {
                 push_oper((Obj *)new_ident(&ident), &opr.data[opr.p].epoint);
                 goto other;
             }
-            push_oper(get_star(&opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
+            push_oper(get_star(), &opr.data[opr.p].epoint);
             goto other;
         }
         lpoint.pos++;
