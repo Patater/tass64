@@ -3423,6 +3423,9 @@ Symbol listing
     VICE symbols may only contain ASCII letters, numbers and underscore.
     Symbols not meeting this requirement will be omitted.
 
+    If a memory location has several symbols only one will be included in the
+    label list.
+
     64tass --vice-labels -l labels.l a.asm
     *       = $1000
     label   jmp label
@@ -3432,6 +3435,29 @@ Symbol listing
 
     For now colons are used as scope delimiter due to a VICE limitation, but
     this will be changed to dots in the future.
+
+--vice-labels-numeric
+    List address like symbols in a VICE readable format including numeric
+    constants.
+
+    The normal VICE label list does not include symbols like chrout = $ffd2 or
+    keybuff = 631 as these are numeric constants and not memory addresses.
+
+    Of course there are ways around that. For example:
+
+    chrout  = address($ffd2)
+    keybuff = address(631)
+    *       = $ffd2
+    chrout  .fill 3
+    *       = 631
+    keybuff .fill 10
+
+    For those who don't want to waste time on explicitly marking addresses as
+    such there's an easy way out by using this command line option.
+
+    The tradeoff is that depending on the coding style the label list will
+    become polluted by non-address constants to various degrees. However if one
+    mostly uses numeric constants for addresses only this may be acceptable.
 
 --dump-labels
     List labels for debugging.

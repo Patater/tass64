@@ -361,6 +361,7 @@ static const struct my_option long_options[] = {
     {"error"            , my_required_argument, NULL, 'E'},
     {"export-labels"    , my_no_argument      , NULL,  0x115},
     {"vice-labels"      , my_no_argument      , NULL,  0x10b},
+    {"vice-labels-numeric",my_no_argument     , NULL,  0x123},
     {"dump-labels"      , my_no_argument      , NULL,  0x10d},
     {"labels-root"      , my_required_argument, NULL,  0x113},
     {"list"             , my_required_argument, NULL, 'L'},
@@ -538,6 +539,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                       break;
             case 0x115: symbol_output.mode = LABEL_EXPORT; break;
             case 0x10b: symbol_output.mode = LABEL_VICE; break;
+            case 0x123: symbol_output.mode = LABEL_VICE_NUMERIC; break;
             case 0x10d: symbol_output.mode = LABEL_DUMP; break;
             case 0x113: symbol_output.space = my_optarg; break;
             case 'E': arguments.error = my_optarg;break;
@@ -570,10 +572,10 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "        [--tasm-compatible] [--quiet] [--no-warn] [--long-address] [--m65c02]\n"
                "        [--m6502] [--m65xx] [--m65dtv02] [--m65816] [--m65el02] [--mr65c02]\n"
                "        [--mw65c02] [--m65ce02] [--m4510] [--labels=<file>] [--export-labels]\n"
-               "        [--vice-labels] [--dump-labels] [--list=<file>] [--no-monitor]\n"
-               "        [--no-source] [--line-numbers] [--tab-size=<value>] [--verbose-list]\n"
-               "        [-W<option>] [--errors=<file>] [--output=<file>] [--help] [--usage]\n"
-               "        [--version] SOURCES");
+               "        [--vice-labels] [--vice-labels-numeric] [--dump-labels] [--list=<file>]\n"
+               "        [--no-monitor] [--no-source] [--line-numbers] [--tab-size=<value>]\n"
+               "        [--verbose-list] [-W<option>] [--errors=<file>] [--output=<file>]\n"
+               "        [--help] [--usage] [--version] SOURCES");
                    return 0;
 
             case 'V':puts("64tass Turbo Assembler Macro V" VERSION);
@@ -666,6 +668,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "  -l, --labels=<file>   List labels into <file>\n"
                "      --export-labels   Export for other source\n"
                "      --vice-labels     Labels in VICE format\n"
+               "      --vice-labels-numeric Labels for VICE with numeric constants\n"
                "      --dump-labels     Dump for debugging\n"
                "      --labels-root=<l> List from scope <l> only\n"
                "  -L, --list=<file>     List into <file>\n"
