@@ -300,7 +300,6 @@ static void tfree(void) {
     err_destroy();
     destroy_file();
     destroy_ternary();
-    destroy_pairs();
     destroy_opt_bit();
     free(arguments.symbol_output);
     if (unfc(NULL)) {}

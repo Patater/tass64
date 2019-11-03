@@ -36,85 +36,6 @@ static Type obj;
 
 Type *const DICT_OBJ = &obj;
 
-#ifdef DEBUG
-#define pair_free(pair) free(pair)
-#define pair_alloc() (struct pair_s *)mallocx(sizeof(struct pair_s))
-#else
-static union pair_u {
-    struct pair_s pair;
-    union pair_u *next;
-} *pairs_free = NULL;
-
-static struct pairs_s {
-    union pair_u pairs[127];
-    struct pairs_s *next;
-} *pairs = NULL;
-
-static void pair_free(struct pair_s *pair) {
-    ((union pair_u *)pair)->next = pairs_free;
-    pairs_free = (union pair_u *)pair;
-}
-
-static union pair_u *pairs_alloc(void) {
-    size_t i;
-    struct pairs_s *old = pairs;
-    pairs = (struct pairs_s *)mallocx(sizeof *pairs);
-    for (i = 0; i < 126; i++) {
-        pairs->pairs[i].next = &pairs->pairs[i + 1];
-    }
-    pairs->pairs[i].next = NULL;
-    pairs->next = old;
-    return &pairs->pairs[0];
-}
-
-static MALLOC struct pair_s *pair_alloc(void) {
-    struct pair_s *pair;
-    if (pairs_free == NULL) pairs_free = pairs_alloc();
-    pair = (struct pair_s *)pairs_free;
-    pairs_free = pairs_free->next;
-    return pair;
-}
-#endif
-
-static void dict_free(struct avltree_node *aa)
-{
-    struct pair_s *a = avltree_container_of(aa, struct pair_s, node);
-    val_destroy(a->key);
-    if (a->data != NULL) val_destroy(a->data);
-    pair_free(a);
-}
-
-static void dict_free2(struct avltree_node *aa)
-{
-    struct pair_s *a = avltree_container_of(aa, struct pair_s, node);
-    pair_free(a);
-}
-
-static void dict_garbage1(struct avltree_node *aa)
-{
-    struct pair_s *a = avltree_container_of(aa, struct pair_s, node);
-    a->key->refcount--;
-    if (a->data != NULL) a->data->refcount--;
-}
-
-static void dict_garbage2(struct avltree_node *aa)
-{
-    struct pair_s *a = avltree_container_of(aa, struct pair_s, node);
-    Obj *v;
-    v = a->data;
-    if (v != NULL) {
-        if ((v->refcount & SIZE_MSB) != 0) {
-            v->refcount -= SIZE_MSB - 1;
-            v->obj->garbage(v, 1);
-        } else v->refcount++;
-    }
-    v = a->key;
-    if ((v->refcount & SIZE_MSB) != 0) {
-        v->refcount -= SIZE_MSB - 1;
-        v->obj->garbage(v, 1);
-    } else v->refcount++;
-}
-
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
@@ -127,32 +48,49 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 
 static FAST_CALL void destroy(Obj *o1) {
     Dict *v1 = (Dict *)o1;
-    avltree_destroy(&v1->members, dict_free);
+    size_t i;
+    for (i = 0; i < v1->len; i++) {
+        struct pair_s *a = &v1->data[i];
+        val_destroy(a->key);
+        if (a->data != NULL) val_destroy(a->data);
+    }
+    free(v1->data);
     if (v1->def != NULL) val_destroy(v1->def);
 }
 
-static MALLOC Dict *new_dict(void) {
-    Dict *v = (Dict *)val_alloc(DICT_OBJ);
-    avltree_init(&v->members);
-    v->len = 0;
-    v->def = NULL;
-    return v;
-}
-
-static FAST_CALL void garbage(Obj *o1, int i) {
+static FAST_CALL void garbage(Obj *o1, int j) {
     Dict *v1 = (Dict *)o1;
     Obj *v;
-    switch (i) {
+    size_t i;
+    switch (j) {
     case -1:
-        avltree_destroy(&v1->members, dict_garbage1);
+        for (i = 0; i < v1->len; i++) {
+            struct pair_s *a = &v1->data[i];
+            a->key->refcount--;
+            if (a->data != NULL) a->data->refcount--;
+        }
         v = v1->def;
         if (v != NULL) v->refcount--;
         return;
     case 0:
-        avltree_destroy(&v1->members, dict_free2);
+        free(v1->data);
         return;
     case 1:
-        avltree_destroy(&v1->members, dict_garbage2);
+        for (i = 0; i < v1->len; i++) {
+            struct pair_s *a = &v1->data[i];
+            v = a->data;
+            if (v != NULL) {
+                if ((v->refcount & SIZE_MSB) != 0) {
+                    v->refcount -= SIZE_MSB - 1;
+                    v->obj->garbage(v, 1);
+                } else v->refcount++;
+            }
+            v = a->key;
+            if ((v->refcount & SIZE_MSB) != 0) {
+                v->refcount -= SIZE_MSB - 1;
+                v->obj->garbage(v, 1);
+            } else v->refcount++;
+        }
         v = v1->def;
         if (v == NULL) return;
         if ((v->refcount & SIZE_MSB) != 0) {
@@ -279,9 +217,9 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         vals = list->data;
         ln = chars;
         if (v1->len != 0) {
-            const struct avltree_node *n = avltree_first(&v1->members);
-            while (n != NULL) {
-                p = cavltree_container_of(n, struct pair_s, node);
+            size_t n;
+            for (n = 0; n < v1->len; n++) {
+                p = &v1->data[n];
                 v = p->key->obj->repr(p->key, epoint, maxsize - chars);
                 if (v == NULL || v->obj != STR_OBJ) goto error;
                 str = (Str *)v;
@@ -304,7 +242,6 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                     chars--;
                 }
                 vals[i++] = v;
-                n = avltree_next(n);
             }
         }
         if (def != 0) {
@@ -471,7 +408,20 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 Obj *dictobj_parse(struct values_s *values, unsigned int args) {
     unsigned int j;
-    Dict *dict = new_dict();
+    Dict *dict = (Dict *)val_alloc(DICT_OBJ);
+    avltree_init(&dict->members);
+    dict->len = 0;
+    dict->def = NULL;
+    if (args == 0) {
+        dict->data = NULL;
+        return &dict->v;
+    }
+    if (args > SIZE_MAX / sizeof *dict->data) dict->data = NULL; /* overflow */
+    else dict->data = (struct pair_s *)malloc(args * sizeof *dict->data);
+    if (dict->data == NULL) {
+        val_destroy(&dict->v);
+        return (Obj *)new_error_mem(&values->epoint);
+    }
 
     for (j = 0; j < args; j++) {
         Obj *data;
@@ -502,17 +452,15 @@ Obj *dictobj_parse(struct values_s *values, unsigned int args) {
             dict->def = (data == NULL) ? NULL : val_reference(data);
             continue;
         }
-        p = pair_alloc();
+        p = &dict->data[dict->len];
         err = key->obj->hash(key, &p->hash, &v2->epoint);
         if (err != NULL) {
-            pair_free(p);
             val_destroy(&dict->v);
             return &err->v;
         }
         p->key = key;
         b = avltree_insert(&p->node, &dict->members, pair_compare);
         if (b != NULL) {
-            pair_free(p);
             p = avltree_container_of(b, struct pair_s, node);
             if (p->data != NULL) val_destroy(p->data);
         } else {
@@ -520,6 +468,12 @@ Obj *dictobj_parse(struct values_s *values, unsigned int args) {
             dict->len++;
         }
         p->data = (data == NULL) ? NULL : val_reference(data);
+    }
+    if (dict->len == 0) {
+        free(dict->data);
+    } else if (args - dict->len > 2) {
+        struct pair_s *v = (struct pair_s *)realloc(dict->data, dict->len * sizeof *dict->data);
+        if (v != NULL) dict->data = v;
     }
     return &dict->v;
 }
@@ -548,12 +502,3 @@ void dictobj_names(void) {
     new_builtin("dict", val_reference(&DICT_OBJ->v));
 }
 
-void destroy_pairs(void) {
-#ifndef DEBUG
-    while (pairs != NULL) {
-        struct pairs_s *old = pairs;
-        pairs = pairs->next;
-        free(old);
-    }
-#endif
-}
