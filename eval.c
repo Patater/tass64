@@ -1157,15 +1157,15 @@ static bool get_val2(struct eval_context_s *ev) {
             }
             if (v1->val->obj == DICT_OBJ) {
                 Dict *tmp = (Dict *)v1->val;
-                const struct avltree_node *n;
+                size_t n;
                 size_t len = (tmp->def == NULL) ? tmp->len : tmp->len + 1;
                 size_t len2 = vsp + len;
                 if (len < tmp->len || len2 < len) err_msg_out_of_memory(); /* overflow */
                 v1->val = NULL;
                 vsp--;
                 if (len2 >= ev->values_size) values = extend_values(ev, len);
-                for (n = avltree_first(&tmp->members); n != NULL; n = avltree_next(n)) {
-                    const struct pair_s *p = cavltree_container_of(n, struct pair_s, node);
+                for (n = 0; n < tmp->len; n++) {
+                    const struct pair_s *p = &tmp->data[n];
                     if (p->data == NULL) values[vsp].val = val_reference(p->key);
                     else {
                         Colonlist *list = new_colonlist();
