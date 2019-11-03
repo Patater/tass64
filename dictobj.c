@@ -464,7 +464,11 @@ Obj *dictobj_parse(struct values_s *values, unsigned int args) {
             p = avltree_container_of(b, struct pair_s, node);
             if (p->data != NULL) val_destroy(p->data);
         } else {
-            p->key = val_reference(p->key);
+            if (data == NULL) {
+                v2->val = NULL;
+            } else {
+                p->key = val_reference(p->key);
+            }
             dict->len++;
         }
         p->data = (data == NULL) ? NULL : val_reference(data);
