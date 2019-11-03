@@ -26,13 +26,13 @@ extern struct Type *const DICT_OBJ;
 typedef struct Dict {
     Obj v;
     size_t len;
-    struct avltree members;
+    struct pair_s *data;
     Obj *def;
+    struct avltree members;
 } Dict;
 
 extern void dictobj_init(void);
 extern void dictobj_names(void);
-extern void destroy_pairs(void);
 
 struct pair_s {
     int hash;
