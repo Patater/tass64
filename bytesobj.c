@@ -247,9 +247,9 @@ static uint8_t *z85_encode(uint8_t *dest, const uint8_t *src, size_t len) {
         tmp = src2[3] | (src2[2] << 8) | (src2[1] << 16) | (src2[0] << 24);
 
         for (j = 4; j > 0; j--) {
-            uint32_t div = tmp / 85;
-            dest[j] = z85[tmp - div * 85];
-            tmp = div;
+            uint32_t divided = tmp / 85;
+            dest[j] = z85[tmp - divided * 85];
+            tmp = divided;
         }
         dest[j] = z85[tmp];
         dest += 5;
