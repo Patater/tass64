@@ -406,7 +406,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     return obj_oper_error(op);
 }
 
-Obj *dictobj_parse(struct values_s *values, unsigned int args) {
+Obj *dictobj_parse(struct values_s *values, size_t args) {
     unsigned int j;
     Dict *dict = (Dict *)val_alloc(DICT_OBJ);
     avltree_init(&dict->members);

@@ -41,6 +41,6 @@ struct pair_s {
     struct avltree_node node;
 };
 
-extern Obj *dictobj_parse(struct values_s *, unsigned int);
+extern Obj *dictobj_parse(struct values_s *, size_t);
 
 #endif

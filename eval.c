@@ -893,7 +893,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_FUNC:
         case O_INDEX:
             {
-                unsigned int args = 0;
+                size_t args = 0;
                 Funcargs tmp;
                 op = (op == O_FUNC) ? O_PARENT : O_BRACKET;
                 while (v1->val->obj != OPER_OBJ || ((Oper *)v1->val)->op != op) {
@@ -989,7 +989,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_RBRACE:
         case O_DICT:
             {
-                unsigned int args = 0;
+                size_t args = 0;
                 while (v1->val->obj != OPER_OBJ || ((Oper *)v1->val)->op != O_BRACE) {
                     args++;
                     if (vsp <= args) goto syntaxe;

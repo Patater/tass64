@@ -273,11 +273,11 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
 
 static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     Str *iter;
-    const Str *str = (Str *)v1->data;
+    const Str *string = (Str *)v1->data;
     unsigned int ln;
     const uint8_t *s;
-    if (v1->val >= str->len) return NULL;
-    s = str->data + v1->val;
+    if (v1->val >= string->len) return NULL;
+    s = string->data + v1->val;
     ln = utf8len(*s);
     v1->val += ln;
     iter = (Str *)v1->iter;

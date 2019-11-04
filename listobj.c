@@ -571,20 +571,20 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     if (o2->obj->iterable) {
         iter_next_t iter_next;
         Iter *iter = o2->obj->getiter(o2);
-        size_t len = iter->len;
+        size_t ln2 = iter->len;
 
-        if (len == 0) {
+        if (ln2 == 0) {
             val_destroy(&iter->v);
             return val_reference((o1->obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
         }
         v = (List *)val_alloc(o1->obj);
-        vals = lnew(v, len);
+        vals = lnew(v, ln2);
         if (vals == NULL) {
             val_destroy(&iter->v);
             goto failed;
         }
         iter_next = iter->next;
-        for (i = 0; i < len && (o2 = iter_next(iter)) != NULL; i++) {
+        for (i = 0; i < ln2 && (o2 = iter_next(iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs2, epoint2);
             if (err != NULL) {
                 vals[i] = &err->v;
