@@ -848,15 +848,20 @@ the address ranges set up by <a href="#d_dpage"><code>.dpage</code></a>, <a href
 and the current program counter address. Therefore the <q>,d</q>,
 <q>,b</q> and <q>,k</q> indexing is only used in very special cases.</p>
 
-<p>The immediate direct page indexed <q><code>#0,d</code></q> addressing mode
-is usable for direct page access. The 8&nbsp;bit constant is a direct offset from the start of actual direct page.</p>
+<p>The immediate direct page indexed <q><code>#0,d</code></q> addressing
+mode is usable for direct page access. The 8&nbsp;bit constant is a
+direct offset from the start of actual direct page. Alternatively it may
+be written as <q><code>0,d</code></q>.</p>
 
-<p>The immediate data bank indexed <q><code>#0,b</code></q> addressing mode
-is usable for data bank access. The 16&nbsp;bit constant is a direct offset from the start of actual data bank.</p>
+<p>The immediate data bank indexed <q><code>#0,b</code></q> addressing
+mode is usable for data bank access. The 16&nbsp;bit constant is a direct
+offset from the start of actual data bank. Alternatively it may be
+written as <q><code>0,b</code></q>.</p>
 
 <p>The immediate program bank indexed <q><code>#0,k</code></q> addressing mode
-is usable for program bank jumps, braches and calls. The 16&nbsp;bit constant
-is a direct offset from the start of actual program bank.</p>
+is usable for program bank jumps, branches and calls. The 16&nbsp;bit constant
+is a direct offset from the start of actual program bank. Alternatively it may
+be written as <q><code>0,k</code></q>.</p>
 
 <p>The immediate stack indexed <q><code>#0,s</code></q> and data stack indexed
 <q><code>#0,r</code></q> accept 8&nbsp;bit constants as an offset from the
