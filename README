@@ -651,15 +651,15 @@ special cases.
 
 The immediate direct page indexed `#0,d' addressing mode is usable for direct
 page access. The 8 bit constant is a direct offset from the start of actual
-direct page.
+direct page. Alternatively it may be written as `0,d'.
 
 The immediate data bank indexed `#0,b' addressing mode is usable for data bank
 access. The 16 bit constant is a direct offset from the start of actual data
-bank.
+bank. Alternatively it may be written as `0,b'.
 
 The immediate program bank indexed `#0,k' addressing mode is usable for program
-bank jumps, braches and calls. The 16 bit constant is a direct offset from the
-start of actual program bank.
+bank jumps, branches and calls. The 16 bit constant is a direct offset from the
+start of actual program bank. Alternatively it may be written as `0,k'.
 
 The immediate stack indexed `#0,s' and data stack indexed `#0,r' accept 8 bit
 constants as an offset from the start of (data) stack. These are sometimes
