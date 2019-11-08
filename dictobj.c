@@ -195,6 +195,42 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(v1->len);
 }
 
+static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
+    Colonlist *iter;
+    const Dict *vv1 = (Dict *)v1->data;
+    if (v1->val >= vv1->len) return NULL;
+    if (vv1->data[v1->val].data == NULL) {
+        return vv1->data[v1->val++].key;
+    }
+    iter = (Colonlist *)v1->iter;
+    if (iter == NULL) {
+    renew:
+        iter = new_colonlist();
+        v1->iter = &iter->v;
+    } else if (iter->v.refcount != 1) {
+        iter->v.refcount--;
+        goto renew;
+    } else {
+        val_destroy(iter->data[0]);
+        val_destroy(iter->data[1]);
+    }
+    iter->len = 2;
+    iter->data = iter->u.val;
+    iter->data[0] = val_reference(vv1->data[v1->val].key);
+    iter->data[1] = val_reference(vv1->data[v1->val++].data);
+    return &iter->v;
+}
+
+static MUST_CHECK Iter *getiter(Obj *v1) {
+    Iter *v = (Iter *)val_alloc(ITER_OBJ);
+    v->iter = NULL;
+    v->val = 0;
+    v->data = val_reference(v1);
+    v->next = next;
+    v->len = ((Dict *)v1)->len;
+    return v;
+}
+
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     Dict *v1 = (Dict *)o1;
     const struct pair_s *p;
@@ -486,11 +522,13 @@ void dictobj_init(void) {
     static struct linepos_s nopoint;
 
     new_type(&obj, T_DICT, "dict", sizeof(Dict));
+    obj.iterable = true;
     obj.create = create;
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;
     obj.len = len;
+    obj.getiter = getiter;
     obj.repr = repr;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;
