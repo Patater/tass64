@@ -1140,9 +1140,21 @@ static bool get_val2(struct eval_context_s *ev) {
                 iter_next_t iter_next;
                 Iter *iter = v1->val->obj->getiter(v1->val);
                 size_t k, len = iter->len;
-                size_t len2 = vsp + len;
-                Obj *tmp;
+                size_t len2;
+                Obj *tmp, *def;
 
+                if (v1->val->obj == DICT_OBJ && ((Dict *)v1->val)->def != NULL) {
+                    Colonlist *list = new_colonlist();
+                    list->len = 2;
+                    list->data = list->u.val;
+                    list->data[0] = (Obj *)ref_default();
+                    list->data[1] = val_reference(((Dict *)v1->val)->def);
+                    def = &list->v;
+                    len++;
+                    if (len < 1) err_msg_out_of_memory(); /* overflow */
+                } else def = NULL;
+
+                len2 = vsp + len;
                 if (len2 < len) err_msg_out_of_memory(); /* overflow */
                 vsp--;
                 if (len2 >= ev->values_size) values = extend_values(ev, len);
@@ -1153,44 +1165,11 @@ static bool get_val2(struct eval_context_s *ev) {
                     values[vsp++].epoint = o_out->epoint;
                 }
                 val_destroy(&iter->v);
-                continue;
-            }
-            if (v1->val->obj == DICT_OBJ) {
-                Dict *tmp = (Dict *)v1->val;
-                size_t n;
-                size_t len = (tmp->def == NULL) ? tmp->len : tmp->len + 1;
-                size_t len2 = vsp + len;
-                if (len < tmp->len || len2 < len) err_msg_out_of_memory(); /* overflow */
-                v1->val = NULL;
-                vsp--;
-                if (len2 >= ev->values_size) values = extend_values(ev, len);
-                for (n = 0; n < tmp->len; n++) {
-                    const struct pair_s *p = &tmp->data[n];
-                    if (p->data == NULL) values[vsp].val = val_reference(p->key);
-                    else {
-                        Colonlist *list = new_colonlist();
-                        list->len = 2;
-                        list->data = list_create_elements(list, 2);
-                        list->data[0] = val_reference(p->key);
-                        list->data[1] = val_reference(p->data);
-
-                        if (values[vsp].val != NULL) val_destroy(values[vsp].val);
-                        values[vsp].val = (Obj *)list;
-                    }
-                    values[vsp++].epoint = o_out->epoint;
-                }
-                if (tmp->def != NULL) {
-                    Colonlist *list = new_colonlist();
-                    list->len = 2;
-                    list->data = list_create_elements(list, 2);
-                    list->data[0] = (Obj *)ref_default();
-                    list->data[1] = val_reference(tmp->def);
-
+                if (def != NULL) {
                     if (values[vsp].val != NULL) val_destroy(values[vsp].val);
-                    values[vsp].val = (Obj *)list;
+                    values[vsp].val = def;
                     values[vsp++].epoint = o_out->epoint;
                 }
-                val_destroy(&tmp->v);
                 continue;
             }
             v1->epoint = o_out->epoint;
