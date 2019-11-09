@@ -222,21 +222,25 @@ static void reindex(Dict *dict) {
     }
 }
 
-static MUST_CHECK Obj *normalize(Dict *dict) {
-    size_t ln = dict->len * 3 / 2, ln2;
+static bool resize(Dict *dict, size_t ln) {
     struct pair_s *p;
-    if (ln > dict->max >> 1) return &dict->v;
-    ln2 = 8; while (ln > ln2) ln2 <<= 1;
+    size_t ln2 = 8; 
+    while (ln > ln2) ln2 <<= 1;
     p = (struct pair_s *)realloc(dict->data, ln2 * (sizeof *dict->data + sizeof(size_t)));
-    if (p != NULL) {
-        dict->data = p;
-        dict->max = ln2 - 1;
-        memset(&p[ln2], 255, ln2 * sizeof(size_t));
-        reindex(dict);
-    }
-    return &dict->v;
+    if (p == NULL) return true;
+    dict->data = p;
+    dict->max = ln2 - 1;
+    memset(&p[ln2], 255, ln2 * sizeof(size_t));
+    reindex(dict);
+    return false;
 }
 
+static MUST_CHECK Obj *normalize(Dict *dict) {
+    size_t ln = dict->len * 3 / 2;
+    if (ln > dict->max >> 1u) return &dict->v;
+    resize(dict, ln);
+    return &dict->v;
+}
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Dict *v1 = (const Dict *)o1, *v2 = (const Dict *)o2;
@@ -483,7 +487,7 @@ MUST_CHECK Obj *dict_sort(Dict *v1, const size_t *sort_index) {
 static MUST_CHECK Obj *concat(oper_t op) {
     Dict *v1 = (Dict *)op->v1;
     Dict *v2 = (Dict *)op->v2;
-    unsigned int j;
+    size_t j;
     size_t ln;
     Dict *dict;
 
@@ -491,24 +495,35 @@ static MUST_CHECK Obj *concat(oper_t op) {
     if (v1->len == 0 && (v1->def == NULL || v2->def != NULL)) return val_reference(&v2->v);
 
     ln = v1->len + v2->len;
-    if (ln < v1->len) return (Obj *)new_error_mem(op->epoint3); /* overflow */
-    dict = new_dict(ln);
-    if (dict == NULL) return (Obj *)new_error_mem(op->epoint3); /* overflow */
+    if (ln < v1->len) goto failed; /* overflow */
+    if (op->inplace == &v1->v) {
+        if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) goto failed; /* overflow */
+        ln = ln * 3 / 2;
+        if (ln > v1->max + 1) {
+            if (resize(v1, ln)) goto failed; /* overflow */
+        }
+        dict = (Dict *)val_reference(&v1->v);
+    } else {
+        dict = new_dict(ln);
+        if (dict == NULL) goto failed; /* overflow */
 
-    for (j = 0; j < v1->len; j++) {
-        struct pair_s *d = &dict->data[j];
-        const struct pair_s *s = &v1->data[j];
-        d->hash = s->hash;
-        d->key = val_reference(s->key);
-        d->data = s->data == NULL ? NULL : val_reference(s->data);
+        for (j = 0; j < v1->len; j++) {
+            struct pair_s *d = &dict->data[j];
+            const struct pair_s *s = &v1->data[j];
+            d->hash = s->hash;
+            d->key = val_reference(s->key);
+            d->data = s->data == NULL ? NULL : val_reference(s->data);
+        }
+        dict->len = j;
+        reindex(dict);
     }
-    dict->len = j;
-    reindex(dict);
     for (j = 0; j < v2->len; j++) {
         dict_update(dict, &v2->data[j]);
     }
     dict->def = v2->def != NULL ? val_reference(v2->def) : v1->def != NULL ? val_reference(v1->def) : NULL;
     return normalize(dict);
+failed:
+    return (Obj *)new_error_mem(op->epoint3); /* overflow */
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
@@ -559,7 +574,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 Obj *dictobj_parse(struct values_s *values, size_t args) {
-    unsigned int j;
+    size_t j;
     Dict *dict = new_dict(args);
     if (dict == NULL) return (Obj *)new_error_mem(&values->epoint);
     dict->def = NULL;
