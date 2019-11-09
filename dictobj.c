@@ -36,14 +36,21 @@ static Type obj;
 
 Type *const DICT_OBJ = &obj;
 
-static struct pair_s *allocate(size_t ln) {
-    struct pair_s *p;
+static Dict *new_dict(size_t ln) {
     size_t ln2;
+    Dict *v;
+    struct pair_s *p;
     if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) return NULL; /* overflow */
-    ln2 = ln * 3 / 2 * sizeof(size_t);
-    p = (struct pair_s *)malloc(ln * sizeof(struct pair_s) + ln2);
-    memset(&p[ln], 255, ln2);
-    return p;
+    ln = ln * 3 / 2;
+    ln2 = 8; while (ln > ln2) ln2 <<= 1;
+    p = (struct pair_s *)malloc(ln2 * (sizeof(struct pair_s) + sizeof(size_t)));
+    if (p == NULL) return NULL; /* out of memory */
+    memset(&p[ln2], 255, ln2 * sizeof(size_t));
+    v = (Dict *)val_alloc(DICT_OBJ);
+    v->data = p;
+    v->len = 0;
+    v->max = ln2 - 1;
+    return v;
 }
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
@@ -164,32 +171,68 @@ static bool pair_equal(const struct pair_s *a, const struct pair_s *b)
     return h;
 }
 
-static size_t *lookup(const Dict *dict, const struct pair_s *p) {
+static void dict_update(Dict *dict, const struct pair_s *p) {
     struct pair_s *d;
-    size_t *indexes = (size_t *)&dict->data[dict->max];
-    size_t hashlen = dict->max * 3 / 2;
+    size_t *indexes = (size_t *)&dict->data[dict->max + 1];
     size_t hash = (size_t)p->hash;
-    size_t offs = hash % hashlen;
+    size_t offs = hash & dict->max;
     while (indexes[offs] != SIZE_MAX) {
         d = &dict->data[indexes[offs]];
-        if (p->key == d->key || pair_equal(p, d)) break;
-        offs++;
-        if (offs == hashlen) offs = 0;
+        if (p->key == d->key || pair_equal(p, d)) {
+            if (d->data != NULL) val_destroy(d->data);
+            d->data = (p->data == NULL) ? NULL : val_reference(p->data);
+            return;
+        }
+        hash >>= 5;
+        offs = (5 * offs + hash + 1) & dict->max;
     } 
-    return &indexes[offs];
+    indexes[offs] = dict->len;
+    d = &dict->data[dict->len];
+    d->hash = p->hash;
+    d->key = val_reference(p->key);
+    d->data = (p->data == NULL) ? NULL : val_reference(p->data);
+    dict->len++;
+}
+
+static const struct pair_s *dict_lookup(const Dict *dict, const struct pair_s *p) {
+    struct pair_s *d;
+    size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+    size_t hash = (size_t)p->hash;
+    size_t offs = hash & dict->max;
+    while (indexes[offs] != SIZE_MAX) {
+        d = &dict->data[indexes[offs]];
+        if (p->key == d->key || pair_equal(p, d)) return d;
+        hash >>= 5;
+        offs = (5 * offs + hash + 1) & dict->max;
+    } 
+    return NULL;
+}
+
+static void reindex(Dict *dict) {
+    size_t i;
+    size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+    for (i = 0; i < dict->len; i++) {
+        size_t hash = (size_t)dict->data[i].hash;
+        size_t offs = hash & dict->max;
+        while (indexes[offs] != SIZE_MAX) {
+            hash >>= 5;
+            offs = (5 * offs + hash + 1) & dict->max;
+        }
+        indexes[offs] = i;
+    }
 }
 
 static MUST_CHECK Obj *normalize(Dict *dict) {
-    size_t ln2 = dict->len * 3 / 2 * sizeof(size_t);
-    struct pair_s *p = (struct pair_s *)realloc(dict->data, dict->len * sizeof *dict->data + ln2);
+    size_t ln = dict->len * 3 / 2, ln2;
+    struct pair_s *p;
+    if (ln > dict->max >> 1) return &dict->v;
+    ln2 = 8; while (ln > ln2) ln2 <<= 1;
+    p = (struct pair_s *)realloc(dict->data, ln2 * (sizeof *dict->data + sizeof(size_t)));
     if (p != NULL) {
-        size_t i;
         dict->data = p;
-        dict->max = dict->len;
-        memset(&p[dict->len], 255, ln2);
-        for (i = 0; i < dict->len; i++) {
-            *lookup(dict, &p[i]) = i;
-        }
+        dict->max = ln2 - 1;
+        memset(&p[ln2], 255, ln2 * sizeof(size_t));
+        reindex(dict);
     }
     return &dict->v;
 }
@@ -204,10 +247,9 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
         if (!v1->def->obj->same(v1->def, v2->def)) return false;
     }
     for (n = 0; n < v1->len; n++) {
-        const struct pair_s *p = &v1->data[n], *p2;
-        size_t n2 = *lookup(v2, p);
-        if (n2 == SIZE_MAX) return false;
-        p2 = &v2->data[n2];
+        const struct pair_s *p = &v1->data[n];
+        const struct pair_s *p2 = dict_lookup(v2, p);
+        if (p2 == NULL) return false;
         if (p->key != p2->key && !p->key->obj->same(p->key, p2->key)) return false;
         if (p->data == p2->data) continue;
         if (p->data == NULL || p2->data == NULL) return false;
@@ -360,18 +402,13 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 static MUST_CHECK Obj *findit(Dict *v1, Obj *o2, linepos_t epoint) {
     if (v1->len != 0) {
         Error *err;
-        size_t b;
+        const struct pair_s *p;
         struct pair_s pair;
         pair.key = o2;
         err = o2->obj->hash(o2, &pair.hash, epoint);
         if (err != NULL) return &err->v;
-        b = *lookup(v1, &pair);
-        if (b != SIZE_MAX) {
-            const struct pair_s *p = &v1->data[b];
-            if (p->data != NULL) {
-                return val_reference(p->data);
-            }
-        }
+        p = dict_lookup(v1, &pair);
+        if (p != NULL && p->data != NULL) return val_reference(p->data);
     }
     if (v1->def != NULL) {
         return val_reference(v1->def);
@@ -428,18 +465,17 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
 
 MUST_CHECK Obj *dict_sort(Dict *v1, const size_t *sort_index) {
     size_t i;
-    Dict *v = (Dict *)val_alloc(DICT_OBJ);
-    v->len = v1->len;
-    v->max = v1->len;
-    v->data = allocate(v1->len);
-    if (v->data == NULL) err_msg_out_of_memory(); /* overflow */
+    Dict *v = new_dict(v1->len);
+    if (v == NULL) err_msg_out_of_memory(); /* overflow */
     for (i = 0; i < v1->len; i++) {
-        struct pair_s *s = &v1->data[sort_index[i]], *d = &v->data[i];
+        struct pair_s *d = &v->data[i];
+        const struct pair_s *s = &v1->data[sort_index[i]];
         d->hash = s->hash;
         d->key = val_reference(s->key);
-        d->data = (s->data == NULL) ? NULL : val_reference(s->data);
-        *lookup(v, d) = i;
+        d->data = s->data == NULL ? NULL : val_reference(s->data);
     }
+    v->len = i;
+    reindex(v);
     v->def = (v1->def == NULL) ? NULL : val_reference(v1->def);
     return &v->v;
 }
@@ -455,54 +491,24 @@ static MUST_CHECK Obj *concat(oper_t op) {
     if (v1->len == 0 && (v1->def == NULL || v2->def != NULL)) return val_reference(&v2->v);
 
     ln = v1->len + v2->len;
-    dict = (Dict *)val_alloc(DICT_OBJ);
-    dict->len = 0;
-    dict->max = ln;
-    dict->def = NULL;
-    if (ln < v1->len) dict->data = NULL; /* overflow */
-    else if (ln == 0) {
-        dict->data = NULL;
-        return &dict->v;
-    } else dict->data = allocate(ln);
-    if (dict->data == NULL) {
-        val_destroy(&dict->v);
-        return (Obj *)new_error_mem(op->epoint3);
-    }
+    if (ln < v1->len) return (Obj *)new_error_mem(op->epoint3); /* overflow */
+    dict = new_dict(ln);
+    if (dict == NULL) return (Obj *)new_error_mem(op->epoint3); /* overflow */
 
     for (j = 0; j < v1->len; j++) {
-        Obj *data;
-        struct pair_s *p = &dict->data[dict->len];
-        p->hash = v1->data[j].hash;
-        p->key = val_reference(v1->data[j].key);
-        data = v1->data[j].data;
-        p->data = (data == NULL) ? NULL : val_reference(data);
-        *lookup(dict, p) = dict->len++;
+        struct pair_s *d = &dict->data[j];
+        const struct pair_s *s = &v1->data[j];
+        d->hash = s->hash;
+        d->key = val_reference(s->key);
+        d->data = s->data == NULL ? NULL : val_reference(s->data);
+    }
+    dict->len = j;
+    reindex(dict);
+    for (j = 0; j < v2->len; j++) {
+        dict_update(dict, &v2->data[j]);
     }
     dict->def = v2->def != NULL ? val_reference(v2->def) : v1->def != NULL ? val_reference(v1->def) : NULL;
-    for (j = 0; j < v2->len; j++) {
-        size_t *b;
-        Obj *data;
-        struct pair_s *p = &dict->data[dict->len];
-        p->hash = v2->data[j].hash;
-        p->key = v2->data[j].key;
-        b = lookup(dict, p);
-        if (*b != SIZE_MAX) {
-            p = &dict->data[*b];
-            if (p->data != NULL) val_destroy(p->data);
-        } else {
-            p->key = val_reference(p->key);
-            *b = dict->len++;
-        }
-        data = v2->data[j].data;
-        p->data = (data == NULL) ? NULL : val_reference(data);
-    }
-    if (dict->len == 0) {
-        free(dict->data);
-        dict->data = NULL;
-    } else if (ln - dict->len > 2) {
-        return normalize(dict);
-    }
-    return &dict->v;
+    return normalize(dict);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
@@ -539,7 +545,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         p.key = o1;
         err = o1->obj->hash(o1, &p.hash, op->epoint);
         if (err != NULL) return &err->v;
-        return truth_reference(*lookup(v2, &p) != SIZE_MAX);
+        return truth_reference(dict_lookup(v2, &p) != NULL);
     }
     switch (o1->obj->type) {
     case T_NONE:
@@ -554,77 +560,45 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 Obj *dictobj_parse(struct values_s *values, size_t args) {
     unsigned int j;
-    Dict *dict = (Dict *)val_alloc(DICT_OBJ);
-    dict->len = 0;
-    dict->max = args;
+    Dict *dict = new_dict(args);
+    if (dict == NULL) return (Obj *)new_error_mem(&values->epoint);
     dict->def = NULL;
-    if (args == 0) {
-        dict->data = NULL;
-        return &dict->v;
-    }
-    dict->data = allocate(args);
-    if (dict->data == NULL) {
-        val_destroy(&dict->v);
-        return (Obj *)new_error_mem(&values->epoint);
-    }
 
     for (j = 0; j < args; j++) {
-        Obj *data;
         Error *err;
-        struct pair_s *p;
-        size_t *b;
+        struct pair_s p;
         struct values_s *v2 = &values[j];
-        Obj *key = v2->val;
 
-        if (key == &none_value->v || key->obj == ERROR_OBJ) {
+        p.key = v2->val;
+        if (p.key == &none_value->v || p.key->obj == ERROR_OBJ) {
             val_destroy(&dict->v);
-            return val_reference(key);
+            return val_reference(p.key);
         }
-        if (key->obj != COLONLIST_OBJ) data = NULL;
+        if (p.key->obj != COLONLIST_OBJ) p.data = NULL;
         else {
-            Colonlist *list = (Colonlist *)key;
+            Colonlist *list = (Colonlist *)p.key;
             if (list->len != 2 || list->data[1] == &default_value->v) {
                 err = new_error(ERROR__NOT_KEYVALUE, &v2->epoint);
-                err->u.obj = val_reference(key);
+                err->u.obj = val_reference(p.key);
                 val_destroy(&dict->v);
                 return &err->v;
             }
-            key = list->data[0];
-            data = list->data[1];
+            p.key = list->data[0];
+            p.data = list->data[1];
         }
-        if (key == &default_value->v) {
+        if (p.key == &default_value->v) {
             if (dict->def != NULL) val_destroy(dict->def);
-            dict->def = (data == NULL) ? NULL : val_reference(data);
+            dict->def = (p.data == NULL) ? NULL : val_reference(p.data);
             continue;
         }
-        p = &dict->data[dict->len];
-        err = key->obj->hash(key, &p->hash, &v2->epoint);
+        err = p.key->obj->hash(p.key, &p.hash, &v2->epoint);
         if (err != NULL) {
             val_destroy(&dict->v);
             return &err->v;
         }
-        p->key = key;
-        b = lookup(dict, p);
-        if (*b != SIZE_MAX) {
-            p = &dict->data[*b];
-            if (p->data != NULL) val_destroy(p->data);
-        } else {
-            if (data == NULL) {
-                v2->val = NULL;
-            } else {
-                p->key = val_reference(p->key);
-            }
-            *b = dict->len++;
-        }
-        p->data = (data == NULL) ? NULL : val_reference(data);
+        dict_update(dict, &p);
     }
-    if (dict->len == 0) {
-        free(dict->data);
-        dict->data = NULL;
-    } else if (args - dict->len > 2) {
-        return normalize(dict);
-    } 
-    return &dict->v;
+    return normalize(dict);
 }
 
 void dictobj_init(void) {
