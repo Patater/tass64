@@ -36,6 +36,16 @@ static Type obj;
 
 Type *const DICT_OBJ = &obj;
 
+static struct pair_s *allocate(size_t ln) {
+    struct pair_s *p;
+    size_t ln2;
+    if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) return NULL; /* overflow */
+    ln2 = ln * 3 / 2 * sizeof(size_t);
+    p = (struct pair_s *)malloc(ln * sizeof(struct pair_s) + ln2);
+    memset(&p[ln], 255, ln2);
+    return p;
+}
+
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
@@ -142,10 +152,8 @@ static int rpair_compare(Obj *o1, Obj *o2) {
     return h;
 }
 
-static FAST_CALL int pair_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+static int pair_compare(const struct pair_s *a, const struct pair_s *b)
 {
-    const struct pair_s *a = cavltree_container_of(aa, struct pair_s, node);
-    const struct pair_s *b = cavltree_container_of(bb, struct pair_s, node);
     Obj *result;
     int h;
     if (a->key->obj == b->key->obj) {
@@ -168,26 +176,40 @@ static FAST_CALL int pair_compare(const struct avltree_node *aa, const struct av
     return h;
 }
 
+static size_t *lookup(const Dict *dict, const struct pair_s *p) {
+    struct pair_s *d;
+    size_t *indexes = (size_t *)&dict->data[dict->max];
+    size_t hashlen = dict->max * 3 / 2;
+    size_t hash = (size_t)p->hash;
+    size_t offs = hash % hashlen;
+    while (indexes[offs] != SIZE_MAX) {
+        d = &dict->data[indexes[offs]];
+        if (p->key == d->key || pair_compare(p, d) == 0) return &indexes[offs];
+        offs++;
+        if (offs == hashlen) offs = 0;
+    } 
+    return &indexes[offs];
+}
+
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Dict *v1 = (const Dict *)o1, *v2 = (const Dict *)o2;
-    const struct avltree_node *n;
-    const struct avltree_node *n2;
+    size_t n;
     if (o2->obj != DICT_OBJ || v1->len != v2->len) return false;
-    if ((v1->def == NULL) != (v2->def == NULL)) return false;
-    if (v1->def != NULL && v2->def != NULL && !v1->def->obj->same(v1->def, v2->def)) return false;
-    n = avltree_first(&v1->members);
-    n2 = avltree_first(&v2->members);
-    while (n != NULL && n2 != NULL) {
-        const struct pair_s *p = cavltree_container_of(n, struct pair_s, node);
-        const struct pair_s *p2 = cavltree_container_of(n2, struct pair_s, node);
-        if ((p->key == NULL) != (p2->key == NULL)) return false;
-        if (p->key != NULL && p2->key != NULL && !p->key->obj->same(p->key, p2->key)) return false;
-        if ((p->data == NULL) != (p2->data == NULL)) return false;
-        if (p->data != NULL && p2->data != NULL && !p->data->obj->same(p->data, p2->data)) return false;
-        n = avltree_next(n);
-        n2 = avltree_next(n2);
+    if (v1->def != v2->def) {
+        if (v1->def == NULL || v2->def == NULL) return false;
+        if (!v1->def->obj->same(v1->def, v2->def)) return false;
     }
-    return n == n2;
+    for (n = 0; n < v1->len; n++) {
+        const struct pair_s *p = &v1->data[n], *p2;
+        size_t n2 = *lookup(v2, p);
+        if (n2 == SIZE_MAX) return false;
+        p2 = &v2->data[n2];
+        if (p->key != p2->key && !p->key->obj->same(p->key, p2->key)) return false;
+        if (p->data == p2->data) continue;
+        if (p->data == NULL || p2->data == NULL) return false;
+        if (!p->data->obj->same(p->data, p2->data)) return false;
+    }
+    return true;
 }
 
 static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
@@ -332,18 +354,19 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 }
 
 static MUST_CHECK Obj *findit(Dict *v1, Obj *o2, linepos_t epoint) {
-    struct pair_s pair;
-    const struct avltree_node *b;
-    Error *err;
-
-    pair.key = o2;
-    err = o2->obj->hash(o2, &pair.hash, epoint);
-    if (err != NULL) return &err->v;
-    b = avltree_lookup(&pair.node, &v1->members, pair_compare);
-    if (b != NULL) {
-        const struct pair_s *p = cavltree_container_of(b, struct pair_s, node);
-        if (p->data != NULL) {
-            return val_reference(p->data);
+    if (v1->len != 0) {
+        Error *err;
+        size_t b;
+        struct pair_s pair;
+        pair.key = o2;
+        err = o2->obj->hash(o2, &pair.hash, epoint);
+        if (err != NULL) return &err->v;
+        b = *lookup(v1, &pair);
+        if (b != SIZE_MAX) {
+            const struct pair_s *p = &v1->data[b];
+            if (p->data != NULL) {
+                return val_reference(p->data);
+            }
         }
     }
     if (v1->def != NULL) {
@@ -409,44 +432,46 @@ static MUST_CHECK Obj *concat(oper_t op) {
     if (v2->len == 0 && v2->def == NULL) return val_reference(&v1->v);
     if (v1->len == 0 && (v1->def == NULL || v2->def != NULL)) return val_reference(&v2->v);
 
-    dict = (Dict *)val_alloc(DICT_OBJ);
-    avltree_init(&dict->members);
-    dict->len = 0;
-    dict->def = NULL;
     ln = v1->len + v2->len;
+    dict = (Dict *)val_alloc(DICT_OBJ);
+    dict->len = 0;
+    dict->max = ln;
+    dict->def = NULL;
     if (ln < v1->len) dict->data = NULL; /* overflow */
     else if (ln == 0) {
         dict->data = NULL;
         return &dict->v;
-    } else dict->data = (struct pair_s *)malloc(ln * sizeof *dict->data);
+    } else dict->data = allocate(ln);
     if (dict->data == NULL) {
         val_destroy(&dict->v);
         return (Obj *)new_error_mem(op->epoint3);
     }
 
     for (j = 0; j < v1->len; j++) {
-        Obj *data = v1->data[j].data;
+        Obj *data;
         struct pair_s *p = &dict->data[dict->len];
         p->hash = v1->data[j].hash;
         p->key = val_reference(v1->data[j].key);
+        data = v1->data[j].data;
         p->data = (data == NULL) ? NULL : val_reference(data);
-        if (avltree_insert(&p->node, &dict->members, pair_compare) == NULL) dict->len++;
+        *lookup(dict, p) = dict->len++;
     }
     dict->def = v2->def != NULL ? val_reference(v2->def) : v1->def != NULL ? val_reference(v1->def) : NULL;
     for (j = 0; j < v2->len; j++) {
-        struct avltree_node *b;
-        Obj *data = v2->data[j].data;
+        size_t *b;
+        Obj *data;
         struct pair_s *p = &dict->data[dict->len];
         p->hash = v2->data[j].hash;
         p->key = v2->data[j].key;
-        b = avltree_insert(&p->node, &dict->members, pair_compare);
-        if (b != NULL) {
-            p = avltree_container_of(b, struct pair_s, node);
+        b = lookup(dict, p);
+        if (*b != SIZE_MAX) {
+            p = &dict->data[*b];
             if (p->data != NULL) val_destroy(p->data);
         } else {
             p->key = val_reference(p->key);
-            dict->len++;
+            *b = dict->len++;
         }
+        data = v2->data[j].data;
         p->data = (data == NULL) ? NULL : val_reference(data);
     }
     if (dict->len == 0) {
@@ -487,14 +512,13 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *o1 = op->v1;
     if (op->op == &o_IN) {
         struct pair_s p;
-        struct avltree_node *b;
         Error *err;
 
+        if (v2->len == 0) return val_reference(&false_value->v);
         p.key = o1;
         err = o1->obj->hash(o1, &p.hash, op->epoint);
         if (err != NULL) return &err->v;
-        b = avltree_lookup(&p.node, &v2->members, pair_compare);
-        return truth_reference(b != NULL);
+        return truth_reference(*lookup(v2, &p) != SIZE_MAX);
     }
     switch (o1->obj->type) {
     case T_NONE:
@@ -510,15 +534,14 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 Obj *dictobj_parse(struct values_s *values, size_t args) {
     unsigned int j;
     Dict *dict = (Dict *)val_alloc(DICT_OBJ);
-    avltree_init(&dict->members);
     dict->len = 0;
+    dict->max = args;
     dict->def = NULL;
     if (args == 0) {
         dict->data = NULL;
         return &dict->v;
     }
-    if (args > SIZE_MAX / sizeof *dict->data) dict->data = NULL; /* overflow */
-    else dict->data = (struct pair_s *)malloc(args * sizeof *dict->data);
+    dict->data = allocate(args);
     if (dict->data == NULL) {
         val_destroy(&dict->v);
         return (Obj *)new_error_mem(&values->epoint);
@@ -528,7 +551,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         Obj *data;
         Error *err;
         struct pair_s *p;
-        struct avltree_node *b;
+        size_t *b;
         struct values_s *v2 = &values[j];
         Obj *key = v2->val;
 
@@ -560,9 +583,9 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
             return &err->v;
         }
         p->key = key;
-        b = avltree_insert(&p->node, &dict->members, pair_compare);
-        if (b != NULL) {
-            p = avltree_container_of(b, struct pair_s, node);
+        b = lookup(dict, p);
+        if (*b != SIZE_MAX) {
+            p = &dict->data[*b];
             if (p->data != NULL) val_destroy(p->data);
         } else {
             if (data == NULL) {
@@ -570,7 +593,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
             } else {
                 p->key = val_reference(p->key);
             }
-            dict->len++;
+            *b = dict->len++;
         }
         p->data = (data == NULL) ? NULL : val_reference(data);
     }
