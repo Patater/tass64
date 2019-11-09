@@ -30,10 +30,15 @@ struct pair_s {
 
 typedef struct Dict {
     Obj v;
-    size_t len, max;
+    size_t len;
     struct pair_s *data;
-    struct pair_s val[1];
-    uint8_t idx[1];
+    union {
+        struct pair_s val[1];
+        struct {
+            size_t max;
+            size_t mask;
+        } s;
+    } u;
     Obj *def;
 } Dict;
 

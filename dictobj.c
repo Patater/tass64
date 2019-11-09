@@ -37,28 +37,30 @@ static Type obj;
 Type *const DICT_OBJ = &obj;
 
 static Dict *new_dict(size_t ln) {
-    size_t ln2, ln3;
+    size_t ln1, ln2, ln3;
     Dict *v;
     struct pair_s *p;
-    if (ln > lenof(v->val)) {
+    if (ln > lenof(v->u.val)) {
         if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) return NULL; /* overflow */
-        ln = ln * 3 / 2;
-        ln2 = 8; while (ln > ln2) ln2 <<= 1;
+        ln1 = ln * 3 / 2;
+        ln2 = 8; while (ln1 > ln2) ln2 <<= 1;
         ln3 = ln2 * ((ln2 <= (1 << (sizeof(uint8_t)*8))) ? sizeof(uint8_t) : sizeof(size_t));
-        p = (struct pair_s *)malloc(ln2 * sizeof(struct pair_s) + ln3);
+        p = (struct pair_s *)malloc(ln * sizeof(struct pair_s) + ln3);
         if (p == NULL) return NULL; /* out of memory */
-        memset(&p[ln2], 255, ln3);
+        memset(&p[ln], 255, ln3);
     } else {
         p = NULL;
         ln2 = 1;
     }
     v = (Dict *)val_alloc(DICT_OBJ);
     if (p == NULL) {
-        v->data = v->val;
-        v->idx[0] = (uint8_t)~0;
-    } else v->data =  p;
+        v->data = v->u.val;
+    } else {
+        v->data = p;
+        v->u.s.max = ln;
+        v->u.s.mask = ln2 - 1;
+    }
     v->len = 0;
-    v->max = ln2 - 1;
     return v;
 }
 
@@ -80,7 +82,7 @@ static FAST_CALL void destroy(Obj *o1) {
         val_destroy(a->key);
         if (a->data != NULL) val_destroy(a->data);
     }
-    if (v1->val != v1->data) free(v1->data);
+    if (v1->u.val != v1->data) free(v1->data);
     if (v1->def != NULL) val_destroy(v1->def);
 }
 
@@ -99,7 +101,7 @@ static FAST_CALL void garbage(Obj *o1, int j) {
         if (v != NULL) v->refcount--;
         return;
     case 0:
-        if (v1->val != v1->data) free(v1->data);
+        if (v1->u.val != v1->data) free(v1->data);
         return;
     case 1:
         for (i = 0; i < v1->len; i++) {
@@ -182,10 +184,13 @@ static bool pair_equal(const struct pair_s *a, const struct pair_s *b)
 
 static void dict_update(Dict *dict, const struct pair_s *p) {
     struct pair_s *d;
-    size_t hash = (size_t)p->hash;
-    size_t offs = hash & dict->max;
-    if (dict->max < (1 << (sizeof(uint8_t)*8))) {
-        uint8_t *indexes = (uint8_t *)&dict->data[dict->max + 1];
+    if (dict->u.val == dict->data) {
+        d = dict->u.val;
+    } else if (dict->u.s.mask < (1 << (sizeof(uint8_t)*8))) {
+        size_t mask = dict->u.s.mask;
+        size_t hash = (size_t)p->hash;
+        size_t offs = hash & mask;
+        uint8_t *indexes = (uint8_t *)&dict->data[dict->u.s.max];
         while (indexes[offs] != (uint8_t)~0) {
             d = &dict->data[indexes[offs]];
             if (p->key == d->key || pair_equal(p, d)) {
@@ -194,11 +199,14 @@ static void dict_update(Dict *dict, const struct pair_s *p) {
                 return;
             }
             hash >>= 5;
-            offs = (5 * offs + hash + 1) & dict->max;
+            offs = (5 * offs + hash + 1) & mask;
         } 
         indexes[offs] = dict->len;
     } else {
-        size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+        size_t mask = dict->u.s.mask;
+        size_t hash = (size_t)p->hash;
+        size_t offs = hash & mask;
+        size_t *indexes = (size_t *)&dict->data[dict->u.s.max];
         while (indexes[offs] != SIZE_MAX) {
             d = &dict->data[indexes[offs]];
             if (p->key == d->key || pair_equal(p, d)) {
@@ -207,7 +215,7 @@ static void dict_update(Dict *dict, const struct pair_s *p) {
                 return;
             }
             hash >>= 5;
-            offs = (5 * offs + hash + 1) & dict->max;
+            offs = (5 * offs + hash + 1) & mask;
         } 
         indexes[offs] = dict->len;
     }
@@ -220,50 +228,61 @@ static void dict_update(Dict *dict, const struct pair_s *p) {
 
 static const struct pair_s *dict_lookup(const Dict *dict, const struct pair_s *p) {
     struct pair_s *d;
-    size_t hash = (size_t)p->hash;
-    size_t offs = hash & dict->max;
-    if (dict->max < (1 << (sizeof(uint8_t)*8))) {
-        uint8_t *indexes = (uint8_t *)&dict->data[dict->max + 1];
+    if (dict->u.val == dict->data) {
+        d = &dict->data[0];
+        if (p->key == d->key || pair_equal(p, d)) return d;
+    } else if (dict->u.s.mask < (1 << (sizeof(uint8_t)*8))) {
+        size_t mask = dict->u.s.mask;
+        size_t hash = (size_t)p->hash;
+        size_t offs = hash & mask;
+        uint8_t *indexes = (uint8_t *)&dict->data[dict->u.s.max];
         while (indexes[offs] != (uint8_t)~0) {
             d = &dict->data[indexes[offs]];
             if (p->key == d->key || pair_equal(p, d)) return d;
             hash >>= 5;
-            offs = (5 * offs + hash + 1) & dict->max;
+            offs = (5 * offs + hash + 1) & mask;
         } 
     } else {
-        size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+        size_t mask = dict->u.s.mask;
+        size_t hash = (size_t)p->hash;
+        size_t offs = hash & mask;
+        size_t *indexes = (size_t *)&dict->data[dict->u.s.max];
         while (indexes[offs] != SIZE_MAX) {
             d = &dict->data[indexes[offs]];
             if (p->key == d->key || pair_equal(p, d)) return d;
             hash >>= 5;
-            offs = (5 * offs + hash + 1) & dict->max;
+            offs = (5 * offs + hash + 1) & mask;
         } 
     }
     return NULL;
 }
 
 static void reindex(Dict *dict) {
-    if (dict->max < (1 << (sizeof(uint8_t)*8))) {
+    if (dict->u.val == dict->data) {
+        return;
+    } else if (dict->u.s.mask < (1 << (sizeof(uint8_t)*8))) {
         unsigned int i;
-        uint8_t *indexes = (uint8_t *)&dict->data[dict->max + 1];
+        size_t mask = dict->u.s.mask;
+        uint8_t *indexes = (uint8_t *)&dict->data[dict->u.s.max];
         for (i = 0; i < dict->len; i++) {
             size_t hash = (size_t)dict->data[i].hash;
-            size_t offs = hash & dict->max;
+            size_t offs = hash & mask;
             while (indexes[offs] != (uint8_t)~0) {
                 hash >>= 5;
-                offs = (5 * offs + hash + 1) & dict->max;
+                offs = (5 * offs + hash + 1) & mask;
             }
             indexes[offs] = i;
         }
     } else {
         size_t i;
-        size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+        size_t mask = dict->u.s.mask;
+        size_t *indexes = (size_t *)&dict->data[dict->u.s.max];
         for (i = 0; i < dict->len; i++) {
             size_t hash = (size_t)dict->data[i].hash;
-            size_t offs = hash & dict->max;
+            size_t offs = hash & mask;
             while (indexes[offs] != SIZE_MAX) {
                 hash >>= 5;
-                offs = (5 * offs + hash + 1) & dict->max;
+                offs = (5 * offs + hash + 1) & mask;
             }
             indexes[offs] = i;
         }
@@ -272,28 +291,43 @@ static void reindex(Dict *dict) {
 
 static bool resize(Dict *dict, size_t ln) {
     struct pair_s *p;
-    size_t ln2 = 8, ln3; 
-    while (ln > ln2) ln2 <<= 1;
+    size_t ln2 = 8, ln3;
+    size_t ln1 = ln * 3 / 2;
+    while (ln1 > ln2) ln2 <<= 1;
     ln3 = ln2 * ((ln2 <= (1 << (sizeof(uint8_t)*8))) ? sizeof(uint8_t) : sizeof(size_t));
-    if (dict->val == dict->data) {
-        p = (struct pair_s *)malloc(ln2 * sizeof *dict->data + ln3);
+    if (dict->u.val == dict->data) {
+        p = (struct pair_s *)malloc(ln * sizeof *dict->data + ln3);
         if (p == NULL) return true;
-        if (dict->len != 0) p[0] = dict->val[0];
+        if (dict->len != 0) p[0] = dict->u.val[0];
+        dict->u.s.mask = 0;
     } else {
-        p = (struct pair_s *)realloc(dict->data, ln2 * sizeof *dict->data + ln3);
+        bool same = dict->u.s.mask == ln2 - 1;
+        if (same && dict->u.s.max > ln) {
+            memmove(&dict->data[ln], &dict->data[dict->u.s.max], ln3);
+            dict->u.s.max = ln;
+        }
+        p = (struct pair_s *)realloc(dict->data, ln * sizeof *dict->data + ln3);
         if (p == NULL) return true;
+        if (same) {
+            if (dict->u.s.max < ln) {
+                memmove(&p[ln], &p[dict->u.s.max], ln3);
+                dict->u.s.max = ln;
+            }
+            dict->data = p;
+            return false;
+        }
     }
     dict->data = p;
-    dict->max = ln2 - 1;
-    memset(&p[ln2], 255, ln3);
+    dict->u.s.max = ln;
+    dict->u.s.mask = ln2 - 1;
+    memset(&p[ln], 255, ln3);
     reindex(dict);
     return false;
 }
 
 static MUST_CHECK Obj *normalize(Dict *dict) {
-    size_t ln = dict->len * 3 / 2;
-    if (ln > dict->max >> 1u) return &dict->v;
-    resize(dict, ln);
+    if (dict->u.val == dict->data || dict->u.s.max - dict->len < 2) return &dict->v;
+    resize(dict, dict->len);
     return &dict->v;
 }
 
@@ -552,9 +586,10 @@ static MUST_CHECK Obj *concat(oper_t op) {
     ln = v1->len + v2->len;
     if (ln < v1->len) goto failed; /* overflow */
     if (op->inplace == &v1->v) {
-        if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) goto failed; /* overflow */
-        ln = ln * 3 / 2;
-        if (ln > v1->max + 1) {
+        if (ln > ((v1->u.val == v1->data) ? lenof(v1->u.val) : v1->u.s.max)) {
+            size_t ln2 = ln + (ln < 1024 ? ln : 1024);
+            if (ln2 > ln) ln = ln2;
+            if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) goto failed; /* overflow */
             if (resize(v1, ln)) goto failed; /* overflow */
         }
         dict = (Dict *)val_reference(&v1->v);
@@ -576,6 +611,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
         dict_update(dict, &v2->data[j]);
     }
     dict->def = v2->def != NULL ? val_reference(v2->def) : v1->def != NULL ? val_reference(v1->def) : NULL;
+    if (dict == v1) return &dict->v;
     return normalize(dict);
 failed:
     return (Obj *)new_error_mem(op->epoint3); /* overflow */
