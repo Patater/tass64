@@ -19,16 +19,14 @@
 #ifndef DICTOBJ_H
 #define DICTOBJ_H
 #include "obj.h"
-#include "avl.h"
 
 extern struct Type *const DICT_OBJ;
 
 typedef struct Dict {
     Obj v;
-    size_t len;
+    size_t len, max;
     struct pair_s *data;
     Obj *def;
-    struct avltree members;
 } Dict;
 
 extern void dictobj_init(void);
@@ -38,7 +36,6 @@ struct pair_s {
     int hash;
     Obj *key;
     Obj *data;
-    struct avltree_node node;
 };
 
 extern Obj *dictobj_parse(struct values_s *, size_t);

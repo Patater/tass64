@@ -73,8 +73,8 @@ codeobj.o: codeobj.c codeobj.h obj.h attributes.h inttypes.h values.h \
  namespaceobj.h listobj.h intobj.h bitsobj.h bytesobj.h oper_e.h \
  operobj.h gapobj.h typeobj.h noneobj.h errorobj.h memblocksobj.h \
  identobj.h iterobj.h addressobj.h
-dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h avl.h eval.h \
- stdbool.h error.h errors_e.h variables.h str.h intobj.h listobj.h \
+dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h eval.h \
+ stdbool.h error.h errors_e.h avl.h variables.h str.h intobj.h listobj.h \
  values.h strobj.h boolobj.h operobj.h oper_e.h typeobj.h noneobj.h \
  errorobj.h iterobj.h
 encoding.o: encoding.c encoding.h avl.h attributes.h stdbool.h inttypes.h \
