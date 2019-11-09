@@ -37,16 +37,17 @@ static Type obj;
 Type *const DICT_OBJ = &obj;
 
 static Dict *new_dict(size_t ln) {
-    size_t ln2;
+    size_t ln2, ln3;
     Dict *v;
     struct pair_s *p;
     if (ln > lenof(v->val)) {
         if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) return NULL; /* overflow */
         ln = ln * 3 / 2;
         ln2 = 8; while (ln > ln2) ln2 <<= 1;
-        p = (struct pair_s *)malloc(ln2 * (sizeof(struct pair_s) + sizeof(size_t)));
+        ln3 = ln2 * ((ln2 <= (1 << (sizeof(uint8_t)*8))) ? sizeof(uint8_t) : sizeof(size_t));
+        p = (struct pair_s *)malloc(ln2 * sizeof(struct pair_s) + ln3);
         if (p == NULL) return NULL; /* out of memory */
-        memset(&p[ln2], 255, ln2 * sizeof(size_t));
+        memset(&p[ln2], 255, ln3);
     } else {
         p = NULL;
         ln2 = 1;
@@ -54,7 +55,7 @@ static Dict *new_dict(size_t ln) {
     v = (Dict *)val_alloc(DICT_OBJ);
     if (p == NULL) {
         v->data = v->val;
-        v->idx[0] = SIZE_MAX;
+        v->idx[0] = (uint8_t)~0;
     } else v->data =  p;
     v->len = 0;
     v->max = ln2 - 1;
@@ -181,20 +182,35 @@ static bool pair_equal(const struct pair_s *a, const struct pair_s *b)
 
 static void dict_update(Dict *dict, const struct pair_s *p) {
     struct pair_s *d;
-    size_t *indexes = (size_t *)&dict->data[dict->max + 1];
     size_t hash = (size_t)p->hash;
     size_t offs = hash & dict->max;
-    while (indexes[offs] != SIZE_MAX) {
-        d = &dict->data[indexes[offs]];
-        if (p->key == d->key || pair_equal(p, d)) {
-            if (d->data != NULL) val_destroy(d->data);
-            d->data = (p->data == NULL) ? NULL : val_reference(p->data);
-            return;
-        }
-        hash >>= 5;
-        offs = (5 * offs + hash + 1) & dict->max;
-    } 
-    indexes[offs] = dict->len;
+    if (dict->max < (1 << (sizeof(uint8_t)*8))) {
+        uint8_t *indexes = (uint8_t *)&dict->data[dict->max + 1];
+        while (indexes[offs] != (uint8_t)~0) {
+            d = &dict->data[indexes[offs]];
+            if (p->key == d->key || pair_equal(p, d)) {
+                if (d->data != NULL) val_destroy(d->data);
+                d->data = (p->data == NULL) ? NULL : val_reference(p->data);
+                return;
+            }
+            hash >>= 5;
+            offs = (5 * offs + hash + 1) & dict->max;
+        } 
+        indexes[offs] = dict->len;
+    } else {
+        size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+        while (indexes[offs] != SIZE_MAX) {
+            d = &dict->data[indexes[offs]];
+            if (p->key == d->key || pair_equal(p, d)) {
+                if (d->data != NULL) val_destroy(d->data);
+                d->data = (p->data == NULL) ? NULL : val_reference(p->data);
+                return;
+            }
+            hash >>= 5;
+            offs = (5 * offs + hash + 1) & dict->max;
+        } 
+        indexes[offs] = dict->len;
+    }
     d = &dict->data[dict->len];
     d->hash = p->hash;
     d->key = val_reference(p->key);
@@ -204,47 +220,72 @@ static void dict_update(Dict *dict, const struct pair_s *p) {
 
 static const struct pair_s *dict_lookup(const Dict *dict, const struct pair_s *p) {
     struct pair_s *d;
-    size_t *indexes = (size_t *)&dict->data[dict->max + 1];
     size_t hash = (size_t)p->hash;
     size_t offs = hash & dict->max;
-    while (indexes[offs] != SIZE_MAX) {
-        d = &dict->data[indexes[offs]];
-        if (p->key == d->key || pair_equal(p, d)) return d;
-        hash >>= 5;
-        offs = (5 * offs + hash + 1) & dict->max;
-    } 
+    if (dict->max < (1 << (sizeof(uint8_t)*8))) {
+        uint8_t *indexes = (uint8_t *)&dict->data[dict->max + 1];
+        while (indexes[offs] != (uint8_t)~0) {
+            d = &dict->data[indexes[offs]];
+            if (p->key == d->key || pair_equal(p, d)) return d;
+            hash >>= 5;
+            offs = (5 * offs + hash + 1) & dict->max;
+        } 
+    } else {
+        size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+        while (indexes[offs] != SIZE_MAX) {
+            d = &dict->data[indexes[offs]];
+            if (p->key == d->key || pair_equal(p, d)) return d;
+            hash >>= 5;
+            offs = (5 * offs + hash + 1) & dict->max;
+        } 
+    }
     return NULL;
 }
 
 static void reindex(Dict *dict) {
-    size_t i;
-    size_t *indexes = (size_t *)&dict->data[dict->max + 1];
-    for (i = 0; i < dict->len; i++) {
-        size_t hash = (size_t)dict->data[i].hash;
-        size_t offs = hash & dict->max;
-        while (indexes[offs] != SIZE_MAX) {
-            hash >>= 5;
-            offs = (5 * offs + hash + 1) & dict->max;
+    if (dict->max < (1 << (sizeof(uint8_t)*8))) {
+        unsigned int i;
+        uint8_t *indexes = (uint8_t *)&dict->data[dict->max + 1];
+        for (i = 0; i < dict->len; i++) {
+            size_t hash = (size_t)dict->data[i].hash;
+            size_t offs = hash & dict->max;
+            while (indexes[offs] != (uint8_t)~0) {
+                hash >>= 5;
+                offs = (5 * offs + hash + 1) & dict->max;
+            }
+            indexes[offs] = i;
         }
-        indexes[offs] = i;
+    } else {
+        size_t i;
+        size_t *indexes = (size_t *)&dict->data[dict->max + 1];
+        for (i = 0; i < dict->len; i++) {
+            size_t hash = (size_t)dict->data[i].hash;
+            size_t offs = hash & dict->max;
+            while (indexes[offs] != SIZE_MAX) {
+                hash >>= 5;
+                offs = (5 * offs + hash + 1) & dict->max;
+            }
+            indexes[offs] = i;
+        }
     }
 }
 
 static bool resize(Dict *dict, size_t ln) {
     struct pair_s *p;
-    size_t ln2 = 8; 
+    size_t ln2 = 8, ln3; 
     while (ln > ln2) ln2 <<= 1;
+    ln3 = ln2 * ((ln2 <= (1 << (sizeof(uint8_t)*8))) ? sizeof(uint8_t) : sizeof(size_t));
     if (dict->val == dict->data) {
-        p = (struct pair_s *)malloc(ln2 * (sizeof *dict->data + sizeof(size_t)));
+        p = (struct pair_s *)malloc(ln2 * sizeof *dict->data + ln3);
         if (p == NULL) return true;
         if (dict->len != 0) p[0] = dict->val[0];
     } else {
-        p = (struct pair_s *)realloc(dict->data, ln2 * (sizeof *dict->data + sizeof(size_t)));
+        p = (struct pair_s *)realloc(dict->data, ln2 * sizeof *dict->data + ln3);
         if (p == NULL) return true;
     }
     dict->data = p;
     dict->max = ln2 - 1;
-    memset(&p[ln2], 255, ln2 * sizeof(size_t));
+    memset(&p[ln2], 255, ln3);
     reindex(dict);
     return false;
 }
