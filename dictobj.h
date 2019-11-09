@@ -33,7 +33,7 @@ typedef struct Dict {
     size_t len, max;
     struct pair_s *data;
     struct pair_s val[1];
-    size_t idx[1];
+    uint8_t idx[1];
     Obj *def;
 } Dict;
 
