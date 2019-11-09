@@ -22,21 +22,23 @@
 
 extern struct Type *const DICT_OBJ;
 
-typedef struct Dict {
-    Obj v;
-    size_t len, max;
-    struct pair_s *data;
-    Obj *def;
-} Dict;
-
-extern void dictobj_init(void);
-extern void dictobj_names(void);
-
 struct pair_s {
     int hash;
     Obj *key;
     Obj *data;
 };
+
+typedef struct Dict {
+    Obj v;
+    size_t len, max;
+    struct pair_s *data;
+    struct pair_s val[1];
+    size_t idx[1];
+    Obj *def;
+} Dict;
+
+extern void dictobj_init(void);
+extern void dictobj_names(void);
 
 extern Obj *dictobj_parse(struct values_s *, size_t);
 extern MUST_CHECK Obj *dict_sort(Dict *, const size_t *);

@@ -40,14 +40,22 @@ static Dict *new_dict(size_t ln) {
     size_t ln2;
     Dict *v;
     struct pair_s *p;
-    if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) return NULL; /* overflow */
-    ln = ln * 3 / 2;
-    ln2 = 8; while (ln > ln2) ln2 <<= 1;
-    p = (struct pair_s *)malloc(ln2 * (sizeof(struct pair_s) + sizeof(size_t)));
-    if (p == NULL) return NULL; /* out of memory */
-    memset(&p[ln2], 255, ln2 * sizeof(size_t));
+    if (ln > lenof(v->val)) {
+        if (ln > SIZE_MAX / (sizeof(struct pair_s) + sizeof(size_t) * 2)) return NULL; /* overflow */
+        ln = ln * 3 / 2;
+        ln2 = 8; while (ln > ln2) ln2 <<= 1;
+        p = (struct pair_s *)malloc(ln2 * (sizeof(struct pair_s) + sizeof(size_t)));
+        if (p == NULL) return NULL; /* out of memory */
+        memset(&p[ln2], 255, ln2 * sizeof(size_t));
+    } else {
+        p = NULL;
+        ln2 = 1;
+    }
     v = (Dict *)val_alloc(DICT_OBJ);
-    v->data = p;
+    if (p == NULL) {
+        v->data = v->val;
+        v->idx[0] = SIZE_MAX;
+    } else v->data =  p;
     v->len = 0;
     v->max = ln2 - 1;
     return v;
@@ -71,7 +79,7 @@ static FAST_CALL void destroy(Obj *o1) {
         val_destroy(a->key);
         if (a->data != NULL) val_destroy(a->data);
     }
-    free(v1->data);
+    if (v1->val != v1->data) free(v1->data);
     if (v1->def != NULL) val_destroy(v1->def);
 }
 
@@ -90,7 +98,7 @@ static FAST_CALL void garbage(Obj *o1, int j) {
         if (v != NULL) v->refcount--;
         return;
     case 0:
-        free(v1->data);
+        if (v1->val != v1->data) free(v1->data);
         return;
     case 1:
         for (i = 0; i < v1->len; i++) {
@@ -226,8 +234,14 @@ static bool resize(Dict *dict, size_t ln) {
     struct pair_s *p;
     size_t ln2 = 8; 
     while (ln > ln2) ln2 <<= 1;
-    p = (struct pair_s *)realloc(dict->data, ln2 * (sizeof *dict->data + sizeof(size_t)));
-    if (p == NULL) return true;
+    if (dict->val == dict->data) {
+        p = (struct pair_s *)malloc(ln2 * (sizeof *dict->data + sizeof(size_t)));
+        if (p == NULL) return true;
+        if (dict->len != 0) p[0] = dict->val[0];
+    } else {
+        p = (struct pair_s *)realloc(dict->data, ln2 * (sizeof *dict->data + sizeof(size_t)));
+        if (p == NULL) return true;
+    }
     dict->data = p;
     dict->max = ln2 - 1;
     memset(&p[ln2], 255, ln2 * sizeof(size_t));
