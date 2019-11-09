@@ -606,12 +606,6 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
     if (dict->len == 0) {
         free(dict->data);
         dict->data = NULL;
-    } else if (args - dict->len > 2) {
-        struct pair_s *v;
-        memmove(&dict->data[dict->len], &dict->data[dict->max], dict->len * 3 / 2 * sizeof(size_t));
-        dict->max = dict->len;
-        v = (struct pair_s *)realloc(dict->data, dict->len * sizeof *dict->data + dict->len * 3 / 2 * sizeof(size_t));
-        if (v != NULL) dict->data = v;
     }
     return &dict->v;
 }
