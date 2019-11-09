@@ -179,6 +179,22 @@ static size_t *lookup(const Dict *dict, const struct pair_s *p) {
     return &indexes[offs];
 }
 
+static MUST_CHECK Obj *normalize(Dict *dict) {
+    size_t ln2 = dict->len * 3 / 2 * sizeof(size_t);
+    struct pair_s *p = (struct pair_s *)realloc(dict->data, dict->len * sizeof *dict->data + ln2);
+    if (p != NULL) {
+        size_t i;
+        dict->data = p;
+        dict->max = dict->len;
+        memset(&p[dict->len], 255, ln2);
+        for (i = 0; i < dict->len; i++) {
+            *lookup(dict, &p[i]) = i;
+        }
+    }
+    return &dict->v;
+}
+
+
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Dict *v1 = (const Dict *)o1, *v2 = (const Dict *)o2;
     size_t n;
@@ -484,8 +500,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
         free(dict->data);
         dict->data = NULL;
     } else if (ln - dict->len > 2) {
-        struct pair_s *v = (struct pair_s *)realloc(dict->data, dict->len * sizeof *dict->data);
-        if (v != NULL) dict->data = v;
+        return normalize(dict);
     }
     return &dict->v;
 }
@@ -606,7 +621,9 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
     if (dict->len == 0) {
         free(dict->data);
         dict->data = NULL;
-    }
+    } else if (args - dict->len > 2) {
+        return normalize(dict);
+    } 
     return &dict->v;
 }
 
