@@ -39,5 +39,6 @@ struct pair_s {
 };
 
 extern Obj *dictobj_parse(struct values_s *, size_t);
+extern MUST_CHECK Obj *dict_sort(Dict *, const size_t *);
 
 #endif
