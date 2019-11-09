@@ -113,8 +113,8 @@ static FAST_CALL void garbage(Obj *o1, int j) {
 
 static struct oper_s pair_oper;
 
-static int rpair_compare(Obj *o1, Obj *o2) {
-    int h;
+static bool rpair_equal(Obj *o1, Obj *o2) {
+    bool h;
     Obj *result;
     Iter *iter1 = o1->obj->getiter(o1);
     Iter *iter2 = o2->obj->getiter(o2);
@@ -124,54 +124,42 @@ static int rpair_compare(Obj *o1, Obj *o2) {
         o1 = iter1_next(iter1);
         o2 = iter2_next(iter2);
         if (o1 == NULL) {
-            h = (o2 == NULL) ? 0 : -1;
+            h = (o2 == NULL);
             break;
         }
         if (o2 == NULL) {
-            h = 1;
+            h = false;
             break;
         }
         if (o1->obj->iterable || o2->obj->iterable) {
-            if (o1->obj->iterable && o2->obj->iterable) {
-                h = rpair_compare(o1, o2);
-            } else {
-                h = o1->obj->type - o2->obj->type;
-            }
+            h = o1->obj->iterable && o2->obj->iterable && rpair_equal(o1, o2);
         } else {
             pair_oper.v1 = o1;
             pair_oper.v2 = o2;
             pair_oper.inplace = NULL;
             result = o1->obj->calc2(&pair_oper);
-            if (result->obj == INT_OBJ) h = (int)((Int *)result)->len;
-            else h = o1->obj->type - o2->obj->type;
+            h = (result == &true_value->v);
             val_destroy(result);
         }
-    } while (h == 0);
+    } while (h);
     val_destroy(&iter2->v);
     val_destroy(&iter1->v);
     return h;
 }
 
-static int pair_compare(const struct pair_s *a, const struct pair_s *b)
+static bool pair_equal(const struct pair_s *a, const struct pair_s *b)
 {
     Obj *result;
-    int h;
-    if (a->key->obj == b->key->obj) {
-        h = a->hash - b->hash;
-        if (h != 0) return h;
-    }
+    bool h;
+    if (a->hash != b->hash) return false;
     if (a->key->obj->iterable || b->key->obj->iterable) {
-        if (a->key->obj->iterable && b->key->obj->iterable) {
-            return rpair_compare(a->key, b->key);
-        }
-        return a->key->obj->type - b->key->obj->type;
+        return a->key->obj->iterable && b->key->obj->iterable && rpair_equal(a->key, b->key);
     }
     pair_oper.v1 = a->key;
     pair_oper.v2 = b->key;
     pair_oper.inplace = NULL;
     result = pair_oper.v1->obj->calc2(&pair_oper);
-    if (result->obj == INT_OBJ) h = (int)((Int *)result)->len;
-    else h = a->key->obj->type - b->key->obj->type;
+    h = (result == &true_value->v);
     val_destroy(result);
     return h;
 }
@@ -184,7 +172,7 @@ static size_t *lookup(const Dict *dict, const struct pair_s *p) {
     size_t offs = hash % hashlen;
     while (indexes[offs] != SIZE_MAX) {
         d = &dict->data[indexes[offs]];
-        if (p->key == d->key || pair_compare(p, d) == 0) return &indexes[offs];
+        if (p->key == d->key || pair_equal(p, d)) break;
         offs++;
         if (offs == hashlen) offs = 0;
     } 
@@ -619,7 +607,10 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         free(dict->data);
         dict->data = NULL;
     } else if (args - dict->len > 2) {
-        struct pair_s *v = (struct pair_s *)realloc(dict->data, dict->len * sizeof *dict->data);
+        struct pair_s *v;
+        memmove(&dict->data[dict->len], &dict->data[dict->max], dict->len * 3 / 2 * sizeof(size_t));
+        dict->max = dict->len;
+        v = (struct pair_s *)realloc(dict->data, dict->len * sizeof *dict->data + dict->len * 3 / 2 * sizeof(size_t));
         if (v != NULL) dict->data = v;
     }
     return &dict->v;
@@ -641,7 +632,7 @@ void dictobj_init(void) {
     obj.rcalc2 = rcalc2;
     obj.slice = slice;
 
-    pair_oper.op = &o_CMP;
+    pair_oper.op = &o_EQ;
     pair_oper.epoint = &nopoint;
     pair_oper.epoint2 = &nopoint;
     pair_oper.epoint3 = &nopoint;
