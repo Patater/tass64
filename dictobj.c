@@ -422,6 +422,24 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     return vv;
 }
 
+MUST_CHECK Obj *dict_sort(Dict *v1, const size_t *sort_index) {
+    size_t i;
+    Dict *v = (Dict *)val_alloc(DICT_OBJ);
+    v->len = v1->len;
+    v->max = v1->len;
+    v->data = allocate(v1->len);
+    if (v->data == NULL) err_msg_out_of_memory(); /* overflow */
+    for (i = 0; i < v1->len; i++) {
+        struct pair_s *s = &v1->data[sort_index[i]], *d = &v->data[i];
+        d->hash = s->hash;
+        d->key = val_reference(s->key);
+        d->data = (s->data == NULL) ? NULL : val_reference(s->data);
+        *lookup(v, d) = i;
+    }
+    v->def = (v1->def == NULL) ? NULL : val_reference(v1->def);
+    return &v->v;
+}
+
 static MUST_CHECK Obj *concat(oper_t op) {
     Dict *v1 = (Dict *)op->v1;
     Dict *v2 = (Dict *)op->v2;

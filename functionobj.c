@@ -37,6 +37,7 @@
 #include "errorobj.h"
 #include "bytesobj.h"
 #include "iterobj.h"
+#include "dictobj.h"
 
 static Type obj;
 
@@ -310,14 +311,13 @@ static MUST_CHECK Obj *function_random(Funcargs *vals, linepos_t epoint) {
 
 static struct oper_s sort_tmp;
 static Obj *sort_error;
-static Obj **sort_vals;
+static Obj *sort_val;
 
-static int sortcomp(const void *a, const void *b) {
+static int sortcomp(void) {
     int ret;
     Obj *result;
-    size_t aa = *(const size_t *)a, bb = *(const size_t *)b;
-    Obj *o1 = sort_tmp.v1 = sort_vals[aa];
-    Obj *o2 = sort_tmp.v2 = sort_vals[bb];
+    Obj *o1 = sort_tmp.v1;
+    Obj *o2 = sort_tmp.v2;
     sort_tmp.inplace = NULL;
     result = sort_tmp.v1->obj->calc2(&sort_tmp);
     if (result->obj == INT_OBJ) ret = (int)((Int *)result)->len;
@@ -341,7 +341,7 @@ static int sortcomp(const void *a, const void *b) {
                     }
                     if (i == v1->len) {
                         val_destroy(result);
-                        return (aa > bb) ? 1 : -1;
+                        return 0;
                     }
                 }
                 sort_tmp.v1 = o1;
@@ -351,16 +351,36 @@ static int sortcomp(const void *a, const void *b) {
         }
     }
     val_destroy(result);
+    return ret;
+}
+
+static int list_sortcomp(const void *a, const void *b) {
+    int ret;
+    size_t aa = *(const size_t *)a, bb = *(const size_t *)b;
+    List *list = (List *)sort_val;
+    sort_tmp.v1 = list->data[aa];
+    sort_tmp.v2 = list->data[bb];
+    ret = sortcomp();
+    if (ret == 0) return (aa > bb) ? 1 : -1;
+    return ret;
+}
+
+static int dict_sortcomp(const void *a, const void *b) {
+    int ret;
+    size_t aa = *(const size_t *)a, bb = *(const size_t *)b;
+    Dict *dict = (Dict *)sort_val;
+    sort_tmp.v1 = dict->data[aa].key;
+    sort_tmp.v2 = dict->data[bb].key;
+    ret = sortcomp();
     if (ret == 0) return (aa > bb) ? 1 : -1;
     return ret;
 }
 
 /* sort() */
 static MUST_CHECK Obj *function_sort(Obj *o1, linepos_t epoint) {
-    if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
-        List *v1 = (List *)o1, *v;
-        size_t ln = v1->len;
-        if (ln > 0) {
+    if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ || o1->obj == DICT_OBJ) {
+        size_t ln = (o1->obj == DICT_OBJ) ? ((Dict *)o1)->len : ((List *)o1)->len;
+        if (ln > 1) {
             size_t i;
             Obj **vals;
             size_t *sort_index;
@@ -368,21 +388,25 @@ static MUST_CHECK Obj *function_sort(Obj *o1, linepos_t epoint) {
             sort_index = (size_t *)malloc(ln * sizeof *sort_index);
             if (sort_index == NULL) goto failed;
             for (i = 0; i < ln; i++) sort_index[i] = i;
-            sort_vals = v1->data;
+            sort_val = o1;
             sort_error = NULL;
             sort_tmp.op = &o_CMP;
             sort_tmp.epoint = sort_tmp.epoint2 = sort_tmp.epoint3 = epoint;
-            qsort(sort_index, ln, sizeof *sort_index, sortcomp);
+            qsort(sort_index, ln, sizeof *sort_index, (o1->obj == DICT_OBJ) ? dict_sortcomp : list_sortcomp);
             if (sort_error != NULL) {
                 free(sort_index);
                 return sort_error;
             }
-            v = (List *)val_alloc(o1->obj);
-            v->data = vals = list_create_elements(v, ln);
-            v->len = ln;
-            for (i = 0; i < ln; i++) vals[i] = val_reference(v1->data[sort_index[i]]);
+            if (o1->obj == DICT_OBJ) o1 = dict_sort((Dict *)o1, sort_index);
+            else {
+                List *v = (List *)val_alloc(o1->obj);
+                v->data = vals = list_create_elements(v, ln);
+                v->len = ln;
+                for (i = 0; i < ln; i++) vals[i] = val_reference(((List *)o1)->data[sort_index[i]]);
+                o1 = &v->v;
+            }
             free(sort_index);
-            return &v->v;
+            return o1;
         }
     }
     return val_reference(o1);
