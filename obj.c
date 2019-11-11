@@ -180,8 +180,7 @@ static MUST_CHECK Obj *invalid_slice(Obj *UNUSED(v1), oper_t op, size_t indx) {
             }
         }
     } else {
-        err_msg_argnum(args->len, 1, indx, op->epoint2);
-        return (Obj *)ref_none();
+        return (Obj *)new_error_argnum(args->len, 1, indx, op->epoint2);
     }
     return obj_oper_error(op);
 }

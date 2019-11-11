@@ -559,8 +559,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     linepos_t epoint2;
 
     if (args->len < 1) {
-        err_msg_argnum(args->len, 1, 0, op->epoint2);
-        return (Obj *)ref_none();
+        return (Obj *)new_error_argnum(args->len, 1, 0, op->epoint2);
     }
 
     o2 = args->val[indx].val;

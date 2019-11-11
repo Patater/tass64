@@ -123,6 +123,7 @@ typedef enum Error_types {
     ERROR___NOT_DEFINED,
     ERROR__INVALID_OPER,
     ERROR__INVALID_CONV,
+    ERROR__WRONG_ARGNUM,
     ERROR____STILL_NONE,
 
     ERROR_CANT_FINDFILE = 0xc0,

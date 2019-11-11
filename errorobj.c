@@ -196,6 +196,14 @@ MALLOC Error *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
     return v;
 }
 
+MALLOC Error *new_error_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {
+    Error *v = new_error(ERROR__WRONG_ARGNUM, epoint);
+    v->u.argnum.num = num;
+    v->u.argnum.min = min;
+    v->u.argnum.max = max;
+    return v;
+}
+
 static MUST_CHECK Obj *calc1(oper_t op) {
     return val_reference(op->v1);
 }

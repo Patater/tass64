@@ -158,8 +158,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (op->op == &o_FUNC) {
             args = ((Funcargs *)o2)->len;
             if (args != 1) {
-                err_msg_argnum(args, 1, 1, op->epoint2);
-                return (Obj *)ref_none();
+                return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);
             }
             return apply_convert(((Funcargs *)o2)->val[0].val, v1, op->epoint2);
         }
