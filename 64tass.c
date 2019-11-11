@@ -3448,7 +3448,7 @@ MUST_CHECK Obj *compile(void)
                             brec.len = 0;
                         }
                     } else if (prm==CMD_BINARY) { /* .binary */
-                        char *path = NULL;
+                        struct file_s *cfile2 = NULL;
                         ival_t foffs = 0;
                         size_t fsize = SIZE_MAX;
                         struct values_s *vs;
@@ -3460,7 +3460,9 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 1, 3, &epoint)) goto breakerr;
                         vs = get_val();
                         if (!tostr(vs, &filename)) {
-                            path = get_path(&filename, current_file_list->file->realname);
+                            char *path = get_path(&filename, current_file_list->file->realname);
+                            cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, &vs->epoint);
+                            free(path);
                         }
                         if ((vs = get_val()) != NULL) {
                             ival_t ival;
@@ -3473,25 +3475,21 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
 
-                        if (path != NULL) {
-                            struct file_s *cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, &epoint);
-                            if (cfile2 != NULL) {
-                                size_t foffset;
-                                if (foffs < 0) foffset = (uval_t)-foffs < cfile2->len ? (cfile2->len - (uval_t)-foffs) : 0;
-                                else foffset = (uval_t)foffs;
-                                for (; fsize != 0 && foffset < cfile2->len;) {
-                                    size_t i, ln = cfile2->len - foffset;
-                                    uint8_t *d, *s = cfile2->data + foffset;
-                                    if (ln > fsize) ln = fsize;
-                                    d = pokealloc((address_t)ln, &epoint);
-                                    if (outputeor != 0) {
-                                        for (i = 0; i < ln; i++) d[i] = s[i] ^ outputeor;
-                                    } else memcpy(d, s, ln);
-                                    foffset += ln;
-                                    fsize -= ln;
-                                }
+                        if (cfile2 != NULL) {
+                            size_t foffset;
+                            if (foffs < 0) foffset = (uval_t)-foffs < cfile2->len ? (cfile2->len - (uval_t)-foffs) : 0;
+                            else foffset = (uval_t)foffs;
+                            for (; fsize != 0 && foffset < cfile2->len;) {
+                                size_t i, ln = cfile2->len - foffset;
+                                uint8_t *d, *s = cfile2->data + foffset;
+                                if (ln > fsize) ln = fsize;
+                                d = pokealloc((address_t)ln, &epoint);
+                                if (outputeor != 0) {
+                                    for (i = 0; i < ln; i++) d[i] = s[i] ^ outputeor;
+                                } else memcpy(d, s, ln);
+                                foffset += ln;
+                                fsize -= ln;
                             }
-                            free(path);
                         }
                     }
 
@@ -4109,15 +4107,14 @@ MUST_CHECK Obj *compile(void)
                 { /* .include, .binclude */
                     struct file_s *f = NULL;
                     struct values_s *vs;
-                    char *path;
                     str_t filename;
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (!tostr(vs, &filename)) {
-                        path = get_path(&filename, current_file_list->file->realname);
-                        f = openfile(path, current_file_list->file->realname, 2, &filename, &epoint);
+                        char *path = get_path(&filename, current_file_list->file->realname);
+                        f = openfile(path, current_file_list->file->realname, 2, &filename, &vs->epoint);
                         free(path);
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
