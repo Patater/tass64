@@ -674,46 +674,39 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 switch (func) {
                 case F_HYPOT:
                     if (args != 2) {
-                        err_msg_argnum(args, 2, 2, op->epoint2);
-                        return (Obj *)ref_none();
+                        return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
                     }
                     return gen_broadcast(v2, op->epoint, function_hypot);
                 case F_ATAN2:
                     if (args != 2) {
-                        err_msg_argnum(args, 2, 2, op->epoint2);
-                        return (Obj *)ref_none();
+                        return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
                     }
                     return gen_broadcast(v2, op->epoint, function_atan2);
                 case F_POW:
                     if (args != 2) {
-                        err_msg_argnum(args, 2, 2, op->epoint2);
-                        return (Obj *)ref_none();
+                        return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
                     }
                     return gen_broadcast(v2, op->epoint, function_pow);
                 case F_RANGE:
                     if (args < 1 || args > 3) {
-                        err_msg_argnum(args, 1, 3, op->epoint2);
-                        return (Obj *)ref_none();
+                        return (Obj *)new_error_argnum(args, 1, 3, op->epoint2);
                     }
                     return gen_broadcast(v2, op->epoint, function_range);
                 case F_BINARY:
                     if (args < 1 || args > 3) {
-                        err_msg_argnum(args, 1, 3, op->epoint2);
-                        return (Obj *)ref_none();
+                        return (Obj *)new_error_argnum(args, 1, 3, op->epoint2);
                     }
                     return gen_broadcast(v2, op->epoint, function_binary);
                 case F_FORMAT:
                     return isnprintf(v2, op->epoint);
                 case F_RANDOM:
                     if (args > 3) {
-                        err_msg_argnum(args, 0, 3, op->epoint2);
-                        return (Obj *)ref_none();
+                        return (Obj *)new_error_argnum(args, 0, 3, op->epoint2);
                     }
                     return gen_broadcast(v2, op->epoint, function_random);
                 default:
                     if (args != 1) {
-                        err_msg_argnum(args, 1, 1, op->epoint2);
-                        return (Obj *)ref_none();
+                        return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);
                     }
                     switch (func) {
                     case F_ANY: return v[0].val->obj->truth(v[0].val, TRUTH_ANY, &v[0].epoint);

@@ -416,8 +416,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
     int state;
 
     if (args < 1) {
-        err_msg_argnum(args, 1, 0, epoint);
-        return (Obj *)ref_none();
+        return (Obj *)new_error_argnum(args, 1, 0, epoint);
     }
     val = v[0].val;
     switch (val->obj->type) {
