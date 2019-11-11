@@ -420,11 +420,13 @@ static MUST_CHECK Obj *function_binary(Funcargs *vals, linepos_t epoint) {
     Error *err;
     ival_t offs = 0;
     uval_t length = (uval_t)-1;
-    char *path = NULL;
+    struct file_s *cfile2 = NULL;
     str_t filename;
 
     if (!tostr(&v[0], &filename)) {
-        path = get_path(&filename, current_file_list->file->realname);
+        char *path = get_path(&filename, current_file_list->file->realname);
+        cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, &v[0].epoint);
+        free(path);
     }
 
     switch (vals->len) {
@@ -439,23 +441,20 @@ static MUST_CHECK Obj *function_binary(Funcargs *vals, linepos_t epoint) {
     default:
         break;
     }
-    if (path != NULL) {
-        struct file_s *cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, epoint);
-        free(path);
-        if (cfile2 != NULL) {
-            size_t offset, ln = cfile2->len;
-            Bytes *b;
-            if (offs < 0) offset = ((uval_t)-offs < ln) ? (ln - (uval_t)-offs) : 0;
-            else offset = (uval_t)offs;
-            if (offset < ln) ln -= offset; else ln = 0;
-            if (length < ln) ln = length;
-            if (ln == 0) return (Obj *)ref_bytes(null_bytes);
-            if (ln > SSIZE_MAX) return (Obj *)new_error_mem(epoint);
-            b = new_bytes(ln);
-            b->len = ln;
-            memcpy(b->data, cfile2->data + offset, ln);
-            return &b->v;
-        }
+    
+    if (cfile2 != NULL) {
+        size_t offset, ln = cfile2->len;
+        Bytes *b;
+        if (offs < 0) offset = ((uval_t)-offs < ln) ? (ln - (uval_t)-offs) : 0;
+        else offset = (uval_t)offs;
+        if (offset < ln) ln -= offset; else ln = 0;
+        if (length < ln) ln = length;
+        if (ln == 0) return (Obj *)ref_bytes(null_bytes);
+        if (ln > SSIZE_MAX) return (Obj *)new_error_mem(epoint);
+        b = new_bytes(ln);
+        b->len = ln;
+        memcpy(b->data, cfile2->data + offset, ln);
+        return &b->v;
     }
     return (Obj *)ref_none();
 }
