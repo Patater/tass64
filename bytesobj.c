@@ -856,7 +856,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     if (op->inplace == &vv1->v) {
         vv = ref_bytes(vv1);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
-    } else if (op->inplace == &vv2->v && len1 == len2) {
+    } else if (op->inplace == &vv2->v && sz <= len2) {
         vv = ref_bytes(vv2);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
     } else {
@@ -906,7 +906,7 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
     if (op->inplace == &vv1->v) {
         vv = ref_bytes(vv1);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
-    } else if (op->inplace == &vv2->v && len1 == len2) {
+    } else if (op->inplace == &vv2->v && sz <= len2) {
         vv = ref_bytes(vv2);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
     } else {
@@ -957,7 +957,7 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
     if (op->inplace == &vv1->v) {
         vv = ref_bytes(vv1);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
-    } else if (op->inplace == &vv2->v && len1 == len2) {
+    } else if (op->inplace == &vv2->v && sz <= len2) {
         vv = ref_bytes(vv2);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
     } else {
