@@ -61,7 +61,8 @@ struct arguments_s {
     bool tasmcomp;
     bool verbose;
     uint8_t caseinsensitive;
-    struct output_s output;
+    struct output_s *output;
+    size_t output_len;
     const struct cpu_s *cpumode;
     struct symbol_output_s *symbol_output;
     size_t symbol_output_len;

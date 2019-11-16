@@ -793,7 +793,7 @@ void makefile(int argc, char *argv[]) {
     FILE *f;
     struct linepos_s nopoint = {0, 0};
     struct avltree_node *n;
-    size_t len = 0;
+    size_t len = 0, j;
     int i, err;
 
     f = dash_name(arguments.make) ? stdout : file_open(arguments.make, "wt");
@@ -802,8 +802,15 @@ void makefile(int argc, char *argv[]) {
         return;
     }
     clearerr(f); errno = 0;
-    if (!dash_name(arguments.output.name)) {
-        len += argv_print(arguments.output.name + get_base(arguments.output.name), f);
+    for (j = 0; j < arguments.output_len; j++) {
+        const struct output_s *output = &arguments.output[j];
+        if (!dash_name(output->name)) {
+            if (j != 0) {
+                len++;
+                putc(' ', f);
+            }
+            len += argv_print(output->name + get_base(output->name), f);
+        }
     }
     if (len > 0) {
         len++;
