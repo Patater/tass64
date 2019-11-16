@@ -296,7 +296,6 @@ static void tfree(void) {
     destroy_longjump();
     destroy_encoding();
     destroy_values();
-    destroy_namespacekeys();
     err_destroy();
     destroy_file();
     destroy_ternary();

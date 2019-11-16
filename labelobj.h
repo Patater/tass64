@@ -28,6 +28,7 @@ typedef struct Label {
     Obj v;
     str_t name;
     str_t cfname;
+    int hash;
 
     Obj *value;
     const struct file_list_s *file_list;
