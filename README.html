@@ -3128,6 +3128,14 @@ system specific.</p>
 64tass a.asm -o a.prg
 </pre>
 
+<p>This option may be used multiple times to output different sections in
+different formats of a single compilation.</p>
+<p>For multiple outputs the format options and output section selection must be
+placed before this option. The format selection will be unchanged if no new
+selection was made but the output section selection must be repeated for each
+output. The maximum image size will be the smallest of all selected
+formats. Using the same name multiple times is not a good idea.</p>
+
 <dt><b>--output-section</b> &lt;sectionname&gt;<a name="o_output-section" href="#o_output-section"></a>
 <dd>By default all sections go into the output file. Using this option
 limits the output to specific section and it's children. This is useful
@@ -3812,15 +3820,25 @@ result (labels.txt):
 label           = $1000
 </pre>
 <p>This option may be used multiple times. In this case the format and root scope
-options must be placed before using this option.</p>
+options must be placed before this option. Using the same name multiple times is not a good idea.</p>
 <pre width=80>
 64tass --vice-labels -l all.l --export-labels --labels-root=export -l myexport.inc source.asm
 </pre>
 <p>This writes symbols for VICE into <q>all.l</q> and symbols from scope
 <q>export</q> into <q>myexport.inc</q>.</p>
 
+<dt><b>--labels-root</b>=&lt;path&gt;<a name="o_labels-root" href="#o_labels-root"></a>
+<dd>Specify the scope to list labels from
+<p>This option can be used to limit the output to only a subset of labels. The
+parameter is a dot separated path to a scope started from the global scope.</p>
+
+<dt><b>--normal-labels</b><a name="o_normal-labels" href="#o_normal-labels"></a>
+<dd>Lists labels in a 64tass readable format. (default)
+<p>List labels without any side effects. Usually for display purposes or for later
+include.</p>
+
 <dt><b>--export-labels</b><a name="o_export-labels" href="#o_export-labels"></a>
-<dd>List labels in a 64tass readable format.
+<dd>List labels for include in a 64tass readable format.
 <p>The difference to normal symbol listing is that 64tass assumes these
 symbols will be used in another source. In practice this means that any
 <a href="#d_proc"><code>.proc</code></a>/<a
@@ -3872,10 +3890,6 @@ uses numeric constants for addresses only this may be acceptable.</p>
 <dd>List labels for debugging.
 <p>The output will contain symbol locations and paths.</p>
 
-<dt><b>--labels-root</b>=&lt;path&gt;<a name="o_labels-root" href="#o_labels-root"></a>
-<dd>Specify the scope to list labels from
-<p>This option can be used to limit the output to only a subset of labels. The
-parameter is a dot separated path to a scope started from the global scope.</p>
 </dl>
 
 <h3>Assembly listing<a name="commandline-assembly" href="#commandline-assembly"></a></h3>

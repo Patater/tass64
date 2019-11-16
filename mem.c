@@ -39,47 +39,46 @@ static int memblockcomp(const void *a, const void *b) {
     return (ad > bd) ? 1 : 0;
 }
 
-static void memcomp(Memblocks *memblocks) {
+static void memcomp(Memblocks *memblocks, bool nomerge) {
     unsigned int i, j, k;
-    if (memblocks->compressed) return;
-    memblocks->compressed = true;
-    memjmp(memblocks, 0);
+    if (!memblocks->flattened) {
+        memblocks->flattened = true;
+        memjmp(memblocks, 0);
 
-    for (j = 0; j < memblocks->p; j++) { /* replace references with real copies */
-        Memblocks *b = memblocks->data[j].ref;
-        if (b != NULL) {
-            size_t rest;
-            memcomp(b);
-            rest = memblocks->p - j - 1;
-            memblocks->p += b->p - 1;
-            if (memblocks->p >= memblocks->len) {
-                memblocks->len = memblocks->p + 64;
-                if (/*memblocks->len < 64 ||*/ memblocks->len > SIZE_MAX / sizeof *memblocks->data) err_msg_out_of_memory(); /* overflow */
-                memblocks->data = (struct memblock_s *)reallocx(memblocks->data, memblocks->len * sizeof *memblocks->data);
-            }
-            memmove(&memblocks->data[j + b->p], &memblocks->data[j + 1], rest * sizeof *memblocks->data);
-            for (k = 0; k < b->p; k++) {
-                struct memblock_s *b2 = &memblocks->data[j + k];
-                b2->p = memblocks->mem.p;
-                b2->len = b->data[k].len;
-                b2->ref = NULL;
-                b2->addr = b->data[k].addr;
-                memblocks->mem.p += b2->len;
-                if (memblocks->mem.p >= memblocks->mem.len) {
-                    memblocks->mem.len = memblocks->mem.p + 0x1000;
-                    if (memblocks->mem.len < 0x1000) err_msg_out_of_memory(); /* overflow */
-                    memblocks->mem.data = (uint8_t *)reallocx(memblocks->mem.data, memblocks->mem.len);
+        for (j = 0; j < memblocks->p; j++) { /* replace references with real copies */
+            Memblocks *b = memblocks->data[j].ref;
+            if (b != NULL) {
+                size_t rest;
+                memcomp(b, nomerge);
+                rest = memblocks->p - j - 1;
+                memblocks->p += b->p - 1;
+                if (memblocks->p >= memblocks->len) {
+                    memblocks->len = memblocks->p + 64;
+                    if (/*memblocks->len < 64 ||*/ memblocks->len > SIZE_MAX / sizeof *memblocks->data) err_msg_out_of_memory(); /* overflow */
+                    memblocks->data = (struct memblock_s *)reallocx(memblocks->data, memblocks->len * sizeof *memblocks->data);
                 }
-                memcpy(&memblocks->mem.data[b2->p], &b->mem.data[b->data[k].p], b2->len);
+                memmove(&memblocks->data[j + b->p], &memblocks->data[j + 1], rest * sizeof *memblocks->data);
+                for (k = 0; k < b->p; k++) {
+                    struct memblock_s *b2 = &memblocks->data[j + k];
+                    b2->p = memblocks->mem.p;
+                    b2->len = b->data[k].len;
+                    b2->ref = NULL;
+                    b2->addr = b->data[k].addr;
+                    memblocks->mem.p += b2->len;
+                    if (memblocks->mem.p >= memblocks->mem.len) {
+                        memblocks->mem.len = memblocks->mem.p + 0x1000;
+                        if (memblocks->mem.len < 0x1000) err_msg_out_of_memory(); /* overflow */
+                        memblocks->mem.data = (uint8_t *)reallocx(memblocks->mem.data, memblocks->mem.len);
+                    }
+                    memcpy(&memblocks->mem.data[b2->p], &b->mem.data[b->data[k].p], b2->len);
+                }
+                j--;
+                val_destroy(&b->v);
             }
-            j--;
-            val_destroy(&b->v);
         }
     }
-    if (memblocks->p < 2) return;
-    if (arguments.output.mode == OUTPUT_XEX ||
-            arguments.output.mode == OUTPUT_IHEX ||
-            arguments.output.mode == OUTPUT_SREC) return;
+    if (memblocks->p < 2 || nomerge || memblocks->merged) return;
+    memblocks->merged = true;
 
     for (k = j = 0; j < memblocks->p; j++) {
         struct memblock_s *bj = &memblocks->data[j];
@@ -160,7 +159,7 @@ void memprint(Memblocks *memblocks) {
     bool over;
     address_t start, end;
 
-    memcomp(memblocks);
+    memcomp(memblocks, false);
 
     if (memblocks->p == 0) return;
 
@@ -463,7 +462,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     bool binary = (output->mode != OUTPUT_IHEX) && (output->mode != OUTPUT_SREC);
     int err;
 
-    memcomp(memblocks);
+    memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC);
 
     if (memblocks->mem.p == 0) return;
 

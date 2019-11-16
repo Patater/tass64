@@ -4906,15 +4906,20 @@ int main2(int *argc2, char **argv2[]) {
 
     if (error_serious()) {status();return EXIT_FAILURE;}
 
-    {
-        struct section_s *section = find_this_section(arguments.output.section);
+    for (j = 0; j < arguments.output_len; j++) {
+        const struct output_s *output = &arguments.output[j];
+        struct section_s *section = find_this_section(output->section);
         if (section == NULL) {
             str_t sectionname;
             sectionname.data = pline;
             sectionname.len = lpoint.pos;
             err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
+        } else if (j == arguments.output_len - 1) { 
+            output_mem(section->address.mem, output);
         } else {
-            output_mem(section->address.mem, &arguments.output);
+            Memblocks *tmp = copy_memblocks(section->address.mem);
+            output_mem(tmp, output);
+            val_destroy(&tmp->v);
         }
     }
 

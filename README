@@ -2686,6 +2686,15 @@ Output options
 
     64tass a.asm -o a.prg
 
+    This option may be used multiple times to output different sections in
+    different formats of a single compilation.
+
+    For multiple outputs the format options and output section selection must
+    be placed before this option. The format selection will be unchanged if no
+    new selection was made but the output section selection must be repeated
+    for each output. The maximum image size will be the smallest of all
+    selected formats. Using the same name multiple times is not a good idea.
+
 --output-section <sectionname>
     By default all sections go into the output file. Using this option limits
     the output to specific section and it's children. This is useful to split a
@@ -3398,15 +3407,28 @@ Symbol listing
     label           = $1000
 
     This option may be used multiple times. In this case the format and root
-    scope options must be placed before using this option.
+    scope options must be placed before this option. Using the same name
+    multiple times is not a good idea.
 
     64tass --vice-labels -l all.l --export-labels --labels-root=export -l myexport.inc source.asm
 
     This writes symbols for VICE into `all.l' and symbols from scope `export'
     into `myexport.inc'.
 
+--labels-root=<path>
+    Specify the scope to list labels from
+
+    This option can be used to limit the output to only a subset of labels. The
+    parameter is a dot separated path to a scope started from the global scope.
+
+--normal-labels
+    Lists labels in a 64tass readable format. (default)
+
+    List labels without any side effects. Usually for display purposes or for
+    later include.
+
 --export-labels
-    List labels in a 64tass readable format.
+    List labels for include in a 64tass readable format.
 
     The difference to normal symbol listing is that 64tass assumes these
     symbols will be used in another source. In practice this means that any
@@ -3463,12 +3485,6 @@ Symbol listing
     List labels for debugging.
 
     The output will contain symbol locations and paths.
-
---labels-root=<path>
-    Specify the scope to list labels from
-
-    This option can be used to limit the output to only a subset of labels. The
-    parameter is a dot separated path to a scope started from the global scope.
 
 Assembly listing
 

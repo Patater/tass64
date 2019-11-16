@@ -39,7 +39,7 @@ typedef struct Memblocks {
     size_t p, len;
     size_t lastp;
     address_t lastaddr;
-    bool compressed;
+    bool flattened, merged;
     struct memblock_s *data;
 } Memblocks;
 
@@ -50,4 +50,5 @@ static inline Memblocks *ref_memblocks(Memblocks *v1) {
 }
 
 extern MALLOC Memblocks *new_memblocks(size_t, size_t);
+extern MALLOC Memblocks *copy_memblocks(Memblocks *);
 #endif
