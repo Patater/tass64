@@ -1808,9 +1808,8 @@ MUST_CHECK Obj *compile(void)
     bool nobreak = true;
     str_t labelname;
     struct anonident_s {
-        uint8_t dir;
-        uint8_t padding[3];
-        int32_t count;
+        uint8_t dir, pad;
+        uint8_t count[sizeof(uint32_t)];
     } anonident;
     struct {
         uint8_t type;
@@ -1931,8 +1930,16 @@ MUST_CHECK Obj *compile(void)
                         lpoint.pos += 3;
                     } else break;
 
-                    if (labelname.data[0] == '-') {current_context->backr--;((struct anonident_s *)labelname.data)->count--;}
-                    else if (labelname.data[0] == '+') {current_context->forwr--;((struct anonident_s *)labelname.data)->count--;}
+                    if (labelname.data == (const uint8_t *)&anonident) {
+                        uint32_t count = (uint32_t)((anonident.dir == '-') ? --current_context->backr :  --current_context->forwr);
+                        count--;
+                        labelname.len = 2;
+                        while (count != 0) {
+                            anonident.count[labelname.len - 2] = count;
+                            labelname.len++;
+                            count >>= 8;
+                        }
+                    }
                     ignore();
                     epoint2 = lpoint;
                     if (labelname.data[0] == '*') {
@@ -2920,11 +2927,18 @@ MUST_CHECK Obj *compile(void)
                 case '\t':
                 case ';':
                 case '\0':
-                    if (sizeof(anonident) != sizeof(anonident.dir) + sizeof(anonident.padding) + sizeof(anonident.count)) memset(&anonident, 0, sizeof anonident);
-                    else memset(anonident.padding, 0, sizeof anonident.padding);
-                    anonident.dir = (uint8_t)wht;
-                    anonident.count = (int32_t)((wht == '-') ? current_context->backr++ : current_context->forwr++);
-                    labelname.data = (const uint8_t *)&anonident;labelname.len = sizeof anonident;
+                    {
+                        uint32_t count = (uint32_t)((wht == '-') ? current_context->backr++ : current_context->forwr++);
+                        anonident.dir = (uint8_t)wht;
+                        anonident.pad = 0;
+                        labelname.len = 2;
+                        while (count != 0) {
+                            anonident.count[labelname.len - 2] = count;
+                            labelname.len++;
+                            count >>= 8;
+                        }
+                        labelname.data = (const uint8_t *)&anonident;
+                    }
                     goto hh;
                 default:
                     lpoint.pos--;
