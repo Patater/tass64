@@ -313,17 +313,16 @@ Label *find_label2(const str_t *name, Namespace *context) {
     return namespace_lookup(context, &label);
 }
 
-static struct {
-    uint8_t dir;
-    uint8_t padding[3];
-    int32_t count;
-} anon_idents;
+struct anonident_s {
+    uint8_t dir, pad;
+    uint8_t count[sizeof(uint32_t)];
+};
 
 Label *find_label3(const str_t *name, Namespace *context, uint8_t strength) {
     Label label;
 
     label.strength = strength;
-    if (name->len == sizeof anon_idents && name->data[1] == 0) label.cfname = *name;
+    if (name->len > 1 && name->data[1] == 0) label.cfname = *name;
     else str_cfcpy(&label.cfname, name);
     label.hash = str_hash(&label.cfname);
 
@@ -334,15 +333,23 @@ Label *find_anonlabel(int32_t count) {
     size_t p = context_stack.p;
     Namespace *context;
     Label label;
+    struct anonident_s anonident;
 
-    anon_idents.dir = (count >= 0) ? '+' : '-';
+    anonident.dir = (count >= 0) ? '+' : '-';
+    anonident.pad = 0;
 
-    label.cfname.data = (const uint8_t *)&anon_idents;
-    label.cfname.len = sizeof anon_idents;
+    label.cfname.data = (const uint8_t *)&anonident;
 
     while (context_stack.bottom < p) {
         context = context_stack.stack[--p].normal;
-        anon_idents.count = (int32_t)((count >= 0) ? context->forwr : context->backr) + count;
+        uint32_t count2 = (uint32_t)((int32_t)((count >= 0) ? context->forwr : context->backr) + count);
+        label.cfname.len = 2;
+        while (count2 != 0) {
+            anonident.count[label.cfname.len - 2] = count2;
+            label.cfname.len++;
+            count2 >>= 8;
+        } 
+
         label.hash = str_hash(&label.cfname);
         return namespace_lookup(context, &label);
     }
@@ -351,12 +358,19 @@ Label *find_anonlabel(int32_t count) {
 
 Label *find_anonlabel2(int32_t count, Namespace *context) {
     Label label;
+    uint32_t count2 = (uint32_t)((int32_t)((count >= 0) ? 0 : context->backr) + count);
+    struct anonident_s anonident;
 
-    anon_idents.dir = (count >= 0) ? '+' : '-';
-    anon_idents.count = (int32_t)((count >= 0) ? 0 : context->backr) + count;
+    anonident.dir = (count >= 0) ? '+' : '-';
+    anonident.pad = 0;
 
-    label.cfname.data = (const uint8_t *)&anon_idents;
-    label.cfname.len = sizeof anon_idents;
+    label.cfname.data = (const uint8_t *)&anonident;
+    label.cfname.len = 2;
+    while (count2 != 0) {
+        anonident.count[label.cfname.len - 2] = count2;
+        label.cfname.len++;
+        count2 >>= 8;
+    } 
     label.hash = str_hash(&label.cfname);
 
     return namespace_lookup(context, &label);
