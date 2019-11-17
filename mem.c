@@ -147,36 +147,26 @@ void memref(Memblocks *memblocks, Memblocks *ref) {
     block->addr = memblocks->lastaddr;
 }
 
-static void printrange(address_t start, address_t end) {
-    char temp[10], temp2[10];
-    sprintf(temp, "$%04" PRIaddress, start);
-    sprintf(temp2, "$%04" PRIaddress, end-1);
-    printf("Memory range: %10s-%-7s $%04" PRIaddress "\n", temp, temp2, end-start);
-}
-
 void memprint(Memblocks *memblocks) {
-    unsigned int i;
-    bool over;
-    address_t start, end;
+    size_t i;
+    char temp[10], temp2[10];
 
     memcomp(memblocks, false);
 
-    if (memblocks->p == 0) return;
-
-    i = 0;
-    start = memblocks->data[i].addr;
-    end = memblocks->data[i].addr + memblocks->data[i].len;
-    over = end < start;
-    for (i++; i < memblocks->p; i++) {
+    for (i = 0; i < memblocks->p;) {
         const struct memblock_s *block = &memblocks->data[i];
-        if (block->addr != end || over) {
-            printrange(start, end);
-            start = block->addr;
+        address_t start = block->addr;
+        address_t size = block->len;
+        for (i++; i < memblocks->p; i++) {
+            const struct memblock_s *b = &memblocks->data[i];
+            address_t addr = start + size;
+            if (b->addr != addr || addr < start) break;
+            size += b->len;
         }
-        end = block->addr + block->len;
-        over = end < block->addr;
+        sprintf(temp, "$%04" PRIaddress, start);
+        sprintf(temp2, "$%04" PRIaddress, (address_t)(start + size - 1));
+        printf("Memory range: %10s-%-7s $%04" PRIaddress "\n", temp, temp2, size);
     }
-    printrange(start, end);
 }
 
 static void putlw(unsigned int w, FILE *f) {
@@ -209,7 +199,7 @@ static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct 
         end -= pos;
         putlw(end, fout);
     } else if (output->mode == OUTPUT_CBM) {
-        if (output->longaddr) putc(pos >> 16,fout);
+        if (output->longaddr) putc(pos >> 16, fout);
     }
     for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *block = &memblocks->data[i];
@@ -220,36 +210,23 @@ static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct 
 }
 
 static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool longaddr) {
-    address_t start, size;
-    unsigned int i, last;
-
-    if (memblocks->p != 0) {
-        i = 0;
-        start = memblocks->data[i].addr;
-        size = memblocks->data[i].len;
-        last = i;
-        for (i++; i < memblocks->p; i++) {
-            const struct memblock_s *block = &memblocks->data[i];
-            if (block->addr != start + size) {
-                putlw(size,fout);
-                if (longaddr) putc(size >> 16,fout);
-                putlw(start,fout);
-                if (longaddr) putc(start >> 16,fout);
-                while (last < i) {
-                    const struct memblock_s *b = &memblocks->data[last++];
-                    if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
-                }
-                start = block->addr;
-                size = 0;
-            }
-            size += block->len;
+    size_t i, j;
+    for (i = 0; i < memblocks->p;) {
+        const struct memblock_s *block = &memblocks->data[i];
+        address_t start = block->addr;
+        address_t size = block->len;
+        for (j = i + 1; j < memblocks->p; j++) {
+            const struct memblock_s *b = &memblocks->data[j];
+            address_t addr = start + size;
+            if (b->addr != addr || addr < start) break;
+            size += b->len;
         }
-        putlw(size,fout);
+        putlw(size, fout);
         if (longaddr) putc(size >> 16, fout);
         putlw(start, fout);
-        if (longaddr) putc(start >> 16,fout);
-        while (last < i) {
-            const struct memblock_s *b = &memblocks->data[last++];
+        if (longaddr) putc(start >> 16, fout);
+        for (;i < j; i++) {
+            const struct memblock_s *b = &memblocks->data[i];
             if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
         }
     }
@@ -259,7 +236,7 @@ static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool lo
 
 static void output_mem_flat(FILE *fout, const Memblocks *memblocks) {
     address_t pos;
-    unsigned int i;
+    size_t i;
 
     for (pos = i = 0; i < memblocks->p; i++) {
         const struct memblock_s *block = &memblocks->data[i];
@@ -270,35 +247,24 @@ static void output_mem_flat(FILE *fout, const Memblocks *memblocks) {
 }
 
 static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks) {
-    address_t start, size;
-    unsigned int i, last;
-
-    if (memblocks->p == 0) return;
-    i = 0;
-    start = memblocks->data[i].addr;
-    size = memblocks->data[i].len;
-    last = i;
-    for (i++; i < memblocks->p; i++) {
+    size_t i, j;
+    for (i = 0; i < memblocks->p;) {
         const struct memblock_s *block = &memblocks->data[i];
-        if (block->addr != start + size) {
-            if (last == 0 || start == 0xffff) putlw(0xffff, fout);
-            putlw(start, fout);
-            putlw(start + size - 1, fout);
-            while (last < i) {
-                const struct memblock_s *b = &memblocks->data[last++];
-                if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
-            }
-            start = block->addr;
-            size = 0;
+        address_t start = block->addr;
+        address_t size = block->len;
+        for (j = i + 1; j < memblocks->p; j++) {
+            const struct memblock_s *b = &memblocks->data[j];
+            address_t addr = start + size;
+            if (b->addr != addr || addr < start) break;
+            size += b->len;
         }
-        size += block->len;
-    }
-    if (last == 0 || start == 0xffff) putlw(0xffff, fout);
-    putlw(start, fout);
-    putlw(start + size - 1, fout);
-    while (last < i) {
-        const struct memblock_s *b = &memblocks->data[last++];
-        if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
+        if (i == 0 || start == 0xffff) putlw(0xffff, fout);
+        putlw(start, fout);
+        putlw(start + size - 1, fout);
+        for (;i < j; i++) {
+            const struct memblock_s *b = &memblocks->data[i];
+            if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
+        }
     }
 }
 
@@ -356,7 +322,6 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
     struct ihex_s ihex;
     size_t i;
 
-    if (memblocks->p == 0) return;
     ihex.file = fout;
     ihex.address = 0;
     ihex.segment = 0;
@@ -416,7 +381,6 @@ static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
     struct srecord_s srec;
     size_t i;
 
-    if (memblocks->p == 0) return;
     srec.file = fout;
     srec.type = 0;
     srec.address = 0;
