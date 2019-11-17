@@ -463,7 +463,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 err = new_error(ERROR___NO_REGISTER, epoint2);
                 err->u.reg.reg = ref_register(cpureg);
                 err->u.reg.cod = mnemonic[prm];
-                return err;
+                err_msg_output_and_destroy(err);
+                val = &none_value->v;
             }
             if (cnmemonic[ADR_REL] != ____) {
                 struct star_s *s;
