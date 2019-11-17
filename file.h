@@ -33,6 +33,7 @@ struct file_s {
     const char *name;
     const char *realname;
     str_t base;
+    int hash;
     uint8_t *nomacro;
     size_t *line;
     line_t lines;
@@ -47,7 +48,6 @@ struct file_s {
     uint8_t pass;
     uint8_t entercount;
     Encoding_types encoding;
-    struct avltree_node node;
 };
 
 struct star_s {
