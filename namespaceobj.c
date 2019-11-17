@@ -94,13 +94,13 @@ static FAST_CALL void garbage(Obj *o1, int j) {
     }
 }
 
-static struct Label *namespace_lookup(const Namespace *ns, const struct Label *p) {
+static Label *namespace_lookup(const Namespace *ns, const Label *p) {
     size_t mask = ns->mask;
     size_t hash = (size_t)p->hash;
     size_t offs = hash & mask;
     if (ns->data == NULL) return NULL;
     while (ns->data[offs] != NULL) {
-        struct Label *d = ns->data[offs];
+        Label *d = ns->data[offs];
         if (p->hash == d->hash && p->strength == d->strength) {
             if (d->defpass == pass || (d->constant && (!fixeddig || d->defpass == pass - 1))) {
                 const str_t *s1 = &p->cfname;
@@ -161,7 +161,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         vals = tuple->data;
         ln = chars;
         for (n = 0; n <= v1->mask; n++) {
-            struct Label *p = v1->data[n];
+            Label *p = v1->data[n];
             Obj *v;
             if (p == NULL) continue;
             if (p->defpass != pass && !(p->constant && (!fixeddig || p->defpass == pass - 1))) {

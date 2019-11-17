@@ -155,11 +155,11 @@ size_t context_get_bottom(void) {
 
 /* --------------------------------------------------------------------------- */
 
-static struct Label *namespace_update(Namespace *ns, struct Label *p) {
+static Label *namespace_update(Namespace *ns, Label *p) {
     size_t mask, hash, offs;
     if (ns->len * 3 / 2 >= ns->mask) {
         size_t i, max = (ns->data == NULL) ? 8 : (ns->mask + 1) << 1;
-        Label **n = (struct Label **)calloc(max, sizeof *n);
+        Label **n = (Label **)calloc(max, sizeof *n);
         if (n == NULL) err_msg_out_of_memory();
         mask = max - 1;
         if (ns->data != NULL) {
@@ -181,7 +181,7 @@ static struct Label *namespace_update(Namespace *ns, struct Label *p) {
     hash = (size_t)p->hash;
     offs = hash & mask;
     while (ns->data[offs] != NULL) {
-        struct Label *d = ns->data[offs];
+        Label *d = ns->data[offs];
         if (p->hash == d->hash && p->strength == d->strength) {
             const str_t *s1 = &p->cfname;
             const str_t *s2 = &d->cfname;
@@ -197,14 +197,14 @@ static struct Label *namespace_update(Namespace *ns, struct Label *p) {
     return NULL;
 }
 
-static struct Label *namespace_lookup(const Namespace *ns, const struct Label *p) {
-    struct Label *ret = NULL;
+static Label *namespace_lookup(const Namespace *ns, const Label *p) {
+    Label *ret = NULL;
     size_t mask = ns->mask;
     size_t hash = (size_t)p->hash;
     size_t offs = hash & mask;
     if (ns->data == NULL) return ret;
     while (ns->data[offs] != NULL) {
-        struct Label *d = ns->data[offs];
+        Label *d = ns->data[offs];
         if (p->hash == d->hash) {
             if (d->defpass == pass || (d->constant && (!fixeddig || d->defpass == pass - 1))) {
                 const str_t *s1 = &p->cfname;
@@ -221,13 +221,13 @@ static struct Label *namespace_lookup(const Namespace *ns, const struct Label *p
     return ret;
 }
 
-static struct Label *namespace_lookup2(const struct Label *p) {
+static Label *namespace_lookup2(const Label *p) {
     const Namespace *ns = builtin_namespace;
     size_t mask = ns->mask;
     size_t hash = (size_t)p->hash;
     size_t offs = hash & mask;
     while (ns->data[offs] != NULL) {
-        struct Label *d = ns->data[offs];
+        Label *d = ns->data[offs];
         if (p->hash == d->hash) {
             const str_t *s1 = &p->cfname;
             const str_t *s2 = &d->cfname;
@@ -241,13 +241,13 @@ static struct Label *namespace_lookup2(const struct Label *p) {
     return NULL;
 }
 
-static struct Label *namespace_lookup3(const Namespace *ns, const struct Label *p) {
+static Label *namespace_lookup3(const Namespace *ns, const Label *p) {
     size_t mask = ns->mask;
     size_t hash = (size_t)p->hash;
     size_t offs = hash & mask;
     if (ns->data == NULL) return NULL;
     while (ns->data[offs] != NULL) {
-        struct Label *d = ns->data[offs];
+        Label *d = ns->data[offs];
         if (p->hash == d->hash && p->strength == d->strength) {
             const str_t *s1 = &p->cfname;
             const str_t *s2 = &d->cfname;
@@ -262,7 +262,7 @@ static struct Label *namespace_lookup3(const Namespace *ns, const struct Label *
 }
 
 Label *find_label(const str_t *name, Namespace **here) {
-    struct Label *c;
+    Label *c;
     size_t p = context_stack.p;
     Label label;
 
@@ -378,7 +378,7 @@ Label *find_anonlabel2(int32_t count, Namespace *context) {
 
 /* --------------------------------------------------------------------------- */
 Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *exists, const struct file_list_s *cflist) {
-    struct Label *b;
+    Label *b;
     Label *tmp;
     if (lastlb == NULL) lastlb = (Label *)val_alloc(LABEL_OBJ);
 
@@ -425,7 +425,7 @@ void unused_check(Namespace *names) {
     names->len = 0;
 
     for (n = 0; n <= names->mask; n++) {
-        struct Label *key2 = names->data[n];
+        Label *key2 = names->data[n];
         Obj *o;
         Namespace *ns;
 
@@ -516,7 +516,7 @@ static void labelprint2(Namespace *names, FILE *flab, int labelmode) {
     names->len = 0;
 
     for (n = 0; n <= names->mask; n++) {
-        struct Label *l = names->data[n];
+        Label *l = names->data[n];
         if (l == NULL || l->name.data == NULL) continue;
         if (l->name.len > 1 && l->name.data[1] == 0) continue;
         switch (l->value->obj->type) {
@@ -604,7 +604,7 @@ static void labeldump(Namespace *names, FILE *flab) {
     names->len = 0;
 
     for (n = 0; n <= names->mask; n++) {
-        struct Label *l2 = names->data[n];
+        Label *l2 = names->data[n];
         Namespace *ns;
 
         if (l2 == NULL) continue;
@@ -728,7 +728,7 @@ void ref_labels(void) {
         if (space == NULL) continue;
 
         for (n = 0; n <= space->mask; n++) {
-            struct Label *l = space->data[n];
+            Label *l = space->data[n];
             if (l == NULL || l->name.data == NULL) continue;
             if (l->name.len > 1 && l->name.data[1] == 0) continue;
             switch (l->value->obj->type) {
