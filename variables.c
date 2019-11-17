@@ -159,9 +159,9 @@ static struct Label *namespace_update(Namespace *ns, struct Label *p) {
     size_t mask, hash, offs;
     if (ns->len * 3 / 2 >= ns->mask) {
         size_t i, max = (ns->data == NULL) ? 8 : (ns->mask + 1) << 1;
-        mask = max - 1;
         Label **n = (struct Label **)calloc(max, sizeof *n);
         if (n == NULL) err_msg_out_of_memory();
+        mask = max - 1;
         if (ns->data != NULL) {
             for (i = 0; i <= ns->mask; i++) if (ns->data[i] != NULL) {
                 hash = (size_t)ns->data[i]->hash;
