@@ -59,7 +59,7 @@ void include_list_add(const char *path)
     if (path[i - 1] != '/') j++;
 #endif
     len = j + 1 + sizeof(struct include_list_s);
-    if (len < sizeof(struct include_list_s)) err_msg_out_of_memory();
+    if (len <= sizeof(struct include_list_s)) err_msg_out_of_memory();
     include_list_last->next = (struct include_list_s *)mallocx(len);
     include_list_last = include_list_last->next;
     include_list_last->next = NULL;
@@ -96,10 +96,8 @@ char *get_path(const str_t *v, const char *base) {
 #else
     i = (v->len != 0 && v->data[0] == '/') ? 0 : get_base(base);
 #endif
-    len = i + v->len;
-    if (len < i) err_msg_out_of_memory(); /* overflow */
-    len += 1;
-    if (len < 1) err_msg_out_of_memory(); /* overflow */
+    len = i + 1 + v->len;
+    if (len <= i) err_msg_out_of_memory(); /* overflow */
     path = (char *)mallocx(len);
     memcpy(path, base, i);
     memcpy(path + i, v->data, v->len);
