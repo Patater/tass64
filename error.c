@@ -1364,7 +1364,12 @@ static void color_detect(FILE *f) {
 #define color_detect(f) {}
 #endif
 
+static inline bool caret_needed(const struct errorentry_s *err) {
+    return (arguments.caret == CARET_ALWAYS || (arguments.caret != CARET_NEVER && (err->line_len != 0 || err->file_list->file->name[0] == 0)));
+}
+
 static bool different_line(const struct errorentry_s *err, const struct errorentry_s *err2) {
+    if (!caret_needed(err2)) return false;
     if (err->file_list->file != err2->file_list->file || err->line_len != err2->line_len ||
             err->epoint.line != err2->epoint.line || err->epoint.pos != err2->epoint.pos) return true;
     if (err->line_len == 0) return false;
@@ -1434,7 +1439,7 @@ bool error_print(void) {
                         err->line_len != err3->line_len || err->error_len != err3->error_len ||
                         err->epoint.line != err3->epoint.line || err->epoint.pos != err3->epoint.pos ||
                         memcmp(err + 1, err3 + 1, err->line_len + err->error_len) != 0) {
-                    print_error(ferr, err3, (arguments.caret == CARET_ALWAYS || (arguments.caret != CARET_NEVER && err3->line_len != 0)) && different_line(err, err3));
+                    print_error(ferr, err3, different_line(err, err3));
                 }
             }
             err3 = err2;
@@ -1461,13 +1466,13 @@ bool error_print(void) {
             errors++;
             break;
         }
-        if (err3 != NULL) print_error(ferr, err3, (arguments.caret == CARET_ALWAYS || (arguments.caret != CARET_NEVER && err3->line_len != 0)) && different_line(err2, err3));
+        if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
         err3 = err2;
         err2 = err;
         usenote = true;
     }
-    if (err3 != NULL) print_error(ferr, err3, (arguments.caret == CARET_ALWAYS || (arguments.caret != CARET_NEVER && err3->line_len != 0)) && different_line(err2, err3));
-    if (err2 != NULL) print_error(ferr, err2, (arguments.caret == CARET_ALWAYS || (arguments.caret != CARET_NEVER && err2->line_len != 0)));
+    if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
+    if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
     color_detect(stderr);
     if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
     return errors != 0;
