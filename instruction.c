@@ -438,9 +438,30 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (am != A_NONE) {
                 adrgen = adrmatch(cnmemonic, prm, am, w, &opr);
                 if (adrgen != AG_NONE) {
-                    if (opr == ADR_REL) {
+                    switch (opr) {
+                    case ADR_REL:
                         ln = 1; longbranch = 0;
                         goto justrel2;
+                    case ADR_IMMEDIATE: 
+                        if (pline[epoints[0].pos] == '#') epoints[0].pos++; 
+                        break;
+                    case ADR_ZP_I_Y:
+                    case ADR_ZP_I_Z:
+                    case ADR_ZP_S_I_Y:
+                    case ADR_ZP_R_I_Y:
+                    case ADR_ADDR_X_I:
+                    case ADR_ZP_X_I:
+                    case ADR_ADDR_I:
+                    case ADR_ZP_I:
+                        if (pline[epoints[0].pos] == '(') epoints[0].pos++; 
+                        break;
+                    case ADR_ZP_LI_Y:
+                    case ADR_ADDR_LI:
+                    case ADR_ZP_LI:
+                        if (pline[epoints[0].pos] == '[') epoints[0].pos++; 
+                        break;
+                    default:
+                        break;
                     }
                     break;
                 }
