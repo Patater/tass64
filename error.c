@@ -1047,7 +1047,6 @@ static const char * const opr_names[ADR_LEN] = {
     "direct page y indexed", /* ADR_ZP_Y */
     "", /* ADR_ZP_LI_Y */
     "", /* ADR_ZP_I_Y */
-    "", /* ADR_ZP_I_Z */
     "", /* ADR_ADDR_LI */
     "", /* ADR_ZP_LI */
     "", /* ADR_ADDR_I */

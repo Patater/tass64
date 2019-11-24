@@ -296,14 +296,14 @@ static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned i
         return AG_NONE;
     case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_I << 4) | A_ZR:/* lda (#$ff,d),z */
     case (A_DR << 8) | (A_I << 4) | A_ZR:
-        if (cnmemonic[ADR_ZP_I_Z] != ____) {
-            adrgen = AG_BYTE; *opr = ADR_ZP_I_Z; /* lda ($ff,d),z */
+        if (cnmemonic[ADR_ZP_I] != ____ && opcode == c65ce02.opcode) {
+            adrgen = AG_BYTE; *opr = ADR_ZP_I; /* lda ($ff,d),z */
             break;
         }
         return AG_NONE;
     case (A_I << 4) | A_ZR:
-        if (cnmemonic[ADR_ZP_I_Z] != ____) {
-            adrgen = AG_ZP; *opr = ADR_ZP_I_Z; /* lda ($ff),z */
+        if (cnmemonic[ADR_ZP_I] != ____ && opcode == c65ce02.opcode) {
+            adrgen = AG_ZP; *opr = ADR_ZP_I; /* lda ($ff),z */
             break;
         }
         return AG_NONE;
@@ -364,14 +364,14 @@ static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned i
             adrgen = AG_B0; *opr = ADR_ADDR_I; /* jmp ($ffff) */
             break;
         }
-        if (cnmemonic[ADR_ZP_I] != ____) {
+        if (cnmemonic[ADR_ZP_I] != ____ && opcode != c65ce02.opcode) {
             adrgen = AG_ZP; *opr = ADR_ZP_I; /* lda ($ff) */
             break;
         }
         return AG_NONE;
     case (A_IMMEDIATE << 8) | (A_DR << 4) | A_I: /* lda (#$ff,d) */
     case (A_DR << 4) | A_I:
-        if (cnmemonic[ADR_ZP_I] != ____) {
+        if (cnmemonic[ADR_ZP_I] != ____ && opcode != c65ce02.opcode) {
             adrgen = AG_BYTE; *opr = ADR_ZP_I; /* lda ($ff,d) */
             break;
         }
@@ -446,7 +446,6 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                         if (pline[epoints[0].pos] == '#') epoints[0].pos++; 
                         break;
                     case ADR_ZP_I_Y:
-                    case ADR_ZP_I_Z:
                     case ADR_ZP_S_I_Y:
                     case ADR_ZP_R_I_Y:
                     case ADR_ADDR_X_I:
