@@ -209,7 +209,7 @@ static MUST_CHECK Error *uaddress(Obj *o1, uval_t *uv, unsigned int bits, linepo
     if (v != NULL) return v;
     addr = code_address(v1);
     *uv = addr;
-    if ((addr >> bits) == 0) {
+    if (bits >= sizeof(addr)*8 || (addr >> bits) == 0) {
         if (v1->addr + v1->offs != addr) err_msg_addr_wrap(epoint);
         return NULL;
     }
