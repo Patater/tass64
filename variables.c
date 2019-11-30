@@ -262,9 +262,8 @@ static Label *namespace_lookup3(const Namespace *ns, const Label *p) {
 }
 
 Label *find_label(const str_t *name, Namespace **here) {
-    Label *c;
     size_t p = context_stack.p;
-    Label label;
+    Label label, *c;
 
     str_cfcpy(&label.cfname, name);
     label.hash = str_hash(&label.cfname);
@@ -332,7 +331,7 @@ Label *find_label3(const str_t *name, Namespace *context, uint8_t strength) {
 Label *find_anonlabel(int32_t count) {
     size_t p = context_stack.p;
     Namespace *context;
-    Label label;
+    Label label, *c;
     struct anonident_s anonident;
 
     anonident.dir = (count >= 0) ? '+' : '-';
@@ -351,7 +350,8 @@ Label *find_anonlabel(int32_t count) {
         } 
 
         label.hash = str_hash(&label.cfname);
-        return namespace_lookup(context, &label);
+        c = namespace_lookup(context, &label);
+        if (c != NULL) return c;
     }
     return NULL;
 }
@@ -379,7 +379,6 @@ Label *find_anonlabel2(int32_t count, Namespace *context) {
 /* --------------------------------------------------------------------------- */
 Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *exists, const struct file_list_s *cflist) {
     Label *b;
-    Label *tmp;
     if (lastlb == NULL) lastlb = (Label *)val_alloc(LABEL_OBJ);
 
     if (name->len > 1 && name->data[1] == 0) lastlb->cfname = *name;
@@ -400,9 +399,9 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
         lastlb->usepass = 0;
         lastlb->defpass = pass;
         *exists = false;
-        tmp = lastlb;
+        b = lastlb;
         lastlb = NULL;
-        return tmp;
+        return b;
     }
     *exists = true;
     return b;
