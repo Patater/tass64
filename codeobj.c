@@ -138,7 +138,7 @@ MUST_CHECK Error *code_uaddress(Obj *o1, uval_t *uv, uval_t *uv2, linepos_t epoi
     if (v != NULL) return v;
     *uv = v1->addr + v1->offs;
     *uv2 = v1->addr;
-    if ((*uv2 >> bits) == 0) {
+    if (bits >= sizeof(*uv2)*8 || (*uv2 >> bits) == 0) {
         return NULL;
     }
     v = new_error(ERROR_____CANT_UVAL, epoint);
