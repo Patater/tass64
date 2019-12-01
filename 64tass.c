@@ -2338,7 +2338,6 @@ MUST_CHECK Obj *compile(void)
                             bool labelexists;
                             listing_line(listing, 0);
                             new_waitfor(W_ENDF, &cmdpoint);waitfor->skip = 0;
-                            if (temporary_label_branch != 0) {err_msg2(ERROR___NOT_ALLOWED, ".function", &cmdpoint);goto breakerr;}
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             mfunc = (Mfunc *)val_alloc(MFUNC_OBJ);
                             mfunc->file_list = current_file_list;
