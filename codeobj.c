@@ -192,7 +192,7 @@ static MUST_CHECK Error *iaddress(Obj *o1, ival_t *iv, unsigned int bits, linepo
     if (v != NULL) return v;
     addr = code_address(v1);
     *iv = (ival_t)addr;
-    if ((addr >> (bits - 1)) != 0) {
+    if ((addr >> (bits - 1)) == 0) {
         if (v1->addr + v1->offs != addr) err_msg_addr_wrap(epoint);
         return NULL;
     }
