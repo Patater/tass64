@@ -415,9 +415,6 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
     struct DATA data;
     int state;
 
-    if (args < 1) {
-        return (Obj *)new_error_argnum(args, 1, 0, epoint);
-    }
     val = v[0].val;
     switch (val->obj->type) {
     case T_ERROR:
