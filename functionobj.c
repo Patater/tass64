@@ -697,7 +697,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     }
                     return gen_broadcast(v2, op->epoint, function_binary);
                 case F_FORMAT:
-                    return isnprintf(v2, op->epoint);
+                    if (args < 1) {
+                        return (Obj *)new_error_argnum(args, 1, 0, op->epoint2);
+                    }
+                    return gen_broadcast(v2, op->epoint, isnprintf);
                 case F_RANDOM:
                     if (args > 3) {
                         return (Obj *)new_error_argnum(args, 0, 3, op->epoint2);
