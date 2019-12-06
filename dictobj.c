@@ -358,10 +358,11 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
 
 static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     Colonlist *iter;
-    const Dict *vv1 = (Dict *)v1->data;
-    if (v1->val >= vv1->len) return NULL;
-    if (vv1->data[v1->val].data == NULL) {
-        return vv1->data[v1->val++].key;
+    const struct pair_s *p;
+    if (v1->val >= v1->len) return NULL;
+    p = &((Dict *)v1->data)->data[v1->val++];
+    if (p->data == NULL) {
+        return p->key;
     }
     iter = (Colonlist *)v1->iter;
     if (iter == NULL) {
@@ -377,8 +378,8 @@ static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     }
     iter->len = 2;
     iter->data = iter->u.val;
-    iter->data[0] = val_reference(vv1->data[v1->val].key);
-    iter->data[1] = val_reference(vv1->data[v1->val++].data);
+    iter->data[0] = val_reference(p->key);
+    iter->data[1] = val_reference(p->data);
     return &iter->v;
 }
 
