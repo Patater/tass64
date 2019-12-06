@@ -812,7 +812,7 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
 static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     Bytes *iter;
     const Bytes *vv1 = (Bytes *)v1->data;
-    if (v1->val >= byteslen(vv1)) return NULL;
+    if (v1->val >= v1->len) return NULL;
     iter = (Bytes *)v1->iter;
     if (iter == NULL) {
     renew:

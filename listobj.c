@@ -318,9 +318,8 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
 }
 
 static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
-    const List *vv1 = (List *)v1->data;
-    if (v1->val >= vv1->len) return NULL;
-    return vv1->data[v1->val++];
+    if (v1->val >= v1->len) return NULL;
+    return ((List *)v1->data)->data[v1->val++];
 }
 
 static MUST_CHECK Iter *getiter(Obj *v1) {
