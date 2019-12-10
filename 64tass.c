@@ -1480,6 +1480,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                         labels.data[j]->value = val_reference(val2);
                     }
                     if (iter2.len != labels.p) err_msg_cant_unpack(labels.p, iter2.len, epoint);
+                    iter_destroy(&iter2);
                 }
                 lpoint.line = lin;
                 waitfor->skip = 1; lvline = vline;
