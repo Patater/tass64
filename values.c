@@ -154,6 +154,11 @@ size_t val_print(Obj *v1, FILE *f) {
     return len;
 }
 
+FAST_CALL void iter_destroy(struct iter_s *v1) {
+    if (v1->iter != NULL) val_destroy(v1->iter);
+    val_destroy(v1->data);
+}
+
 void destroy_values(void)
 {
     size_t j;

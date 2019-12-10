@@ -24,10 +24,22 @@
 struct Type;
 struct Obj;
 
+struct iter_s;
+typedef FAST_CALL MUST_CHECK struct Obj *(*iter_next_t)(struct iter_s *);
+
+struct iter_s {
+    struct Obj *data;
+    struct Obj *iter;
+    size_t val;
+    iter_next_t next;
+    size_t len;
+};
+
 extern FAST_CALL MALLOC struct Obj *val_alloc(const struct Type *);
 extern FAST_CALL void val_destroy(struct Obj *);
 extern FAST_CALL void val_replace(struct Obj **, struct Obj *);
 extern size_t val_print(struct Obj *, FILE *);
+extern FAST_CALL void iter_destroy(struct iter_s *);
 
 extern void destroy_values(void);
 extern void garbage_collect(void);

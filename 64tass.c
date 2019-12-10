@@ -72,7 +72,6 @@
 #include "memblocksobj.h"
 #include "identobj.h"
 #include "dictobj.h"
-#include "iterobj.h"
 
 struct Listing *listing = NULL;
 int temporary_label_branch; /* function declaration in function context, not good */
@@ -575,8 +574,7 @@ static void textdump(struct textrecursion_s *trec, uval_t uval) {
 }
 
 static void textrecursion(struct textrecursion_s *trec, Obj *val) {
-    Iter *iter;
-    iter_next_t iter_next;
+    struct iter_s iter;
     Obj *val2 = NULL;
     uval_t uval;
 
@@ -603,7 +601,7 @@ retry:
     case T_FLOAT:
     case T_INT:
     case T_BOOL:
-        iter = NULL;
+        iter.data = NULL;
         val2 = val;
         goto doit;
     case T_CODE:
@@ -615,14 +613,14 @@ retry:
         }
     case T_ADDRESS:
         if (((Address *)val)->type != A_NONE) {
-            iter = NULL;
+            iter.data = NULL;
             val2 = val;
             goto doit;
         }
         val = ((Address *)val)->val;
         goto retry;
     case T_GAP:
-        iter = NULL;
+        iter.data = NULL;
         goto dogap;
     case T_BITS:
         {
@@ -630,7 +628,7 @@ retry:
             size_t bits = ((Bits *)val)->bits;
             if (bits == 0) return;
             if (bits <= 8) {
-                iter = NULL;
+                iter.data = NULL;
                 val2 = val;
                 goto doit;
             }
@@ -643,15 +641,14 @@ retry:
         trec->warn = true;
         return;
     case T_BYTES:
-        iter = NULL;
+        iter.data = NULL;
         val2 = val;
         goto dobytes;
     default:
-        iter = val->obj->getiter(val);
+        iter.data = val; val->obj->getiter(&iter);
     }
 
-    iter_next = iter->next;
-    while ((val2 = iter_next(iter)) != NULL) {
+    while ((val2 = iter.next(&iter)) != NULL) {
         if (val2->obj->iterable) goto rec;
         switch (val2->obj->type) {
         case T_BITS:
@@ -675,7 +672,7 @@ retry:
             }
             trec->len--;
             trec->sum++;
-            if (iter == NULL) return;
+            if (iter.data == NULL) return;
             break;
         case T_BYTES:
         dobytes:
@@ -701,7 +698,7 @@ retry:
                     }
                 }
             }
-            if (iter == NULL) return;
+            if (iter.data == NULL) return;
             break;
         default:
         doit:
@@ -709,14 +706,14 @@ retry:
             trec->sum++;
             if (trec->len < 0) { memskip(-trec->len, trec->epoint); trec->len = 0; }
             textdump(trec, uval);
-            if (iter == NULL) return;
+            if (iter.data == NULL) return;
             break;
         case T_NONE:
             trec->warn = true;
         }
         if (trec->sum >= trec->max) break;
     }
-    val_destroy(&iter->v);
+    iter_destroy(&iter);
 }
 
 struct byterecursion_s {
@@ -727,8 +724,7 @@ struct byterecursion_s {
 };
 
 static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int bits) {
-    Iter *iter;
-    iter_next_t iter_next;
+    struct iter_s iter;
     Obj *val2;
     uint32_t ch2;
     uval_t uv;
@@ -744,14 +740,13 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
             brec->len -= (unsigned int)abs(bits) / 8;
             return;
         }
-        iter = NULL;
+        iter.data = NULL;
         if (type == NONE_OBJ) goto donone;
         val2 = val;
         goto doit;
     }
-    iter = type->getiter(val);
-    iter_next = iter->next;
-    while ((val2 = iter_next(iter)) != NULL) {
+    iter.data = val; type->getiter(&iter);
+    while ((val2 = iter.next(&iter)) != NULL) {
         if (val2->obj->iterable) {
             byterecursion(val2, prm, brec, bits);
             continue;
@@ -831,18 +826,17 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
                 if (prm >= CMD_DINT) brec->buff[brec->len++] = ch2 >> 24;
             }
         }
-        if (iter == NULL) return;
+        if (iter.data == NULL) return;
     }
-    val_destroy(&iter->v);
+    iter_destroy(&iter);
 }
 
 static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, struct linepos_s *epoints) {
-    iter_next_t iter_next;
-    Iter *iter = o1->obj->getiter(o1);
+    struct iter_s iter;
     Error *err;
     bool was = false;
-    iter_next = iter->next;
-    while ((o1 = iter_next(iter)) != NULL) {
+    iter.data = o1; o1->obj->getiter(&iter);
+    while ((o1 = iter.next(&iter)) != NULL) {
         if (o1->obj->iterable) {
             if (instrecursion(o1, prm, w, epoint, epoints)) was = true;
         } else {
@@ -850,7 +844,7 @@ static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, st
             if (err != NULL) err_msg_output_and_destroy(err); else was = true;
         }
     }
-    val_destroy(&iter->v);
+    iter_destroy(&iter);
     return was;
 }
 
@@ -1345,9 +1339,10 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     struct avltree *stree_old;
     line_t ovline, lvline;
     bool starexists, foreach = false;
-    Iter *iter = NULL;
+    struct iter_s iter;
     size_t i = 0;
     labels.p = 0;
+    iter.data = NULL;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
     if (lst != NULL) listing_equal2(listing, &lst->v, epoint->pos);
@@ -1393,7 +1388,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                         err_msg_output((Error *)val);
                     }
                 } else {
-                    iter = val->obj->getiter(val);
+                    iter.data = val; val->obj->getiter(&iter);
                 }
                 val_destroy(val); val = (Obj *)ref_none();
             } else {
@@ -1467,26 +1462,24 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (foreach) {
         new_waitfor(W_NEXT2, epoint);
         waitfor->u.cmd_rept.breakout = false;
-        if (iter != NULL) {
-            iter_next_t iter_next = iter->next;
+        if (iter.data != NULL) {
             Obj *val2;
 
-            while ((val2 = iter_next(iter)) != NULL) {
+            while ((val2 = iter.next(&iter)) != NULL) {
                 if (nopos < 0) nopos = 0;
                 else if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
                 if (labels.p == 1) {
                     val_destroy(label->value);
                     label->value = val_reference(val2);
                 } else {
-                    Iter *iter2 = val2->obj->getiter(val2);
-                    iter_next_t iter2_next = iter2->next;
+                    struct iter_s iter2;
                     size_t j;
-                    for (j = 0; j < labels.p && (val2 = iter2_next(iter2)) != NULL; j++) {
+                    iter2.data = val2; val2->obj->getiter(&iter2);
+                    for (j = 0; j < labels.p && (val2 = iter2.next(&iter2)) != NULL; j++) {
                         val_destroy(labels.data[j]->value);
                         labels.data[j]->value = val_reference(val2);
                     }
-                    j = iter2->len;
-                    if (j != labels.p) err_msg_cant_unpack(labels.p, j, epoint);
+                    if (iter2.len != labels.p) err_msg_cant_unpack(labels.p, iter2.len, epoint);
                 }
                 lpoint.line = lin;
                 waitfor->skip = 1; lvline = vline;
@@ -1500,7 +1493,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                     break;
                 }
             }
-            val_destroy(&iter->v);
+            iter_destroy(&iter);
         }
         if (labels.p != 0 && labels.data != labels.val) free(labels.data);
         expr = expr2 = NULL;

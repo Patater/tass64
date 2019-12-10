@@ -29,7 +29,6 @@
 #include "listobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
-#include "iterobj.h"
 
 static Type obj;
 
@@ -103,24 +102,23 @@ static MUST_CHECK Obj *apply_convert(Obj *o2, const Type *v1, linepos_t epoint) 
     if (v1 != LIST_OBJ && v1 != TUPLE_OBJ && v1 != TYPE_OBJ) {
         const Type *v2 = o2->obj;
         if (v2->iterable) {
-            iter_next_t iter_next;
-            Iter *iter = v2->getiter(o2);
-            size_t i, len = iter->len;
+            struct iter_s iter;
+            size_t i;
             Obj **vals;
             List *v;
+            iter.data = o2; v2->getiter(&iter);
 
-            if (len == 0) {
-                val_destroy(&iter->v);
+            if (iter.len == 0) {
+                iter_destroy(&iter);
                 return val_reference(v2 == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
             }
 
             v = (List *)val_alloc(v2 == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
-            v->data = vals = list_create_elements(v, len);
-            iter_next = iter->next;
-            for (i = 0;i < len && (o2 = iter_next(iter)) != NULL; i++) {
+            v->data = vals = list_create_elements(v, iter.len);
+            for (i = 0;i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
                 vals[i] = apply_convert(o2, v1, epoint);
             }
-            val_destroy(&iter->v);
+            iter_destroy(&iter);
             v->len = i;
             return (Obj *)v;
         }

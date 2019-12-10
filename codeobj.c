@@ -41,7 +41,6 @@
 #include "errorobj.h"
 #include "memblocksobj.h"
 #include "identobj.h"
-#include "iterobj.h"
 #include "addressobj.h"
 
 static Type obj;
@@ -410,19 +409,17 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         offs0 = -(ssize_t)(((uval_t)-v1->offs + ln2 - 1) / ln2);
     }
     if (o2->obj->iterable) {
-        iter_next_t iter_next;
-        Iter *iter = o2->obj->getiter(o2);
-        size_t len1 = iter->len;
+        struct iter_s iter;
         Tuple *v;
+        iter.data = o2; o2->obj->getiter(&iter);
 
-        if (len1 == 0) {
-            val_destroy(&iter->v);
+        if (iter.len == 0) {
+            iter_destroy(&iter);
             return (Obj *)ref_tuple(null_tuple);
         }
-        v = new_tuple(len1);
+        v = new_tuple(iter.len);
         vals = v->data;
-        iter_next = iter->next;
-        for (i = 0; i < len1 && (o2 = iter_next(iter)) != NULL; i++) {
+        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs1, epoint2);
             if (err != NULL) {
                 vals[i] = &err->v;
@@ -430,7 +427,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             }
             vals[i] = code_item(v1, (ssize_t)offs1 + offs0, ln2);
         }
-        val_destroy(&iter->v);
+        iter_destroy(&iter);
         v->len = i;
         return &v->v;
     }

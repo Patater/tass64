@@ -38,7 +38,6 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "addressobj.h"
-#include "iterobj.h"
 
 static Type obj;
 
@@ -809,7 +808,7 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(byteslen(v1));
 }
 
-static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
+static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
     Bytes *iter;
     const Bytes *vv1 = (Bytes *)v1->data;
     if (v1->val >= v1->len) return NULL;
@@ -827,14 +826,12 @@ static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
     return &iter->v;
 }
 
-static MUST_CHECK Iter *getiter(Obj *v1) {
-    Iter *v = (Iter *)val_alloc(ITER_OBJ);
+static void getiter(struct iter_s *v) {
     v->iter = NULL;
     v->val = 0;
-    v->data = val_reference(v1);
+    v->data = val_reference(v->data);
     v->next = next;
-    v->len = byteslen((Bytes *)v1);
-    return v;
+    v->len = byteslen((Bytes *)v->data);
 }
 
 static inline MUST_CHECK Obj *and_(oper_t op) {
@@ -1212,31 +1209,29 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     len1 = byteslen(v1);
 
     if (o2->obj->iterable) {
-        iter_next_t iter_next;
-        Iter *iter = o2->obj->getiter(o2);
-        size_t len2 = iter->len;
+        struct iter_s iter;
+        iter.data = o2; o2->obj->getiter(&iter);
 
-        if (len2 == 0) {
-            val_destroy(&iter->v);
+        if (iter.len == 0) {
+            iter_destroy(&iter);
             return (Obj *)ref_bytes(null_bytes);
         }
-        v = new_bytes2(len2);
+        v = new_bytes2(iter.len);
         if (v == NULL) {
-            val_destroy(&iter->v);
+            iter_destroy(&iter);
             goto failed;
         }
         p2 = v->data;
-        iter_next = iter->next;
-        for (i = 0; i < len2 && (o2 = iter_next(iter)) != NULL; i++) {
+        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(o2, len1, &offs2, epoint2);
             if (err != NULL) {
                 val_destroy(&v->v);
-                val_destroy(&iter->v);
+                iter_destroy(&iter);
                 return &err->v;
             }
             p2[i] = v1->data[offs2] ^ inv;
         }
-        val_destroy(&iter->v);
+        iter_destroy(&iter);
         if (i > SSIZE_MAX) goto failed2; /* overflow */
         v->len = (ssize_t)i;
         return &v->v;

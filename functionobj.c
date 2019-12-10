@@ -36,7 +36,6 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "bytesobj.h"
-#include "iterobj.h"
 #include "dictobj.h"
 
 static Type obj;
@@ -108,46 +107,48 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
     for (j = 0; j < args; j++) {
         const Type *objt2, *objt = v[j].val->obj;
         if (objt->iterable) {
-            Iter *iter = objt->getiter(v[j].val);
-            size_t ln = iter->len;
+            struct iter_s iter;
+            size_t ln;
             Obj *oval[3];
-            Iter *iters[3];
+            struct iter_s iters[3];
             size_t k;
             oval[j] = v[j].val;
+            iter.data = v[j].val; objt->getiter(&iter);
+            ln = iter.len;
             if (ln == 1) {
-                v[j].val = iter->next(iter);
-                val_destroy(&iter->v);
-                iters[j] = NULL;
+                v[j].val = iter.next(&iter);
+                iter_destroy(&iter);
+                iters[j].data = NULL;
             } else iters[j] = iter;
             for (k = j + 1; k < args; k++) {
                 oval[k] = v[k].val;
                 objt2 = oval[k]->obj;
                 if (objt2->iterable) {
                     Error *err;
-                    Iter *iter2 = objt2->getiter(oval[k]);
-                    size_t ln2 = iter2->len;
-                    if (ln2 != 1) {
+                    struct iter_s iter2;
+                    iter2.data = oval[k]; objt2->getiter(&iter2);
+                    if (iter2.len != 1) {
                         iters[k] = iter2;
-                        if (ln2 == ln) continue;
+                        if (iter2.len == ln) continue;
                         if (ln == 1) {
-                            ln = ln2;
+                            ln = iter2.len;
                             continue;
                         }
                         for (; k > j; k--) {
-                            if (iters[k] != NULL) val_destroy(&iters[k]->v);
+                            if (iters[k].data != NULL) iter_destroy(&iters[k]);
                             v[k].val = oval[k];
                         }
-                        if (iters[j] != NULL) val_destroy(&iters[j]->v);
+                        if (iters[j].data != NULL) iter_destroy(&iters[j]);
                         v[j].val = oval[j];
                         err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
                         err->u.broadcast.v1 = ln;
-                        err->u.broadcast.v2 = ln2;
+                        err->u.broadcast.v2 = iter2.len;
                         return &err->v;
                     }
-                    v[k].val = iter2->next(iter2);
-                    val_destroy(&iter2->v);
+                    v[k].val = iter2.next(&iter2);
+                    iter_destroy(&iter2);
                 }
-                iters[k] = NULL;
+                iters[k].data = NULL;
             }
             if (ln != 0) {
                 size_t i;
@@ -155,18 +156,18 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                 Obj **vals2 = vv->data = list_create_elements(vv, ln);
                 for (i = 0; i < ln; i++) {
                     for (k = j; k < args; k++) {
-                        if (iters[k] != NULL) v[k].val = iters[k]->next(iters[k]);
+                        if (iters[k].data != NULL) v[k].val = iters[k].next(&iters[k]);
                     }
                     vals2[i] = gen_broadcast(vals, epoint, f);
                 }
                 vv->len = i;
                 for (k = j; k < args; k++) {
-                    if (iters[k] != NULL) val_destroy(&iters[k]->v);
+                    if (iters[k].data != NULL) iter_destroy(&iters[k]);
                     v[k].val = oval[k];
                 }
                 return &vv->v;
             }
-            val_destroy(&iter->v);
+            iter_destroy(&iter);
             return val_reference(objt == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
         }
     }
@@ -521,20 +522,18 @@ static MUST_CHECK Obj *apply_func(Obj *o1, Function_types func, bool inplace, li
         Obj **vals;
 
         if (!inplace || (typ != TUPLE_OBJ && typ != LIST_OBJ)) {
-            iter_next_t iter_next;
-            Iter *iter = typ->getiter(o1);
-            len = iter->len;
-            if (len == 0) {
-                val_destroy(&iter->v);
+            struct iter_s iter;
+            iter.data = o1; typ->getiter(&iter);
+            if (iter.len == 0) {
+                iter_destroy(&iter);
                 return val_reference(typ == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
             }
             v = (List *)val_alloc(typ == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
-            v->data = vals = list_create_elements(v, len);
-            iter_next = iter->next;
-            for (i = 0; i < len && (o1 = iter_next(iter)) != NULL; i++) {
+            v->data = vals = list_create_elements(v, iter.len);
+            for (i = 0; i < iter.len && (o1 = iter.next(&iter)) != NULL; i++) {
                 vals[i] = apply_func(o1, func, inplace && (o1->refcount == 1), epoint);
             }
-            val_destroy(&iter->v);
+            iter_destroy(&iter);
             v->len = i;
             return &v->v;
         } 
