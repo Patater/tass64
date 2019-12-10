@@ -161,7 +161,7 @@ mfuncobj.o: mfuncobj.c mfuncobj.h obj.h attributes.h inttypes.h str.h \
 my_getopt.o: my_getopt.c my_getopt.h stdbool.h unicode.h attributes.h \
  inttypes.h error.h errors_e.h avl.h
 namespaceobj.o: namespaceobj.c namespaceobj.h obj.h attributes.h \
- inttypes.h avl.h variables.h stdbool.h str.h eval.h error.h errors_e.h \
+ inttypes.h variables.h stdbool.h str.h eval.h error.h errors_e.h avl.h \
  arguments.h 64tass.h wait_e.h listobj.h values.h strobj.h operobj.h \
  oper_e.h typeobj.h noneobj.h labelobj.h errorobj.h identobj.h codeobj.h \
  macroobj.h mfuncobj.h
