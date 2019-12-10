@@ -46,7 +46,6 @@
 #include "identobj.h"
 #include "memblocksobj.h"
 #include "foldobj.h"
-#include "iterobj.h"
 
 static Type lbl_obj;
 static Type default_obj;
@@ -225,20 +224,18 @@ static MUST_CHECK Obj *invalid_size(Obj *v1, linepos_t epoint) {
     return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_SIZE);
 }
 
-static FAST_CALL MUST_CHECK Obj *invalid_next(Iter *v1) {
+static FAST_CALL MUST_CHECK Obj *invalid_next(struct iter_s *v1) {
     if (v1->val != 0) return NULL;
     v1->val = 1;
     return v1->data;
 }
 
-static MUST_CHECK Iter *invalid_getiter(Obj *v1) {
-    Iter *v = (Iter *)val_alloc(ITER_OBJ);
+static void invalid_getiter(struct iter_s *v) {
     v->iter = NULL;
     v->val = 0;
-    v->data = val_reference(v1);
+    v->data = val_reference(v->data);
     v->next = invalid_next;
     v->len = 1;
-    return v;
 }
 
 static FAST_CALL bool lbl_same(const Obj *o1, const Obj *o2) {
@@ -307,7 +304,6 @@ void objects_init(void) {
     mfuncobj_init();
     identobj_init();
     foldobj_init();
-    iterobj_init();
 
     new_type(&lbl_obj, T_LBL, "lbl", sizeof(Lbl));
     lbl_obj.same = lbl_same;

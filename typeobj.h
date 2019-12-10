@@ -21,6 +21,8 @@
 #include "obj.h"
 #include "stdbool.h"
 
+struct iter_s;
+
 extern struct Type *const TYPE_OBJ;
 
 typedef enum Truth_types {
@@ -68,7 +70,7 @@ typedef struct Type {
     Obj *(*function)(Obj *, Func_types, bool, linepos_t) MUST_CHECK;
     Obj *(*len)(Obj *, linepos_t) MUST_CHECK;
     Obj *(*size)(Obj *, linepos_t) MUST_CHECK;
-    struct Iter *(*getiter)(Obj *) MUST_CHECK;
+    void (*getiter)(struct iter_s *);
 } Type;
 
 extern void typeobj_init(void);

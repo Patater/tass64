@@ -32,7 +32,6 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "foldobj.h"
-#include "iterobj.h"
 
 static Type list_obj;
 static Type tuple_obj;
@@ -317,19 +316,17 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size(v1->len);
 }
 
-static FAST_CALL MUST_CHECK Obj *next(Iter *v1) {
+static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
     if (v1->val >= v1->len) return NULL;
     return ((List *)v1->data)->data[v1->val++];
 }
 
-static MUST_CHECK Iter *getiter(Obj *v1) {
-    Iter *v = (Iter *)val_alloc(ITER_OBJ);
+static void getiter(struct iter_s *v) {
     v->iter = NULL;
     v->val = 0;
-    v->data = val_reference(v1);
+    v->data = val_reference(v->data);
     v->next = next;
-    v->len = ((List *)v1)->len;
-    return v;
+    v->len = ((List *)v->data)->len;
 }
 
 Obj **list_create_elements(List *v, size_t n) {
@@ -567,22 +564,20 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     ln = v1->len;
 
     if (o2->obj->iterable) {
-        iter_next_t iter_next;
-        Iter *iter = o2->obj->getiter(o2);
-        size_t ln2 = iter->len;
+        struct iter_s iter;
+        iter.data = o2; o2->obj->getiter(&iter);
 
-        if (ln2 == 0) {
-            val_destroy(&iter->v);
+        if (iter.len == 0) {
+            iter_destroy(&iter);
             return val_reference((o1->obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
         }
         v = (List *)val_alloc(o1->obj);
-        vals = lnew(v, ln2);
+        vals = lnew(v, iter.len);
         if (vals == NULL) {
-            val_destroy(&iter->v);
+            iter_destroy(&iter);
             goto failed;
         }
-        iter_next = iter->next;
-        for (i = 0; i < ln2 && (o2 = iter_next(iter)) != NULL; i++) {
+        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs2, epoint2);
             if (err != NULL) {
                 vals[i] = &err->v;
@@ -595,7 +590,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 vals[i] = val_reference(v1->data[offs2]);
             }
         }
-        val_destroy(&iter->v);
+        iter_destroy(&iter);
         v->len = i;
         return &v->v;
     }

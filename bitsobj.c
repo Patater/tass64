@@ -38,7 +38,6 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "addressobj.h"
-#include "iterobj.h"
 
 #define SHIFT (8 * sizeof(bdigit_t))
 
@@ -1243,31 +1242,29 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
     ln = vv1->bits;
 
     if (o2->obj->iterable) {
-        iter_next_t iter_next;
-        Iter *iter = o2->obj->getiter(o2);
-        size_t len1 = iter->len;
+        struct iter_s iter;
+        iter.data = o2; o2->obj->getiter(&iter);
 
-        if (len1 == 0) {
-            val_destroy(&iter->v);
+        if (iter.len == 0) {
+            iter_destroy(&iter);
             return (Obj *)ref_bits(null_bits);
         }
-        sz = (len1 + SHIFT - 1) / SHIFT;
+        sz = (iter.len + SHIFT - 1) / SHIFT;
 
         vv = new_bits2(sz);
         if (vv == NULL) {
-            val_destroy(&iter->v);
+            iter_destroy(&iter);
             goto failed;
         }
         v = vv->data;
 
         uv = inv;
         bits = sz = 0;
-        iter_next = iter->next;
-        for (i = 0; i < len1 && (o2 = iter_next(iter)) != NULL; i++) {
+        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs2, epoint2);
             if (err != NULL) {
                 val_destroy(&vv->v);
-                val_destroy(&iter->v);
+                iter_destroy(&iter);
                 return &err->v;
             }
             o = offs2 / SHIFT;
@@ -1281,7 +1278,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 bits = 0;
             }
         }
-        val_destroy(&iter->v);
+        iter_destroy(&iter);
         if (bits != 0) v[sz++] = uv & ((1 << bits) - 1);
 
         vv->bits = i;
