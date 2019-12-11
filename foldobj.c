@@ -64,10 +64,8 @@ static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t ma
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *v2 = op->v2;
-    if (v2->obj->iterable) {
-        if (op->op != &o_MEMBER && op->op != &o_X) {
-            return v2->obj->rcalc2(op);
-        }
+    if (v2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
+        return v2->obj->rcalc2(op);
     }
     switch (v2->obj->type) {
     case T_NONE:
