@@ -161,17 +161,14 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             return apply_convert(((Funcargs *)o2)->val[0].val, v1, op->epoint2);
         }
         break;
-    case T_TUPLE:
-    case T_LIST:
-    case T_DICT:
-        if (op->op != &o_MEMBER && op->op != &o_X) {
-            return o2->obj->rcalc2(op);
-        }
-        break;
     case T_NONE:
     case T_ERROR:
         return val_reference(o2);
-    default: break;
+    default:
+        if (o2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
+            return o2->obj->rcalc2(op);
+        }
+        break;
     }
     return obj_oper_error(op);
 }
