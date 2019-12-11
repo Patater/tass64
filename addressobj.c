@@ -371,12 +371,12 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     return obj_oper_error(op);
 }
 
-static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
-    Obj *val = ((Address *)o1)->val;
+static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
+    Obj *val = ((Address *)op->v1)->val;
     if (val == &none_value->v || val->obj == ERROR_OBJ) {
         return val_reference(val);
     }
-    return DEFAULT_OBJ->slice(o1, op, indx);
+    return DEFAULT_OBJ->slice(op, indx);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {

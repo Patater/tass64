@@ -381,13 +381,13 @@ MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
     return &v->v;
 }
 
-static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Obj **vals;
     size_t i;
     address_t ln, ln2;
     size_t offs1;
     ssize_t offs0;
-    Code *v1 = (Code *)o1;
+    Code *v1 = (Code *)op->v1;
     Obj *o2 = op->v2;
     Error *err;
     Funcargs *args = (Funcargs *)o2;

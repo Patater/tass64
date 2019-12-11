@@ -165,7 +165,7 @@ static MUST_CHECK Obj *invalid_rcalc2(oper_t op) {
     return obj_oper_error(op);
 }
 
-static MUST_CHECK Obj *invalid_slice(Obj *UNUSED(v1), oper_t op, size_t indx) {
+static MUST_CHECK Obj *invalid_slice(oper_t op, size_t indx) {
     Funcargs *args = (Funcargs *)op->v2;
     if (indx == 0) {
         if (args->len > 0) {

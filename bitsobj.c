@@ -1219,10 +1219,10 @@ failed:
     return (Obj *)new_error_mem(op->epoint3);
 }
 
-static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     size_t offs2, ln, sz;
     size_t i, o;
-    Bits *vv, *vv1 = (Bits *)o1;
+    Bits *vv, *vv1 = (Bits *)op->v1;
     Obj *o2 = op->v2;
     bdigit_t *v;
     bdigit_t uv;

@@ -507,9 +507,9 @@ static MUST_CHECK Obj *findit(Dict *v1, Obj *o2, linepos_t epoint) {
     return (Obj *)new_error_obj(ERROR_____KEY_ERROR, o2, epoint);
 }
 
-static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Obj *o2 = op->v2, *vv;
-    Dict *v1 = (Dict *)o1;
+    Dict *v1 = (Dict *)op->v1;
     Funcargs *args = (Funcargs *)o2;
     bool more = args->len > indx + 1;
     linepos_t epoint2;
@@ -538,7 +538,10 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         pair_oper.epoint3 = epoint2;
         for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             vv = findit(v1, o2, epoint2);
-            if (vv->obj != ERROR_OBJ && more) vv = vv->obj->slice(vv, op, indx + 1);
+            if (vv->obj != ERROR_OBJ && more) {
+                op->v1 = vv;
+                vv = vv->obj->slice(op, indx + 1);
+            }
             vals[i] = vv;
         }
         iter_destroy(&iter);
@@ -548,7 +551,10 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
 
     pair_oper.epoint3 = epoint2;
     vv = findit(v1, o2, epoint2);
-    if (vv->obj != ERROR_OBJ && more) vv = vv->obj->slice(vv, op, indx + 1);
+    if (vv->obj != ERROR_OBJ && more) {
+        op->v1 = vv;
+        vv = vv->obj->slice(op, indx + 1);
+    }
     return vv;
 }
 
