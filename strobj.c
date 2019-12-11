@@ -280,14 +280,11 @@ static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
     ln = utf8len(*s);
     v1->val += ln;
     iter = (Str *)v1->iter;
-    if (iter == NULL) {
-    renew:
+    if (iter->v.refcount != 1) {
+        iter->v.refcount--;
         iter = new_str(6);
         iter->chars = 1;
         v1->iter = &iter->v;
-    } else if (iter->v.refcount != 1) {
-        iter->v.refcount--;
-        goto renew;
     }
     iter->len = ln;
     memcpy(iter->data, s, ln);
@@ -295,7 +292,7 @@ static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
 }
 
 static void getiter(struct iter_s *v) {
-    v->iter = NULL;
+    v->iter = val_reference(v->data);
     v->val = 0;
     v->data = val_reference(v->data);
     v->next = next;

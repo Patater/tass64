@@ -813,21 +813,18 @@ static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
     const Bytes *vv1 = (Bytes *)v1->data;
     if (v1->val >= v1->len) return NULL;
     iter = (Bytes *)v1->iter;
-    if (iter == NULL) {
-    renew:
+    if (iter->v.refcount != 1) {
+        iter->v.refcount--;
         iter = new_bytes(1);
         v1->iter = &iter->v;
         iter->len = (vv1->len < 0) ? ~1 : 1;
-    } else if (iter->v.refcount != 1) {
-        iter->v.refcount--;
-        goto renew;
     }
     iter->data[0] = vv1->data[v1->val++];
     return &iter->v;
 }
 
 static void getiter(struct iter_s *v) {
-    v->iter = NULL;
+    v->iter = val_reference(v->data);
     v->val = 0;
     v->data = val_reference(v->data);
     v->next = next;
