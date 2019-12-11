@@ -216,8 +216,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     return val_reference(op->v2);
 }
 
-static MUST_CHECK Obj *slice(Obj *v1, oper_t UNUSED(op), size_t UNUSED(indx)) {
-    return val_reference(v1);
+static MUST_CHECK Obj *slice(oper_t op, size_t UNUSED(indx)) {
+    return val_reference(op->v1);
 }
 
 void errorobj_init(void) {

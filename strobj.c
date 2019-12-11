@@ -545,12 +545,12 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     return (Obj *)new_error_mem(op->epoint3);
 }
 
-static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     uint8_t *p, *p2;
     size_t offs2;
     size_t len1, len2;
     Obj *o2 = op->v2;
-    Str *v, *v1 = (Str *)o1;
+    Str *v, *v1 = (Str *)op->v1;
     Funcargs *args = (Funcargs *)o2;
     Error *err;
     linepos_t epoint2;
@@ -700,7 +700,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 }
                 len2 = (size_t)(p - v1->data) - len2;
             }
-            if (op->inplace == o1) {
+            if (op->inplace == &v1->v) {
                 v = ref_str(v1);
                 v->len = len2;
                 if (v->data != v->u.val && len2 <= sizeof v->u.val) {
@@ -721,7 +721,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         }
         if (v1->len == v1->chars) {
             size_t i;
-            if (step > 0 && op->inplace == o1) {
+            if (step > 0 && op->inplace == &v1->v) {
                 v = ref_str(v1);
                 if (v->data != v->u.val && length <= sizeof v->u.val) {
                     p2 = v->u.val;
@@ -747,7 +747,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             ival_t i, k;
             size_t j;
             uint8_t *o;
-            if (step > 0 && op->inplace == o1) {
+            if (step > 0 && op->inplace == &v1->v) {
                 v = ref_str(v1);
             } else {
                 v = new_str2(v1->len);
@@ -807,7 +807,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
         len1 = utf8len(*p);
     }
 
-    if (op->inplace == o1) {
+    if (op->inplace == &v1->v) {
         v = ref_str(v1);
         if (v->data != v->u.val) {
             p2 = v->u.val;

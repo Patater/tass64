@@ -63,8 +63,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     return val_reference(op->v1->obj->type == T_ERROR ? op->v1 : op->v2);
 }
 
-static MUST_CHECK Obj *slice(Obj *v1, oper_t UNUSED(op), size_t UNUSED(indx)) {
-    return val_reference(v1);
+static MUST_CHECK Obj *slice(oper_t op, size_t UNUSED(indx)) {
+    return val_reference(op->v1);
 }
 
 static MUST_CHECK Error *ival(Obj *UNUSED(v1), ival_t *UNUSED(iv), unsigned int UNUSED(bits), linepos_t epoint) {

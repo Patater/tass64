@@ -1189,11 +1189,11 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     return (Obj *)new_error_mem(op->epoint3);
 }
 
-static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     uint8_t *p2;
     size_t offs2, len1;
     size_t i;
-    Bytes *v, *v1 = (Bytes *)o1;
+    Bytes *v, *v1 = (Bytes *)op->v1;
     Obj *o2 = op->v2;
     Error *err;
     uint8_t inv = (v1->len < 0) ? (uint8_t)~0 : 0;
@@ -1253,7 +1253,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
             if (length == byteslen(v1)) {
                 return (Obj *)ref_bytes(v1); /* original bytes */
             }
-            if (op->inplace == o1) {
+            if (op->inplace == &v1->v) {
                 v = ref_bytes(v1);
                 if (v->data != v->u.val && length <= sizeof v->u.val) {
                     p2 = v->u.val;
@@ -1270,7 +1270,7 @@ static MUST_CHECK Obj *slice(Obj *o1, oper_t op, size_t indx) {
                 memcpy(p2, v1->data + offs, length);
             }
         } else {
-            if (step > 0 && op->inplace == o1) {
+            if (step > 0 && op->inplace == &v1->v) {
                 v = ref_bytes(v1);
                 if (v->data != v->u.val && length <= sizeof v->u.val) {
                     p2 = v->u.val;
