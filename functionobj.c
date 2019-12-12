@@ -104,42 +104,51 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
     struct values_s *v = vals->val;
     size_t args = vals->len;
     size_t j;
+    struct {
+        Obj *oval;
+        struct iter_s iters;
+    } elements3[3], *elements;
     for (j = 0; j < args; j++) {
         const Type *objt2, *objt = v[j].val->obj;
         if (objt->iterable) {
             struct iter_s iter;
-            size_t ln;
-            Obj *oval[3];
-            struct iter_s iters[3];
-            size_t k;
-            oval[j] = v[j].val;
+            size_t ln, k;
+            if (args <= lenof(elements3)) {
+                elements = elements3; 
+            } else {
+                if (args > SIZE_MAX / sizeof *elements) goto failed; /* overflow */
+                elements = malloc(args * sizeof *elements);
+                if (elements == NULL) goto failed;
+            }
+            elements[j].oval = v[j].val;
             iter.data = v[j].val; objt->getiter(&iter);
             ln = iter.len;
             if (ln == 1) {
                 v[j].val = iter.next(&iter);
                 iter_destroy(&iter);
-                iters[j].data = NULL;
-            } else iters[j] = iter;
+                elements[j].iters.data = NULL;
+            } else elements[j].iters = iter;
             for (k = j + 1; k < args; k++) {
-                oval[k] = v[k].val;
-                objt2 = oval[k]->obj;
+                elements[k].oval = v[k].val;
+                objt2 = elements[k].oval->obj;
                 if (objt2->iterable) {
                     Error *err;
                     struct iter_s iter2;
-                    iter2.data = oval[k]; objt2->getiter(&iter2);
+                    iter2.data = elements[k].oval; objt2->getiter(&iter2);
                     if (iter2.len != 1) {
-                        iters[k] = iter2;
+                        elements[k].iters = iter2;
                         if (iter2.len == ln) continue;
                         if (ln == 1) {
                             ln = iter2.len;
                             continue;
                         }
                         for (; k > j; k--) {
-                            if (iters[k].data != NULL) iter_destroy(&iters[k]);
-                            v[k].val = oval[k];
+                            if (elements[k].iters.data != NULL) iter_destroy(&elements[k].iters);
+                            v[k].val = elements[k].oval;
                         }
-                        if (iters[j].data != NULL) iter_destroy(&iters[j]);
-                        v[j].val = oval[j];
+                        if (elements[j].iters.data != NULL) iter_destroy(&elements[j].iters);
+                        v[j].val = elements[j].oval;
+                        if (elements != elements3) free(elements);
                         err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
                         err->u.broadcast.v1 = ln;
                         err->u.broadcast.v2 = iter2.len;
@@ -148,7 +157,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                     v[k].val = iter2.next(&iter2);
                     iter_destroy(&iter2);
                 }
-                iters[k].data = NULL;
+                elements[k].iters.data = NULL;
             }
             if (ln != 0) {
                 size_t i;
@@ -156,22 +165,26 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                 Obj **vals2 = vv->data = list_create_elements(vv, ln);
                 for (i = 0; i < ln; i++) {
                     for (k = j; k < args; k++) {
-                        if (iters[k].data != NULL) v[k].val = iters[k].next(&iters[k]);
+                        if (elements[k].iters.data != NULL) v[k].val = elements[k].iters.next(&elements[k].iters);
                     }
                     vals2[i] = gen_broadcast(vals, epoint, f);
                 }
                 vv->len = i;
                 for (k = j; k < args; k++) {
-                    if (iters[k].data != NULL) iter_destroy(&iters[k]);
-                    v[k].val = oval[k];
+                    if (elements[k].iters.data != NULL) iter_destroy(&elements[k].iters);
+                    v[k].val = elements[k].oval;
                 }
+                if (elements != elements3) free(elements);
                 return &vv->v;
             }
+            if (elements != elements3) free(elements);
             iter_destroy(&iter);
             return val_reference(objt == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
         }
     }
     return f(vals, epoint);
+failed:
+    return (Obj *)new_error_mem(epoint);
 }
 
 /* range([start],end,[step]) */
