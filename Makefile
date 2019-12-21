@@ -197,7 +197,8 @@ ternary.o: ternary.c ternary.h stdbool.h inttypes.h unicode.h \
  attributes.h error.h errors_e.h avl.h
 typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
  variables.h str.h eval.h error.h errors_e.h avl.h strobj.h operobj.h \
- oper_e.h intobj.h boolobj.h listobj.h values.h noneobj.h errorobj.h
+ oper_e.h intobj.h boolobj.h listobj.h values.h noneobj.h errorobj.h \
+ functionobj.h
 unicodedata.o: unicodedata.c unicodedata.h attributes.h inttypes.h
 unicode.o: unicode.c unicode.h attributes.h inttypes.h stdbool.h wchar.h \
  wctype.h error.h errors_e.h avl.h unicodedata.h str.h
