@@ -514,6 +514,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
         }
         return &v->v;
     }
+    if (op->v1->obj != FUNCTION_OBJ) return ((Type *)op->v1)->create(op->v2, op->epoint2);
     switch (((Function *)op->v1)->func) {
     case F_SIZE: return typ->size(op);
     case F_SIGN: return typ->sign(o2, op->epoint2);
@@ -527,7 +528,6 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
             Obj *v = typ->repr(o2, op->epoint2, SIZE_MAX);
             return v != NULL ? v : (Obj *)new_error_mem(op->epoint2);
         }
-    case F_CONVERT: return ((Type *)op->v1)->create(op->v2, op->epoint2);
     default: break;
     }
     if (typ != FLOAT_OBJ) {
@@ -759,9 +759,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
 MUST_CHECK Obj *apply_convert(oper_t op) {
     struct values_s *v = ((Funcargs *)op->v2)->val;
-    Function convert;
-    convert.func = F_CONVERT;
-    op->v1 = &convert.v;
     op->v2 = v[0].val;
     op->inplace = v[0].val->refcount == 1 ? v[0].val : NULL;
     return apply_func(op);
