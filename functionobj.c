@@ -589,7 +589,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
     return typ != FLOAT_OBJ ? o2 : val_reference(o2);
 failed:
     if (typ != FLOAT_OBJ) val_destroy(o2);
-    return (Obj *)new_error_obj(err, o2, op->epoint2);
+    return (Obj *)new_error_obj(err, op->v2, op->epoint2);
 }
 
 static MUST_CHECK Obj *to_real(struct values_s *v, double *r) {
