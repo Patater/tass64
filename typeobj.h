@@ -69,7 +69,7 @@ typedef struct Type {
     Obj *(*sign)(Obj *, linepos_t) MUST_CHECK;
     Obj *(*function)(Obj *, Func_types, bool, linepos_t) MUST_CHECK;
     Obj *(*len)(Obj *, linepos_t) MUST_CHECK;
-    Obj *(*size)(Obj *, linepos_t) MUST_CHECK;
+    Obj *(*size)(struct oper_s *) MUST_CHECK;
     void (*getiter)(struct iter_s *);
 } Type;
 
