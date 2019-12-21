@@ -212,8 +212,8 @@ static MUST_CHECK Obj *invalid_sign(Obj *v1, linepos_t epoint) {
     return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_SIGN);
 }
 
-static MUST_CHECK Obj *invalid_function(Obj *v1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
-    return (Obj *)generic_invalid(v1, epoint, (f == TF_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
+static MUST_CHECK Obj *invalid_function(oper_t op) {
+    return (Obj *)generic_invalid(op->v2, op->epoint2, (((Function *)op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
 }
 
 static MUST_CHECK Obj *invalid_len(oper_t op) {

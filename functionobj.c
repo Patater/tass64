@@ -517,11 +517,11 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
     switch (((Function *)op->v1)->func) {
     case F_SIZE: return typ->size(op);
     case F_SIGN: return typ->sign(o2, op->epoint2);
-    case F_CEIL: return typ->function(o2, TF_CEIL, inplace, op->epoint2);
-    case F_FLOOR: return typ->function(o2, TF_FLOOR, inplace, op->epoint2);
-    case F_ROUND: return typ->function(o2, TF_ROUND, inplace, op->epoint2);
-    case F_TRUNC: return typ->function(o2, TF_TRUNC, inplace, op->epoint2);
-    case F_ABS: return typ->function(o2, TF_ABS, inplace, op->epoint2);
+    case F_CEIL:
+    case F_FLOOR:
+    case F_ROUND:
+    case F_TRUNC:
+    case F_ABS: return typ->function(op);
     case F_REPR:
         {
             Obj *v = typ->repr(o2, op->epoint2, SIZE_MAX);

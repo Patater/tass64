@@ -265,13 +265,14 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
     return result;
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), linepos_t epoint) {
-    Code *v1 = (Code *)o1;
+static MUST_CHECK Obj *function(oper_t op) {
+    Code *v1 = (Code *)op->v2;
     Obj *v, *result;
-    Error *err = access_check(v1, epoint);
+    Error *err = access_check(v1, op->epoint2);
     if (err != NULL) return &err->v;
-    v = get_code_address(v1, epoint);
-    result = v->obj->function(v, f, false, epoint);
+    op->v2 = v = get_code_address(v1, op->epoint2);
+    op->inplace = v->refcount == 1 ? v : NULL;
+    result = v->obj->function(op);
     val_destroy(v);
     return result;
 }
