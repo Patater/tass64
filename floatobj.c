@@ -35,6 +35,7 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "addressobj.h"
+#include "functionobj.h"
 
 static Type obj;
 
@@ -151,19 +152,20 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)ref_int(int_value[(v1->real > 0.0) ? 1 : 0]);
 }
 
-static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool inplace, linepos_t UNUSED(epoint)) {
-    double r = ((Float *)o1)->real;
-    switch (f) {
-    case TF_ABS: if (r >= 0.0) return val_reference(o1); r = -r; break;
-    case TF_TRUNC: r = trunc(r); break;
-    case TF_ROUND: r = round(r); break;
-    case TF_FLOOR: r = floor(r); break;
-    case TF_CEIL: r = ceil(r); break;
+static MUST_CHECK Obj *function(oper_t op) {
+    Float *v1 = (Float *)op->v2;
+    double r = v1->real;
+    switch (((Function *)op->v1)->func) {
+    case F_ABS: if (r >= 0.0) return val_reference(&v1->v); r = -r; break;
+    case F_TRUNC: r = trunc(r); break;
+    case F_ROUND: r = round(r); break;
+    case F_FLOOR: r = floor(r); break;
+    case F_CEIL: r = ceil(r); break;
     default: break;
     }
-    if (inplace) {
-        ((Float *)o1)->real = r;
-        return val_reference(o1);
+    if (op->inplace == &v1->v) {
+        v1->real = r;
+        return val_reference(&v1->v);
     } 
     return (Obj *)new_float(r);
 }

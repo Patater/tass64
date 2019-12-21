@@ -37,10 +37,6 @@ typedef enum Type_types {
     T_NAMESPACE, T_MEMBLOCKS, T_FOLD
 } Type_types;
 
-typedef enum Func_types {
-    TF_ABS, TF_TRUNC, TF_CEIL, TF_FLOOR, TF_ROUND
-} Func_types;
-
 typedef struct Type {
     Obj v;
     Type_types type;
@@ -67,7 +63,7 @@ typedef struct Type {
     struct Error *(*iaddress)(Obj *, ival_t *, unsigned int, linepos_t) MUST_CHECK;
     struct Error *(*uaddress)(Obj *, uval_t *, unsigned int, linepos_t) MUST_CHECK;
     Obj *(*sign)(Obj *, linepos_t) MUST_CHECK;
-    Obj *(*function)(Obj *, Func_types, bool, linepos_t) MUST_CHECK;
+    Obj *(*function)(struct oper_s *) MUST_CHECK;
     Obj *(*len)(struct oper_s *) MUST_CHECK;
     Obj *(*size)(struct oper_s *) MUST_CHECK;
     void (*getiter)(struct iter_s *);

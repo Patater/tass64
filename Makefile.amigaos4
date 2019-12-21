@@ -43,7 +43,7 @@ bitsobj.o: bitsobj.c bitsobj.h obj.h attributes.h inttypes.h stdbool.h \
 boolobj.o: boolobj.c boolobj.h obj.h attributes.h inttypes.h stdbool.h \
  eval.h error.h errors_e.h avl.h variables.h str.h arguments.h floatobj.h \
  values.h strobj.h bytesobj.h oper_e.h bitsobj.h intobj.h operobj.h \
- typeobj.h errorobj.h noneobj.h
+ typeobj.h errorobj.h noneobj.h functionobj.h
 bytesobj.o: bytesobj.c bytesobj.h obj.h attributes.h inttypes.h oper_e.h \
  math.h eval.h stdbool.h unicode.h encoding.h avl.h errors_e.h \
  variables.h str.h arguments.h error.h boolobj.h floatobj.h values.h \
@@ -83,7 +83,8 @@ file.o: file.c file.h attributes.h stdbool.h inttypes.h avl.h str.h \
 floatobj.o: floatobj.c floatobj.h obj.h attributes.h inttypes.h values.h \
  math.h error.h stdbool.h errors_e.h avl.h eval.h variables.h str.h \
  arguments.h boolobj.h codeobj.h strobj.h bytesobj.h oper_e.h intobj.h \
- bitsobj.h operobj.h typeobj.h noneobj.h errorobj.h addressobj.h
+ bitsobj.h operobj.h typeobj.h noneobj.h errorobj.h addressobj.h \
+ functionobj.h
 foldobj.o: foldobj.c foldobj.h obj.h attributes.h inttypes.h values.h \
  eval.h stdbool.h typeobj.h operobj.h oper_e.h strobj.h errorobj.h \
  errors_e.h str.h
@@ -107,7 +108,7 @@ intobj.o: intobj.c intobj.h obj.h attributes.h inttypes.h math.h \
  unicode.h stdbool.h encoding.h avl.h errors_e.h error.h eval.h \
  variables.h str.h arguments.h boolobj.h floatobj.h values.h codeobj.h \
  strobj.h bytesobj.h oper_e.h bitsobj.h operobj.h typeobj.h noneobj.h \
- errorobj.h addressobj.h
+ errorobj.h addressobj.h functionobj.h
 isnprintf.o: isnprintf.c isnprintf.h attributes.h inttypes.h unicode.h \
  stdbool.h eval.h error.h errors_e.h avl.h floatobj.h obj.h values.h \
  strobj.h intobj.h typeobj.h noneobj.h errorobj.h str.h addressobj.h
