@@ -295,9 +295,9 @@ static address_t calc_size(const Code *v1) {
     return v1->size + (uval_t)-v1->offs;
 }
 
-static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *len(oper_t op) {
     address_t ln, s;
-    Code *v1 = (Code *)o1;
+    Code *v1 = (Code *)op->v2;
     if (v1->pass == 0) {
         return (Obj *)ref_none();
     }

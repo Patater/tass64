@@ -216,8 +216,8 @@ static MUST_CHECK Obj *invalid_function(Obj *v1, Func_types f, bool UNUSED(inpla
     return (Obj *)generic_invalid(v1, epoint, (f == TF_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
 }
 
-static MUST_CHECK Obj *invalid_len(Obj *v1, linepos_t epoint) {
-    return (Obj *)generic_invalid(v1, epoint, ERROR______CANT_LEN);
+static MUST_CHECK Obj *invalid_len(oper_t op) {
+    return (Obj *)generic_invalid(op->v2, op->epoint2, ERROR______CANT_LEN);
 }
 
 static MUST_CHECK Obj *invalid_size(oper_t op) {
