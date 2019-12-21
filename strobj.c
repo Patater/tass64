@@ -265,8 +265,8 @@ static MUST_CHECK Obj *function(Obj *o1, Func_types UNUSED(f), bool UNUSED(inpla
     return int_from_str(v1, epoint);
 }
 
-static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
-    Str *v1 = (Str *)o1;
+static MUST_CHECK Obj *len(oper_t op) {
+    Str *v1 = (Str *)op->v2;
     return (Obj *)int_from_size(v1->chars);
 }
 

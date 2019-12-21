@@ -803,8 +803,8 @@ static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), lin
     return ret;
 }
 
-static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
-    Bytes *v1 = (Bytes *)o1;
+static MUST_CHECK Obj *len(oper_t op) {
+    Bytes *v1 = (Bytes *)op->v2;
     return (Obj *)int_from_size(byteslen(v1));
 }
 

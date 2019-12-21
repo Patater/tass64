@@ -83,8 +83,8 @@ static MUST_CHECK Obj *function(Obj *v1, Func_types UNUSED(f), bool UNUSED(inpla
     return val_reference(v1);
 }
 
-static MUST_CHECK Obj *len(Obj *v1, linepos_t UNUSED(epoint)) {
-    return val_reference(v1);
+static MUST_CHECK Obj *len(oper_t op) {
+    return val_reference(op->v2);
 }
 
 static MUST_CHECK Obj *size(oper_t op) {

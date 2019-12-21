@@ -731,7 +731,9 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     switch (func) {
                     case F_ANY: return v[0].val->obj->truth(v[0].val, TRUTH_ANY, &v[0].epoint);
                     case F_ALL: return v[0].val->obj->truth(v[0].val, TRUTH_ALL, &v[0].epoint);
-                    case F_LEN: return v[0].val->obj->len(v[0].val, &v[0].epoint);
+                    case F_LEN: 
+                        op->v2 = v[0].val;
+                        return v[0].val->obj->len(op);
                     case F_SORT: return function_sort(v[0].val, &v[0].epoint);
                     default: 
                         op->v2 = v[0].val;

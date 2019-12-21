@@ -311,8 +311,8 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
     return &v->v;
 }
 
-static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
-    List *v1 = (List *)o1;
+static MUST_CHECK Obj *len(oper_t op) {
+    List *v1 = (List *)op->v2;
     return (Obj *)int_from_size(v1->len);
 }
 

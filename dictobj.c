@@ -350,8 +350,8 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return true;
 }
 
-static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
-    Dict *v1 = (Dict *)o1;
+static MUST_CHECK Obj *len(oper_t op) {
+    Dict *v1 = (Dict *)op->v2;
     return (Obj *)int_from_size(v1->len);
 }
 

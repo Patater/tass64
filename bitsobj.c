@@ -406,8 +406,8 @@ static MUST_CHECK Obj *function(Obj *o1, Func_types f, bool UNUSED(inplace), lin
     return ret;
 }
 
-static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
-    Bits *v1 = (Bits *)o1;
+static MUST_CHECK Obj *len(oper_t op) {
+    Bits *v1 = (Bits *)op->v2;
     return (Obj *)int_from_size(v1->bits);
 }
 
