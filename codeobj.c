@@ -306,8 +306,8 @@ static MUST_CHECK Obj *len(Obj *o1, linepos_t UNUSED(epoint)) {
     return (Obj *)int_from_size((ln != 0) ? (s / ln) : s);
 }
 
-static MUST_CHECK Obj *size(Obj *o1, linepos_t UNUSED(epoint)) {
-    Code *v1 = (Code *)o1;
+static MUST_CHECK Obj *size(oper_t op) {
+    Code *v1 = (Code *)op->v2;
     if (v1->pass == 0) {
         return (Obj *)ref_none();
     }

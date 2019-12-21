@@ -220,8 +220,8 @@ static MUST_CHECK Obj *invalid_len(Obj *v1, linepos_t epoint) {
     return (Obj *)generic_invalid(v1, epoint, ERROR______CANT_LEN);
 }
 
-static MUST_CHECK Obj *invalid_size(Obj *v1, linepos_t epoint) {
-    return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_SIZE);
+static MUST_CHECK Obj *invalid_size(oper_t op) {
+    return (Obj *)generic_invalid(op->v2, op->epoint2, ERROR_____CANT_SIZE);
 }
 
 static FAST_CALL MUST_CHECK Obj *invalid_next(struct iter_s *v1) {
