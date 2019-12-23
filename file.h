@@ -70,6 +70,6 @@ extern FILE *file_open(const char *, const char *);
 extern void include_list_add(const char *);
 extern size_t get_base(const char *);
 extern char *get_path(const struct str_t *, const char *);
-extern void makefile(int, char *[]);
+extern void makefile(int, char *[], bool);
 
 #endif

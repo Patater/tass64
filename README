@@ -2967,11 +2967,17 @@ Operation options
     specified by repeating this option. If multiple matches exist the first one
     is used.
 
--M <file>
+-M <file>, --dependencies <file>
     Specify make rule output file
 
-    Writes a dependency rule suitable for `make' from the list of files used
+    Writes a dependency rules suitable for `make' from the list of files used
     during compilation.
+
+--make-phony
+    Enable phony targets for dependencies
+
+    This is useful for automatic dependency generation to avoid missing target
+    errors on file rename.
 
 -E <file>, --error <file>
     Specify error output file
