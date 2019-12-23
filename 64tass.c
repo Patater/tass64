@@ -4910,7 +4910,7 @@ int main2(int *argc2, char **argv2[]) {
         }
         if (labelprint(s, k != j)) break;
     }
-    if (arguments.make != NULL) makefile(argc - opts, argv + opts);
+    if (arguments.make != NULL) makefile(argc - opts, argv + opts, arguments.make_phony);
 
     if (error_serious()) {status();return EXIT_FAILURE;}
 

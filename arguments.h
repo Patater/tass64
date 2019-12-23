@@ -60,6 +60,7 @@ struct arguments_s {
     bool longbranch;
     bool tasmcomp;
     bool verbose;
+    bool make_phony;
     uint8_t caseinsensitive;
     struct output_s *output;
     size_t output_len;

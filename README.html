@@ -3402,9 +3402,13 @@ and forces 16&nbsp;bit unsigned evaluation (see <q>differences to original Turbo
 source file then this path is tried. More than one directories can be specified
 by repeating this option. If multiple matches exist the first one is used.</p>
 
-<dt><b>-M</b> &lt;file&gt;<a name="o_M" href="#o_M"></a>
+<dt><b>-M</b> &lt;file&gt;, <b>--dependencies</b> &lt;file&gt;<a name="o_dependencies" href="#o_dependencies"></a>
 <dd>Specify make rule output file
-<p>Writes a dependency rule suitable for <q>make</q> from the list of files used during compilation.</p>
+<p>Writes a dependency rules suitable for <q>make</q> from the list of files used during compilation.</p>
+
+<dt><b>--make-phony</b><a name="o_make-phony" href="#o_make-phony"></a>
+<dd>Enable phony targets for dependencies
+<p>This is useful for automatic dependency generation to avoid missing target errors on file rename.</p>
 
 <dt><b>-E</b> &lt;file&gt;, <b>--error</b> &lt;file&gt;<a name="o_error" href="#o_error"></a>
 <dd>Specify error output file
