@@ -484,11 +484,12 @@ FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, size_t len) {
 
 static size_t omemp;
 static size_t ptextaddr;
-static address_t oaddr, oaddr2;
+static address_t oaddr, oaddr2, olastaddr;
 
 void mark_mem(const Memblocks *memblocks, address_t adr, address_t adr2) {
     ptextaddr = memblocks->mem.p;
     omemp = memblocks->p;
+    olastaddr = memblocks->lastaddr;
     oaddr = adr;
     oaddr2 = adr2;
 }
@@ -552,18 +553,17 @@ void list_mem(const Memblocks *memblocks) {
         }
 
         if (first) {
-            if (addr2 < addr) {
-                addr = addr2;
+            first = false;
+            if (addr != olastaddr) {
                 len = 0;
                 o--;
             } else {
-                address_t diff = addr2 - addr;
+                address_t diff = (addr2 - addr) & all_mem2;
                 if (diff > len) continue;
-                addr = addr2;
                 p += diff;
                 len -= diff;
             }
-            first = false;
+            addr = addr2;
         } else {
             if (len == 0) continue;
         }
