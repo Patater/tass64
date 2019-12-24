@@ -420,9 +420,10 @@ void label_move(Label *label, const str_t *name, const struct file_list_s *cflis
 }
 
 void unused_check(Namespace *names) {
-    size_t n, ln = names->len;
-    names->len = 0;
+    size_t n, ln;
 
+    if (names->len == 0) return;
+    ln = names->len; names->len = 0;
     for (n = 0; n <= names->mask; n++) {
         Label *key2 = names->data[n];
         Obj *o;
@@ -511,9 +512,10 @@ static FAST_CALL int duplicate_compare(const struct avltree_node *aa, const stru
 }
 
 static void labelprint2(Namespace *names, FILE *flab, int labelmode) {
-    size_t n, ln = names->len;
-    names->len = 0;
+    size_t n, ln;
 
+    if (names->len == 0) return;
+    ln = names->len; names->len = 0;
     for (n = 0; n <= names->mask; n++) {
         Label *l = names->data[n];
         if (l == NULL || l->name.data == NULL) continue;
@@ -599,9 +601,10 @@ static inline const uint8_t *get_line(const struct file_s *file, size_t line) {
 }
 
 static void labeldump(Namespace *names, FILE *flab) {
-    size_t n, ln = names->len;
-    names->len = 0;
+    size_t n, ln;
 
+    if (names->len == 0) return;
+    ln = names->len; names->len = 0;
     for (n = 0; n <= names->mask; n++) {
         Label *l2 = names->data[n];
         Namespace *ns;
@@ -724,7 +727,7 @@ void ref_labels(void) {
 
         if (output->mode != LABEL_EXPORT) continue;
         space = find_space(output->space, true);
-        if (space == NULL) continue;
+        if (space == NULL || space->len == 0) continue;
 
         for (n = 0; n <= space->mask; n++) {
             Label *l = space->data[n];
