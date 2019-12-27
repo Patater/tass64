@@ -742,6 +742,7 @@ void ref_labels(void) {
             default:break;
             }
             if (l != namespace_lookup(space, l)) continue;
+            if (l->value->obj == ERROR_OBJ) err_msg_output((Error *)l->value);
             l->ref = true;
             l->usepass = pass;
         }
