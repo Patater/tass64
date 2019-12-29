@@ -4126,6 +4126,10 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
 
+                    if (newlabel != NULL && prm == CMD_BINCLUDE && (f == NULL || f->open > 1) && newlabel->value->obj == CODE_OBJ) {
+                        newlabel->update_after = true;
+                        const_assign(newlabel, (Obj *)ref_none());
+                    }
                     if (f == NULL) goto breakerr;
                     if (f->open>1) {
                         err_msg2(ERROR_FILERECURSION, NULL, &epoint);
