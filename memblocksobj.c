@@ -65,6 +65,7 @@ MALLOC Memblocks *new_memblocks(size_t ln, size_t ln2) {
     val->data = (ln2 == 0) ? NULL : (struct memblock_s *)mallocx(ln2 * sizeof *val->data);
     val->flattened = false;
     val->merged = false;
+    val->enumeration = false;
     return val;
 }
 

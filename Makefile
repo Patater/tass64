@@ -119,7 +119,7 @@ instruction.o: instruction.c instruction.h attributes.h stdbool.h \
  inttypes.h opcodes.h 64tass.h wait_e.h section.h avl.h str.h file.h \
  listing.h error.h errors_e.h longjump.h arguments.h optimizer.h \
  addressobj.h obj.h values.h listobj.h registerobj.h codeobj.h typeobj.h \
- noneobj.h errorobj.h
+ noneobj.h errorobj.h memblocksobj.h
 intobj.o: intobj.c intobj.h obj.h attributes.h inttypes.h math.h \
  unicode.h stdbool.h encoding.h avl.h errors_e.h error.h eval.h \
  variables.h str.h arguments.h boolobj.h floatobj.h values.h codeobj.h \

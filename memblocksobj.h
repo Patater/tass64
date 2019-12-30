@@ -39,7 +39,7 @@ typedef struct Memblocks {
     size_t p, len;
     size_t lastp;
     address_t lastaddr;
-    bool flattened, merged;
+    bool flattened, merged, enumeration;
     struct memblock_s *data;
 } Memblocks;
 
