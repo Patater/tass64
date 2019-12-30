@@ -99,6 +99,29 @@ bool pop_context(void) {
     return true;
 }
 
+void push_context2(Namespace *name) {
+    if (context_stack.p >= context_stack.len) {
+        context_stack.len += 8;
+        if (/*context_stack.len < 8 ||*/ context_stack.len > SIZE_MAX / sizeof *context_stack.stack) err_msg_out_of_memory(); /* overflow */
+        context_stack.stack = (struct cstack_s *)reallocx(context_stack.stack, context_stack.len * sizeof *context_stack.stack);
+    }
+    context_stack.stack[context_stack.p].normal = context_stack.stack[context_stack.p - 1].normal;
+    context_stack.stack[context_stack.p - 1].normal = ref_namespace(name);
+    context_stack.stack[context_stack.p].cheap = ref_namespace(name);
+    context_stack.p++;
+}
+
+bool pop_context2(void) {
+    if (context_stack.p > 1 + context_stack.bottom) {
+        struct cstack_s *c = &context_stack.stack[--context_stack.p];
+        val_destroy(&context_stack.stack[context_stack.p - 1].normal->v);
+        context_stack.stack[context_stack.p - 1].normal = c->normal;
+        val_destroy(&c->cheap->v);
+        return false;
+    }
+    return true;
+}
+
 void reset_context(void) {
     context_stack.bottom = 0;
     while (context_stack.p != 0) {

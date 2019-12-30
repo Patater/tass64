@@ -32,6 +32,8 @@ extern void push_dummy_context(void);
 extern void push_context(struct Namespace *);
 extern bool pop_context(void);
 extern void reset_context(void);
+extern void push_context2(struct Namespace *);
+extern bool pop_context2(void);
 extern void get_namespaces(struct Mfunc *);
 extern size_t context_get_bottom(void);
 extern void context_set_bottom(size_t);
