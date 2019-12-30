@@ -2415,6 +2415,7 @@ MUST_CHECK Obj *compile(void)
                             section_address.l_address_val = (Obj *)ref_int(int_value[0]);
                             section_address.mem = new_memblocks(0, 0);
                             section_address.mem->lastaddr = 0;
+                            section_address.mem->enumeration = true;
                             current_address = &section_address;
 
                             structure = (Struct *)val_alloc(obj);
