@@ -122,6 +122,11 @@ static struct waitfor_s {
             address_t addr;
             Label *label;
             size_t membp;
+        } cmd_with;
+        struct {
+            address_t addr;
+            Label *label;
+            size_t membp;
         } cmd_weak;
         struct {
             address2_t laddr;
@@ -211,6 +216,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x49" "endu",
     "\x61" "endv",
     "\x58" "endweak",
+    "\x69" "endwith",
     "\x40" "eor",
     "\x25" "error",
     "\x16" "fi",
@@ -262,6 +268,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x2b" "warn",
     "\x57" "weak",
     "\x64" "while",
+    "\x68" "with",
     "\x0a" "word",
     "\x24" "xl",
     "\x23" "xs",
@@ -283,7 +290,8 @@ typedef enum Command_types {
     CMD_BINCLUDE, CMD_FUNCTION, CMD_ENDF, CMD_SWITCH, CMD_CASE, CMD_DEFAULT,
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
-    CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF
+    CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF,
+    CMD_WITH, CMD_ENDWITH
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -958,6 +966,12 @@ static const char *check_waitfor(void) {
     case W_ENDN:
         pop_context();
         return ".endn";
+    case W_ENDWITH2:
+        pop_context2();
+        /* fall through */
+    case W_ENDWITH:
+        if (waitfor->u.cmd_with.label != NULL) {set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(&waitfor->u.cmd_with.label->v);}
+        return ".endwith";
     case W_ENDC: return ".endc";
     case W_ENDS:
         if ((waitfor->skip & 1) != 0) current_address->unionmode = waitfor->u.cmd_struct.unionmode;
@@ -3328,6 +3342,15 @@ MUST_CHECK Obj *compile(void)
                     close_waitfor(W_ENDN2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".namespace", &epoint); goto breakerr;}
                 break;
+            case CMD_ENDWITH: /* .endwith */
+                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if (close_waitfor(W_ENDWITH)) {
+                    pop_context2();
+                } else if (waitfor->what==W_ENDWITH2) {
+                    if (pop_context2()) err_msg2(ERROR__MISSING_OPEN, ".with", &epoint);
+                    close_waitfor(W_ENDWITH2);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".with", &epoint); goto breakerr;}
+                break;
             case CMD_ENDWEAK: /* .endweak */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (close_waitfor(W_WEAK)) {
@@ -3689,6 +3712,26 @@ MUST_CHECK Obj *compile(void)
                         waitfor->what = W_ENDN2;
                     } else push_context(current_context);
                 } else {push_dummy_context(); new_waitfor(W_ENDN, &epoint);}
+                break;
+            case CMD_WITH: if ((waitfor->skip & 1) != 0)
+                { /* .namespace */
+                    struct values_s *vs;
+                    listing_line(listing, epoint.pos);
+                    new_waitfor(W_ENDWITH, &epoint);
+                    if (newlabel == NULL) waitfor->u.cmd_with.label = NULL;
+                    else {
+                        waitfor->u.cmd_with.addr = current_address->address;waitfor->u.cmd_with.membp = newmembp;waitfor->u.cmd_with.label = ref_label(newlabel);
+                        newlabel = NULL;
+                    }
+                    if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
+                    vs = get_val();
+                    val = (Obj *)get_namespace(vs->val);
+                    if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
+                    else {
+                        push_context2((Namespace *)val);
+                        waitfor->what = W_ENDWITH2;
+                    }
+                } else new_waitfor(W_ENDWITH, &epoint);
                 break;
             case CMD_WEAK: if ((waitfor->skip & 1) != 0)
                 { /* .weak */

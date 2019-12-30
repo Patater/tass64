@@ -2607,6 +2607,17 @@ scope is of course not allowed and it results in double definition error.</p>
 <p>Please note that <code>.ifdef</code>/<code>.ifndef</code> directives are
 left out from 64tass for of technical reasons, so don't wait for them to appear
 anytime soon.</p>
+
+<dt><code><b class="k">.with</b> &lt;symbol&gt;</code><a name="d_with" href="#d_with"></a>
+<dt><code><b class="k">.endwith</b></code><a name="d_endwith" href="#d_endwith"></a>
+<dd>Namespace access
+<p>This directive is similar to <a href="#d_namespace"><code>.namespace</code></a> but it gives access to
+another scope's variables without leaving the current scope. May be
+useful to allow a short hand access in some situations.</p>
+
+<p>It's advised to use the <a href="#o_Wshadow">-Wshadow</a> command line
+option to warn about any unexpected symbol ambiguity.</p>
+
 </dl>
 
 <h3>Sections<a name="sections" href="#sections"></a></h3>
@@ -5323,6 +5334,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_endu">.endu</a>
 <a href="#d_endv">.endv</a>
 <a href="#d_endweak">.endweak</a>
+<a href="#d_endwith">.endwith</a>
 <a href="#d_eor">.eor</a>
 <a href="#d_error">.error</a>
 <a href="#d_fi">.fi</a>
@@ -5374,6 +5386,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#d_warn">.warn</a>
 <a href="#d_weak">.weak</a>
 <a href="#d_while">.while</a>
+<a href="#d_with">.with</a>
 <a href="#d_word">.word</a>
 <a href="#d_xl">.xl</a>
 <a href="#d_xs">.xs</a>
