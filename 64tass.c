@@ -2477,7 +2477,9 @@ MUST_CHECK Obj *compile(void)
                             val = macro_recurse(W_ENDS, &structure->v, structure->names, &cmdpoint);
                             structure->retval = (val != NULL);
                             if (val != NULL) val_destroy(val);
-                            close_waitfor((prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2);
+                            waitfor->what = (prm == CMD_STRUCT) ? W_ENDS : W_ENDU;
+                            waitfor->skip = 0;
+                            lpoint.line--; vline--;
                             current_section->structrecursion--;
 
                             current_section->provides = provides; current_section->requires = requires; current_section->conflicts = conflicts;
