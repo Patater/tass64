@@ -3005,7 +3005,7 @@ MUST_CHECK Obj *compile(void)
         case ';':
         case '\0':
             if ((waitfor->skip & 1) != 0) {
-                if (newlabel != NULL && newlabel->value->obj == CODE_OBJ && labelname.len != 0 && labelname.data[0] != '_' && labelname.data[0] != '+' && labelname.data[0] != '-' && mycontext == current_context) {val_destroy(&cheap_context->v);cheap_context = ref_namespace(((Code *)newlabel->value)->names);}
+                if (newlabel != NULL && newlabel->value->obj == CODE_OBJ && labelname.len != 0 && labelname.data[0] != '_' && labelname.data[0] != '+' && labelname.data[0] != '-') {val_destroy(&cheap_context->v);cheap_context = ref_namespace(((Code *)newlabel->value)->names);}
                 listing_line(listing, epoint.pos);
             }
             break;
@@ -4745,7 +4745,7 @@ MUST_CHECK Obj *compile(void)
                 str_t opname;
                 bool down;
 
-                if (newlabel != NULL && newlabel->value->obj == CODE_OBJ && labelname.len != 0 && labelname.data[0] != '_' && labelname.data[0] != '+' && labelname.data[0] != '-' && mycontext == current_context) {val_destroy(&cheap_context->v);cheap_context = ref_namespace(((Code *)newlabel->value)->names);}
+                if (newlabel != NULL && newlabel->value->obj == CODE_OBJ && labelname.len != 0 && labelname.data[0] != '_' && labelname.data[0] != '+' && labelname.data[0] != '-') {val_destroy(&cheap_context->v);cheap_context = ref_namespace(((Code *)newlabel->value)->names);}
                 opname.data = pline + lpoint.pos; opname.len = get_label(opname.data);
                 lpoint.pos += opname.len;
                 if (opname.len == 3 && (prm = lookup_opcode(opname.data)) >= 0) {
