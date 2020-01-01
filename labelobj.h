@@ -40,6 +40,7 @@ typedef struct Label {
     uint8_t usepass;
     uint8_t defpass;
     uint8_t strength;
+    uint8_t fwpass;
 } Label;
 
 extern void labelobj_init(void);

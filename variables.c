@@ -56,6 +56,7 @@ Namespace *root_namespace;
 static Namespace *builtin_namespace;
 Namespace *current_context;
 Namespace *cheap_context;
+size_t fwcount;
 
 struct cstack_s {
     Namespace *normal;
@@ -233,13 +234,17 @@ static Label *namespace_lookup(const Namespace *ns, const Label *p) {
                 const str_t *s1 = &p->cfname;
                 const str_t *s2 = &d->cfname;
                 if (s1->len == s2->len && (s1->data == s2->data || memcmp(s1->data, s2->data, s1->len) == 0)) {
-                    if (d->strength == 0) return d;
+                    if (d->strength == 0) { ret = d; break; }
                     if (ret == NULL || d->strength < ret->strength) ret = d;
                 }
             }
         }
         hash >>= 5;
         offs = (5 * offs + hash + 1) & mask;
+    }
+    if (ret != NULL && ret->constant && ret->defpass == pass - 1 && ret->fwpass != pass) {
+        ret->fwpass = pass;
+        fwcount++;
     }
     return ret;
 }
@@ -420,6 +425,7 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
         lastlb->ref = false;
         lastlb->update_after = false;
         lastlb->usepass = 0;
+        lastlb->fwpass = 0;
         lastlb->defpass = pass;
         *exists = false;
         b = lastlb;

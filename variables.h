@@ -39,6 +39,7 @@ extern size_t context_get_bottom(void);
 extern void context_set_bottom(size_t);
 
 extern struct Namespace *current_context, *cheap_context, *root_namespace;
+extern size_t fwcount;
 extern struct Label *find_label(const str_t *, struct Namespace **);
 extern struct Label *find_label2(const str_t *, struct Namespace *);
 extern struct Label *find_label3(const str_t *, struct Namespace *, uint8_t);
