@@ -117,21 +117,26 @@ static Label *namespace_lookup(const Namespace *ns, const Label *p) {
 
 static bool namespace_issubset(Namespace *v1, const Namespace *v2) {
     size_t n, ln;
-    if (v1->len == 0) return true;
+    bool ret = true;
+    if (v1->len == 0) return ret;
     ln = v1->len; v1->len = 0;
     for (n = 0; n <= v1->mask; n++) {
         const Label *p2, *p = v1->data[n];
         if (p == NULL) continue;
         if (p->defpass == pass || (p->constant && (!fixeddig || p->defpass == pass - 1))) {
             p2 = namespace_lookup(v2, p);
-            if (p2 == NULL) return false;
+            if (p2 == NULL) {
+                ret = false;
+                break;
+            }
             if (!p->v.obj->same(&p->v, &p2->v)) {
-                return false;
+                ret = false;
+                break;
             }
         }
     }
     v1->len = ln;
-    return true;
+    return ret;
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
