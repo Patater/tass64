@@ -190,7 +190,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
             vals[i++] = v;
         }
         tuple->len = i;
-        if (i == 1) { ln--; chars--; }
+        if (i == 0) { ln++; chars++; }
     }
     str = new_str2(ln);
     if (str == NULL) {
