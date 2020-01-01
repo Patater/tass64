@@ -156,10 +156,9 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     if (epoint == NULL) return NULL;
     if (v1->len != 0) {
         size_t n;
-        bool first = true;
         ln = v1->len;
         chars = ln + 12;
-        if (chars < 1) return NULL; /* overflow */
+        if (chars < 12) return NULL; /* overflow */
         if (chars > maxsize) return NULL;
         tuple = new_tuple(ln);
         vals = tuple->data;
@@ -169,10 +168,6 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
             Obj *v;
             if (p == NULL) continue;
             if (p->defpass != pass && !(p->constant && (!fixeddig || p->defpass == pass - 1))) {
-                if (first) {
-                    first = false;
-                    continue;
-                }
                 ln--;
                 chars--;
                 continue;
@@ -195,6 +190,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
             vals[i++] = v;
         }
         tuple->len = i;
+        if (i == 1) { ln--; chars--; }
     }
     str = new_str2(ln);
     if (str == NULL) {
