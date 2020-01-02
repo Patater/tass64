@@ -2064,7 +2064,7 @@ MUST_CHECK Obj *compile(void)
                                 err_msg_double_defined(label, &labelname, &epoint);
                             } else {
                                 if (label->fwpass == pass) fwcount--;
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                if (!constcreated && label->defpass != pass - 1) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2078,7 +2078,7 @@ MUST_CHECK Obj *compile(void)
                                 const_assign(label, val);
                             }
                         } else {
-                            if (!constcreated && temporary_label_branch == 0) {
+                            if (!constcreated) {
                                 if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                 constcreated = true;
                             }
@@ -2166,7 +2166,7 @@ MUST_CHECK Obj *compile(void)
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
-                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (!constcreated && label->defpass != pass - 1) {
                                         if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                         constcreated = true;
                                     }
@@ -2180,7 +2180,7 @@ MUST_CHECK Obj *compile(void)
                                     const_assign(label, &lbl->v);
                                 }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0) {
+                                if (!constcreated) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2204,7 +2204,7 @@ MUST_CHECK Obj *compile(void)
                                     goto as_command;
                                 }
                                 if (label->fwpass == pass) fwcount--;
-                                if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                if (!constcreated && label->defpass != pass - 1) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2212,7 +2212,7 @@ MUST_CHECK Obj *compile(void)
                                     label_move(label, &labelname, current_file_list);
                                 }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0) {
+                                if (!constcreated) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2278,7 +2278,7 @@ MUST_CHECK Obj *compile(void)
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
-                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (!constcreated && label->defpass != pass - 1) {
                                         if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                         constcreated = true;
                                     }
@@ -2294,7 +2294,7 @@ MUST_CHECK Obj *compile(void)
                                 }
                             } else {
                                 macro->retval = false;
-                                if (!constcreated && temporary_label_branch == 0) {
+                                if (!constcreated == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2333,7 +2333,7 @@ MUST_CHECK Obj *compile(void)
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
-                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (!constcreated && label->defpass != pass - 1) {
                                         if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                         constcreated = true;
                                     }
@@ -2362,7 +2362,7 @@ MUST_CHECK Obj *compile(void)
                                 }
                             } else {
                                 mfunc->retval = false;
-                                if (!constcreated && temporary_label_branch == 0) {
+                                if (!constcreated) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2420,7 +2420,7 @@ MUST_CHECK Obj *compile(void)
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
-                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (!constcreated && label->defpass != pass - 1) {
                                         if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                         constcreated = true;
                                     }
@@ -2447,7 +2447,7 @@ MUST_CHECK Obj *compile(void)
                                 }
                             } else {
                                 structure->retval = false;
-                                if (!constcreated && temporary_label_branch == 0) {
+                                if (!constcreated == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2516,7 +2516,7 @@ MUST_CHECK Obj *compile(void)
                                     goto as_command;
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
-                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (!constcreated && label->defpass != pass - 1) {
                                         if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                         constcreated = true;
                                     }
@@ -2526,7 +2526,7 @@ MUST_CHECK Obj *compile(void)
                                     label->defpass = pass;
                                 }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0) {
+                                if (!constcreated) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2567,7 +2567,7 @@ MUST_CHECK Obj *compile(void)
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
-                                    if (!constcreated && temporary_label_branch == 0 && label->defpass != pass - 1) {
+                                    if (!constcreated && label->defpass != pass - 1) {
                                         if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                         constcreated = true;
                                     }
@@ -2580,7 +2580,7 @@ MUST_CHECK Obj *compile(void)
                                     label->ref = false;
                                 }
                             } else {
-                                if (!constcreated && temporary_label_branch == 0) {
+                                if (!constcreated) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2778,7 +2778,7 @@ MUST_CHECK Obj *compile(void)
                         }
                     }
                     if (labelexists) {
-                        if (!constcreated && temporary_label_branch == 0 && newlabel->defpass != pass - 1) {
+                        if (!constcreated && newlabel->defpass != pass - 1) {
                             if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
                             constcreated = true;
                         }
@@ -2819,7 +2819,7 @@ MUST_CHECK Obj *compile(void)
                     } else {
                         if (diagnostics.optimize) cpu_opt_invalidate();
                         code = new_code();
-                        if (!constcreated && temporary_label_branch == 0) {
+                        if (!constcreated) {
                             if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
                             constcreated = true;
                         }
