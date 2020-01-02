@@ -1017,8 +1017,8 @@ static bool section_start(linepos_t epoint) {
     tmp = find_new_section(&sectionname);
     if (tmp->usepass == 0 || tmp->defpass < pass - 1) {
         size_t ln = tmp->address.mem->mem.p, ln2 = tmp->address.mem->p;
-        tmp->address.end = tmp->address.start = tmp->restart = tmp->address.address = 0;
-        tmp->size = tmp->l_restart.address = tmp->l_restart.bank = tmp->address.l_address.address = tmp->address.l_address.bank = 0;
+        tmp->address.end = tmp->address.start = tmp->restart = tmp->address.address = current_address->address;
+        tmp->size = 0; tmp->l_restart = tmp->address.l_address = current_address->l_address;
         if (tmp->usepass != 0 && tmp->usepass >= pass - 1) err_msg_not_defined(&sectionname, &opoint);
         else {
             if (fixeddig && pass > max_pass) err_msg_cant_calculate(&sectionname, epoint);
