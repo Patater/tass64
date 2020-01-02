@@ -20,6 +20,7 @@
 #define LISTOBJ_H
 #include "obj.h"
 #include "values.h"
+#include "stdbool.h"
 
 extern struct Type *const LIST_OBJ;
 extern struct Type *const TUPLE_OBJ;
@@ -78,4 +79,6 @@ static inline MUST_CHECK Colonlist *new_colonlist(void) {
 
 extern MUST_CHECK Tuple *new_tuple(size_t);
 extern Obj **list_create_elements(List *, size_t);
+extern MUST_CHECK bool list_extend(List *);
+extern void list_shrink(List *, size_t);
 #endif

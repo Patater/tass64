@@ -1291,49 +1291,13 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
     return nf;
 }
 
-static MUST_CHECK bool list_extend(List *lst) {
-    Obj **vals;
-    size_t o = lst->len, n;
-    if (lst->data == lst->u.val) {
-        n = 16;
-        vals = (Obj **)malloc(n * sizeof *lst->data);
-        if (vals == NULL) return true;
-        memcpy(vals, lst->u.val, o * sizeof *lst->data);
-    } else {
-        if (o < 256) n = o * 2;
-        else {
-            n = o + 256;
-            if (/*n < 256 ||*/ n > SIZE_MAX / sizeof *lst->data) return true; /* overflow */
-        }
-        vals = (Obj **)realloc(lst->data, n * sizeof *lst->data);
-        if (vals == NULL) return true;
-    }
-    while (o < n) vals[o++] = (Obj *)ref_none();
-    lst->data = vals;
-    lst->len = n;
-    lst->u.s.max = n;
-    lst->u.s.hash = -1;
+static MUST_CHECK bool list_extend2(List *lst) {
+    if (list_extend(lst)) return true;
+    size_t o = lst->len;
+    Obj **vals = lst->data;
+    while (o < lst->u.s.max) vals[o++] = (Obj *)ref_none();
+    lst->len = o;
     return false;
-}
-
-static void list_shrink(List *lst, size_t i) {
-    size_t j = i;
-    while (j < lst->len) val_destroy(lst->data[j++]);
-    lst->len = i;
-    if (lst->data != lst->u.val) {
-        if (lst->len <= lenof(lst->u.val)) {
-            memcpy(lst->u.val, lst->data, lst->len * sizeof *lst->data);
-            free(lst->data);
-            lst->data = lst->u.val;
-        } else {
-            Obj **v = (Obj **)realloc(lst->data, lst->len * sizeof *lst->data);
-            if (v != NULL) {
-                lst->data = v;
-                lst->u.s.max = lst->len;
-                lst->u.s.hash = -1;
-            }
-        }
-    }
 }
 
 static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
@@ -1499,7 +1463,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 lpoint.line = lin;
                 waitfor->skip = 1; lvline = vline;
                 if (lst != NULL) {
-                    if (i >= lst->len && list_extend(lst)) {i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
+                    if (i >= lst->len && list_extend2(lst)) {i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
                     else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                     else nf = tuple_scope(newlabel, &lst->data[i]);
                     i++;
@@ -1554,7 +1518,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             }
             waitfor->skip = 1;lvline = vline;
             if (lst != NULL) {
-                if (i >= lst->len && list_extend(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+                if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                 else nf = tuple_scope(newlabel, &lst->data[i]);
                 i++;
@@ -1707,7 +1671,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
             lpoint.line = lin;
             waitfor->skip = 1; lvline = vline;
             if (lst != NULL) {
-                if (i >= lst->len && list_extend(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+                if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
                 else nf = tuple_scope(newlabel, &lst->data[i]);
                 i++;
@@ -1774,7 +1738,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
         if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
         waitfor->skip = 1;lvline = vline;
         if (lst != NULL) {
-            if (i >= lst->len && list_extend(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
+            if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
             else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
             else nf = tuple_scope(newlabel, &lst->data[i]);
             i++;
@@ -2359,11 +2323,13 @@ MUST_CHECK Obj *compile(void)
                             mfunc->param = NULL; /* might be recursive through init */
                             mfunc->nslen = 0;
                             mfunc->namespaces = NULL;
+                            mfunc->ipoint = 0;
                             if (labelexists) {
                                 mfunc->retval = (label->value->obj == MFUNC_OBJ) && ((Mfunc *)label->value)->retval;
                                 if (label->defpass == pass) {
                                     waitfor->u.cmd_function.val = &mfunc->v;
                                     mfunc->names = new_namespace(current_file_list, &epoint);
+                                    mfunc->inamespaces = ref_tuple(null_tuple);
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
@@ -2382,8 +2348,10 @@ MUST_CHECK Obj *compile(void)
                                         mfunc->names->backr = mfunc->names->forwr = 0;
                                         mfunc->names->file_list = current_file_list;
                                         mfunc->names->epoint = epoint;
+                                        mfunc->inamespaces = ref_tuple(prev->inamespaces);
                                     } else {
                                         mfunc->names = new_namespace(current_file_list, &epoint);
+                                        mfunc->inamespaces = ref_tuple(null_tuple);
                                     }
                                     label->epoint = epoint;
                                     label->ref = false;
@@ -2406,6 +2374,7 @@ MUST_CHECK Obj *compile(void)
                                 get_func_params(mfunc);
                                 get_namespaces(mfunc);
                                 mfunc->names = new_namespace(current_file_list, &epoint);
+                                mfunc->inamespaces = ref_tuple(null_tuple);
                                 waitfor->u.cmd_function.val = val_reference(&mfunc->v);
                             }
                             goto finish;

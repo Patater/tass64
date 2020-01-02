@@ -461,20 +461,6 @@ void unused_check(Namespace *names) {
         if (key2 == NULL || key2->defpass != pass) continue;
 
         o  = key2->value;
-        switch (o->obj->type) {
-        case T_CODE:
-            ns = ((Code *)o)->names;
-            break;
-        case T_NAMESPACE:
-            ns = (Namespace *)o;
-            break;
-        case T_MFUNC:
-            ns = ((Mfunc *)o)->names;
-            break;
-        default:
-            ns = NULL;
-            break;
-        }
         if (key2->usepass != pass && (key2->name.data[0] != '.' && key2->name.data[0] != '#')) {
             if (!key2->constant) {
                 if (diagnostics.unused.variable) err_msg_unused_variable(key2);
@@ -493,7 +479,31 @@ void unused_check(Namespace *names) {
                 continue;
             }
         }
-        if (ns != NULL && ns->len != 0 && key2->owner) {
+        if (!key2->owner) continue;
+        switch (o->obj->type) {
+        case T_CODE:
+            ns = ((Code *)o)->names;
+            break;
+        case T_NAMESPACE:
+            ns = (Namespace *)o;
+            break;
+        case T_MFUNC:
+            {
+                Mfunc *mfunc = (Mfunc *)o;
+                List *lst = mfunc->inamespaces;
+                size_t i;
+                for (i = 0; i < lst->len; i++) {
+                    ns = (Namespace *)lst->data[i];
+                    if (ns->len != 0) unused_check(ns);
+                }
+                ns = mfunc->names;
+            }
+            break;
+        default:
+            ns = NULL;
+            break;
+        }
+        if (ns != NULL && ns->len != 0) {
             push_context(ns);
             unused_check(ns);
             pop_context();
