@@ -2358,6 +2358,7 @@ MUST_CHECK Obj *compile(void)
                                     get_func_params(mfunc);
                                     get_namespaces(mfunc);
                                     const_assign(label, &mfunc->v);
+                                    if (label->value != &mfunc->v) ((Mfunc *)label->value)->ipoint = 0;
                                     waitfor->u.cmd_function.val = val_reference(label->value);
                                 }
                             } else {
