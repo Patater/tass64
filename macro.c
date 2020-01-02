@@ -711,6 +711,27 @@ void get_macro_params(Obj *v) {
     free(epoints);
 }
 
+static bool clean_namespace(Namespace *v1) {
+    size_t n, n2;
+    if (v1->len == 0) return true;
+    for (n = n2 = 0; n <= v1->mask && n2 < v1->len; n++) {
+        const Label *p = v1->data[n];
+        if (p == NULL) continue;
+        if (p->constant) {
+            return false;
+        }
+        n2++;
+    }
+    for (n2 = 0; n2 < n; n2++) {
+        Label *p = v1->data[n2];
+        if (p == NULL) continue;
+        val_destroy(&p->v);
+        v1->data[n2] = NULL;
+    }
+    v1->len = 0;
+    return true;
+}
+
 Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t epoint) {
     size_t i;
     Label *label;
@@ -874,6 +895,9 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         in_macro = in_macro_old;
     }
     exitfile();
+    if (context->v.refcount == 1 && clean_namespace(context)) {
+        mfunc->ipoint--;
+    }
     return retval;
 }
 
