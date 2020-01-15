@@ -552,7 +552,6 @@ struct textrecursion_s {
     ssize_t len;
     size_t sum, max;
     int prm;
-    bool warn;
     Error_types error;
     uint8_t buff[16];
     linepos_t epoint;
@@ -609,6 +608,7 @@ retry:
     case T_FLOAT:
     case T_INT:
     case T_BOOL:
+    case T_NONE:
         iter.data = NULL;
         val2 = val;
         goto doit;
@@ -645,9 +645,6 @@ retry:
             val_destroy(tmp);
             return;
         }
-    case T_NONE:
-        trec->warn = true;
-        return;
     case T_BYTES:
         iter.data = NULL;
         val2 = val;
@@ -716,8 +713,6 @@ retry:
             textdump(trec, uval);
             if (iter.data == NULL) return;
             break;
-        case T_NONE:
-            trec->warn = true;
         }
         if (trec->sum >= trec->max) break;
     }
@@ -3384,7 +3379,6 @@ MUST_CHECK Obj *compile(void)
                         trec.sum = trec.len;
                         trec.max = SIZE_MAX;
                         trec.prm = prm;
-                        trec.warn = false;
                         trec.error = ERROR__USER_DEFINED;
                         trec.epoint = &epoint;
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
@@ -3395,7 +3389,6 @@ MUST_CHECK Obj *compile(void)
                             }
                             trec.epoint = &vs->epoint;
                             textrecursion(&trec, vs->val);
-                            if (trec.warn) { err_msg_still_none(NULL, trec.epoint); trec.warn = false; }
                             if (trec.error != ERROR__USER_DEFINED) { err_msg2(trec.error, NULL, trec.epoint); trec.error = ERROR__USER_DEFINED;}
                         }
                         if (trec.len < 0) { memskip(-trec.len, trec.epoint); trec.len = 0; }
@@ -3803,11 +3796,9 @@ MUST_CHECK Obj *compile(void)
                         trec.sum = 0;
                         trec.max = db;
                         trec.prm = CMD_TEXT;
-                        trec.warn = false;
                         trec.error = ERROR__USER_DEFINED;
                         trec.epoint = &vs->epoint;
                         textrecursion(&trec, vs->val);
-                        if (trec.warn) err_msg_still_none(NULL, trec.epoint);
                         if (trec.error != ERROR__USER_DEFINED) err_msg2(trec.error, NULL, trec.epoint);
 
                         db -= trec.sum;
