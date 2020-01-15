@@ -1852,10 +1852,14 @@ MUST_CHECK Obj *compile(void)
                     if (!error) {
                         Namespace *context = get_namespace(tmp2->value);
                         if (context == NULL) {
-                            Ident *idn = new_ident(&labelname);
                             epoint.pos--;
-                            err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
-                            val_destroy(&idn->v);
+                            if (tmp2->value == &none_value->v) err_msg_still_none(NULL, &epoint);
+                            else if (tmp2->value->obj == ERROR_OBJ) err_msg_output((Error *)tmp2->value);
+                            else {
+                                Ident *idn = new_ident(&labelname);
+                                err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
+                                val_destroy(&idn->v);
+                            }
                             error = true;
                         } else mycontext = context;
                     }
