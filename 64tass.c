@@ -2767,6 +2767,10 @@ MUST_CHECK Obj *compile(void)
                             epoint = lpoint;
                             goto jn;
                         }
+                        if (!constcreated && newlabel->defpass != pass - 1) {
+                            if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
+                            constcreated = true;
+                        }
                         if (newlabel->fwpass == pass) fwcount--;
                         if (newlabel->file_list != current_file_list) {
                             label_move(newlabel, &labelname, current_file_list);
@@ -2776,12 +2780,11 @@ MUST_CHECK Obj *compile(void)
                             labelexists = false;
                             newlabel->defpass = pass;
                         }
+                    } else if (!constcreated) {
+                        if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
+                        constcreated = true;
                     }
                     if (labelexists) {
-                        if (!constcreated && newlabel->defpass != pass - 1) {
-                            if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
-                            constcreated = true;
-                        }
                         newlabel->constant = true;
                         newlabel->owner = true;
                         newlabel->epoint = epoint;
@@ -2819,10 +2822,6 @@ MUST_CHECK Obj *compile(void)
                     } else {
                         if (diagnostics.optimize) cpu_opt_invalidate();
                         code = new_code();
-                        if (!constcreated) {
-                            if (pass > max_pass) err_msg_cant_calculate(&newlabel->name, &epoint);
-                            constcreated = true;
-                        }
                         newlabel->constant = true;
                         newlabel->owner = true;
                         newlabel->value = (Obj *)code;
