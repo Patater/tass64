@@ -650,7 +650,7 @@ static void labeldump(Namespace *names, FILE *flab) {
 
         if (l2 == NULL) continue;
         if (l2->name.len < 2 || l2->name.data[1] != 0) {
-            Str *val = (Str *)l2->value->obj->repr(l2->value, NULL, SIZE_MAX);
+            Str *val = l2->value->obj != BYTES_OBJ ? (Str *)l2->value->obj->repr(l2->value, NULL, SIZE_MAX) : (Str *)l2->value->obj->str(l2->value, NULL, SIZE_MAX);
             if (val != NULL) {
                 if (val->v.obj == STR_OBJ) {
                     const struct file_s *file = l2->file_list->file;
