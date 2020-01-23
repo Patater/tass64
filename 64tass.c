@@ -1079,6 +1079,7 @@ static bool virtual_start(linepos_t epoint) {
         section_address->l_address.address = uval & 0xffff;
         section_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
         section_address->l_address_val = get_star_value(0, tmp);
+        if (arguments.verbose) listing_starequal(listing, tmp);
     } while (false);
 
     if (tmp == NULL) {
@@ -1124,6 +1125,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
             current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
             val_destroy(current_address->l_address_val);
             current_address->l_address_val = get_star_value(0, val);
+            if (arguments.verbose) listing_starequal(listing, val);
             val_destroy(val);
             addr = (address_t)uval & all_mem2;
             if (current_address->address != addr) {
@@ -1148,6 +1150,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
         current_address->l_address.bank = uval & all_mem & ~(address_t)0xffff;
         val_destroy(current_address->l_address_val);
         current_address->l_address_val = get_star_value(0, val);
+        if (arguments.verbose) listing_starequal(listing, val);
         val_destroy(val);
         return;
     } while (false);
@@ -3564,6 +3567,7 @@ MUST_CHECK Obj *compile(void)
                     val_destroy(current_address->l_address_val);
                     tmp = vs->val;
                     current_address->l_address_val = get_star_value(0, tmp);
+                    if (arguments.verbose) listing_starequal(listing, tmp);
                 } else new_waitfor(W_HERE, &epoint);
                 break;
             case CMD_VIRTUAL: if ((waitfor->skip & 1) != 0)
