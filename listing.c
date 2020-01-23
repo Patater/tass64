@@ -265,21 +265,6 @@ FAST_CALL void listing_equal(Listing *ls, Obj *val) {
     newline(ls);
 }
 
-FAST_CALL void listing_starequal(Listing *ls, Obj *val) {
-    if (ls == NULL) return;
-    if (nolisting != 0 || !ls->source || temporary_label_branch != 0) return;
-    if (ls->linenum) {
-        printline(ls);
-        padding2(ls, ls->columns.addr);
-        flushbuf(ls);
-    }
-    putc('*', ls->flist);
-    putc('=', ls->flist);
-    ls->c += val_print(val, ls->flist) + 1;
-    printllist(ls);
-    newline(ls);
-}
-
 static void printaddr(Listing *ls, char pre, address_t addr, address_t addr2) {
     ls->s[ls->i++] = pre;
     for (;;) {
