@@ -2006,8 +2006,8 @@ MUST_CHECK Obj *compile(void)
                         else if (result2 == &false_value->v) val_replace(&result2, val2);
                     }
                     val_destroy(val2);
-                    listing_equal(listing, result2);
                     if (label != NULL) {
+                        listing_equal(listing, result2);
                         if (label->file_list != current_file_list) {
                             label_move(label, &labelname, current_file_list);
                         }
@@ -2049,7 +2049,6 @@ MUST_CHECK Obj *compile(void)
                             referenceit = oldreferenceit;
                         }
                         if (labelname.data[0] == '*') {
-                            listing_equal(listing, val);
                             starhandle(val, &epoint, &epoints[0]);
                             goto finish;
                         }
