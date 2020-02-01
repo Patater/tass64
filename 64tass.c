@@ -3323,7 +3323,6 @@ MUST_CHECK Obj *compile(void)
             case CMD_ENDWITH: /* .endwith */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
                 if (close_waitfor(W_ENDWITH)) {
-                    pop_context2();
                 } else if (waitfor->what==W_ENDWITH2) {
                     if (pop_context2()) err_msg2(ERROR__MISSING_OPEN, ".with", &epoint);
                     close_waitfor(W_ENDWITH2);
