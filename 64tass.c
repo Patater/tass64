@@ -3130,7 +3130,7 @@ MUST_CHECK Obj *compile(void)
                     if (waitfor->what == W_SWITCH) { err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr; }
                     if (waitfor->what != W_SWITCH2) { err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr; }
                     waitfor->epoint = epoint;
-                    if (skwait==2 || diagnostics.switch_case) {
+                    if (skwait == 2 || diagnostics.switch_case) {
                         struct values_s *vs;
                         Obj *result2;
                         struct oper_s tmp;
@@ -3139,8 +3139,8 @@ MUST_CHECK Obj *compile(void)
                         tmp.epoint = tmp.epoint3 = &epoint;
                         while (!truth && (vs = get_val()) != NULL) {
                             val = vs->val;
-                            if (val->obj == ERROR_OBJ) { err_msg_output((Error *)val); continue; }
-                            if (val == &none_value->v) { err_msg_still_none(NULL, &vs->epoint);continue; }
+                            if (val->obj == ERROR_OBJ) { if (skwait == 2) err_msg_output((Error *)val); continue; }
+                            if (val == &none_value->v) { if (skwait == 2) err_msg_still_none(NULL, &vs->epoint);continue; }
                             tmp.v1 = waitfor->u.cmd_switch.val;
                             tmp.v2 = val;
                             tmp.epoint2 = &vs->epoint;
