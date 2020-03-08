@@ -1176,12 +1176,6 @@ void err_msg_bool(Error_types no, Obj *o, linepos_t epoint) {
     adderror(" [-Wstrict-bool]");
 }
 
-void err_msg_bool_val(Error_types no, unsigned int bits, Obj *o, linepos_t epoint) {
-    new_error_msg2(diagnostic_errors.strict_bool, epoint);
-    err_msg_big_integer(terr_error[no - 0x40], bits, o);
-    adderror(" [-Wstrict-bool]");
-}
-
 void err_msg_bool_oper(oper_t op) {
     new_error_msg2(diagnostic_errors.strict_bool, op->epoint3);
     err_msg_invalid_oper2(op->op, op->v1, op->v2);
