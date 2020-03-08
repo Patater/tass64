@@ -34,6 +34,7 @@ typedef enum Reg_types {
 } Reg_types;
 
 struct cpu_s {
+    const char *name;
     const uint32_t *mnemonic;
     const uint8_t *opcode;
     const uint16_t *disasm;
