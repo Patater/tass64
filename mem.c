@@ -181,7 +181,7 @@ err:while ((size--) != 0) if (putc(0, f) == EOF) break;
 }
 
 #ifdef __DJGPP__
-#define set_unbuffered(f) do {} while (0)
+#define set_unbuffered(f) do {} while (false)
 #else
 static void set_unbuffered(FILE *fout) {
     setvbuf(fout, NULL, _IONBF, 0);
