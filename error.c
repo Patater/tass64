@@ -1408,7 +1408,7 @@ bool error_print(void) {
         }
     } else ferr = stderr;
 
-    if (ferr != stderr) color_detect(ferr); else fflush(stdout);
+    if (ferr != stderr) color_detect(ferr); else if (arguments.quiet) fflush(stdout);
 
     warnings = errors = 0;
     close_error();
