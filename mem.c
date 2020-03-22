@@ -180,9 +180,13 @@ static void padding(size_t size, FILE *f) {
 err:while ((size--) != 0) if (putc(0, f) == EOF) break;
 }
 
+#ifdef __DJGPP__
+#define set_unbuffered(f) do {} while (0)
+#else
 static void set_unbuffered(FILE *fout) {
     setvbuf(fout, NULL, _IONBF, 0);
 }
+#endif
 
 static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     address_t pos, end;
