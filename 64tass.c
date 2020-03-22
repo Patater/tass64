@@ -4879,6 +4879,7 @@ int main2(int *argc2, char **argv2[]) {
     int argc;
 
     err_init(*argv2[0]);
+    setvbuf(stdout, NULL, _IOLBF, 1024);
     avltree_init(&star_root);
     objects_init();
     init_section();
