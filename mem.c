@@ -326,7 +326,7 @@ struct ihex_s {
 
 static void output_mem_ihex_line(struct ihex_s *ihex, unsigned int length, address_t address, unsigned int type, const uint8_t *data) {
     unsigned int i;
-    char line[1+(1+2+1+32+1)*2+1+1];
+    char line[1+(1+2+1+32+1)*2+1];
     struct hexput_s h = { line + 1, 0 };
     line[0] = ':';
     hexput(&h, length);
@@ -337,9 +337,8 @@ static void output_mem_ihex_line(struct ihex_s *ihex, unsigned int length, addre
         hexput(&h, data[i]);
     }
     hexput(&h, (-h.sum) & 0xff);
-    h.line[0] = '\n';
-    h.line[1] = '\0';
-    fputs(line, ihex->file);
+    *h.line++ = '\n';
+    fwrite(line, h.line - line, 1, ihex->file);
 }
 
 static void output_mem_ihex_data(struct ihex_s *ihex) {
@@ -407,7 +406,7 @@ struct srecord_s {
 
 static void output_mem_srec_line(struct srecord_s *srec) {
     unsigned int i;
-    char line[1+1+(1+4+32+1)*2+1+1];
+    char line[1+1+(1+4+32+1)*2+1];
     struct hexput_s h = { line + 2, 0 };
     line[0] = 'S';
     line[1] = srec->length != 0 ? ('1' + srec->type) : ('9' - srec->type);
@@ -420,11 +419,10 @@ static void output_mem_srec_line(struct srecord_s *srec) {
         hexput(&h, srec->data[i]);
     }
     hexput(&h, (~h.sum) & 0xff);
-    h.line[0] = '\n';
-    h.line[1] = '\0';
+    *h.line++ = '\n';
     srec->address += srec->length;
     srec->length = 0;
-    fputs(line, srec->file);
+    fwrite(line, h.line - line, 1, srec->file);
 }
 
 static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
