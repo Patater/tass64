@@ -134,8 +134,7 @@ int main(int argc, char *argv[]) {
     int i, r;
     char **uargv;
 
-    setlocale(LC_ALL, "");
-    setlocale(LC_NUMERIC, "C");
+    setlocale(LC_CTYPE, "");
 
     uargv = (char **)malloc((argc < 1 ? 1 : (unsigned int)argc) * sizeof *uargv);
     if (uargv == NULL) err_msg_out_of_memory2();
