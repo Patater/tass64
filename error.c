@@ -1550,9 +1550,6 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
     int err = errno;
     bool more;
 
-#ifdef _WIN32
-    setlocale(LC_CTYPE, "");
-#endif
     s = strerror(err);
     n = strlen(s);
 
@@ -1578,9 +1575,6 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
         adderror((char *)s2);
         i += (size_t)l;
     }
-#ifdef _WIN32
-    setlocale(LC_CTYPE, "C");
-#endif
     if (more) new_error_msg_more();
 }
 
