@@ -1358,7 +1358,7 @@ static void color_detect(FILE *f) {
     print_use_color = terminal == 1 && isatty(fileno(f)) == 1;
 }
 #else
-#define color_detect(f) {}
+#define color_detect(f) do {} while (false)
 #endif
 
 static inline bool caret_needed(const struct errorentry_s *err) {
@@ -1408,7 +1408,7 @@ bool error_print(void) {
         }
     } else ferr = stderr;
 
-    if (ferr != stderr) color_detect(ferr);
+    if (ferr != stderr) color_detect(ferr); else fflush(stdout);
 
     warnings = errors = 0;
     close_error();
