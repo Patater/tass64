@@ -170,6 +170,7 @@ void memprint(Memblocks *memblocks) {
 }
 
 static void padding(size_t size, FILE *f) {
+    unsigned char nuls[256];
     while (size >= 0x80000000) {
         if (fseek(f, 0x40000000, SEEK_CUR) != 0) goto err;
         size -= 0x40000000;
@@ -177,7 +178,14 @@ static void padding(size_t size, FILE *f) {
     if ((long)size > 256 && fseek(f, (long)size, SEEK_CUR) == 0) {
         return;
     }
-err:while ((size--) != 0) if (putc(0, f) == EOF) break;
+err:
+    nuls[0] = 1;
+    while (size != 0) {
+        size_t db = size < sizeof nuls ? size : sizeof nuls;
+        size -= db;
+        if (nuls[0] != 0) memset(nuls, 0, db);
+        if (fwrite(nuls, db, 1, f) == 0) return;
+    }
 }
 
 #ifdef __DJGPP__
