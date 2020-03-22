@@ -1580,11 +1580,14 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
     if (more) new_error_msg_more();
 }
 
+static void error_status_val(const char *head, unsigned int val) {
+    fputs(head, stdout);
+    if (val != 0) printf("%u\n", val); else puts("None");
+}
+
 void error_status(void) {
-    fputs("Error messages:    ", stdout);
-    if (errors != 0) printf("%u\n", errors); else puts("None");
-    fputs("Warning messages:  ", stdout);
-    if (warnings != 0) printf("%u\n", warnings); else puts("None");
+    error_status_val("Error messages:    ", errors);
+    error_status_val("Warning messages:  ", warnings);
 }
 
 linecpos_t interstring_position(linepos_t epoint, const uint8_t *data, size_t i) {
