@@ -169,11 +169,6 @@ void memprint(Memblocks *memblocks) {
     }
 }
 
-static void putlw(unsigned int w, FILE *f) {
-    putc(w, f);
-    putc(w >> 8, f);
-}
-
 static void padding(size_t size, FILE *f) {
     while (size >= 0x80000000) {
         if (fseek(f, 0x40000000, SEEK_CUR) != 0) goto err;
@@ -185,22 +180,41 @@ static void padding(size_t size, FILE *f) {
 err:while ((size--) != 0) if (putc(0, f) == EOF) break;
 }
 
+static void set_unbuffered(FILE *fout) {
+    setvbuf(fout, NULL, _IONBF, 0);
+}
+
 static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     address_t pos, end;
     unsigned int i;
+    unsigned char header[4];
 
     if (memblocks->p == 0) return;
     pos = memblocks->data[0].addr;
-    if (output->mode == OUTPUT_CBM || output->mode == OUTPUT_APPLE) {
-        putlw(pos, fout);
-    }
-    if (output->mode == OUTPUT_APPLE) {
+    switch (output->mode) {
+    case OUTPUT_CBM:
+        header[0] = pos;
+        header[1] = pos >> 8;
+        if (output->longaddr) {
+            header[2] = pos >> 16;
+            i = 3;
+        } else i = 2;
+        break;
+    case OUTPUT_APPLE:
+        header[0] = pos;
+        header[1] = pos >> 8;
         end = memblocks->data[memblocks->p - 1].addr + memblocks->data[memblocks->p - 1].len;
         end -= pos;
-        putlw(end, fout);
-    } else if (output->mode == OUTPUT_CBM) {
-        if (output->longaddr) putc(pos >> 16, fout);
+        header[2] = end;
+        header[3] = end >> 8;
+        i = 4;
+        break;
+    default:
+        i = 0;
+        break;
     }
+    if (memblocks->p == 1) set_unbuffered(fout);
+    if (i != 0 && fwrite(header, i, 1, fout) == 0) return;
     for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *block = &memblocks->data[i];
         padding(block->addr - pos, fout);
@@ -211,6 +225,7 @@ static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct 
 
 static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool longaddr) {
     size_t i, j;
+    unsigned char header[6];
     for (i = 0; i < memblocks->p;) {
         const struct memblock_s *block = &memblocks->data[i];
         address_t start = block->addr;
@@ -221,23 +236,32 @@ static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool lo
             if (b->addr != addr || addr < start) break;
             size += b->len;
         }
-        putlw(size, fout);
-        if (longaddr) putc(size >> 16, fout);
-        putlw(start, fout);
-        if (longaddr) putc(start >> 16, fout);
+        header[0] = size;
+        header[1] = size >> 8;
+        if (longaddr) {
+            header[2] = size >> 16;
+            header[3] = start;
+            header[4] = start >> 8;
+            header[5] = start >> 16;
+        } else {
+            header[2] = start;
+            header[3] = start >> 8;
+        }
+        if (fwrite(header, longaddr ? 6 : 4, 1, fout) == 0) return;
         for (;i < j; i++) {
             const struct memblock_s *b = &memblocks->data[i];
             if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
         }
     }
-    putlw(0, fout);
-    if (longaddr) putc(0, fout);
+    memset(header, 0, 4);
+    fwrite(header, longaddr ? 3 : 2, 1, fout);
 }
 
 static void output_mem_flat(FILE *fout, const Memblocks *memblocks) {
     address_t pos;
     size_t i;
 
+    if (memblocks->p == 1 && memblocks->data[0].addr == 0) set_unbuffered(fout);
     for (pos = i = 0; i < memblocks->p; i++) {
         const struct memblock_s *block = &memblocks->data[i];
         padding(block->addr - pos, fout);
@@ -248,9 +272,14 @@ static void output_mem_flat(FILE *fout, const Memblocks *memblocks) {
 
 static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks) {
     size_t i, j;
+    unsigned char header[6];
+    header[0] = 0xff;
+    header[1] = 0xff;
+    if (memblocks->p == 1) set_unbuffered(fout);
     for (i = 0; i < memblocks->p;) {
         const struct memblock_s *block = &memblocks->data[i];
-        address_t start = block->addr;
+        bool special;
+        address_t end, start = block->addr;
         address_t size = block->len;
         for (j = i + 1; j < memblocks->p; j++) {
             const struct memblock_s *b = &memblocks->data[j];
@@ -258,9 +287,13 @@ static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks) {
             if (b->addr != addr || addr < start) break;
             size += b->len;
         }
-        if (i == 0 || start == 0xffff) putlw(0xffff, fout);
-        putlw(start, fout);
-        putlw(start + size - 1, fout);
+        special = (i == 0 || start == 0xffff);
+        header[2] = start;
+        header[3] = start >> 8;
+        end = start + size - 1;
+        header[4] = end;
+        header[5] = end >> 8;
+        if (fwrite(special ? header : &header[2], special ? 6 : 4, 1, fout) == 0) return;
         for (;i < j; i++) {
             const struct memblock_s *b = &memblocks->data[i];
             if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
