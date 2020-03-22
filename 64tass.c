@@ -317,7 +317,9 @@ static void tfree(void) {
 }
 
 static void status(void) {
-    bool errors = error_print();
+    bool errors;
+    fflush(stdout);
+    errors = error_print();
     if (arguments.quiet) {
         error_status();
         printf("Passes: %12u\n",pass);
