@@ -305,11 +305,16 @@ static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks) {
     }
 }
 
-static unsigned int hexput(FILE *fout, unsigned int b) {
+struct hexput_s {
+    char *line;
+    unsigned int sum;
+};
+
+static void hexput(struct hexput_s *h, unsigned int b) {
     const char *hex = "0123456789ABCDEF";
-    putc(hex[(b >> 4) & 0xf], fout);
-    putc(hex[b & 0xf], fout);
-    return b;
+    *h->line++ = hex[b >> 4];
+    *h->line++ = hex[b & 0xf];
+    h->sum += b;
 }
 
 struct ihex_s {
@@ -319,22 +324,26 @@ struct ihex_s {
     unsigned int length;
 };
 
-static void output_mem_ihex_line(FILE *fout, unsigned int length, address_t address, unsigned int type, const uint8_t *data) {
-    unsigned int i, sum;
-    putc(':', fout);
-    sum = hexput(fout, length);
-    sum += hexput(fout, address >> 8);
-    sum += hexput(fout, address);
-    sum += hexput(fout, type);
+static void output_mem_ihex_line(struct ihex_s *ihex, unsigned int length, address_t address, unsigned int type, const uint8_t *data) {
+    unsigned int i;
+    char line[1+(1+2+1+32+1)*2+1+1];
+    struct hexput_s h = { line + 1, 0 };
+    line[0] = ':';
+    hexput(&h, length);
+    hexput(&h, (address >> 8) & 0xff);
+    hexput(&h, address & 0xff);
+    hexput(&h, type);
     for (i = 0; i < length; i++) {
-        sum += hexput(fout, data[i]);
+        hexput(&h, data[i]);
     }
-    hexput(fout, -sum);
-    putc('\n', fout);
+    hexput(&h, (-h.sum) & 0xff);
+    h.line[0] = '\n';
+    h.line[1] = '\0';
+    fputs(line, ihex->file);
 }
 
 static void output_mem_ihex_data(struct ihex_s *ihex) {
-    uint8_t *data = ihex->data;
+    const uint8_t *data = ihex->data;
     if ((ihex->address & 0xffff) + ihex->length > 0x10000) {
         uint16_t length = (uint16_t)-ihex->address;
         unsigned int remains = ihex->length - length;
@@ -347,10 +356,10 @@ static void output_mem_ihex_data(struct ihex_s *ihex) {
         uint8_t ez[2];
         ez[0] = (uint8_t)(ihex->address >> 24);
         ez[1] = (uint8_t)(ihex->address >> 16);
-        output_mem_ihex_line(ihex->file, sizeof ez, 0, 4, ez);
+        output_mem_ihex_line(ihex, sizeof ez, 0, 4, ez);
         ihex->segment = ihex->address;
     }
-    output_mem_ihex_line(ihex->file, ihex->length, ihex->address, 0, data);
+    output_mem_ihex_line(ihex, ihex->length, ihex->address, 0, data);
     ihex->address += ihex->length;
     ihex->length = 0;
 }
@@ -385,7 +394,7 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
         }
     }
     if (ihex.length != 0) output_mem_ihex_data(&ihex);
-    output_mem_ihex_line(fout, 0, 0, 1, NULL);
+    output_mem_ihex_line(&ihex, 0, 0, 1, NULL);
 }
 
 struct srecord_s {
@@ -397,21 +406,25 @@ struct srecord_s {
 };
 
 static void output_mem_srec_line(struct srecord_s *srec) {
-    unsigned int i, sum;
-    putc('S', srec->file);
-    putc(srec->length ? ('1' + srec->type) : ('9' - srec->type), srec->file);
-    sum = hexput(srec->file, srec->length + srec->type + 3);
-    if (srec->type > 1) sum += hexput(srec->file, srec->address >> 24);
-    if (srec->type > 0) sum += hexput(srec->file, srec->address >> 16);
-    sum += hexput(srec->file, srec->address >> 8);
-    sum += hexput(srec->file, srec->address);
+    unsigned int i;
+    char line[1+1+(1+4+32+1)*2+1+1];
+    struct hexput_s h = { line + 2, 0 };
+    line[0] = 'S';
+    line[1] = srec->length != 0 ? ('1' + srec->type) : ('9' - srec->type);
+    hexput(&h, srec->length + srec->type + 3);
+    if (srec->type > 1) hexput(&h, (srec->address >> 24) & 0xff);
+    if (srec->type > 0) hexput(&h, (srec->address >> 16) & 0xff);
+    hexput(&h, (srec->address >> 8) & 0xff);
+    hexput(&h, srec->address & 0xff);
     for (i = 0; i < srec->length; i++) {
-        sum += hexput(srec->file, srec->data[i]);
+        hexput(&h, srec->data[i]);
     }
-    hexput(srec->file, ~sum);
-    putc('\n', srec->file);
+    hexput(&h, (~h.sum) & 0xff);
+    h.line[0] = '\n';
+    h.line[1] = '\0';
     srec->address += srec->length;
     srec->length = 0;
+    fputs(line, srec->file);
 }
 
 static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
