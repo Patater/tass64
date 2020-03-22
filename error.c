@@ -1350,8 +1350,12 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
 
 #ifdef COLOR_OUTPUT
 static void color_detect(FILE *f) {
-    char const *term = getenv ("TERM");
-    print_use_color = term != NULL && strcmp(term, "dumb") != 0 && isatty(fileno(f)) == 1;
+    static int terminal;
+    if (terminal == 0) {
+        char const *term = getenv ("TERM");
+        terminal = (term != NULL && strcmp(term, "dumb") != 0) ? 1 : 2;
+    }
+    print_use_color = terminal == 1 && isatty(fileno(f)) == 1;
 }
 #else
 #define color_detect(f) {}
@@ -1404,7 +1408,7 @@ bool error_print(void) {
         }
     } else ferr = stderr;
 
-    color_detect(ferr);
+    if (ferr != stderr) color_detect(ferr);
 
     warnings = errors = 0;
     close_error();
@@ -1466,7 +1470,7 @@ bool error_print(void) {
     }
     if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
     if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
-    color_detect(stderr);
+    if (ferr != stderr) color_detect(stderr);
     if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
     return errors != 0;
 }
