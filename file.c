@@ -419,7 +419,7 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
             if (path == NULL) path = s;
             tmp->realname = path;
             if (arguments.quiet) {
-                printf((ftype == 1) ? "Reading file:      " : "Assembling file:   ");
+                fputs((ftype == 1) ? "Reading file:      " : "Assembling file:   ", stdout);
                 argv_print(path, stdout);
                 putchar('\n');
             }

@@ -1581,9 +1581,9 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
 }
 
 void error_status(void) {
-    printf("Error messages:    ");
+    fputs("Error messages:    ", stdout);
     if (errors != 0) printf("%u\n", errors); else puts("None");
-    printf("Warning messages:  ");
+    fputs("Warning messages:  ", stdout);
     if (warnings != 0) printf("%u\n", warnings); else puts("None");
 }
 
