@@ -104,10 +104,11 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
     struct values_s *v = vals->val;
     size_t args = vals->len;
     size_t j;
-    struct {
+    struct elements_s {
         Obj *oval;
         struct iter_s iters;
-    } elements3[3], *elements;
+    };
+    struct elements_s elements3[3], *elements;
     for (j = 0; j < args; j++) {
         const Type *objt2, *objt = v[j].val->obj;
         if (objt->iterable) {
@@ -117,7 +118,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                 elements = elements3; 
             } else {
                 if (args > SIZE_MAX / sizeof *elements) goto failed; /* overflow */
-                elements = malloc(args * sizeof *elements);
+                elements = (struct elements_s *)malloc(args * sizeof *elements);
                 if (elements == NULL) goto failed;
             }
             elements[j].oval = v[j].val;
