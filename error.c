@@ -1352,7 +1352,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
 static void color_detect(FILE *f) {
     static int terminal;
     if (terminal == 0) {
-        char const *term = getenv ("TERM");
+        char const *term = getenv("TERM");
         terminal = (term != NULL && strcmp(term, "dumb") != 0) ? 1 : 2;
     }
     print_use_color = terminal == 1 && isatty(fileno(f)) == 1;

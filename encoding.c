@@ -840,7 +840,7 @@ next:
         t = cavltree_container_of(c, struct trans_s, node);
         if (tmp.start >= t->start && tmp.end <= t->end) {
             encode_state.i += ln;
-            if ((ch & 0x80) == 0) {
+            if (ch < 0x80) {
                 actual_encoding->table_use[ch / 32] |= 1 << (ch % 32);
                 actual_encoding->table[ch] = (uint8_t)(ch - t->start + t->offset);
             }
