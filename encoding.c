@@ -31,7 +31,7 @@
 
 struct encoding_s *actual_encoding;
 
-#define identmap (const uint8_t *)petscii_esc
+#define identmap (const uint8_t *)petscii_trans
 
 struct encoding_s {
     str_t name;
