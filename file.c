@@ -917,7 +917,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
                     }
                     len += argv_print(a->realname, f);
                 }
-                putc(':', f);
+                if (len != 0) putc(':', f);
             }
         }
         putc('\n', f);
