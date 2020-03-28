@@ -184,7 +184,7 @@ static bool pair_equal(const struct pair_s *a, const struct pair_s *b)
 static void dict_update(Dict *dict, const struct pair_s *p) {
     struct pair_s *d;
     if (dict->u.val == dict->data) {
-        d = dict->u.val;
+        /* nothing */
     } else if (dict->u.s.mask < (1 << (sizeof(uint8_t)*8))) {
         size_t mask = dict->u.s.mask;
         size_t hash = (size_t)p->hash;
