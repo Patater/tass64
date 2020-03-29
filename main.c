@@ -28,26 +28,15 @@
 */
 
 #include "64tass.h"
-#ifdef _WIN32
-#include <windows.h>
-#include <wincon.h>
-#endif
 #include <locale.h>
 #include "wchar.h"
 #include <string.h>
 
 #include "error.h"
 #include "unicode.h"
+#include "console.h"
 
 #ifdef _WIN32
-static UINT oldcodepage;
-static UINT oldcodepage2;
-
-static void myexit(void) {
-    SetConsoleCP(oldcodepage2);
-    SetConsoleOutputCP(oldcodepage);
-}
-
 static const wchar_t *prgname(const wchar_t *name) {
     const wchar_t *p = name;
     while (*p != 0) p++;
@@ -58,17 +47,15 @@ static const wchar_t *prgname(const wchar_t *name) {
     return p;
 }
 
-static int wmain(int argc, wchar_t *argv2[]) {
+#ifdef __MINGW32__
+static 
+#endif
+int wmain(int argc, wchar_t *argv2[]) {
     int i, r;
     char **argv;
 
-    if (IsValidCodePage(CP_UTF8)) {
-        oldcodepage = GetConsoleOutputCP();
-        oldcodepage2 = GetConsoleCP();
-        SetConsoleCP(CP_UTF8);
-        SetConsoleOutputCP(CP_UTF8);
-        atexit(myexit);
-    }
+    console_init();
+    atexit(console_destroy);
 
     argv = (char **)malloc((argc < 1 ? 1 : argc) * sizeof *argv);
     if (argv == NULL) err_msg_out_of_memory2();
@@ -189,7 +176,7 @@ int main(int argc, char *argv[]) {
 
 
 #ifdef __MINGW32__
-
+#include <windows.h>
 #include <shellapi.h>
 
 int main(void)

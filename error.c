@@ -42,11 +42,7 @@
 #include "errorobj.h"
 #include "noneobj.h"
 #include "identobj.h"
-
-#ifdef COLOR_OUTPUT
-bool print_use_color = false;
-bool print_use_bold = false;
-#endif
+#include "console.h"
 
 struct file_list_s *current_file_list;
 
@@ -1303,38 +1299,46 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
             if (included_from->parent != &file_list) included_from = cflist;
             while (included_from->parent != &file_list) {
                 fputs((included_from == cflist) ? "In file included from " : "                      ", f);
-                if (print_use_color) fputs("\33[01m", f);
+                if (print_use_color) console_bold(f);
                 printable_print((const uint8_t *)included_from->parent->file->realname, f);
                 printline(included_from->parent, &included_from->epoint, NULL, f);
                 included_from = included_from->parent;
-                if (print_use_color) fputs("\33[m\33[K", f);
+                if (print_use_color) {
+                    console_default(f);
+                    console_finish(f);
+                }
                 fputs((included_from->parent != &file_list) ? ",\n" : ":\n", f);
             }
             included_from = cflist;
         }
-        if (print_use_color) fputs("\33[01m", f);
+        if (print_use_color) console_bold(f);
         printable_print((const uint8_t *)cflist->file->realname, f);
         line = printline(cflist, epoint, (err->line_len != 0) ? (const uint8_t *)(err + 1) : NULL, f);
-        fputs(": ", f);
     } else {
-        if (print_use_color) fputs("\33[01m", f);
+        if (print_use_color) console_bold(f);
         printable_print((const uint8_t *)prgname, f);
-        fputs(": ", f);
     }
+    fputs(": ", f);
     switch (err->severity) {
-    case SV_NOTE: if (print_use_color) fputs("\33[30m", f); fputs("note: ", f); bold = false; break;
-    case SV_WARNING: if (print_use_color) fputs("\33[35m", f); fputs("warning: ", f); bold = true; break;
+    case SV_NOTE: if (print_use_color) console_black(f); fputs("note: ", f); bold = false; break;
+    case SV_WARNING: if (print_use_color) console_purple(f); fputs("warning: ", f); bold = true; break;
     case SV_NONEERROR:
-    case SV_ERROR: if (print_use_color) fputs("\33[31m", f); fputs("error: ", f); bold = true; break;
-    case SV_FATAL: if (print_use_color) fputs("\33[31m", f); fputs("fatal error: ", f); bold = true; break;
+    case SV_ERROR: if (print_use_color) console_red(f); fputs("error: ", f); bold = true; break;
+    case SV_FATAL: if (print_use_color) console_red(f); fputs("fatal error: ", f); bold = true; break;
     default: bold = false;
     }
-    if (print_use_color) fputs(bold ? "\33[m\33[01m" : "\33[m\33[K", f);
+    if (print_use_color) {
+        console_default(f);
+        if (bold) console_bold(f); else console_finish(f);
+    }
 #ifdef COLOR_OUTPUT
     print_use_bold = print_use_color && bold;
 #endif
     printable_print2(((const uint8_t *)(err + 1)) + err->line_len, f, err->error_len);
-    if (print_use_color && bold) fputs("\33[m\33[K", f);
+    if (print_use_color && bold) {
+        console_default(f);
+        console_finish(f);
+    }
 #ifdef COLOR_OUTPUT
     print_use_bold = false;
 #endif
@@ -1344,22 +1348,16 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
         printable_print(line, f);
         fputs("\n ", f);
         caret_print(line, f, err->caret);
-        fputs(print_use_color ? "\33[01;32m^\33[m\33[K\n" : "^\n", f);
+        if (print_use_color) {
+            console_bold(f);
+            console_green(f);
+            putc('^', f);
+            console_default(f);
+            console_finish(f);
+            putc('\n', f);
+        } else fputs("^\n", f);
     }
 }
-
-#ifdef COLOR_OUTPUT
-static void color_detect(FILE *f) {
-    static int terminal;
-    if (terminal == 0) {
-        char const *term = getenv("TERM");
-        terminal = (term != NULL && strcmp(term, "dumb") != 0) ? 1 : 2;
-    }
-    print_use_color = terminal == 1 && isatty(fileno(f)) == 1;
-}
-#else
-#define color_detect(f) do {} while (false)
-#endif
 
 static inline bool caret_needed(const struct errorentry_s *err) {
     return (arguments.caret == CARET_ALWAYS || (arguments.caret != CARET_NEVER && (err->line_len != 0 || err->file_list->file->name[0] == 0)));
@@ -1408,7 +1406,7 @@ bool error_print(void) {
         }
     } else ferr = stderr;
 
-    if (ferr != stderr) color_detect(ferr); else if (arguments.quiet) fflush(stdout);
+    if (ferr != stderr) console_use(ferr); else if (arguments.quiet) fflush(stdout);
 
     warnings = errors = 0;
     close_error();
@@ -1470,7 +1468,7 @@ bool error_print(void) {
     }
     if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
     if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
-    if (ferr != stderr) color_detect(stderr);
+    if (ferr != stderr) console_use(stderr);
     if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
     return errors != 0;
 }
@@ -1485,7 +1483,7 @@ void error_reset(void) {
 void err_init(const char *name) {
     prgname = name;
     setvbuf(stderr, NULL, _IOLBF, 1024);
-    color_detect(stderr);
+    console_use(stderr);
     file_lists = (struct file_lists_s *)mallocx(sizeof *file_lists);
     file_lists->next = NULL;
     file_listsp = 0;
@@ -1515,15 +1513,22 @@ void err_destroy(void) {
 
 void fatal_error(const char *txt) {
     if (txt != NULL) {
-        if (print_use_color) fputs("\33[01m", stderr);
+        if (print_use_color) console_bold(stderr);
         printable_print((const uint8_t *)((prgname != NULL) ? prgname : "64tass"), stderr);
-        fputs(print_use_color ? ": \33[31m" : ": ", stderr);
+        fputs(": ", stderr);
+        if (print_use_color) console_red(stderr);
         fputs("fatal error: ", stderr);
-        if (print_use_color) fputs("\33[m\33[01m", stderr);
+        if (print_use_color) {
+            console_default(stderr);
+            console_bold(stderr);
+        }
         fputs(txt, stderr);
         return;
     }
-    if (print_use_color) fputs("\33[m\33[K", stderr);
+    if (print_use_color) {
+        console_default(stderr);
+        console_finish(stderr);
+    }
     putc('\n', stderr);
 }
 
