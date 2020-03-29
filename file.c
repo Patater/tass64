@@ -875,7 +875,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
     for (j = 0; j < arguments.output_len; j++) {
         const struct output_s *output = &arguments.output[j];
         if (dash_name(output->name)) continue;
-        len = wrap_print(output->name + get_base(output->name), f, len);
+        len = wrap_print(output->name, f, len);
     }
     if (arguments.list != NULL) {
         if (!dash_name(arguments.list)) {
@@ -885,9 +885,9 @@ void makefile(int argc, char *argv[], bool make_phony) {
     for (j = 0; j < arguments.symbol_output_len; j++) {
         const struct symbol_output_s *output = &arguments.symbol_output[j];
         if (dash_name(output->name)) continue;
-        len = wrap_print(output->name + get_base(output->name), f, len);
+        len = wrap_print(output->name, f, len);
     }
-    if (len > 0) {
+    if (len != 0) {
         len++;
         putc(':', f);
 
@@ -897,26 +897,25 @@ void makefile(int argc, char *argv[], bool make_phony) {
         }
 
         if (file_table.data != NULL) {
-            size_t n;
-            for (n = 0; n <= file_table.mask; n++) {
-                const struct file_s *a = file_table.data[n];
+            for (j = 0; j <= file_table.mask; j++) {
+                const struct file_s *a = file_table.data[j];
                 if (a == NULL) continue;
                 if (a->type == 0) continue;
                 len = wrap_print(a->realname, f, len);
             }
-
-            if (make_phony) {
-                putc('\n', f); len = 0;
-                for (n = 0; n <= file_table.mask; n++) {
-                    const struct file_s *a = file_table.data[n];
-                    if (a == NULL) continue;
-                    if (a->type == 0) continue;
-                    len = wrap_print(a->realname, f, len);
-                }
-                if (len != 0) putc(':', f);
-            }
         }
         putc('\n', f);
+
+        if (file_table.data != NULL && make_phony) {
+            len = 0;
+            for (j = 0; j <= file_table.mask; j++) {
+                const struct file_s *a = file_table.data[j];
+                if (a == NULL) continue;
+                if (a->type == 0) continue;
+                len = wrap_print(a->realname, f, len);
+            }
+            if (len != 0) fputs(":\n", f);
+        }
     }
 
     err = ferror(f);
