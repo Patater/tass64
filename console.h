@@ -18,7 +18,7 @@
 */
 #ifndef CONSOLE_H
 #define CONSOLE_H
-#include "stdlib.h"
+#include "unistd.h"
 #include "stdbool.h"
 
 #if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE || _POSIX_VERSION || _POSIX2_VERSION || defined _WIN32
@@ -33,22 +33,22 @@ extern void console_use(FILE *);
 extern void console_init(void);
 extern void console_destroy(void);
 extern void console_attribute(int c, FILE *f);
-#define console_finish(f) do {} while (false)
 #define console_bold(f) console_attribute(0, (f))
-#define console_reverse(f) console_attribute(1, (f))
-#define console_default(f) console_attribute(2, (f))
-#define console_black(f) console_attribute(3, (f))
-#define console_red(f) console_attribute(4, (f))
-#define console_green(f) console_attribute(5, (f))
-#define console_purple(f) console_attribute(6, (f))
+#define console_defaultbold(f) console_attribute(1, (f))
+#define console_reverse(f) console_attribute(2, (f))
+#define console_default(f) console_attribute(3, (f))
+#define console_black(f) console_attribute(4, (f))
+#define console_red(f) console_attribute(5, (f))
+#define console_boldgreen(f) console_attribute(6, (f))
+#define console_purple(f) console_attribute(7, (f))
 #else
-#define console_finish(f) fputs("\33[K", (f))
-#define console_bold(f) fputs("\33[01m", (f))
+#define console_bold(f) fputs("\33[1m", (f))
+#define console_defaultbold(f) fputs("\33[0;1m", (f))
 #define console_reverse(f) fputs("\33[7m", (f))
 #define console_default(f) fputs("\33[m", (f))
 #define console_black(f) fputs("\33[30m", (f))
 #define console_red(f) fputs("\33[31m", (f))
-#define console_green(f) fputs("\33[32m", (f))
+#define console_boldgreen(f) fputs("\33[1;32m", (f))
 #define console_purple(f) fputs("\33[35m", (f))
 #endif
 
@@ -56,13 +56,13 @@ extern void console_attribute(int c, FILE *f);
 #define print_use_color false
 #define print_use_bold false
 #define console_use(f) do {} while (false)
-#define console_finish(f) do {} while (false)
 #define console_bold(f) do {} while (false)
+#define console_defaultbold(f) do {} while (false)
 #define console_reverse(f) do {} while (false)
 #define console_default(f) do {} while (false)
 #define console_black(f) do {} while (false)
 #define console_red(f) do {} while (false)
-#define console_green(f) do {} while (false)
+#define console_boldgreen(f) do {} while (false)
 #define console_purple(f) do {} while (false)
 #endif
 
