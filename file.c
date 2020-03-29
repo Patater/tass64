@@ -848,6 +848,18 @@ void init_file(void) {
     last_ubuff.len = 16;
 }
 
+static size_t wrap_print(const char *txt, FILE *f, size_t len) {
+    if (len != 0) {
+        if (len > 64) {
+            fputs(" \\\n", f);
+            len = 0;
+        }
+        len++;
+        putc(' ', f);
+    }
+    return len + argv_print(txt, f);
+}
+
 void makefile(int argc, char *argv[], bool make_phony) {
     FILE *f;
     struct linepos_s nopoint = {0, 0};
@@ -863,15 +875,17 @@ void makefile(int argc, char *argv[], bool make_phony) {
     for (j = 0; j < arguments.output_len; j++) {
         const struct output_s *output = &arguments.output[j];
         if (dash_name(output->name)) continue;
-        if (j != 0) {
-            if (len > 64) {
-                fputs(" \\\n", f);
-                len = 0;
-            }
-            len++;
-            putc(' ', f);
+        len = wrap_print(output->name + get_base(output->name), f, len);
+    }
+    if (arguments.list != NULL) {
+        if (!dash_name(arguments.list)) {
+            len = wrap_print(arguments.list, f, len);
         }
-        len += argv_print(output->name + get_base(output->name), f);
+    }
+    for (j = 0; j < arguments.symbol_output_len; j++) {
+        const struct symbol_output_s *output = &arguments.symbol_output[j];
+        if (dash_name(output->name)) continue;
+        len = wrap_print(output->name + get_base(output->name), f, len);
     }
     if (len > 0) {
         len++;
@@ -879,12 +893,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
 
         for (i = 0; i < argc; i++) {
             if (dash_name(argv[i])) continue;
-            if (len > 64) {
-                fputs(" \\\n", f);
-                len = 0;
-            }
-            putc(' ', f);
-            len += argv_print(argv[i], f) + 1;
+            len = wrap_print(argv[i], f, len);
         }
 
         if (file_table.data != NULL) {
@@ -893,12 +902,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
                 const struct file_s *a = file_table.data[n];
                 if (a == NULL) continue;
                 if (a->type == 0) continue;
-                if (len > 64) {
-                    fputs(" \\\n", f);
-                    len = 0;
-                }
-                putc(' ', f);
-                len += argv_print(a->realname, f) + 1;
+                len = wrap_print(a->realname, f, len);
             }
 
             if (make_phony) {
@@ -907,15 +911,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
                     const struct file_s *a = file_table.data[n];
                     if (a == NULL) continue;
                     if (a->type == 0) continue;
-                    if (len != 0) {
-                        if (len > 64) {
-                            fputs(" \\\n", f);
-                            len = 0;
-                        }
-                        len++;
-                        putc(' ', f);
-                    }
-                    len += argv_print(a->realname, f);
+                    len = wrap_print(a->realname, f, len);
                 }
                 if (len != 0) putc(':', f);
             }
