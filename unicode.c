@@ -24,6 +24,7 @@
 #include "error.h"
 #include "unicodedata.h"
 #include "str.h"
+#include "console.h"
 
 #define U_CASEFOLD 1
 #define U_COMPAT 2
@@ -454,10 +455,10 @@ static int unknown_print(FILE *f, uchar_t ch) {
     const char *format = (ch >= 256) ? "<U+%" PRIX32 ">" : "<%02" PRIX32 ">";
     if (f != NULL) {
         int ln;
-        if (print_use_color) fputs("\33[7m", f);
+        if (print_use_color) console_reverse(f);
         ln = fprintf(f, format, ch);
-        if (print_use_color) fputs("\33[m", f);
-        if (print_use_bold) fputs("\33[1m", f);
+        if (print_use_color) console_default(f);
+        if (print_use_bold) console_bold(f);
         return ln;
     }
     return sprintf(temp, format, ch);
