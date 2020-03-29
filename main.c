@@ -121,7 +121,7 @@ static int wmain(int argc, wchar_t *argv2[]) {
 static const char *prgname(const char *name) {
     const char *newp = strrchr(name, '/');
     if (newp != NULL) return newp + 1;
-#if defined _win32 || defined __win32__ || defined __emx__ || defined __msdos__ || defined __dos__
+#if defined _WIN32 || defined __WIN32__ || defined __EMX__ || defined __MSDOS__ || defined __DOS__
     newp = strrchr(prgname, '\\');
     if (newp != NULL) return newp + 1;
     newp = strrchr(prgname, ':');
