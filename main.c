@@ -109,9 +109,9 @@ static const char *prgname(const char *name) {
     const char *newp = strrchr(name, '/');
     if (newp != NULL) return newp + 1;
 #if defined _WIN32 || defined __WIN32__ || defined __EMX__ || defined __MSDOS__ || defined __DOS__
-    newp = strrchr(prgname, '\\');
+    newp = strrchr(newp, '\\');
     if (newp != NULL) return newp + 1;
-    newp = strrchr(prgname, ':');
+    newp = strrchr(newp, ':');
     if (newp != NULL) return newp + 1;
 #endif
     return name;
