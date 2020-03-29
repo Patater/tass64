@@ -1303,10 +1303,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
                 printable_print((const uint8_t *)included_from->parent->file->realname, f);
                 printline(included_from->parent, &included_from->epoint, NULL, f);
                 included_from = included_from->parent;
-                if (print_use_color) {
-                    console_default(f);
-                    console_finish(f);
-                }
+                if (print_use_color) console_default(f);
                 fputs((included_from->parent != &file_list) ? ",\n" : ":\n", f);
             }
             included_from = cflist;
@@ -1328,19 +1325,19 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
     default: bold = false;
     }
     if (print_use_color) {
-        console_default(f);
-        if (bold) console_bold(f); else console_finish(f);
-    }
+        if (bold) {
+            console_defaultbold(f); 
 #ifdef COLOR_OUTPUT
-    print_use_bold = print_use_color && bold;
+            print_use_bold = true;
 #endif
-    printable_print2(((const uint8_t *)(err + 1)) + err->line_len, f, err->error_len);
-    if (print_use_color && bold) {
-        console_default(f);
-        console_finish(f);
+        } else console_default(f);
     }
+    printable_print2(((const uint8_t *)(err + 1)) + err->line_len, f, err->error_len);
 #ifdef COLOR_OUTPUT
-    print_use_bold = false;
+    if (print_use_bold) {
+        console_default(f);
+        print_use_bold = false;
+    }
 #endif
     putc('\n', f);
     if (caret && line != NULL) {
@@ -1348,14 +1345,10 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
         printable_print(line, f);
         fputs("\n ", f);
         caret_print(line, f, err->caret);
-        if (print_use_color) {
-            console_bold(f);
-            console_green(f);
-            putc('^', f);
-            console_default(f);
-            console_finish(f);
-            putc('\n', f);
-        } else fputs("^\n", f);
+        if (print_use_color) console_boldgreen(f);
+        putc('^', f);
+        if (print_use_color) console_default(f);
+        putc('\n', f);
     }
 }
 
@@ -1525,10 +1518,7 @@ void fatal_error(const char *txt) {
         fputs(txt, stderr);
         return;
     }
-    if (print_use_color) {
-        console_default(stderr);
-        console_finish(stderr);
-    }
+    if (print_use_color) console_default(stderr);
     putc('\n', stderr);
 }
 

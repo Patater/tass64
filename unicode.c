@@ -457,8 +457,9 @@ static int unknown_print(FILE *f, uchar_t ch) {
         int ln;
         if (print_use_color) console_reverse(f);
         ln = fprintf(f, format, ch);
-        if (print_use_color) console_default(f);
-        if (print_use_bold) console_bold(f);
+        if (print_use_color) {
+            if (print_use_bold) console_defaultbold(f); else console_default(f);
+        }
         return ln;
     }
     return sprintf(temp, format, ch);

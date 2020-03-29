@@ -73,17 +73,18 @@ void console_attribute(int c, FILE *f) {
     fflush(f);
     switch (c) {
     case 0: current_attributes |= FOREGROUND_INTENSITY; break;
-    case 1: 
+    case 1: current_attributes = old_attributes | FOREGROUND_INTENSITY; break;
+    case 2: 
         if (!(current_attributes & FOREGROUND_BLUE) != !(current_attributes & BACKGROUND_BLUE)) current_attributes ^= FOREGROUND_BLUE | BACKGROUND_BLUE; 
         if (!(current_attributes & FOREGROUND_GREEN) != !(current_attributes & BACKGROUND_GREEN)) current_attributes ^= FOREGROUND_GREEN | BACKGROUND_GREEN; 
         if (!(current_attributes & FOREGROUND_RED) != !(current_attributes & BACKGROUND_RED)) current_attributes ^= FOREGROUND_RED | BACKGROUND_RED; 
         if (!(current_attributes & FOREGROUND_INTENSITY) != !(current_attributes & BACKGROUND_INTENSITY)) current_attributes ^= FOREGROUND_INTENSITY | BACKGROUND_INTENSITY; 
         break;
-    case 2: current_attributes = old_attributes; break;
-    case 3: current_attributes &= ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); break;
-    case 4: current_attributes = FOREGROUND_RED | (current_attributes & ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)); break;
-    case 5: current_attributes = FOREGROUND_GREEN | (current_attributes & ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)); break;
-    case 6: current_attributes = FOREGROUND_RED | FOREGROUND_BLUE | (current_attributes & ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)); break;
+    case 3: current_attributes = old_attributes; break;
+    case 4: current_attributes &= ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); break;
+    case 5: current_attributes = FOREGROUND_RED | (current_attributes & ~(FOREGROUND_BLUE | FOREGROUND_GREEN)); break;
+    case 6: current_attributes = FOREGROUND_GREEN | FOREGROUND_INTENSITY | (current_attributes & ~(FOREGROUND_BLUE | FOREGROUND_RED)); break;
+    case 7: current_attributes = FOREGROUND_RED | FOREGROUND_BLUE | (current_attributes & ~FOREGROUND_GREEN); break;
     default: break;
     }
     SetConsoleTextAttribute(console_handle, current_attributes);
