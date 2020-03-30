@@ -19,12 +19,31 @@
 #include "console.h"
 
 #ifdef COLOR_OUTPUT
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 bool print_use_color = false;
 bool print_use_bold = false;
+
+enum terminal_e {
+    TERMINAL_UNKNOWN, TERMINAL_OK, TERMINAL_DUMB
+};
+
+static enum terminal_e terminal = TERMINAL_UNKNOWN;
+
+static bool terminal_detect(FILE *f) {
+    if (terminal == TERMINAL_UNKNOWN) {
+        char const *term = getenv("TERM");
+        terminal = (term != NULL && strcmp(term, "dumb") != 0) ? TERMINAL_OK : TERMINAL_DUMB;
+    }
+    return terminal == TERMINAL_OK && isatty(fileno(f)) == 1;
+}
 
 #ifdef _WIN32
 #include <windows.h>
 
+bool use_ansi;
 static BOOL utf8_console;
 static UINT old_consoleoutputcp;
 static UINT old_consolecp;
@@ -51,25 +70,38 @@ void console_destroy(void) {
 void console_use(FILE *f) {
     CONSOLE_SCREEN_BUFFER_INFO console_info;
     DWORD handle;
-    if (f == stderr) {
-        handle = STD_ERROR_HANDLE;
-    } else if (f == stdout) {
-        handle = STD_OUTPUT_HANDLE;
-    } else {
-        print_use_color = false;
-        return;
+
+    use_ansi = terminal_detect(f);
+    if (!use_ansi) {
+        if (f == stderr) {
+            handle = STD_ERROR_HANDLE;
+        } else if (f == stdout) {
+            handle = STD_OUTPUT_HANDLE;
+        } else {
+            print_use_color = false;
+            return;
+        }
+        console_handle = GetStdHandle(handle);
+        if (console_handle == INVALID_HANDLE_VALUE) {
+            print_use_color = false;
+            return;
+        }
+        GetConsoleScreenBufferInfo(console_handle, &console_info);
+        old_attributes = current_attributes = console_info.wAttributes;
     }
-    console_handle = GetStdHandle(handle);
-    if (console_handle == INVALID_HANDLE_VALUE) {
-        print_use_color = false;
-        return;
-    }
-    GetConsoleScreenBufferInfo(console_handle, &console_info);
-    old_attributes = current_attributes = console_info.wAttributes;
     print_use_color = true;
 }
 
+static const char *const ansi_sequences[8] = {
+    "\33[1m", "\33[0;1m", "\33[7m", "\33[m", "\33[30m", "\33[31m", "\33[1;32m",
+    "\33[35m"
+};
+
 void console_attribute(int c, FILE *f) {
+    if (use_ansi) {
+        fputs(ansi_sequences[c], f);
+        return;
+    }
     fflush(f);
     switch (c) {
     case 0: current_attributes |= FOREGROUND_INTENSITY; break;
@@ -90,17 +122,8 @@ void console_attribute(int c, FILE *f) {
     SetConsoleTextAttribute(console_handle, current_attributes);
 }
 #else
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
 void console_use(FILE *f) {
-    static int terminal;
-    if (terminal == 0) {
-        char const *term = getenv("TERM");
-        terminal = (term != NULL && strcmp(term, "dumb") != 0) ? 1 : 2;
-    }
-    print_use_color = terminal == 1 && isatty(fileno(f)) == 1;
+    print_use_color = terminal_detect(f);
 }
 #endif
 
