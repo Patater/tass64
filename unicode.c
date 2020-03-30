@@ -455,10 +455,10 @@ static int unknown_print(FILE *f, uchar_t ch) {
     const char *format = (ch >= 256) ? "<U+%" PRIX32 ">" : "<%02" PRIX32 ">";
     if (f != NULL) {
         int ln;
-        if (print_use_color) console_reverse(f);
+        if (console_use_color) console_reverse(f);
         ln = fprintf(f, format, ch);
-        if (print_use_color) {
-            if (print_use_bold) console_defaultbold(f); else console_default(f);
+        if (console_use_color) {
+            if (console_use_bold) console_defaultbold(f); else console_default(f);
         }
         return ln;
     }

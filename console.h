@@ -25,8 +25,8 @@
 #include <stdio.h>
 
 #define COLOR_OUTPUT
-extern bool print_use_color;
-extern bool print_use_bold;
+extern bool console_use_color;
+extern bool console_use_bold;
 extern void console_use(FILE *);
 
 #ifdef _WIN32
@@ -53,8 +53,8 @@ extern void console_attribute(int c, FILE *f);
 #endif
 
 #else
-#define print_use_color false
-#define print_use_bold false
+#define console_use_color false
+#define console_use_bold false
 #define console_use(f) do {} while (false)
 #define console_bold(f) do {} while (false)
 #define console_defaultbold(f) do {} while (false)

@@ -23,8 +23,8 @@
 #include <string.h>
 #include <unistd.h>
 
-bool print_use_color = false;
-bool print_use_bold = false;
+bool console_use_color = false;
+bool console_use_bold = false;
 
 enum terminal_e {
     TERMINAL_UNKNOWN, TERMINAL_OK, TERMINAL_DUMB
@@ -43,7 +43,7 @@ static bool terminal_detect(FILE *f) {
 #ifdef _WIN32
 #include <windows.h>
 
-bool use_ansi;
+static bool use_ansi;
 static BOOL utf8_console;
 static UINT old_consoleoutputcp;
 static UINT old_consolecp;
@@ -78,18 +78,18 @@ void console_use(FILE *f) {
         } else if (f == stdout) {
             handle = STD_OUTPUT_HANDLE;
         } else {
-            print_use_color = false;
+            console_use_color = false;
             return;
         }
         console_handle = GetStdHandle(handle);
         if (console_handle == INVALID_HANDLE_VALUE) {
-            print_use_color = false;
+            console_use_color = false;
             return;
         }
         GetConsoleScreenBufferInfo(console_handle, &console_info);
         old_attributes = current_attributes = console_info.wAttributes;
     }
-    print_use_color = true;
+    console_use_color = true;
 }
 
 static const char *const ansi_sequences[8] = {
@@ -123,7 +123,7 @@ void console_attribute(int c, FILE *f) {
 }
 #else
 void console_use(FILE *f) {
-    print_use_color = terminal_detect(f);
+    console_use_color = terminal_detect(f);
 }
 #endif
 
