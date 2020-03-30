@@ -1299,44 +1299,44 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
             if (included_from->parent != &file_list) included_from = cflist;
             while (included_from->parent != &file_list) {
                 fputs((included_from == cflist) ? "In file included from " : "                      ", f);
-                if (print_use_color) console_bold(f);
+                if (console_use_color) console_bold(f);
                 printable_print((const uint8_t *)included_from->parent->file->realname, f);
                 printline(included_from->parent, &included_from->epoint, NULL, f);
                 included_from = included_from->parent;
-                if (print_use_color) console_default(f);
+                if (console_use_color) console_default(f);
                 fputs((included_from->parent != &file_list) ? ",\n" : ":\n", f);
             }
             included_from = cflist;
         }
-        if (print_use_color) console_bold(f);
+        if (console_use_color) console_bold(f);
         printable_print((const uint8_t *)cflist->file->realname, f);
         line = printline(cflist, epoint, (err->line_len != 0) ? (const uint8_t *)(err + 1) : NULL, f);
     } else {
-        if (print_use_color) console_bold(f);
+        if (console_use_color) console_bold(f);
         printable_print((const uint8_t *)prgname, f);
     }
     fputs(": ", f);
     switch (err->severity) {
-    case SV_NOTE: if (print_use_color) console_black(f); fputs("note: ", f); bold = false; break;
-    case SV_WARNING: if (print_use_color) console_purple(f); fputs("warning: ", f); bold = true; break;
+    case SV_NOTE: if (console_use_color) console_black(f); fputs("note: ", f); bold = false; break;
+    case SV_WARNING: if (console_use_color) console_purple(f); fputs("warning: ", f); bold = true; break;
     case SV_NONEERROR:
-    case SV_ERROR: if (print_use_color) console_red(f); fputs("error: ", f); bold = true; break;
-    case SV_FATAL: if (print_use_color) console_red(f); fputs("fatal error: ", f); bold = true; break;
+    case SV_ERROR: if (console_use_color) console_red(f); fputs("error: ", f); bold = true; break;
+    case SV_FATAL: if (console_use_color) console_red(f); fputs("fatal error: ", f); bold = true; break;
     default: bold = false;
     }
-    if (print_use_color) {
+    if (console_use_color) {
         if (bold) {
             console_defaultbold(f); 
 #ifdef COLOR_OUTPUT
-            print_use_bold = true;
+            console_use_bold = true;
 #endif
         } else console_default(f);
     }
     printable_print2(((const uint8_t *)(err + 1)) + err->line_len, f, err->error_len);
 #ifdef COLOR_OUTPUT
-    if (print_use_bold) {
+    if (console_use_bold) {
         console_default(f);
-        print_use_bold = false;
+        console_use_bold = false;
     }
 #endif
     putc('\n', f);
@@ -1345,9 +1345,9 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
         printable_print(line, f);
         fputs("\n ", f);
         caret_print(line, f, err->caret);
-        if (print_use_color) console_boldgreen(f);
+        if (console_use_color) console_boldgreen(f);
         putc('^', f);
-        if (print_use_color) console_default(f);
+        if (console_use_color) console_default(f);
         putc('\n', f);
     }
 }
@@ -1506,19 +1506,19 @@ void err_destroy(void) {
 
 void fatal_error(const char *txt) {
     if (txt != NULL) {
-        if (print_use_color) console_bold(stderr);
+        if (console_use_color) console_bold(stderr);
         printable_print((const uint8_t *)((prgname != NULL) ? prgname : "64tass"), stderr);
         fputs(": ", stderr);
-        if (print_use_color) console_red(stderr);
+        if (console_use_color) console_red(stderr);
         fputs("fatal error: ", stderr);
-        if (print_use_color) {
+        if (console_use_color) {
             console_default(stderr);
             console_bold(stderr);
         }
         fputs(txt, stderr);
         return;
     }
-    if (print_use_color) console_default(stderr);
+    if (console_use_color) console_default(stderr);
     putc('\n', stderr);
 }
 
