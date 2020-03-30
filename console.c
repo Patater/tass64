@@ -72,24 +72,27 @@ void console_use(FILE *f) {
     DWORD handle;
 
     use_ansi = terminal_detect(f);
-    if (!use_ansi) {
-        if (f == stderr) {
-            handle = STD_ERROR_HANDLE;
-        } else if (f == stdout) {
-            handle = STD_OUTPUT_HANDLE;
-        } else {
-            console_use_color = false;
-            return;
-        }
-        console_handle = GetStdHandle(handle);
-        if (console_handle == INVALID_HANDLE_VALUE) {
-            console_use_color = false;
-            return;
-        }
-        GetConsoleScreenBufferInfo(console_handle, &console_info);
-        old_attributes = current_attributes = console_info.wAttributes;
+    if (use_ansi) {
+        console_use_color = true;
+        return;
     }
-    console_use_color = true;
+    console_use_color = false;
+    if (f == stderr) {
+        handle = STD_ERROR_HANDLE;
+    } else if (f == stdout) {
+        handle = STD_OUTPUT_HANDLE;
+    } else {
+        return;
+    }
+    console_handle = GetStdHandle(handle);
+    if (console_handle == INVALID_HANDLE_VALUE) {
+        return;
+    }
+    if (GetConsoleScreenBufferInfo(console_handle, &console_info)) {
+        old_attributes = current_attributes = console_info.wAttributes;
+        console_use_color = true;
+        return;
+    }
 }
 
 static const char *const ansi_sequences[8] = {
