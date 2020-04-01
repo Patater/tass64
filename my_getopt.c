@@ -49,11 +49,11 @@ static int my_getopt(int argc, char *argv[], const char *opts)
 
   if (getenv("POSIXLY_CORRECT") != NULL) colon_mode = mode = '+';
   else {
-    if ((colon_mode = *opts) == ':') off ++;
+    if ((colon_mode = *opts) == ':') off++;
     if (((mode = opts[off]) == '+') || (mode == '-')) {
       off++;
       if ((colon_mode != ':') && ((colon_mode = opts[off]) == ':'))
-        off ++;
+        off++;
     }
   }
   my_optarg = NULL;
@@ -145,11 +145,11 @@ static int my_getopt_internal(int argc, char *argv[], const char *shortopts,
 
   if (getenv("POSIXLY_CORRECT") != NULL) colon_mode = mode = '+';
   else {
-    if ((colon_mode = *shortopts) == ':') shortoff ++;
+    if ((colon_mode = *shortopts) == ':') shortoff++;
     if (((mode = shortopts[shortoff]) == '+') || (mode == '-')) {
       shortoff++;
       if ((colon_mode != ':') && ((colon_mode = shortopts[shortoff]) == ':'))
-        shortoff ++;
+        shortoff++;
     }
   }
   my_optarg = NULL;
@@ -198,7 +198,7 @@ static int my_getopt_internal(int argc, char *argv[], const char *shortopts,
         if (((shortopts[ind] == ':') ||
             ((c == 'W') && (shortopts[ind] == ';'))) &&
            (shortopts[++ind] == ':'))
-          ind ++;
+          ind++;
         if (my_optopt == c) return my_getopt(argc, argv, shortopts);
       }
     }
