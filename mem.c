@@ -24,7 +24,6 @@
 #ifdef __DJGPP__
 #include <io.h>
 #include <fcntl.h>
-#include <unistd.h>
 #endif
 #include <errno.h>
 #include "error.h"
