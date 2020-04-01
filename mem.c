@@ -495,7 +495,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 
     if (dash_name(output->name)) {
 #if defined _WIN32 || defined __DJGPP__
-        if (binary) oldmode = setmode(fileno(stdout), O_BINARY);
+        if (binary) oldmode = setmode(STDOUT_FILENO, O_BINARY);
 #endif
         fout = stdout;
     } else {
@@ -520,7 +520,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     err |= (fout != stdout) ? fclose(fout) : fflush(fout);
     if (err != 0 && errno != 0) err_msg_file(ERROR_CANT_WRTE_OBJ, output->name, &nopoint);
 #if defined _WIN32 || defined __DJGPP__
-    if (oldmode >= 0) setmode(fileno(stdout), oldmode);
+    if (oldmode >= 0) setmode(STDOUT_FILENO, oldmode);
 #endif
 }
 

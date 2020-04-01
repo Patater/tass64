@@ -33,11 +33,19 @@ enum terminal_e {
 static enum terminal_e terminal = TERMINAL_UNKNOWN;
 
 static bool terminal_detect(FILE *f) {
+    int fd;
+    if (f == stdout) {
+        fd = STDOUT_FILENO;
+    } else if (f == stderr) {
+        fd = STDERR_FILENO;
+    } else {
+        return false;
+    }
     if (terminal == TERMINAL_UNKNOWN) {
         char const *term = getenv("TERM");
         terminal = (term != NULL && strcmp(term, "dumb") != 0) ? TERMINAL_OK : TERMINAL_DUMB;
     }
-    return terminal == TERMINAL_OK && isatty(fileno(f)) == 1;
+    return terminal == TERMINAL_OK && isatty(fd) == 1;
 }
 
 #ifdef _WIN32
