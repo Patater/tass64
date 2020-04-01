@@ -34,10 +34,10 @@ static enum terminal_e terminal = TERMINAL_UNKNOWN;
 
 static bool terminal_detect(FILE *f) {
     int fd;
-    if (f == stdout) {
-        fd = STDOUT_FILENO;
-    } else if (f == stderr) {
+    if (f == stderr) {
         fd = STDERR_FILENO;
+    } else if (f == stdout) {
+        fd = STDOUT_FILENO;
     } else {
         return false;
     }
