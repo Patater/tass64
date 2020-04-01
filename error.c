@@ -1542,10 +1542,9 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
     uint8_t s2[10];
     size_t n, i = 0;
     ssize_t l;
-    int err = errno;
     bool more;
 
-    s = strerror(err);
+    s = strerror(errno);
     n = strlen(s);
 
     more = new_error_msg(SV_FATAL, current_file_list, epoint);
