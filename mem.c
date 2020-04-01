@@ -21,6 +21,11 @@
 #ifdef _WIN32
 #include <fcntl.h>
 #endif
+#ifdef __DJGPP__
+#include <io.h>
+#include <fcntl.h>
+#include <unistd.h>
+#endif
 #include <errno.h>
 #include "error.h"
 #include "file.h"
@@ -481,14 +486,17 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     struct linepos_s nopoint = {0, 0};
     bool binary = (output->mode != OUTPUT_IHEX) && (output->mode != OUTPUT_SREC);
     int err;
+#if defined _WIN32 || defined __DJGPP__
+    int oldmode = -1;
+#endif
 
     memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC);
 
     if (memblocks->mem.p == 0) return;
 
     if (dash_name(output->name)) {
-#ifdef _WIN32
-        if (binary) setmode(fileno(stdout), O_BINARY);
+#if defined _WIN32 || defined __DJGPP__
+        if (binary) oldmode = setmode(fileno(stdout), O_BINARY);
 #endif
         fout = stdout;
     } else {
@@ -512,8 +520,8 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     err = ferror(fout);
     err |= (fout != stdout) ? fclose(fout) : fflush(fout);
     if (err != 0 && errno != 0) err_msg_file(ERROR_CANT_WRTE_OBJ, output->name, &nopoint);
-#ifdef _WIN32
-    setmode(fileno(stdout), O_TEXT);
+#if defined _WIN32 || defined __DJGPP__
+    if (oldmode >= 0) setmode(fileno(stdout), oldmode);
 #endif
 }
 
