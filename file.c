@@ -24,7 +24,7 @@
 #include <locale.h>
 #include <windows.h>
 #endif
-#if defined _POSIX_C_SOURCE || defined __MINGW32__
+#if defined _POSIX_C_SOURCE || defined __unix__ || defined __MINGW32__
 #include <sys/stat.h>
 #endif
 #include "64tass.h"
@@ -359,7 +359,7 @@ static inline uchar_t fromiso(uchar_t c) {
 }
 
 static size_t fsize(FILE *f) {
-#if defined _POSIX_C_SOURCE || defined __MINGW32__
+#if defined _POSIX_C_SOURCE || defined __unix__ || defined __MINGW32__
     struct stat st;
     if (fstat(fileno(f), &st) == 0) {
         if (S_ISREG(st.st_mode) && st.st_size > 0) {
