@@ -447,9 +447,6 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
                 putchar('\n');
             }
             if (f == NULL) goto openerr;
-#ifndef __DJGPP__
-            setvbuf(f, NULL, _IONBF, 0);
-#endif
             tmp->read_error = true;
             if (ftype == 1) {
                 bool check;
