@@ -474,10 +474,8 @@ static address_t get_all_mem2(void) {
         }
         if (dash_name(output->name)) tostdout = true;
     }
-    if (tostdout) {
-        arguments.quiet = false;
-        setvbuf(stdout, NULL, _IOFBF, BUFSIZ);
-    }
+    if (tostdout) arguments.quiet = false;
+    else setvbuf(stdout, NULL, _IOLBF, 1024);
     return min;
 }
 
