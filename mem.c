@@ -192,14 +192,6 @@ err:
     }
 }
 
-#ifdef __DJGPP__
-#define set_unbuffered(f) do {} while (false)
-#else
-static void set_unbuffered(FILE *fout) {
-    setvbuf(fout, NULL, _IONBF, 0);
-}
-#endif
-
 static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     address_t pos, end;
     unsigned int i;
@@ -229,7 +221,6 @@ static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct 
         i = 0;
         break;
     }
-    if (memblocks->p == 1) set_unbuffered(fout);
     if (i != 0 && fwrite(header, i, 1, fout) == 0) return;
     for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *block = &memblocks->data[i];
@@ -277,7 +268,6 @@ static void output_mem_flat(FILE *fout, const Memblocks *memblocks) {
     address_t pos;
     size_t i;
 
-    if (memblocks->p == 1 && memblocks->data[0].addr == 0) set_unbuffered(fout);
     for (pos = i = 0; i < memblocks->p; i++) {
         const struct memblock_s *block = &memblocks->data[i];
         padding(block->addr - pos, fout);
@@ -291,7 +281,6 @@ static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks) {
     unsigned char header[6];
     header[0] = 0xff;
     header[1] = 0xff;
-    if (memblocks->p == 1) set_unbuffered(fout);
     for (i = 0; i < memblocks->p;) {
         const struct memblock_s *block = &memblocks->data[i];
         bool special;
