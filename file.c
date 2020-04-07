@@ -284,7 +284,9 @@ FILE *file_open(const char *name, const char *mode) {
         }
         memcpy(newname + len - l, temp, (size_t)l);
     } while (ch != 0);
+    errno = 0;
     f = fopen(newname, mode);
+    if (f == NULL && errno == 0) errno = (mode[0] == 'r') ? ENOENT : EINVAL;
 failed:
     free(newname);
 #endif
@@ -854,7 +856,7 @@ static size_t wrap_print(const char *txt, FILE *f, size_t len) {
         len++;
         putc(' ', f);
     }
-    return len + argv_print(txt, f);
+    return len + makefile_print(txt, f);
 }
 
 void makefile(int argc, char *argv[], bool make_phony) {

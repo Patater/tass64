@@ -519,7 +519,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case 0x11d:arguments.tasmcomp = false;break;
             case 'o': output.name = my_optarg;
                       arguments.output_len++;
-                      arguments.output = (struct output_s *)reallocx(arguments.output, arguments.output_len * sizeof *arguments.output);
+                      arguments.output = (struct output_s *)realloc(arguments.output, arguments.output_len * sizeof *arguments.output);
+                      if (arguments.output == NULL) err_msg_out_of_memory2();
                       arguments.output[arguments.output_len - 1] = output;
                       output.section = NULL;
                       break;
@@ -533,16 +534,18 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
 
                     if (fin->lines >= max_lines) {
                         max_lines += 1024;
-                        if (/*max_lines < 1024 ||*/ max_lines > SIZE_MAX / sizeof *fin->line) err_msg_out_of_memory(); /* overflow */
-                        fin->line = (size_t *)reallocx(fin->line, max_lines * sizeof *fin->line);
+                        if (/*max_lines < 1024 ||*/ max_lines > SIZE_MAX / sizeof *fin->line) err_msg_out_of_memory2(); /* overflow */
+                        fin->line = (size_t *)realloc(fin->line, max_lines * sizeof *fin->line);
+                        if (fin->line == NULL) err_msg_out_of_memory2();
                     }
                     fin->line[fin->lines++] = fp;
 
-                    if (len < 1 || fp + len < len) err_msg_out_of_memory();
+                    if (len < 1 || fp + len < len) err_msg_out_of_memory2();
                     if (fp + len > fin->len) {
                         fin->len = fp + len + 1024;
-                        if (fin->len < 1024) err_msg_out_of_memory();
-                        fin->data = (uint8_t*)reallocx(fin->data, fin->len);
+                        if (fin->len < 1024) err_msg_out_of_memory2();
+                        fin->data = (uint8_t*)realloc(fin->data, fin->len);
+                        if (fin->data == NULL) err_msg_out_of_memory2();
                     }
                     memcpy(fin->data + fp, my_optarg, len);
                     fp += len;
@@ -562,7 +565,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case 0x111: arguments.cpumode = &c4510;break;
             case 'l': symbol_output.name = my_optarg;
                       arguments.symbol_output_len++;
-                      arguments.symbol_output = (struct symbol_output_s *)reallocx(arguments.symbol_output, arguments.symbol_output_len * sizeof *arguments.symbol_output);
+                      arguments.symbol_output = (struct symbol_output_s *)realloc(arguments.symbol_output, arguments.symbol_output_len * sizeof *arguments.symbol_output);
+                      if (arguments.symbol_output == NULL) err_msg_out_of_memory2();
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
                       symbol_output.space = NULL;
                       break;
@@ -735,29 +739,29 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
         for (i = my_optind; i < argc; i++) {
             char *arg = argv[i];
             if (arg[0] == '@' && arg[1] != 0) {
-                FILE *f = fopen(arg+1, "rb");
-                if (f != NULL) {
-                    int j;
-                    free(arg);
-                    argc--;
-                    for (j = i; j < argc; j++) {
-                        argv[j] = argv[j + 1];
-                    }
-                    while (feof(f) == 0) {
-                        char *onepar = read_one(f);
-                        if (onepar == NULL) break;
-                        *argv2 = argv = (char **)reallocx(argv, ((size_t)argc + 1) * sizeof *argv);
+                FILE *f = file_open(arg + 1, "rb");
+                if (f == NULL) continue;
+                while (feof(f) == 0) {
+                    char *onepar = read_one(f);
+                    if (onepar == NULL) break;
+                    *argv2 = argv = (char **)realloc(argv, ((size_t)argc + 1) * sizeof *argv);
+                    if (argv == NULL) err_msg_out_of_memory2();
+                    if (arg != NULL) {
+                        free(arg);
+                        arg = NULL;
+                    } else {
+                        int j;
                         for (j = argc; j > i; j--) {
                             argv[j] = argv[j - 1];
                         }
                         argc++;
-                        argv[i++] = onepar;
-                        again = true;
                     }
-                    fclose(f);
-                    *argc2 = argc;
-                    break;
+                    argv[i++] = onepar;
+                    again = true;
                 }
+                fclose(f);
+                *argc2 = argc;
+                break;
             }
         }
         max--;
