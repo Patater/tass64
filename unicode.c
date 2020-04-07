@@ -379,10 +379,7 @@ size_t argv_print(const char *line, FILE *f) {
         back = 0;
 
         i++;
-        if (isprint(ch) == 0) {
-            len++;putc('?', f);
-            continue;
-        }
+        if (isprint(ch) == 0) ch = '?';
         len++;putc(ch, f);
     }
     if (space) {
@@ -447,6 +444,76 @@ size_t argv_print(const char *line, FILE *f) {
     }
     if (quote) {len++;putc('"', f);}
 #endif
+    return len;
+}
+
+size_t makefile_print(const char *line, FILE *f) {
+    size_t len = 0, i = 0, bl = 0;
+
+    for (;;) {
+        uchar_t ch = (uint8_t)line[i];
+        if ((ch & 0x80) != 0) {
+#ifdef _WIN32
+            unsigned int ln = utf8in((const uint8_t *)line + i, &ch);
+            if (iswprint(ch) != 0) {
+                int ln2;
+                char tmp[64];
+                memcpy(tmp, line + i, ln);
+                tmp[ln] = 0;
+                ln2 = fwprintf(f, L"%S", tmp);
+                if (ln2 > 0) {
+                    i += ln;
+                    len += ln2;
+                    bl = 0;
+                    continue;
+                }
+            }
+            i += ln;
+#else
+            i += utf8in((const uint8_t *)line + i, &ch);
+            if (iswprint(ch) != 0) {
+                mbstate_t ps;
+                char temp[64];
+                size_t ln;
+                memset(&ps, 0, sizeof ps);
+                ln = wcrtomb(temp, (wchar_t)ch, &ps);
+                if (ln != (size_t)-1) {
+                    len += fwrite(temp, ln, 1, f);
+                    bl = 0;
+                    continue;
+                }
+            }
+#endif
+            len++;putc('?', f);
+            bl = 0;
+            continue;
+        }
+        if (ch == 0) break;
+
+        switch (ch) {
+        case '\\':
+            bl++;
+            break;
+        case ' ':
+        case '#':
+            while (bl > 0) {
+                len++; putc('\\', f);
+                bl--;
+            }
+            putc('\\', f);
+            break;
+        case '$':
+            len++; putc('$', f);
+            /* fall through */
+        default:
+            bl = 0;
+            break;
+        }
+
+        i++;
+        if (isprint(ch) == 0) ch = '?';
+        len++; putc(ch, f);
+    }
     return len;
 }
 

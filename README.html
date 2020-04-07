@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html lang="en">
 <head>
-<title>64tass v1.55 r2176 reference manual</title>
+<title>64tass v1.55 r2200 reference manual</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="Description" content="64tass, an advanced multi pass macro assembler for the 65xx family of microprocessors">
 <meta name="Keywords" content="6502 assembler, 65816, 6510, 65C02, dtv, c64 cross assembler">
@@ -84,7 +84,7 @@ q { quotes: "\201C" "\201D" "\2018" "\2019"; }
 </head>
 <body>
 <div>
-<h1>64tass v1.55 r2176 reference manual</h1>
+<h1>64tass v1.55 r2200 reference manual</h1>
 
 <p>This is the manual for 64tass, the multi pass optimizing macro assembler for
 the 65xx series of processors. Key features:</p>
@@ -3438,6 +3438,8 @@ by repeating this option. If multiple matches exist the first one is used.</p>
 <dt><b>-M</b> &lt;file&gt;, <b>--dependencies</b> &lt;file&gt;<a name="o_dependencies" href="#o_dependencies"></a>
 <dd>Specify make rule output file
 <p>Writes a dependency rules suitable for <q>make</q> from the list of files used during compilation.</p>
+<p>Please choose source file names which are compatible with Makefiles as there
+are very little escaping possibilities.</p>
 
 <dt><b>--make-phony</b><a name="o_make-phony" href="#o_make-phony"></a>
 <dd>Enable phony targets for dependencies

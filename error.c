@@ -1317,7 +1317,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
     }
     fputs(": ", f);
     switch (err->severity) {
-    case SV_NOTE: if (console_use_color) console_black(f); fputs("note: ", f); bold = false; break;
+    case SV_NOTE: if (console_use_color) console_cyan(f); fputs("note: ", f); bold = false; break;
     case SV_WARNING: if (console_use_color) console_purple(f); fputs("warning: ", f); bold = true; break;
     case SV_NONEERROR:
     case SV_ERROR: if (console_use_color) console_red(f); fputs("error: ", f); bold = true; break;

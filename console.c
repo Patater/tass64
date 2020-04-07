@@ -104,7 +104,7 @@ void console_use(FILE *f) {
 }
 
 static const char *const ansi_sequences[8] = {
-    "\33[1m", "\33[0;1m", "\33[7m", "\33[m", "\33[30m", "\33[31m", "\33[1;32m",
+    "\33[1m", "\33[0;1m", "\33[7m", "\33[m", "\33[36m", "\33[31m", "\33[1;32m",
     "\33[35m"
 };
 
@@ -124,7 +124,7 @@ void console_attribute(int c, FILE *f) {
         if (!(current_attributes & FOREGROUND_INTENSITY) != !(current_attributes & BACKGROUND_INTENSITY)) current_attributes ^= FOREGROUND_INTENSITY | BACKGROUND_INTENSITY; 
         break;
     case 3: current_attributes = old_attributes; break;
-    case 4: current_attributes &= ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED); break;
+    case 4: current_attributes = FOREGROUND_GREEN | FOREGROUND_BLUE | (current_attributes & ~FOREGROUND_RED); break;
     case 5: current_attributes = FOREGROUND_RED | (current_attributes & ~(FOREGROUND_BLUE | FOREGROUND_GREEN)); break;
     case 6: current_attributes = FOREGROUND_GREEN | FOREGROUND_INTENSITY | (current_attributes & ~(FOREGROUND_BLUE | FOREGROUND_RED)); break;
     case 7: current_attributes = FOREGROUND_RED | FOREGROUND_BLUE | (current_attributes & ~FOREGROUND_GREEN); break;
