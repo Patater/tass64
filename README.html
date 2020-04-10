@@ -4115,7 +4115,7 @@ href="#o_no-caret-diag"><code>--no-caret-diag</code></a></q> option.</p>
 <pre width=80><strong>a.asm:3:21: <span style="color:red">error:</span> not defined ident 'label'</strong>
                  lda label
                      <strong><span style="color:green">^</span></strong>
-<strong>a.asm:3:21: <span style="color:gray">note:</span></strong> searched in the global scope</pre>
+<strong>a.asm:3:21: <span style="color:darkcyan">note:</span></strong> searched in the global scope</pre>
 <p>This is helpful for macro expansions as it displays the processed line which usually
 looks different to the one in the original source file.</p>
 Error buried deep in included files or macros display a backtrace of files after an <q>In
@@ -4126,7 +4126,7 @@ file included from</q> text where all the files and positions involved are liste
  		        <strong><span style="color:green">^</span></strong>
 In file included from <strong>included.asm:2:3</strong>,
                       <strong>main.asm:3:3</strong>:
-<strong>macros.asm:3:7: <span style="color:gray">note:</span></strong> original location in an expanded macro was here
+<strong>macros.asm:3:7: <span style="color:darkcyan">note:</span></strong> original location in an expanded macro was here
  		lda test
  		    <strong><span style="color:green">^</span></strong>
 </pre>
