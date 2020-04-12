@@ -1533,12 +1533,13 @@ opcodes.</p>
 </tbody>
 </table></div>
 
-<h4>Bit string extraction operators<a name="bitstringextractor" href="#bitstringextractor"></a></h4>
+<h4>Byte extraction operators<a name="bitstringextractor" href="#bitstringextractor"></a></h4>
 
-<p>These unary operators extract 8 or 16&nbsp;bits as a bit string from various types of operands.</p>
+<p>These unary operators extract 8 or 16&nbsp;bits. Usually they are used to get
+parts of a memory address.</p>
 
 <div><table border="0">
-<caption>Bit string extraction operators</caption>
+<caption>Byte/word extraction operators</caption>
 <tbody>
 <tr><td><code>&lt;</code><td>lower byte
 <td><code>&gt;</code><td>higher byte
@@ -1550,14 +1551,26 @@ opcodes.</p>
 </table></div>
 
 <pre width=80>
-        <b>lda</b> #&lt;<u>label</u>
-        <b>ldy</b> #&gt;<u>label</u>
+        <b>lda</b> #&lt;<u>label</u>     <i>; low byte of address</i>
+        <b>ldy</b> #&gt;<u>label</u>     <i>; high byte of address</i>
         <b>jsr</b> <span>$ab1e</span>
 
         <b>ldx</b> #&lt;&gt;<u>source</u>   <i>; word extraction</i>
         <b>ldy</b> #&lt;&gt;<u>dest</u>
         <b>lda</b> #<span class="k">size</span>(<u>source</u>)-<span>1</span>
         <b>mvn</b> #`<u>source</u>, #`<u>dest</u><i>; bank extraction</i>
+</pre>
+
+<p>Please note that these prefix operators are not strongly binding like
+negation or inversion. Instead they apply to the whole expression to the right.
+This may be unexpected but is required for compatibility with old sources which
+expect this behaviour.</p>
+
+<pre width=80>
+        <b>lda</b> #&lt;<u>label</u>+<span>10</span>  <i>;This is &lt;(label+10) and not (&lt;label)+10</i>
+
+<i>;The check below is wrong and should be written as (&lt;start) != (&lt;*)</i>
+        <b class="k">.cerror</b> &gt;<u>start</u> != &gt;<u>end</u><i>;Effectively this is &gt;(start != (&gt;end))</i>
 </pre>
 
 <h4>Conditional operators<a name="conditionals" href="#conditionals"></a></h4>
