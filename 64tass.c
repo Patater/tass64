@@ -1960,7 +1960,6 @@ MUST_CHECK Obj *compile(void)
                         val2 = get_vals_addrlist(epoints);
                         referenceit = oldreferenceit;
                     }
-                    oaddr = current_address->address;
                     if (val == NULL) {
                         bool labelexists;
                         label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
@@ -2055,7 +2054,6 @@ MUST_CHECK Obj *compile(void)
                         if (label != NULL) {
                             labelexists = true;
                         } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        oaddr = current_address->address;
                         listing_equal(listing, val);
                         if (labelexists) {
                             if (label->defpass == pass) {
@@ -2117,7 +2115,6 @@ MUST_CHECK Obj *compile(void)
                                 labelexists = true;
                                 if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
                             } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                            oaddr = current_address->address;
                             listing_equal(listing, val);
                             if (labelexists) {
                                 if (label->constant) {
@@ -3789,6 +3786,7 @@ MUST_CHECK Obj *compile(void)
                     if ((vs = get_val()) != NULL) {
                         struct textrecursion_s trec;
                         size_t membp = get_mem(current_address->mem);
+                        oaddr = current_address->address;
 
                         trec.len = 0;
                         trec.sum = 0;
