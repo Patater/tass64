@@ -2987,6 +2987,9 @@ MUST_CHECK Obj *compile(void)
         case '.':
             prm = get_command();
             ignore();
+            if ((waitfor->skip & 1) == 0 && waitfor->what == W_ENDC && prm != CMD_ENDC && prm != CMD_COMMENT) {
+                break;
+            }
         as_command:
             switch (prm) {
             case CMD_ENDC: /* .endc */
