@@ -1287,9 +1287,11 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
 }
 
 static MUST_CHECK bool list_extend2(List *lst) {
+    size_t o;
+    Obj **vals;
     if (list_extend(lst)) return true;
-    size_t o = lst->len;
-    Obj **vals = lst->data;
+    o = lst->len;
+    vals = lst->data;
     while (o < lst->u.s.max) vals[o++] = (Obj *)ref_none();
     lst->len = o;
     return false;
