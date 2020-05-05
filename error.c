@@ -642,7 +642,7 @@ static void new_error_msg_err_more(const Error *err) {
     adderror("original location in an expanded macro was here");
 }
 
-static void new_error_msg_more() {
+static void new_error_msg_more(void) {
     const struct file_list_s *flist = new_error_msg_more_param.flist;
     linepos_t epoint = new_error_msg_more_param.epoint;
     size_t line_len;

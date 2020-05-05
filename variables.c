@@ -368,8 +368,9 @@ Label *find_anonlabel(int32_t count) {
     label.cfname.data = (const uint8_t *)&anonident;
 
     while (context_stack.bottom < p) {
+        uint32_t count2;
         context = context_stack.stack[--p].normal;
-        uint32_t count2 = (uint32_t)((int32_t)((count >= 0) ? context->forwr : context->backr) + count);
+        count2 = (uint32_t)((int32_t)((count >= 0) ? context->forwr : context->backr) + count);
         label.cfname.len = 2;
         while (count2 != 0) {
             anonident.count[label.cfname.len - 2] = count2;
