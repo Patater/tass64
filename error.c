@@ -422,6 +422,8 @@ static void str_name(const uint8_t *data, size_t len) {
     adderror("'");
 }
 
+static void err_opcode(uint32_t);
+
 void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
     bool more;
     if (no < 0x40) {
@@ -567,6 +569,11 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             adderror("unknown processor '");
             adderror2(((const str_t *)prm)->data, ((const str_t *)prm)->len);
             adderror("'");
+            break;
+        case ERROR__NO_WORD_ADDR:
+        case ERROR__NO_LONG_ADDR: 
+            adderror(terr_error[no - 0x40]); 
+            err_opcode(*(uint32_t *)prm); 
             break;
         default:
             adderror(terr_error[no - 0x40]);

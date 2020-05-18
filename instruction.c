@@ -613,7 +613,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                         goto asjmp; /* gcc -> jmp */
                     } else { /* too long */
                         if (w != 3 && w != 0) {
-                            err_msg2((w == 1) ? ERROR__NO_WORD_ADDR : ERROR__NO_LONG_ADDR, NULL, epoint2);
+                            err_msg2((w == 1) ? ERROR__NO_WORD_ADDR : ERROR__NO_LONG_ADDR, &mnemonic[prm], epoint2);
                         } else if (crossbank) {
                             err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);
                         } else {
