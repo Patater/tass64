@@ -570,6 +570,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             adderror2(((const str_t *)prm)->data, ((const str_t *)prm)->len);
             adderror("'");
             break;
+        case ERROR__NO_BYTE_ADDR:
         case ERROR__NO_WORD_ADDR:
         case ERROR__NO_LONG_ADDR: 
             adderror(terr_error[no - 0x40]); 
