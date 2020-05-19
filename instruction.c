@@ -196,7 +196,7 @@ static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned i
             adrgen = (am == A_IMMEDIATE) ? AG_SBYTE : AG_CHAR;
             break;
         default:
-            if (cnmemonic[ADR_REL] != ____) {
+            if (cnmemonic[ADR_REL] != ____ || cnmemonic[ADR_REL_L] != ____) {
                 adrgen = (am == A_IMMEDIATE) ? AG_SBYTE: AG_CHAR;
                 break;
             }
@@ -450,6 +450,11 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                     case ADR_IMMEDIATE: 
                         if (cnmemonic[ADR_REL] != ____) {
                             ln = 1; longbranch = 0; opr = ADR_REL;
+                            goto immediaterel;
+                        }
+                        if (cnmemonic[ADR_REL_L] != ____) {
+                            if (w == 0) err_msg2(ERROR__NO_BYTE_ADDR, &mnemonic[prm], epoint2);
+                            ln = 2; longbranch = 0; opr = ADR_REL_L;
                             goto immediaterel;
                         }
                         if (pline[epoints[0].pos] == '#') epoints[0].pos++; 
