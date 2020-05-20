@@ -260,7 +260,7 @@ static MUST_CHECK Obj *get_bytes(linepos_t epoint, bool z85) {
     txt[2] = txt[0] = txt[1] ^ ('\'' ^ '"');
     txt[3] = 0;
     lpoint.pos += len;
-    if (here() != txt[1]) err_msg2(ERROR______EXPECTED, txt, &lpoint);
+    if (pline[lpoint.pos - 1] != txt[1] || len == 1) err_msg2(ERROR______EXPECTED, txt, &lpoint);
     return v;
 }
 
