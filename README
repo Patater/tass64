@@ -428,7 +428,8 @@ Quoted character strings prefixing by `b', `l', `n', `p', `s', `x' or `z'
 characters can be used to create byte strings. The resulting byte string
 contains what .text, .shiftl, .null, .ptext and .shift would create. Direct
 hexadecimal entry can be done using the `x' prefix and `z' denotes a z85
-encoded byte string.
+encoded byte string. Spaces can be used between pairs of hexadecimal digits as
+a separator for better readability.
 
           Byte string operators and functions
 y .. x concatenate strings x"12" .. x"34" is x"1234"
