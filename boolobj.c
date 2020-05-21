@@ -134,7 +134,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, v1 ? 1u : 0u);
+        return bytes_calc1(op->op->op, v1 ? 1U : 0U);
     case O_INV: return (Obj *)ibits_from_bool(v1);
     case O_NEG: return v1 ? (Obj *)ibits_from_bool(false) : (Obj *)ref_bits(bits_value[0]);
     case O_POS: return (Obj *)ref_bits(bits_value[v1 ? 1 : 0]);
