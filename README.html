@@ -1571,7 +1571,7 @@ expect this behaviour.</p>
 <pre width=80>
         <b>lda</b> #&lt;<u>label</u>+<span>10</span>  <i>;This is &lt;(label+10) and not (&lt;label)+10</i>
 
-<i>;The check below is wrong and should be written as (&lt;start) != (&lt;*)</i>
+<i>;The check below is wrong and should be written as (&gt;start) != (&gt;end)</i>
         <b class="k">.cerror</b> &gt;<u>start</u> != &gt;<u>end</u><i>;Effectively this is &gt;(start != (&gt;end))</i>
 </pre>
 
