@@ -1212,7 +1212,7 @@ this behaviour.
 
         lda #<label+10  ;This is <(label+10) and not (<label)+10
 
-;The check below is wrong and should be written as (<start) != (<*)
+;The check below is wrong and should be written as (>start) != (>end)
         .cerror >start != >end;Effectively this is >(start != (>end))
 
 Conditional operators
