@@ -760,7 +760,7 @@ MUST_CHECK Obj *sliceparams(const struct List *v2, size_t len2, uval_t *olen, iv
     Error *err;
     ival_t len, offs, end, step = 1;
 
-    if (len2 >= (1u << (8 * sizeof(ival_t) - 1))) return (Obj *)new_error_mem(epoint); /* overflow */
+    if (len2 >= (1U << (8 * sizeof(ival_t) - 1))) return (Obj *)new_error_mem(epoint); /* overflow */
     len = (ival_t)len2;
     if (v2->len > 3 || v2->len < 1) {
         return (Obj *)new_error_argnum(v2->len, 1, 3, epoint);

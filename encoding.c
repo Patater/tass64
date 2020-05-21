@@ -827,7 +827,7 @@ next:
     }
     ch = encode_state.data[encode_state.i];
     if ((ch & 0x80) != 0) ln = utf8in(encode_state.data + encode_state.i, &ch); else {
-        if ((actual_encoding->table_use[ch / 32] & (1 << (ch % 32))) != 0) {
+        if ((actual_encoding->table_use[ch / 32] & (1U << (ch % 32))) != 0) {
             encode_state.i++;
             return actual_encoding->table[ch];
         }
@@ -841,7 +841,7 @@ next:
         if (tmp.start >= t->start && tmp.end <= t->end) {
             encode_state.i += ln;
             if (ch < 0x80) {
-                actual_encoding->table_use[ch / 32] |= 1 << (ch % 32);
+                actual_encoding->table_use[ch / 32] |= 1U << (ch % 32);
                 actual_encoding->table[ch] = (uint8_t)(ch - t->start + t->offset);
             }
             return (uint8_t)(ch - t->start + t->offset);

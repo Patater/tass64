@@ -418,7 +418,7 @@ MUST_CHECK Bits *ibits_from_bool(bool i) {
 }
 
 MUST_CHECK Bits *bits_from_bools(bool i, bool j) {
-    return return_bits((i ? 2 : 0) | (j ? 1 : 0), 2, false);
+    return return_bits((i ? 2U : 0U) | (j ? 1U : 0U), 2, false);
 }
 
 static MUST_CHECK Bits *bits_from_u24(uint32_t i) {
@@ -531,7 +531,7 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     uv = bits = j = 0;
     while ((k--) != 0) {
         uint8_t c = s[k];
-        if (c == 0x31) uv |= 1 << bits;
+        if (c == 0x31) uv |= 1U << bits;
         else if (c == '_') continue;
         if (bits == SHIFT - 1) {
             d[j++] = uv;
@@ -1025,7 +1025,7 @@ static inline MUST_CHECK Obj *concat(oper_t op) {
     for (i = 0; i < rbits && i < l; i++) v[i] = v1[i] ^ inv;
     for (; i < rbits; i++) v[i] = inv;
     if (i < l) uv = v1[i] ^ inv; else uv = inv;
-    if (inv != 0) uv &= (1 << bits) - 1;
+    if (inv != 0) uv &= (1U << bits) - 1;
 
     v1 = vv1->data;
 
@@ -1271,7 +1271,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
             }
             o = offs2 / SHIFT;
             if (o < bitslen(vv1) && ((vv1->data[o] >> (offs2 % SHIFT)) & 1) != 0) {
-                uv ^= 1 << bits;
+                uv ^= 1U << bits;
             }
             bits++;
             if (bits == SHIFT) {
@@ -1281,7 +1281,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
             }
         }
         iter_destroy(&iter);
-        if (bits != 0) v[sz++] = uv & ((1 << bits) - 1);
+        if (bits != 0) v[sz++] = uv & ((1U << bits) - 1);
 
         vv->bits = i;
         return normalize(vv, sz, false);
@@ -1330,7 +1330,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
                 for (; sz < wl; sz++) v[sz] = inv;
                 if (bl != 0) v[sz] = inv ^ ((sz < wl2) ? v1[sz] : 0);
             }
-            if (bl != 0) v[sz++] &= ((1 << bl) - 1);
+            if (bl != 0) v[sz++] &= ((1U << bl) - 1);
         } else {
             sz = length / SHIFT;
             if ((length % SHIFT) != 0) sz++;
@@ -1344,7 +1344,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
             for (i = 0; i < length; i++) {
                 wo = (uval_t)offs / SHIFT;
                 if (wo < l && ((vv1->data[wo] >> ((uval_t)offs % SHIFT)) & 1) != 0) {
-                    uv ^= 1 << bits;
+                    uv ^= 1U << bits;
                 }
                 bits++;
                 if (bits == SHIFT) {
@@ -1354,7 +1354,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
                 }
                 offs += step;
             }
-            if (bits != 0) v[sz++] = uv & ((1 << bits) - 1);
+            if (bits != 0) v[sz++] = uv & ((1U << bits) - 1);
         }
 
         vv->bits = length;

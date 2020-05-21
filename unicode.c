@@ -155,7 +155,7 @@ static MUST_CHECK bool udecompose(uchar_t ch, struct ubuff_s *d, int options) {
                 const int16_t *p;
                 for (p = &usequences[-prop->decompose];; p++) {
                     uchar_t ch2 = (uint16_t)abs(*p);
-                    if (ch2 < 0x80 || (uint16_t)(ch2 - 0x300) < 0x40u) {
+                    if (ch2 < 0x80 || (uint16_t)(ch2 - 0x300) < 0x40U) {
                         if (d->p >= d->len && extend_ubuff(d)) return true;
                         d->data[d->p++] = ch2;
                     } else if (udecompose(ch2, d, options)) return true;
