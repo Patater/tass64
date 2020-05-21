@@ -239,7 +239,7 @@ static void printdec(Listing *ls, uint32_t dec) {
 
 static void printfile(Listing *ls) {
     ls->s[ls->i++] = ':';
-    printdec(ls, ls->lastfile - 1);
+    printdec(ls, ls->lastfile - 1U);
 }
 
 static void printline(Listing *ls) {

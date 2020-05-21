@@ -335,10 +335,10 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     if (v1->len < 0) *s++ = '~';
     *s++ = 'z';
     *s++ = '\'';
-    s = z85_encode(s, v1->data, sz & ~3);
+    s = z85_encode(s, v1->data, sz & ~3U);
     if ((sz & 3) != 0) {
         uint8_t tmp2[5], tmp[4] = {0, 0, 0, 0};
-        memcpy(tmp + 4 - (sz & 3), v1->data + (sz & ~3), sz & 3);
+        memcpy(tmp + 4 - (sz & 3), v1->data + (sz & ~3U), sz & 3);
         sz &= 3;
         z85_encode(tmp2, tmp, sz);
         sz++;
