@@ -446,7 +446,7 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint)
             }
             c2 = (c | 0x20) - 0x71;
             if (c2 < 6) {
-                uv = (uv << 4) | (c2 + 10);
+                uv = (uv << 4) | (c2 + 10U);
                 continue;
             }
             if (c != ('_' ^ 0x30)) break;
@@ -473,7 +473,7 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     v->bits = i * 4;
     d = v->data;
 
-    uv = bits = j = 0;
+    uv = j = 0; bits = 0;
     while ((k--) != 0) {
         uint8_t c = s[k] ^ 0x30;
         if (c < 10) uv |= (bdigit_t)c << bits;
@@ -481,7 +481,7 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint)
         else uv |= (((bdigit_t)c & 7) + 9) << bits;
         if (bits == SHIFT - 4) {
             d[j++] = uv;
-            bits = uv = 0;
+            bits = 0; uv = 0;
         } else bits += 4;
     }
     if (bits != 0) d[j] = uv;
@@ -528,14 +528,14 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     v->bits = i;
     d = v->data;
 
-    uv = bits = j = 0;
+    uv = j = 0; bits = 0;
     while ((k--) != 0) {
         uint8_t c = s[k];
         if (c == 0x31) uv |= 1U << bits;
         else if (c == '_') continue;
         if (bits == SHIFT - 1) {
             d[j++] = uv;
-            bits = uv = 0;
+            bits = 0; uv = 0;
         } else bits++;
     }
     if (bits != 0) d[j] = uv;
@@ -663,12 +663,12 @@ MUST_CHECK Obj *bits_from_bytes(const Bytes *v1, linepos_t epoint) {
     v->bits = len1 * 8;
     d = v->data;
 
-    uv = bits = j = i = 0;
+    uv = j = i = 0; bits = 0;
     while (len1 > i) {
         uv |= (bdigit_t)v1->data[i++] << bits;
         if (bits == SHIFT - 8) {
             d[j++] = uv;
-            bits = uv = 0;
+            bits = 0; uv = 0;
         } else bits += 8;
     }
     if (bits != 0) d[j] = uv;
@@ -1261,7 +1261,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         v = vv->data;
 
         uv = inv;
-        bits = sz = 0;
+        bits = 0; sz = 0;
         for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs2, epoint2);
             if (err != NULL) {
@@ -1339,7 +1339,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
             v = vv->data;
 
             uv = inv;
-            sz = bits = 0;
+            sz = 0; bits = 0;
             l = bitslen(vv1);
             for (i = 0; i < length; i++) {
                 wo = (uval_t)offs / SHIFT;
