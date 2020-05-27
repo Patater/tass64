@@ -1751,15 +1751,15 @@ but it does not need to be.</p>
 <dd>The compile offset is adjusted so that the program counter
 will match the requested address in the expression.
 <pre width=80>
-<i>;Offset PC       Bytes          Disassembly     Source</i>
+<i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$0800</span>
-&gt;0800							<b class="d">.byte</b>
+.0800						label1
 							<b class="k">.logical</b> <span>$1000</span>
-&gt;0800	1000						<b class="d">.byte</b>
+.0800	1000					label2
 						*	= <span>$1200</span>
-&gt;0a00	1200						<b class="d">.byte</b>
+.0a00	1200					label3
 							<b class="k">.here</b>
-&gt;0a00							<b class="d">.byte</b>
+.0a00						label4
 </pre>
 <dt><code><b class="k">.offs</b></code> &lt;expression&gt;<a name="d_offs" href="#d_offs"></a>
 <dd>Sets the compile offset relative to the program counter.
@@ -1767,7 +1767,7 @@ will match the requested address in the expression.
 relocated code, otherwise it's use is not recommended as there are easier
 to use alternatives below.</p>
 <pre width=80>
-<i>;Offset PC       Bytes          Disassembly     Source</i>
+<i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$1000</span>
 .1000		ea		nop			<b>nop</b>
 							<b class="k">.offs</b> <span>100</span>
@@ -1779,7 +1779,7 @@ to use alternatives below.</p>
 <p>The naming is not logical at all for relocated code, but that's how it was named in old 6502tass.</p>
 <p>It's used for code copied to it's proper location at runtime. Can be nested of course.</p>
 <pre width=80>
-<i>;Offset PC       Bytes          Disassembly     Source</i>
+<i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$1000</span>
 							<b class="k">.logical</b> <span>$300</span>
 .1000	0300	 a9 80		lda #$80	drive	<b>lda</b> #<span>$80</span>

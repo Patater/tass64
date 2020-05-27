@@ -1365,15 +1365,15 @@ it does not need to be.
     The compile offset is adjusted so that the program counter will match the
     requested address in the expression.
 
-    ;Offset PC       Bytes          Disassembly     Source
+    ;Offset ;PC     ;Hex            ;Monitor        ;Source
                                                     *       = $0800
-    >0800                                                   .byte
+    .0800                                           label1
                                                             .logical $1000
-    >0800   1000                                            .byte
+    .0800   1000                                    label2
                                                     *       = $1200
-    >0a00   1200                                            .byte
+    .0a00   1200                                    label3
                                                             .here
-    >0a00                                                   .byte
+    .0a00                                           label4
 
 .offs <expression>
     Sets the compile offset relative to the program counter.
@@ -1382,7 +1382,7 @@ it does not need to be.
     code, otherwise it's use is not recommended as there are easier to use
     alternatives below.
 
-    ;Offset PC       Bytes          Disassembly     Source
+    ;Offset ;PC     ;Hex            ;Monitor        ;Source
                                                     *       = $1000
     .1000           ea              nop                     nop
                                                             .offs 100
@@ -1399,7 +1399,7 @@ it does not need to be.
     It's used for code copied to it's proper location at runtime. Can be nested
     of course.
 
-    ;Offset PC       Bytes          Disassembly     Source
+    ;Offset ;PC     ;Hex            ;Monitor        ;Source
                                                     *       = $1000
                                                             .logical $300
     .1000   0300     a9 80          lda #$80        drive   lda #$80
