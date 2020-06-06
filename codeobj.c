@@ -304,15 +304,23 @@ static MUST_CHECK Obj *len(oper_t op) {
     }
     ln = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
     s = calc_size(v1);
+    if (s == 0 && v1->offs >= 0 && v1->size < (uval_t)v1->offs) {
+        return (Obj *)new_error(ERROR_NEGATIVE_SIZE, op->epoint2);
+    }
     return (Obj *)int_from_size((ln != 0) ? (s / ln) : s);
 }
 
 static MUST_CHECK Obj *size(oper_t op) {
+    address_t s;
     Code *v1 = (Code *)op->v2;
     if (v1->pass == 0) {
         return (Obj *)ref_none();
     }
-    return (Obj *)int_from_size(calc_size(v1));
+    s = calc_size(v1);
+    if (s == 0 && v1->offs >= 0 && v1->size < (uval_t)v1->offs) {
+        return (Obj *)new_error(ERROR_NEGATIVE_SIZE, op->epoint2);
+    }
+    return (Obj *)int_from_size(s);
 }
 
 MUST_CHECK Obj *bits_from_code(const Code *v1, linepos_t epoint) {

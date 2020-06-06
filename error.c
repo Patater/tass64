@@ -375,7 +375,8 @@ static const char * const terr_error[] = {
     "empty encoding, add something or correct name",
     "closing directive '",
     "opening directive '",
-    "must be used within a loop"
+    "must be used within a loop",
+    "not measurable as start offset beyond size of original"
 };
 
 static const char * const terr_fatal[] = {
@@ -893,6 +894,7 @@ void err_msg_output(const Error *val) {
     case ERROR_NO_ZERO_VALUE:
     case ERROR_OUT_OF_MEMORY:
     case ERROR__ADDR_COMPLEX:
+    case ERROR_NEGATIVE_SIZE:
     case ERROR_DIVISION_BY_Z: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); break;
     case ERROR_NO_ADDRESSING: more = new_error_msg_err(val); err_msg_no_addressing(val->u.addressing.am, val->u.addressing.cod);break;
     case ERROR___NO_REGISTER: more = new_error_msg_err(val); err_msg_no_register(val->u.reg.reg, val->u.reg.cod);break;
