@@ -3945,6 +3945,9 @@ not in range -1.0 to 1.0
     the function is only valid in the -1.0 to 1.0 range
 not iterable
     value is not a list or other iterable object
+not measurable as start offset beyond size of original
+    the offset was larger then size of original. For example when size(data) is
+    2 then size(data + 3) makes no sense.
 offset out of range
     code offset too much
 operands could not be broadcast together with shapes ? and ?
