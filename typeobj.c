@@ -131,7 +131,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (args != 1) {
                 return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);
             }
-            if (v1 == LIST_OBJ || v1 == TUPLE_OBJ || v1 == TYPE_OBJ) return v1->create(v2->val[0].val, op->epoint);
+            if (v1 == LIST_OBJ || v1 == TUPLE_OBJ || v1 == TYPE_OBJ) return v1->create(v2->val[0].val, &v2->val[0].epoint);
             return apply_convert(op);
         }
         break;
