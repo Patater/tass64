@@ -4248,7 +4248,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>not hashable<dd>the type can't be used as a key in a dictionary
 <dt>not in range -1.0 to 1.0<dd>the function is only valid in the -1.0 to 1.0 range
 <dt>not iterable<dd>value is not a list or other iterable object
-<dt>not measurable as start offset beyond size of original<dd>the offset was larger then size of original. For example when size(data) is 2 then size(data + 3) makes no sense.
+<dt>not measurable as start offset beyond size of original<dd>the applied offset was larger than the original size. For example if size(data) is 2 then size(data + 1) is 1. However size(data + 3) makes no sense as there's no such thing as a negative size.
 <dt>offset out of range<dd>code offset too much
 <dt>operands could not be broadcast together with shapes ? and ?<dd>list length must match or must have a single element only
 <dt>different start and end page $xxxx and $xxxx<dd>page crossing was detected
