@@ -1125,9 +1125,12 @@ repr(<expression>)
 size(<expression>)
     Returns the size of code, structure or union in bytes.
 
-            ldx #size(var) ; size to x
+    var     .word 0, 0, 0
+            ldx #size(var)  ; 6 bytes
+    var2    = var + 2       ; start 2 bytes later
+            ldx #size(var2) ; what remains is 4 bytes
 
-sort(<list>)
+sort(<list expression>)
     Returns a sorted list or tuple.
 
     If the original list contains further lists then these must be all of the
@@ -1166,8 +1169,9 @@ in line with it's use in most other assemblers.
 .. concat      x  repeat
 in contains
 
-There's a ternary operator (? :) which gives the second value if the first is
-true or the third if the first is false.
+Spacing must be used for the `x' and `in' operators or else they won't be
+recognized as such. For example the expression `[1,2]x2' should be written as
+`[1,2]x 2' instead.
 
 Parenthesis (( )) can be used to override operator precedence. Don't forget
 that they also denote indirect addressing mode for certain opcodes.
@@ -1245,21 +1249,23 @@ Address length forcing
 
 Special addressing length forcing operators in front of an expression can be
 used to make sure the expected addressing mode is used. Only applicable when
-used directly with instructions.
+used directly at the mnemonic.
 
            Address size forcing
 @b          to force 8 bit address
 @w          to force 16 bit address
 @l          to force 24 bit address (65816)
 
-        lda @w$0000
+        lda @w $0000    ; force the use of 2 byte absolute addressing
+        bne @b label    ; prevent upgrade to beq+jmp with long branches in use
+        lda @w #$00     ; use 2 bytes independent of accumulator size
 
 Compound assignment
 
-These assignment operators are short hands for common .var directive use.
+These assignment operators are short hands for updating variables.
 
-With the exception of := the variables updated must be defined beforehand. As
-with .var they can't update constants, only variables.
+The variables on the left must be defined beforehand by `:=' or `.var'.
+Constants can't be changed of course.
 
        Compound assignments
 +=  add         -=  subtract
