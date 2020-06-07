@@ -112,6 +112,7 @@ struct diagnostics_s {
     bool page;
     bool macro_prefix;
     bool float_round;
+    bool size_larger;
 };
 
 extern int testarg(int *, char ***, struct file_s *);

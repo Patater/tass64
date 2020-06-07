@@ -3280,6 +3280,20 @@ default, the others are disabled.
             .end
             asl bl.x        ; not ambiguous
 
+-Wno-size-larger
+    Don't warn if size is larger due to negative offset
+
+    size() and len() can be used to measure a memory area. Normally there's no
+    offset used but a positive offset may be used to reduce available space up
+    until nothing remains.
+
+    On the other hand if a negative offset is used then more space will be
+    available (ahead of the area) which may or may not be desired.
+
+    var     .byte ?, ?, ?
+    var2    = var - 2       ; start 2 bytes earlier
+            ldx #size(var2) ; size is 6 bytes due to 2 bytes ahead
+
 -Wstrict-bool
     Warn about implicit boolean conversions.
 
@@ -3913,6 +3927,9 @@ key error
     key not in the dictionary
 label required
     a label is mandatory for this directive
+larger than original due to negative offset
+    if a negative offset is used the size gets larger than the original as this
+    effectively adds bytes to the front.
 last byte must not be gap
     .shift or .shiftl needs a normal byte at the end
 logarithm of non-positive number

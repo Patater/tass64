@@ -1196,9 +1196,14 @@ void err_msg_implied_reg(linepos_t epoint, uint32_t cod) {
     if (more) new_error_msg_more();
 }
 
+void err_msg_size_larger(linepos_t epoint) {
+    new_error_msg2(diagnostic_errors.size_larger, epoint);
+    adderror("larger than original due to negative offset [-Wsize-larger]");
+}
+
 void err_msg_jmp_bug(linepos_t epoint) {
     new_error_msg2(diagnostic_errors.jmp_bug, epoint);
-    adderror( "possible jmp ($xxff) bug [-Wjmp-bug]");
+    adderror("possible jmp ($xxff) bug [-Wjmp-bug]");
 }
 
 void err_msg_pc_wrap(linepos_t epoint) {
