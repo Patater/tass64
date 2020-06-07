@@ -302,11 +302,17 @@ static MUST_CHECK Obj *len(oper_t op) {
     if (v1->pass == 0) {
         return (Obj *)ref_none();
     }
-    ln = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
-    s = calc_size(v1);
-    if (s == 0 && v1->offs >= 0 && v1->size < (uval_t)v1->offs) {
-        return (Obj *)new_error(ERROR_NEGATIVE_SIZE, op->epoint2);
+    if (v1->offs == 0) {
+        s = v1->size;
+    } else if (v1->offs > 0) {
+        s = v1->size - (uval_t)v1->offs;
+        if (s > v1->size) return (Obj *)new_error(ERROR_NEGATIVE_SIZE, op->epoint2);
+    } else {
+        s = v1->size + (uval_t)-v1->offs;
+        if (s < v1->size) err_msg_out_of_memory(); /* overflow */
+        if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
+    ln = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
     return (Obj *)int_from_size((ln != 0) ? (s / ln) : s);
 }
 
@@ -316,9 +322,15 @@ static MUST_CHECK Obj *size(oper_t op) {
     if (v1->pass == 0) {
         return (Obj *)ref_none();
     }
-    s = calc_size(v1);
-    if (s == 0 && v1->offs >= 0 && v1->size < (uval_t)v1->offs) {
-        return (Obj *)new_error(ERROR_NEGATIVE_SIZE, op->epoint2);
+    if (v1->offs == 0) {
+        s = v1->size;
+    } else if (v1->offs > 0) {
+        s = v1->size - (uval_t)v1->offs;
+        if (s > v1->size) return (Obj *)new_error(ERROR_NEGATIVE_SIZE, op->epoint2);
+    } else {
+        s = v1->size + (uval_t)-v1->offs;
+        if (s < v1->size) err_msg_out_of_memory(); /* overflow */
+        if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
     return (Obj *)int_from_size(s);
 }

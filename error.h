@@ -78,6 +78,7 @@ extern void err_msg_argnum(size_t, size_t, size_t, linepos_t);
 extern void err_msg_bool(Error_types, struct Obj *, linepos_t);
 extern void err_msg_bool_oper(struct oper_s *);
 extern void err_msg_implied_reg(linepos_t, uint32_t);
+extern void err_msg_size_larger(linepos_t);
 extern void err_msg_jmp_bug(linepos_t);
 extern void err_msg_pc_wrap(linepos_t);
 extern void err_msg_mem_wrap(linepos_t);

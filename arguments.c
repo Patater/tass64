@@ -90,7 +90,8 @@ struct diagnostics_s diagnostics = {
     false,       /* altmode */
     true,        /* page */
     false,       /* macro_prefix */
-    false        /* float_round */
+    false,       /* float_round */
+    true         /* size_larger */
 };
 
 struct diagnostics_s diagnostic_errors = {
@@ -131,7 +132,8 @@ struct diagnostics_s diagnostic_errors = {
     false,       /* altmode */
     true,        /* page */
     false,       /* macro_prefix */
-    false        /* float_round */
+    false,       /* float_round */
+    false        /* size_larger */
 };
 
 static struct diagnostics_s diagnostic_no_all;
@@ -173,7 +175,8 @@ static struct diagnostics_s diagnostic_all = {
     false,       /* altmode */
     true,        /* page */
     false,       /* macro_prefix */
-    true         /* float_round */
+    true,        /* float_round */
+    true         /* size_larger */
 };
 
 static struct diagnostics_s diagnostic_no_error_all;
@@ -215,7 +218,8 @@ static struct diagnostics_s diagnostic_error_all = {
     true,        /* altmode */
     true,        /* page */
     true,        /* macro_prefix */
-    true         /* float_round */
+    true,        /* float_round */
+    true         /* size_larger */
 };
 
 struct w_options_s {
@@ -260,6 +264,7 @@ static const struct w_options_s w_options[] = {
     {"page",            &diagnostics.page},
     {"macro-prefix",    &diagnostics.macro_prefix},
     {"float-round",     &diagnostics.float_round},
+    {"size-larger",     &diagnostics.size_larger},
     {NULL,              NULL}
 };
 
@@ -675,6 +680,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "  -Wno-wrap-pc           No PC overflow warning\n"
                "  -Wno-pitfalls          No common pitfall notes\n"
                "  -Wno-portable          No portability warnings\n"
+               "  -Wno-size-larger       No size larger than original warnings\n"
                "  -Wno-star-assign       No label multiply warnings\n"
                "  -Wold-equal            Warn about old equal operator\n"
                "  -Woptimize             Optimization warnings\n"
