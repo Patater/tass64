@@ -1441,10 +1441,13 @@ mylist  <b>=</b> <span class="k">range</span>(<span>10</span>, <span>0</span>, <
 <dt><code><b>size(</b>&lt;expression&gt;<b>)</b></code><a name="f_size" href="#f_size"></a>
 <dd>Returns the size of code, structure or union in bytes.
 <pre width=80>
-        <b>ldx</b> #<span class="k">size</span>(<u>var</u>) <i>; size to x</i>
+var     <b class="d">.word</b> <span>0</span>, <span>0</span>, <span>0</span>
+        <b>ldx</b> #<span class="k">size</span>(<u>var</u>)  <i>; 6 bytes</i>
+var2    <b>=</b> <u>var</u> + <span>2</span>       <i>; start 2 bytes later</i>
+        <b>ldx</b> #<span class="k">size</span>(<u>var2</u>) <i>; what remains is 4 bytes</i>
 </pre>
 
-<dt><code><b>sort(</b>&lt;list&gt;<b>)</b></code><a name="f_sort" href="#f_sort"></a>
+<dt><code><b>sort(</b>&lt;list expression&gt;<b>)</b></code><a name="f_sort" href="#f_sort"></a>
 <dd>Returns a sorted list or tuple.
 
 <p>If the original list contains further lists then these must
@@ -1505,8 +1508,8 @@ This is done to be in line with it's use in most other assemblers.</p>
 </tbody>
 </table></div>
 
-<p>There's a ternary operator (<code>? :</code>) which gives the second value if the first is
-true or the third if the first is false.</p>
+<p>Spacing must be used for the <q>x</q> and <q>in</q> operators or else they won't
+be recognized as such. For example the expression <q>[1,2]x2</q> should be written as <q>[1,2]x 2</q> instead.</p>
 
 <p>Parenthesis (<code>( )</code>) can be used to override operator precedence.
 Don't forget that they also denote indirect addressing mode for certain
@@ -1610,7 +1613,7 @@ booleans are required as arguments and only the <q><code>?</code></q> operator m
 
 <p>Special addressing length forcing operators in front of an expression can be
 used to make sure the expected addressing mode is used. Only applicable when used
-directly with instructions.</p>
+directly at the mnemonic.</p>
 
 <div><table border="0">
 <caption>Address size forcing</caption>
@@ -1622,16 +1625,17 @@ directly with instructions.</p>
 </table></div>
 
 <pre width=80>
-        <b>lda</b> @w<span>$0000</span>
+        <b>lda</b> @w <span>$0000</span>    <i>; force the use of 2 byte absolute addressing</i>
+        <b>bne</b> @b <u>label</u>    <i>; prevent upgrade to beq+jmp with long branches in use</i>
+        <b>lda</b> @w #<span>$00</span>     <i>; use 2 bytes independent of accumulator size</i>
 </pre>
 
 <h4>Compound assignment<a name="compound" href="#compound"></a></h4>
 
-<p>These assignment operators are short hands for common <a href="#d_var"><code>.var</code></a> directive use.</p>
+<p>These assignment operators are short hands for updating variables.</p>
 
-<p>With the exception of <code>:=</code> the variables updated must be defined
-beforehand. As with <a href="#d_var"><code>.var</code></a> they can't update constants, only
-variables.</p>
+<p>The variables on the left must be defined beforehand by <q><code>:=</code></q>
+or <q><a href="#d_var"><code>.var</code></q></a>. Constants can't be changed of course.</p>
 
 <div><table border="0">
 <caption>Compound assignments</caption>
