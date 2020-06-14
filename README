@@ -2165,24 +2165,33 @@ directory separator and use lower/uppercase consistently in file names!
 
 Scopes
 
-Scopes may contain symbols or other scopes nested. They are useful to avoid
-symbol clashes as the same symbol name can repeated as long as it's in a
-different scope.
+Scopes may contain symbols or further nested scopes. The same symbol name can
+be reused as long as it's in a different scope.
 
-In nested scopes the symbol lookup starts from the local scope and goes in the
-direction of the global scope. This means that local variables will `shadow'
-global one with the same name.
+A symbol is looked up in the local scope first. If it's a non-local symbol then
+parent scopes and the global scope may be searched in addition. This means that
+a symbol in a parent or global scope may be `shadowed'.
+
+Symbols of a named scope can be looked up using the `.' operator. The searched
+symbol stands on the right and it's looked up in the scope on the left. More
+than one symbol may be looked up at the same time and the result will be a list
+or tuple.
+
+        lda #0
+        sta vic.sprite.enable
+; same as .byte colors.red, colors.green, colors.blue
+ctable  .byte colors.(red, green, blue)
 
 .proc
 .pend
-    Procedure start and end of procedure.
+    Start a procedure, close and start next procedure and finish procedure.
 
-    If it's label is not used then the code won't be compiled at all. This is
-    very useful to avoid a lot of .if blocks to exclude unused sections of
-    code.
+    If the symbol in front is not referenced anywhere then the enclosed source
+    won't be compiled.
 
-    All labels inside are local enclosed in a scope and are accessible through
-    the prefixed label. Useful for building libraries.
+    Symbols inside are enclosed in a scope and are accessible through the
+    symbol of the procedure using the dot notation. This forces compilation of
+    the whole procedure of course.
 
     ize     .proc
             nop
@@ -2192,13 +2201,33 @@ global one with the same name.
             jsr ize
             jmp ize.cucc
 
+    The `compilation only if used' behaviour of .proc eases the building of
+    `libraries' from a collection of subroutines and tables where not
+    everything is needed all the time.
+
+    Alternative dead-code reduction techniques I encountered:
+
+    Separate source files
+        This potentially results in a lot of small files and manually managed
+        include directives. This is popular on external linker based systems
+        where object files may be excluded if unused.
+    Conditional compilation
+        Few larger files with conditional compilation directives all over the
+        place to exclude or include various parts. The source which does the
+        include manually declares somewhere what's actually needed or not.
+        There may be a lot of options if it's fine grained enough.
+    Wrap parts with macros
+        If a part is needed then a single macro call is placed somewhere to
+        `include' that part. Much better than conditional compilation but these
+        macro calls still need to be manually managed.
+
 .block
 .bend
     Block start and block end.
 
-    All labels inside a block are local enclosed in a scope. If prefixed with a
-    label local variables are accessible through that label using the dot
-    notation, otherwise not at all.
+    All symbols inside a block are enclosed in a scope. If the block had a
+    symbol then local symbols are accessible through that using the dot
+    notation.
 
             .block
             inc count + 1
