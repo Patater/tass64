@@ -2573,21 +2573,30 @@ file separately, like bitmap and colors for example. Negative offsets are calcul
 
 </dl>
 <h3>Scopes<a name="scopes" href="#scopes"></a></h3>
-<p>Scopes may contain symbols or other scopes nested. They are useful to avoid
-symbol clashes as the same symbol name can repeated as long as it's in a
-different scope.</p>
-<p>In nested scopes the symbol lookup starts from the local scope and goes in
-the direction of the global scope. This means that local variables will
-<q>shadow</q> global one with the same name.</p>
+<p>Scopes may contain symbols or further nested scopes. The same symbol name
+can be reused as long as it's in a different scope.</p>
+<p>A symbol is looked up in the local scope first. If it's a non-local symbol
+then parent scopes and the global scope may be searched in addition.  This means
+that a symbol in a parent or global scope may be <q>shadowed</q>.</p>
+<p>Symbols of a named scope can be looked up using the <q>.</q> operator.
+The searched symbol stands on the right and it's looked up in the scope on the
+left. More than one symbol may be looked up at the same time and the result
+will be a list or tuple.</p>
+<pre width=80>
+        <b>lda</b> #<span>0</span>
+        <b>sta</b> <u>vic</u>.<u>sprite</u>.<u>enable</u>
+<i>; same as .byte colors.red, colors.green, colors.blue</i>
+ctable  <b class="d">.byte</b> <u>colors</u>.(<u>red</u>, <u>green</u>, <u>blue</u>)
+</pre>
 <dl class="dir">
 <dt><code><b class="k">.proc</b></code><a name="d_proc" href="#d_proc"></a>
 <dt><code><b class="k">.pend</b></code><a name="d_pend" href="#d_pend"></a>
-<dd>Procedure start and end of procedure.
-<p>If it's label is not used then the code won't be compiled at all. This is
-very useful to avoid a lot of <a href="#d_if"><code>.if</code></a> blocks to exclude unused
-sections of code.</p>
-<p>All labels inside are local enclosed in a scope and are accessible through
-the prefixed label. Useful for building libraries.</p>
+<dd>Start a procedure, close and start next procedure and finish procedure.
+<p>If the symbol in front is not referenced anywhere then the enclosed source
+won't be compiled.</p>
+<p>Symbols inside are enclosed in a scope and are accessible through the
+symbol of the procedure using the dot notation. This forces compilation of the
+whole procedure of course.</p>
 <pre width=80>
 ize     <b class="k">.proc</b>
 	<b>nop</b>
@@ -2598,12 +2607,30 @@ cucc    <b>nop</b>
         <b>jmp</b> <u>ize</u>.<u>cucc</u>
 </pre>
 
+<p>The <q>compilation only if used</q> behaviour of <code>.proc</code> eases the building of <q>libraries</q> from a
+collection of subroutines and tables where not everything is needed all the time.</p>
+<p>Alternative dead-code reduction techniques I encountered:</p>
+<dl>
+<dt>Separate source files
+<dd>This potentially results in a lot of small files and manually managed include
+directives. This is popular on external linker based systems where object files
+may be excluded if unused.
+<dt>Conditional compilation
+<dd>Few larger files with conditional compilation directives all over the place to
+exclude or include various parts. The source which does the include manually declares
+somewhere what's actually needed or not. There may be a lot of options if it's
+fine grained enough.
+<dt>Wrap parts with macros
+<dd>If a part is needed then a single macro call is placed
+somewhere to <q>include</q> that part. Much better than conditional compilation
+but these macro calls still need to be manually managed.
+</dl>
+
 <dt><code><b class="k">.block</b></code><a name="d_block" href="#d_block"></a>
 <dt><code><b class="k">.bend</b></code><a name="d_bend" href="#d_bend"></a>
 <dd>Block start and block end.
-<p>All labels inside a block are local enclosed in a scope. If prefixed with a
-label local variables are accessible through that label using the dot notation,
-otherwise not at all.</p>
+<p>All symbols inside a block are enclosed in a scope. If the block had a symbol
+then local symbols are accessible through that using the dot notation.</p>
 <pre width=80>
 	<b class="k">.block</b>
         <b>inc</b> <u>count</u> + <span>1</span>
