@@ -369,7 +369,7 @@ The only predefined constant is pi.
 Floating point numbers are automatically truncated to integer as necessary.
 Other types can be converted to floating point by using the type float.
 
-Fixed point conversion can be done by using the shift operators. For example a
+Fixed point conversion can be done by using the shift operators. For example an
 8.16 fixed point number can be calculated as (3.14 << 16) & $ffffff. The binary
 operators operate like if the floating point number would be a fixed point one.
 This is the reason for the strange definition of inversion.
@@ -2541,7 +2541,7 @@ Misc
 .end
     Terminate assembly. Any content after this directive is ignored.
 .eor <expression>
-    XOR output with a 8 bit value. Useful for reverse screen code text for
+    XOR output with an 8 bit value. Useful for reverse screen code text for
     example, or for silly `encryption'.
 .seed <expression>
     Seed the pseudo random number generator with an unsigned integer of maximum
@@ -2838,7 +2838,7 @@ Output options
     $00, $00 end marker (length=0)
 
 --atari-xex
-    Generate a Atari XEX output file.
+    Generate an Atari XEX output file.
 
     Overlapping blocks are kept, continuing blocks are concatenated. Saving
     happens in the definition order without sorting, and uninitialized memory
@@ -2862,7 +2862,7 @@ Output options
     $60      code
 
 --apple2
-    Generate a Apple II output file (DOS 3.3).
+    Generate an Apple II output file (DOS 3.3).
 
     Overlapping blocks are flattened and uninitialized memory is filled up with
     zeros. Uninitialized memory before the first and after the last valid bytes

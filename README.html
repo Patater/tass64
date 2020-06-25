@@ -523,7 +523,7 @@ readability. The following operations can be used:</p>
 Other types can be converted to floating point by using the type <code>float</code>.</p>
 
 <p>Fixed point conversion can be done by using the shift operators. For example
-a 8.16 fixed point number can be calculated as <code>(3.14 &lt;&lt; 16) &amp; $ffffff</code>.
+an 8.16 fixed point number can be calculated as <code>(3.14 &lt;&lt; 16) &amp; $ffffff</code>.
 The binary operators operate like if the floating point number would be a fixed
 point one. This is the reason for the strange definition of inversion.</p>
 
@@ -2965,7 +2965,7 @@ can ruin the timing of a carefully cycle counted code.
 <dd>Terminate assembly. Any content after this directive is ignored.
 
 <dt><code><b class="k">.eor</b></code> &lt;expression&gt;<a name="d_eor" href="#d_eor"></a>
-<dd>XOR output with a 8&nbsp;bit value. Useful for reverse screen code text for example,
+<dd>XOR output with an 8&nbsp;bit value. Useful for reverse screen code text for example,
 or for silly <q>encryption</q>.
 
 <dt><code><b class="k">.seed</b></code> &lt;expression&gt;<a name="d_seed" href="#d_seed"></a>
@@ -3275,7 +3275,7 @@ zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp
 </table></div>
 
 <dt><b>--atari-xex</b><a name="o_atari-xex" href="#o_atari-xex"></a>
-<dd>Generate a Atari XEX output file.
+<dd>Generate an Atari XEX output file.
 <p>Overlapping blocks are kept, continuing blocks are concatenated. Saving
 happens in the definition order without sorting, and uninitialized memory is
 skipped in the output. Up to 64&nbsp;KiB.</p>
@@ -3301,7 +3301,7 @@ start	<b>rts</b>
 </table></div>
 
 <dt><b>--apple2</b><a name="o_apple2" href="#o_apple2"></a>
-<dd>Generate a Apple II output file (DOS 3.3).
+<dd>Generate an Apple II output file (DOS 3.3).
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with zeros. Uninitialized memory
 before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB.</p>
 <p>Used for Apple II executables.</p>
