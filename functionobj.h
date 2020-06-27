@@ -28,7 +28,8 @@ typedef enum Function_types {
     F_LOG10, F_EXP, F_SIN, F_COS, F_TAN, F_ACOS, F_ASIN, F_ATAN, F_RAD, F_DEG,
     F_COSH, F_SINH, F_TANH, F_HYPOT, F_ATAN2, F_POW, F_SIGN, F_ABS, F_ALL,
     F_ANY, F_SIZE, F_LEN, F_RANGE, F_REPR, F_FORMAT, F_RANDOM, F_SORT,
-    F_BINARY
+    F_BINARY, F_BYTE, F_CHAR, F_RTA, F_ADDR, F_SINT, F_WORD, F_LINT, F_LONG,
+    F_DINT, F_DWORD
 } Function_types;
 
 typedef struct Function {
