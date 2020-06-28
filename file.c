@@ -707,6 +707,7 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
                     k = (size_t)(p - tmp->data) - fp;
                     p = tmp->data + fp;
                     while (k != 0 && (p[k-1]==' ' || p[k-1]=='\t')) k--;
+                    if (fp == 0 && k > 1 && p[0] == '#' && p[1] == '!') k = 0;
                     p[k++] = 0;
                     fp += k;
                 } while (bp != bl);
