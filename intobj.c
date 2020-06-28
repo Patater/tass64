@@ -371,6 +371,39 @@ static inline unsigned int ldigit(const Int *v1) {
     return (len != 0) ? v1->data[0] : 0;
 }
 
+static inline MUST_CHECK Obj *int_calc1(oper_t op) {
+    Int *v1 = (Int *)op->v1;
+    unsigned int val = ldigit(v1);
+    switch (op->op->op) {
+    case O_BANK: val >>= 8; /* fall through */
+    case O_HIGHER: val >>= 8; /* fall through */
+    case O_LOWER: 
+    default: 
+        val &= 0xff;
+        break;
+    case O_HWORD: val >>= 8; /* fall through */
+    case O_WORD: 
+        val &= 0xffff;
+        break;
+    case O_BSWORD: 
+        val = (uint8_t)(val >> 8) | (uint16_t)(val << 8);
+        break;
+    }
+    if (op->inplace != &v1->v) {
+        v1 = new_int();
+        v1->data = v1->val;
+    } else {
+        v1 = ref_int(v1);
+        if (v1->data != v1->val) {
+            int_destroy(v1);
+            v1->data = v1->val;
+        }
+    }
+    v1->len = (val != 0) ? 1 : 0;
+    v1->val[0] = val;
+    return &v1->v;
+}
+
 static MUST_CHECK Obj *calc1(oper_t op) {
     Int *v1 = (Int *)op->v1, *v;
     switch (op->op->op) {
@@ -380,7 +413,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, ldigit(v1));
+        return int_calc1(op);
     case O_INV:
         v = new_int();
         if (v1->len < 0) isub(v1, int_value[1], v);
