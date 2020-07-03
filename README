@@ -59,11 +59,12 @@ Table of Contents
           o The star label
       + Built-in functions
           o Mathematical functions
+          o Byte string functions
           o Other functions
       + Expressions
           o Operators
           o Comparison operators
-          o Bit string extraction operators
+          o Byte extraction operators
           o Conditional operators
           o Address length forcing
           o Compound assignment
