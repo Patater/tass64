@@ -20,6 +20,7 @@
 #include <string.h>
 #ifdef _WIN32
 #include <fcntl.h>
+#include <unistd.h>
 #endif
 #ifdef __DJGPP__
 #include <io.h>
