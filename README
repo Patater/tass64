@@ -1028,7 +1028,7 @@ dint(<expression>)
     123456789) is x"15CD5B07" and dint(-1) is x"ffffffff"
 addr(<expression>)
     Return a little endian byte string of 2 bytes from an address in the
-    current program bank. E.g. rta(start) is x"0d08"
+    current program bank. E.g. addr(start) is x"0d08"
 rta(<expression>)
     Return a little endian byte string of 2 bytes from a return address in the
     current program bank. E.g. rta(4096) is x"ff0f"
