@@ -3259,6 +3259,11 @@ selection was made but the output section selection must be repeated for each
 output. The maximum image size will be the smallest of all selected
 formats. Using the same name multiple times is not a good idea.</p>
 
+<dt><b>--output-append</b> &lt;filename&gt;<a name="o_output-append" href="#o_output-append"></a>
+<dd>Same as output but appends instead of overwrites.
+
+<p>Normally output files are overwritten but in some cases it's useful to append them instead.</p>
+
 <dt><b>--output-section</b> &lt;sectionname&gt;<a name="o_output-section" href="#o_output-section"></a>
 <dd>By default all sections go into the output file. Using this option
 limits the output to specific section and it's children. This is useful
@@ -3267,11 +3272,6 @@ to split a larger program into several files.
 64tass a.asm --output-section main -o main.prg
 64tass a.asm --output-section loader -o loader.prg
 </pre>
-
-<dt><b>--output-append</b><a name="o_output-append" href="#o_output-append"></a>
-<dd>Append output instead of overwrite.
-
-<p>Normally output files are overwritten however in some cases it's useful to append them instead.</p>
 
 <dt><b>-X</b>, <b>--long-address</b><a name="o_long-address" href="#o_long-address"></a>
 <dd>Use 3 byte address/length for CBM and nonlinear output instead of 2
