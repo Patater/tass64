@@ -40,6 +40,7 @@ struct output_s {
     const char *name;
     const char *section;
     Output_types mode;
+    bool append;
     bool longaddr;
 };
 

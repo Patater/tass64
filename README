@@ -2814,6 +2814,12 @@ Output options
     64tass a.asm --output-section main -o main.prg
     64tass a.asm --output-section loader -o loader.prg
 
+--output-append
+    Append output instead of overwrite.
+
+    Normally output files are overwritten however in some cases it's useful to
+    append them instead.
+
 -X, --long-address
     Use 3 byte address/length for CBM and nonlinear output instead of 2 bytes.
     Also increases the size of raw output to 16 MiB.

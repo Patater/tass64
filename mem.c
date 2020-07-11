@@ -489,7 +489,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 #endif
         fout = stdout;
     } else {
-        fout = file_open(output->name, binary ? "wb" : "wt");
+        fout = file_open(output->name, output->append ? (binary ? "ab" : "at") : (binary ? "wb" : "wt"));
     }
     if (fout == NULL) {
         err_msg_file(ERROR_CANT_WRTE_OBJ, output->name, &nopoint);
