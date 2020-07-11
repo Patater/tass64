@@ -2806,6 +2806,12 @@ Output options
     for each output. The maximum image size will be the smallest of all
     selected formats. Using the same name multiple times is not a good idea.
 
+--output-append <filename>
+    Same as output but appends instead of overwrites.
+
+    Normally output files are overwritten but in some cases it's useful to
+    append them instead.
+
 --output-section <sectionname>
     By default all sections go into the output file. Using this option limits
     the output to specific section and it's children. This is useful to split a
@@ -2813,12 +2819,6 @@ Output options
 
     64tass a.asm --output-section main -o main.prg
     64tass a.asm --output-section loader -o loader.prg
-
---output-append
-    Append output instead of overwrite.
-
-    Normally output files are overwritten however in some cases it's useful to
-    append them instead.
 
 -X, --long-address
     Use 3 byte address/length for CBM and nonlinear output instead of 2 bytes.
