@@ -1226,10 +1226,10 @@ static ssize_t icmp(oper_t op) {
     i = vv1->len - vv2->len;
     if (i != 0) return i;
     j = intlen(vv1);
-    while ((j--) != 0) {
+    while (j != 0) {
+        j--;
         a = vv1->data[j]; b = vv2->data[j];
-        if (a > b) return (vv1->len < 0) ? -1 : 1;
-        if (a < b) return (vv1->len < 0) ? 1 : -1;
+        if (a != b) return (a > b) ? vv1->len : -vv1->len;
     }
     return 0;
 }
