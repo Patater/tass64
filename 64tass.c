@@ -316,16 +316,6 @@ static void tfree(void) {
     free(waitfors);
 }
 
-static void status(void) {
-    bool errors = error_print();
-    if (arguments.quiet) {
-        error_status();
-        printf("Passes: %12u\n",pass);
-        if (!errors) sectionprint();
-    }
-    tfree();
-}
-
 void new_waitfor(Wait_types what, linepos_t epoint) {
     uint8_t skwait = waitfor->skip;
     waitfor_p++;
@@ -4880,6 +4870,7 @@ int main2(int *argc2, char **argv2[]) {
     static struct linepos_s nopoint = {0, 0};
     char **argv;
     int argc;
+    bool failed;
 
     err_init(*argv2[0]);
     avltree_init(&star_root);
@@ -4913,54 +4904,60 @@ int main2(int *argc2, char **argv2[]) {
     if (arguments.list == NULL) {
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
     }
-    if (error_serious()) {status();return EXIT_FAILURE;}
+    failed = error_serious();
+    if (!failed) {
+        /* assemble again to create listing */
+        if (arguments.list != NULL) {
+            nolisting = 0;
 
-    /* assemble again to create listing */
-    if (arguments.list != NULL) {
-        nolisting = 0;
+            max_pass = pass; pass++;
+            listing = listing_open(arguments.list, argc, argv);
+            one_pass(argc, argv, opts, fin);
+            listing_close(listing);
+            listing = NULL;
 
-        max_pass = pass; pass++;
-        listing = listing_open(arguments.list, argc, argv);
-        one_pass(argc, argv, opts, fin);
-        listing_close(listing);
-        listing = NULL;
-
-        if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
-    }
-
-    for (j = 0; j < arguments.symbol_output_len; j++) {
-        const struct symbol_output_s *s = &arguments.symbol_output[j];
-        size_t k;
-        for (k = 0; k < j; k++) {
-            const struct symbol_output_s *s2 = &arguments.symbol_output[k];
-            if (strcmp(s->name, s2->name) == 0) break;
+            if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
         }
-        if (labelprint(s, k != j)) break;
-    }
-    if (arguments.make != NULL) makefile(argc - opts, argv + opts, arguments.make_phony);
 
-    if (error_serious()) {status();return EXIT_FAILURE;}
-
-    for (j = 0; j < arguments.output_len; j++) {
-        const struct output_s *output = &arguments.output[j];
-        struct section_s *section = find_this_section(output->section);
-        if (section == NULL) {
-            str_t sectionname;
-            sectionname.data = pline;
-            sectionname.len = lpoint.pos;
-            err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
-        } else if (j == arguments.output_len - 1) { 
-            output_mem(section->address.mem, output);
-        } else {
-            Memblocks *tmp = copy_memblocks(section->address.mem);
-            output_mem(tmp, output);
-            val_destroy(&tmp->v);
+        for (j = 0; j < arguments.symbol_output_len; j++) {
+            const struct symbol_output_s *s = &arguments.symbol_output[j];
+            size_t k;
+            for (k = 0; k < j; k++) {
+                const struct symbol_output_s *s2 = &arguments.symbol_output[k];
+                if (strcmp(s->name, s2->name) == 0) break;
+            }
+            if (labelprint(s, k != j)) break;
         }
+        if (arguments.make != NULL) makefile(argc - opts, argv + opts, arguments.make_phony);
+
+        failed = error_serious();
+    }
+    if (!failed) {
+        for (j = 0; j < arguments.output_len; j++) {
+            const struct output_s *output = &arguments.output[j];
+            struct section_s *section = find_this_section(output->section);
+            if (section == NULL) {
+                str_t sectionname;
+                sectionname.data = pline;
+                sectionname.len = lpoint.pos;
+                err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
+            } else if (j == arguments.output_len - 1) { 
+                output_mem(section->address.mem, output);
+            } else {
+                Memblocks *tmp = copy_memblocks(section->address.mem);
+                output_mem(tmp, output);
+                val_destroy(&tmp->v);
+            }
+        }
+        failed = error_serious();
     }
 
-    {
-        bool e = error_serious();
-        status();
-        return e ? EXIT_FAILURE : EXIT_SUCCESS;
+    error_print();
+    if (arguments.quiet) {
+        error_status();
+        printf("Passes: %12u\n",pass);
+        if (!failed) sectionprint();
     }
+    tfree();
+    return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }

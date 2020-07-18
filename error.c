@@ -1390,7 +1390,7 @@ static void walkfilelist(struct file_list_s *cflist) {
     }
 }
 
-bool error_print(void) {
+void error_print(void) {
     const struct errorentry_s *err, *err2, *err3;
     size_t pos;
     bool noneerr = false, anyerr = false, usenote;
@@ -1478,7 +1478,6 @@ bool error_print(void) {
     if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
     if (ferr != stderr) console_use(stderr);
     if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
-    return errors != 0;
 }
 
 void error_reset(void) {
