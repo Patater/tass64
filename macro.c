@@ -89,11 +89,12 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
                     size_t param = mline->rpositions[i].param;
                     if (param < macro_parameters.params[p].len) {
                         if (macro_parameters.params[p].param[param].init) return ret;
-                        pos = macro_parameters.params[p].param[param].pos + c;
+                        pos = macro_parameters.params[p].param[param].pos;
                     } else {
-                        pos = macro_parameters.params[p].all.pos + c;
+                        if (param != SIZE_MAX) return ret;
+                        pos = macro_parameters.params[p].all.pos;
                     }
-                    opoint->pos = pos;
+                    opoint->pos = pos + c;
                     opoint->line = flist->epoint.line;
                     ret = flist->parent;
                     flist = ret;
