@@ -87,7 +87,7 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
                 size_t c = pos - mline->rpositions[i].pos;
                 if (c < mline->rpositions[i].len) {
                     size_t param = mline->rpositions[i].param;
-                    if (param != SIZE_MAX) {
+                    if (param < macro_parameters.params[p].len) {
                         if (macro_parameters.params[p].param[param].init) return ret;
                         pos = macro_parameters.params[p].param[param].pos + c;
                     } else {
