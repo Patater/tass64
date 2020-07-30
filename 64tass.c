@@ -2358,12 +2358,12 @@ MUST_CHECK Obj *compile(void)
                                 label->constant = true;
                                 label->owner = true;
                                 label->value = &mfunc->v;
+                                mfunc->inamespaces = ref_tuple(null_tuple);
                                 label->epoint = epoint;
                                 label->ref = false;
                                 get_func_params(mfunc);
                                 get_namespaces(mfunc);
                                 mfunc->names = new_namespace(current_file_list, &epoint);
-                                mfunc->inamespaces = ref_tuple(null_tuple);
                                 waitfor->u.cmd_function.val = val_reference(&mfunc->v);
                             }
                             goto finish;
