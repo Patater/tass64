@@ -500,7 +500,7 @@ static Obj *function_rta_addr(oper_t op, bool rta) {
         uv &= all_mem;
         switch (am) {
         case A_NONE:
-            if ((current_address->l_address.bank ^ uv) > 0xffff) err_msg2(ERROR_CANT_CROSS_BA, val, op->epoint2);
+            if ((current_address->l_address ^ uv) > 0xffff) err_msg2(ERROR_CANT_CROSS_BA, val, op->epoint2);
             break;
         case A_KR:
             break;

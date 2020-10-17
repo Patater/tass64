@@ -682,7 +682,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "  -Wno-wrap-dpage        No direct page overflow warning\n"
                "  -Wno-wrap-mem          No offset overflow warning\n"
                "  -Wno-wrap-pbank        No program bank overflow warning\n"
-               "  -Wno-wrap-pc           No PC overflow warning\n"
+               "  -Wno-wrap-pc           No PC bank cross warning\n"
                "  -Wno-pitfalls          No common pitfall notes\n"
                "  -Wno-portable          No portability warnings\n"
                "  -Wno-size-larger       No size larger than original warnings\n"

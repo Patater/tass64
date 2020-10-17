@@ -28,11 +28,11 @@ struct optimizer_s;
 
 struct section_address_s {
     address_t address;
-    address2_t l_address;
+    address_t l_address;
     address_t start;
     address_t end;
-    address2_t l_start;
-    address2_t l_union;
+    address_t l_start;
+    address_t l_union;
     bool moved;
     bool wrapwarn;
     bool unionmode;
@@ -50,7 +50,7 @@ struct section_s {
     uval_t conflicts;
     uval_t provides;
     address_t restart;
-    address2_t l_restart;
+    address_t l_restart;
     address_t size;
     struct section_address_s address;
     uint8_t usepass;

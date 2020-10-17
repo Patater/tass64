@@ -861,10 +861,8 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         section_address.wrapwarn = section_address.moved = section_address.unionmode = false;
         section_address.address = 0;
         section_address.start = 0;
-        section_address.l_start.address = 0;
-        section_address.l_start.bank = 0;
-        section_address.l_union.address = 0;
-        section_address.l_union.bank = 0;
+        section_address.l_start = 0;
+        section_address.l_union = 0;
         section_address.end = 0;
         section_address.mem = new_memblocks(0, 0);
         section_address.mem->lastaddr = 0;
@@ -877,9 +875,9 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         val_destroy(current_address->l_address_val);
         val_destroy(&current_address->mem->v);
         current_address = oldsection_address;
-        if (current_address->l_address.bank > all_mem) {
+        if (current_address->l_address > all_mem) {
             err_msg_big_address(epoint);
-            current_address->l_address.bank &= all_mem;
+            current_address->l_address &= all_mem;
         }
         context_set_bottom(oldbottom);
         pop_context();
