@@ -407,9 +407,11 @@ static void memskip(address_t db, linepos_t epoint) {
         if (current_address->wrapwarn) {err_msg_mem_wrap(epoint);current_address->wrapwarn = false;}
         current_address->moved = false;
     }
+    if (current_address->bankwarn) {err_msg_pc_bank(epoint);current_address->bankwarn = false;}
     if (db > (~current_address->l_address & 0xffff)) {
+        current_address->bankwarn = ((-current_address->l_address & 0xffff) == db);
+        if (!current_address->bankwarn) err_msg_pc_bank(epoint);
         current_address->l_address = (current_address->l_address + db) & all_mem;
-        err_msg_pc_bank(epoint);
     } else current_address->l_address += db;
     if (db > (~current_address->address & all_mem2)) {
         if (db - 1 + current_address->address == all_mem2) {
@@ -437,9 +439,11 @@ FAST_CALL uint8_t *pokealloc(address_t db, linepos_t epoint) {
         if (current_address->wrapwarn) {err_msg_mem_wrap(epoint);current_address->wrapwarn = false;}
         current_address->moved = false;
     }
+    if (current_address->bankwarn) {err_msg_pc_bank(epoint);current_address->bankwarn = false;}
     if (db > (~current_address->l_address & 0xffff)) {
+        current_address->bankwarn = ((-current_address->l_address & 0xffff) == db);
+        if (!current_address->bankwarn) err_msg_pc_bank(epoint);
         current_address->l_address = (current_address->l_address + db) & all_mem;
-        err_msg_pc_bank(epoint);
     } else current_address->l_address += db;
     if (db > (~current_address->address & all_mem2)) {
         if (db - 1 + current_address->address == all_mem2) {
@@ -850,10 +854,11 @@ static void logical_close(linepos_t epoint) {
         bool overflowed = false;
         diff = (current_address->address - waitfor->u.cmd_logical.addr) & all_mem2;
         if (diff != 0) {
+            current_address->bankwarn = ((-current_address->l_address & 0xffff) == diff);
             if (diff > (~waitfor->u.cmd_logical.laddr & 0xffff)) {
                 current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
                 overflowed = current_address->l_address < diff;
-                if (epoint != NULL) err_msg_pc_bank(epoint);
+                if (epoint != NULL && !current_address->bankwarn) err_msg_pc_bank(epoint);
             } else current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
         } else current_address->l_address = waitfor->u.cmd_logical.laddr;
         if (current_address->l_address > all_mem || overflowed) {
@@ -1024,6 +1029,7 @@ static bool section_start(linepos_t epoint) {
         tmp->size = tmp->address.end - tmp->address.start;
         tmp->address.end = tmp->address.start = tmp->restart;
         tmp->address.wrapwarn = false;
+        tmp->address.bankwarn = false;
         tmp->address.address = tmp->restart;
         tmp->address.l_address = tmp->l_restart;
         val_destroy(&tmp->address.mem->v);
@@ -1049,6 +1055,7 @@ static bool virtual_start(linepos_t epoint) {
     new_waitfor(W_ENDV2, epoint); waitfor->u.cmd_virtual.section_address = current_address; waitfor->u.cmd_virtual.label = NULL;
     section_address = (struct section_address_s *)mallocx(sizeof *section_address);
     section_address->wrapwarn = section_address->moved = false;
+    section_address->bankwarn = false;
 
     do {
         struct values_s *vs;
@@ -1092,6 +1099,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
     address_t addr, laddr;
 
     current_address->wrapwarn = false;
+    current_address->bankwarn = false;
     if (!current_address->moved) {
         if (current_address->end < current_address->address) current_address->end = current_address->address;
         current_address->moved = true;
@@ -1223,6 +1231,7 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
                 fixeddig = false;
             }
         }
+        if (current_address->bankwarn) {err_msg_pc_bank(&newlabel->epoint);current_address->bankwarn = false;}
         if (code->addr != star || code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
             code->addr = star;
             code->requires = current_section->requires;
@@ -1238,6 +1247,7 @@ static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
         code->names->epoint = newlabel->epoint;
     } else {
         code = new_code();
+        if (current_address->bankwarn) {err_msg_pc_bank(&newlabel->epoint);current_address->bankwarn = false;}
         code->addr = star;
         code->typ = val_reference(current_address->l_address_val);
         code->size = 0;
@@ -1787,6 +1797,7 @@ MUST_CHECK Obj *compile(void)
                     err_msg_big_address(&epoint);
                     current_address->l_address &= all_mem;
                 }
+                current_address->bankwarn = false;
             }
             if (current_address->address != current_address->start) {
                 if (!current_address->moved) {
@@ -2382,6 +2393,7 @@ MUST_CHECK Obj *compile(void)
 
                             current_section->provides = ~(uval_t)0;current_section->requires = current_section->conflicts = 0;
                             section_address.wrapwarn = section_address.moved = false;
+                            section_address.bankwarn = false;
                             section_address.unionmode = (prm == CMD_UNION);
                             section_address.address = section_address.start = section_address.end = 0;
                             section_address.l_start = 0;
@@ -2607,6 +2619,7 @@ MUST_CHECK Obj *compile(void)
 
                             if (!ret && !doubledef) {
                                 Code *code = (Code *)label->value;
+                                if (current_address->bankwarn) {err_msg_pc_bank(&epoint);current_address->bankwarn = false;}
                                 if (labelexists && code->v.obj == CODE_OBJ) {
                                     Obj *tmp = current_address->l_address_val;
                                     if (!tmp->obj->same(tmp, code->typ)) {
@@ -2789,6 +2802,7 @@ MUST_CHECK Obj *compile(void)
                                     fixeddig = false;
                                 }
                             }
+                            if (current_address->bankwarn) {err_msg_pc_bank(&epoint);current_address->bankwarn = false;}
                             if (code->addr != star || code->requires != current_section->requires || code->conflicts != current_section->conflicts || code->offs != 0) {
                                 code->addr = star;
                                 code->requires = current_section->requires;
@@ -2813,6 +2827,7 @@ MUST_CHECK Obj *compile(void)
                         newlabel->owner = true;
                         newlabel->value = (Obj *)code;
                         newlabel->epoint = epoint;
+                        if (current_address->bankwarn) {err_msg_pc_bank(&epoint);current_address->bankwarn = false;}
                         code->addr = star;
                         code->typ = val_reference(current_address->l_address_val);
                         code->size = 0;
@@ -3548,6 +3563,7 @@ MUST_CHECK Obj *compile(void)
                     } else {
                         current_address->l_address = uval;
                     }
+                    current_address->bankwarn = false;
                     val_destroy(current_address->l_address_val);
                     tmp = vs->val;
                     current_address->l_address_val = get_star_value(0, tmp);
@@ -4488,6 +4504,7 @@ MUST_CHECK Obj *compile(void)
                         if (tmp3->usepass == 0 || tmp3->defpass < pass - 1) {
                             size_t ln = tmp3->address.mem->mem.p, ln2 = tmp3->address.mem->p;
                             tmp3->address.wrapwarn = tmp3->address.moved = false;
+                            tmp3->address.bankwarn = false;
                             tmp3->address.end = tmp3->address.start = tmp3->restart = tmp3->address.address = current_address->address;
                             tmp3->l_restart = tmp3->address.l_address = current_address->l_address;
                             tmp3->usepass = pass;
@@ -4535,6 +4552,7 @@ MUST_CHECK Obj *compile(void)
                                 tmp3->address.moved = true;
                             }
                             tmp3->address.wrapwarn = false;
+                            tmp3->address.bankwarn = false;
                             t = tmp3->address.end - tmp3->address.start;
                             tmp3->address.end = tmp3->address.start = tmp3->restart = tmp3->address.address = current_address->address;
                             tmp3->address.l_address = current_address->l_address;

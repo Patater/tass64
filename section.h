@@ -35,6 +35,7 @@ struct section_address_s {
     address_t l_union;
     bool moved;
     bool wrapwarn;
+    bool bankwarn;
     bool unionmode;
     struct Obj *l_address_val;
     struct Memblocks *mem;

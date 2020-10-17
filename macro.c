@@ -858,7 +858,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         push_context(context);
         temporary_label_branch++;
 
-        section_address.wrapwarn = section_address.moved = section_address.unionmode = false;
+        section_address.moved = section_address.wrapwarn = section_address.bankwarn = section_address.unionmode = false;
         section_address.address = 0;
         section_address.start = 0;
         section_address.l_start = 0;
