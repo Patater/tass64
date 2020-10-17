@@ -108,6 +108,7 @@ struct section_s *new_section(const str_t *name) {
         lastsc->logicalrecursion = 0;
         lastsc->address.moved = false;
         lastsc->address.wrapwarn = false;
+        lastsc->address.bankwarn = false;
         lastsc->next = NULL;
         lastsc->optimizer = NULL;
         prev_section->next = lastsc;
@@ -152,6 +153,7 @@ void reset_section(struct section_s *section) {
     section->logicalrecursion = 0;
     section->address.moved = false;
     section->address.wrapwarn = false;
+    section->address.bankwarn = false;
     section->address.unionmode = false;
 }
 
