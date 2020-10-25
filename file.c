@@ -190,27 +190,35 @@ failed:
 #endif
 
 static bool portability(const str_t *name, linepos_t epoint) {
+    struct linepos_s epoint2;
+    const uint8_t *pos;
 #if defined _WIN32 || defined __WIN32__ || defined __EMX__ || defined __MSDOS__ || defined __DOS__
-    if (memchr(name->data, '\\', name->len) != NULL) {
-        err_msg2(ERROR_____BACKSLASH, name, epoint);
+    if (name->len == 0) return true;
+    pos = (const uint8_t *)memchr(name->data, '\\', name->len);
+    if (pos != NULL) {
+        epoint2.line = epoint->line;
+        epoint2.pos = interstring_position(epoint, name->data, pos - name->data);
+        err_msg2(ERROR_____BACKSLASH, name, &epoint2);
         return false;
     }
-    if ((name->len > 0 && name->data[0] == '/') || (name->len > 1 && is_driveletter((const char *)name->data))) {
+    if (name->data[0] == '/' || is_driveletter((const char *)name->data)) {
         err_msg2(ERROR_ABSOLUTE_PATH, name, epoint);
         return false;
     }
 #else
     const char *c;
-    if (name->len > 0) {
-        for (c = "\\:*?\"<>|"; *c != '\0'; c++) {
-            if (memchr(name->data, *c, name->len) == NULL) continue;
-            err_msg2(ERROR__RESERVED_CHR, name, epoint);
-            return false;
-        }
-        if (name->data[0] == '/') {
-            err_msg2(ERROR_ABSOLUTE_PATH, name, epoint);
-            return false;
-        }
+    if (name->len == 0) return true;
+    for (c = "\\:*?\"<>|"; *c != '\0'; c++) {
+        pos = (const uint8_t *)memchr(name->data, *c, name->len);
+        if (pos == NULL) continue;
+        epoint2.line = epoint->line;
+        epoint2.pos = interstring_position(epoint, name->data, pos - name->data);
+        err_msg2(ERROR__RESERVED_CHR, name, &epoint2);
+        return false;
+    }
+    if (name->data[0] == '/') {
+        err_msg2(ERROR_ABSOLUTE_PATH, name, epoint);
+        return false;
     }
 #endif
     return true;

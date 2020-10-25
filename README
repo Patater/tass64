@@ -3853,6 +3853,9 @@ directive ignored
     an assembler directive was ignored for compatibility reasons
 expected ? values but got ? to unpack
     the number of variables must match the number of values when unpacking
+file name uses reserved character '?'
+    do not use \ : * ? " < > | in file names as some operating systems don't
+    like these
 immediate addressing mode suggested
     numeric constant was used as an address which was likely meant as an
     immediate value
@@ -3905,9 +3908,6 @@ symbol case mismatch '?'
 the file's real name is not '?'
     check if all characters match including their case as this is not the real
     name of the file
-this name uses reserved characters '?'
-    do not use \ : * ? " < > | in file names as some operating systems don't
-    like these
 unused symbol '?'
     this symbol has is not referred anywhere and therefore may be unused
 use '/' as path separation '?'

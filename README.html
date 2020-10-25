@@ -4258,6 +4258,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>direct page address overflow<dd>the calculated memory location address ended up outside of direct page and is now wrapped.
 <dt>directive ignored<dd>an assembler directive was ignored for compatibility reasons
 <dt>expected ? values but got ? to unpack<dd>the number of variables must match the number of values when unpacking
+<dt>file name uses reserved character '?'<dd>do not use \ : * ? " &lt; &gt; | in file names as some operating systems don't like these
 <dt>immediate addressing mode suggested<dd>numeric constant was used as an address which was likely meant as an immediate value
 <dt>implicit floating point rounding<dd>a floating point number with fractional part was used for an integer parameter
 <dt>independent result, possibly changeable to 'lda'<dd>the result does not seem to depend on the input so it could be just loaded instead
@@ -4277,7 +4278,6 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <dt>program bank address overflow<dd>the calculated memory location address ended up outside of the current program bank and is now wrapped.
 <dt>symbol case mismatch '?'<dd>the symbol is matching case insensitively but it's not all letters are exactly the same
 <dt>the file's real name is not '?'<dd>check if all characters match including their case as this is not the real name of the file
-<dt>this name uses reserved characters '?'<dd>do not use \ : * ? " &lt; &gt; | in file names as some operating systems don't like these
 <dt>unused symbol '?'<dd>this symbol has is not referred anywhere and therefore may be unused
 <dt>use '/' as path separation '?'<dd>backslash is not a path separator on all systems while forward slash will work independent of the host operating system
 <dt>use relative path for '?'<dd>file's path is absolute and depends on the file system layout and the source will not compile without the exact same environment
