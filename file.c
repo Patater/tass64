@@ -242,7 +242,7 @@ static wchar_t *get_real_name(const wchar_t *name) {
                 }
             }
             CloseHandle(handle);
-            if (ret < len) {
+            if (ret < len && ret != 0) {
                 return real_name;
             }
         }
@@ -256,7 +256,7 @@ static wchar_t *get_real_name(const wchar_t *name) {
             ret = GetLongPathNameW(name, real_name, len);
         }
     }
-    if (ret < len) {
+    if (ret < len && ret != 0) {
         return real_name;
     }
     free(real_name);
