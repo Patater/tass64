@@ -3897,14 +3897,14 @@ MUST_CHECK Obj *compile(void)
                     if (prm == CMD_CWARN || prm == CMD_CERROR) {
                         bool writeit;
                         if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
-                        if (tobool(get_val(), &writeit) || !writeit) {
-                            skip_exp();
-                            goto breakerr;
+                        if (here() == ',') {
+                            lpoint.pos++; ignore();
+                            if (here() == 0 || here() == ';') {
+                                err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
+                            }
                         }
-                        if (here() == 0 || here() == ';') goto breakerr;
-                        if (here() == ',') lpoint.pos++;
-                        if (here() == 0 || here() == ';') {
-                            err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
+                        if (tobool(get_val(), &writeit) || !writeit) {
+                            if (skip_exp()) get_exp(0, 0, 0, &epoint);
                             goto breakerr;
                         }
                     }
