@@ -3897,8 +3897,16 @@ MUST_CHECK Obj *compile(void)
                     if (prm == CMD_CWARN || prm == CMD_CERROR) {
                         bool writeit;
                         if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
-                        if (tobool(get_val(), &writeit) || !writeit) goto breakerr;
+                        if (tobool(get_val(), &writeit) || !writeit) {
+                            skip_exp();
+                            goto breakerr;
+                        }
+                        if (here() == 0 || here() == ';') goto breakerr;
                         if (here() == ',') lpoint.pos++;
+                        if (here() == 0 || here() == ';') {
+                            err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
+                            goto breakerr;
+                        }
                     }
                     if (!get_exp(0, 0, 0, &epoint)) goto breakerr;
                     len = get_val_remaining();
