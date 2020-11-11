@@ -1804,7 +1804,7 @@ void skip_exp(void) {
     for (;;) {
         uint8_t ch = here();
         if (ch == 0) {
-            if (pp == 0) break;
+            if (pp == 0 || q != 0) break;
             if (mtranslate()) { /* expand macro parameters, if any */
                 listing_line(listing, 0);
                 break;
