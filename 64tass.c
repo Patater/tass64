@@ -851,20 +851,12 @@ static void logical_close(linepos_t epoint) {
         current_address->l_union = waitfor->u.cmd_logical.laddr;
         diff = 0;
     } else {
-        bool overflowed = false;
         diff = (current_address->address - waitfor->u.cmd_logical.addr) & all_mem2;
-        if (diff != 0) {
-            current_address->bankwarn = ((-current_address->l_address & 0xffff) == diff);
-            if (diff > (~waitfor->u.cmd_logical.laddr & 0xffff)) {
-                current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
-                overflowed = current_address->l_address < diff;
-                if (epoint != NULL && !current_address->bankwarn) err_msg_pc_bank(epoint);
-            } else current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
-        } else current_address->l_address = waitfor->u.cmd_logical.laddr;
-        if (current_address->l_address > all_mem || overflowed) {
-            if (epoint != NULL) err_msg_big_address(epoint);
-            current_address->l_address &= all_mem;
-        }
+        if (diff > (~waitfor->u.cmd_logical.laddr & 0xffff)) {
+            current_address->bankwarn = ((-waitfor->u.cmd_logical.laddr & 0xffff) == diff);
+            if (epoint != NULL && !current_address->bankwarn) err_msg_pc_bank(epoint);
+            current_address->l_address = (waitfor->u.cmd_logical.laddr + diff) & all_mem;
+        } else current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
     }
     val_destroy(current_address->l_address_val);
     current_address->l_address_val = waitfor->u.cmd_logical.val;
