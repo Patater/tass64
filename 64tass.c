@@ -904,6 +904,8 @@ static void union_close(linepos_t epoint) {
     end = (current_address->address < current_address->end) ? current_address->end : current_address->address;
     current_address->end = (waitfor->u.cmd_union.addr2 > end) ? waitfor->u.cmd_union.addr2 : end;
     if (end > current_address->address) {
+        current_address->wrapwarn = false;
+        current_address->bankwarn = false;
         memskip(end - current_address->address, epoint);
     }
 }
