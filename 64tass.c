@@ -409,7 +409,7 @@ static void memskip(address_t db, linepos_t epoint) {
     }
     if (current_address->bankwarn) {err_msg_pc_bank(epoint);current_address->bankwarn = false;}
     if (db > (~current_address->l_address & 0xffff)) {
-        current_address->bankwarn = ((-current_address->l_address & 0xffff) == db);
+        current_address->bankwarn = (0x10000 - (current_address->l_address & 0xffff) == db);
         if (!current_address->bankwarn) err_msg_pc_bank(epoint);
         current_address->l_address = (current_address->l_address + db) & all_mem;
     } else current_address->l_address += db;
@@ -441,7 +441,7 @@ FAST_CALL uint8_t *pokealloc(address_t db, linepos_t epoint) {
     }
     if (current_address->bankwarn) {err_msg_pc_bank(epoint);current_address->bankwarn = false;}
     if (db > (~current_address->l_address & 0xffff)) {
-        current_address->bankwarn = ((-current_address->l_address & 0xffff) == db);
+        current_address->bankwarn = (0x10000 - (current_address->l_address & 0xffff) == db);
         if (!current_address->bankwarn) err_msg_pc_bank(epoint);
         current_address->l_address = (current_address->l_address + db) & all_mem;
     } else current_address->l_address += db;
@@ -853,7 +853,7 @@ static void logical_close(linepos_t epoint) {
     } else {
         diff = (current_address->address - waitfor->u.cmd_logical.addr) & all_mem2;
         if (diff > (~waitfor->u.cmd_logical.laddr & 0xffff)) {
-            current_address->bankwarn = ((-waitfor->u.cmd_logical.laddr & 0xffff) == diff);
+            current_address->bankwarn = (0x10000 - (waitfor->u.cmd_logical.laddr & 0xffff) == diff);
             if (epoint != NULL && !current_address->bankwarn) err_msg_pc_bank(epoint);
             current_address->l_address = (waitfor->u.cmd_logical.laddr + diff) & all_mem;
         } else current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
