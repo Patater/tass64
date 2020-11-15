@@ -856,7 +856,10 @@ static void logical_close(linepos_t epoint) {
             current_address->bankwarn = (0x10000 - (waitfor->u.cmd_logical.laddr & 0xffff) == diff);
             if (epoint != NULL && !current_address->bankwarn) err_msg_pc_bank(epoint);
             current_address->l_address = (waitfor->u.cmd_logical.laddr + diff) & all_mem;
-        } else current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
+        } else {
+            current_address->bankwarn = false;
+            current_address->l_address = waitfor->u.cmd_logical.laddr + diff;
+        }
     }
     val_destroy(current_address->l_address_val);
     current_address->l_address_val = waitfor->u.cmd_logical.val;
