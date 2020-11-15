@@ -362,7 +362,7 @@ static void printmon(Listing *ls, unsigned int cod, int ln, uint32_t adr) {
 }
 
 static void printsource(Listing *ls, linecpos_t pos) {
-    while (llist[pos-1] == 0x20 || llist[pos-1] == 0x09) pos--;
+    while (pos > 0 && (llist[pos-1] == 0x20 || llist[pos-1] == 0x09)) pos--;
     padding2(ls, ls->columns.source);
     flushbuf(ls);
     printable_print2(llist, ls->flist, pos);
