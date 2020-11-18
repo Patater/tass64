@@ -152,7 +152,7 @@ void memref(Memblocks *memblocks, Memblocks *ref) {
     block->addr = memblocks->lastaddr;
 }
 
-void memprint(Memblocks *memblocks) {
+void memprint(Memblocks *memblocks, FILE *f) {
     size_t i;
     char temp[10], temp2[10];
 
@@ -170,7 +170,7 @@ void memprint(Memblocks *memblocks) {
         }
         sprintf(temp, "$%04" PRIaddress, start);
         sprintf(temp2, "$%04" PRIaddress, (address_t)(start + size - 1));
-        printf("Memory range: %10s-%-7s $%04" PRIaddress "\n", temp, temp2, size);
+        fprintf(f, "Memory range: %10s-%-7s $%04" PRIaddress "\n", temp, temp2, size);
     }
 }
 

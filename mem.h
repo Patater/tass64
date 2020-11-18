@@ -18,6 +18,7 @@
 */
 #ifndef MEM_H
 #define MEM_H
+#include <stdio.h>
 #include "attributes.h"
 #include "stdbool.h"
 #include "inttypes.h"
@@ -30,7 +31,7 @@ extern void write_mark_mem(struct Memblocks *, unsigned int);
 extern void list_mem(const struct Memblocks *);
 extern void memjmp(struct Memblocks *, address_t);
 extern void memref(struct Memblocks *, struct Memblocks *);
-extern void memprint(struct Memblocks *);
+extern void memprint(struct Memblocks *, FILE *);
 extern void output_mem(struct Memblocks *, const struct output_s *);
 extern FAST_CALL uint8_t *alloc_mem(struct Memblocks *, size_t);
 extern int read_mem(const struct Memblocks *, address_t, size_t, size_t);

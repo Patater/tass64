@@ -4972,7 +4972,7 @@ int main2(int *argc2, char **argv2[]) {
     if (arguments.quiet) {
         error_status();
         printf("Passes: %12u\n",pass);
-        if (!failed) sectionprint();
+        if (!failed) sectionprint(stdout);
     }
     tfree();
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
