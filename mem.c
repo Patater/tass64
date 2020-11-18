@@ -482,6 +482,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC);
 
     if (memblocks->mem.p == 0) return;
+    if (output->name == NULL) return;
 
     if (dash_name(output->name)) {
 #if defined _WIN32 || defined __DJGPP__
