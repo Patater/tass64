@@ -4039,7 +4039,7 @@ MUST_CHECK Obj *compile(void)
                                 tmp.end = tmpe;
                             }
                             t = new_trans(&tmp, actual_encoding, &epoint);
-                            if (t->start != tmp.start || t->end != tmp.end || t->offset != tmp.offset) {
+                            if (t->start > tmp.start || t->end < tmp.end || t->offset + (tmp.start - t->start) != tmp.offset) {
                                 err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); goto breakerr;
                             }
                         }
