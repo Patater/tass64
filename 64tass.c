@@ -1317,7 +1317,6 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (diagnostics.optimize) cpu_opt_invalidate();
     if (lst != NULL && newlabel != NULL) listing_equal2(listing, &lst->v, epoint->pos);
     else listing_line(listing, epoint->pos);
-    new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
 
     do { /* label */
         bool labelexists;
@@ -1409,12 +1408,14 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         }
         ignore();
     } while (wht == ',');
+    
     if (foreach) {
         if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
     } else {
         if (here() != ',') {err_msg(ERROR______EXPECTED, "','");
         error:
             if (labels.p != 0 && labels.data != labels.val) free(labels.data);
+            new_waitfor(W_NEXT, epoint); waitfor->skip = 0;
             return i;
         }
         lpoint.pos++;ignore();
@@ -1429,8 +1430,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     star_tree = &s->tree; lvline = vline = 0;
     lin = lpoint.line;
 
+    new_waitfor(W_NEXT2, epoint);
     if (foreach) {
-        new_waitfor(W_NEXT2, epoint);
         waitfor->u.cmd_rept.breakout = false;
         if (iter.data != NULL) {
             Obj *val2;
@@ -1473,6 +1474,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         line_t xlin = lpoint.line;
         struct oper_s tmp;
         const uint8_t *oldpline = pline, *oldpline2 = pline;
+        uint8_t skip = 0;
         expr2 = (uint8_t *)oldpline2;
         if ((size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
             size_t lentmp = strlen((const char *)pline) + 1;
@@ -1481,20 +1483,18 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             pline = expr;
         } else expr = (uint8_t *)oldpline;
         label = NULL;
-        new_waitfor(W_NEXT2, epoint);
         waitfor->u.cmd_rept.breakout = false;
         tmp.op = NULL;
         for (;;) {
             if (here() != ',' && here() != 0) {
-                struct values_s *vs;
                 bool truth;
-                if (!get_exp(1, 1, 1, &apoint)) break;
-                vs = get_val();
-                if (tobool(vs, &truth)) break;
-                if (!truth) break;
+                if (!get_exp(1, 1, 1, &apoint) || tobool(get_val(), &truth) || !truth) {
+                    waitfor->skip = skip;
+                    break;
+                }
             }
             if (nopos < 0) {
-                ignore();if (here() != ',') {err_msg(ERROR______EXPECTED, "','"); break;}
+                ignore();if (here() != ',') {err_msg(ERROR______EXPECTED, "','"); waitfor->skip = skip; break;}
                 lpoint.pos++;ignore();
                 oldpline2 = pline;
                 if (pline != expr && (size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
@@ -1506,9 +1506,9 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 if (here() == 0 || here() == ';') {bpoint.pos = 0; nopos = 0;}
                 else bpoint = lpoint;
             } else {
-                if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+                if ((skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
             }
-            waitfor->skip = 1;lvline = vline;
+            lvline = vline;
             if (lst != NULL) {
                 if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1587,6 +1587,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 }
                 bpoint = lpoint; nopos = 1;
             }
+            skip = waitfor->skip;
+            waitfor->skip = 1;
             if (nopos > 0) {
                 struct linepos_s epoints[3];
                 lpoint = bpoint;
@@ -1621,11 +1623,12 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (nf != NULL) {
         if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
         else listing_line_cut2(listing, waitfor->epoint.pos);
+        close_waitfor(W_NEXT2);
+    } else {
+        waitfor->what = W_NEXT; waitfor->skip = 0;
     }
-    close_waitfor(W_NEXT2);
     free(expr);
     free(expr2);
-    if (nf != NULL) close_waitfor(W_NEXT);
     star_tree = stree_old; vline = ovline + vline - lvline;
     return i;
 }
@@ -1638,13 +1641,14 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (diagnostics.optimize) cpu_opt_invalidate();
     if (lst != NULL && newlabel != NULL) listing_equal2(listing, &lst->v, epoint->pos);
     else listing_line(listing, epoint->pos);
-    new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
     if (!get_exp(0, 1, 1, epoint)) cnt = 0;
     else {
         struct values_s *vs = get_val();
         if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) cnt = 0;
     }
-    if (cnt > 0) {
+    if (cnt == 0) {
+        new_waitfor(W_NEXT, epoint); waitfor->skip = 0;
+    } else {
         line_t lin = lpoint.line;
         bool starexists;
         struct star_s *s = new_star(vline, &starexists);
@@ -1661,7 +1665,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
         waitfor->u.cmd_rept.breakout = false;
         for (;;) {
             lpoint.line = lin;
-            waitfor->skip = 1; lvline = vline;
+            lvline = vline;
             if (lst != NULL) {
                 if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1672,13 +1676,15 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
                 break;
             }
             if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+            waitfor->skip = 1;
         }
         if (nf != NULL) {
             if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
             else listing_line_cut2(listing, waitfor->epoint.pos);
+            close_waitfor(W_NEXT2);
+        } else {
+            waitfor->what = W_NEXT; waitfor->skip = 0;
         }
-        close_waitfor(W_NEXT2);
-        if (nf != NULL) close_waitfor(W_NEXT);
         star_tree = stree_old; vline = ovline + vline - lvline;
     }
     return i;
@@ -1695,11 +1701,11 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     struct linepos_s apoint;
     line_t xlin;
     const uint8_t *oldpline;
+    uint8_t skip = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
     if (lst != NULL && newlabel != NULL) listing_equal2(listing, &lst->v, epoint->pos);
     else listing_line(listing, epoint->pos);
-    new_waitfor(W_NEXT, epoint);waitfor->skip = 0;
 
     s = new_star(vline, &starexists); stree_old = star_tree; ovline = vline;
     if (starexists && s->addr != star) {
@@ -1721,14 +1727,13 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     new_waitfor(W_NEXT2, epoint);
     waitfor->u.cmd_rept.breakout = false;
     for (;;) {
-        struct values_s *vs;
         bool truth;
-        if (!get_exp(1, 1, 1, &apoint)) break;
-        vs = get_val();
-        if (tobool(vs, &truth)) break;
-        if (!truth) break;
-        if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
-        waitfor->skip = 1;lvline = vline;
+        if (!get_exp(1, 1, 1, &apoint) || tobool(get_val(), &truth) || !truth) {
+            waitfor->skip = skip;
+            break;
+        }
+        if ((skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+        lvline = vline;
         if (lst != NULL) {
             if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
             else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1737,20 +1742,22 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
         } else nf = compile();
         xlin = lpoint.line;
         if (nf == NULL || waitfor->u.cmd_rept.breakout) break;
+        skip = waitfor->skip;
+        waitfor->skip = 1;
         pline = expr;
         lpoint = apoint;
     }
     pline = oldpline;
-    if (expr == oldpline) expr = NULL;
     lpoint.line = xlin;
     
     if (nf != NULL) {
         if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
         else listing_line_cut2(listing, waitfor->epoint.pos);
+        close_waitfor(W_NEXT2);
+    } else {
+        waitfor->what = W_NEXT; waitfor->skip = 0;
     }
-    close_waitfor(W_NEXT2);
-    free(expr);
-    if (nf != NULL) close_waitfor(W_NEXT);
+    if (expr != oldpline) free(expr);
     star_tree = stree_old; vline = ovline + vline - lvline;
     return i;
 }
