@@ -3136,7 +3136,7 @@ MUST_CHECK Obj *compile(void)
                     if (waitfor->what == W_SWITCH) { err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr; }
                     if (waitfor->what != W_SWITCH2) { err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr; }
                     waitfor->epoint = epoint;
-                    if (skwait == 2 || diagnostics.switch_case) {
+                    if (skwait == 2) {
                         struct values_s *vs;
                         Obj *result2;
                         struct oper_s tmp;
@@ -3155,11 +3155,6 @@ MUST_CHECK Obj *compile(void)
                             result2 = tmp.v1->obj->calc2(&tmp);
                             truth = (Bool *)result2 == true_value;
                             val_destroy(result2);
-                            if (truth && diagnostics.switch_case && skwait != 2) {
-                                err_msg2(ERROR_DUPLICATECASE, NULL, &vs->epoint);
-                                truth = false;
-                                break;
-                            }
                         }
                     }
                     waitfor->skip = truth ? (skwait >> 1) : (skwait & 2);

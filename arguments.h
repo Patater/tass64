@@ -100,7 +100,6 @@ struct diagnostics_s {
         bool variable;
     } unused;
     bool case_symbol;
-    bool switch_case;
     bool immediate;
     bool float_compare;
     bool leading_zeros;
