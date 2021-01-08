@@ -3130,9 +3130,9 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_CASE: /* .case */
                 {
-                    uint8_t skwait = waitfor->skip;
                     bool truth = false;
-                    if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
+                    uint8_t skwait = waitfor->skip;
+                    if ((skwait & 1) != 0) listing_line_cut(listing, epoint.pos);
                     if (waitfor->what == W_SWITCH) { err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr; }
                     if (waitfor->what != W_SWITCH2) { err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr; }
                     waitfor->epoint = epoint;
@@ -3140,6 +3140,7 @@ MUST_CHECK Obj *compile(void)
                         struct values_s *vs;
                         Obj *result2;
                         struct oper_s tmp;
+                        waitfor->skip = 1;
                         if (!get_exp(0, 1, 0, &epoint)) { waitfor->skip = 0; goto breakerr; }
                         tmp.op = &o_EQ;
                         tmp.epoint = tmp.epoint3 = &epoint;
@@ -3161,7 +3162,7 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                     }
-                    waitfor->skip = truth ? (waitfor->skip >> 1) : (waitfor->skip & 2);
+                    waitfor->skip = truth ? (skwait >> 1) : (skwait & 2);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 }
                 break;
