@@ -3099,20 +3099,17 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_ELSIF: /* .elsif */
                 {
-                    uint8_t skwait = waitfor->skip;
                     bool truth;
-                    struct values_s *vs;
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
                     if (waitfor->what == W_FI) {err_msg2(ERROR______EXPECTED, "'.fi'", &epoint); goto breakerr; }
                     if (waitfor->what != W_FI2) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     waitfor->epoint = epoint;
-                    if (skwait == 2) {
-                        if (!get_exp(0, 1, 1, &epoint)) { waitfor->skip = 0; goto breakerr;}
-                        vs = get_val();
-                    } else { waitfor->skip = 0; break; }
-                    if (tobool(vs, &truth)) { waitfor->skip = 0; break; }
-                    waitfor->skip = truth ? (waitfor->skip >> 1) : (waitfor->skip & 2);
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if (waitfor->skip != 2) { waitfor->skip = 0; break; }
+                    waitfor->skip = 1;
+                    if (!get_exp(0, 1, 1, &epoint)) { waitfor->skip = 0; goto breakerr;}
+                    if (tobool(get_val(), &truth)) waitfor->skip = 0;
+                    else if (truth) listing_line_cut2(listing, epoint.pos);
+                    else waitfor->skip = 2;
                 }
                 break;
             case CMD_SWITCH: /* .switch */
