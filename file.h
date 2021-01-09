@@ -51,8 +51,9 @@ struct file_s {
 };
 
 struct star_s {
-    line_t line;
+    line_t line, vline;
     address_t addr;
+    uint8_t pass;
     struct avltree tree;
     struct avltree_node node;
 };
