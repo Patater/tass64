@@ -162,8 +162,8 @@ static struct waitfor_s {
     } u;
 } *waitfors, *waitfor;
 
-static struct avltree star_root;
-struct avltree *star_tree = NULL;
+static struct star_s star_root;
+struct star_s *star_tree = NULL;
 
 static const char * const command[] = { /* must be sorted, first char is the ID */
     "\x08" "addr",
@@ -1305,9 +1305,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     } labels;
     Label *label;
     Obj *val, *nf = NULL;
-    struct star_s *s;
-    struct avltree *stree_old;
-    line_t ovline, lvline;
+    struct star_s *s, *stree_old;
     bool starexists, foreach = false;
     struct iter_s iter;
     size_t i = 0;
@@ -1421,13 +1419,13 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         lpoint.pos++;ignore();
     }
 
-    s = new_star(vline, &starexists); stree_old = star_tree; ovline = vline;
+    s = new_star(vline, &starexists); stree_old = star_tree;
     if (starexists && s->addr != star) {
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
     }
     s->addr = star;
-    star_tree = &s->tree; lvline = vline = 0;
+    star_tree->vline = vline; star_tree = s; vline = s->vline;
     lin = lpoint.line;
 
     new_waitfor(W_NEXT2, epoint);
@@ -1454,7 +1452,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                     iter_destroy(&iter2);
                 }
                 lpoint.line = lin;
-                waitfor->skip = 1; lvline = vline;
+                waitfor->skip = 1;
                 if (lst != NULL) {
                     if (i >= lst->len && list_extend2(lst)) {i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
                     else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1508,7 +1506,6 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             } else {
                 if ((skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
             }
-            lvline = vline;
             if (lst != NULL) {
                 if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1629,7 +1626,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     }
     free(expr);
     free(expr2);
-    star_tree = stree_old; vline = ovline + vline - lvline;
+    s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - lin;
     return i;
 }
 
@@ -1652,20 +1649,18 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
         line_t lin = lpoint.line;
         bool starexists;
         struct star_s *s = new_star(vline, &starexists);
-        struct avltree *stree_old = star_tree;
-        line_t ovline = vline, lvline;
+        struct star_s *stree_old = star_tree;
 
         if (starexists && s->addr != star) {
             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
             fixeddig = false;
         }
         s->addr = star;
-        star_tree = &s->tree;vline = 0;
+        star_tree->vline = vline; star_tree = s; vline = s->vline;
         new_waitfor(W_NEXT2, epoint);
         waitfor->u.cmd_rept.breakout = false;
         for (;;) {
             lpoint.line = lin;
-            lvline = vline;
             if (lst != NULL) {
                 if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1685,7 +1680,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
         } else {
             waitfor->what = W_NEXT; waitfor->skip = 0;
         }
-        star_tree = stree_old; vline = ovline + vline - lvline;
+        s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - lin;
     }
     return i;
 }
@@ -1693,9 +1688,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
 static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     uint8_t *expr;
     Obj *nf = NULL;
-    struct star_s *s;
-    struct avltree *stree_old;
-    line_t ovline, lvline;
+    struct star_s *s, *stree_old;
     bool starexists;
     size_t i = 0;
     struct linepos_s apoint;
@@ -1707,13 +1700,13 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (lst != NULL && newlabel != NULL) listing_equal2(listing, &lst->v, epoint->pos);
     else listing_line(listing, epoint->pos);
 
-    s = new_star(vline, &starexists); stree_old = star_tree; ovline = vline;
+    s = new_star(vline, &starexists); stree_old = star_tree;
     if (starexists && s->addr != star) {
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
     }
     s->addr = star;
-    star_tree = &s->tree; lvline = vline = 0;
+    star_tree->vline = vline; star_tree = s; vline = s->vline;
 
     apoint = lpoint;
     xlin = lpoint.line;
@@ -1733,7 +1726,6 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
             break;
         }
         if ((skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
-        lvline = vline;
         if (lst != NULL) {
             if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
             else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1758,7 +1750,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
         waitfor->what = W_NEXT; waitfor->skip = 0;
     }
     if (expr != oldpline) free(expr);
-    star_tree = stree_old; vline = ovline + vline - lvline;
+    s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - apoint.line;
     return i;
 }
 
@@ -1786,7 +1778,7 @@ MUST_CHECK Obj *compile(void)
         uint8_t type;
         uint8_t padding[3];
         line_t vline;
-        struct avltree *star_tree;
+        struct star_s *star_tree;
     } anonident2;
     struct linepos_s epoint;
 
@@ -4162,9 +4154,8 @@ MUST_CHECK Obj *compile(void)
                         Wait_types what;
                         bool starexists;
                         struct star_s *s = new_star(vline, &starexists);
-                        struct avltree *stree_old = star_tree;
+                        struct star_s *stree_old = star_tree;
                         line_t lin = lpoint.line;
-                        line_t vlin = vline;
 
                         if (starexists && s->addr != star) {
                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
@@ -4211,15 +4202,15 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                         enterfile(f, &epoint);
-                        lpoint.line = vline = 0;
-                        star_tree = &s->tree;
+                        lpoint.line = 0;
+                        star_tree->vline = vline; star_tree = s; vline = s->vline;
                         what = waitfor->what; waitfor->what = W_NONE;
                         val = compile();
                         waitfor->what = what;
                         if (prm == CMD_BINCLUDE) pop_context();
                         if (val != NULL) val_destroy(val);
-                        lpoint.line = lin; vline = vlin;
-                        star_tree = stree_old;
+                        lpoint.line = lin; 
+                        s->vline = vline; star_tree = stree_old; vline = star_tree->vline;
                         exitfile();
                         listing_file(listing, ";******  Return to file: ", current_file_list->file);
                     }
@@ -4847,7 +4838,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         star_tree = &star_root;
         s = new_star(i, &starexists);
         s->addr = 0;
-        star_tree = &s->tree;
+        star_tree = s;
 
         if (i == opts - 1) {
             if (fin->lines != 0) {
@@ -4889,7 +4880,7 @@ int main2(int *argc2, char **argv2[]) {
     bool failed;
 
     err_init(*argv2[0]);
-    avltree_init(&star_root);
+    avltree_init(&star_root.tree);
     objects_init();
     init_section();
     init_file();

@@ -42,7 +42,7 @@ extern uint32_t outputeor;
 extern int temporary_label_branch;
 extern line_t vline;
 extern struct linepos_s lpoint;
-extern struct avltree *star_tree;
+extern struct star_s *star_tree;
 extern bool fixeddig, constcreated;
 extern address_t star;
 extern const uint8_t *pline;
