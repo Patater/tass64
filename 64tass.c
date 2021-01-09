@@ -2306,7 +2306,6 @@ MUST_CHECK Obj *compile(void)
                             Mfunc *mfunc;
                             bool labelexists;
                             listing_line(listing, 0);
-                            new_waitfor(W_ENDF, &cmdpoint);waitfor->skip = 0;
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             mfunc = (Mfunc *)val_alloc(MFUNC_OBJ);
                             mfunc->file_list = current_file_list;
@@ -2371,6 +2370,7 @@ MUST_CHECK Obj *compile(void)
                                 mfunc->names = new_namespace(current_file_list, &epoint);
                                 waitfor->u.cmd_function.val = val_reference(&mfunc->v);
                             }
+                            new_waitfor(W_ENDF, &cmdpoint);waitfor->skip = 0;
                             goto finish;
                         }
                     case CMD_STRUCT:
