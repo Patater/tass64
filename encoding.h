@@ -37,13 +37,14 @@ extern struct encoding_s *actual_encoding;
 
 struct str_t;
 struct Str;
+struct encoder_s;
 
 extern struct encoding_s *new_encoding(const struct str_t *, linepos_t);
 extern struct trans_s *new_trans(struct encoding_s *, const struct trans_s *, linepos_t);
 extern bool new_escape(struct encoding_s *, const struct str_t *, struct Obj *, linepos_t);
-extern void encode_string_init(const struct Str *, linepos_t);
-extern int encode_string(void);
-extern void encode_error(Error_types);
+extern struct encoder_s *encode_string_init(const struct Str *, linepos_t);
+extern int encode_string(struct encoder_s *);
+extern void encode_error(struct encoder_s *, Error_types);
 extern void init_encoding(bool);
 extern void destroy_encoding(void);
 #endif

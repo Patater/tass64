@@ -1402,6 +1402,7 @@ failed:
 }
 
 MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
+    struct encoder_s *encoder;
     int ch;
     Int *v;
     digit_t uv;
@@ -1430,8 +1431,8 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
     if (d == NULL) goto failed2;
 
     uv = bits = j = 0;
-    encode_string_init(v1, epoint);
-    while ((ch = encode_string()) != EOF) {
+    encoder = encode_string_init(v1, epoint);
+    while ((ch = encode_string(encoder)) != EOF) {
         uv |= (digit_t)(ch & 0xff) << bits;
         if (bits == SHIFT - 8) {
             if (j >= sz) {

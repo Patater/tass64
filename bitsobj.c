@@ -544,6 +544,7 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint)
 }
 
 MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
+    struct encoder_s *encoder;
     int ch;
     Bits *v;
     unsigned int bits;
@@ -573,8 +574,8 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
     d = v->data;
 
     uv = bits = j = 0;
-    encode_string_init(v1, epoint);
-    while ((ch = encode_string()) != EOF) {
+    encoder = encode_string_init(v1, epoint);
+    while ((ch = encode_string(encoder)) != EOF) {
         uv |= (bdigit_t)(ch & 0xff) << bits;
         if (bits == SHIFT - 8) {
             if (j >= sz) {

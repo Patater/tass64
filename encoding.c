@@ -760,95 +760,99 @@ static void add_trans(struct encoding_s *tmp, const struct translate_table_s *ta
     }
 }
 
-static struct {
+struct encoder_s {
+    struct encoding_s *encoding;
     size_t i, i2, j, len, len2;
     bool err;
     const uint8_t *data, *data2;
     linepos_t epoint;
     char mode;
-} encode_state;
+};
 
-void encode_string_init(const Str *v, linepos_t epoint) {
-    encode_state.i = 0;
-    encode_state.j = 0;
-    encode_state.len2 = 0;
-    encode_state.len = v->len;
-    encode_state.data = v->data;
-    encode_state.epoint = epoint;
-    encode_state.err = false;
+struct encoder_s *encode_string_init(const Str *v, linepos_t epoint) {
+    static struct encoder_s encoder;
+    encoder.encoding = actual_encoding;
+    encoder.i = 0;
+    encoder.j = 0;
+    encoder.len2 = 0;
+    encoder.len = v->len;
+    encoder.data = v->data;
+    encoder.epoint = epoint;
+    encoder.err = false;
+    return &encoder;
 }
 
-void encode_error(Error_types no) {
-    if (!encode_state.err) {
-        struct linepos_s epoint = *encode_state.epoint;
-        epoint.pos = interstring_position(&epoint, encode_state.data, encode_state.i2);
+void encode_error(struct encoder_s *encoder, Error_types no) {
+    if (!encoder->err) {
+        struct linepos_s epoint = *encoder->epoint;
+        epoint.pos = interstring_position(&epoint, encoder->data, encoder->i2);
         err_msg2(no, NULL, &epoint);
-        encode_state.err = true;
+        encoder->err = true;
     }
 }
 
-int encode_string(void) {
+int encode_string(struct encoder_s *encoder) {
+    struct encoding_s *encoding;
     uchar_t ch;
     unsigned int ln;
     const struct avltree_node *c;
     const struct trans_s *t;
     struct trans_s tmp;
 
-    if (encode_state.j < encode_state.len2) {
-        return encode_state.data2[encode_state.j++];
+    if (encoder->j < encoder->len2) {
+        return encoder->data2[encoder->j++];
     }
+    encoding = encoder->encoding;
 next:
-    if (encode_state.i >= encode_state.len) return EOF;
-    encode_state.i2 = encode_state.i;
-    if (encode_state.len - encode_state.i >= actual_encoding->escape_length) {
-        size_t len = encode_state.len - encode_state.i;
-        const struct escape_s *e = (struct escape_s *)ternary_search(actual_encoding->escape, encode_state.data + encode_state.i, &len);
+    if (encoder->i >= encoder->len) return EOF;
+    encoder->i2 = encoder->i;
+    if (encoder->len - encoder->i >= encoding->escape_length) {
+        size_t len = encoder->len - encoder->i;
+        const struct escape_s *e = (struct escape_s *)ternary_search(encoding->escape, encoder->data + encoder->i, &len);
         if (e != NULL) {
             size_t i;
-            encode_state.i += len;
+            encoder->i += len;
             i = (const uint8_t *)e - identmap;
             if (i < 256) {
-                encode_state.len2 = 1;
-                encode_state.j = 1;
                 return i;
             }
-            encode_state.data2 = e->data;
-            encode_state.len2 = e->len;
-            if (encode_state.len2 < 1) goto next;
-            encode_state.j = 1;
+            if (e->len < 1) goto next;
+            encoder->len2 = e->len;
+            encoder->j = 1;
+            encoder->data2 = e->data;
             return e->data[0];
         }
     }
-    ch = encode_state.data[encode_state.i];
-    if ((ch & 0x80) != 0) ln = utf8in(encode_state.data + encode_state.i, &ch); else {
-        if ((actual_encoding->table_use[ch / 32] & (1U << (ch % 32))) != 0) {
-            encode_state.i++;
-            return actual_encoding->table[ch];
+    ch = encoder->data[encoder->i];
+    if ((ch & 0x80) != 0) ln = utf8in(encoder->data + encoder->i, &ch); else {
+        if ((encoding->table_use[ch / 32] & (1U << (ch % 32))) != 0) {
+            encoder->i++;
+            return encoding->table[ch];
         }
         ln = 1;
     }
     tmp.start = tmp.end = ch;
 
-    c = avltree_lookup(&tmp.node, &actual_encoding->trans, trans_compare);
+    c = avltree_lookup(&tmp.node, &encoding->trans, trans_compare);
     if (c != NULL) {
         t = cavltree_container_of(c, struct trans_s, node);
         if (tmp.start >= t->start && tmp.end <= t->end) {
-            encode_state.i += ln;
+            encoder->i += ln;
             if (ch < 0x80) {
-                actual_encoding->table_use[ch / 32] |= 1U << (ch % 32);
-                actual_encoding->table[ch] = (uint8_t)(ch - t->start + t->offset);
+                encoding->table_use[ch / 32] |= 1U << (ch % 32);
+                encoding->table[ch] = (uint8_t)(ch - t->start + t->offset);
             }
             return (uint8_t)(ch - t->start + t->offset);
         }
     }
-    if (!encode_state.err && (!(actual_encoding->escape == NULL && actual_encoding->trans.root == NULL) || !actual_encoding->failed)) {
-        struct linepos_s epoint = *encode_state.epoint;
-        epoint.pos = interstring_position(&epoint, encode_state.data, encode_state.i);
-        err_msg_unknown_char(ch, &actual_encoding->name, &epoint);
-        actual_encoding->failed = true;
-        encode_state.err = true;
+    if (!encoder->err && (!(encoding->escape == NULL && encoding->trans.root == NULL) || !encoding->failed)) {
+        struct linepos_s epoint = *encoder->epoint;
+        epoint.pos = interstring_position(&epoint, encoder->data, encoder->i);
+        err_msg_unknown_char(ch, &encoding->name, &epoint);
+        encoding->failed = true;
+        encoder->err = true;
     }
-    encode_state.i += ln;
+    encoder->i += ln;
     return 256 + '?';
 }
 
