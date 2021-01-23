@@ -45,12 +45,6 @@ struct encoding_s {
     uint32_t table_use[4];
 };
 
-struct trans2_s {
-    uint16_t start;
-    uint8_t length;
-    uint8_t offset;
-};
-
 struct escape_s {
     size_t len;
     uint8_t val[4];
@@ -59,11 +53,17 @@ struct escape_s {
 
 static struct avltree encoding_tree;
 
-static const struct trans2_s no_trans[] = {
+struct translate_table_s {
+    uint16_t start;
+    uint8_t length;
+    uint8_t offset;
+};
+
+static const struct translate_table_s no_trans[] = {
     {0x0000, 255, 0x00},
 };
 
-static const struct trans2_s petscii_trans[] = {
+static const struct translate_table_s petscii_trans[] = {
     {0x0020,  32, 0x20}, /*  -@ */
     {0x0041,  25, 0xc1}, /* A-Z */
     {0x005b,   0, 0x5b}, /* [ */
@@ -370,7 +370,7 @@ static const char *petscii_esc =
     "\x9e" "{yel}\0"
     "\x00" "\0";
 
-static const struct trans2_s petscii_screen_trans[] = {
+static const struct translate_table_s petscii_screen_trans[] = {
     {0x0020,  31, 0x20}, /*  -? */
     {0x0040,   0, 0x00}, /* @ */
     {0x0041,  25, 0x41}, /* A-Z */
@@ -544,7 +544,7 @@ static const char *petscii_screen_esc =
     "\x1e" "{up arrow}\0"
     "\x00" "\0";
 
-static const struct trans2_s no_screen_trans[] = {
+static const struct translate_table_s no_screen_trans[] = {
     {0x0000,  31, 0x80},
     {0x0020,  31, 0x20},
     {0x0040,  31, 0x00},
@@ -633,7 +633,7 @@ static struct transs_s {
 static unsigned int transs_i = lenof(transs->transs);
 
 static struct trans_s *lasttr = NULL;
-struct trans_s *new_trans(struct trans_s *trans, struct encoding_s *enc, linepos_t epoint)
+struct trans_s *new_trans(struct encoding_s *enc, const struct trans_s *trans, linepos_t epoint)
 {
     struct avltree_node *b;
     struct trans_s *tmp;
@@ -661,7 +661,7 @@ struct trans_s *new_trans(struct trans_s *trans, struct encoding_s *enc, linepos
     return avltree_container_of(b, struct trans_s, node);            /* already exists */
 }
 
-bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoint)
+bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoint)
 {
     struct escape_s **b2, *b, tmp;
     Obj *val2;
@@ -735,7 +735,7 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
     return ret;            /* already exists */
 }
 
-static void add_esc(const char *s, struct encoding_s *enc) {
+static void add_esc(struct encoding_s *enc, const char *s) {
     while (s[1] != 0) {
         size_t len = strlen(s + 1);
         const uint8_t **b = (const uint8_t **)ternary_insert(&enc->escape, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
@@ -746,17 +746,17 @@ static void add_esc(const char *s, struct encoding_s *enc) {
     }
 }
 
-static void add_trans(const struct trans2_s *t, size_t ln, struct encoding_s *tmp) {
+static void add_trans(struct encoding_s *tmp, const struct translate_table_s *table, size_t ln) {
     size_t i;
     struct trans_s tmp2;
     struct linepos_s nopoint = {0, 0};
     for (i = 0; i < ln; i++) {
-        uint32_t start = t[i].start;
+        uint32_t start = table[i].start;
         if (start >= 0x8000) start += 0x10000;
         tmp2.start = start;
-        tmp2.end = start + t[i].length;
-        tmp2.offset = t[i].offset;
-        new_trans(&tmp2, tmp, &nopoint);
+        tmp2.end = start + table[i].length;
+        tmp2.offset = table[i].offset;
+        new_trans( tmp, &tmp2,&nopoint);
     }
 }
 
@@ -866,27 +866,27 @@ void init_encoding(bool toascii)
         if (tmp == NULL) {
             return;
         }
-        add_trans(no_trans, lenof(no_trans), tmp);
+        add_trans(tmp, no_trans, lenof(no_trans));
 
         tmp = new_encoding(&screen_enc, &nopoint);
         if (tmp == NULL) {
             return;
         }
-        add_trans(no_screen_trans, lenof(no_screen_trans), tmp);
+        add_trans(tmp, no_screen_trans, lenof(no_screen_trans));
     } else {
         tmp = new_encoding(&none_enc, &nopoint);
         if (tmp == NULL) {
             return;
         }
-        add_esc(petscii_esc, tmp);
-        add_trans(petscii_trans, lenof(petscii_trans), tmp);
+        add_esc(tmp, petscii_esc);
+        add_trans(tmp, petscii_trans, lenof(petscii_trans));
 
         tmp = new_encoding(&screen_enc, &nopoint);
         if (tmp == NULL) {
             return;
         }
-        add_esc(petscii_screen_esc, tmp);
-        add_trans(petscii_screen_trans, lenof(petscii_screen_trans), tmp);
+        add_esc(tmp, petscii_screen_esc);
+        add_trans(tmp, petscii_screen_trans, lenof(petscii_screen_trans));
     }
 }
 

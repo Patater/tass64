@@ -4027,7 +4027,7 @@ MUST_CHECK Obj *compile(void)
                                 tmp.start = tmp.end;
                                 tmp.end = tmpe;
                             }
-                            t = new_trans(&tmp, actual_encoding, &epoint);
+                            t = new_trans(actual_encoding, &tmp, &epoint);
                             if (t->start > tmp.start || t->end < tmp.end || t->offset + (tmp.start - t->start) != tmp.offset) {
                                 err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); goto breakerr;
                             }
@@ -4063,7 +4063,7 @@ MUST_CHECK Obj *compile(void)
                         if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr; }
                         val = vs2->val;
                         if (val == &none_value->v) err_msg_still_none(NULL, &vs2->epoint);
-                        else if (tryit && new_escape(&escape, val, actual_encoding, &vs2->epoint)) {
+                        else if (tryit && new_escape(actual_encoding, &escape, val, &vs2->epoint)) {
                             err_msg2(ERROR_DOUBLE_ESCAPE, NULL, &vs->epoint); goto breakerr;
                         }
                     }
