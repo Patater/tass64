@@ -546,10 +546,6 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             adderror((const char *)prm);
             adderror("' not found");
             break;
-        case ERROR___NOT_ALLOWED:
-            adderror("not allowed here: ");
-            adderror((const char *)prm);
-            break;
         case ERROR_RESERVED_LABL:
             adderror("reserved symbol name '");
             adderror2(((const str_t *)prm)->data, ((const str_t *)prm)->len);

@@ -57,7 +57,6 @@ struct section_s {
     struct section_address_s address;
     uint8_t usepass;
     uint8_t defpass;
-    uint8_t structrecursion;
     uint8_t logicalrecursion;
     bool declared;
     struct section_s *parent;
