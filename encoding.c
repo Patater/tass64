@@ -36,7 +36,6 @@ struct encoding_s *actual_encoding;
 struct encoding_s {
     str_t name;
     str_t cfname;
-    bool empty;
     bool failed;
     ternary_tree escape;
     size_t escape_length;
@@ -614,7 +613,6 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
         else str_cfcpy(&lasten->cfname, NULL);
         lasten->escape = NULL;
         lasten->escape_length = SIZE_MAX;
-        lasten->empty = true;
         lasten->failed = false;
         avltree_init(&lasten->trans);
         memset(lasten->table_use, 0, sizeof(lasten->table_use));
@@ -623,7 +621,7 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
         return tmp;
     }
     tmp = avltree_container_of(b, struct encoding_s, node);
-    if (tmp->failed && tmp->empty) err_msg2(ERROR__EMPTY_ENCODI, NULL, epoint);
+    if (tmp->failed && tmp->escape == NULL && tmp->trans.root == NULL) err_msg2(ERROR__EMPTY_ENCODI, NULL, epoint);
     return tmp;            /* already exists */
 }
 
@@ -657,7 +655,6 @@ struct trans_s *new_trans(struct trans_s *trans, struct encoding_s *enc, linepos
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
         lasttr = NULL;
-        enc->empty = false;
         if (trans->start < 128) memset(enc->table_use, 0, sizeof(enc->table_use));
         return tmp;
     }
@@ -727,7 +724,6 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
         *b2 = b;
         if (v->len < enc->escape_length) enc->escape_length = v->len;
         
-        enc->empty = false;
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
         return false;
@@ -740,11 +736,9 @@ bool new_escape(const str_t *v, Obj *val, struct encoding_s *enc, linepos_t epoi
 }
 
 static void add_esc(const char *s, struct encoding_s *enc) {
-    const uint8_t **b;
-    enc->empty = s[1] != 0;
     while (s[1] != 0) {
         size_t len = strlen(s + 1);
-        b = (const uint8_t **)ternary_insert(&enc->escape, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
+        const uint8_t **b = (const uint8_t **)ternary_insert(&enc->escape, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
         if (b == NULL) err_msg_out_of_memory();
         *b = identmap + (uint8_t)s[0];
         if (enc->escape_length > len) enc->escape_length = len;
@@ -847,7 +841,7 @@ next:
             return (uint8_t)(ch - t->start + t->offset);
         }
     }
-    if (!encode_state.err && (!actual_encoding->empty || !actual_encoding->failed)) {
+    if (!encode_state.err && (!(actual_encoding->escape == NULL && actual_encoding->trans.root == NULL) || !actual_encoding->failed)) {
         struct linepos_s epoint = *encode_state.epoint;
         epoint.pos = interstring_position(&epoint, encode_state.data, encode_state.i);
         err_msg_unknown_char(ch, &actual_encoding->name, &epoint);
