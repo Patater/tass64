@@ -22,9 +22,11 @@
 
 extern struct Type *const FOLD_OBJ;
 
+struct Str;
+
 typedef struct Fold {
     Obj v;
-    int *dummy;
+    struct Str *repr;
 } Fold;
 
 extern Fold *fold_value;

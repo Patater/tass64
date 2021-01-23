@@ -31,6 +31,7 @@ static Type obj;
 Type *const FOLD_OBJ = &obj;
 
 static Fold foldval = { { &obj, 1 }, NULL };
+
 Fold *fold_value = &foldval;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
@@ -55,11 +56,15 @@ static MUST_CHECK Error *hash(Obj *UNUSED(v1), int *hs, linepos_t UNUSED(epoint)
 static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t maxsize) {
     Str *v;
     if (3 > maxsize) return NULL;
-    v = new_str2(3);
-    if (v == NULL) return NULL;
-    v->chars = 3;
-    memset(v->data, '.', 3);
-    return &v->v;
+    v = foldval.repr;
+    if (v == NULL) {
+        v = new_str2(3);
+        if (v == NULL) return NULL;
+        v->chars = 3;
+        memset(v->data, '.', 3);
+        foldval.repr = v;
+    }
+    return val_reference(&v->v);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
@@ -108,4 +113,5 @@ void foldobj_destroy(void) {
 #ifdef DEBUG
     if (fold_value->v.refcount != 1) fprintf(stderr, "fold %" PRIuSIZE "\n", fold_value->v.refcount - 1);
 #endif
+    if (foldval.repr != NULL) val_destroy(&foldval.repr->v);
 }
