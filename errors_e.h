@@ -116,7 +116,6 @@ typedef enum Error_types {
     ERROR_BRANCH_TOOFAR,
     ERROR____PTEXT_LONG,
     ERROR______EXPECTED,
-    ERROR___NOT_ALLOWED,
     ERROR_RESERVED_LABL,
     ERROR___UNKNOWN_CPU,
 

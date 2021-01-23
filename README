@@ -4027,8 +4027,6 @@ not a key and value pair
     dictionaries are built from key and value pairs separated by a colon
 not a variable
     only variables are changeable
-not allowed here: ?
-    do not use this directive here
 not defined '?'
     can't find this label at this point
 not hashable

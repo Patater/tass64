@@ -2456,7 +2456,6 @@ MUST_CHECK Obj *compile(void)
                                 structure->names = new_namespace(current_file_list, &epoint);
                             }
                             listing_line(listing, cmdpoint.pos);
-                            current_section->structrecursion++;
                             waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
                             waitfor->skip = 1;
                             val = macro_recurse(W_ENDS, &structure->v, structure->names, &cmdpoint);
@@ -2465,7 +2464,6 @@ MUST_CHECK Obj *compile(void)
                             waitfor->what = (prm == CMD_STRUCT) ? W_ENDS : W_ENDU;
                             waitfor->skip = 0;
                             lpoint.line--; vline--;
-                            current_section->structrecursion--;
 
                             current_section->provides = provides; current_section->requires = requires; current_section->conflicts = conflicts;
                             current_address = oldsection_address;
@@ -2600,7 +2598,6 @@ MUST_CHECK Obj *compile(void)
                             } else val = NULL;
                             ret = (val != NULL) && ((Struct *)val)->retval;
                             if (here() == ',') lpoint.pos++;
-                            current_section->structrecursion++;
 
                             oaddr = current_address->address;
                             newmembp = get_mem(current_address->mem);
@@ -2700,7 +2697,6 @@ MUST_CHECK Obj *compile(void)
                                     else val_destroy(val);
                                 }
                             }
-                            current_section->structrecursion--;
 
                             if (!ret && !doubledef) set_size(label, ((current_address->end < current_address->address) ? current_address->address : current_address->end) - oaddr, current_address->mem, oaddr, newmembp);
                             current_address->start = oldstart;
@@ -4457,7 +4453,6 @@ MUST_CHECK Obj *compile(void)
                     if (here() == ',') lpoint.pos++;
                     obj = (prm == CMD_DUNION) ? UNION_OBJ : STRUCT_OBJ;
                     if (val->obj != obj) {err_msg_wrong_type2(val, obj, &vs->epoint); goto breakerr;}
-                    current_section->structrecursion++;
                     oldstart = current_address->start;
                     oldend = current_address->end;
                     oldl_start = current_address->l_start;
@@ -4469,7 +4464,6 @@ MUST_CHECK Obj *compile(void)
                     current_address->unionmode = (prm == CMD_DUNION);
                     val = macro_recurse(prm == CMD_DUNION ? W_ENDU3 : W_ENDS3, val, NULL, &epoint);
                     if (val != NULL) val_destroy(val);
-                    current_section->structrecursion--;
                     current_address->start = oldstart;
                     oldstart = current_address->unionmode ? current_address->end : current_address->address;
                     if (oldend > current_address->end) current_address->end = oldend;
@@ -4488,7 +4482,6 @@ MUST_CHECK Obj *compile(void)
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
-                    if (current_section->structrecursion != 0) { err_msg2(ERROR___NOT_ALLOWED, ".dsection", &epoint); goto breakerr; }
                     epoint = lpoint;
                     sectionname.data = pline + lpoint.pos; sectionname.len = get_label(sectionname.data);
                     if (sectionname.len == 0) {err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
@@ -4516,7 +4509,6 @@ MUST_CHECK Obj *compile(void)
                         tmp3->address.unionmode = current_address->unionmode;
                         tmp3->address.l_start = current_address->l_start;
                         tmp3->address.l_union = current_address->l_union;
-                        tmp3->structrecursion = current_section->structrecursion;
                         tmp3->logicalrecursion = current_section->logicalrecursion;
                         val_destroy(tmp3->address.l_address_val); /* TODO: restart as well */
                         tmp3->address.l_address_val = val_reference(current_address->l_address_val);
