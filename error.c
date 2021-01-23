@@ -1377,10 +1377,10 @@ static bool different_line(const struct errorentry_s *err, const struct errorent
 static void walkfilelist(struct file_list_s *cflist) {
     struct avltree_node *n;
 
-    cflist->file->entercount = (cflist->file->entercount << 1) | 1u;
     for (n = avltree_first(&cflist->members); n != NULL; n = avltree_next(n)) {
         struct file_list_s *l = avltree_container_of(n, struct file_list_s, node);
         if (l->file->entercount > 1 || l->pass != pass) continue;
+        l->file->entercount++;
         walkfilelist(l);
     }
 }
@@ -1393,12 +1393,7 @@ void error_print(void) {
     struct linepos_s nopoint = {0, 0};
 
     if (error_list.header_pos != 0) {
-        struct avltree_node *n;
-        for (n = avltree_first(&file_list.members); n != NULL; n = avltree_next(n)) {
-            struct file_list_s *l = avltree_container_of(n, struct file_list_s, node);
-            if (l->file->entercount > 1 || l->pass != pass) continue;
-            walkfilelist(l);
-        }
+        walkfilelist(&file_list);
     }
 
     if (arguments.error != NULL) {
