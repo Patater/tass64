@@ -31,8 +31,14 @@
 #include "errorobj.h"
 
 struct encoding_s *actual_encoding;
+size_t efwcount;
 
 #define identmap (const uint8_t *)petscii_trans
+
+struct map_s {
+    uint8_t value;
+    uint8_t pass;
+};
 
 struct encoding_s {
     str_t name;
@@ -43,13 +49,14 @@ struct encoding_s {
     size_t escape_length;
     struct avltree ranges;
     struct avltree_node node;
-    uint8_t table[128];
-    uint32_t table_use[4];
+    struct map_s map[128];
 };
 
 struct escape_s {
     size_t len;
-    uint8_t val[4];
+    uint8_t val[6];
+    uint8_t pass;
+    uint8_t fwpass;
     uint8_t *data;
 };
 
@@ -604,7 +611,7 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
         lasten->escape_char = 256;
         lasten->failed = false;
         avltree_init(&lasten->ranges);
-        memset(lasten->table_use, 0, sizeof(lasten->table_use));
+        memset(lasten->map, 0, sizeof(lasten->map));
         tmp = lasten;
         lasten = NULL;
         return tmp;
@@ -616,6 +623,8 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
 
 struct trans_s {
     struct character_range_s range;
+    uint8_t pass;
+    uint8_t fwpass;
     struct avltree_node node;
 };
 
@@ -658,14 +667,28 @@ bool new_trans(struct encoding_s *enc, const struct character_range_s *range, li
     b = avltree_insert(&lasttr->node, &enc->ranges, trans_compare);
     if (b == NULL) { /* new encoding */
         tmp = lasttr;
+        lasttr = NULL;
+        tmp->fwpass = 0;
+        tmp->pass = pass;
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
-        lasttr = NULL;
-        if (range->start < lenof(enc->table)) memset(enc->table_use, 0, sizeof(enc->table_use));
         return false;
     }
     tmp = avltree_container_of(b, struct trans_s, node);
-    return tmp->range.start > range->start || tmp->range.end < range->end || tmp->range.offset + (range->start - tmp->range.start) != range->offset;
+    if (tmp->range.start != range->start || tmp->range.end != range->end) {
+        return true;
+    }
+    if (tmp->pass >= pass) {
+        return (tmp->range.offset != range->offset);
+    }
+    tmp->pass = pass;
+    if (tmp->fwpass == pass) efwcount--;
+    if (tmp->range.offset != range->offset) {
+        tmp->range.offset = range->offset;
+        if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+        fixeddig = false;
+    }
+    return false;
 }
 
 bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoint)
@@ -715,19 +738,18 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
     iter_destroy(&iter);
 
     if (b == NULL) { /* new escape */
-        if (i == 1) {
-            b = (struct escape_s *)(identmap + tmp.val[0]);
-        } else {
-            b = (struct escape_s *)mallocx(sizeof *b);
-            if (d == tmp.val) {
-                memcpy(b->val, tmp.val, i);
-                d = b->val;
-            } else if (i < len) {
-                d = (uint8_t *)reallocx(d, i);
-            }
-            b->len = i;
-            b->data = d;
+        b = (struct escape_s *)mallocx(sizeof *b);
+        if (d == tmp.val) {
+            memcpy(b->val, tmp.val, i);
+            d = b->val;
+        } else if (i < len) {
+            uint8_t *d2 = (uint8_t *)realloc(d, i);
+            if (d2 != NULL) d = d2;
         }
+        b->len = i;
+        b->data = d;
+        b->fwpass = 0;
+        b->pass = pass;
         *b2 = b;
         if (v->len < enc->escape_length) enc->escape_length = v->len;
         if (enc->escape_char != v->data[0]) {
@@ -743,10 +765,37 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
         return false;
     }
     *b2 = b;
-    if (i == 1) return b != (struct escape_s *)(identmap + tmp.val[0]);
-    ret = (i != b->len || memcmp(d, b->data, i) != 0);
-    if (tmp.val != d) free(d);
-    return ret;            /* already exists */
+    if (i == 1) {
+        size_t j = (const uint8_t *)b - identmap;
+        if (j < 256) {
+            return b != (struct escape_s *)(identmap + tmp.val[0]);
+        }
+        ret = (b->len != 1 || *d != *b->data);
+    } else {
+        ret = (i != b->len || memcmp(d, b->data, i) != 0);
+    }
+    if (b->pass == pass) {
+        if (tmp.val != d) free(d);
+        return ret;            /* already exists */
+    }
+    b->pass = pass;
+    if (b->fwpass == pass) efwcount--;
+    if (ret) {
+        if (b->data != b->val) free(b->data);
+        if (tmp.val == d) {
+            memcpy(b->val, tmp.val, i);
+            d = b->val;
+        } else if (i < len) {
+            uint8_t *d2 = (uint8_t *)realloc(d, i);
+            if (d2 != NULL) d = d2;
+        }
+        b->data = d;
+        if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+        fixeddig = false;
+    } else {
+        if (tmp.val != d) free(d);
+    }
+    return false;
 }
 
 static void add_esc(struct encoding_s *enc, const char *s) {
@@ -765,6 +814,8 @@ static void add_trans(struct encoding_s *tmp, const struct translate_table_s *ta
     size_t i;
     struct character_range_s range;
     struct linepos_s nopoint = {0, 0};
+    uint8_t oldpass = pass;
+    pass = 255;
     for (i = 0; i < ln; i++) {
         uint32_t start = table[i].start;
         if (start >= 0x8000) start += 0x10000;
@@ -773,6 +824,7 @@ static void add_trans(struct encoding_s *tmp, const struct translate_table_s *ta
         range.offset = table[i].offset;
         new_trans(tmp, &range, &nopoint);
     }
+    pass = oldpass;
 }
 
 struct encoder_s {
@@ -810,8 +862,7 @@ int encode_string(struct encoder_s *encoder) {
     struct encoding_s *encoding;
     uchar_t ch;
     unsigned int ln;
-    const struct avltree_node *c;
-    const struct trans_s *t;
+    struct avltree_node *c;
     struct trans_s tmp;
 
     if (encoder->j < encoder->len2) {
@@ -824,25 +875,32 @@ next:
     ch = encoder->data[encoder->i];
     if ((ch == encoding->escape_char || encoding->escape_char == 257) && encoder->len - encoder->i >= encoding->escape_length) {
         size_t len = encoder->len - encoder->i;
-        const struct escape_s *e = (struct escape_s *)ternary_search(encoding->escapes, encoder->data + encoder->i, &len);
+        struct escape_s *e = (struct escape_s *)ternary_search(encoding->escapes, encoder->data + encoder->i, &len);
         if (e != NULL) {
-            size_t i;
-            encoder->i += len;
-            i = (const uint8_t *)e - identmap;
+            size_t i = (const uint8_t *)e - identmap;
             if (i < 256) {
+                encoder->i += len;
                 return i;
             }
-            if (e->len < 1) goto next;
-            encoder->len2 = e->len;
-            encoder->j = 1;
-            encoder->data2 = e->data;
-            return e->data[0];
+            if (e->pass >= pass || !fixeddig || e->pass == pass - 1) {
+                encoder->i += len;
+                if (e->pass == pass - 1 && e->fwpass != pass) {
+                    e->fwpass = pass;
+                    efwcount++;
+                }
+                if (e->len < 1) goto next;
+                encoder->len2 = e->len;
+                encoder->j = 1;
+                encoder->data2 = e->data;
+                return e->data[0];
+            }
         }
     }
     if ((ch & 0x80) != 0) ln = utf8in(encoder->data + encoder->i, &ch); else {
-        if ((encoding->table_use[ch / 32] & (1U << (ch % 32))) != 0) {
+        struct map_s *map = &encoding->map[ch];
+        if (map->pass == pass) {
             encoder->i++;
-            return encoding->table[ch];
+            return map->value;
         }
         ln = 1;
     }
@@ -850,14 +908,21 @@ next:
 
     c = avltree_lookup(&tmp.node, &encoding->ranges, trans_compare);
     if (c != NULL) {
-        t = cavltree_container_of(c, struct trans_s, node);
+        struct trans_s *t = avltree_container_of(c, struct trans_s, node);
         if (tmp.range.start >= t->range.start && tmp.range.end <= t->range.end) {
-            encoder->i += ln;
-            if (ch < lenof(encoding->table)) {
-                encoding->table_use[ch / 32] |= 1U << (ch % 32);
-                encoding->table[ch] = (uint8_t)(ch - t->range.start + t->range.offset);
+            if (t->pass >= pass || !fixeddig || t->pass == pass - 1) {
+                encoder->i += ln;
+                if (t->pass == pass - 1 && t->fwpass != pass) {
+                    t->fwpass = pass;
+                    efwcount++;
+                }
+                if (ch < lenof(encoding->map)) {
+                    struct map_s *map = &encoding->map[ch];
+                    map->pass = pass;
+                    map->value = (uint8_t)(ch - t->range.start + t->range.offset);
+                }
+                return (uint8_t)(ch - t->range.start + t->range.offset);
             }
-            return (uint8_t)(ch - t->range.start + t->range.offset);
         }
     }
     if (!encoder->err && (!(encoding->escapes == NULL && encoding->ranges.root == NULL) || !encoding->failed)) {
