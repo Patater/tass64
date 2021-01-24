@@ -3956,7 +3956,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_CDEF: if ((waitfor->skip & 1) != 0)
                 { /* .cdef */
-                    struct trans_s tmp, *t;
+                    struct character_range_s tmp;
                     struct encoding_s *old = actual_encoding;
                     bool rc;
                     size_t len;
@@ -4021,6 +4021,7 @@ MUST_CHECK Obj *compile(void)
                         if (vs == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr;}
                         if (touval(vs->val, &uval, 8, &vs->epoint)) {}
                         else if (tryit) {
+                            const struct character_range_s *t;
                             tmp.offset = uval & 0xff;
                             if (tmp.start > tmp.end) {
                                 uchar_t tmpe = tmp.start;
