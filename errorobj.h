@@ -20,7 +20,6 @@
 #define ERROROBJ_H
 #include "obj.h"
 #include "errors_e.h"
-#include "str.h"
 #include "stdbool.h"
 
 extern struct Type *const ERROR_OBJ;

@@ -23,6 +23,7 @@
 #include "error.h"
 #include "variables.h"
 #include "arguments.h"
+#include "str.h"
 
 #include "boolobj.h"
 #include "bytesobj.h"
