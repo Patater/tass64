@@ -38,6 +38,7 @@ struct str_t;
 struct Str;
 struct encoder_s;
 
+extern void add_esc(struct encoding_s *, const char *);
 extern struct encoding_s *new_encoding(const struct str_t *, linepos_t);
 extern bool new_trans(struct encoding_s *, const struct character_range_s *, linepos_t);
 extern bool new_escape(struct encoding_s *, const struct str_t *, struct Obj *, linepos_t);

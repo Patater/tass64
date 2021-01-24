@@ -4,7 +4,8 @@ OBJS = 64tass.o opcodes.o str.o avl.o my_getopt.o eval.o error.o section.o \
  intobj.o bitsobj.o functionobj.o instruction.o unicode.o unicodedata.o listing.o \
  registerobj.o dictobj.o namespaceobj.o operobj.o gapobj.o typeobj.o noneobj.o \
  longjump.o wctype.o wchar.o math.o arguments.o optimizer.o opt_bit.o labelobj.o \
- errorobj.o macroobj.o mfuncobj.o identobj.o memblocksobj.o foldobj.o main.o console.o
+ errorobj.o macroobj.o mfuncobj.o identobj.o memblocksobj.o foldobj.o main.o \
+ console.o encodings.o
 LDLIBS = -lm
 LANG = C
 REVISION != svnversion | grep --color=none "^[1-9]" || echo "2200?"
@@ -74,9 +75,12 @@ dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h eval.h \
  stdbool.h error.h errors_e.h variables.h str.h intobj.h listobj.h \
  values.h strobj.h boolobj.h operobj.h oper_e.h typeobj.h noneobj.h \
  errorobj.h
-encoding.o: encoding.c encoding.h stdbool.h inttypes.h errors_e.h error.h \
- attributes.h ternary.h unicode.h values.h 64tass.h wait_e.h avl.h \
- strobj.h obj.h bytesobj.h oper_e.h typeobj.h errorobj.h str.h
+encoding.o: encoding.c encoding.h stdbool.h inttypes.h errors_e.h \
+ encodings.h error.h attributes.h ternary.h unicode.h values.h 64tass.h \
+ wait_e.h avl.h strobj.h obj.h bytesobj.h oper_e.h typeobj.h errorobj.h \
+ str.h
+encodings.o: encodings.c encodings.h stdbool.h inttypes.h error.h \
+ attributes.h errors_e.h 64tass.h wait_e.h encoding.h str.h
 error.o: error.c error.h attributes.h stdbool.h errors_e.h inttypes.h \
  wchar.h file.h str.h 64tass.h wait_e.h unicode.h eval.h arguments.h \
  opcodes.h section.h avl.h macro.h strobj.h obj.h addressobj.h values.h \
