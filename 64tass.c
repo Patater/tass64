@@ -4020,15 +4020,13 @@ MUST_CHECK Obj *compile(void)
                         if (vs == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr;}
                         if (touval(vs->val, &uval, 8, &vs->epoint)) {}
                         else if (tryit) {
-                            const struct character_range_s *t;
                             tmp.offset = uval & 0xff;
                             if (tmp.start > tmp.end) {
                                 uchar_t tmpe = tmp.start;
                                 tmp.start = tmp.end;
                                 tmp.end = tmpe;
                             }
-                            t = new_trans(actual_encoding, &tmp, &epoint);
-                            if (t->start > tmp.start || t->end < tmp.end || t->offset + (tmp.start - t->start) != tmp.offset) {
+                            if (new_trans(actual_encoding, &tmp, &epoint)) {
                                 err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); goto breakerr;
                             }
                         }

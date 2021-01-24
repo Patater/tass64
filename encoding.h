@@ -38,7 +38,7 @@ struct Str;
 struct encoder_s;
 
 extern struct encoding_s *new_encoding(const struct str_t *, linepos_t);
-extern const struct character_range_s *new_trans(struct encoding_s *, const struct character_range_s *, linepos_t);
+extern bool new_trans(struct encoding_s *, const struct character_range_s *, linepos_t);
 extern bool new_escape(struct encoding_s *, const struct str_t *, struct Obj *, linepos_t);
 extern struct encoder_s *encode_string_init(const struct Str *, linepos_t);
 extern int encode_string(struct encoder_s *);

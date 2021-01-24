@@ -641,7 +641,7 @@ static struct transs_s {
 static unsigned int transs_i = lenof(transs->transs);
 
 static struct trans_s *lasttr = NULL;
-const struct character_range_s *new_trans(struct encoding_s *enc, const struct character_range_s *range, linepos_t epoint)
+bool new_trans(struct encoding_s *enc, const struct character_range_s *range, linepos_t epoint)
 {
     struct avltree_node *b;
     struct trans_s *tmp;
@@ -662,10 +662,10 @@ const struct character_range_s *new_trans(struct encoding_s *enc, const struct c
         fixeddig = false;
         lasttr = NULL;
         if (range->start < lenof(enc->table)) memset(enc->table_use, 0, sizeof(enc->table_use));
-    } else {
-        tmp = avltree_container_of(b, struct trans_s, node);            /* already exists */
+        return false;
     }
-    return &tmp->range;
+    tmp = avltree_container_of(b, struct trans_s, node);
+    return tmp->range.start > range->start || tmp->range.end < range->end || tmp->range.offset + (range->start - tmp->range.start) != range->offset;
 }
 
 bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoint)
