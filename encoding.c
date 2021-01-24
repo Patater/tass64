@@ -37,6 +37,7 @@ struct encoding_s {
     str_t name;
     str_t cfname;
     bool failed;
+    uint16_t escape_char;
     ternary_tree escape;
     size_t escape_length;
     struct avltree trans;
@@ -613,6 +614,7 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
         else str_cfcpy(&lasten->cfname, NULL);
         lasten->escape = NULL;
         lasten->escape_length = SIZE_MAX;
+        lasten->escape_char = 256;
         lasten->failed = false;
         avltree_init(&lasten->trans);
         memset(lasten->table_use, 0, sizeof(lasten->table_use));
@@ -655,7 +657,7 @@ struct trans_s *new_trans(struct encoding_s *enc, const struct trans_s *trans, l
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
         lasttr = NULL;
-        if (trans->start < 128) memset(enc->table_use, 0, sizeof(enc->table_use));
+        if (trans->start < lenof(enc->table)) memset(enc->table_use, 0, sizeof(enc->table_use));
         return tmp;
     }
     return avltree_container_of(b, struct trans_s, node);            /* already exists */
@@ -723,6 +725,13 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
         }
         *b2 = b;
         if (v->len < enc->escape_length) enc->escape_length = v->len;
+        if (enc->escape_char != v->data[0]) {
+            if (enc->escape_char == 256) {
+                enc->escape_char = v->data[0];
+            } else {
+                enc->escape_char = 257;
+            }
+        }
         
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
@@ -736,6 +745,7 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
 }
 
 static void add_esc(struct encoding_s *enc, const char *s) {
+    enc->escape_char = '{';
     while (s[1] != 0) {
         size_t len = strlen(s + 1);
         const uint8_t **b = (const uint8_t **)ternary_insert(&enc->escape, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
@@ -806,7 +816,8 @@ int encode_string(struct encoder_s *encoder) {
 next:
     if (encoder->i >= encoder->len) return EOF;
     encoder->i2 = encoder->i;
-    if (encoder->len - encoder->i >= encoding->escape_length) {
+    ch = encoder->data[encoder->i];
+    if ((ch == encoding->escape_char || encoding->escape_char == 257) && encoder->len - encoder->i >= encoding->escape_length) {
         size_t len = encoder->len - encoder->i;
         const struct escape_s *e = (struct escape_s *)ternary_search(encoding->escape, encoder->data + encoder->i, &len);
         if (e != NULL) {
@@ -823,7 +834,6 @@ next:
             return e->data[0];
         }
     }
-    ch = encoder->data[encoder->i];
     if ((ch & 0x80) != 0) ln = utf8in(encoder->data + encoder->i, &ch); else {
         if ((encoding->table_use[ch / 32] & (1U << (ch % 32))) != 0) {
             encoder->i++;
@@ -838,7 +848,7 @@ next:
         t = cavltree_container_of(c, struct trans_s, node);
         if (tmp.start >= t->start && tmp.end <= t->end) {
             encoder->i += ln;
-            if (ch < 0x80) {
+            if (ch < lenof(encoding->table)) {
                 encoding->table_use[ch / 32] |= 1U << (ch % 32);
                 encoding->table[ch] = (uint8_t)(ch - t->start + t->offset);
             }
