@@ -543,6 +543,8 @@ static void add_trans(struct encoding_s *enc, const struct translate_table_s *ta
 }
 
 void enctables(struct encoding_s *enc, str_t *name, bool toascii) {
+    bool oldfixeddig = fixeddig;
+    fixeddig = false;
     if (name->len == 4 && memcmp(name->data, "none", 4) == 0) {
         if (!toascii) {
             add_trans(enc, no_trans, lenof(no_trans));
@@ -550,15 +552,13 @@ void enctables(struct encoding_s *enc, str_t *name, bool toascii) {
             add_esc(enc, petscii_esc);
             add_trans(enc, petscii_trans, lenof(petscii_trans));
         }
-        return;
-    }
-    if (name->len == 6 && memcmp(name->data, "screen", 6) == 0) {
+    } else if (name->len == 6 && memcmp(name->data, "screen", 6) == 0) {
         if (!toascii) {
             add_trans(enc, no_screen_trans, lenof(no_screen_trans));
         } else {
             add_esc(enc, petscii_screen_esc);
             add_trans(enc, petscii_screen_trans, lenof(petscii_screen_trans));
         }
-        return;
     }
+    fixeddig = oldfixeddig;
 }
