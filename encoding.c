@@ -564,6 +564,9 @@ static const struct translate_table_s no_screen_trans[] = {
     {0x00FF,   0, 0x5E},
 };
 
+static void add_esc(struct encoding_s *, const char *);
+static void add_trans(struct encoding_s *, const struct translate_table_s *, size_t);
+
 static FAST_CALL int encoding_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
     const struct encoding_s *a = cavltree_container_of(aa, struct encoding_s, node);
@@ -591,6 +594,7 @@ static void encoding_free(struct avltree_node *aa)
     free(a);
 }
 
+static bool ascii_mode;
 static struct encoding_s *lasten = NULL;
 struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
 {
@@ -614,6 +618,14 @@ struct encoding_s *new_encoding(const str_t *name, linepos_t epoint)
         memset(lasten->map, 0, sizeof(lasten->map));
         tmp = lasten;
         lasten = NULL;
+        if (tmp->cfname.len == 6 && memcmp(tmp->cfname.data, "screen", 6) == 0) {
+            if (!ascii_mode) {
+                add_trans(tmp, no_screen_trans, lenof(no_screen_trans));
+            } else {
+                add_esc(tmp, petscii_screen_esc);
+                add_trans(tmp, petscii_screen_trans, lenof(petscii_screen_trans));
+            }
+        }
         return tmp;
     }
     tmp = avltree_container_of(b, struct encoding_s, node);
@@ -940,37 +952,19 @@ void init_encoding(bool toascii)
 {
     struct encoding_s *tmp;
     static const str_t none_enc = {(const uint8_t *)"none", 4};
-    static const str_t screen_enc = {(const uint8_t *)"screen", 6};
     struct linepos_s nopoint = {0, 0};
 
     avltree_init(&encoding_tree);
 
-    if (!toascii) {
-        tmp = new_encoding(&none_enc, &nopoint);
-        if (tmp == NULL) {
-            return;
+    ascii_mode = toascii;
+    tmp = new_encoding(&none_enc, &nopoint);
+    if (tmp != NULL) {
+        if (!toascii) {
+            add_trans(tmp, no_trans, lenof(no_trans));
+        } else {
+            add_esc(tmp, petscii_esc);
+            add_trans(tmp, petscii_trans, lenof(petscii_trans));
         }
-        add_trans(tmp, no_trans, lenof(no_trans));
-
-        tmp = new_encoding(&screen_enc, &nopoint);
-        if (tmp == NULL) {
-            return;
-        }
-        add_trans(tmp, no_screen_trans, lenof(no_screen_trans));
-    } else {
-        tmp = new_encoding(&none_enc, &nopoint);
-        if (tmp == NULL) {
-            return;
-        }
-        add_esc(tmp, petscii_esc);
-        add_trans(tmp, petscii_trans, lenof(petscii_trans));
-
-        tmp = new_encoding(&screen_enc, &nopoint);
-        if (tmp == NULL) {
-            return;
-        }
-        add_esc(tmp, petscii_screen_esc);
-        add_trans(tmp, petscii_screen_trans, lenof(petscii_screen_trans));
     }
 }
 
