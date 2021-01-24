@@ -25,6 +25,7 @@
 #include "values.h"
 #include "64tass.h"
 #include "avl.h"
+#include "str.h"
 
 #include "strobj.h"
 #include "bytesobj.h"
