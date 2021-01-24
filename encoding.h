@@ -32,6 +32,7 @@ struct character_range_s {
 };
 
 extern struct encoding_s *actual_encoding;
+extern size_t efwcount;
 
 struct str_t;
 struct Str;

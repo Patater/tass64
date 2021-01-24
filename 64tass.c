@@ -4810,7 +4810,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
     int i;
     size_t ln = root_section.address.mem->mem.p, ln2 = root_section.address.mem->p;
 
-    fixeddig = true;constcreated = false; fwcount = 0;error_reset();random_reseed(&int_value[0]->v, NULL);
+    fixeddig = true;constcreated = false; fwcount = 0; efwcount = 0; error_reset();random_reseed(&int_value[0]->v, NULL);
     val_destroy(&root_section.address.mem->v);
     root_section.address.mem = new_memblocks(0, 0);
     if (diagnostics.optimize) cpu_opt_invalidate();
@@ -4851,7 +4851,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         }
     }
     ref_labels();
-    if (fwcount != 0) fixeddig = false;
+    if (fwcount != 0 || efwcount != 0) fixeddig = false;
     if (fixeddig) section_sizecheck();
     /*garbage_collect();*/
 }
