@@ -381,7 +381,7 @@ next:
     }
     if ((ch & 0x80) != 0) ln = utf8in(encoder->data + encoder->i, &ch); else {
         struct map_s *map = &encoding->map[ch];
-        if (map->pass == pass) {
+        if (map->pass >= pass) {
             encoder->i++;
             return map->value;
         }
@@ -401,7 +401,7 @@ next:
                 }
                 if (ch < lenof(encoding->map)) {
                     struct map_s *map = &encoding->map[ch];
-                    map->pass = pass;
+                    map->pass = t->pass;
                     map->value = (uint8_t)(ch - t->range.start + t->range.offset);
                 }
                 return (uint8_t)(ch - t->range.start + t->range.offset);
