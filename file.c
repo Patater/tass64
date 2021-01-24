@@ -847,10 +847,10 @@ struct starnode_s {
 
 static FAST_CALL int star_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
-    const struct starnode_s *a = cavltree_container_of(aa, struct starnode_s, node);
-    const struct starnode_s *b = cavltree_container_of(bb, struct starnode_s, node);
+    const struct star_s *a = &cavltree_container_of(aa, struct starnode_s, node)->star;
+    const struct star_s *b = &cavltree_container_of(bb, struct starnode_s, node)->star;
 
-    if (a->star.line != b->star.line) return a->star.line > b->star.line ? 1 : -1;
+    if (a->line != b->line) return a->line > b->line ? 1 : -1;
     return 0;
 }
 
