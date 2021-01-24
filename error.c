@@ -20,9 +20,6 @@
 #include <string.h>
 #include <errno.h>
 #include "wchar.h"
-#ifdef _WIN32
-#include <locale.h>
-#endif
 #include "file.h"
 #include "64tass.h"
 #include "unicode.h"
