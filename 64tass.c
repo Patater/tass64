@@ -162,7 +162,6 @@ static struct waitfor_s {
     } u;
 } *waitfors, *waitfor;
 
-static struct star_s star_root;
 struct star_s *star_tree = NULL;
 
 static const char * const command[] = { /* must be sorted, first char is the ID */
@@ -4812,8 +4811,6 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
     Obj *val;
     int i;
     size_t ln = root_section.address.mem->mem.p, ln2 = root_section.address.mem->p;
-    bool starexists;
-    struct star_s *s;
 
     fixeddig = true;constcreated = false; fwcount = 0;error_reset();random_reseed(&int_value[0]->v, NULL);
     val_destroy(&root_section.address.mem->v);
@@ -4829,10 +4826,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         current_address = &root_section.address;
         reset_section(current_section);
         init_macro();
-        star_tree = &star_root;
-        s = new_star(i, &starexists);
-        s->addr = 0;
-        star_tree = s;
+        star_tree = init_star(i);
 
         if (i == opts - 1) {
             if (fin->lines != 0) {
@@ -4874,7 +4868,6 @@ int main2(int *argc2, char **argv2[]) {
     bool failed;
 
     err_init(*argv2[0]);
-    avltree_init(&star_root.tree);
     objects_init();
     init_section();
     init_file();
