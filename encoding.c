@@ -23,6 +23,7 @@
 #include "unicode.h"
 #include "values.h"
 #include "64tass.h"
+#include "avl.h"
 
 #include "strobj.h"
 #include "bytesobj.h"
