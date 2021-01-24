@@ -66,8 +66,8 @@ encoding.o: encoding.c encoding.h stdbool.h inttypes.h errors_e.h \
  encodings.h error.h attributes.h ternary.h unicode.h values.h 64tass.h \
  wait_e.h avl.h str.h strobj.h obj.h bytesobj.h oper_e.h typeobj.h \
  errorobj.h
-encodings.o: encodings.c encodings.h stdbool.h inttypes.h error.h \
- attributes.h errors_e.h 64tass.h wait_e.h encoding.h str.h
+encodings.o: encodings.c encodings.h stdbool.h inttypes.h 64tass.h \
+ attributes.h wait_e.h encoding.h errors_e.h str.h
 error.o: error.c error.h attributes.h stdbool.h errors_e.h inttypes.h \
  wchar.h file.h str.h 64tass.h wait_e.h unicode.h eval.h arguments.h \
  opcodes.h section.h avl.h macro.h strobj.h obj.h addressobj.h values.h \
