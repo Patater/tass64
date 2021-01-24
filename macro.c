@@ -96,7 +96,7 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
                     }
                     opoint->pos = pos + c;
                     opoint->line = flist->epoint.line;
-                    ret = flist->parent;
+                    ret = parent_file_list(flist);
                     flist = ret;
                     break;
                 }

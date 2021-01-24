@@ -747,8 +747,6 @@ void ref_labels(void) {
     }
 }
 
-static struct file_list_s dummy_cflist;
-
 void new_builtin(const char *ident, Obj *val) {
     struct linepos_s nopoint = {0, 0};
     str_t name;
@@ -756,7 +754,7 @@ void new_builtin(const char *ident, Obj *val) {
     bool label_exists;
     name.len = strlen(ident);
     name.data = (const uint8_t *)ident;
-    label = new_label(&name, builtin_namespace, 0, &label_exists, &dummy_cflist);
+    label = new_label(&name, builtin_namespace, 0, &label_exists, dummy_file_list);
     label->constant = true;
     label->owner = true;
     label->value = val;
@@ -766,11 +764,6 @@ void new_builtin(const char *ident, Obj *val) {
 void init_variables(void)
 {
     struct linepos_s nopoint = {0, 0};
-    static struct file_s cfile;
-
-    cfile.data = (uint8_t *)0;
-    cfile.len = SIZE_MAX;
-    dummy_cflist.file = &cfile;
 
     builtin_namespace = new_namespace(NULL, &nopoint);
     root_namespace = new_namespace(NULL, &nopoint);

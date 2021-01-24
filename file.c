@@ -32,6 +32,7 @@
 #include "error.h"
 #include "arguments.h"
 #include "unicodedata.h"
+#include "avl.h"
 
 #define REPLACEMENT_CHARACTER 0xfffd
 

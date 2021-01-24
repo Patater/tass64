@@ -21,7 +21,6 @@
 #include "attributes.h"
 #include "stdbool.h"
 #include "errors_e.h"
-#include "avl.h"
 #include "inttypes.h"
 
 struct file_s;
@@ -29,13 +28,10 @@ struct file_s;
 struct file_list_s {
     struct linepos_s epoint;
     struct file_s *file;
-    struct avltree_node node;
-    struct file_list_s *parent;
-    struct avltree members;
-    uint8_t pass;
 };
 
 extern struct file_list_s *current_file_list;
+extern const struct file_list_s *dummy_file_list;
 
 struct Obj;
 struct Type;
@@ -100,6 +96,7 @@ extern void err_msg_immediate_note(linepos_t);
 extern void err_msg_big_address(linepos_t);
 extern void error_reset(void);
 extern void error_print(void);
+extern const struct file_list_s *parent_file_list(const struct file_list_s *);
 extern void enterfile(struct file_s *, linepos_t);
 extern void exitfile(void);
 extern void err_init(const char *);
