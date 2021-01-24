@@ -19,7 +19,6 @@
 #include "encodings.h"
 #include <string.h>
 #include "inttypes.h"
-#include "error.h"
 #include "64tass.h"
 #include "encoding.h"
 #include "str.h"
