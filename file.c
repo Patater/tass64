@@ -359,15 +359,6 @@ failed:
     return f;
 }
 
-static FAST_CALL int star_compare(const struct avltree_node *aa, const struct avltree_node *bb)
-{
-    const struct star_s *a = cavltree_container_of(aa, struct star_s, node);
-    const struct star_s *b = cavltree_container_of(bb, struct star_s, node);
-
-    if (a->line != b->line) return a->line > b->line ? 1 : -1;
-    return 0;
-}
-
 static void file_free(struct file_s *a)
 {
     free(a->data);
@@ -847,18 +838,33 @@ void closefile(struct file_s *f) {
     if (f->open != 0) f->open--;
 }
 
+struct starnode_s {
+    struct star_s star;
+    struct avltree tree;
+    struct avltree_node node;
+};
+
+static FAST_CALL int star_compare(const struct avltree_node *aa, const struct avltree_node *bb)
+{
+    const struct starnode_s *a = cavltree_container_of(aa, struct starnode_s, node);
+    const struct starnode_s *b = cavltree_container_of(bb, struct starnode_s, node);
+
+    if (a->star.line != b->star.line) return a->star.line > b->star.line ? 1 : -1;
+    return 0;
+}
+
 static struct stars_s {
-    struct star_s stars[255];
+    struct starnode_s stars[255];
     struct stars_s *next;
 } *stars = NULL;
 
-static struct star_s *lastst;
+static struct starnode_s *lastst;
 static int starsp;
 struct star_s *new_star(line_t line, bool *exists) {
     struct avltree_node *b;
-    struct star_s *tmp;
-    lastst->line = line;
-    b = avltree_insert(&lastst->node, &star_tree->tree, star_compare);
+    struct starnode_s *tmp;
+    lastst->star.line = line;
+    b = avltree_insert(&lastst->node, &((struct starnode_s *)star_tree)->tree, star_compare);
     if (b == NULL) { /* new label */
         *exists = false;
         avltree_init(&lastst->tree);
@@ -870,17 +876,28 @@ struct star_s *new_star(line_t line, bool *exists) {
         } else starsp++;
         tmp = lastst;
         lastst = &stars->stars[starsp];
-        tmp->pass = 0;
-        tmp->vline = 0;
-        return tmp;
+        tmp->star.pass = 0;
+        tmp->star.vline = 0;
+        return &tmp->star;
     }
     *exists = true;
-    tmp = avltree_container_of(b, struct star_s, node);
-    if (tmp->pass != pass) {
-        tmp->pass = pass;
-        tmp->vline = 0;
+    tmp = avltree_container_of(b, struct starnode_s, node);
+    if (tmp->star.pass != pass) {
+        tmp->star.pass = pass;
+        tmp->star.vline = 0;
     }
-    return tmp;            /* already exists */
+    return &tmp->star;            /* already exists */
+}
+
+static struct starnode_s star_root;
+
+struct star_s *init_star(line_t i) {
+    bool starexists;
+    struct star_s *s;
+    star_tree = &star_root.star;
+    s = new_star(i, &starexists);
+    s->addr = 0;
+    return s;
 }
 
 void destroy_file(void) {
@@ -923,6 +940,7 @@ void init_file(void) {
     lastst = &stars->stars[starsp];
     last_ubuff.data = (uchar_t *)mallocx(16 * sizeof *last_ubuff.data);
     last_ubuff.len = 16;
+    avltree_init(&star_root.tree);
 }
 
 static size_t wrap_print(const char *txt, FILE *f, size_t len) {
