@@ -316,7 +316,6 @@ struct encoder_s {
     bool err;
     const uint8_t *data, *data2;
     linepos_t epoint;
-    char mode;
 };
 
 struct encoder_s *encode_string_init(const Str *v, linepos_t epoint) {
