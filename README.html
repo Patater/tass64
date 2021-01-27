@@ -698,6 +698,14 @@ call_l  <b class="d">.byte</b> &lt;<u>mylist</u>[<span>1</span>::<span>2</span>]
 call_h  <b class="d">.byte</b> &gt;<u>mylist</u>[<span>1</span>::<span>2</span>]-<span>1</span><i>; routines (&gt;cmd_e&minus;1, &gt;cmd_g&minus;1, &gt;cmd_i&minus;1)</i>
 </pre>
 
+<p>Although lists elements of variables can't be changed using indexing (at the
+moment) the same effect can be achieved by combining slicing and
+concatenation:</p>
+
+<pre width=80>
+lst     := <u>lst</u>[:<span>2</span>] .. [<span>4</span>] .. <u>lst</u>[<span>3</span>:]<i>; same as lst[2] := 4 would be</i>
+</pre>
+
 <p>Folding is done on pair of elements either forward (left) or reverse
 (right). The list must contain at least one element. Here are some folding examples:</p>
 

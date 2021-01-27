@@ -520,6 +520,11 @@ keys    .text mylist[::2]    ; keys ("e", "g", "i")
 call_l  .byte <mylist[1::2]-1; routines (<cmd_e-1, <cmd_g-1, <cmd_i-1)
 call_h  .byte >mylist[1::2]-1; routines (>cmd_e-1, >cmd_g-1, >cmd_i-1)
 
+Although lists elements of variables can't be changed using indexing (at the
+moment) the same effect can be achieved by combining slicing and concatenation:
+
+lst     := lst[:2] .. [4] .. lst[3:]; same as lst[2] := 4 would be
+
 Folding is done on pair of elements either forward (left) or reverse (right).
 The list must contain at least one element. Here are some folding examples:
 
