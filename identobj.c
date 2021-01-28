@@ -28,6 +28,8 @@
 #include "operobj.h"
 #include "strobj.h"
 
+struct Error;
+
 static Type ident_obj;
 static Type anonident_obj;
 
@@ -56,45 +58,47 @@ static FAST_CALL NO_INLINE void ident_destroy(Ident *v1) {
     free((char *)v1->name.data);
 }
 
+static FAST_CALL NO_INLINE bool ident_same(const Ident *v1, const Ident *v2) {
+    return memcmp(v1->name.data, v2->name.data, v2->name.len) == 0;
+}
+
+static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
+    const Ident *v1 = (const Ident *)o1, *v2 = (const Ident *)o2;
+    if (o1->obj != o2->obj || v1->name.len != v2->name.len) return false;
+    switch (v1->name.len) {
+    case 0: return true;
+    case 1: return v1->name.data[0] == v2->name.data[0];
+    default: return v1->name.data == v2->name.data || ident_same(v1, v2);
+    }
+}
+
+static FAST_CALL bool anon_same(const Obj *o1, const Obj *o2) {
+    const Anonident *v1 = (const Anonident *)o1, *v2 = (const Anonident *)o2;
+    if (o1->obj != o2->obj) return false;
+    return v1->count == v2->count;
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Ident *v1 = (Ident *)o1;
     const struct file_s *cfile = v1->file_list->file;
     if ((size_t)(v1->name.data - cfile->data) >= cfile->len && v1->name.data != v1->val) ident_destroy(v1);
 }
 
-static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Ident *v1 = (Ident *)o1;
-    size_t i2, i;
-    uint8_t *s;
-    const uint8_t *s2;
-    uint8_t q;
     size_t chars;
     Str *v;
     size_t len;
 
-    if (epoint == NULL) return NULL;
-    s2 = v1->name.data;
-    len = v1->name.len;
-    i2 = str_quoting(s2, len, &q) + 9;
-    if (i2 < 9) return NULL; /* overflow */
-    chars = i2 - (len - calcpos(s2, len));
-    if (chars > maxsize) return NULL;
-    v = new_str2(i2);
+    chars = calcpos(v1->name.data, v1->name.len) + 1;
+    if (chars < 1 || chars > maxsize) return NULL;/* overflow */
+    len = v1->name.len + 1;
+    if (len < 1) return NULL;/* overflow */
+    v = new_str2(len);
     if (v == NULL) return NULL;
     v->chars = chars;
-    s = v->data;
-
-    memcpy(s, "ident(", 6);
-    s += 6;
-    *s++ = q;
-    for (i = 0; i < len; i++) {
-        s[i] = s2[i];
-        if (s[i] == q) {
-            s++; s[i] = q;
-        }
-    }
-    s[i] = q;
-    s[i + 1] = ')';
+    v->data[0] = '.';
+    memcpy(v->data + 1, v1->name.data, len - 1);
     return &v->v;
 }
 
@@ -108,6 +112,23 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     v->chars = chars;
     memcpy(v->data, v1->name.data, v1->name.len);
     return &v->v;
+}
+
+static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+    Ident *v1 = (Ident *)o1;
+    size_t l = v1->name.len;
+    const uint8_t *s2 = v1->name.data;
+    unsigned int h;
+    if (l == 0) {
+        *hs = 0;
+        return NULL;
+    }
+    h = (unsigned int)*s2 << 7;
+    while ((l--) != 0) h = (1000003 * h) ^ *s2++;
+    h ^= v1->name.len;
+    h &= ((~0U) >> 1);
+    *hs = h;
+    return NULL;
 }
 
 static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t epoint, size_t maxsize) {
@@ -150,11 +171,14 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 void identobj_init(void) {
     new_type(&ident_obj, T_IDENT, "ident", sizeof(Ident));
     ident_obj.destroy = destroy;
+    ident_obj.same = same;
+    ident_obj.hash = hash;
     ident_obj.repr = repr;
     ident_obj.str = str;
     ident_obj.calc2 = calc2;
     ident_obj.rcalc2 = rcalc2;
     new_type(&anonident_obj, T_ANONIDENT, "anonident", sizeof(Anonident));
+    anonident_obj.same = anon_same;
     anonident_obj.repr = anon_repr;
     anonident_obj.calc2 = calc2;
     anonident_obj.rcalc2 = rcalc2;

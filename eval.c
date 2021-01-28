@@ -1376,8 +1376,16 @@ static bool get_exp2(int stop) {
             lpoint.pos++;push_oper((Obj *)ref_gap(), &epoint);goto other;
         case '.':
             if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) {
+                str_t ident;
                 if (pline[lpoint.pos + 1] == '.' && pline[lpoint.pos + 2] == '.') {
                     lpoint.pos += 3;push_oper((Obj *)ref_fold(), &epoint);goto other;
+                }
+                ident.data = pline + lpoint.pos + 1;
+                ident.len = get_label(ident.data);
+                if (ident.len != 0) {
+                    lpoint.pos += ident.len + 1;
+                    push_oper((Obj *)new_ident(&ident), &epoint);
+                    goto other;
                 }
                 goto tryanon;
             }
