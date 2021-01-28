@@ -131,13 +131,31 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
     return NULL;
 }
 
-static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+static MUST_CHECK struct Error *anon_hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+    Anonident *v1 = (Anonident *)o1;
+    unsigned int h = v1->count;
+    h &= ((~0U) >> 1);
+    *hs = h;
+    return NULL;
+}
+
+static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Anonident *v1 = (Anonident *)o1;
     Str *v;
-    size_t len;
+    size_t len = v1->count < 0 ? (1 - v1->count) : (v1->count + 2);
+    if (len > maxsize) return NULL;
+    v = new_str2(len);
+    if (v == NULL) return NULL;
+    v->chars = len;
+    v->data[0] = '.';
+    memset(v->data + 1, v1->count >= 0 ? '+' : '-', len);
+    return &v->v;
+}
 
-    if (epoint == NULL) return NULL;
-    len = v1->count < 0 ? -v1->count : (v1->count + 1);
+static MUST_CHECK Obj *anon_str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
+    Anonident *v1 = (Anonident *)o1;
+    Str *v;
+    size_t len = v1->count < 0 ? -v1->count : (v1->count + 1);
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
@@ -179,7 +197,9 @@ void identobj_init(void) {
     ident_obj.rcalc2 = rcalc2;
     new_type(&anonident_obj, T_ANONIDENT, "anonident", sizeof(Anonident));
     anonident_obj.same = anon_same;
+    anonident_obj.hash = anon_hash;
     anonident_obj.repr = anon_repr;
+    anonident_obj.str = anon_str;
     anonident_obj.calc2 = calc2;
     anonident_obj.rcalc2 = rcalc2;
 }
