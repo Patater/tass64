@@ -1387,6 +1387,12 @@ static bool get_exp2(int stop) {
                     push_oper((Obj *)new_ident(&ident), &epoint);
                     goto other;
                 }
+                if (ident.data[0] == '+' || ident.data[0] == '-') {
+                    while (ident.data[0] == ident.data[++ident.len]);
+                    lpoint.pos += ident.len + 1;
+                    push_oper((Obj *)new_anonident((ident.data[0] == '+') ? (ident.len - 1) : -ident.len), &epoint);
+                    goto other;
+                }
                 goto tryanon;
             }
             push_oper(get_float(&epoint), &epoint);
