@@ -160,15 +160,15 @@ static MUST_CHECK Obj *calc2_ident(oper_t op) {
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
-    if (o2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
-        return o2->obj->rcalc2(op);
-    }
     switch (o2->obj->type) {
     case T_IDENT: return calc2_ident(op);
     case T_NONE:
     case T_ERROR:
         return val_reference(o2);
     default:
+        if (op->op != &o_MEMBER && op->op != &o_X) {
+            return o2->obj->rcalc2(op);
+        }
         break;
     }
     return obj_oper_error(op);
