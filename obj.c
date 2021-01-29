@@ -44,6 +44,7 @@
 #include "errorobj.h"
 #include "mfuncobj.h"
 #include "identobj.h"
+#include "anonidentobj.h"
 #include "memblocksobj.h"
 #include "foldobj.h"
 
@@ -303,6 +304,7 @@ void objects_init(void) {
     noneobj_init();
     mfuncobj_init();
     identobj_init();
+    anonidentobj_init();
     foldobj_init();
 
     new_type(&lbl_obj, T_LBL, "lbl", sizeof(Lbl));

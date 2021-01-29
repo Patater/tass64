@@ -16,27 +16,24 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-#ifndef IDENTOBJ_H
-#define IDENTOBJ_H
+#ifndef ANONIDENTOBJ_H
+#define ANONIDENTOBJ_H
 #include "obj.h"
-#include "str.h"
 
-extern struct Type *const IDENT_OBJ;
+extern struct Type *const ANONIDENT_OBJ;
 
 struct file_list_s;
 
-typedef struct Ident {
+typedef struct Anonident {
     Obj v;
-    str_t name;
-    uint8_t val[16];
-    const struct file_list_s *file_list;
-} Ident;
+    int32_t count;
+} Anonident;
 
-extern void identobj_init(void);
+extern void anonidentobj_init(void);
 
-extern Ident *new_ident(const str_t *name);
+extern Anonident *new_anonident(int32_t);
 
-static inline Ident *ref_ident(Ident *v1) {
+static inline Anonident *ref_anonident(Anonident *v1) {
     v1->v.refcount++; return v1;
 }
 #endif

@@ -32,6 +32,7 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "identobj.h"
+#include "anonidentobj.h"
 #include "codeobj.h"
 #include "macroobj.h"
 #include "mfuncobj.h"
