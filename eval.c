@@ -51,6 +51,7 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "identobj.h"
+#include "anonidentobj.h"
 #include "foldobj.h"
 #include "memblocksobj.h"
 

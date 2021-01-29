@@ -27,14 +27,23 @@
 #include "typeobj.h"
 #include "operobj.h"
 #include "strobj.h"
+#include "errorobj.h"
 
 struct Error;
 
-static Type ident_obj;
-static Type anonident_obj;
+static Type obj;
 
-Type *const IDENT_OBJ = &ident_obj;
-Type *const ANONIDENT_OBJ = &anonident_obj;
+Type *const IDENT_OBJ = &obj;
+
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    switch (v1->obj->type) {
+    case T_NONE:
+    case T_ERROR:
+    case T_IDENT: return val_reference(v1);
+    default: break;
+    }
+    return (Obj *)new_error_conv(v1, IDENT_OBJ, epoint);
+}
 
 Ident *new_ident(const str_t *name) {
     Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
@@ -46,12 +55,6 @@ Ident *new_ident(const str_t *name) {
     } else str_cpy(&idn->name, name);
     idn->file_list = current_file_list;
     return idn;
-}
-
-Anonident *new_anonident(int32_t count) {
-    Anonident *anonident = (Anonident *)val_alloc(ANONIDENT_OBJ);
-    anonident->count = count;
-    return anonident;
 }
 
 static FAST_CALL NO_INLINE void ident_destroy(Ident *v1) {
@@ -70,12 +73,6 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     case 1: return v1->name.data[0] == v2->name.data[0];
     default: return v1->name.data == v2->name.data || ident_same(v1, v2);
     }
-}
-
-static FAST_CALL bool anon_same(const Obj *o1, const Obj *o2) {
-    const Anonident *v1 = (const Anonident *)o1, *v2 = (const Anonident *)o2;
-    if (o1->obj != o2->obj) return false;
-    return v1->count == v2->count;
 }
 
 static FAST_CALL void destroy(Obj *o1) {
@@ -131,39 +128,6 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
     return NULL;
 }
 
-static MUST_CHECK struct Error *anon_hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Anonident *v1 = (Anonident *)o1;
-    unsigned int h = v1->count;
-    h &= ((~0U) >> 1);
-    *hs = h;
-    return NULL;
-}
-
-static MUST_CHECK Obj *anon_repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Anonident *v1 = (Anonident *)o1;
-    Str *v;
-    size_t len = v1->count < 0 ? (1 - v1->count) : (v1->count + 2);
-    if (len > maxsize) return NULL;
-    v = new_str2(len);
-    if (v == NULL) return NULL;
-    v->chars = len;
-    v->data[0] = '.';
-    memset(v->data + 1, v1->count >= 0 ? '+' : '-', len);
-    return &v->v;
-}
-
-static MUST_CHECK Obj *anon_str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Anonident *v1 = (Anonident *)o1;
-    Str *v;
-    size_t len = v1->count < 0 ? -v1->count : (v1->count + 1);
-    if (len > maxsize) return NULL;
-    v = new_str2(len);
-    if (v == NULL) return NULL;
-    v->chars = len;
-    memset(v->data, v1->count >= 0 ? '+' : '-', len);
-    return &v->v;
-}
-
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     if (o2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
@@ -187,19 +151,13 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void identobj_init(void) {
-    new_type(&ident_obj, T_IDENT, "ident", sizeof(Ident));
-    ident_obj.destroy = destroy;
-    ident_obj.same = same;
-    ident_obj.hash = hash;
-    ident_obj.repr = repr;
-    ident_obj.str = str;
-    ident_obj.calc2 = calc2;
-    ident_obj.rcalc2 = rcalc2;
-    new_type(&anonident_obj, T_ANONIDENT, "anonident", sizeof(Anonident));
-    anonident_obj.same = anon_same;
-    anonident_obj.hash = anon_hash;
-    anonident_obj.repr = anon_repr;
-    anonident_obj.str = anon_str;
-    anonident_obj.calc2 = calc2;
-    anonident_obj.rcalc2 = rcalc2;
+    new_type(&obj, T_IDENT, "ident", sizeof(Ident));
+    obj.create = create;
+    obj.destroy = destroy;
+    obj.same = same;
+    obj.hash = hash;
+    obj.repr = repr;
+    obj.str = str;
+    obj.calc2 = calc2;
+    obj.rcalc2 = rcalc2;
 }

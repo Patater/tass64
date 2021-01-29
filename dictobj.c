@@ -627,14 +627,14 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         break;
     case T_TUPLE:
     case T_LIST:
-        if (op->op != &o_MEMBER && op->op != &o_X) {
+        if (op->op != &o_X) {
             return o2->obj->rcalc2(op);
         }
         break;
     case T_ANONIDENT:
     case T_IDENT:
         if (op->op == &o_MEMBER) {
-            return findit((Dict *)op->v1, o2, op->epoint);
+            return findit((Dict *)op->v1, o2, op->epoint2);
         }
         break;
     case T_NONE:
