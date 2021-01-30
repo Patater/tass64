@@ -53,6 +53,7 @@ static inline Obj *val_reference(Obj *v1) {
 }
 
 extern MUST_CHECK Obj *obj_oper_error(struct oper_s *);
+extern MUST_CHECK Obj *obj_oper_compare(struct oper_s *, int);
 extern void obj_init(struct Type *);
 extern void objects_init(void);
 extern void objects_destroy(void);

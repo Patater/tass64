@@ -695,9 +695,9 @@ static MUST_CHECK Obj *function_pow(Funcargs *vals, linepos_t epoint) {
     return float_from_double(pow(real, real2), epoint);
 }
 
-static inline int icmp(const Function *vv1, const Function *vv2) {
-    Function_types v1 = vv1->func;
-    Function_types v2 = vv2->func;
+static inline int icmp(oper_t op) {
+    Function_types v1 = ((Function *)op->v1)->func;
+    Function_types v2 = ((Function *)op->v2)->func;
     if (v1 < v2) return -1;
     return (v1 > v2) ? 1 : 0;
 }
@@ -710,25 +710,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     size_t args;
     switch (o2->obj->type) {
     case T_FUNCTION:
-        {
-            Function *v2 = (Function *)o2;
-            int val = icmp(v1, v2);
-            switch (op->op->op) {
-            case O_CMP:
-                if (val < 0) return (Obj *)ref_int(minus1_value);
-                return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-            case O_EQ: return truth_reference(val == 0);
-            case O_NE: return truth_reference(val != 0);
-            case O_MIN:
-            case O_LT: return truth_reference(val < 0);
-            case O_LE: return truth_reference(val <= 0);
-            case O_MAX:
-            case O_GT: return truth_reference(val > 0);
-            case O_GE: return truth_reference(val >= 0);
-            default: break;
-            }
-            break;
-        }
+        return obj_oper_compare(op, icmp(op));
     case T_FUNCARGS:
         {
             Funcargs *v2 = (Funcargs *)o2;

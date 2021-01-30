@@ -150,30 +150,11 @@ static inline int icmp(oper_t op) {
     return (v1->len > v2->len) ? 1 : 0;
 }
 
-static MUST_CHECK Obj *calc2_register(oper_t op) {
-    int val = icmp(op);
-    switch (op->op->op) {
-    case O_CMP:
-        if (val < 0) return (Obj *)ref_int(minus1_value);
-        return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-    case O_EQ: return truth_reference(val == 0);
-    case O_NE: return truth_reference(val != 0);
-    case O_MIN:
-    case O_LT: return truth_reference(val < 0);
-    case O_LE: return truth_reference(val <= 0);
-    case O_MAX:
-    case O_GT: return truth_reference(val > 0);
-    case O_GE: return truth_reference(val >= 0);
-    default: break;
-    }
-    return obj_oper_error(op);
-}
-
 static MUST_CHECK Obj *calc2(oper_t op) {
     const Type *t2 = op->v2->obj;
     switch (t2->type) {
     case T_REGISTER: 
-        return calc2_register(op);
+        return obj_oper_compare(op, icmp(op));
     case T_NONE:
     case T_ERROR:
         return val_reference(op->v2);
