@@ -1333,6 +1333,7 @@ static bool get_exp2(int stop) {
             goto other;
         case '(':
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) identlist++;
+        tphack2:
             opr.data[opr.p].epoint = epoint;
             opr.data[opr.p++].val = &o_PARENT; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
@@ -1341,6 +1342,7 @@ static bool get_exp2(int stop) {
             continue;
         case '[':
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) identlist++;
+        lshack2:
             opr.data[opr.p].epoint = epoint;
             opr.data[opr.p++].val = &o_BRACKET; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
@@ -1394,6 +1396,8 @@ static bool get_exp2(int stop) {
                     push_oper((Obj *)new_anonident((ident.data[0] == '+') ? (ident.len - 1) : -ident.len), &epoint);
                     goto other;
                 }
+                if (ident.data[0] == '(') { lpoint.pos++; identlist++; goto tphack2; }
+                if (ident.data[0] == '[') { lpoint.pos++; identlist++; goto lshack2; }
                 goto tryanon;
             }
             push_oper(get_float(&epoint), &epoint);
