@@ -25,10 +25,6 @@
 #include "operobj.h"
 #include "strobj.h"
 #include "errorobj.h"
-#include "intobj.h"
-#include "boolobj.h"
-
-struct Error;
 
 static Type obj;
 
@@ -89,35 +85,16 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     return &v->v;
 }
 
-static int icmp(oper_t op) {
+static inline int icmp(oper_t op) {
     const int32_t v1 = ((Anonident *)op->v1)->count, v2 = ((Anonident *)op->v2)->count;
     return v1 - v2;
-}
-
-static MUST_CHECK Obj *calc2_anonident(oper_t op) {
-    int val;
-    switch (op->op->op) {
-    case O_CMP:
-        val = icmp(op);
-        if (val < 0) return (Obj *)ref_int(minus1_value);
-        return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-    case O_EQ: return truth_reference(icmp(op) == 0);
-    case O_NE: return truth_reference(icmp(op) != 0);
-    case O_MIN:
-    case O_LT: return truth_reference(icmp(op) < 0);
-    case O_LE: return truth_reference(icmp(op) <= 0);
-    case O_MAX:
-    case O_GT: return truth_reference(icmp(op) > 0);
-    case O_GE: return truth_reference(icmp(op) >= 0);
-    default: break;
-    }
-    return obj_oper_error(op);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     switch (o2->obj->type) {
-    case T_ANONIDENT: return calc2_anonident(op);
+    case T_ANONIDENT: 
+        return obj_oper_compare(op, icmp(op));
     case T_NONE:
     case T_ERROR:
         return val_reference(o2);

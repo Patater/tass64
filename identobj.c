@@ -28,10 +28,6 @@
 #include "operobj.h"
 #include "strobj.h"
 #include "errorobj.h"
-#include "intobj.h"
-#include "boolobj.h"
-
-struct Error;
 
 static Type obj;
 
@@ -130,7 +126,7 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
     return NULL;
 }
 
-static int icmp(oper_t op) {
+static inline int icmp(oper_t op) {
     const str_t *v1 = &((Ident *)op->v1)->name, *v2 = &((Ident *)op->v2)->name;
     int h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
     if (h != 0) return h;
@@ -138,30 +134,11 @@ static int icmp(oper_t op) {
     return (v1->len > v2->len) ? 1 : 0;
 }
 
-static MUST_CHECK Obj *calc2_ident(oper_t op) {
-    int val;
-    switch (op->op->op) {
-    case O_CMP:
-        val = icmp(op);
-        if (val < 0) return (Obj *)ref_int(minus1_value);
-        return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-    case O_EQ: return truth_reference(icmp(op) == 0);
-    case O_NE: return truth_reference(icmp(op) != 0);
-    case O_MIN:
-    case O_LT: return truth_reference(icmp(op) < 0);
-    case O_LE: return truth_reference(icmp(op) <= 0);
-    case O_MAX:
-    case O_GT: return truth_reference(icmp(op) > 0);
-    case O_GE: return truth_reference(icmp(op) >= 0);
-    default: break;
-    }
-    return obj_oper_error(op);
-}
-
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     switch (o2->obj->type) {
-    case T_IDENT: return calc2_ident(op);
+    case T_IDENT:
+        return obj_oper_compare(op, icmp(op));
     case T_NONE:
     case T_ERROR:
         return val_reference(o2);

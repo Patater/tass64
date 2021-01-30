@@ -76,6 +76,25 @@ MUST_CHECK Obj *obj_oper_error(oper_t op) {
     return &err->v;
 }
 
+MUST_CHECK Obj *obj_oper_compare(oper_t op, int val) {
+    bool result;
+    switch (op->op->op) {
+    case O_CMP:
+        if (val < 0) return (Obj *)ref_int(minus1_value);
+        return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
+    case O_EQ: result = (val == 0); break;
+    case O_NE: result = (val != 0); break;
+    case O_MIN:
+    case O_LT: result = (val < 0); break;
+    case O_LE: result = (val <= 0); break;
+    case O_MAX:
+    case O_GT: result = (val > 0); break;
+    case O_GE: result = (val >= 0); break;
+    default: return obj_oper_error(op);
+    }
+    return truth_reference(result);
+}
+
 static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
