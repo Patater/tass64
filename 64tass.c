@@ -2411,7 +2411,7 @@ MUST_CHECK Obj *compile(void)
                             structure->file_list = current_file_list;
                             structure->line = epoint.line;
                             structure->recursion_pass = 0;
-                            if (labelexists && (label->value->obj == obj)) {
+                            if (labelexists && label->value->obj == obj) {
                                 structure->retval = ((Struct *)label->value)->retval;
                                 structure->argc = ((Struct *)label->value)->argc;
                             } else {
