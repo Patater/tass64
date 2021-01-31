@@ -2411,9 +2411,15 @@ MUST_CHECK Obj *compile(void)
                             structure->file_list = current_file_list;
                             structure->line = epoint.line;
                             structure->recursion_pass = 0;
+                            if (labelexists && (label->value->obj == obj)) {
+                                structure->retval = ((Struct *)label->value)->retval;
+                                structure->argc = ((Struct *)label->value)->argc;
+                            } else {
+                                structure->retval = false;
+                                structure->argc = 0;
+                            }
                             get_macro_params(&structure->v);
                             if (labelexists) {
-                                structure->retval = (label->value->obj == obj) && ((Struct *)label->value)->retval;
                                 if (label->defpass == pass) {
                                     doubledef = true;
                                     structure->size = 0;
@@ -2447,7 +2453,6 @@ MUST_CHECK Obj *compile(void)
                                     structure = (Struct *)label->value;
                                 }
                             } else {
-                                structure->retval = false;
                                 if (!constcreated == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
