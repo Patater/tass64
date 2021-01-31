@@ -573,7 +573,7 @@ void get_func_params(Mfunc *v) {
     str_t label;
     bool stard = false;
 
-    new_mfunc.param = (len != 0) ? mallocx(len * sizeof *new_mfunc.param) : NULL;
+    new_mfunc.param = (len != 0) ? (struct mfunc_param_s *)mallocx(len * sizeof *new_mfunc.param) : NULL;
     for (i = 0;;i++) {
         ignore();if (here() == 0 || here() == ';') break;
         if (here() == '*') {
@@ -644,19 +644,26 @@ void get_func_params(Mfunc *v) {
 void get_macro_params(Obj *v) {
     Macro *macro = (Macro *)v;
     Macro new_macro;
-    size_t len = 0, i, j;
+    size_t len = macro->argc, i, j;
     str_t label;
-    struct linepos_s *epoints = NULL;
+    struct linepos_s *epoints;
+    struct linepos_s vepoints[4];
     const struct file_s *cfile = macro->file_list->file;
 
-    new_macro.param = NULL;
+    new_macro.param = (len != 0) ? (struct macro_param_s *)mallocx(len * sizeof *new_macro.param) : NULL;
+    epoints = (len <= lenof(vepoints)) ? vepoints : (struct linepos_s *)mallocx(len * sizeof *epoints);
     for (i = 0;;i++) {
         ignore();if (here() == 0 || here() == ';') break;
         if (i >= len) {
             len += 16;
             if (/*len < 16 ||*/ len > SIZE_MAX / (sizeof *new_macro.param > sizeof *epoints ? sizeof *new_macro.param : sizeof *epoints)) err_msg_out_of_memory(); /* overflow */
             new_macro.param = (struct macro_param_s *)reallocx(new_macro.param, len * sizeof *new_macro.param);
-            epoints = (struct linepos_s *)reallocx(epoints, len * sizeof *epoints);
+            if (epoints == vepoints) {
+                epoints = (struct linepos_s *)mallocx(len * sizeof *epoints);
+                memcpy(epoints, vepoints, sizeof vepoints);
+            } else {
+                epoints = (struct linepos_s *)reallocx(epoints, len * sizeof *epoints);
+            }
         }
         epoints[i] = lpoint;
         label.data = pline + lpoint.pos;
@@ -697,10 +704,10 @@ void get_macro_params(Obj *v) {
         }
         lpoint.pos++;
     }
-    if (i != len) {
+    if (i < len) {
         if (i != 0) {
-            if (i > SIZE_MAX / sizeof *new_macro.param) err_msg_out_of_memory(); /* overflow */
-            new_macro.param = (struct macro_param_s *)reallocx(new_macro.param, i * sizeof *new_macro.param);
+            struct macro_param_s *p = (struct macro_param_s *)realloc(new_macro.param, i * sizeof *new_macro.param);
+            if (p != NULL) new_macro.param = p;
         } else {
             free(new_macro.param);
             new_macro.param = NULL;
@@ -708,7 +715,7 @@ void get_macro_params(Obj *v) {
     }
     macro->argc = i;
     macro->param = new_macro.param;
-    free(epoints);
+    if (epoints != vepoints) free(epoints);
 }
 
 static bool clean_namespace(Namespace *v1) {

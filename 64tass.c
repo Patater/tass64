@@ -2262,9 +2262,15 @@ MUST_CHECK Obj *compile(void)
                             macro->file_list = current_file_list;
                             macro->line = epoint.line;
                             macro->recursion_pass = 0;
+                            if (labelexists && label->value->obj == obj) {
+                                macro->retval = ((Macro *)label->value)->retval;
+                                macro->argc = ((Macro *)label->value)->argc;
+                            } else {
+                                macro->retval = false;
+                                macro->argc = 0;
+                            }
                             get_macro_params(&macro->v);
                             if (labelexists) {
-                                macro->retval = (label->value->obj == obj) && ((Macro *)label->value)->retval;
                                 if (label->defpass == pass) {
                                     waitfor->u.cmd_macro.val = &macro->v;
                                     err_msg_double_defined(label, &labelname, &epoint);
@@ -2285,7 +2291,6 @@ MUST_CHECK Obj *compile(void)
                                     waitfor->u.cmd_macro.val = val_reference(label->value);
                                 }
                             } else {
-                                macro->retval = false;
                                 if (!constcreated == 0) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
