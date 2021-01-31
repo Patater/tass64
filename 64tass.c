@@ -204,16 +204,29 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x17" "elsif",
     "\x2c" "enc",
     "\x3f" "end",
+    "\x3a" "endblock",
     "\x1c" "endc",
+    "\x1c" "endcomment",
     "\x52" "endf",
+    "\x52" "endfunction",
     "\x16" "endif",
+    "\x20" "endlogical",
     "\x11" "endm",
+    "\x6a" "endmacro",
     "\x5f" "endn",
+    "\x5f" "endnamespace",
     "\x1e" "endp",
+    "\x1e" "endpage",
+    "\x27" "endproc",
     "\x46" "ends",
+    "\x4d" "endsection",
+    "\x6b" "endsegment",
+    "\x46" "endstruct",
     "\x56" "endswitch",
     "\x49" "endu",
+    "\x49" "endunion",
     "\x61" "endv",
+    "\x61" "endvirtual",
     "\x58" "endweak",
     "\x69" "endwith",
     "\x40" "eor",
@@ -291,7 +304,7 @@ typedef enum Command_types {
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
     CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF,
-    CMD_WITH, CMD_ENDWITH
+    CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -465,7 +478,7 @@ FAST_CALL uint8_t *pokealloc(address_t db, linepos_t epoint) {
 static int get_command(void) {
     unsigned int no, also, felso, elozo;
     const uint8_t *label;
-    uint8_t tmp[12];
+    uint8_t tmp[13];
     lpoint.pos++;
     label = pline + lpoint.pos;
     if (arguments.caseinsensitive) {
@@ -930,9 +943,12 @@ static const char *check_waitfor(void) {
         if (waitfor->u.cmd_page.label != NULL) {set_size(waitfor->u.cmd_page.label, current_address->address - waitfor->u.cmd_page.addr, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);val_destroy(&waitfor->u.cmd_page.label->v);}
         /* fall through */
     case W_ENDP: return ".endp";
-    case W_ENDM:
+    case W_ENDSEGMENT:
         if (waitfor->u.cmd_macro.val != NULL) val_destroy(waitfor->u.cmd_macro.val);
-        return ".endm";
+        return ".endsegment";
+    case W_ENDMACRO:
+        if (waitfor->u.cmd_macro.val != NULL) val_destroy(waitfor->u.cmd_macro.val);
+        return ".endmacro";
     case W_ENDF: 
         if (waitfor->u.cmd_function.val != NULL) val_destroy(waitfor->u.cmd_function.val);
         return ".endf";
@@ -983,7 +999,8 @@ static const char *check_waitfor(void) {
     case W_ENDV: return ".endv";
     case W_ENDU3:
     case W_ENDS3:
-    case W_ENDM3:
+    case W_ENDSEGMENT2:
+    case W_ENDMACRO2:
     case W_ENDF3:
     case W_NEXT2:
     case W_NONE:
@@ -2257,7 +2274,7 @@ MUST_CHECK Obj *compile(void)
                             Type *obj = (prm == CMD_MACRO) ? MACRO_OBJ : SEGMENT_OBJ;
                             bool labelexists;
                             listing_line(listing, 0);
-                            new_waitfor(W_ENDM, &cmdpoint);waitfor->skip = 0;
+                            new_waitfor(prm == CMD_MACRO ? W_ENDMACRO : W_ENDSEGMENT, &cmdpoint);waitfor->skip = 0;
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             macro = (Macro *)val_alloc(obj);
                             macro->file_list = current_file_list;
@@ -3169,21 +3186,23 @@ MUST_CHECK Obj *compile(void)
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 }
                 break;
+            case CMD_ENDMACRO: /* .endmacro */
+            case CMD_ENDSEGMENT: /* .endsegment */
             case CMD_ENDM: /* .endm */
-                if (waitfor->what==W_ENDM) {
+                if ((prm != CMD_ENDSEGMENT && waitfor->what == W_ENDMACRO) || (prm != CMD_ENDMACRO && waitfor->what==W_ENDSEGMENT)) {
                     if (waitfor->u.cmd_macro.val != NULL) {
                         ((Macro *)waitfor->u.cmd_macro.val)->retval = (here() != 0 && here() != ';');
                         val_destroy(waitfor->u.cmd_macro.val);
                     }
-                    close_waitfor(W_ENDM);
+                    close_waitfor(waitfor->what);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                } else if (waitfor->what==W_ENDM3) { /* not closed here */
+                } else if ((prm != CMD_ENDSEGMENT && waitfor->what == W_ENDMACRO2) || (prm != CMD_ENDMACRO && waitfor->what==W_ENDSEGMENT2)) { /* not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
                         break;
                     }
-                } else err_msg2(ERROR__MISSING_OPEN, ".macro' or '.segment", &epoint);
+                } else err_msg2(ERROR__MISSING_OPEN, prm == CMD_ENDMACRO ? ".macro" : prm == CMD_ENDSEGMENT ? ".segment" : ".macro' or '.segment", &epoint);
                 goto breakerr;
             case CMD_ENDF: /* .endf */
                 if (waitfor->what==W_ENDF) {
@@ -4398,7 +4417,7 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, 0);
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                 }
-                new_waitfor(W_ENDM, &epoint);
+                new_waitfor(prm == CMD_MACRO ? W_ENDMACRO : W_ENDSEGMENT, &epoint);
                 waitfor->u.cmd_macro.val = NULL;
                 waitfor->skip = 0;
                 break;
@@ -4661,7 +4680,7 @@ MUST_CHECK Obj *compile(void)
                     } else {
                         listing_line_cut(listing, epoint.pos);
                     }
-                    val = macro_recurse(val->obj == MACRO_OBJ ? W_ENDM3 : val->obj == STRUCT_OBJ ? W_ENDS3 : W_ENDU3, val, context, &epoint);
+                    val = macro_recurse(val->obj == MACRO_OBJ ? W_ENDMACRO2 : val->obj == STRUCT_OBJ ? W_ENDS3 : W_ENDU3, val, context, &epoint);
                 } else if (val->obj == MFUNC_OBJ) {
                     Label *label;
                     Mfunc *mfunc;
@@ -4715,7 +4734,7 @@ MUST_CHECK Obj *compile(void)
                     } else {
                         listing_line_cut(listing, epoint.pos);
                     }
-                    val = macro_recurse(W_ENDM3, val, NULL, &epoint);
+                    val = macro_recurse(W_ENDSEGMENT2, val, NULL, &epoint);
                 }
                 if (val != NULL) {
                     if (newlabel != NULL) {
