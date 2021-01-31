@@ -28,9 +28,11 @@
 #include "operobj.h"
 #include "listobj.h"
 
-static Type obj;
+static Type mfunc_obj;
+static Type sfunc_obj;
 
-Type *const MFUNC_OBJ = &obj;
+Type *const MFUNC_OBJ = &mfunc_obj;
+Type *const SFUNC_OBJ = &sfunc_obj;
 
 static FAST_CALL void destroy(Obj *o1) {
     Mfunc *v1 = (Mfunc *)o1;
@@ -170,10 +172,15 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 }
 
 void mfuncobj_init(void) {
-    new_type(&obj, T_MFUNC, "function", sizeof(Mfunc));
-    obj.destroy = destroy;
-    obj.garbage = garbage;
-    obj.same = same;
-    obj.calc2 = calc2;
+    new_type(&mfunc_obj, T_MFUNC, "function", sizeof(Mfunc));
+    mfunc_obj.destroy = destroy;
+    mfunc_obj.garbage = garbage;
+    mfunc_obj.same = same;
+    mfunc_obj.calc2 = calc2;
+    new_type(&sfunc_obj, T_SFUNC, "sfunction", sizeof(Sfunc));
+    sfunc_obj.destroy = destroy;
+    sfunc_obj.garbage = garbage;
+    sfunc_obj.same = same;
+    sfunc_obj.calc2 = calc2;
 }
 

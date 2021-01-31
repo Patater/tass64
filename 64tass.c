@@ -2328,10 +2328,11 @@ MUST_CHECK Obj *compile(void)
                             Label *label;
                             Mfunc *mfunc;
                             bool labelexists, failed;
+                            Type *obj = (prm == CMD_FUNCTION) ? MFUNC_OBJ : SFUNC_OBJ;
                             listing_line(listing, 0);
                             if (prm == CMD_FUNCTION) new_waitfor(W_ENDF, &cmdpoint);
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                            mfunc = (Mfunc *)val_alloc(MFUNC_OBJ);
+                            mfunc = (Mfunc *)val_alloc(obj);
                             mfunc->file_list = current_file_list;
                             mfunc->epoint.line = epoint.line;
                             mfunc->epoint.pos = 0;
@@ -2343,7 +2344,7 @@ MUST_CHECK Obj *compile(void)
                             mfunc->ipoint = 0;
                             mfunc->single = (prm == CMD_SFUNCTION);
                             if (labelexists) {
-                                mfunc->retval = (label->value->obj == MFUNC_OBJ) && ((Mfunc *)label->value)->retval;
+                                mfunc->retval = (label->value->obj == obj) && ((Mfunc *)label->value)->retval;
                                 if (label->defpass == pass) {
                                     mfunc->names = new_namespace(current_file_list, &epoint);
                                     mfunc->inamespaces = ref_tuple(null_tuple);
@@ -2361,7 +2362,7 @@ MUST_CHECK Obj *compile(void)
                                     if (label->file_list != current_file_list) {
                                         label_move(label, &labelname, current_file_list);
                                     }
-                                    if (label->value->obj == MFUNC_OBJ) {
+                                    if (label->value->obj == obj) {
                                         Mfunc *prev = (Mfunc *)label->value;
                                         mfunc->names = ref_namespace(prev->names);
                                         mfunc->names->backr = mfunc->names->forwr = 0;
@@ -4686,7 +4687,6 @@ MUST_CHECK Obj *compile(void)
                     Mfunc *mfunc;
                     bool labelexists;
                     str_t tmpname;
-                    if (((Mfunc *)val)->single) { err_msg_wrong_type2(val, NULL, &epoint); goto breakerr; }
                     if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
                     else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
                     anonident2.type = '#';
@@ -4800,7 +4800,7 @@ MUST_CHECK Obj *compile(void)
                     if (tmp2 != NULL) {
                         const Type *obj = tmp2->value->obj;
                         if (diagnostics.case_symbol && str_cmp(&opname, &tmp2->name) != 0) err_msg_symbol_case(&opname, tmp2, &epoint);
-                        if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || (obj == MFUNC_OBJ && !((Mfunc *)obj)->single)) {
+                        if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
                             val_destroy(&err->v);
                             touch_label(tmp2);
                             lpoint = oldlpoint;
@@ -4816,7 +4816,7 @@ MUST_CHECK Obj *compile(void)
                 if (tmp2 != NULL) {
                     const Type *obj = tmp2->value->obj;
                     if (diagnostics.case_symbol && str_cmp(&opname, &tmp2->name) != 0) err_msg_symbol_case(&opname, tmp2, &epoint);
-                    if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || (obj == MFUNC_OBJ && !((Mfunc *)obj)->single)) {
+                    if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
                         if (diagnostics.macro_prefix) {
                             ignore();
                             if (here() == 0 || here() == ';') err_msg_macro_prefix(&epoint);
