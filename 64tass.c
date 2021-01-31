@@ -2341,6 +2341,7 @@ MUST_CHECK Obj *compile(void)
                                         mfunc->names->file_list = current_file_list;
                                         mfunc->names->epoint = epoint;
                                         mfunc->inamespaces = ref_tuple(prev->inamespaces);
+                                        mfunc->argc = prev->argc;
                                     } else {
                                         mfunc->names = new_namespace(current_file_list, &epoint);
                                         mfunc->inamespaces = ref_tuple(null_tuple);
