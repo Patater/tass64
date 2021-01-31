@@ -542,7 +542,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
         s->addr = star;
         star_tree->vline = vline; star_tree = s; vline = s->vline;
         enterfile(mfunc->file_list->file, epoint);
-        lpoint.line = mfunc->line;
+        lpoint.line = mfunc->epoint.line;
         new_waitfor(W_ENDF3, epoint);
         oldbottom = context_get_bottom();
         for (i = 0; i < mfunc->nslen; i++) {
@@ -567,7 +567,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
     return val;
 }
 
-bool get_func_params(Mfunc *v) {
+bool get_func_params(Mfunc *v, bool single) {
     struct mfunc_param_s *param;
     size_t len = v->argc, i = 0, j;
     str_t label;
@@ -589,6 +589,14 @@ bool get_func_params(Mfunc *v) {
             param[i].epoint = lpoint;
             label.data = pline + lpoint.pos;
             label.len = get_label(label.data);
+            if (single) {
+                const uint8_t *s = pline + lpoint.pos + label.len;
+                if (!stard && s[0] != ',' && (s[0] != '=' || s[1] == '=')) {
+                    v->epoint.line = lpoint.line - 1;
+                    v->epoint.pos = lpoint.pos;
+                    break;
+                }
+            }
             if (label.len != 0) {
                 lpoint.pos += label.len;
                 if (label.len > 1 && label.data[0] == '_' && label.data[1] == '_') {
@@ -616,6 +624,17 @@ bool get_func_params(Mfunc *v) {
             if (stard) {
                 param[i].init = (Obj *)ref_default();
                 i++;
+                if (single) {
+                    if (here() != ',') {
+                        err_msg2(ERROR______EXPECTED, "','", &lpoint);
+                        ret = true;
+                        break;
+                    }
+                    lpoint.pos++;
+                    ignore();
+                    v->epoint.line = lpoint.line - 1;
+                    v->epoint.pos = lpoint.pos;
+                }
                 break;
             } else {
                 param[i].init = NULL;
@@ -786,7 +805,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
     }
     if (context == NULL) {
         struct linepos_s xpoint;
-        xpoint.line = mfunc->line;
+        xpoint.line = mfunc->epoint.line;
         xpoint.pos = 0;
         context = new_namespace(mfunc->file_list, &xpoint);
         mfunc->inamespaces->data[mfunc->ipoint] = &context->v;
@@ -866,42 +885,54 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         }
         s->addr = star;
         star_tree->vline = vline; star_tree = s; vline = s->vline;
-        lpoint.line = mfunc->line;
-        new_waitfor(W_ENDF3, epoint);
+        lpoint.line = mfunc->epoint.line;
+        if (!mfunc->single) new_waitfor(W_ENDF3, epoint);
         oldbottom = context_get_bottom();
         for (i = 0; i < mfunc->nslen; i++) {
             push_context(mfunc->namespaces[i]);
         }
         push_context(context);
         temporary_label_branch++;
-
-        section_address.moved = section_address.wrapwarn = section_address.bankwarn = section_address.unionmode = false;
-        section_address.address = 0;
-        section_address.start = 0;
-        section_address.l_start = 0;
-        section_address.l_union = 0;
-        section_address.end = 0;
-        section_address.mem = new_memblocks(0, 0);
-        section_address.mem->lastaddr = 0;
-        section_address.l_address = current_address->l_address;
-        section_address.l_address_val = val_reference(current_address->l_address_val);
-        current_address = &section_address;
         functionrecursion++;
-        retval = compile();
-        functionrecursion--;
-        val_destroy(current_address->l_address_val);
-        val_destroy(&current_address->mem->v);
-        current_address = oldsection_address;
-        if (current_address->l_address > all_mem) {
-            err_msg_big_address(epoint);
-            current_address->l_address &= all_mem;
+        if (mfunc->single) {
+            mtranslate();
+            lpoint.pos = mfunc->epoint.pos;
+            if (!get_exp(0, 0, 0, &mfunc->epoint)) {
+                retval = NULL;
+            } else {
+                struct linepos_s epoints[3];
+                retval = get_vals_addrlist(epoints);
+            }
+        } else {
+            section_address.moved = section_address.wrapwarn = section_address.bankwarn = section_address.unionmode = false;
+            section_address.address = 0;
+            section_address.start = 0;
+            section_address.l_start = 0;
+            section_address.l_union = 0;
+            section_address.end = 0;
+            section_address.mem = new_memblocks(0, 0);
+            section_address.mem->lastaddr = 0;
+            section_address.l_address = current_address->l_address;
+            section_address.l_address_val = val_reference(current_address->l_address_val);
+            current_address = &section_address;
+
+            retval = compile();
+
+            val_destroy(current_address->l_address_val);
+            val_destroy(&current_address->mem->v);
+            current_address = oldsection_address;
+            if (current_address->l_address > all_mem) {
+                err_msg_big_address(epoint);
+                current_address->l_address &= all_mem;
+            }
         }
+        functionrecursion--;
         context_set_bottom(oldbottom);
         pop_context();
         for (i = 0; i < mfunc->nslen; i++) {
             pop_context();
         }
-        close_waitfor(W_ENDF3);
+        if (!mfunc->single) close_waitfor(W_ENDF3);
         star = s->addr;
         temporary_label_branch--;
         lpoint = opoint;

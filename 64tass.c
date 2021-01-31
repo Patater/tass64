@@ -206,7 +206,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x3f" "end",
     "\x1c" "endc",
     "\x52" "endf",
-    "\x2d" "endif",
+    "\x16" "endif",
     "\x11" "endm",
     "\x5f" "endn",
     "\x1e" "endp",
@@ -254,6 +254,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x5d" "seed",
     "\x41" "segment",
     "\x4d" "send",
+    "\x2d" "sfunction",
     "\x02" "shift",
     "\x03" "shiftl",
     "\x3d" "showmac",
@@ -280,7 +281,7 @@ typedef enum Command_types {
     CMD_ELSE, CMD_FI, CMD_ELSIF, CMD_REPT, CMD_INCLUDE, CMD_BINARY,
     CMD_COMMENT, CMD_ENDC, CMD_PAGE, CMD_ENDP, CMD_LOGICAL, CMD_HERE, CMD_AS,
     CMD_AL, CMD_XS, CMD_XL, CMD_ERROR, CMD_PROC, CMD_PEND, CMD_DATABANK,
-    CMD_DPAGE, CMD_FILL, CMD_WARN, CMD_ENC, CMD_ENDIF, CMD_IFNE, CMD_IFEQ,
+    CMD_DPAGE, CMD_FILL, CMD_WARN, CMD_ENC, CMD_SFUNCTION, CMD_IFNE, CMD_IFEQ,
     CMD_IFPL, CMD_IFMI, CMD_CERROR, CMD_CWARN, CMD_ALIGN, CMD_ASSERT,
     CMD_CHECK, CMD_CPU, CMD_OPTION, CMD_BLOCK, CMD_BEND, CMD_PRON, CMD_PROFF,
     CMD_SHOWMAC, CMD_HIDEMAC, CMD_END, CMD_EOR, CMD_SEGMENT, CMD_VAR, CMD_LBL,
@@ -2304,29 +2305,32 @@ MUST_CHECK Obj *compile(void)
                             }
                             goto finish;
                         }
+                    case CMD_SFUNCTION:
                     case CMD_FUNCTION:
                         {
                             Label *label;
                             Mfunc *mfunc;
                             bool labelexists, failed;
                             listing_line(listing, 0);
-                            new_waitfor(W_ENDF, &cmdpoint);
+                            if (prm == CMD_FUNCTION) new_waitfor(W_ENDF, &cmdpoint);
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             mfunc = (Mfunc *)val_alloc(MFUNC_OBJ);
                             mfunc->file_list = current_file_list;
-                            mfunc->line = epoint.line;
+                            mfunc->epoint.line = epoint.line;
+                            mfunc->epoint.pos = 0;
                             mfunc->recursion_pass = 0;
                             mfunc->argc = 0;
                             mfunc->param = NULL; /* might be recursive through init */
                             mfunc->nslen = 0;
                             mfunc->namespaces = NULL;
                             mfunc->ipoint = 0;
+                            mfunc->single = (prm == CMD_SFUNCTION);
                             if (labelexists) {
                                 mfunc->retval = (label->value->obj == MFUNC_OBJ) && ((Mfunc *)label->value)->retval;
                                 if (label->defpass == pass) {
-                                    waitfor->u.cmd_function.val = &mfunc->v;
                                     mfunc->names = new_namespace(current_file_list, &epoint);
                                     mfunc->inamespaces = ref_tuple(null_tuple);
+                                    if (prm == CMD_FUNCTION) waitfor->u.cmd_function.val = &mfunc->v; else val_destroy(&mfunc->v);
                                     err_msg_double_defined(label, &labelname, &epoint);
                                     failed = true;
                                 } else {
@@ -2354,11 +2358,11 @@ MUST_CHECK Obj *compile(void)
                                     }
                                     label->epoint = epoint;
                                     label->ref = false;
-                                    failed = get_func_params(mfunc);
+                                    failed = get_func_params(mfunc, prm == CMD_SFUNCTION);
                                     get_namespaces(mfunc);
                                     const_assign(label, &mfunc->v);
                                     if (label->value != &mfunc->v) ((Mfunc *)label->value)->ipoint = 0;
-                                    waitfor->u.cmd_function.val = val_reference(label->value);
+                                    if (prm == CMD_FUNCTION) waitfor->u.cmd_function.val = val_reference(label->value);
                                 }
                             } else {
                                 mfunc->retval = false;
@@ -2372,13 +2376,17 @@ MUST_CHECK Obj *compile(void)
                                 mfunc->inamespaces = ref_tuple(null_tuple);
                                 label->epoint = epoint;
                                 label->ref = false;
-                                failed = get_func_params(mfunc);
+                                failed = get_func_params(mfunc, prm == CMD_SFUNCTION);
                                 get_namespaces(mfunc);
                                 mfunc->names = new_namespace(current_file_list, &epoint);
-                                waitfor->u.cmd_function.val = val_reference(&mfunc->v);
+                                if (prm == CMD_FUNCTION) waitfor->u.cmd_function.val = val_reference(&mfunc->v);
                             }
-                            if (!failed && here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
-                            waitfor->skip = 0;
+                            if (prm == CMD_FUNCTION) {
+                                if (!failed && here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
+                                waitfor->skip = 0;
+                                goto breakerr;
+                            } 
+                            if (skip_exp()) get_exp(0, 0, 0, &epoint);
                             goto finish;
                         }
                     case CMD_STRUCT:
@@ -3007,7 +3015,6 @@ MUST_CHECK Obj *compile(void)
                 if (!close_waitfor(W_ENDC)) {err_msg2(ERROR__MISSING_OPEN, ".comment", &epoint); goto breakerr;}
                 if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 break;
-            case CMD_ENDIF: /* .endif */
             case CMD_FI: /* .fi */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
@@ -4404,6 +4411,7 @@ MUST_CHECK Obj *compile(void)
                 waitfor->u.cmd_function.val = NULL;
                 waitfor->skip = 0;
                 break;
+            case CMD_SFUNCTION: /* .sfunction */
             case CMD_VAR: /* .var */
                 if ((waitfor->skip & 1) != 0) {
                     listing_line(listing, 0);
@@ -4659,6 +4667,7 @@ MUST_CHECK Obj *compile(void)
                     Mfunc *mfunc;
                     bool labelexists;
                     str_t tmpname;
+                    if (((Mfunc *)val)->single) { err_msg_wrong_type2(val, NULL, &epoint); goto breakerr; }
                     if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
                     else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
                     anonident2.type = '#';
@@ -4772,7 +4781,7 @@ MUST_CHECK Obj *compile(void)
                     if (tmp2 != NULL) {
                         const Type *obj = tmp2->value->obj;
                         if (diagnostics.case_symbol && str_cmp(&opname, &tmp2->name) != 0) err_msg_symbol_case(&opname, tmp2, &epoint);
-                        if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
+                        if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || (obj == MFUNC_OBJ && !((Mfunc *)obj)->single)) {
                             val_destroy(&err->v);
                             touch_label(tmp2);
                             lpoint = oldlpoint;
@@ -4788,7 +4797,7 @@ MUST_CHECK Obj *compile(void)
                 if (tmp2 != NULL) {
                     const Type *obj = tmp2->value->obj;
                     if (diagnostics.case_symbol && str_cmp(&opname, &tmp2->name) != 0) err_msg_symbol_case(&opname, tmp2, &epoint);
-                    if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || obj == MFUNC_OBJ) {
+                    if (obj == MACRO_OBJ || obj == SEGMENT_OBJ || (obj == MFUNC_OBJ && !((Mfunc *)obj)->single)) {
                         if (diagnostics.macro_prefix) {
                             ignore();
                             if (here() == 0 || here() == ';') err_msg_macro_prefix(&epoint);
