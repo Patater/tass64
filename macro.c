@@ -569,11 +569,11 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
 
 void get_func_params(Mfunc *v) {
     Mfunc new_mfunc;
-    size_t len = 0, i, j;
+    size_t len = v->argc, i, j;
     str_t label;
     bool stard = false;
 
-    new_mfunc.param = NULL;
+    new_mfunc.param = (len != 0) ? mallocx(len * sizeof *new_mfunc.param) : NULL;
     for (i = 0;;i++) {
         ignore();if (here() == 0 || here() == ';') break;
         if (here() == '*') {
@@ -628,10 +628,10 @@ void get_func_params(Mfunc *v) {
         }
         lpoint.pos++;
     }
-    if (i != len) {
+    if (i < len) {
         if (i != 0) {
-            if (i > SIZE_MAX / sizeof *new_mfunc.param) err_msg_out_of_memory(); /* overflow */
-            new_mfunc.param = (struct mfunc_param_s *)reallocx(new_mfunc.param, i * sizeof *new_mfunc.param);
+            struct mfunc_param_s *p = (struct mfunc_param_s *)realloc(new_mfunc.param, i * sizeof *new_mfunc.param);
+            if (p != NULL) new_mfunc.param = p;
         } else {
             free(new_mfunc.param);
             new_mfunc.param = NULL;
