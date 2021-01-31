@@ -56,6 +56,7 @@ static Dict *new_dict(size_t ln) {
         v->data = v->u.val;
     } else {
         v->data = p;
+        v->u.s.hash = -1;
         v->u.s.max = ln;
         v->u.s.mask = ln2 - 1;
     }
@@ -298,6 +299,7 @@ static bool resize(Dict *dict, size_t ln) {
         p = (struct pair_s *)malloc(ln * sizeof *dict->data + ln3);
         if (p == NULL) return true;
         if (dict->len != 0) p[0] = dict->u.val[0];
+        dict->u.s.hash = -1;
         dict->u.s.mask = 0;
     } else {
         bool same = dict->u.s.mask == ln2 - 1;
@@ -348,6 +350,40 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
         if (!p->data->obj->same(p->data, p2->data)) return false;
     }
     return true;
+}
+
+static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
+    Dict *v1 = (Dict *)o1;
+    size_t i, l = v1->len;
+    struct pair_s *vals = v1->data;
+    unsigned int h;
+    if (vals != v1->u.val && v1->u.s.hash >= 0) {
+        *hs = v1->u.s.hash;
+        return NULL;
+    }
+    h = 0;
+    for (i = 0; i < l; i++) {
+        Obj *o2 = vals[i].data;
+        if (o2 != NULL) {
+            int h2;
+            Error *err = o2->obj->hash(o2, &h2, epoint);
+            if (err != NULL) return err;
+            h += h2;
+        }
+        h += vals[i].hash;
+    }
+    if (v1->def != NULL) {
+        Obj *o2 = v1->def;
+        int h2;
+        Error *err = o2->obj->hash(o2, &h2, epoint);
+        if (err != NULL) return err;
+        h += h2;
+    }
+    h ^= i;
+    h &= ((~0U) >> 1);
+    if (vals != v1->u.val) v1->u.s.hash = h;
+    *hs = h;
+    return NULL;
 }
 
 static MUST_CHECK Obj *len(oper_t op) {
@@ -592,6 +628,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
             if (resize(v1, ln)) goto failed; /* overflow */
         }
         dict = (Dict *)val_reference(&v1->v);
+        if (dict->data != dict->u.val) dict->u.s.hash = -1;
     } else {
         dict = new_dict(ln);
         if (dict == NULL) goto failed; /* overflow */
@@ -721,6 +758,7 @@ void dictobj_init(void) {
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;
+    obj.hash = hash;
     obj.len = len;
     obj.getiter = getiter;
     obj.repr = repr;

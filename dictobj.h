@@ -35,6 +35,7 @@ typedef struct Dict {
     union {
         struct pair_s val[1];
         struct {
+            int hash;
             size_t max;
             size_t mask;
         } s;
