@@ -2308,7 +2308,7 @@ MUST_CHECK Obj *compile(void)
                         {
                             Label *label;
                             Mfunc *mfunc;
-                            bool labelexists;
+                            bool labelexists, failed;
                             listing_line(listing, 0);
                             new_waitfor(W_ENDF, &cmdpoint);
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
@@ -2328,6 +2328,7 @@ MUST_CHECK Obj *compile(void)
                                     mfunc->names = new_namespace(current_file_list, &epoint);
                                     mfunc->inamespaces = ref_tuple(null_tuple);
                                     err_msg_double_defined(label, &labelname, &epoint);
+                                    failed = true;
                                 } else {
                                     if (label->fwpass == pass) fwcount--;
                                     if (!constcreated && label->defpass != pass - 1) {
@@ -2353,7 +2354,7 @@ MUST_CHECK Obj *compile(void)
                                     }
                                     label->epoint = epoint;
                                     label->ref = false;
-                                    get_func_params(mfunc);
+                                    failed = get_func_params(mfunc);
                                     get_namespaces(mfunc);
                                     const_assign(label, &mfunc->v);
                                     if (label->value != &mfunc->v) ((Mfunc *)label->value)->ipoint = 0;
@@ -2371,11 +2372,12 @@ MUST_CHECK Obj *compile(void)
                                 mfunc->inamespaces = ref_tuple(null_tuple);
                                 label->epoint = epoint;
                                 label->ref = false;
-                                get_func_params(mfunc);
+                                failed = get_func_params(mfunc);
                                 get_namespaces(mfunc);
                                 mfunc->names = new_namespace(current_file_list, &epoint);
                                 waitfor->u.cmd_function.val = val_reference(&mfunc->v);
                             }
+                            if (!failed && here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
                             waitfor->skip = 0;
                             goto finish;
                         }
