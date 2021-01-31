@@ -2291,7 +2291,7 @@ MUST_CHECK Obj *compile(void)
                                     waitfor->u.cmd_macro.val = val_reference(label->value);
                                 }
                             } else {
-                                if (!constcreated == 0) {
+                                if (!constcreated) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
@@ -2455,7 +2455,7 @@ MUST_CHECK Obj *compile(void)
                                     structure = (Struct *)label->value;
                                 }
                             } else {
-                                if (!constcreated == 0) {
+                                if (!constcreated) {
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
