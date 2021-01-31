@@ -1434,7 +1434,11 @@ it does not need to be.
     .1065   1001    ea              nop                     nop
 
 .logical <expression>
+    Starts a relocation block
 .here
+.endlogical
+    Ends a relocation block
+
     Changes the program counter only, the compile offset is not changed. When
     finished all continues where it was left off before.
 
@@ -1453,11 +1457,14 @@ it does not need to be.
                                                             .here
 
 .virtual [<expression>]
+    Starts a virtual block
 .endv
-    Changes the program counter to the expression (if given) and discards the
-    result of compilation.
+.endvirtual
+    Ends a virtual block
 
-    This is useful to define structures to fixed addresses.
+    Changes the program counter to the expression (if given) and discards the
+    result of compilation. This is useful to define structures to fixed
+    addresses.
 
             .virtual $d400  ; base address
     sid     .block
@@ -1775,8 +1782,13 @@ Structures are for organizing sequential data, so the length of a structure is
 the sum of lengths of all items.
 
 .struct [<name>][=<default>]][, [<name>][=<default>] ...]
+    Begins a structure block
 .ends [<result>][, <result> ...]
+.endstruct [<result>][, <result> ...]
+    Ends a structure block
+
     Structure definition, with named parameters and default values
+
 .dstruct <name>[, <initialization values>]
 .<name> [<initialization values>]
     Create instance of structure with initialization values
@@ -1804,8 +1816,13 @@ counter remains the same on each line. Therefore the length of a union is the
 length of it's longest item.
 
 .union [<name>][=<default>]][, [<name>][=<default>] ...]
+    Begins a union block
 .endu
+.endunion
+    Ends a union block
+
     Union definition, with named parameters and default values
+
 .dunion <name>[, <initialization values>]
 .<name> [<initialization values>]
     Create instance of union with initialization values
@@ -1863,15 +1880,25 @@ invocation is a copy of the macro's content with parameter references replaced
 by the parameter texts.
 
 .segment [<name>][=<default>]][, [<name>][=<default>] ...]
+    Start of segment block
 .endm [<result>][, <result> ...]
+.endsegment [<result>][, <result> ...]
+    End of segment block
+
     Copies the code segment as it is, so symbols can be used from outside, but
     this also means multiple use will result in double defines unless anonymous
     labels are used.
+
 .macro [<name>][=<default>]][, [<name>][=<default>] ...]
+    Start of macro block
 .endm [<result>][, <result> ...]
+.endmacro [<result>][, <result> ...]
+    End of macro block
+
     The code is enclosed in it's own block so symbols inside are
     non-accessible, unless a label is prefixed at the place of use, then local
     labels can be accessed through that label.
+
 #<name> [<param>][[,][<param>] ...]
 .<name> [<param>][[,][<param>] ...]
     Invoke the macro after `#' or `.' with the parameters. Normally the name of
@@ -1947,8 +1974,10 @@ ones for frequently used calculations.
 .sfunction [<name>[=<default>], ...][*<name>,] <expression>
     Defines a simple function to return the result of a parametrised expression
 .function <name>[=<default>]][, <name>[=<default>] ...][, *<name>]
-.endf [<result>][, <result> ...]
     Defines a multi line function
+.endf [<result>][, <result> ...]
+.endfunction [<result>][, <result> ...]
+    End of a multi line function
 #<name> [<param>][[,][<param>] ...]
 .<name> [<param>][[,][<param>] ...]
 <name> [<param>][[,][<param>] ...]
@@ -2057,6 +2086,7 @@ Comment
 .comment
     Never compile.
 .endc
+.endcomment
     End of conditional compilation.
 
         .comment
@@ -2224,8 +2254,10 @@ or tuple.
 ctable  .byte colors.(red, green, blue)
 
 .proc
+    Start of a procedure block
 .pend
-    Start a procedure, close and start next procedure and finish procedure.
+.endproc
+    End of a procedure block
 
     If the symbol in front is not referenced anywhere then the enclosed source
     won't be compiled.
@@ -2263,8 +2295,10 @@ ctable  .byte colors.(red, green, blue)
         macro calls still need to be manually managed.
 
 .block
+    Block scoping area start
 .bend
-    Block start and block end.
+.endblock
+    Block scoping area end
 
     All symbols inside a block are enclosed in a scope. If the block had a
     symbol then local symbols are accessible through that using the dot
@@ -2276,8 +2310,10 @@ ctable  .byte colors.(red, green, blue)
             .bend
 
 .namespace [<symbol>]
+    Namespace area start
 .endn
-    Namespace area
+.endnamespace
+    Namespace area end
 
     This directive either creates a new scope (if used without a parameter) or
     activates the one in the parameter.
@@ -2335,8 +2371,13 @@ moving source code lines around. This is achieved by having separate compile
 offset and program counters for each defined section.
 
 .section <name>
+    Starts a segment block
 .send [<name>]
+.endsection [<name>]
+    Ends a segment block
+
     Defines a section fragment. The name at .send must match but it's optional.
+
 .dsection <name>
     Collect the section fragments here.
 
@@ -2528,7 +2569,11 @@ routine .addr print
 Controlling errors
 
 .page
+    Start of page check block
 .endp
+.endpage
+    End of page check block
+
     Gives an error on page boundary crossing, e.g. for timing sensitive code.
 
             .page
@@ -4653,8 +4698,10 @@ Assembler directives
 .addr .al .align .as .assert .autsiz .bend .binary .binclude .bfor .block
 .break .breakif .brept .bwhile .byte .case .cdef .cerror .char .check .comment
 .continue .continueif .cpu .cwarn .databank .default .dint .dpage .dsection
-.dstruct .dunion .dword .edef .else .elsif .enc .end .endc .endf .endif .endm
-.endn .endp .ends .endswitch .endu .endv .endweak .endwith .eor .error .fi
+.dstruct .dunion .dword .edef .else .elsif .enc .end .endblock .endc
+.endcomment .endf .endfunction .endif .endlogical .endm .endmacro .endn
+.endnamespace .endp .endpage .endproc .ends .endsection .endsegment .endstruct
+.endswitch .endu .endunion .endv .endvirtual .endweak .endwith .eor .error .fi
 .fill .for .function .goto .here .hidemac .if .ifeq .ifmi .ifne .ifpl .include
 .lbl .lint .logical .long .macro .mansiz .namespace .next .null .offs .option
 .page .pend .proc .proff .pron .ptext .rept .rta .section .seed .segment .send
