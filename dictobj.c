@@ -342,8 +342,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     }
     for (n = 0; n < v1->len; n++) {
         const struct pair_s *p = &v1->data[n];
-        const struct pair_s *p2 = dict_lookup(v2, p);
-        if (p2 == NULL) return false;
+        const struct pair_s *p2 = &v2->data[n];
         if (p->key != p2->key && !p->key->obj->same(p->key, p2->key)) return false;
         if (p->data == p2->data) continue;
         if (p->data == NULL || p2->data == NULL) return false;
