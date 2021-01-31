@@ -36,8 +36,8 @@ typedef struct Mfunc {
     size_t argc;
     struct mfunc_param_s *param;
     const struct file_list_s *file_list;
-    line_t line;
-    bool retval;
+    struct linepos_s epoint;
+    bool retval, single;
     uint8_t recursion_pass;
     size_t nslen;
     struct Namespace **namespaces, *names;

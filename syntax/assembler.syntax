@@ -184,6 +184,7 @@ context default lightgray
     keyword whole .seed brightcyan
     keyword whole .segment brightcyan
     keyword whole .send brightcyan
+    keyword whole .sfunction brightcyan
     keyword whole .showmac brightcyan
     keyword whole .struct brightcyan
     keyword whole .switch brightcyan

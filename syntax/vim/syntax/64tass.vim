@@ -126,7 +126,7 @@ syn match tass64PreProc /\v\.%(databank|dpage|dsection|edef|enc|end|endp)>/ cont
 syn match tass64PreProc /\v\.%(endweak|eor|for|bfor|goto|here|hidemac)>/ contained
 syn match tass64PreProc /\v\.%(lbl|logical|mansiz|next|virtual|endv)>/ contained
 syn match tass64PreProc /\v\.%(offs|option|page|pend|proc|proff|pron|rept|brept|while|bwhile|section)>/ contained
-syn match tass64PreProc /\v\.%(seed|send|showmac|var|weak|xl|xs|namespace|endn|with|endwith)>/ contained
+syn match tass64PreProc /\v\.%(seed|send|showmac|var|weak|xl|xs|namespace|endn|with|endwith|sfunction)>/ contained
 syn match tass64Define  /\v\.%(segment|macro|endm|function|endf)>/ contained
 syn match tass64Include /\v\.%(include|binclude)>/ contained
 syn match tass64PreCondit /\v\.%(elsif|ifmi|ifne|ifpl|else|fi|if|ifeq|endif|switch|endswitch|case|default|comment|endc|breakif|continueif|break|continue)>/ contained

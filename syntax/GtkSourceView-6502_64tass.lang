@@ -221,7 +221,7 @@
     </context>
 
     <context id="preprocessor-misc" end-at-line-end="true">
-      <start>\.(struct|union|page|end[uspnv]|d?section|block|proc|[sbp]end|logical|here|[ax][ls]|autsiz|mansiz|pron|proff|namespace|weak|endweak|hidemac|showmac|offs|align|assert|check|[ce]def|databank|dpage|cpu|enc|option|var|end|eor|seed|breakif|continueif|break|continue|virtual|with|endwith)(\s|(?=;)|$)</start>
+      <start>\.(struct|union|page|end[uspnv]|d?section|block|proc|[sbp]end|logical|here|[ax][ls]|autsiz|mansiz|pron|proff|namespace|weak|endweak|hidemac|showmac|offs|align|assert|check|[ce]def|databank|dpage|cpu|enc|option|var|end|eor|seed|breakif|continueif|break|continue|virtual|with|endwith|sfunction)(\s|(?=;)|$)</start>
       <include>
         <context sub-pattern="0" where="start" style-ref="preprocessor"/>
         <context ref="miscparam"/>
