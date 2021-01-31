@@ -23,6 +23,7 @@
 #include "stdbool.h"
 
 extern struct Type *const MFUNC_OBJ;
+extern struct Type *const SFUNC_OBJ;
 
 struct mfunc_param_s {
     str_t name;
@@ -44,6 +45,7 @@ typedef struct Mfunc {
     size_t ipoint;
     struct List *inamespaces;
 } Mfunc;
+typedef struct Mfunc Sfunc;
 
 extern void mfuncobj_init(void);
 #endif
