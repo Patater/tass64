@@ -20,11 +20,13 @@
 #include <string.h>
 #include "values.h"
 #include "eval.h"
+#include "error.h"
 
 #include "typeobj.h"
 #include "operobj.h"
 #include "strobj.h"
 #include "errorobj.h"
+#include "boolobj.h"
 
 static Type obj;
 
@@ -70,7 +72,29 @@ static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t ma
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *v2 = op->v2;
     if (v2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
-        return v2->obj->rcalc2(op);
+        bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX);
+        struct iter_s iter;
+        Obj *ret = NULL;
+        iter.data = v2; v2->obj->getiter(&iter);
+
+        while ((v2 = iter.next(&iter)) != NULL) {
+            Obj *val;
+            if (ret == NULL) {
+                ret = val_reference(v2);
+                continue;
+            }
+            op->v1 = ret;
+            op->v2 = v2;
+            op->inplace = (ret->refcount == 1 && !minmax) ? ret : NULL;
+            val = ret->obj->calc2(op);
+            if (minmax) {
+                if (val == &true_value->v) val_replace(&val, ret);
+                else if (val == &false_value->v) val_replace(&val, v2);
+            }
+            val_destroy(ret); ret = val;
+        }
+        iter_destroy(&iter);
+        return ret != NULL ? ret : (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint2);
     }
     switch (v2->obj->type) {
     case T_NONE:
@@ -86,7 +110,29 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *v1 = op->v1;
     if (v1->obj->iterable) {
         if (op->op != &o_IN) {
-            return v1->obj->calc2(op);
+            bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX);
+            struct iter_s iter;
+            Obj *ret = NULL;
+            iter.data = v1; v1->obj->getriter(&iter);
+
+            while ((v1 = iter.next(&iter)) != NULL) {
+                Obj *val;
+                if (ret == NULL) {
+                    ret = val_reference(v1);
+                    continue;
+                }
+                op->v1 = v1;
+                op->v2 = ret;
+                op->inplace = (ret->refcount == 1 && !minmax) ? ret : NULL;
+                val = v1->obj->calc2(op);
+                if (minmax) {
+                    if (val == &true_value->v) val_replace(&val, v1);
+                    else if (val == &false_value->v) val_replace(&val, ret);
+                }
+                val_destroy(ret); ret = val;
+            }
+            iter_destroy(&iter);
+            return ret != NULL ? ret : (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint);
         }
     }
     switch (v1->obj->type) {

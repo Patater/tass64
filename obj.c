@@ -297,6 +297,7 @@ void obj_init(Type *obj) {
     obj->len = invalid_len;
     obj->size = invalid_size;
     obj->getiter = invalid_getiter;
+    obj->getriter = invalid_getiter;
 }
 
 void objects_init(void) {
