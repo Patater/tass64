@@ -256,12 +256,15 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
             err->u.notdef.down = false;
             return &err->v;
         }
-    case T_TUPLE:
-    case T_LIST: return o2->obj->rcalc2(op);
     case T_ERROR:
     case T_NONE: return val_reference(o2);
-    default: return obj_oper_error(op);
+    default:
+        if (o2->obj->iterable) {
+            return o2->obj->rcalc2(op);
+        }
+        break;
     }
+    return obj_oper_error(op);
 }
 
 MALLOC Namespace *new_namespace(const struct file_list_s *file_list, linepos_t epoint) {

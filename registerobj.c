@@ -170,15 +170,17 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 static MUST_CHECK Obj *rcalc2(oper_t op) {
     const Type *t1 = op->v1->obj;
     switch (t1->type) {
+    default:
+        if (!t1->iterable) {
+            break;
+        }
+        /* fall through */
     case T_NONE:
     case T_ERROR:
-    case T_TUPLE:
-    case T_LIST:
         if (op->op != &o_IN) {
             return t1->calc2(op);
         }
         break;
-    default: break;
     }
     return obj_oper_error(op);
 }

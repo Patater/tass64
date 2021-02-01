@@ -1364,7 +1364,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         }
     case T_STR:
     case T_GAP:
-    case T_DICT:
         if (op->op != &o_MEMBER) {
             return o2->obj->rcalc2(op);
         }
@@ -1406,8 +1405,11 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             val_destroy(tmp);
             return result;
         }
-    case T_TUPLE:
-    case T_LIST:
+    default:
+        if (!o1->obj->iterable) {
+            break;
+        }
+        /* fall through */
     case T_STR:
     case T_NONE:
     case T_ERROR:
@@ -1415,7 +1417,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             return o1->obj->calc2(op);
         }
         break;
-    default: break;
     }
     return obj_oper_error(op);
 }
