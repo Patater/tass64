@@ -724,7 +724,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         if (p.key->obj != COLONLIST_OBJ) p.data = NULL;
         else {
             Colonlist *list = (Colonlist *)p.key;
-            if (list->len != 2 || list->data[1] == &default_value->v) {
+            if (list->len != 2 || (list->data[0] != &default_value->v && list->data[1] == &default_value->v)) {
                 err = new_error(ERROR__NOT_KEYVALUE, &v2->epoint);
                 err->u.obj = val_reference(p.key);
                 val_destroy(&dict->v);
@@ -735,7 +735,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         }
         if (p.key == &default_value->v) {
             if (dict->def != NULL) val_destroy(dict->def);
-            dict->def = (p.data == NULL) ? NULL : val_reference(p.data);
+            dict->def = (p.data == NULL || p.data == &default_value->v) ? NULL : val_reference(p.data);
             continue;
         }
         err = p.key->obj->hash(p.key, &p.hash, &v2->epoint);
