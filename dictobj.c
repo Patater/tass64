@@ -661,12 +661,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             return concat(op);
         }
         break;
-    case T_TUPLE:
-    case T_LIST:
-        if (op->op != &o_X) {
-            return o2->obj->rcalc2(op);
-        }
-        break;
     case T_ANONIDENT:
     case T_IDENT:
         if (op->op == &o_MEMBER) {
@@ -676,7 +670,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_NONE:
     case T_ERROR:
         return val_reference(o2);
-    default: break;
+    default: 
+        if (o2->obj->iterable && op->op != &o_X) {
+            return o2->obj->rcalc2(op);
+        }
+        break;
     }
     return obj_oper_error(op);
 }
@@ -695,12 +693,16 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         return truth_reference(dict_lookup(v2, &p) != NULL);
     }
     switch (o1->obj->type) {
+    default:
+        if (!o1->obj->iterable) {
+            break;
+        }
+        /* fall through */
     case T_NONE:
     case T_ERROR:
-    case T_TUPLE:
-    case T_LIST:
         return o1->obj->calc2(op);
-    default: break;
+    case T_DICT:
+        break;
     }
     return obj_oper_error(op);
 }
