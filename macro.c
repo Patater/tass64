@@ -900,8 +900,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
             if (!get_exp(0, 0, 0, &mfunc->epoint)) {
                 retval = NULL;
             } else {
-                struct linepos_s epoints[3];
-                retval = get_vals_addrlist(epoints);
+                retval = get_vals_tuple();
             }
         } else {
             section_address.moved = section_address.wrapwarn = section_address.bankwarn = section_address.unionmode = false;
