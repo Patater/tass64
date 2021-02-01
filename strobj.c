@@ -271,7 +271,7 @@ static MUST_CHECK Obj *len(oper_t op) {
     return (Obj *)int_from_size(v1->chars);
 }
 
-static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
+static FAST_CALL MUST_CHECK Obj *iter_forward(struct iter_s *v1) {
     Str *iter;
     const Str *string = (Str *)v1->data;
     unsigned int ln;
@@ -296,7 +296,37 @@ static void getiter(struct iter_s *v) {
     v->iter = val_reference(v->data);
     v->val = 0;
     v->data = val_reference(v->data);
-    v->next = next;
+    v->next = iter_forward;
+    v->len = ((Str *)v->data)->chars;
+}
+
+static FAST_CALL MUST_CHECK Obj *iter_reverse(struct iter_s *v1) {
+    Str *iter;
+    const Str *string = (Str *)v1->data;
+    unsigned int ln;
+    const uint8_t *s;
+    if (v1->val >= string->len) return NULL;
+    s = string->data + string->len - v1->val;
+    ln = 0;
+    do { s--; ln++; } while (*s >= 0x80 && *s < 0xc0);
+    v1->val += ln;
+    iter = (Str *)v1->iter;
+    if (iter->v.refcount != 1) {
+        iter->v.refcount--;
+        iter = new_str(6);
+        iter->chars = 1;
+        v1->iter = &iter->v;
+    }
+    iter->len = ln;
+    memcpy(iter->data, s, ln);
+    return &iter->v;
+}
+
+static void getriter(struct iter_s *v) {
+    v->iter = val_reference(v->data);
+    v->val = 0;
+    v->data = val_reference(v->data);
+    v->next = iter_reverse;
     v->len = ((Str *)v->data)->chars;
 }
 
@@ -978,6 +1008,7 @@ void strobj_init(void) {
     obj.function = function;
     obj.len = len;
     obj.getiter = getiter;
+    obj.getriter = getriter;
     obj.calc1 = calc1;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;

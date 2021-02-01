@@ -390,11 +390,9 @@ static MUST_CHECK Obj *len(oper_t op) {
     return (Obj *)int_from_size(v1->len);
 }
 
-static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
+static FAST_CALL MUST_CHECK Obj *iter_element(struct iter_s *v1, size_t i) {
     Colonlist *iter;
-    const struct pair_s *p;
-    if (v1->val >= v1->len) return NULL;
-    p = &((Dict *)v1->data)->data[v1->val++];
+    const struct pair_s *p = &((Dict *)v1->data)->data[i];
     if (p->data == NULL) {
         return p->key;
     }
@@ -414,11 +412,29 @@ static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
     return &iter->v;
 }
 
+static FAST_CALL MUST_CHECK Obj *iter_forward(struct iter_s *v1) {
+    if (v1->val >= v1->len) return NULL;
+    return iter_element(v1, v1->val++);
+}
+
 static void getiter(struct iter_s *v) {
     v->iter = val_reference(v->data);
     v->val = 0;
     v->data = val_reference(v->data);
-    v->next = next;
+    v->next = iter_forward;
+    v->len = ((Dict *)v->data)->len;
+}
+
+static FAST_CALL MUST_CHECK Obj *iter_reverse(struct iter_s *v1) {
+    if (v1->val >= v1->len) return NULL;
+    return iter_element(v1, v1->len - ++v1->val);
+}
+
+static void getriter(struct iter_s *v) {
+    v->iter = val_reference(v->data);
+    v->val = 0;
+    v->data = val_reference(v->data);
+    v->next = iter_reverse;
     v->len = ((Dict *)v->data)->len;
 }
 
@@ -762,6 +778,7 @@ void dictobj_init(void) {
     obj.hash = hash;
     obj.len = len;
     obj.getiter = getiter;
+    obj.getriter = getriter;
     obj.repr = repr;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;

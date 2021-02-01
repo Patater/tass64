@@ -821,26 +821,42 @@ static MUST_CHECK Obj *len(oper_t op) {
     return (Obj *)int_from_size(byteslen(v1));
 }
 
-static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
-    Bytes *iter;
+static FAST_CALL MUST_CHECK Obj *iter_element(struct iter_s *v1, size_t i) {
+    Bytes *iter = (Bytes *)v1->iter;
     const Bytes *vv1 = (Bytes *)v1->data;
-    if (v1->val >= v1->len) return NULL;
-    iter = (Bytes *)v1->iter;
     if (iter->v.refcount != 1) {
         iter->v.refcount--;
         iter = new_bytes(1);
         v1->iter = &iter->v;
         iter->len = (vv1->len < 0) ? ~1 : 1;
     }
-    iter->data[0] = vv1->data[v1->val++];
+    iter->data[0] = vv1->data[i];
     return &iter->v;
+}
+
+static FAST_CALL MUST_CHECK Obj *iter_forward(struct iter_s *v1) {
+    if (v1->val >= v1->len) return NULL;
+    return iter_element(v1, v1->val++);
 }
 
 static void getiter(struct iter_s *v) {
     v->iter = val_reference(v->data);
     v->val = 0;
     v->data = val_reference(v->data);
-    v->next = next;
+    v->next = iter_forward;
+    v->len = byteslen((Bytes *)v->data);
+}
+
+static FAST_CALL MUST_CHECK Obj *iter_reverse(struct iter_s *v1) {
+    if (v1->val >= v1->len) return NULL;
+    return iter_element(v1, v1->len - ++v1->val);
+}
+
+static void getriter(struct iter_s *v) {
+    v->iter = val_reference(v->data);
+    v->val = 0;
+    v->data = val_reference(v->data);
+    v->next = iter_reverse;
     v->len = byteslen((Bytes *)v->data);
 }
 
@@ -1439,6 +1455,7 @@ void bytesobj_init(void) {
     obj.function = function;
     obj.len = len;
     obj.getiter = getiter;
+    obj.getriter = getriter;
     obj.calc1 = calc1;
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;

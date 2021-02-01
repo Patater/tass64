@@ -316,7 +316,7 @@ static MUST_CHECK Obj *len(oper_t op) {
     return (Obj *)int_from_size(v1->len);
 }
 
-static FAST_CALL MUST_CHECK Obj *next(struct iter_s *v1) {
+static FAST_CALL MUST_CHECK Obj *iter_forward(struct iter_s *v1) {
     if (v1->val >= v1->len) return NULL;
     return ((List *)v1->data)->data[v1->val++];
 }
@@ -325,7 +325,20 @@ static void getiter(struct iter_s *v) {
     v->iter = NULL;
     v->val = 0;
     v->data = val_reference(v->data);
-    v->next = next;
+    v->next = iter_forward;
+    v->len = ((List *)v->data)->len;
+}
+
+static FAST_CALL MUST_CHECK Obj *iter_reverse(struct iter_s *v1) {
+    if (v1->val >= v1->len) return NULL;
+    return ((List *)v1->data)->data[v1->len - ++v1->val];
+}
+
+static void getriter(struct iter_s *v) {
+    v->iter = NULL;
+    v->val = 0;
+    v->data = val_reference(v->data);
+    v->next = iter_reverse;
     v->len = ((List *)v->data)->len;
 }
 
@@ -686,7 +699,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (o2 == &none_value->v || o2->obj == ERROR_OBJ) return val_reference(o2);
         return repeat(op);
     }
-    if (op->op == &o_IN) {
+    if (op->op == &o_IN || o2->obj == FOLD_OBJ) {
         return o2->obj->rcalc2(op);
     }
     if (o2->obj == TUPLE_OBJ || o2->obj == LIST_OBJ) {
@@ -694,28 +707,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     }
     if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
         return val_reference(o2);
-    }
-    if (o2->obj == FOLD_OBJ) {
-        if (v1->len != 0) {
-            Obj *val;
-            bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX);
-            val = val_reference(v1->data[v1->len - 1]);
-            for (i = 1; i < v1->len; i++) {
-                Obj *oo1 = v1->data[v1->len - i - 1];
-                Obj *oo2 = val;
-                op->v1 = oo1;
-                op->v2 = oo2;
-                op->inplace = (val->refcount == 1 && !minmax) ? val : NULL;
-                val = op->v1->obj->calc2(op);
-                if (minmax) {
-                    if (val == &true_value->v) val_replace(&val, oo1);
-                    else if (val == &false_value->v) val_replace(&val, oo2);
-                }
-                val_destroy(oo2);
-            }
-            return val;
-        }
-        return (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint);
     }
     if (v1->len != 0) {
         bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o1);
@@ -774,30 +765,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
         return calc2_list(op);
     }
-    if (o1 == &none_value->v || o1->obj == ERROR_OBJ) {
+    if (o1 == &none_value->v || o1->obj == ERROR_OBJ || o1->obj == FOLD_OBJ) {
         return o1->obj->calc2(op);
-    }
-    if (o1->obj == FOLD_OBJ) {
-        if (v2->len != 0) {
-            Obj *val;
-            bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX);
-            val = val_reference(v2->data[0]);
-            for (i = 1; i < v2->len; i++) {
-                Obj *oo1 = val;
-                Obj *oo2 = v2->data[i];
-                op->v1 = oo1;
-                op->v2 = oo2;
-                op->inplace = (val->refcount == 1 && !minmax) ? val : NULL;
-                val = op->v1->obj->calc2(op);
-                if (minmax) {
-                    if (val == &true_value->v) val_replace(&val, oo1);
-                    else if (val == &false_value->v) val_replace(&val, oo2);
-                }
-                val_destroy(oo1);
-            }
-            return val;
-        }
-        return (Obj *)new_error(ERROR____EMPTY_LIST, op->epoint2);
     }
     if (v2->len != 0) {
         bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o2);
@@ -839,6 +808,7 @@ static void init(Type *obj) {
     obj->hash = hash;
     obj->len = len;
     obj->getiter = getiter;
+    obj->getriter = getriter;
     obj->calc1 = calc1;
     obj->calc2 = calc2;
     obj->rcalc2 = rcalc2;
