@@ -533,7 +533,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     return &str->v;
 }
 
-static MUST_CHECK Obj *findit(Dict *v1, Obj *o2, linepos_t epoint) {
+static MUST_CHECK Obj *findit(const Dict *v1, Obj *o2, linepos_t epoint) {
     if (v1->len != 0) {
         Error *err;
         const struct pair_s *p;
@@ -548,6 +548,69 @@ static MUST_CHECK Obj *findit(Dict *v1, Obj *o2, linepos_t epoint) {
         return val_reference(v1->def);
     }
     return (Obj *)new_error_obj(ERROR_____KEY_ERROR, o2, epoint);
+}
+
+static MUST_CHECK Error *indexof(const Dict *v1, Obj *o2, ival_t *r, linepos_t epoint) {
+    if (v1->len != 0) {
+        Error *err;
+        const struct pair_s *p;
+        struct pair_s pair;
+        pair.key = o2;
+        err = o2->obj->hash(o2, &pair.hash, epoint);
+        if (err != NULL) return err;
+        p = dict_lookup(v1, &pair);
+        if (p != NULL) {
+            *r = p - v1->data;
+            return NULL;
+        }
+    }
+    return new_error_obj(ERROR_____KEY_ERROR, o2, epoint);
+}
+
+static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, size_t len2, uval_t *olen, ival_t *offs2, ival_t *end2, ival_t *step2, linepos_t epoint) {
+    Error *err;
+    ival_t len, offs, end, step = 1;
+
+    if (len2 >= (1U << (8 * sizeof(ival_t) - 1))) return (Obj *)new_error_mem(epoint); /* overflow */
+    len = (ival_t)len2;
+    if (v2->len > 3 || v2->len < 1) {
+        return (Obj *)new_error_argnum(v2->len, 1, 3, epoint);
+    }
+    end = len;
+    if (v2->len > 2) {
+        if (v2->data[2] != &default_value->v) {
+            err = v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint);
+            if (err != NULL) return &err->v;
+            if (step == 0) {
+                return (Obj *)new_error(ERROR_NO_ZERO_VALUE, epoint);
+            }
+        }
+    }
+    if (v2->len > 1) {
+        if (v2->data[1] == &default_value->v) end = (step > 0) ? len : -1;
+        else {
+            err = indexof(v1, v2->data[1], &end, epoint);
+            if (err != NULL) return &err->v;
+        }
+    } else end = len;
+    if (v2->data[0] == &default_value->v) offs = (step > 0) ? 0 : len - 1;
+    else {
+        err = indexof(v1, v2->data[0], &offs, epoint);
+        if (err != NULL) return &err->v;
+    }
+
+    if (step > 0) {
+        if (offs > end) offs = end;
+        *olen = (uval_t)(end - offs + step - 1) / (uval_t)step;
+    } else {
+        if (end > offs) end = offs;
+        *olen = (uval_t)(offs - end - step - 1) / (uval_t)-step;
+    }
+
+    *offs2 = offs;
+    *end2 = end;
+    *step2 = step;
+    return NULL;
 }
 
 static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
@@ -589,6 +652,48 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         }
         iter_destroy(&iter);
         v->len = i;
+        return &v->v;
+    }
+    if (o2->obj == COLONLIST_OBJ) {
+        uval_t length = 0, i;
+        ival_t offs, end, step;
+        Dict *v;
+        Error *err = (Error *)dictsliceparams(v1, (Colonlist *)o2, v1->len, &length, &offs, &end, &step, epoint2);
+        if (err != NULL) return &err->v;
+
+        if (length == 0) {
+            return val_reference((v1->v.obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
+        }
+
+        if (step == 1 && length == v1->len && v1->def == NULL && !more) {
+            return val_reference(&v1->v); /* original tuple */
+        }
+        v = new_dict(length);
+        if (v == NULL) return (Obj *)new_error_mem(epoint2); /* overflow */
+        v->def = NULL;
+        for (i = 0; i < length; i++) {
+            struct pair_s *p = &v->data[i];
+            if (v1->data[offs].data == NULL) {
+                if (more) {
+                    v->len = i;
+                    val_destroy(&v->v);
+                    return (Obj *)new_error_obj(ERROR_____KEY_ERROR, v1->data[offs].key, epoint2);
+                }
+                p->data = NULL;
+            } else {
+                if (more) {
+                    op->v1 = v1->data[offs].data;
+                    p->data = op->v1->obj->slice(op, indx + 1);
+                } else {
+                    p->data = val_reference(v1->data[offs].data);
+                }
+            }
+            p->hash = v1->data[offs].hash;
+            p->key = val_reference(v1->data[offs].key);
+            offs += step;
+        }
+        v->len = i;
+        reindex(v);
         return &v->v;
     }
 
