@@ -131,9 +131,10 @@ static FAST_CALL void garbage(Obj *o1, int j) {
 
 static struct oper_s pair_oper;
 
-static bool rpair_equal(Obj *o1, Obj *o2) {
+static bool equal(Obj *, Obj *);
+
+static bool iter_equal(Obj *o1, Obj *o2) {
     bool h;
-    Obj *result;
     struct iter_s iter1;
     struct iter_s iter2;
     iter1.data = o1; o1->obj->getiter(&iter1);
@@ -149,37 +150,31 @@ static bool rpair_equal(Obj *o1, Obj *o2) {
             h = false;
             break;
         }
-        if (o1->obj->iterable || o2->obj->iterable) {
-            h = o1->obj->iterable && o2->obj->iterable && rpair_equal(o1, o2);
-        } else {
-            pair_oper.v1 = o1;
-            pair_oper.v2 = o2;
-            pair_oper.inplace = NULL;
-            result = o1->obj->calc2(&pair_oper);
-            h = (result == &true_value->v);
-            val_destroy(result);
-        }
+        h = equal(o1, o2);
     } while (h);
     iter_destroy(&iter2);
     iter_destroy(&iter1);
     return h;
 }
 
-static bool pair_equal(const struct pair_s *a, const struct pair_s *b)
-{
-    Obj *result;
+static bool equal(Obj *o1, Obj *o2) {
     bool h;
-    if (a->hash != b->hash) return false;
-    if (a->key->obj->iterable || b->key->obj->iterable) {
-        return a->key->obj->iterable && b->key->obj->iterable && rpair_equal(a->key, b->key);
+    Obj *result;
+    if (o1->obj->iterable || o2->obj->iterable) {
+        return o1->obj->iterable && o2->obj->iterable && iter_equal(o1, o2);
     }
-    pair_oper.v1 = a->key;
-    pair_oper.v2 = b->key;
+    pair_oper.v1 = o1;
+    pair_oper.v2 = o2;
     pair_oper.inplace = NULL;
-    result = pair_oper.v1->obj->calc2(&pair_oper);
+    result = o1->obj->calc2(&pair_oper);
     h = (result == &true_value->v);
     val_destroy(result);
     return h;
+}
+
+static bool pair_equal(const struct pair_s *a, const struct pair_s *b)
+{
+    return a->hash == b->hash && equal(a->key, b->key);
 }
 
 static void dict_update(Dict *dict, const struct pair_s *p) {

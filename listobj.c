@@ -659,7 +659,6 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, uval_t *olen, ival
     return NULL;
 }
 
-
 static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Obj **vals;
     Obj *o2 = op->v2;
