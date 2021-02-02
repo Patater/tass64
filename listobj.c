@@ -599,6 +599,67 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     return (Obj *)new_error_mem(op->epoint3);
 }
 
+MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, uval_t *olen, ival_t *offs2, ival_t *end2, ival_t *step2, linepos_t epoint) {
+    Error *err;
+    ival_t len, offs, end, step = 1;
+
+    if (len2 >= (1U << (8 * sizeof(ival_t) - 1))) return (Obj *)new_error_mem(epoint); /* overflow */
+    len = (ival_t)len2;
+    if (v2->len > 3 || v2->len < 1) {
+        return (Obj *)new_error_argnum(v2->len, 1, 3, epoint);
+    }
+    end = len;
+    if (v2->len > 2) {
+        if (v2->data[2] != &default_value->v) {
+            err = v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint);
+            if (err != NULL) return &err->v;
+            if (step == 0) {
+                return (Obj *)new_error(ERROR_NO_ZERO_VALUE, epoint);
+            }
+        }
+    }
+    if (v2->len > 1) {
+        if (v2->data[1] == &default_value->v) end = (step > 0) ? len : -1;
+        else {
+            err = v2->data[1]->obj->ival(v2->data[1], &end, 8 * sizeof end, epoint);
+            if (err != NULL) return &err->v;
+            if (end >= 0) {
+                if (end > len) end = len;
+            } else {
+                end += len;
+                if (end < -1) end = -1;
+            }
+        }
+    } else end = len;
+    if (v2->data[0] == &default_value->v) offs = (step > 0) ? 0 : len - 1;
+    else {
+        ival_t minus;
+        err = v2->data[0]->obj->ival(v2->data[0], &offs, 8 * sizeof offs, epoint);
+        if (err != NULL) return &err->v;
+        minus = (step < 0) ? -1 : 0;
+        if (offs >= 0) {
+            if (offs > len + minus) offs = len + minus;
+        } else {
+            offs += len;
+        }
+        if (offs < minus) offs = minus;
+    }
+
+    if (step > 0) {
+        if (offs > end) offs = end;
+        *olen = (uval_t)(end - offs + step - 1) / (uval_t)step;
+    } else {
+        if (end > offs) end = offs;
+        *olen = (uval_t)(offs - end - step - 1) / (uval_t)-step;
+    }
+
+    *offs2 = offs;
+    *end2 = end;
+    *step2 = step;
+    return NULL;
+}
+
+
 static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Obj **vals;
     Obj *o2 = op->v2;

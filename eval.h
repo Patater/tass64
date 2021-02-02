@@ -22,7 +22,6 @@
 #include "inttypes.h"
 #include "stdbool.h"
 
-struct List;
 struct Label;
 struct Oper;
 struct Obj;
@@ -53,7 +52,6 @@ extern MUST_CHECK struct Obj *get_star(void);
 extern struct Obj *get_vals_tuple(void);
 extern struct Obj *get_vals_addrlist(struct linepos_s *);
 extern MUST_CHECK struct Error *indexoffs(struct Obj *, size_t, size_t *, linepos_t);
-extern MUST_CHECK struct Obj *sliceparams(const struct List *, size_t, uval_t *, ival_t *, ival_t *, ival_t *, linepos_t);
 extern void touch_label(struct Label *);
 
 struct values_s {
