@@ -139,20 +139,21 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
 }
 
 static inline int icmp(oper_t op) {
-    str_t *v1 = &((Ident *)op->v1)->cfname, *v2 = &((Ident *)op->v2)->cfname;
+    Ident *v1 = (Ident *)op->v1, *v2 = (Ident *)op->v2;
+    str_t *n1 = &v1->cfname, *n2 = &v2->cfname;
     int h;
-    if (v1->data == NULL) {
-        str_cfcpy(v1, &((Ident *)op->v1)->name);
-        if (v1->data != ((Ident *)op->v1)->name.data) str_cfcpy(v1, NULL);
+    if (n1->data == NULL) {
+        str_cfcpy(n1, &v1->name);
+        if (n1->data != v1->name.data) str_cfcpy(n1, NULL);
     }
-    if (v2->data == NULL) {
-        str_cfcpy(v2, &((Ident *)op->v2)->name);
-        if (v2->data != ((Ident *)op->v2)->name.data) str_cfcpy(v2, NULL);
+    if (n2->data == NULL) {
+        str_cfcpy(n2, &v2->name);
+        if (n2->data != v2->name.data) str_cfcpy(n2, NULL);
     }
-    h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
+    h = memcmp(n1->data, n2->data, (n1->len < n2->len) ? n1->len : n2->len);
     if (h != 0) return h;
-    if (v1->len < v2->len) return -1;
-    return (v1->len > v2->len) ? 1 : 0;
+    if (n1->len < n2->len) return -1;
+    return (n1->len > n2->len) ? 1 : 0;
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
