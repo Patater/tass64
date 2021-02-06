@@ -737,26 +737,6 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
     return true;
 }
 
-MUST_CHECK Error *indexoffs(Obj *v1, size_t len, size_t *offs, linepos_t epoint) {
-    ival_t ival;
-    Error *err = v1->obj->ival(v1, &ival, 8 * sizeof ival, epoint);
-    if (err != NULL) return err;
-
-    if (ival >= 0) {
-        if ((uval_t)ival < len) {
-            *offs = (uval_t)ival;
-            return NULL;
-        }
-    } else {
-        ival = -ival;
-        if ((uval_t)ival <= len) {
-            *offs = len - (uval_t)ival;
-            return NULL;
-        }
-    }
-    return new_error_obj(ERROR___INDEX_RANGE, v1, epoint);
-}
-
 static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace) {
     if (o1->obj->iterable) {
         struct iter_s iter;
