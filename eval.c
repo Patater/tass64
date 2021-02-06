@@ -1320,6 +1320,12 @@ static bool get_exp2(int stop) {
                     push_oper((Obj *)new_anonident((ident.data[0] == '+') ? (ident.len - 1) : -ident.len), &epoint);
                     goto other;
                 }
+                if (ident.data[0] == '*') {
+                    lpoint.pos += 2;
+                    ident.len = 1;
+                    push_oper((Obj *)new_ident(&ident, &epoint), &epoint);
+                    goto other;
+                }
                 if (ident.data[0] == '(') { lpoint.pos++; identlist++; goto tphack2; }
                 if (ident.data[0] == '[') { lpoint.pos++; identlist++; goto lshack2; }
                 goto tryanon;
