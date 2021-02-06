@@ -267,7 +267,8 @@ context default lightgray
     keyword ] white
     keyword { white
     keyword } white
-    keyword . white
+    keyword \.\. white
+    keyword \. white
     keyword , white
     keyword : white
     keyword - white
