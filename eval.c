@@ -1225,29 +1225,29 @@ static bool get_exp2(int stop) {
             continue;
         case ')':
             if (opr.p != 0) {
-                const Oper *o = opr.data[opr.p - 1].val;
-                if (o == &o_COMMA) {opr.p--;op = &o_TUPLE;goto tphack;}
-                else if (o == &o_PARENT || o == &o_FUNC) goto other;
+                Oper_types o = opr.data[opr.p - 1].val->op;
+                if (o == O_COMMA) {opr.p--;op = &o_TUPLE;goto tphack;}
+                else if (o == O_PARENT || o == O_FUNC) goto other;
             }
             goto tryanon;
         case ']':
             if (opr.p != 0) {
-                const Oper *o = opr.data[opr.p - 1].val;
-                if (o == &o_COMMA) {opr.p--;op = &o_LIST;goto lshack;}
-                else if (o == &o_BRACKET || o == &o_INDEX) goto other;
+                Oper_types o = opr.data[opr.p - 1].val->op;
+                if (o == O_COMMA) {opr.p--;op = &o_LIST;goto lshack;}
+                else if (o == O_BRACKET || o == O_INDEX) goto other;
             }
             goto tryanon;
         case '}':
             if (opr.p != 0) {
-                const Oper *o = opr.data[opr.p - 1].val;
-                if (o == &o_COMMA) {opr.p--;op = &o_DICT;goto brhack;}
-                else if (o == &o_BRACE) goto other;
+                Oper_types o = opr.data[opr.p - 1].val->op;
+                if (o == O_COMMA) {opr.p--;op = &o_DICT;goto brhack;}
+                else if (o == O_BRACE) goto other;
             }
             goto tryanon;
         case ':':
             if (opr.p != 0) {
-                const Oper *o = opr.data[opr.p - 1].val;
-                if (o != &o_PARENT && o != &o_BRACKET && o != &o_BRACE && o != &o_FUNC && o != &o_INDEX && o != &o_COMMA) goto tryanon;
+                Oper_types o = opr.data[opr.p - 1].val->op;
+                if (o != O_PARENT && o != O_BRACKET && o != O_BRACE && o != O_FUNC && o != O_INDEX && o != O_COMMA) goto tryanon;
             }
             push_oper((Obj *)ref_default(), &epoint);
             goto other;
@@ -1293,8 +1293,8 @@ static bool get_exp2(int stop) {
         case '\'': push_oper(get_string(&epoint), &epoint);goto other;
         case '?':
             if (opr.p != 0) {
-                const Oper *o = opr.data[opr.p - 1].val;
-                if (o == &o_SPLAT || o == &o_POS || o == &o_NEG) goto tryanon;
+                Oper_types o = opr.data[opr.p - 1].val->op;
+                if (o == O_SPLAT || o == O_POS || o == O_NEG) goto tryanon;
             }
             lpoint.pos++;push_oper((Obj *)ref_gap(), &epoint);goto other;
         case '.':
