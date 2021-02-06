@@ -599,6 +599,26 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     return (Obj *)new_error_mem(op->epoint3);
 }
 
+MUST_CHECK Error *indexoffs(Obj *v1, size_t len, size_t *offs, linepos_t epoint) {
+    ival_t ival;
+    Error *err = v1->obj->ival(v1, &ival, 8 * sizeof ival, epoint);
+    if (err != NULL) return err;
+
+    if (ival >= 0) {
+        if ((uval_t)ival < len) {
+            *offs = (uval_t)ival;
+            return NULL;
+        }
+    } else {
+        ival = -ival;
+        if ((uval_t)ival <= len) {
+            *offs = len - (uval_t)ival;
+            return NULL;
+        }
+    }
+    return new_error_obj(ERROR___INDEX_RANGE, v1, epoint);
+}
+
 MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_s *s, linepos_t epoint) {
     Error *err;
     ival_t len, offs, end, step = 1;
@@ -706,8 +726,8 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
                 vals[i] = val_reference(v1->data[offs2]);
             }
         }
-        iter_destroy(&iter);
         v->len = i;
+        iter_destroy(&iter);
         return &v->v;
     }
     if (o2->obj == COLONLIST_OBJ) {

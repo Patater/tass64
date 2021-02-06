@@ -51,7 +51,6 @@ extern MUST_CHECK struct Obj *get_star_value(address_t, struct Obj *);
 extern MUST_CHECK struct Obj *get_star(void);
 extern struct Obj *get_vals_tuple(void);
 extern struct Obj *get_vals_addrlist(struct linepos_s *);
-extern MUST_CHECK struct Error *indexoffs(struct Obj *, size_t, size_t *, linepos_t);
 extern void touch_label(struct Label *);
 
 struct values_s {
