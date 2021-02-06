@@ -28,7 +28,8 @@ struct file_list_s;
 typedef struct Ident {
     Obj v;
     str_t name;
-    uint8_t val[16];
+    str_t cfname;
+    int hash;
     const struct file_list_s *file_list;
 } Ident;
 
