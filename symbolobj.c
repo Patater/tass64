@@ -16,7 +16,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-#include "identobj.h"
+#include "symbolobj.h"
 #include <string.h>
 #include "eval.h"
 #include "unicode.h"
@@ -32,20 +32,20 @@
 
 static Type obj;
 
-Type *const IDENT_OBJ = &obj;
+Type *const SYMBOL_OBJ = &obj;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR:
-    case T_IDENT: return val_reference(v1);
+    case T_SYMBOL: return val_reference(v1);
     default: break;
     }
-    return (Obj *)new_error_conv(v1, IDENT_OBJ, epoint);
+    return (Obj *)new_error_conv(v1, SYMBOL_OBJ, epoint);
 }
 
-Ident *new_ident(const str_t *name, linepos_t epoint) {
-    Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
+Symbol *new_symbol(const str_t *name, linepos_t epoint) {
+    Symbol *idn = (Symbol *)val_alloc(SYMBOL_OBJ);
     if ((size_t)(name->data - current_file_list->file->data) < current_file_list->file->len) idn->name = *name;
     else str_cpy(&idn->name, name);
     idn->cfname.data = NULL;
@@ -56,33 +56,33 @@ Ident *new_ident(const str_t *name, linepos_t epoint) {
     return idn;
 }
 
-static FAST_CALL NO_INLINE void ident_destroy(Ident *v1) {
+static FAST_CALL NO_INLINE void symbol_destroy(Symbol *v1) {
     free((char *)v1->name.data);
 }
 
-static FAST_CALL NO_INLINE bool ident_same(const Ident *v1, const Ident *v2) {
+static FAST_CALL NO_INLINE bool symbol_same(const Symbol *v1, const Symbol *v2) {
     return memcmp(v1->name.data, v2->name.data, v2->name.len) == 0;
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Ident *v1 = (const Ident *)o1, *v2 = (const Ident *)o2;
+    const Symbol *v1 = (const Symbol *)o1, *v2 = (const Symbol *)o2;
     if (o1->obj != o2->obj || v1->name.len != v2->name.len) return false;
     switch (v1->name.len) {
     case 0: return true;
     case 1: return v1->name.data[0] == v2->name.data[0];
-    default: return v1->name.data == v2->name.data || ident_same(v1, v2);
+    default: return v1->name.data == v2->name.data || symbol_same(v1, v2);
     }
 }
 
 static FAST_CALL void destroy(Obj *o1) {
-    Ident *v1 = (Ident *)o1;
+    Symbol *v1 = (Symbol *)o1;
     const struct file_s *cfile = v1->file_list->file;
-    if ((size_t)(v1->name.data - cfile->data) >= cfile->len) ident_destroy(v1);
+    if ((size_t)(v1->name.data - cfile->data) >= cfile->len) symbol_destroy(v1);
     if (v1->cfname.data != NULL && v1->name.data != v1->cfname.data) free((uint8_t *)v1->cfname.data);
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Ident *v1 = (Ident *)o1;
+    Symbol *v1 = (Symbol *)o1;
     size_t chars;
     Str *v;
     size_t len;
@@ -100,7 +100,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Ident *v1 = (Ident *)o1;
+    Symbol *v1 = (Symbol *)o1;
     Str *v;
     size_t chars = calcpos(v1->name.data, v1->name.len);
     if (chars > maxsize) return NULL;
@@ -112,7 +112,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Ident *v1 = (Ident *)o1;
+    Symbol *v1 = (Symbol *)o1;
     str_t s = v1->cfname;
     size_t l;
     unsigned int h;
@@ -125,8 +125,8 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
         return NULL;
     }
     if (s.data == NULL) {
-        str_cfcpy(&s, &((Ident *)o1)->name);
-        if (s.data != ((Ident *)o1)->name.data) str_cfcpy(&s, NULL);
+        str_cfcpy(&s, &((Symbol *)o1)->name);
+        if (s.data != ((Symbol *)o1)->name.data) str_cfcpy(&s, NULL);
     }
     h = (unsigned int)*s.data << 7;
     l = s.len;
@@ -139,7 +139,7 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
 }
 
 static inline int icmp(oper_t op) {
-    Ident *v1 = (Ident *)op->v1, *v2 = (Ident *)op->v2;
+    Symbol *v1 = (Symbol *)op->v1, *v2 = (Symbol *)op->v2;
     str_t *n1 = &v1->cfname, *n2 = &v2->cfname;
     int h;
     if (n1->data == NULL) {
@@ -160,9 +160,9 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     int i;
     switch (o2->obj->type) {
-    case T_IDENT:
+    case T_SYMBOL:
         i = icmp(op);
-        if (i == 0 && diagnostics.case_symbol && str_cmp(&((Ident *)op->v1)->name, &((Ident *)o2)->name) != 0) err_msg_symbol_case2((Ident *)op->v1, (Ident *)o2);
+        if (i == 0 && diagnostics.case_symbol && str_cmp(&((Symbol *)op->v1)->name, &((Symbol *)o2)->name) != 0) err_msg_symbol_case2((Symbol *)op->v1, (Symbol *)o2);
         return obj_oper_compare(op, i);
     case T_NONE:
     case T_ERROR:
@@ -183,8 +183,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     return obj_oper_error(op);
 }
 
-void identobj_init(void) {
-    new_type(&obj, T_IDENT, "ident", sizeof(Ident));
+void symbolobj_init(void) {
+    new_type(&obj, T_SYMBOL, "symbol", sizeof(Symbol));
     obj.create = create;
     obj.destroy = destroy;
     obj.same = same;

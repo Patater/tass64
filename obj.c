@@ -43,8 +43,8 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "mfuncobj.h"
-#include "identobj.h"
-#include "anonidentobj.h"
+#include "symbolobj.h"
+#include "anonsymbolobj.h"
 #include "memblocksobj.h"
 #include "foldobj.h"
 
@@ -323,8 +323,8 @@ void objects_init(void) {
     typeobj_init();
     noneobj_init();
     mfuncobj_init();
-    identobj_init();
-    anonidentobj_init();
+    symbolobj_init();
+    anonsymbolobj_init();
     foldobj_init();
 
     new_type(&lbl_obj, T_LBL, "lbl", sizeof(Lbl));

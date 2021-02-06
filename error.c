@@ -38,7 +38,7 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "noneobj.h"
-#include "identobj.h"
+#include "symbolobj.h"
 #include "console.h"
 
 struct file_list_s *current_file_list;
@@ -712,8 +712,8 @@ static void err_msg_not_defined3(const Error *err) {
         lastnd = (struct notdefines_s *)mallocx(sizeof *lastnd);
     }
 
-    if (err->u.notdef.ident->obj == IDENT_OBJ) {
-        const str_t *name = &((Ident *)err->u.notdef.ident)->name;
+    if (err->u.notdef.symbol->obj == SYMBOL_OBJ) {
+        const str_t *name = &((Symbol *)err->u.notdef.symbol)->name;
         str_cfcpy(&lastnd->cfname, name);
         lastnd->file_list = l->file_list;
         lastnd->epoint = l->epoint;
@@ -734,7 +734,7 @@ static void err_msg_not_defined3(const Error *err) {
 
     more = new_error_msg_err(err);
     adderror("not defined ");
-    err_msg_variable(err->u.notdef.ident);
+    err_msg_variable(err->u.notdef.symbol);
     if (more) new_error_msg_err_more(err);
 
     if (l->file_list == NULL) {
@@ -752,7 +752,7 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     Error *err = new_error(ERROR___NOT_DEFINED, epoint);
     err->u.notdef.down = down;
     err->u.notdef.names = ref_namespace(l);
-    err->u.notdef.ident = (Obj *)new_ident(name, epoint);
+    err->u.notdef.symbol = (Obj *)new_symbol(name, epoint);
     err_msg_not_defined3(err);
     val_destroy(&err->v);
 }
@@ -1033,7 +1033,7 @@ void err_msg_symbol_case(const str_t *labelname1, const Label *l, linepos_t epoi
     if (l != NULL) err_msg_double_note(l->file_list, &l->epoint, &l->name);
 }
 
-void err_msg_symbol_case2(const Ident *l1, const Ident *l2) {
+void err_msg_symbol_case2(const Symbol *l1, const Symbol *l2) {
     Severity_types severity = diagnostic_errors.case_symbol ? SV_ERROR : SV_WARNING;
     bool more = new_error_msg(severity, l1->file_list, &l1->epoint);
     adderror("symbol case mismatch");

@@ -16,24 +16,29 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-#ifndef ANONIDENTOBJ_H
-#define ANONIDENTOBJ_H
+#ifndef SYMBOLOBJ_H
+#define SYMBOLOBJ_H
 #include "obj.h"
+#include "str.h"
 
-extern struct Type *const ANONIDENT_OBJ;
+extern struct Type *const SYMBOL_OBJ;
 
 struct file_list_s;
 
-typedef struct Anonident {
+typedef struct Symbol {
     Obj v;
-    int32_t count;
-} Anonident;
+    str_t name;
+    str_t cfname;
+    int hash;
+    const struct file_list_s *file_list;
+    struct linepos_s epoint;
+} Symbol;
 
-extern void anonidentobj_init(void);
+extern void symbolobj_init(void);
 
-extern Anonident *new_anonident(int32_t);
+extern Symbol *new_symbol(const str_t *name, linepos_t);
 
-static inline Anonident *ref_anonident(Anonident *v1) {
+static inline Symbol *ref_symbol(Symbol *v1) {
     v1->v.refcount++; return v1;
 }
 #endif
