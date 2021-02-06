@@ -752,7 +752,7 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     Error *err = new_error(ERROR___NOT_DEFINED, epoint);
     err->u.notdef.down = down;
     err->u.notdef.names = ref_namespace(l);
-    err->u.notdef.ident = (Obj *)new_ident(name);
+    err->u.notdef.ident = (Obj *)new_ident(name, epoint);
     err_msg_not_defined3(err);
     val_destroy(&err->v);
 }
@@ -1025,12 +1025,22 @@ void err_msg_immediate_note(linepos_t epoint) {
     adderror("to accept signed values use the '#+' operator [-Wpitfalls]");
 }
 
-void err_msg_symbol_case(const str_t *labelname1, Label *l, linepos_t epoint) {
+void err_msg_symbol_case(const str_t *labelname1, const Label *l, linepos_t epoint) {
     new_error_msg2(diagnostic_errors.case_symbol, epoint);
     adderror("symbol case mismatch");
     str_name(labelname1->data, labelname1->len);
     adderror(" [-Wcase-symbol]");
     if (l != NULL) err_msg_double_note(l->file_list, &l->epoint, &l->name);
+}
+
+void err_msg_symbol_case2(const Ident *l1, const Ident *l2) {
+    Severity_types severity = diagnostic_errors.case_symbol ? SV_ERROR : SV_WARNING;
+    bool more = new_error_msg(severity, l1->file_list, &l1->epoint);
+    if (more) new_error_msg_more();
+    adderror("symbol case mismatch");
+    str_name(l1->name.data, l1->name.len);
+    adderror(" [-Wcase-symbol]");
+    err_msg_double_note(l2->file_list, &l2->epoint, &l2->name);
 }
 
 void err_msg_macro_prefix(linepos_t epoint) {

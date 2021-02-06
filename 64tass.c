@@ -1865,7 +1865,7 @@ MUST_CHECK Obj *compile(void)
                             if (tmp2->value == &none_value->v) err_msg_still_none(NULL, &epoint);
                             else if (tmp2->value->obj == ERROR_OBJ) err_msg_output((Error *)tmp2->value);
                             else {
-                                Ident *idn = new_ident(&labelname);
+                                Ident *idn = new_ident(&labelname, &epoint);
                                 err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
                                 val_destroy(&idn->v);
                             }
