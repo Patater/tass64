@@ -260,7 +260,7 @@ FAST_CALL void listing_equal(Listing *ls, Obj *val) {
         flushbuf(ls);
     }
     putc('=', ls->flist);
-    ls->c += val_print(val, ls->flist) + 1;
+    ls->c += val_print(val, ls->flist, ls->verbose ? SIZE_MAX : ls->columns.source - 2) + 1;
     printllist(ls);
     newline(ls);
 }
@@ -377,7 +377,7 @@ FAST_CALL void listing_equal2(Listing *ls, Obj *val, linecpos_t pos) {
         padding2(ls, ls->columns.addr);
     }
     putc('=', ls->flist);
-    ls->c += val_print(val, ls->flist) + 1;
+    ls->c += val_print(val, ls->flist, ls->verbose ? SIZE_MAX : ls->columns.source - 2) + 1;
     if (ls->verbose) {
         printllist(ls);
         newline(ls);
