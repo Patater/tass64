@@ -113,10 +113,10 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Symbol *v1 = (Symbol *)o1;
-    str_t s = v1->cfname;
+    str_t s;
     size_t l;
     unsigned int h;
-    if (s.len == 0) {
+    if (v1->name.len == 0) {
         *hs = 0;
         return NULL;
     }
@@ -124,10 +124,11 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
         *hs = v1->hash;
         return NULL;
     }
-    if (s.data == NULL) {
-        str_cfcpy(&s, &((Symbol *)o1)->name);
-        if (s.data != ((Symbol *)o1)->name.data) str_cfcpy(&s, NULL);
+    if (v1->cfname.data == NULL) {
+        str_cfcpy(&v1->cfname, &v1->name);
+        if (v1->cfname.data != v1->name.data) str_cfcpy(&v1->cfname, NULL);
     }
+    s = v1->cfname;
     h = (unsigned int)*s.data << 7;
     l = s.len;
     while ((l--) != 0) h = (1000003 * h) ^ *s.data++;
