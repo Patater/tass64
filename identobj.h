@@ -31,11 +31,12 @@ typedef struct Ident {
     str_t cfname;
     int hash;
     const struct file_list_s *file_list;
+    struct linepos_s epoint;
 } Ident;
 
 extern void identobj_init(void);
 
-extern Ident *new_ident(const str_t *name);
+extern Ident *new_ident(const str_t *name, linepos_t);
 
 static inline Ident *ref_ident(Ident *v1) {
     v1->v.refcount++; return v1;

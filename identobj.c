@@ -23,6 +23,7 @@
 #include "error.h"
 #include "file.h"
 #include "values.h"
+#include "arguments.h"
 
 #include "typeobj.h"
 #include "operobj.h"
@@ -43,7 +44,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     return (Obj *)new_error_conv(v1, IDENT_OBJ, epoint);
 }
 
-Ident *new_ident(const str_t *name) {
+Ident *new_ident(const str_t *name, linepos_t epoint) {
     Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
     if ((size_t)(name->data - current_file_list->file->data) < current_file_list->file->len) idn->name = *name;
     else str_cpy(&idn->name, name);
@@ -51,6 +52,7 @@ Ident *new_ident(const str_t *name) {
     idn->cfname.len = 0;
     idn->hash = -1;
     idn->file_list = current_file_list;
+    idn->epoint = *epoint;
     return idn;
 }
 
@@ -155,9 +157,12 @@ static inline int icmp(oper_t op) {
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
+    int i;
     switch (o2->obj->type) {
     case T_IDENT:
-        return obj_oper_compare(op, icmp(op));
+        i = icmp(op);
+        if (i == 0 && diagnostics.case_symbol && str_cmp(&((Ident *)op->v1)->name, &((Ident *)o2)->name) != 0) err_msg_symbol_case2((Ident *)op->v1, (Ident *)o2);
+        return obj_oper_compare(op, i);
     case T_NONE:
     case T_ERROR:
         return val_reference(o2);

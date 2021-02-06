@@ -189,6 +189,7 @@ static void dict_update(Dict *dict, const struct pair_s *p) {
         while (indexes[offs] != (uint8_t)~0) {
             d = &dict->data[indexes[offs]];
             if (p->key == d->key || pair_equal(p, d)) {
+            found:
                 if (d->data != NULL) val_destroy(d->data);
                 d->data = (p->data == NULL) ? NULL : val_reference(p->data);
                 return;
@@ -204,11 +205,7 @@ static void dict_update(Dict *dict, const struct pair_s *p) {
         size_t *indexes = (size_t *)&dict->data[dict->u.s.max];
         while (indexes[offs] != SIZE_MAX) {
             d = &dict->data[indexes[offs]];
-            if (p->key == d->key || pair_equal(p, d)) {
-                if (d->data != NULL) val_destroy(d->data);
-                d->data = (p->data == NULL) ? NULL : val_reference(p->data);
-                return;
-            }
+            if (p->key == d->key || pair_equal(p, d)) goto found;
             hash >>= 5;
             offs = (5 * offs + hash + 1) & mask;
         } 

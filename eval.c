@@ -465,7 +465,7 @@ rest:
             val = (Obj *)ref_none();
         } else {
             Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
-            err->u.notdef.ident = (Obj *)new_ident(&ident);
+            err->u.notdef.ident = (Obj *)new_ident(&ident, &epoint);
             err->u.notdef.names = ref_namespace(current_context);
             err->u.notdef.down = true;
             val = &err->v;
@@ -1311,7 +1311,7 @@ static bool get_exp2(int stop) {
                 ident.len = get_label(ident.data);
                 if (ident.len != 0) {
                     lpoint.pos += ident.len + 1;
-                    push_oper((Obj *)new_ident(&ident), &epoint);
+                    push_oper((Obj *)new_ident(&ident, &epoint), &epoint);
                     goto other;
                 }
                 if (ident.data[0] == '+' || ident.data[0] == '-') {
@@ -1377,7 +1377,7 @@ static bool get_exp2(int stop) {
                 ident.data = pline + epoint.pos;
                 ident.len = lpoint.pos - epoint.pos;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || identlist != 0) {
-                    push_oper((Obj *)new_ident(&ident), &epoint);
+                    push_oper((Obj *)new_ident(&ident, &epoint), &epoint);
                     goto other;
                 }
                 down = (ident.data[0] != '_');
@@ -1390,7 +1390,7 @@ static bool get_exp2(int stop) {
                     val = (Obj *)ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
-                    err->u.notdef.ident = (Obj *)new_ident(&ident);
+                    err->u.notdef.ident = (Obj *)new_ident(&ident, &epoint);
                     err->u.notdef.names = ref_namespace(down ? current_context : cheap_context);
                     err->u.notdef.down = down;
                     val = &err->v;
@@ -1459,7 +1459,7 @@ static bool get_exp2(int stop) {
                         str_t ident;
                         ident.data = pline + opr.data[opr.p].epoint.pos;
                         ident.len = 1;
-                        push_oper((Obj *)new_ident(&ident), &opr.data[opr.p].epoint);
+                        push_oper((Obj *)new_ident(&ident, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                         goto other;
                     }
                     push_oper(get_star(), &opr.data[opr.p].epoint);
@@ -1477,7 +1477,7 @@ static bool get_exp2(int stop) {
                 str_t ident;
                 ident.data = pline + opr.data[opr.p].epoint.pos;
                 ident.len = 1;
-                push_oper((Obj *)new_ident(&ident), &opr.data[opr.p].epoint);
+                push_oper((Obj *)new_ident(&ident, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                 goto other;
             }
             push_oper(get_star(), &opr.data[opr.p].epoint);
