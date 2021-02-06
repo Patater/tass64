@@ -107,8 +107,8 @@ floatobj.o: floatobj.c floatobj.h obj.h attributes.h inttypes.h values.h \
  operobj.h typeobj.h noneobj.h errorobj.h addressobj.h functionobj.h \
  str.h
 foldobj.o: foldobj.c foldobj.h obj.h attributes.h inttypes.h values.h \
- eval.h stdbool.h typeobj.h operobj.h oper_e.h strobj.h errorobj.h \
- errors_e.h
+ eval.h stdbool.h error.h errors_e.h typeobj.h operobj.h oper_e.h \
+ strobj.h errorobj.h boolobj.h
 functionobj.o: functionobj.c functionobj.h obj.h attributes.h inttypes.h \
  str.h math.h isnprintf.h eval.h stdbool.h variables.h error.h errors_e.h \
  file.h arguments.h instruction.h 64tass.h wait_e.h section.h avl.h \
@@ -118,9 +118,6 @@ functionobj.o: functionobj.c functionobj.h obj.h attributes.h inttypes.h \
 gapobj.o: gapobj.c gapobj.h obj.h attributes.h inttypes.h eval.h \
  stdbool.h variables.h values.h strobj.h operobj.h oper_e.h intobj.h \
  boolobj.h typeobj.h errorobj.h errors_e.h
-symbolobj.o: symbolobj.c symbolobj.h obj.h attributes.h inttypes.h str.h \
- eval.h stdbool.h unicode.h error.h errors_e.h file.h values.h typeobj.h \
- operobj.h oper_e.h strobj.h errorobj.h
 instruction.o: instruction.c instruction.h attributes.h stdbool.h \
  inttypes.h opcodes.h 64tass.h wait_e.h section.h avl.h str.h file.h \
  listing.h error.h errors_e.h longjump.h arguments.h optimizer.h \
@@ -200,6 +197,9 @@ strobj.o: strobj.c strobj.h obj.h attributes.h inttypes.h stdbool.h \
  eval.h unicode.h error.h errors_e.h variables.h arguments.h str.h \
  boolobj.h bytesobj.h oper_e.h intobj.h bitsobj.h listobj.h values.h \
  operobj.h typeobj.h noneobj.h errorobj.h
+symbolobj.o: symbolobj.c symbolobj.h obj.h attributes.h inttypes.h str.h \
+ eval.h stdbool.h unicode.h error.h errors_e.h file.h values.h \
+ arguments.h typeobj.h operobj.h oper_e.h strobj.h errorobj.h
 ternary.o: ternary.c ternary.h stdbool.h inttypes.h unicode.h \
  attributes.h error.h errors_e.h
 typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
