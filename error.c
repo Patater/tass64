@@ -361,7 +361,7 @@ static const char * const terr_error[] = {
     "requirements not met",
     "conflict",
     "index out of range ",
-    "key error ",
+    "key not in dictionary ",
     "offset out of range",
     "not hashable ",
     "not a key and value pair ",

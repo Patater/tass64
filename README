@@ -3842,7 +3842,7 @@ redirect them to a file append `2>filename.log' after the command or use the `
 The faulty line will be displayed after the message with a caret pointing to
 the error location unless this is disabled by using `--no-caret-diag' option.
 
-a.asm:3:21: error: not defined ident 'label'
+a.asm:3:21: error: not defined symbol 'label'
                  lda label
                      ^
 a.asm:3:21: note: searched in the global scope
@@ -3855,7 +3855,7 @@ after an `In file included from' text where all the files and positions
 involved are listed down to the main file.
 
 In file included from main.asm:3:3:
-included.asm:2:11: error: not defined ident 'test'
+included.asm:2:11: error: not defined symbol 'test'
                 #macro1 test
                         ^
 In file included from included.asm:2:3,
@@ -4044,7 +4044,7 @@ general syntax
     can't do anything with this
 index out of range
     not enough elements in list
-key error
+key not in dictionary
     key not in the dictionary
 label required
     a label is mandatory for this directive
