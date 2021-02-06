@@ -599,7 +599,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     return (Obj *)new_error_mem(op->epoint3);
 }
 
-MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, uval_t *olen, ival_t *offs2, ival_t *end2, ival_t *step2, linepos_t epoint) {
+MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_s *s, linepos_t epoint) {
     Error *err;
     ival_t len, offs, end, step = 1;
 
@@ -647,15 +647,15 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, uval_t *olen, ival
 
     if (step > 0) {
         if (offs > end) offs = end;
-        *olen = (uval_t)(end - offs + step - 1) / (uval_t)step;
+        s->length = (uval_t)(end - offs + step - 1) / (uval_t)step;
     } else {
         if (end > offs) end = offs;
-        *olen = (uval_t)(offs - end - step - 1) / (uval_t)-step;
+        s->length = (uval_t)(offs - end - step - 1) / (uval_t)-step;
     }
 
-    *offs2 = offs;
-    *end2 = end;
-    *step2 = step;
+    s->offset = offs;
+    s->end = end;
+    s->step = step;
     return NULL;
 }
 
@@ -711,30 +711,29 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         return &v->v;
     }
     if (o2->obj == COLONLIST_OBJ) {
-        uval_t length;
-        ival_t offs, end, step;
+        struct sliceparam_s s;
 
-        err = (Error *)sliceparams((Colonlist *)o2, ln, &length, &offs, &end, &step, epoint2);
+        err = (Error *)sliceparams((Colonlist *)o2, ln, &s, epoint2);
         if (err != NULL) return &err->v;
 
-        if (length == 0) {
+        if (s.length == 0) {
             return val_reference((v1->v.obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
         }
 
-        if (step == 1 && length == v1->len && !more) {
+        if (s.step == 1 && s.length == v1->len && !more) {
             return val_reference(&v1->v); /* original tuple */
         }
         v = (List *)val_alloc(v1->v.obj);
-        vals = lnew(v, length);
+        vals = lnew(v, s.length);
         if (vals == NULL) goto failed;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < s.length; i++) {
             if (more) {
-                op->v1 = v1->data[offs];
+                op->v1 = v1->data[s.offset];
                 vals[i] = op->v1->obj->slice(op, indx + 1);
             } else {
-                vals[i] = val_reference(v1->data[offs]);
+                vals[i] = val_reference(v1->data[s.offset]);
             }
-            offs += step;
+            s.offset += s.step;
         }
         return &v->v;
     }

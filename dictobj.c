@@ -567,12 +567,13 @@ static MUST_CHECK Error *indexof(const Dict *v1, Obj *o2, ival_t *r, linepos_t e
     return new_error_obj(ERROR_____KEY_ERROR, o2, epoint);
 }
 
-static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, size_t len2, uval_t *olen, ival_t *offs2, ival_t *end2, ival_t *step2, linepos_t epoint) {
+static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, struct sliceparam_s *s, linepos_t epoint) {
     Error *err;
     ival_t len, offs, end, step = 1;
 
-    if (len2 >= (1U << (8 * sizeof(ival_t) - 1))) return (Obj *)new_error_mem(epoint); /* overflow */
-    len = (ival_t)len2;
+    s->length = 0;
+    if (v1->len >= (1U << (8 * sizeof(ival_t) - 1))) return (Obj *)new_error_mem(epoint); /* overflow */
+    len = (ival_t)v1->len;
     if (v2->len > 3 || v2->len < 1) {
         return (Obj *)new_error_argnum(v2->len, 1, 3, epoint);
     }
@@ -601,15 +602,15 @@ static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, size
 
     if (step > 0) {
         if (offs > end) offs = end;
-        *olen = (uval_t)(end - offs + step - 1) / (uval_t)step;
+        s->length = (uval_t)(end - offs + step - 1) / (uval_t)step;
     } else {
         if (end > offs) end = offs;
-        *olen = (uval_t)(offs - end - step - 1) / (uval_t)-step;
+        s->length = (uval_t)(offs - end - step - 1) / (uval_t)-step;
     }
 
-    *offs2 = offs;
-    *end2 = end;
-    *step2 = step;
+    s->offset = offs;
+    s->end = end;
+    s->step = step;
     return NULL;
 }
 
@@ -655,42 +656,42 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         return &v->v;
     }
     if (o2->obj == COLONLIST_OBJ) {
-        uval_t length = 0, i;
-        ival_t offs, end, step;
+        struct sliceparam_s s;
+        uval_t i;
         Dict *v;
-        Error *err = (Error *)dictsliceparams(v1, (Colonlist *)o2, v1->len, &length, &offs, &end, &step, epoint2);
+        Error *err = (Error *)dictsliceparams(v1, (Colonlist *)o2, &s, epoint2);
         if (err != NULL) return &err->v;
 
-        if (length == 0) {
+        if (s.length == 0) {
             return val_reference((v1->v.obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
         }
 
-        if (step == 1 && length == v1->len && v1->def == NULL && !more) {
+        if (s.step == 1 && s.length == v1->len && v1->def == NULL && !more) {
             return val_reference(&v1->v); /* original tuple */
         }
-        v = new_dict(length);
+        v = new_dict(s.length);
         if (v == NULL) return (Obj *)new_error_mem(epoint2); /* overflow */
         v->def = NULL;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < s.length; i++) {
             struct pair_s *p = &v->data[i];
-            if (v1->data[offs].data == NULL) {
+            if (v1->data[s.offset].data == NULL) {
                 if (more) {
                     v->len = i;
                     val_destroy(&v->v);
-                    return (Obj *)new_error_obj(ERROR_____KEY_ERROR, v1->data[offs].key, epoint2);
+                    return (Obj *)new_error_obj(ERROR_____KEY_ERROR, v1->data[s.offset].key, epoint2);
                 }
                 p->data = NULL;
             } else {
                 if (more) {
-                    op->v1 = v1->data[offs].data;
+                    op->v1 = v1->data[s.offset].data;
                     p->data = op->v1->obj->slice(op, indx + 1);
                 } else {
-                    p->data = val_reference(v1->data[offs].data);
+                    p->data = val_reference(v1->data[s.offset].data);
                 }
             }
-            p->hash = v1->data[offs].hash;
-            p->key = val_reference(v1->data[offs].key);
-            offs += step;
+            p->hash = v1->data[s.offset].hash;
+            p->key = val_reference(v1->data[s.offset].key);
+            s.offset += s.step;
         }
         v->len = i;
         reindex(v);

@@ -453,21 +453,20 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         return &v->v;
     }
     if (o2->obj == COLONLIST_OBJ) {
-        uval_t length;
-        ival_t offs, end, step;
+        struct sliceparam_s s;
         Tuple *v;
 
-        err = (Error *)sliceparams((Colonlist *)o2, ln, &length, &offs, &end, &step, epoint2);
+        err = (Error *)sliceparams((Colonlist *)o2, ln, &s, epoint2);
         if (err != NULL) return &err->v;
 
-        if (length == 0) {
+        if (s.length == 0) {
             return (Obj *)ref_tuple(null_tuple);
         }
-        v = new_tuple(length);
+        v = new_tuple(s.length);
         vals = v->data;
-        for (i = 0; i < length; i++) {
-            vals[i] = code_item(v1, offs + offs0, ln2);
-            offs += step;
+        for (i = 0; i < s.length; i++) {
+            vals[i] = code_item(v1, s.offset + offs0, ln2);
+            s.offset += s.step;
         }
         return &v->v;
     }
