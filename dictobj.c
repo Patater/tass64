@@ -775,8 +775,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             return concat(op);
         }
         break;
-    case T_ANONIDENT:
-    case T_IDENT:
+    case T_ANONSYMBOL:
+    case T_SYMBOL:
         if (op->op == &o_MEMBER) {
             return findit((Dict *)op->v1, o2, op->epoint2);
         }

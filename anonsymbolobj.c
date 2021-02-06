@@ -16,7 +16,7 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
-#include "anonidentobj.h"
+#include "anonsymbolobj.h"
 #include <string.h>
 #include "eval.h"
 #include "values.h"
@@ -28,32 +28,32 @@
 
 static Type obj;
 
-Type *const ANONIDENT_OBJ = &obj;
+Type *const ANONSYMBOL_OBJ = &obj;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR:
-    case T_ANONIDENT: return val_reference(v1);
+    case T_ANONSYMBOL: return val_reference(v1);
     default: break;
     }
-    return (Obj *)new_error_conv(v1, ANONIDENT_OBJ, epoint);
+    return (Obj *)new_error_conv(v1, ANONSYMBOL_OBJ, epoint);
 }
 
-Anonident *new_anonident(int32_t count) {
-    Anonident *anonident = (Anonident *)val_alloc(ANONIDENT_OBJ);
-    anonident->count = count;
-    return anonident;
+Anonsymbol *new_anonsymbol(int32_t count) {
+    Anonsymbol *anonsymbol = (Anonsymbol *)val_alloc(ANONSYMBOL_OBJ);
+    anonsymbol->count = count;
+    return anonsymbol;
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Anonident *v1 = (const Anonident *)o1, *v2 = (const Anonident *)o2;
+    const Anonsymbol *v1 = (const Anonsymbol *)o1, *v2 = (const Anonsymbol *)o2;
     if (o1->obj != o2->obj) return false;
     return v1->count == v2->count;
 }
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Anonident *v1 = (Anonident *)o1;
+    Anonsymbol *v1 = (Anonsymbol *)o1;
     unsigned int h = v1->count;
     h &= ((~0U) >> 1);
     *hs = h;
@@ -61,7 +61,7 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Anonident *v1 = (Anonident *)o1;
+    Anonsymbol *v1 = (Anonsymbol *)o1;
     Str *v;
     size_t len = v1->count < 0 ? (1 - v1->count) : (v1->count + 2);
     if (len > maxsize) return NULL;
@@ -74,7 +74,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Anonident *v1 = (Anonident *)o1;
+    Anonsymbol *v1 = (Anonsymbol *)o1;
     Str *v;
     size_t len = v1->count < 0 ? -v1->count : (v1->count + 1);
     if (len > maxsize) return NULL;
@@ -86,14 +86,14 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static inline int icmp(oper_t op) {
-    const int32_t v1 = ((Anonident *)op->v1)->count, v2 = ((Anonident *)op->v2)->count;
+    const int32_t v1 = ((Anonsymbol *)op->v1)->count, v2 = ((Anonsymbol *)op->v2)->count;
     return v1 - v2;
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     switch (o2->obj->type) {
-    case T_ANONIDENT: 
+    case T_ANONSYMBOL: 
         return obj_oper_compare(op, icmp(op));
     case T_NONE:
     case T_ERROR:
@@ -114,8 +114,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     return obj_oper_error(op);
 }
 
-void anonidentobj_init(void) {
-    new_type(&obj, T_ANONIDENT, "anonident", sizeof(Anonident));
+void anonsymbolobj_init(void) {
+    new_type(&obj, T_ANONSYMBOL, "anonsymbol", sizeof(Anonsymbol));
     obj.create = create;
     obj.same = same;
     obj.hash = hash;

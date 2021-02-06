@@ -70,7 +70,7 @@
 #include "macroobj.h"
 #include "mfuncobj.h"
 #include "memblocksobj.h"
-#include "identobj.h"
+#include "symbolobj.h"
 #include "dictobj.h"
 
 struct Listing *listing = NULL;
@@ -1787,16 +1787,16 @@ MUST_CHECK Obj *compile(void)
     size_t oldwaitforp = waitfor_p;
     bool nobreak = true;
     str_t labelname;
-    struct anonident_s {
+    struct anonsymbol_s {
         uint8_t dir, pad;
         uint8_t count[sizeof(uint32_t)];
-    } anonident;
+    } anonsymbol;
     struct {
         uint8_t type;
         uint8_t padding[3];
         line_t vline;
         struct star_s *star_tree;
-    } anonident2;
+    } anonsymbol2;
     struct linepos_s epoint;
 
     while (nobreak) {
@@ -1865,9 +1865,9 @@ MUST_CHECK Obj *compile(void)
                             if (tmp2->value == &none_value->v) err_msg_still_none(NULL, &epoint);
                             else if (tmp2->value->obj == ERROR_OBJ) err_msg_output((Error *)tmp2->value);
                             else {
-                                Ident *idn = new_ident(&labelname, &epoint);
-                                err_msg_invalid_oper(&o_MEMBER, tmp2->value, &idn->v, &epoint);
-                                val_destroy(&idn->v);
+                                Symbol *symbol = new_symbol(&labelname, &epoint);
+                                err_msg_invalid_oper(&o_MEMBER, tmp2->value, &symbol->v, &epoint);
+                                val_destroy(&symbol->v);
                             }
                             error = true;
                         } else mycontext = context;
@@ -1915,12 +1915,12 @@ MUST_CHECK Obj *compile(void)
                         lpoint.pos += 3;
                     } else break;
 
-                    if (labelname.data == (const uint8_t *)&anonident) {
-                        uint32_t count = (uint32_t)((anonident.dir == '-') ? --current_context->backr :  --current_context->forwr);
+                    if (labelname.data == (const uint8_t *)&anonsymbol) {
+                        uint32_t count = (uint32_t)((anonsymbol.dir == '-') ? --current_context->backr :  --current_context->forwr);
                         count--;
                         labelname.len = 2;
                         while (count != 0) {
-                            anonident.count[labelname.len - 2] = count;
+                            anonsymbol.count[labelname.len - 2] = count;
                             labelname.len++;
                             count >>= 8;
                         }
@@ -2697,12 +2697,12 @@ MUST_CHECK Obj *compile(void)
                                 Label *label2;
                                 bool labelexists2;
                                 str_t tmpname;
-                                if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                                else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                                anonident2.type = '#';
-                                anonident2.star_tree = star_tree;
-                                anonident2.vline = vline;
-                                tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                                if (sizeof(anonsymbol2) != sizeof(anonsymbol2.type) + sizeof(anonsymbol2.padding) + sizeof(anonsymbol2.star_tree) + sizeof(anonsymbol2.vline)) memset(&anonsymbol2, 0, sizeof anonsymbol2);
+                                else anonsymbol2.padding[0] = anonsymbol2.padding[1] = anonsymbol2.padding[2] = 0;
+                                anonsymbol2.type = '#';
+                                anonsymbol2.star_tree = star_tree;
+                                anonsymbol2.vline = vline;
+                                tmpname.data = (const uint8_t *)&anonsymbol2; tmpname.len = sizeof anonsymbol2;
                                 label2 = new_label(&tmpname, mycontext, strength, &labelexists2, current_file_list);
                                 if (labelexists2) {
                                     if (label2->defpass == pass) err_msg_double_defined(label2, &tmpname, &epoint);
@@ -2950,15 +2950,15 @@ MUST_CHECK Obj *compile(void)
                 case '\0':
                     {
                         uint32_t count = (uint32_t)((wht == '-') ? current_context->backr++ : current_context->forwr++);
-                        anonident.dir = (uint8_t)wht;
-                        anonident.pad = 0;
+                        anonsymbol.dir = (uint8_t)wht;
+                        anonsymbol.pad = 0;
                         labelname.len = 2;
                         while (count != 0) {
-                            anonident.count[labelname.len - 2] = count;
+                            anonsymbol.count[labelname.len - 2] = count;
                             labelname.len++;
                             count >>= 8;
                         }
-                        labelname.data = (const uint8_t *)&anonident;
+                        labelname.data = (const uint8_t *)&anonsymbol;
                     }
                     goto hh;
                 default:
@@ -3634,12 +3634,12 @@ MUST_CHECK Obj *compile(void)
                         bool labelexists;
                         str_t tmpname;
                         waitfor->u.cmd_block.label = NULL;
-                        if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                        else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                        anonident2.type = '.';
-                        anonident2.star_tree = star_tree;
-                        anonident2.vline = vline;
-                        tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                        if (sizeof(anonsymbol2) != sizeof(anonsymbol2.type) + sizeof(anonsymbol2.padding) + sizeof(anonsymbol2.star_tree) + sizeof(anonsymbol2.vline)) memset(&anonsymbol2, 0, sizeof anonsymbol2);
+                        else anonsymbol2.padding[0] = anonsymbol2.padding[1] = anonsymbol2.padding[2] = 0;
+                        anonsymbol2.type = '.';
+                        anonsymbol2.star_tree = star_tree;
+                        anonsymbol2.vline = vline;
+                        tmpname.data = (const uint8_t *)&anonsymbol2; tmpname.len = sizeof anonsymbol2;
                         label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
                         if (labelexists) {
                             if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
@@ -3682,12 +3682,12 @@ MUST_CHECK Obj *compile(void)
                             if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
                         } else val = NULL;
                     } else val = NULL;
-                    if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                    else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                    anonident2.type = '.';
-                    anonident2.star_tree = star_tree;
-                    anonident2.vline = vline;
-                    tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                    if (sizeof(anonsymbol2) != sizeof(anonsymbol2.type) + sizeof(anonsymbol2.padding) + sizeof(anonsymbol2.star_tree) + sizeof(anonsymbol2.vline)) memset(&anonsymbol2, 0, sizeof anonsymbol2);
+                    else anonsymbol2.padding[0] = anonsymbol2.padding[1] = anonsymbol2.padding[2] = 0;
+                    anonsymbol2.type = '.';
+                    anonsymbol2.star_tree = star_tree;
+                    anonsymbol2.vline = vline;
+                    tmpname.data = (const uint8_t *)&anonsymbol2; tmpname.len = sizeof anonsymbol2;
                     label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
                     if (labelexists) {
                         if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
@@ -4205,12 +4205,12 @@ MUST_CHECK Obj *compile(void)
                                 Label *label;
                                 bool labelexists;
                                 str_t tmpname;
-                                if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                                else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                                anonident2.type = '.';
-                                anonident2.star_tree = star_tree;
-                                anonident2.vline = vline;
-                                tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                                if (sizeof(anonsymbol2) != sizeof(anonsymbol2.type) + sizeof(anonsymbol2.padding) + sizeof(anonsymbol2.star_tree) + sizeof(anonsymbol2.vline)) memset(&anonsymbol2, 0, sizeof anonsymbol2);
+                                else anonsymbol2.padding[0] = anonsymbol2.padding[1] = anonsymbol2.padding[2] = 0;
+                                anonsymbol2.type = '.';
+                                anonsymbol2.star_tree = star_tree;
+                                anonsymbol2.vline = vline;
+                                tmpname.data = (const uint8_t *)&anonsymbol2; tmpname.len = sizeof anonsymbol2;
                                 label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
                                 if (labelexists) {
                                     if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
@@ -4262,12 +4262,12 @@ MUST_CHECK Obj *compile(void)
                     Label *label;
                     bool labelexists;
                     str_t tmpname;
-                    if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                    else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                    anonident2.type = '.';
-                    anonident2.star_tree = star_tree;
-                    anonident2.vline = vline;
-                    tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                    if (sizeof(anonsymbol2) != sizeof(anonsymbol2.type) + sizeof(anonsymbol2.padding) + sizeof(anonsymbol2.star_tree) + sizeof(anonsymbol2.vline)) memset(&anonsymbol2, 0, sizeof anonsymbol2);
+                    else anonsymbol2.padding[0] = anonsymbol2.padding[1] = anonsymbol2.padding[2] = 0;
+                    anonsymbol2.type = '.';
+                    anonsymbol2.star_tree = star_tree;
+                    anonsymbol2.vline = vline;
+                    tmpname.data = (const uint8_t *)&anonsymbol2; tmpname.len = sizeof anonsymbol2;
                     label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
                     if (labelexists) {
                         if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
@@ -4646,12 +4646,12 @@ MUST_CHECK Obj *compile(void)
                         Label *label;
                         bool labelexists;
                         str_t tmpname;
-                        if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                        else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                        anonident2.type = '#';
-                        anonident2.star_tree = star_tree;
-                        anonident2.vline = vline;
-                        tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                        if (sizeof(anonsymbol2) != sizeof(anonsymbol2.type) + sizeof(anonsymbol2.padding) + sizeof(anonsymbol2.star_tree) + sizeof(anonsymbol2.vline)) memset(&anonsymbol2, 0, sizeof anonsymbol2);
+                        else anonsymbol2.padding[0] = anonsymbol2.padding[1] = anonsymbol2.padding[2] = 0;
+                        anonsymbol2.type = '#';
+                        anonsymbol2.star_tree = star_tree;
+                        anonsymbol2.vline = vline;
+                        tmpname.data = (const uint8_t *)&anonsymbol2; tmpname.len = sizeof anonsymbol2;
                         label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
                         if (labelexists) {
                             if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);
@@ -4687,12 +4687,12 @@ MUST_CHECK Obj *compile(void)
                     Mfunc *mfunc;
                     bool labelexists;
                     str_t tmpname;
-                    if (sizeof(anonident2) != sizeof(anonident2.type) + sizeof(anonident2.padding) + sizeof(anonident2.star_tree) + sizeof(anonident2.vline)) memset(&anonident2, 0, sizeof anonident2);
-                    else anonident2.padding[0] = anonident2.padding[1] = anonident2.padding[2] = 0;
-                    anonident2.type = '#';
-                    anonident2.star_tree = star_tree;
-                    anonident2.vline = vline;
-                    tmpname.data = (const uint8_t *)&anonident2; tmpname.len = sizeof anonident2;
+                    if (sizeof(anonsymbol2) != sizeof(anonsymbol2.type) + sizeof(anonsymbol2.padding) + sizeof(anonsymbol2.star_tree) + sizeof(anonsymbol2.vline)) memset(&anonsymbol2, 0, sizeof anonsymbol2);
+                    else anonsymbol2.padding[0] = anonsymbol2.padding[1] = anonsymbol2.padding[2] = 0;
+                    anonsymbol2.type = '#';
+                    anonsymbol2.star_tree = star_tree;
+                    anonsymbol2.vline = vline;
+                    tmpname.data = (const uint8_t *)&anonsymbol2; tmpname.len = sizeof anonsymbol2;
                     label = new_label(&tmpname, ((Mfunc *)val)->namespaces[((Mfunc *)val)->nslen - 1], strength, &labelexists, current_file_list);
                     if (labelexists) {
                         if (label->defpass == pass) err_msg_double_defined(label, &tmpname, &epoint);

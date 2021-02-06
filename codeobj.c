@@ -40,7 +40,7 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "memblocksobj.h"
-#include "identobj.h"
+#include "symbolobj.h"
 #include "addressobj.h"
 
 static Type obj;
@@ -526,8 +526,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     Error *err;
     if (op->op == &o_MEMBER) {
-        if (o2->obj == IDENT_OBJ) {
-            Ident *v2 = (Ident *)o2;
+        if (o2->obj == SYMBOL_OBJ) {
+            Symbol *v2 = (Symbol *)o2;
             if (v2->name.len == 10 && v2->name.data[0] == '_' && v2->name.data[1] == '_') {
                 static const str_t of = {(const uint8_t *)"__offset__", 10};
                 str_t cf;

@@ -50,7 +50,7 @@ static FAST_CALL void destroy(Obj *o1) {
         val_destroy(v1->u.intconv.val);
         return;
     case ERROR___NOT_DEFINED:
-        val_destroy(v1->u.notdef.ident);
+        val_destroy(v1->u.notdef.symbol);
         val_destroy((Obj *)v1->u.notdef.names);
         return;
     case ERROR__NOT_KEYVALUE:
@@ -108,7 +108,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
         v = v1->u.intconv.val;
         break;
     case ERROR___NOT_DEFINED:
-        v = v1->u.notdef.ident;
+        v = v1->u.notdef.symbol;
         switch (i) {
         case -1:
             v->refcount--;
