@@ -1036,10 +1036,10 @@ void err_msg_symbol_case(const str_t *labelname1, const Label *l, linepos_t epoi
 void err_msg_symbol_case2(const Ident *l1, const Ident *l2) {
     Severity_types severity = diagnostic_errors.case_symbol ? SV_ERROR : SV_WARNING;
     bool more = new_error_msg(severity, l1->file_list, &l1->epoint);
-    if (more) new_error_msg_more();
     adderror("symbol case mismatch");
     str_name(l1->name.data, l1->name.len);
     adderror(" [-Wcase-symbol]");
+    if (more) new_error_msg_more();
     err_msg_double_note(l2->file_list, &l2->epoint, &l2->name);
 }
 
