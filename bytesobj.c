@@ -1262,62 +1262,61 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         return &v->v;
     }
     if (o2->obj == COLONLIST_OBJ) {
-        uval_t length;
-        ival_t offs, end, step;
+        struct sliceparam_s s;
 
-        err = (Error *)sliceparams((Colonlist *)o2, len1, &length, &offs, &end, &step, epoint2);
+        err = (Error *)sliceparams((Colonlist *)o2, len1, &s, epoint2);
         if (err != NULL) return &err->v;
 
-        switch (length) {
+        switch (s.length) {
         case 0:
             return (Obj *)ref_bytes(null_bytes);
         case 1:
-            return (Obj *)bytes_from_u8(v1->data[offs] ^ inv);
+            return (Obj *)bytes_from_u8(v1->data[s.offset] ^ inv);
         }
-        if (step == 1 && inv == 0) {
-            if (length == byteslen(v1)) {
+        if (s.step == 1 && inv == 0) {
+            if (s.length == byteslen(v1)) {
                 return (Obj *)ref_bytes(v1); /* original bytes */
             }
             if (op->inplace == &v1->v) {
                 v = ref_bytes(v1);
-                if (v->data != v->u.val && length <= sizeof v->u.val) {
+                if (v->data != v->u.val && s.length <= sizeof v->u.val) {
                     p2 = v->u.val;
-                    memcpy(p2, v1->data + offs, length);
+                    memcpy(p2, v1->data + s.offset, s.length);
                 } else {
                     p2 = v->data;
-                    if (offs != 0) memmove(p2, v1->data + offs, length);
+                    if (s.offset != 0) memmove(p2, v1->data + s.offset, s.length);
                     if (v->data != v->u.val) v->u.s.hash = -1;
                 }
             } else {
-                v = new_bytes2(length);
+                v = new_bytes2(s.length);
                 if (v == NULL) goto failed;
                 p2 = v->data;
-                memcpy(p2, v1->data + offs, length);
+                memcpy(p2, v1->data + s.offset, s.length);
             }
         } else {
-            if (step > 0 && op->inplace == &v1->v) {
+            if (s.step > 0 && op->inplace == &v1->v) {
                 v = ref_bytes(v1);
-                if (v->data != v->u.val && length <= sizeof v->u.val) {
+                if (v->data != v->u.val && s.length <= sizeof v->u.val) {
                     p2 = v->u.val;
                 } else {
                     p2 = v->data;
                     if (v->data != v->u.val) v->u.s.hash = -1;
                 }
             } else {
-                v = new_bytes2(length);
+                v = new_bytes2(s.length);
                 if (v == NULL) goto failed;
                 p2 = v->data;
             }
-            for (i = 0; i < length; i++) {
-                p2[i] = v1->data[offs] ^ inv;
-                offs += step;
+            for (i = 0; i < s.length; i++) {
+                p2[i] = v1->data[s.offset] ^ inv;
+                s.offset += s.step;
             }
         }
         if (p2 != v->data) {
             free(v->data);
             v->data = p2;
         }
-        v->len = (ssize_t)length;
+        v->len = (ssize_t)s.length;
         return &v->v;
     }
     err = indexoffs(o2, len1, &offs2, epoint2);
