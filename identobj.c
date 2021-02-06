@@ -46,11 +46,10 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 Ident *new_ident(const str_t *name) {
     Ident *idn = (Ident *)val_alloc(IDENT_OBJ);
     if ((size_t)(name->data - current_file_list->file->data) < current_file_list->file->len) idn->name = *name;
-    else if (name->len <= sizeof idn->val) {
-        idn->name.data = idn->val;
-        idn->name.len = name->len;
-        memcpy(idn->val, name->data, name->len);
-    } else str_cpy(&idn->name, name);
+    else str_cpy(&idn->name, name);
+    idn->cfname.data = NULL;
+    idn->cfname.len = 0;
+    idn->hash = -1;
     idn->file_list = current_file_list;
     return idn;
 }
@@ -76,7 +75,8 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 static FAST_CALL void destroy(Obj *o1) {
     Ident *v1 = (Ident *)o1;
     const struct file_s *cfile = v1->file_list->file;
-    if ((size_t)(v1->name.data - cfile->data) >= cfile->len && v1->name.data != v1->val) ident_destroy(v1);
+    if ((size_t)(v1->name.data - cfile->data) >= cfile->len) ident_destroy(v1);
+    if (v1->cfname.data != NULL && v1->name.data != v1->cfname.data) free((uint8_t *)v1->cfname.data);
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
@@ -111,24 +111,43 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Ident *v1 = (Ident *)o1;
-    size_t l = v1->name.len;
-    const uint8_t *s2 = v1->name.data;
+    str_t s = v1->cfname;
+    size_t l;
     unsigned int h;
-    if (l == 0) {
+    if (s.len == 0) {
         *hs = 0;
         return NULL;
     }
-    h = (unsigned int)*s2 << 7;
-    while ((l--) != 0) h = (1000003 * h) ^ *s2++;
-    h ^= v1->name.len;
+    if (v1->hash >= 0) {
+        *hs = v1->hash;
+        return NULL;
+    }
+    if (s.data == NULL) {
+        str_cfcpy(&s, &((Ident *)o1)->name);
+        if (s.data != ((Ident *)o1)->name.data) str_cfcpy(&s, NULL);
+    }
+    h = (unsigned int)*s.data << 7;
+    l = s.len;
+    while ((l--) != 0) h = (1000003 * h) ^ *s.data++;
+    h ^= s.len;
     h &= ((~0U) >> 1);
+    v1->hash = h;
     *hs = h;
     return NULL;
 }
 
 static inline int icmp(oper_t op) {
-    const str_t *v1 = &((Ident *)op->v1)->name, *v2 = &((Ident *)op->v2)->name;
-    int h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
+    str_t *v1 = &((Ident *)op->v1)->cfname, *v2 = &((Ident *)op->v2)->cfname;
+    int h;
+    if (v1->data == NULL) {
+        str_cfcpy(v1, &((Ident *)op->v1)->name);
+        if (v1->data != ((Ident *)op->v1)->name.data) str_cfcpy(v1, NULL);
+    }
+    if (v2->data == NULL) {
+        str_cfcpy(v2, &((Ident *)op->v2)->name);
+        if (v2->data != ((Ident *)op->v2)->name.data) str_cfcpy(v2, NULL);
+    }
+    h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
     if (h != 0) return h;
     if (v1->len < v2->len) return -1;
     return (v1->len > v2->len) ? 1 : 0;
