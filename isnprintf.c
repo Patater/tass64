@@ -74,19 +74,19 @@ static size_t none;
 static Obj *failure;
 
 /* this struct holds everything we need */
-struct DATA {
+typedef struct Data {
   const uint8_t *pf;
   const uint8_t *pfend;
 /* FLAGS */
   int width, precision;
   uchar_t pad;
   bool left, square, space, plus, star_w, star_p, dot;
-};
+} Data;
 
 /* those are defines specific to snprintf to hopefully
  * make the code clearer :-)
  */
-#define NOT_FOUND (-1)
+enum { NOT_FOUND = -1 };
 
 static size_t listp;
 static const struct values_s *list;
@@ -112,7 +112,7 @@ static const struct values_s *next_arg(void) {
     return ret;
 }
 
-static void PUT_CHAR(uchar_t c) {
+static void put_char(uchar_t c) {
     uint8_t *p;
     return_value.chars++;
     p = return_value.data;
@@ -131,14 +131,14 @@ static void PUT_CHAR(uchar_t c) {
 }
 
 /* pad right */
-static inline void PAD_RIGHT(struct DATA *p)
+static inline void pad_right(Data *p)
 {
     if (p->width > 0 && !p->left) {
-        for (; p->width > 0; p->width--) PUT_CHAR(p->pad);
+        for (; p->width > 0; p->width--) put_char(p->pad);
     }
 }
 
-static void PAD_RIGHT2(struct DATA *p, uint8_t c, bool minus, size_t ln)
+static void pad_right2(Data *p, uint8_t c, bool minus, size_t ln)
 {
     size_t n = 0;
     p->width -= ln;
@@ -148,20 +148,20 @@ static void PAD_RIGHT2(struct DATA *p, uint8_t c, bool minus, size_t ln)
     }
     if (minus || p->plus || p->space) p->width--;
     if (c != 0 && p->square) p->width--;
-    if (p->pad != '0') PAD_RIGHT(p);
-    if (minus) PUT_CHAR('-');
-    else if (p->plus) PUT_CHAR('+');
-    else if (p->space) PUT_CHAR(' ');
-    if (c != 0 && p->square) PUT_CHAR(c);
-    if (p->pad == '0') PAD_RIGHT(p);
-    for (;n > 0; n--) PUT_CHAR('0');
+    if (p->pad != '0') pad_right(p);
+    if (minus) put_char('-');
+    else if (p->plus) put_char('+');
+    else if (p->space) put_char(' ');
+    if (c != 0 && p->square) put_char(c);
+    if (p->pad == '0') pad_right(p);
+    for (;n > 0; n--) put_char('0');
 }
 
 /* pad left */
-static void PAD_LEFT(struct DATA *p)
+static void pad_left(Data *p)
 {
     if (p->width > 0 && p->left) {
-        for (; p->width > 0; p->width--) PUT_CHAR(p->pad);
+        for (; p->width > 0; p->width--) put_char(p->pad);
     }
 }
 
@@ -190,7 +190,7 @@ static ival_t get_ival(void) {
 }
 
 /* if width and prec. in the args */
-static void star_args(struct DATA *p)
+static void star_args(Data *p)
 {
     if (p->star_w) {
         ival_t ival = get_ival();
@@ -206,7 +206,7 @@ static void star_args(struct DATA *p)
 /* for %d and friends, it puts in holder
  * the representation with the right padding
  */
-static inline void decimal(struct DATA *p)
+static inline void decimal(Data *p)
 {
     const struct values_s *v = next_arg();
     bool minus;
@@ -241,13 +241,13 @@ static inline void decimal(struct DATA *p)
     }
 
     i = minus ? 1 : 0;
-    PAD_RIGHT2(p, 0, minus, str->len - i);
-    for (; i < str->len; i++) PUT_CHAR(str->data[i]);
+    pad_right2(p, 0, minus, str->len - i);
+    for (; i < str->len; i++) put_char(str->data[i]);
     val_destroy(&str->v);
-    PAD_LEFT(p);
+    pad_left(p);
 }
 
-static MUST_CHECK Int *get_int(struct DATA *p) {
+static MUST_CHECK Int *get_int(Data *p) {
     const struct values_s *v = next_arg();
 
     star_args(p);
@@ -262,7 +262,7 @@ static MUST_CHECK Int *get_int(struct DATA *p) {
 }
 
 /* for %x %X hexadecimal representation */
-static inline void hexa(struct DATA *p)
+static inline void hexa(Data *p)
 {
     bool minus;
     Int *integer;
@@ -283,9 +283,9 @@ static inline void hexa(struct DATA *p)
         b = (integer->data[bp2] >> bp) & 0xf;
     } while (b == 0);
 
-    PAD_RIGHT2(p, '$', minus, bp / 4 + bp2 * (sizeof(digit_t) * 2) + 1);
+    pad_right2(p, '$', minus, bp / 4 + bp2 * (sizeof(digit_t) * 2) + 1);
     for (;;) {
-        PUT_CHAR((uint8_t)hex[b]);
+        put_char((uint8_t)hex[b]);
         if (bp == 0) {
             if (bp2 == 0) break;
             bp2--;
@@ -294,11 +294,11 @@ static inline void hexa(struct DATA *p)
         b = (integer->data[bp2] >> bp) & 0xf;
     }
     val_destroy(&integer->v);
-    PAD_LEFT(p);
+    pad_left(p);
 }
 
 /* for %b binary representation */
-static inline void bin(struct DATA *p)
+static inline void bin(Data *p)
 {
     bool minus;
     Int *integer;
@@ -318,9 +318,9 @@ static inline void bin(struct DATA *p)
         b = (integer->data[bp2] >> bp) & 1;
     } while (b == 0);
 
-    PAD_RIGHT2(p, '%', minus, bp + bp2 * (sizeof(digit_t) * 8) + 1);
+    pad_right2(p, '%', minus, bp + bp2 * (sizeof(digit_t) * 8) + 1);
     for (;;) {
-        PUT_CHAR('0' + b);
+        put_char('0' + b);
         if (bp == 0) {
             if (bp2 == 0) break;
             bp2--;
@@ -329,7 +329,7 @@ static inline void bin(struct DATA *p)
         b = (integer->data[bp2] >> bp) & 1;
     }
     val_destroy(&integer->v);
-    PAD_LEFT(p);
+    pad_left(p);
 }
 
 /* %c chars */
@@ -351,11 +351,11 @@ static inline void chars(void)
         }
     }
 
-    PUT_CHAR(uval);
+    put_char(uval);
 }
 
 /* %s strings */
-static inline void strings(struct DATA *p)
+static inline void strings(Data *p)
 {
     const struct values_s *v = next_arg();
     int i;
@@ -391,18 +391,18 @@ static inline void strings(struct DATA *p)
     }
     if (i < 0) i = 0;
     p->width -= i;
-    PAD_RIGHT(p);
+    pad_right(p);
     while (i-- > 0) { /* put the string */
         ch = *tmp;
         if ((ch & 0x80) != 0) tmp += utf8in(tmp, &ch); else tmp++;
-        PUT_CHAR(ch);
+        put_char(ch);
     }
     val_destroy(&str->v);
-    PAD_LEFT(p);
+    pad_left(p);
 }
 
 /* %f or %g  floating point representation */
-static inline void floating(struct DATA *p)
+static inline void floating(Data *p)
 {
     const struct values_s *v = next_arg();
     char tmp[400], *t, form[10];
@@ -437,12 +437,12 @@ static inline void floating(struct DATA *p)
     t = tmp;
 
     p->precision = 0;
-    PAD_RIGHT2(p, 0, minus, (l > 0) ? (size_t)l : 0);
+    pad_right2(p, 0, minus, (l > 0) ? (size_t)l : 0);
     while (*t != 0) { /* the integral */
-        PUT_CHAR((uint8_t)*t);
+        put_char((uint8_t)*t);
         t++;
     }
-    PAD_LEFT(p);
+    pad_left(p);
 }
 
 MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
@@ -451,7 +451,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
     size_t args = vals->len;
     Obj *val;
     Str *str;
-    struct DATA data;
+    Data data;
 
     val = v[0].val;
     switch (val->obj->type) {
@@ -483,7 +483,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         uchar_t c = *data.pf;
         if (c != '%') {
             if ((c & 0x80) != 0) data.pf += utf8in(data.pf, &c) - 1;
-            PUT_CHAR(c);  /* add the char the string */
+            put_char(c);  /* add the char the string */
             continue;
         }
         /* reset the flags. */
@@ -526,7 +526,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                 strings(&data);
                 break;
             case '%':  /* nothing just % */
-                PUT_CHAR('%');
+                put_char('%');
                 break;
             case ' ':
                 data.space = true;
@@ -579,8 +579,8 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                 err_msg_not_defined(&msg, &epoint2);
                 next_arg();
                 star_args(&data);
-                PUT_CHAR('%');
-                PUT_CHAR(c);
+                put_char('%');
+                put_char(c);
                 data.pf += msg.len - 1;
                 break;
             }
