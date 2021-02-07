@@ -1151,6 +1151,7 @@ static MUST_CHECK Obj *calc2_bits(oper_t op) {
     case O_XOR: return xor_(op);
     case O_CONCAT: return concat(op);
     case O_IN: return obj_oper_error(op); /* TODO */
+    case O_IDENTITY: return truth_reference(op->v1 == op->v2 || same(op->v1, op->v2));
     default: return NULL;
     }
 }

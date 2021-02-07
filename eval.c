@@ -1596,7 +1596,14 @@ static bool get_exp2(int stop) {
             if (opr.p >= opr.l) extend_opr(&opr);
             lpoint.pos++;
             continue;
-        case '=': op = &o_EQ; if (pline[lpoint.pos + 1] != '=') {if (diagnostics.old_equal) err_msg2(ERROR_____OLD_EQUAL, NULL, &lpoint);lpoint.pos--;}
+        case '=':
+            if (pline[lpoint.pos + 1] != '=') {
+                if (diagnostics.old_equal) err_msg2(ERROR_____OLD_EQUAL, NULL, &lpoint);
+                lpoint.pos--;
+                op = &o_EQ;
+            } else {
+                op = pline[lpoint.pos + 2] != '=' ? &o_EQ : &o_IDENTITY;
+            }
         push2:
             lpoint.pos += op->len;
         push2a:
