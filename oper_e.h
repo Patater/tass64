@@ -76,8 +76,9 @@ typedef enum Oper_types {
     O_INV,           /* ~     */
     O_LNOT,          /* !     */
 
+    O_IDENTITY,      /* ===   */
     O_CMP,           /* <=>   */
-    O_EQ,            /* =     */
+    O_EQ,            /* ==    */
     O_NE,            /* !=    */
     O_LT,            /* <     */
     O_GT,            /* >     */

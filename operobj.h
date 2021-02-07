@@ -90,6 +90,7 @@ extern Oper o_STRING;
 extern Oper o_LOR;
 extern Oper o_LXOR;
 extern Oper o_LAND;
+extern Oper o_IDENTITY;
 extern Oper o_IN;
 extern Oper o_CMP;
 extern Oper o_EQ;
