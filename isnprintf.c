@@ -169,6 +169,7 @@ static void note_failure(Obj *err) {
     if (err->obj == ERROR_OBJ) {
         if (failure == NULL) {
             failure = err;
+            return;
         }
     } else {
         if (none != 0) none = listp;
