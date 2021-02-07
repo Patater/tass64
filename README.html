@@ -322,7 +322,7 @@ compression:</p>
 <pre width=80>
 *       <b>=</b> <span>$0801</span>
         <b class="d">.word</b> (<u>+</u>), <span>2005</span>  <i>;pointer, line number</i>
-        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%d"</span>, <u>start</u>)<i>;will be sys 4096</i>
+        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%4d"</span>, <u>start</u>)<i>;will be sys 4096</i>
 +	<b class="d">.word</b> <span>0</span>          <i>;basic line end</i>
 
 *       <b>=</b> <span>$1000</span>
@@ -2809,7 +2809,7 @@ start of <a href="#d_dsection"><code>.dsection</code></a> is not allowed.</p>
 <i>;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;&minus;</i>
         <b class="k">.section</b> <u>code</u>
         <b class="d">.word</b> <u>ss</u>, <span>2005</span>
-        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%d"</span>, <u>start</u>)
+        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%4d"</span>, <u>start</u>)
 ss	<b class="d">.word</b> <span>0</span>
 
 start   <b>sei</b>
@@ -2838,7 +2838,7 @@ p3	<b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
 <p>The compiled code will look like:</p>
 <pre width=80>
 &gt;0801	 0b 08 d5 07			        <b class="d">.word</b> <u>ss</u>, <span>2005</span>
-&gt;0805	 9e 32 30 36 31 00		        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%d"</span>, <u>start</u>)
+&gt;0805	 9e 32 30 36 31 00		        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%4d"</span>, <u>start</u>)
 &gt;080b	 00 00				ss      <b class="d">.word</b> <span>0</span>
 
 .080d	 78				start   <b>sei</b>
