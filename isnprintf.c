@@ -193,6 +193,9 @@ static inline MUST_CHECK Obj *decimal(struct DATA *p, const struct values_s *v)
     Str *str;
     size_t i;
 
+    err = star_args(p);
+    if (err != NULL) return err;
+
     if (val == &none_value->v) {
         none = listp;
         err = (Obj *)ref_int(int_value[0]);
@@ -224,6 +227,9 @@ static inline MUST_CHECK Obj *hexa(struct DATA *p, const struct values_s *v)
     const char *hex = (*p->pf == 'x') ? "0123456789abcdef" : "0123456789ABCDEF";
     unsigned int bp, b;
     size_t bp2;
+
+    err = star_args(p);
+    if (err != NULL) return err;
 
     if (val == &none_value->v) {
         none = listp;
@@ -268,6 +274,9 @@ static inline MUST_CHECK Obj *bin(struct DATA *p, const struct values_s *v)
     Int *integer;
     unsigned int bp, b;
     size_t bp2;
+
+    err = star_args(p);
+    if (err != NULL) return err;
 
     if (val == &none_value->v) {
         none = listp;
@@ -333,6 +342,9 @@ static inline MUST_CHECK Obj *strings(struct DATA *p, const struct values_s *v)
     Obj *val = v->val, *err;
     Str *str;
 
+    err = star_args(p);
+    if (err != NULL) return err;
+
     if (val == &none_value->v) {
         none = listp;
         return NULL;
@@ -377,6 +389,9 @@ static inline MUST_CHECK Obj *floating(struct DATA *p, const struct values_s *v)
     Obj *val = v->val, *err;
     int l;
 
+    err = star_args(p);
+    if (err != NULL) return err;
+
     if (val == &none_value->v) {
         none = listp;
         d = 0;
@@ -411,10 +426,9 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
 {
     struct values_s *v = vals->val;
     size_t args = vals->len;
-    Obj *err, *val;
+    Obj *val;
     Str *str;
     struct DATA data;
-    int state;
 
     val = v[0].val;
     switch (val->obj->type) {
@@ -454,7 +468,11 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         data.square = data.plus = data.space = false;
         data.left = false; data.dot = false;
         data.pad = ' ';
-        for (state = 1; data.pf < data.pfend - 1 && state != 0;) {
+        while (data.pf < data.pfend - 1) {
+            struct linepos_s epoint2;
+            str_t msg;
+            Obj *err;
+
             c = *(++data.pf);
             switch (c) {
             case 'e':
@@ -465,57 +483,35 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
             case 'A':
             case 'g':
             case 'G':
-                err = star_args(&data);
-                if (err != NULL) goto error;
                 err = floating(&data, next_arg());
-                if (err != NULL) goto error;
-                state = 0;
                 break;
             case 'd':  /* decimal */
-                err = star_args(&data);
-                if (err != NULL) goto error;
                 err = decimal(&data, next_arg());
-                if (err != NULL) goto error;
-                state = 0;
                 break;
             case 'x':
             case 'X':  /* hexadecimal */
-                err = star_args(&data);
-                if (err != NULL) goto error;
                 err = hexa(&data, next_arg());
-                if (err != NULL) goto error;
-                state = 0;
                 break;
             case 'b':  /* binary */
-                err = star_args(&data);
-                if (err != NULL) goto error;
                 err = bin(&data, next_arg());
-                if (err != NULL) goto error;
-                state = 0;
                 break;
             case 'c': /* character */
                 err = chars(next_arg());
-                if (err != NULL) goto error;
-                state = 0;
                 break;
             case 'r':  /* repr */
             case 's':  /* string */
-                err = star_args(&data);
-                if (err != NULL) goto error;
                 err = strings(&data, next_arg());
-                if (err != NULL) goto error;
-                state = 0;
                 break;
             case '%':  /* nothing just % */
                 PUT_CHAR('%');
-                state = 0;
+                err = NULL;
                 break;
             case ' ':
                 data.space = true;
-                break;
+                continue;
             case '#':
                 data.square = true;
-                break;
+                continue;
             case '*':
                 if (data.width == NOT_FOUND) {
                     data.width = 0;
@@ -524,21 +520,21 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                     data.precision = 0;
                     data.star_p = true;
                 }
-                break;
+                continue;
             case '+':
                 data.plus = true;
-                break;
+                continue;
             case '-':
                 data.left = true;
-                break;
+                continue;
             case '.':
                 data.dot = true;
                 if (data.width == NOT_FOUND) data.width = 0;
-                break;
+                continue;
             case '0':
                 if (data.width == NOT_FOUND) {
                     data.pad = '0';
-                    break;
+                    continue;
                 }
                 /* fall through */
             case '1':
@@ -547,31 +543,31 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                 c -= '0';
                 if (data.dot && !data.star_p) {
                     data.precision = ((data.precision == NOT_FOUND) ? 0 : data.precision * 10) + (int)c;
-                    if (data.precision > 100000) goto error2;
+                    if (data.precision < 100000) continue;
                 } else if (!data.star_w) {
                     data.width = ((data.width == NOT_FOUND) ? 0 : data.width * 10) + (int)c;
-                    if (data.width > 100000) goto error2;
-                } else goto error2;
-                break;
-            default:
-                {
-                    struct linepos_s epoint2;
-                    str_t msg;
-                error2:
-                    epoint2 = v[0].epoint;
-                    epoint2.pos = interstring_position(&epoint2, ((Str *)val)->data, (size_t)(data.pf - ((Str *)val)->data));
-                    msg.data = data.pf;
-                    if ((c & 0x80) != 0) msg.len = utf8in(data.pf, &c); else msg.len = 1;
-                    err_msg_not_defined(&msg, &epoint2);
-                    err = star_args(&data);
-                    if (err != NULL) goto error;
-                    next_arg();
-                    PUT_CHAR('%');
-                    PUT_CHAR(c);
-                    state = 0;
-                    data.pf += msg.len - 1;
+                    if (data.width < 100000) continue;
                 }
-            } /* end switch */
+                /* fall through */
+            default:
+                epoint2 = v[0].epoint;
+                epoint2.pos = interstring_position(&epoint2, ((Str *)val)->data, (size_t)(data.pf - ((Str *)val)->data));
+                msg.data = data.pf;
+                if ((c & 0x80) != 0) msg.len = utf8in(data.pf, &c); else msg.len = 1;
+                err_msg_not_defined(&msg, &epoint2);
+                err = star_args(&data);
+                if (err != NULL) break;
+                next_arg();
+                PUT_CHAR('%');
+                PUT_CHAR(c);
+                data.pf += msg.len - 1;
+                break;
+            }
+            if (err != NULL) {
+                free(return_value.data);
+                return err;
+            }
+            break;
         }
     }
     if (listp != largs) {
@@ -599,8 +595,5 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
     str->data = str->u.val;
     free(return_value.data);
     return &str->v;
-error:
-    free(return_value.data);
-    return err;
 }
 
