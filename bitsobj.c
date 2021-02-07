@@ -291,10 +291,10 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     int h;
 
     switch (v1->len) {
-    case ~1: *hs = (~v1->data[0]) & ((~0U) >> 1); return NULL;
-    case ~0: *hs = ((~0U) >> 1); return NULL;
-    case 0: *hs = 0; return NULL;
-    case 1: *hs = v1->data[0] & ((~0U) >> 1); return NULL;
+    case ~1: *hs = (v1->bits ^ ~v1->data[0]) & ((~0U) >> 1); return NULL;
+    case ~0: *hs = (v1->bits ^ ~0U) & ((~0U) >> 1); return NULL;
+    case 0: *hs = v1->bits & ((~0U) >> 1); return NULL;
+    case 1: *hs = (v1->bits ^ v1->data[0]) & ((~0U) >> 1); return NULL;
     default: break;
     }
     if (v1->data != v1->u.val && v1->u.hash >= 0) {
@@ -314,6 +314,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
             h += v1->data[l];
         }
     }
+    h ^= v1->bits;
     h &= ((~0U) >> 1);
     if (v1->data != v1->u.val) v1->u.hash = h;
     *hs = h;
