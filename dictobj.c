@@ -30,6 +30,7 @@
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
+#include "symbolobj.h"
 
 static Type obj;
 
@@ -131,7 +132,9 @@ static FAST_CALL void garbage(Obj *o1, int j) {
 
 static bool pair_same(const struct pair_s *a, const struct pair_s *b)
 {
-    return a->hash == b->hash && a->key->obj->same(a->key, b->key);
+    if (a->hash != b->hash || a->key->obj != b->key->obj) return false;
+    if (a->key->obj->type == T_SYMBOL) return symbol_cfsame((Symbol *)a->key, (Symbol *)b->key);
+    return a->key->obj->same(a->key, b->key);
 }
 
 static void dict_update(Dict *dict, const struct pair_s *p) {
