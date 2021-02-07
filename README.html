@@ -270,7 +270,7 @@ editor. As a minimum the source filename must be given on the command line. The
 <q><a href="#o_ascii"><code>-a</code></a></q> command line option is highly recommended if the source is Unicode or
 ASCII.</p>
 
-<pre width=80>
+<pre width="80">
 64tass -a src.asm
 </pre>
 
@@ -278,7 +278,7 @@ ASCII.</p>
 
 <p>For comfortable compiling I use such <q>Makefile</q>s (for <a href="https://en.wikipedia.org/wiki/Make_%28software%29">make</a>):</p>
 
-<pre width=80 class="make">
+<pre width="80" class="make">
 <span>demo.prg:</span> source.asm macros.asm pic.drp music.bin
         <span class="cmd">64tass -C -a -B -i source.asm -o demo.tmp</span>
         <span class="cmd">pucrunch -ffast -x 2048 demo.tmp &gt;demo.prg</span>
@@ -290,7 +290,7 @@ whenever <q>source.asm</q>, <q>macros.asm</q>, <q>pic.drp</q> or <q>music.bin</q
 <p>Of course it's not much harder to create something similar for win32 (make.bat),
 however this will always compile and compress:</p>
 
-<pre width=80>
+<pre width="80">
 64tass.exe -C -a -B -i source.asm -o demo.tmp
 pucrunch.exe -ffast -x 2048 demo.tmp &gt;demo.prg
 </pre>
@@ -299,7 +299,7 @@ pucrunch.exe -ffast -x 2048 demo.tmp &gt;demo.prg
 testing in VICE, clean target for removal of temporary files and compressing
 using an intermediate temporary file:</p>
 
-<pre width=80 class="make">
+<pre width="80" class="make">
 <span>all:</span> demo.prg
         <span class="cmd">x64 -autostartprgmode 1 -autostart-warp +truedrive +cart</span> $&lt;
 
@@ -319,7 +319,7 @@ using an intermediate temporary file:</p>
 so that the resulting file is directly runnable without additional
 compression:</p>
 
-<pre width=80>
+<pre width="80">
 *       <b>=</b> <span>$0801</span>
         <b class="d">.word</b> (<u>+</u>), <span>2005</span>  <i>;pointer, line number</i>
         <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%4d"</span>, <u>start</u>)<i>;will be sys 4096</i>
@@ -337,7 +337,7 @@ but what about zero page, or RAM outside of program area? The solution
 is to not use an initial value by using <q><a href="#uninitialized"><code>?</code></a></q> or not
 giving a fill byte value to <a href="#d_fill"><code>.fill</code></a>.</p>
 
-<pre width=80>
+<pre width="80">
 *       <b>=</b> <span>$02</span>
 p1	<b class="d">.addr</b> <span>?</span>         <i>;a zero page pointer</i>
 temp	<b class="d">.fill</b> <span>10</span>        <i>;a 10 byte temporary area</i>
@@ -351,7 +351,7 @@ addresses.</p>
 relocated, and the length must be known to copy it there. Here's
 an example:</p>
 
-<pre width=80>
+<pre width="80">
         <b>ldx</b> #<span class="k">size</span>(<u>zpcode</u>)-<span>1</span><i>;calculate length</i>
 -       <b>lda</b> <u>zpcode</u>,x
         <b>sta</b> <u>wrbyte</u>,x
@@ -375,7 +375,7 @@ once, this could spare quite some typing and repetition.</p>
 <p>Let's take a simple example of a low/high byte jump table of return
 addresses, this usually involves some unnecessary copy/pasting to create a pair
 of tables with constructs like <code>&gt;(label&minus;1)</code>.</p>
-<pre width=80>
+<pre width="80">
 jumpcmd <b>lda</b> <u>hibytes</u>,x   <i>; selected routine in X register</i>
         <b>pha</b>
         <b>lda</b> <u>lobytes</u>,x   <i>; push address to stack</i>
@@ -423,7 +423,7 @@ accepted:</p>
 Other types can be converted to integer using the integer type
 <code>int</code>.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="d">.byte</b> <span>23</span>        <i>; as unsigned</i>
         <b class="d">.char</b> <span>-23</span>       <i>; as signed</i>
 
@@ -470,7 +470,7 @@ in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
 
 <p>Other types can be converted to bit string using the bit string type <code>bits</code>.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="d">.byte</b> <span>$33</span>       <i>; 8 bits in hexadecimal</i>
         <b class="d">.byte</b> <span>%00011111</span> <i>; 8 bits in binary</i>
         <b class="d">.text</b> <span>$1234</span>     <i>; $34, $12 (little endian)</i>
@@ -524,7 +524,7 @@ an 8.16 fixed point number can be calculated as <code>(3.14 &lt;&lt; 16) &amp; $
 The binary operators operate like if the floating point number would be a fixed
 point one. This is the reason for the strange definition of inversion.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="d">.byte</b> <span>3.66e1</span>       <i>; 36.6, truncated to 36</i>
         <b class="d">.byte</b> <span>$1.8p4</span>       <i>; 4:4 fixed point number (1.5)</i>
         <b class="d">.sint</b> <span>12.2p8</span>       <i>; 8:8 fixed point number (12.2)</i>
@@ -548,10 +548,10 @@ expressions as numeric constants or in context of text data directives.</p>
 <tr><td><code><u>y</u> <span class="k">in</span> <u>x</u></code><td>is substring of<td><code><span class="s">"b"</span> <span class="k">in</span> <span class="s">"abc"</span></code> is <code><span>true</span></code>
 <tr><td><code><u>a</u> <span class="k">x</span> <u>n</u></code><td>repeat<td><code><span class="s">"ab"</span> <span class="k">x</span> <span>3</span></code> is <code><span class="s">"ababab"</span></code>
 <tr><td><code><u>a</u>[<u>i</u>]</code><td>character from start<td><code><span class="s">"abc"</span>[<span>1</span>]</code> is <code><span class="s">"b"</span></code>
-<tr><td><code><u>a</u>[<u>i</u>]</code><td>character from end<td><code><span class="s">"abc"</span>[<span>&minus;1</span>]</code> is <code><span class="s">"c"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>no change<td><code><span class="s">"abc"</span>[:]</code> is <code><span class="s">"abc"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off start<td><code><span class="s">"abc"</span>[<span>1</span>:]</code> is <code><span class="s">"bc"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off end<td><code><span class="s">"abc"</span>[:<span>&minus;1</span>]</code> is <code><span class="s">"ab"</span></code>
+<tr><td><code><u>a</u>[&minus;<u>i</u>]</code><td>character from end<td><code><span class="s">"abc"</span>[<span>&minus;1</span>]</code> is <code><span class="s">"c"</span></code>
+<tr><td><code><u>a</u>[:]</code><td>no change<td><code><span class="s">"abc"</span>[:]</code> is <code><span class="s">"abc"</span></code>
+<tr><td><code><u>a</u>[<u>s</u>:]</code><td>cut off start<td><code><span class="s">"abc"</span>[<span>1</span>:]</code> is <code><span class="s">"bc"</span></code>
+<tr><td><code><u>a</u>[:&minus;<u>s</u>]</code><td>cut off end<td><code><span class="s">"abc"</span>[:<span>&minus;1</span>]</code> is <code><span class="s">"ab"</span></code>
 <tr><td><code><u>a</u>[<u>s</u>]</code><td>reverse<td><code><span class="s">"abc"</span>[::<span>&minus;1</span>]</code> is <code><span class="s">"cba"</span></code>
 </tbody>
 </table></div>
@@ -567,7 +567,7 @@ functions.</p>
 <p>Character strings support indexing and slicing. This is explained in detail
 in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
 
-<pre width=80>
+<pre width="80">
 mystr   <b>=</b> <span class="s">"oeU"</span>         <i>; character string constant</i>
         <b class="d">.text</b> <span class="s">'it''s'</span>   <i>; it's</i>
         <b class="d">.word</b> <span class="s">"ab"</span>+<span>1</span>    <i>; conversion result is "bb" usually</i>
@@ -595,10 +595,10 @@ hexadecimal digits as a separator for better readability.</p>
 <tr><td><code><u>y</u> <span class="k">in</span> <u>x</u></code><td>is substring of<td><code><span class="s">x"34"</span> <span class="k">in</span> <span class="s">x"1234"</span></code> is <code><span>true</span></code>
 <tr><td><code><u>a</u> <span class="k">x</span> <u>n</u></code><td>repeat<td><code><span class="s">x"ab"</span> <span class="k">x</span> <span>3</span></code> is <code><span class="s">x"ababab"</span></code>
 <tr><td><code><u>a</u>[<u>i</u>]</code><td>byte from start<td><code><span class="s">x"abcd12"</span>[<span>1</span>]</code> is <code><span class="s">x"cd"</span></code>
-<tr><td><code><u>a</u>[<u>i</u>]</code><td>byte from end<td><code><span class="s">x"abcd"</span>[<span>&minus;1</span>]</code> is <code><span class="s">x"cd"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>no change<td><code><span class="s">x"abcd"</span>[:]</code> is <code><span class="s">x"abcd"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off start<td><code><span class="s">x"abcdef"</span>[<span>1</span>:]</code> is <code><span class="s">x"cdef"</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off end<td><code><span class="s">x"abcdef"</span>[:<span>&minus;1</span>]</code> is <code><span class="s">x"abcd"</span></code>
+<tr><td><code><u>a</u>[&minus;<u>i</u>]</code><td>byte from end<td><code><span class="s">x"abcd"</span>[<span>&minus;1</span>]</code> is <code><span class="s">x"cd"</span></code>
+<tr><td><code><u>a</u>[:]</code><td>no change<td><code><span class="s">x"abcd"</span>[:]</code> is <code><span class="s">x"abcd"</span></code>
+<tr><td><code><u>a</u>[<u>s</u>:]</code><td>cut off start<td><code><span class="s">x"abcdef"</span>[<span>1</span>:]</code> is <code><span class="s">x"cdef"</span></code>
+<tr><td><code><u>a</u>[:&minus;<u>s</u>]</code><td>cut off end<td><code><span class="s">x"abcdef"</span>[:<span>&minus;1</span>]</code> is <code><span class="s">x"abcd"</span></code>
 <tr><td><code><u>a</u>[<u>s</u>]</code><td>reverse<td><code><span class="s">x"abcdef"</span>[::<span>&minus;1</span>]</code> is <code><span class="s">x"efcdab"</span></code>
 </tbody>
 </table></div>
@@ -608,7 +608,7 @@ in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
 
 <p>Other types can be converted to byte strings by using the type <code>bytes</code>.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="k">.enc</b> <span class="s">"screen"</span>	<i>;use screen encoding</i>
 mystr   <b>=</b> <span class="s">b"oeU"</span>        <i>;convert text to bytes, like .text</i>
         <b class="k">.enc</b> <span class="s">"none"</span>	<i>;normal encoding</i>
@@ -624,7 +624,7 @@ mystr   <b>=</b> <span class="s">b"oeU"</span>        <i>;convert text to bytes,
 strings. This is more compact than using <code>.byte</code> followed by a lot
 of numbers. As expected 1 byte becomes 2 characters.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="d">.text</b> <span class="s">x"fce2"</span>   <i>;2 bytes: $fc and $e2 (big endian)</i>
 </pre>
 
@@ -632,7 +632,7 @@ of numbers. As expected 1 byte becomes 2 characters.</p>
 which encodes 4 bytes into 5 characters. Data lengths not a multiple of 4 are
 handled by omitting leading zeros in the last group.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="d">.text</b> <span class="s">z"FiUj*2M$hf"</span><i>;8 bytes: 80 40 20 10 08 04 02 01</i>
 </pre>
 
@@ -649,7 +649,7 @@ values separated by comma between square brackets <code>[1, 2, 3]</code>, an
 empty list is <code>[]</code>. Tuples are similar but are enclosed in
 parentheses instead. An empty tuple is <code>()</code>, a single element tuple
 is <code>(4,)</code> to differentiate from normal numeric expression
-parentheses. When nested they function similar to an array. Currently both
+parentheses. When nested they function similar to an array. Both
 types are immutable.</p>
 
 <div><table border="0">
@@ -659,10 +659,10 @@ types are immutable.</p>
 <tr><td><code><u>y</u> <span class="k">in</span> <u>x</u></code><td>is member of list<td><code><span>2</span> <span class="k">in</span> [<span>1</span>, <span>2</span>, <span>3</span>]</code> is <code><span>true</span></code>
 <tr><td><code><u>a</u> <span class="k">x</span> <u>n</u></code><td>repeat<td><code>[<span>1</span>, <span>2</span>] <span class="k">x</span> <span>2</span></code> is <code>[<span>1</span>, <span>2</span>, <span>1</span>, <span>2</span>]</code>
 <tr><td><code><u>a</u>[<u>i</u>]</code><td>element from start<td><code>(<span class="s">"1"</span>, <span>2</span>)[<span>1</span>]</code> is <code><span>2</span></code>
-<tr><td><code><u>a</u>[<u>i</u>]</code><td>element from end<td><code>(<span class="s">"1"</span>, <span>2</span>, <span>3</span>)[<span>&minus;1</span>]</code> is <code><span>3</span></code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>no change<td><code>(<span>1</span>, <span>2</span>, <span>3</span>)[:]</code> is <code>(<span>1</span>, <span>2</span>, <span>3</span>)</code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off start<td><code>(<span>1</span>, <span>2</span>, <span>3</span>)[<span>1</span>:]</code> is <code>(<span>2</span>, <span>3</span>)</code>
-<tr><td><code><u>a</u>[<u>s</u>]</code><td>cut off end<td><code>(<span>1</span>, <span>2.0</span>, <span>3</span>)[:<span>&minus;1</span>]</code> is <code>(<span>1</span>, <span>2.0</span>)</code>
+<tr><td><code><u>a</u>[&minus;<u>i</u>]</code><td>element from end<td><code>(<span class="s">"1"</span>, <span>2</span>, <span>3</span>)[<span>&minus;1</span>]</code> is <code><span>3</span></code>
+<tr><td><code><u>a</u>[:]</code><td>no change<td><code>(<span>1</span>, <span>2</span>, <span>3</span>)[:]</code> is <code>(<span>1</span>, <span>2</span>, <span>3</span>)</code>
+<tr><td><code><u>a</u>[<u>s</u>:]</code><td>cut off start<td><code>(<span>1</span>, <span>2</span>, <span>3</span>)[<span>1</span>:]</code> is <code>(<span>2</span>, <span>3</span>)</code>
+<tr><td><code><u>a</u>[:&minus;<u>s</u>]</code><td>cut off end<td><code>(<span>1</span>, <span>2.0</span>, <span>3</span>)[:<span>&minus;1</span>]</code> is <code>(<span>1</span>, <span>2.0</span>)</code>
 <tr><td><code><u>a</u>[<u>s</u>]</code><td>reverse<td><code>(<span>1</span>, <span>2</span>, <span>3</span>)[::<span>&minus;1</span>]</code> is <code>(<span>3</span>, <span>2</span>, <span>1</span>)</code>
 <tr><td><code>&lowast;<u>a</u></code><td>convert to arguments<td><code><span class="k">format</span>(<span class="s">"%d: %s"</span>, &lowast;<u>mylist</u>)</code>
 <tr><td><code>... op <u>a</u></code><td>left fold<td><code>... + (<span>1</span>, <span>2</span>, <span>3</span>)</code> is <code>((<span>1</span>+<span>2</span>)+<span>3</span>)</code>
@@ -684,7 +684,7 @@ is <code>[[3, 4], [6, 8]]</code>.</p>
 <p>Lists and tuples support indexing and slicing. This is explained in detail
 in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
 
-<pre width=80>
+<pre width="80">
 mylist  <b>=</b> [<span>1</span>, <span>2</span>, <span class="s">"whatever"</span>]
 mytuple <b>=</b> (<u>cmd_e</u>, <u>cmd_g</u>)
 
@@ -698,14 +698,14 @@ call_h  <b class="d">.byte</b> &gt;<u>mylist</u>[<span>1</span>::<span>2</span>]
 moment) the same effect can be achieved by combining slicing and
 concatenation:</p>
 
-<pre width=80>
+<pre width="80">
 lst     := <u>lst</u>[:<span>2</span>] .. [<span>4</span>] .. <u>lst</u>[<span>3</span>:]<i>; same as lst[2] := 4 would be</i>
 </pre>
 
 <p>Folding is done on pair of elements either forward (left) or reverse
 (right). The list must contain at least one element. Here are some folding examples:</p>
 
-<pre width=80>
+<pre width="80">
 minimum <b>=</b> size([<u>part1</u>, <u>part2</u>, <u>part3</u>]) &lt;? ...
 maximum <b>=</b> size([<u>part1</u>, <u>part2</u>, <u>part3</u>]) &gt;? ...
 sum     <b>=</b> size([<u>part1</u>, <u>part2</u>, <u>part3</u>]) + ...
@@ -721,7 +721,7 @@ create lists of integers in a range with a given step value. At least the end
 must be given, the start defaults to 0 and the step to 1. Sounds not very
 useful, so here are a few examples:</p>
 
-<pre width=80>
+<pre width="80">
 <i>;Bitmask table, 8 bits from left to right</i>
         <b class="d">.byte</b> <span>%10000000</span> &gt;&gt; <span class="k">range</span>(<span>8</span>)
 <i>;Classic 256 byte single period sinus table with values of 0&ndash;255.</i>
@@ -734,27 +734,29 @@ scrhi   <b class="d">.byte</b> &gt;<u>_</u>
 
 <h3>Dictionaries<a name="dictionaries" href="#dictionaries"></a></h3>
 
-<p>Dictionaries are unsorted lists holding key and value pairs. Definition is
-done by collecting key:value pairs separated by comma between braces
-<code>{1:"value", "key":1, :"optional default value"}</code>.</p>
+<p>Dictionaries hold key and value pairs. Definition is done by collecting
+key:value pairs separated by comma between braces <code>{"key":"value", 
+:"default value"}</code>.</p>
 
-<p>Looking up a non existing key is normally an error
-unless a default value is given. An
-empty dictionary is <code>{}</code>. Currently this type is immutable. Numeric
-and string keys are accepted, the value can be anything.</p>
+<p>Looking up a non-existing key is normally an error
+unless a default value is given. An empty dictionary is <code>{}</code>.
+This type is immutable. There are limitations what may be used as a
+key but the value can be anything.</p>
 
 <div><table border="0">
 <caption>Dictionary operators and functions</caption>
 <tbody>
+<tr><td><code><u>y</u> .. <u>x</u></code><td>combine dictionaries<td><code>{<span>1</span>:<span>2</span>, <span>3</span>:<span>4</span>} .. {<span>2</span>:<span>3</span>, <span>3</span>:<span>1</span>}</code> is <code>{<span>1</span>:<span>2</span>, <span>2</span>:<span>3</span>, <span>3</span>:<span>1</span>}</code>
 <tr><td><code><u>x</u>[<u>i</u>]</code><td>value lookup<td><code>{<span class="s">"1"</span>:<span>2</span>}[<span class="s">"1"</span>]</code> is <code><span>2</span></code>
+<tr><td><code><u>x</u>.<u>i</u></code><td>symbol lookup<td><code>{.<u>ONE</u>:<span>1</span>, .<u>TWO</u>:<span>2</span>}.<u>ONE</u></code> is <code><span>1</span></code>
 <tr><td><code><u>y</u> <span class="k">in</span> <u>x</u></code><td>is a key<td><code><span>1</span> <span class="k">in</span> {<span>1</span>:<span>2</span>}</code> is <code><span>true</span></code>
 </tbody>
 </table></div>
 
-<pre width=80>
+<pre width="80">
 <i>; Simple lookup</i>
         <b class="d">.text</b> {<span>1</span>:<span class="s">"one"</span>, <span>2</span>:<span class="s">"two"</span>}[<span>2</span>]<i>; "two"</i>
-<i>; 16 element "fader" table 1->15->12->11->0</i>
+<i>; 16 element "fader" table 1-&gt;15-&gt;12-&gt;11-&gt;0</i>
         <b class="d">.byte</b> {<span>1</span>:<span>15</span>, <span>15</span>:<span>12</span>, <span>12</span>:<span>11</span>, :<span>0</span>}[<span class="k">range</span>(<span>16</span>)]
 </pre>
 
@@ -781,7 +783,7 @@ risk for now, you might need to update your code later.</b></p>
 </tbody>
 </table></div>
 
-<pre width=80>
+<pre width="80">
 mydata  <b class="d">.word</b> <span>1</span>, <span>4</span>, <span>3</span>
 mycode  <b class="k">.block</b>
 local   <b>lda</b> #<span>0</span>
@@ -917,7 +919,7 @@ signed.</p>
 instructions. They can also be used for defining stack variable symbols when
 using a 65816, or to force a specific addressing mode.</p>
 
-<pre width=80>
+<pre width="80">
 param   <b>=</b> #<span>1</span>,s            <i>;define a stack variable</i>
 const   <b>=</b> #<span>1</span>              <i>;immediate constant</i>
         <b>lda</b> #<span>0</span>,b          <i>;always "absolute" lda $0000</i>
@@ -942,7 +944,7 @@ zeros.</p>
 create uninitialized memory, but <a href="#d_fill"><code>.fill</code></a>, <a href="#d_align"><code>.align</code></a> or address manipulation as
 well.</p>
 
-<pre width=80>
+<pre width="80">
 *       <b>=</b> <span>$200</span>          <i>;bytes as necessary</i>
 	<b class="d">.word</b> <span>?</span>         <i>;2 bytes</i>
 	<b class="d">.fill</b> <span>10</span>        <i>;10 bytes</i>
@@ -1002,7 +1004,7 @@ used for conversions or type checks.</p>
 </tbody>
 </table></div>
 
-<pre width=80>
+<pre width="80">
         <b class="k">.cerror</b> <span class="k">type</span>(<u>var</u>) != <u>str</u>, <span class="s">"Not a string!"</span>
         <b class="d">.text</b> <span class="k">str</span>(<u>year</u>)   <i>; convert to string</i>
 </pre>
@@ -1049,7 +1051,7 @@ line option.</p>
 <p>A regular symbol is looked up first in the current scope, then in lower scopes
 until the global scope is reached.</p>
 
-<pre width=80>
+<pre width="80">
 f       <b class="k">.block</b>
 g        <b class="k">.block</b>
 n        <b>nop</b>            <i>;jump here</i>
@@ -1081,7 +1083,7 @@ symbol is used as a constant.</p>
 
 <p>A local symbol is only looked up in it's own scope and nowhere else.</p>
 
-<pre width=80>
+<pre width="80">
 incr	<b>inc</b> <u>ac</u>
         <b>bne</b> <u>_skip</u>
         <b>inc</b> <u>ac</u>+<span>1</span>
@@ -1102,7 +1104,7 @@ and backward (<code>&minus;</code>) references.</p>
 <q><code>&minus;&minus;</code></q> means the second backwards and so on. It's the same for forward, but with
 <q><code>+</code></q>. In expressions it may be necessary to put them into brackets.</p>
 
-<pre width=80>
+<pre width="80">
         <b>ldy</b> #<span>4</span>
 -       <b>ldx</b> #<span>0</span>
 -       <b>txa</b>
@@ -1124,7 +1126,7 @@ long debugging session to find out what went wrong.</p>
 <p>These references are also useful in segments, but this can create a nice
 trap when segments are copied into the code with their internal references.</p>
 
-<pre width=80>
+<pre width="80">
 	<b>bne</b> +
         <b class="k">#somemakro</b>      <i>;let's hope that this segment does</i>
 +	<b>nop</b>             <i>;not contain forward references...</i>
@@ -1156,7 +1158,7 @@ possible to use them before their definition.</p>
 If the variable was defined already then the original value is retained
 otherwise a new one is created with this value.</p>
 
-<pre width=80>
+<pre width="80">
 WIDTH   <b>=</b> <span>40</span>            <i>;a constant</i>
         <b>lda</b> #<u>WIDTH</u>      <i>;lda #$28</i>
 variabl	<b class="k">.var</b> <span>1</span>          <i>;a variable</i>
@@ -1378,7 +1380,7 @@ the <a href="#data-dumping">data directives</a> with the same names normally emi
 <tr><td>Some bytes from offset<td><code><span class="k">binary</span>(<u>name</u>, <u>offset</u>, <u>length</u>)</code>
 </tbody>
 </table></div>
-<pre width=80>
+<pre width="80">
 sidfile <b>=</b> <span class="s">"music.sid"</span>        <i>; file name</i>
 header  <b>=</b> <span class="k">binary</span>(<u>sidfile</u>, <span>$00</span>, <span>$7e</span>)
 init    <b>=</b> <u>header</u>[<span>$b</span>:<span>$9</span>:<span>-1</span>]   <i>; init address (big endian)</i>
@@ -1427,7 +1429,7 @@ type character. These flags can be used:</p>
 </tbody>
 </table></div>
 
-<pre width=80>
+<pre width="80">
         <b class="d">.text</b> <span class="k">format</span>(<span class="s">"<span>%#04x</span> bytes left"</span>, <span>1000</span>)<i>; $03e8 bytes left</i>
 </pre>
 
@@ -1458,7 +1460,7 @@ Different sequences can be generated by seeding with <a href="#d_seed"><code>.se
 <tr><td>integer in range of s &lt;= x &lt; e, step t<td><code><span class="k">random</span>(<u>s</u>, <u>a</u>, <u>t</u>)</code>
 </tbody>
 </table></div>
-<pre width=80>
+<pre width="80">
         <b class="k">.seed</b> <span>1234</span>      <i>; default is boring, seed the generator</i>
         <b class="d">.byte</b> <span class="k">random</span>(<span>256</span>)<i>; a pseudo random byte (0&ndash;255)</i>
         <b class="d">.byte</b> <span class="k">random</span>([<span>16</span>] x <span>8</span>)<i>; 8 pseudo random bytes (0&ndash;15)</i>
@@ -1474,7 +1476,7 @@ Different sequences can be generated by seeding with <a href="#d_seed"><code>.se
 <tr><td>integers from s to e (not including e), step t<td><code><span class="k">range</span>(<u>s</u>, <u>a</u>, <u>t</u>)</code>
 </tbody>
 </table></div>
-<pre width=80>
+<pre width="80">
         <b class="d">.byte</b> <span class="k">range</span>(<span>16</span>) <i>; 0, 1, ..., 14, 15</i>
         <b class="d">.char</b> <span class="k">range</span>(<span>-5</span>, <span>6</span>)<i>; -5, -4, ..., 4, 5</i>
 mylist  <b>=</b> <span class="k">range</span>(<span>10</span>, <span>0</span>, <span>-2</span>)<i>; [10, 8, 6, 4, 2]</i>
@@ -1482,13 +1484,13 @@ mylist  <b>=</b> <span class="k">range</span>(<span>10</span>, <span>0</span>, <
 
 <dt><code><b>repr(</b>&lt;expression&gt;<b>)</b></code><a name="f_repr" href="#f_repr"></a>
 <dd>Returns a string representation of value.
-<pre width=80>
+<pre width="80">
         <b class="k">.warn</b> <span class="k">repr</span>(<u>var</u>) <i>; pretty print value, for debugging</i>
 </pre>
 
 <dt><code><b>size(</b>&lt;expression&gt;<b>)</b></code><a name="f_size" href="#f_size"></a>
 <dd>Returns the size of code, structure or union in bytes.
-<pre width=80>
+<pre width="80">
 var     <b class="d">.word</b> <span>0</span>, <span>0</span>, <span>0</span>
         <b>ldx</b> #<span class="k">size</span>(<u>var</u>)  <i>; 6 bytes</i>
 var2    <b>=</b> <u>var</u> + <span>2</span>       <i>; start 2 bytes later</i>
@@ -1502,7 +1504,7 @@ var2    <b>=</b> <u>var</u> + <span>2</span>       <i>; start 2 bytes later</i>
 be all of the same length. In this case the order of lists is determined by
 comparing their elements from the start until a difference is found. The sort is stable.</p>
 
-<pre width=80>
+<pre width="80">
 <i>; sort IRQ routines by their raster lines</i>
 sorted  <b>=</b> <span class="k">sort</span>([(<span>60</span>, <u>irq1</u>), (<span>50</span>, <u>irq2</u>)])
 lines   <b class="d">.byte</b> <u>sorted</u>[:, <span>0</span>] <i>; 50, 60</i>
@@ -1563,7 +1565,7 @@ be recognized as such. For example the expression <q>[1,2]x2</q> should be writt
 Don't forget that they also denote indirect addressing mode for certain
 opcodes.</p>
 
-<pre width=80>
+<pre width="80">
         <b>lda</b> #(<span>4</span>+<span>2</span>)*<span>3</span>
 </pre>
 
@@ -1603,7 +1605,7 @@ parts of a memory address.</p>
 </tbody>
 </table></div>
 
-<pre width=80>
+<pre width="80">
         <b>lda</b> #&lt;<u>label</u>     <i>; low byte of address</i>
         <b>ldy</b> #&gt;<u>label</u>     <i>; high byte of address</i>
         <b>jsr</b> <span>$ab1e</span>
@@ -1619,7 +1621,7 @@ negation or inversion. Instead they apply to the whole expression to the right.
 This may be unexpected but is required for compatibility with old sources which
 expect this behaviour.</p>
 
-<pre width=80>
+<pre width="80">
         <b>lda</b> #&lt;<u>label</u>+<span>10</span>  <i>;This is &lt;(label+10) and not (&lt;label)+10</i>
 
 <i>;The check below is wrong and should be written as (&gt;start) != (&gt;end)</i>
@@ -1643,8 +1645,8 @@ operands as the result.</p>
 </tbody>
 </table></div>
 
-<pre width=80>
-<i>;Silly example for 1=>"simple", 2=>"advanced", else "normal"</i>
+<pre width="80">
+<i>;Silly example for 1=&gt;"simple", 2=&gt;"advanced", else "normal"</i>
         <b class="d">.text</b> <u>MODE</u> == <span>1</span> &amp;&amp; <span class="s">"simple"</span> || <u>MODE</u> == <span>2</span> &amp;&amp; <span class="s">"advanced"</span> || <span class="s">"normal"</span>
         <b class="d">.text</b> <u>MODE</u> == <span>1</span> ? <span class="s">"simple"</span> : <u>MODE</u> == <span>2</span> ? <span class="s">"advanced"</span> : <span class="s">"normal"</span>
 <i>;Limit result to 0 .. 8</i>
@@ -1672,7 +1674,7 @@ directly at the mnemonic.</p>
 </tbody>
 </table></div>
 
-<pre width=80>
+<pre width="80">
         <b>lda</b> @w <span>$0000</span>    <i>; force the use of 2 byte absolute addressing</i>
         <b>bne</b> @b <u>label</u>    <i>; prevent upgrade to beq+jmp with long branches in use</i>
         <b>lda</b> @w #<span>$00</span>     <i>; use 2 bytes independent of accumulator size</i>
@@ -1683,7 +1685,7 @@ directly at the mnemonic.</p>
 <p>These assignment operators are short hands for updating variables.</p>
 
 <p>The variables on the left must be defined beforehand by <q><code>:=</code></q>
-or <q><a href="#d_var"><code>.var</code></q></a>. Constants can't be changed of course.</p>
+or <q><a href="#d_var"><code>.var</code></a></q>. Constants can't be changed of course.</p>
 
 <div><table border="0">
 <caption>Compound assignments</caption>
@@ -1709,7 +1711,7 @@ or <q><a href="#d_var"><code>.var</code></q></a>. Constants can't be changed of 
 </tbody>
 </table></div>
 
-<pre width=80>
+<pre width="80">
 v       <b>+=</b> <span>1</span>            <i>; same as 'v .var v + 1'</i>
 </pre>
 
@@ -1800,7 +1802,7 @@ but it does not need to be.</p>
 <dt><code><b>&lowast;=</b></code> &lt;expression&gt;<a name="d_star" href="#d_star"></a>
 <dd>The compile offset is adjusted so that the program counter
 will match the requested address in the expression.
-<pre width=80>
+<pre width="80">
 <i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$0800</span>
 .0800						label1
@@ -1816,7 +1818,7 @@ will match the requested address in the expression.
 <p>Popular in old TASM code where this was the only way to create
 relocated code, otherwise it's use is not recommended as there are easier
 to use alternatives below.</p>
-<pre width=80>
+<pre width="80">
 <i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$1000</span>
 .1000		ea		nop			<b>nop</b>
@@ -1831,7 +1833,7 @@ to use alternatives below.</p>
 <p>Changes the program counter only, the compile offset is not changed. When finished all continues where it was left off before.</p>
 <p>The naming is not logical at all for relocated code, but that's how it was named in old 6502tass.</p>
 <p>It's used for code copied to it's proper location at runtime. Can be nested of course.</p>
-<pre width=80>
+<pre width="80">
 <i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$1000</span>
 							<b class="k">.logical</b> <span>$300</span>
@@ -1848,7 +1850,7 @@ to use alternatives below.</p>
 <dd>Ends a virtual block
 <p>Changes the program counter to the expression (if given) and discards the result of compilation.
 This is useful to define structures to fixed addresses.</p>
-<pre width=80>
+<pre width="80">
 	<b class="k">.virtual</b> <span>$d400</span>	<i>; base address</i>
 sid	<b class="k">.block</b>
 freq	<b class="d">.word</b> <span>?</span>	        <i>; frequency</i>
@@ -1860,7 +1862,7 @@ sr	<b class="d">.byte</b> <span>?</span>	        <i>; sustain/release</i>
 	<b class="k">.endv</b>
 </pre>
 <p>Or to define stack "allocated" variables on 65816.</p>
-<pre width=80>
+<pre width="80">
 	<b class="k">.virtual</b> #<span>1</span>,s
 p1	<b class="d">.addr</b> <span>?</span>	        <i>; at #1,s</i>
 tmp	<b class="d">.byte</b> <span>?</span>	        <i>; at #3,s</i>
@@ -1871,7 +1873,7 @@ tmp	<b class="d">.byte</b> <span>?</span>	        <i>; at #3,s</i>
 <dt><code><b class="k">.align</b></code> &lt;expression&gt;[, &lt;fill&gt;]<a name="d_align" href="#d_align"></a>
 <dd>Align the program counter to a dividable address by inserting uninitialized memory or repeated bytes.
 <p>Usually used to page align data or code to avoid penalty cycles when indexing or branching.</p>
-<pre width=80>
+<pre width="80">
 <i>;Offset PC       Bytes          Disassembly     Source</i>
 						*	<b>=</b> <span>$ffc</span>
 &gt;0ffc							<b class="k">.align</b> <span>$100</span>
@@ -1901,7 +1903,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create bytes from 8&nbsp;bit unsigned constants (0&ndash;255)
 <dt><code><b class="d">.char</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_char" href="#d_char"></a>
 <dd>Create bytes from 8&nbsp;bit signed constants (&minus;128&ndash;127)
-<pre width=80>
+<pre width="80">
 &gt;1000  ff 03                             <b class="d">.byte</b> <span>255</span>, <span>$03</span>
 &gt;1002  41                                <b class="d">.byte</b> <span class="s">"a"</span>
 &gt;1003                                    <b class="d">.byte</b> <span>?</span>        <i>; reserve 1 byte</i>
@@ -1920,7 +1922,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create bytes from 16&nbsp;bit unsigned constants (0&ndash;65535)
 <dt><code><b class="d">.sint</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_int" href="#d_int"></a>
 <dd>Create bytes from 16&nbsp;bit signed constants (&minus;32768&ndash;32767)
-<pre width=80>
+<pre width="80">
 &gt;1000  42 23 55 45                       <b class="d">.word</b> <span>$2342</span>, <span>$4555</span>
 &gt;1004                                    <b class="d">.word</b> <span>?</span>        <i>; reserve 2 bytes</i>
 &gt;1006  eb fd 51 11                       <b class="d">.sint</b> <span>-533</span>, <span>4433</span>
@@ -1936,7 +1938,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create 16&nbsp;bit address constants for addresses (in current program bank)
 <dt><code><b class="d">.rta</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_rta" href="#d_rta"></a>
 <dd>Create 16&nbsp;bit return address constants for addresses (in current program bank)
-<pre width=80>
+<pre width="80">
                                         *       <b>=</b> <span>$12000</span>
 .012000  7c 03 20       jmp ($012003,x)         <b>jmp</b> (<u>jumps</u>,x)
 &gt;012003  50 20 32 03 92 15              jumps   <b class="d">.addr</b> <span>$12050</span>, <u>routine1</u>, <u>routine2</u>
@@ -1954,7 +1956,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create bytes from 24&nbsp;bit unsigned constants (0&ndash;16777215)
 <dt><code><b class="d">.lint</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_lint" href="#d_lint"></a>
 <dd>Create bytes from 24&nbsp;bit signed constants (&minus;8388608&ndash;8388607)
-<pre width=80>
+<pre width="80">
 &gt;1000  56 34 12                          <b class="d">.long</b> <span>$123456</span>
 &gt;1003                                    <b class="d">.long</b> <span>?</span>	        <i>; reserve 3 bytes</i>
 &gt;1006  eb fd ff 51 11 00                 <b class="d">.lint</b> <span>-533</span>, <span>4433</span>
@@ -1976,7 +1978,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create bytes from 32&nbsp;bit constants (0&ndash;4294967295)
 <dt><code><b class="d">.dint</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_dint" href="#d_dint"></a>
 <dd>Create bytes from 32&nbsp;bit signed constants (&minus;2147483648&ndash;2147483647)
-<pre width=80>
+<pre width="80">
 &gt;1000  78 56 34 12              <b class="d">.dword</b> <span>$12345678</span>
 &gt;1004                           <b class="d">.dword</b> <span>?</span>        <i>; reserve 4 bytes</i>
 &gt;1008  5d 7a 79 e7              <b class="d">.dint</b> <span>-411469219</span>
@@ -1995,7 +1997,7 @@ are converted using the current encoding.</p>
 <dl class="dir">
 <dt><code><b class="d">.text</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_text" href="#d_text"></a>
 <dd>Assemble strings into 8&nbsp;bit bytes.
-<pre width=80>
+<pre width="80">
 &gt;1000  4f 45 d5  <b class="d">.text</b> <span class="s">"oeU"</span>
 &gt;1003  4f 45 d5  <b class="d">.text</b> <span class="s">'oeU'</span>
 &gt;1006  17 33     <b class="d">.text</b> <span>23</span>, <span>$33</span>	<i>; bytes</i>
@@ -2005,7 +2007,7 @@ are converted using the current encoding.</p>
 
 <dt><code><b class="d">.fill</b></code> &lt;length&gt;[, &lt;fill&gt;]<a name="d_fill" href="#d_fill"></a>
 <dd>Reserve space (using uninitialized data), or fill with repeated bytes.
-<pre width=80>
+<pre width="80">
 &gt;1000            <b class="d">.fill</b> <span>$100</span>      <i>;no fill, just reserve $100 bytes</i>
 &gt;1100  00 00 00  <b class="d">.fill</b> <span>$4000</span>, <span>0</span>  <i>;16384 bytes of 0</i>
 ...
@@ -2020,7 +2022,7 @@ are converted using the current encoding.</p>
 <p>Any byte which already has the most significant bit set will cause an error.
 The last byte can't be uninitialized or missing of course.</p>
 <p>The naming comes from old TASM and is a reference to setting the high bit of alphabetic letters which results in it's uppercase version in PETSCII.</p>
-<pre width=80>
+<pre width="80">
 .1000  a2 00          ldx #$00                <b>ldx</b> #<span>0</span>
 .1002  bd 10 10       lda $1010,x     loop    <b>lda</b> <u>txt</u>,x
 .1005  08             php                     <b>php</b>
@@ -2041,7 +2043,7 @@ bit set will cause an error as this is cut off on shifting.
 The last byte can't be uninitialized or missing of course.</p>
 <p>The naming is a reference to left shifting.</p>
 
-<pre width=80>
+<pre width="80">
 .1000  a2 00          ldx #$00                <b>ldx</b> #<span>0</span>
 .1002  bd 0d 10       lda $100d,x     loop    <b>lda</b> <u>txt</u>,x
 .1005  4a             lsr a                   <b>lsr</b>
@@ -2057,7 +2059,7 @@ The last byte can't be uninitialized or missing of course.</p>
 <dt><code><b class="d">.null</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_null" href="#d_null"></a>
 <dd>Same as <a href="#d_text"><code>.text</code></a>, but adds a zero byte to the end. An existing
 zero byte is an error as it'd cause a false end marker.
-<pre width=80>
+<pre width="80">
 .1000  a9 07          lda #$07                <b>lda</b> #&lt;<u>txt</u>
 .1002  a0 10          ldy #$10                <b>ldy</b> #&gt;<u>txt</u>
 .1004  20 1e ab       jsr $ab1e               <b>jsr</b> <span>$ab1e</span>
@@ -2068,7 +2070,7 @@ zero byte is an error as it'd cause a false end marker.
 <dt><code><b class="d">.ptext</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_ptext" href="#d_ptext"></a>
 <dd>Same as <a href="#d_text"><code>.text</code></a>, but prepend the number of bytes in front of the
 string (pascal style string). Therefore it can't do more than 255 bytes.
-<pre width=80>
+<pre width="80">
 .1000  a9 1d          lda #$1d                <b>lda</b> #&lt;<u>txt</u>
 .1002  a2 10          ldx #$10                <b>ldx</b> #&gt;<u>txt</u>
 .1004  20 08 10       jsr $1008               <b>jsr</b> <u>print</u>
@@ -2100,7 +2102,7 @@ to 8&nbsp;bit values in strings.</p>
 <dd>Selects text encoding, predefined encodings are <q>none</q> and
 <q>screen</q> (screen code), anything else is user defined. All user encodings
 start without any character or escape definitions, add some as required.
-<pre width=80>
+<pre width="80">
                                 <b class="k">.enc</b> <span class="s">"screen"</span><i>;screen code mode</i>
 &gt;1000  13 03 12 05 05 0e 20 03  <b class="d">.text</b> <span class="s">"screen codes"</span>
 &gt;1008  0f 04 05 13
@@ -2115,7 +2117,7 @@ start without any character or escape definitions, add some as required.
 applied to a range as characters and bytes are usually assigned sequentially.
 The start and end positions are Unicode character codes either by numbers or by
 typing them. Overlapping ranges are not allowed.</p>
-<pre width=80>
+<pre width="80">
         <b class="k">.enc</b> <span class="s">"ascii"</span>	<i>;define an ascii encoding</i>
         <b class="k">.cdef</b> <span class="s">" ~"</span>, <span>32</span>  <i>;identity for printable</i>
 </pre>
@@ -2125,8 +2127,8 @@ typing them. Overlapping ranges are not allowed.</p>
 When strings with common prefixes are used the longest match wins. Useful for defining
 non-typeable control code aliases, or as a simple tokenizer.</p>
 </dl>
-<pre width=80>
-        <b class="k">.enc</b> <span class="s">"petscii"</span>  <i>;define an ascii->petscii encoding</i>
+<pre width="80">
+        <b class="k">.enc</b> <span class="s">"petscii"</span>  <i>;define an ascii-&gt;petscii encoding</i>
         <b class="k">.cdef</b> <span class="s">" @"</span>, <span>32</span>  <i>;characters</i>
         <b class="k">.cdef</b> <span class="s">"AZ"</span>, <span>$c1</span>
         <b class="k">.cdef</b> <span class="s">"az"</span>, <span>$41</span>
@@ -2171,7 +2173,7 @@ is the sum of lengths of all items.</p>
 <dd>Create instance of structure with initialization values
 </dl>
 
-<pre width=80>
+<pre width="80">
         <b class="k">.struct</b>         <i>;anonymous structure</i>
 x       <b class="d">.byte</b> <span>0</span>         <i>;labels are visible</i>
 y       <b class="d">.byte</b> <span>0</span>         <i>;content compiled here</i>
@@ -2206,7 +2208,7 @@ length of it's longest item.</p>
 <dd>Create instance of union with initialization values
 </dl>
 
-<pre width=80>
+<pre width="80">
         <b class="k">.union</b>          <i>;anonymous union</i>
 x       <b class="d">.byte</b> <span>0</span>         <i>;labels are visible</i>
 y       <b class="d">.word</b> <span>0</span>         <i>;content compiled here</i>
@@ -2227,7 +2229,7 @@ nn      <b class="d">.dunion</b> <u>nn_u</u>, <span>1</span> <i>;union instance 
 <h4>Combined use of structures and unions<a name="struct-and-union" href="#struct-and-union"></a></h4>
 <p>The example below shows how to define structure to a binary include.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="k">.union</b>
         <b class="d">.binary</b> <span class="s">"pic.drp"</span>, <span>2</span>
         <b class="k">.struct</b>
@@ -2244,7 +2246,7 @@ overlapping memory assignment. The example below shares zero page allocations
 for two separate parts of a bigger program. The common subroutine variables
 are assigned after in the <q>zp</q> section.</p>
 
-<pre width=80>
+<pre width="80">
 *       <b>=</b> <span>$02</span>
         <b class="k">.union</b>          <i>;spare some memory</i>
          <b class="k">.struct</b>
@@ -2285,7 +2287,7 @@ labels can be accessed through that label.</p>
 the macro is used, but it can be any expression.
 </dl>
 
-<pre width=80>
+<pre width="80">
 <i>;A simple macro</i>
 copy    <b class="k">.macro</b>
         <b>ldx</b> #<span class="k">size</span>(<span class="k">\1</span>)
@@ -2312,7 +2314,7 @@ var     <b class="k">.lohi</b> <span>1234</span>, <span>5678</span>
 <h4>Parameter references<a name="macro-parameters" href="#macro-parameters"></a></h4>
 <p>The first 9 parameters can be referenced by <q><code>\1</code></q>&ndash;<q><code>\9</code></q>.
 The entire parameter list including separators is <q><code>\@</code></q>.</p>
-<pre width=80>
+<pre width="80">
 name	<b class="k">.macro</b>
         <b>lda</b> #<span class="k">\1</span> 	<i>;first parameter 23+1</i>
 	<b class="k">.endm</b>
@@ -2326,7 +2328,7 @@ equal sign which is used as a replacement when the parameter is missing.</p>
 <p>These named parameters can be referenced by <code>\name</code> or
 <code>\{name}</code>. Names must match completely, if unsure use the quoted
 name reference syntax.</p>
-<pre width=80>
+<pre width="80">
 name	<b class="k">.macro</b> first, b=<span>2</span>, , last
         <b>lda</b> #<span class="k">\first</span>	<i>;first parameter</i>
         <b>lda</b> #<span class="k">\b</span> 	<i>;second parameter</i>
@@ -2343,7 +2345,7 @@ can only appear in place of one. Text references on the other hand can appear
 everywhere and will work in place of e.g. quoted text or opcodes and labels. The
 first 9 parameters can be referenced as text by
 <code>@1</code>&ndash;<code>@9</code>.</p>
-<pre width=80>
+<pre width="80">
 name    <b class="k">.macro</b>
         <b>jsr</b> <u>print</u>
         <b class="d">.null</b> <span class="s">"Hello <span>@1</span>!"</span><i>;first parameter</i>
@@ -2378,7 +2380,7 @@ preceded with a star, in this case these parameters are collected into a tuple.<
 <p>Only those external variables and functions are available which were accessible at
 the place of definition, but not those at the place of invocation.</p>
 
-<pre width=80>
+<pre width="80">
 vicmem  <b class="k">.sfunction</b> <u>_font</u>, <u>_scr</u>=<span>0</span>, ((<u>_font</u> &gt;&gt; <span>10</span>) &amp; <span>$0f</span>) | ((<u>_scr</u> &gt;&gt; <span>6</span>) &amp; <span>$f0</span>)
 
         <b>lda</b> #<u>vicmem</u>(<span>$2000</span>, <span>$0400</span>)<i>; calculate constant</i>
@@ -2391,7 +2393,7 @@ used. If multiple values are returned these will form a tuple.</p>
 and there's a label in front then the returned value is assigned to it. If
 nothing is returned then it's used as regular label.</p>
 
-<pre width=80>
+<pre width="80">
 mva     <b class="k">.function</b> <u>value</u>, <u>target</u>
         <b>lda</b> <u>value</u>
         <b>sta</b> <u>target</u>
@@ -2434,7 +2436,7 @@ across conditionally compiled areas with such labels.</p>
 <a href="#d_ifmi"><code>.ifmi</code></a> directives exists for compatibility only, in practice it's
 better to use comparison operators instead.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="k">.if</b> <u>wait</u>==<span>2</span>	<i>;2 cycles</i>
 	<b>nop</b>
         <b class="k">.elsif</b> <u>wait</u>==<span>3</span>	<i>;3 cycles</i>
@@ -2462,7 +2464,7 @@ statement.</p>
 <dd>End of conditional compilation.
 </dl>
 
-<pre width=80>
+<pre width="80">
         <b class="k">.switch</b> <u>wait</u>
         <b class="k">.case</b> <span>2</span>	        <i>;2 cycles</i>
 	<b>nop</b>
@@ -2484,7 +2486,7 @@ statement.</p>
 <dd>End of conditional compilation.
 </dl>
 
-<pre width=80>
+<pre width="80">
 	<b class="k">.comment</b>
 <i>        lda #1          ;this won't be compiled</i>
 <i>	sta $d020</i>
@@ -2512,7 +2514,7 @@ each iteration will be assigned to it. This allows accessing labels within.</p>
 <p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.</p>
 <p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.</p>
 
-<pre width=80>
+<pre width="80">
         <b>ldx</b> #<span>0</span>
         <b>lda</b> #<span>32</span>
 lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <span>$800</span>, <u>ue</u> += <span>$100</span>
@@ -2527,7 +2529,7 @@ lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <sp
 <dt><code><b class="k">.next</b></code>
 <dd>Assign variable(s) to values in sequence one-by-one in order.
 <p>The expression is usually the <a href="#f_range"><code>range</code></a> function or some sort of <a href="#list-tuples">list</a>.</p>
-<pre width=80>
+<pre width="80">
         <b class="k">.for</b> <u>col</u> <span class="k">in</span> <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
         <b>lda</b> #<u>col</u>         <i>;0, 11, 12, 15 and 1</i>
         <b>sta</b> <span>$d020</span>
@@ -2539,7 +2541,7 @@ lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <sp
 <dt><code><b class="k">.next</b></code>
 <dd>Repeat enclosed lines the specified number of times.
 
-<pre width=80>
+<pre width="80">
         <b class="k">.rept</b> <span>100</span>
 -	<b>inx</b>
 	<b>bne</b> <u>-</u>
@@ -2588,7 +2590,7 @@ and <a href="#d_while"><code>.bwhile</code></a> loop.
 forward references of course, handle with care. Should only be used in
 classic TASM sources for creating loops.
 
-<pre width=80>
+<pre width="80">
 i	<b class="k">.var</b> <span>100</span>
 loop	<b class="k">.lbl</b>
         <b>nop</b>
@@ -2620,7 +2622,7 @@ in file names!</p>
 <dd>Include source file here in it's local block. If the directive is prefixed
 with a label then all labels are local and are accessible through that label
 only, otherwise not reachable at all.
-<pre width=80>
+<pre width="80">
 
 	<b class="k">.include</b> <span class="s">"macros.asm"</span>       <i>;include macros</i>
 menu    <b class="k">.binclude</b> <span class="s">"menu.asm"</span>        <i>;include in a block</i>
@@ -2633,7 +2635,7 @@ menu    <b class="k">.binclude</b> <span class="s">"menu.asm"</span>        <i>;
 <p>By using offset and length it's possible to break out chunks of data from a
 file separately, like bitmap and colors for example. Negative offsets are calculated from the end of file.</p>
 
-<pre width=80>
+<pre width="80">
         <b class="d">.binary</b> <span class="s">"stuffz.bin"</span>        <i>;simple include, all bytes</i>
         <b class="d">.binary</b> <span class="s">"stuffz.bin"</span>, <span>2</span>     <i>;skip start address</i>
         <b class="d">.binary</b> <span class="s">"stuffz.bin"</span>, <span>2</span>, <span>1000</span><i>;skip start address, 1000 bytes max</i>
@@ -2650,7 +2652,7 @@ that a symbol in a parent or global scope may be <q>shadowed</q>.</p>
 The searched symbol stands on the right and it's looked up in the scope on the
 left. More than one symbol may be looked up at the same time and the result
 will be a list or tuple.</p>
-<pre width=80>
+<pre width="80">
         <b>lda</b> #<span>0</span>
         <b>sta</b> <u>vic</u>.<u>sprite</u>.<u>enable</u>
 <i>; same as .byte colors.red, colors.green, colors.blue</i>
@@ -2667,7 +2669,7 @@ won't be compiled.</p>
 <p>Symbols inside are enclosed in a scope and are accessible through the
 symbol of the procedure using the dot notation. This forces compilation of the
 whole procedure of course.</p>
-<pre width=80>
+<pre width="80">
 ize     <b class="k">.proc</b>
 	<b>nop</b>
 cucc    <b>nop</b>
@@ -2703,7 +2705,7 @@ but these macro calls still need to be manually managed.
 <dd>Block scoping area end
 <p>All symbols inside a block are enclosed in a scope. If the block had a symbol
 then local symbols are accessible through that using the dot notation.</p>
-<pre width=80>
+<pre width="80">
 	<b class="k">.block</b>
         <b>inc</b> <u>count</u> + <span>1</span>
 count	<b>ldx</b> #<span>0</span>
@@ -2728,7 +2730,7 @@ the same scope from outside. Can be nested as necessary.</p>
 not always exist without resorting to <code>.ifdef</code>/<code>.ifndef</code> or
 similar directives in other assemblers.</p>
 
-<pre width=80>
+<pre width="80">
 symbol	<b>=</b> <span>1</span>            <i>;stronger symbol than the one below</i>
 	<b class="k">.weak</b>
 symbol	<b>=</b> <span>0</span>            <i>;default value if the one above does not exists</i>
@@ -2790,7 +2792,7 @@ starting compile offset and the maximum compile offset reached. It is possible
 to manipulate the compile offset in fragments, but putting code before the
 start of <a href="#d_dsection"><code>.dsection</code></a> is not allowed.</p>
 
-<pre width=80>
+<pre width="80">
 *       <b>=</b> <span>$02</span>
         <b class="d">.dsection</b> <u>zp</u>   <i>;declare zero page section</i>
         <b class="k">.cerror</b> <u>*</u> &gt; <span>$30</span>, <span class="s">"Too many zero page variables"</span>
@@ -2836,7 +2838,7 @@ p3	<b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
         <b class="k">.send</b> <u>code</u>
 </pre>
 <p>The compiled code will look like:</p>
-<pre width=80>
+<pre width="80">
 &gt;0801	 0b 08 d5 07			        <b class="d">.word</b> <u>ss</u>, <span>2005</span>
 &gt;0805	 9e 32 30 36 31 00		        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%4d"</span>, <u>start</u>)
 &gt;080b	 00 00				ss      <b class="d">.word</b> <span>0</span>
@@ -2867,7 +2869,7 @@ reached through parents.</p>
 <q>code</q> and <q>data</q> sections they use, while the <q>bss</q> section is
 shared for all banks.</p>
 
-<pre width=80>
+<pre width="80">
 <i>;First 8K bank at the beginning, PC at $8000</i>
 *       <b>=</b> <span>$0000</span>
         <b class="k">.logical</b> <span>$8000</span>
@@ -2925,7 +2927,7 @@ routine <b class="d">.addr</b> <u>print</u>
 <dt><code><b class="k">.al</b></code><a name="d_al" href="#d_al"></a>
 <dd>Select short (8&nbsp;bit) or long (16&nbsp;bit) accumulator immediate constants.
 
-<pre width=80>
+<pre width="80">
 	<b class="k">.al</b>
         <b>lda</b> #<span>$4322</span>
 </pre>
@@ -2933,7 +2935,7 @@ routine <b class="d">.addr</b> <u>print</u>
 <dt><code><b class="k">.xs</b></code><a name="d_xs" href="#d_xs"></a>
 <dt><code><b class="k">.xl</b></code><a name="d_xl" href="#d_xl"></a>
 <dd>Select short (8&nbsp;bit) or long (16&nbsp;bit) index register immediate constants.
-<pre width=80>
+<pre width="80">
 	<b class="k">.xl</b>
         <b>ldx</b> #<span>$1000</span>
 </pre>
@@ -2942,7 +2944,7 @@ routine <b class="d">.addr</b> <u>print</u>
 <dt><code><b class="k">.mansiz</b></code><a name="d_mansiz" href="#d_mansiz"></a>
 <dd>Select automatic adjustment of immediate constant sizes based on
 <code>SEP</code>/<code>REP</code> instructions.
-<pre width=80>
+<pre width="80">
 	<b class="k">.autsiz</b>
         <b>rep</b> #<span>$10</span>        <i>;implicit .xl</i>
         <b>ldx</b> #<span>$1000</span>
@@ -2952,7 +2954,7 @@ routine <b class="d">.addr</b> <u>print</u>
 <dd>Data bank (absolute) addressing is only used for addresses falling into this 64&nbsp;KiB
 bank. The default is 0, which means addresses in bank zero.
 <p>When data bank is switched off only data bank indexed (,b) addresses create data bank accessing instructions.</p>
-<pre width=80>
+<pre width="80">
         <b class="k">.databank</b> <span>$10</span>   <i>;data bank at $10xxxx</i>
         <b>lda</b> <span>$101234</span>     <i>;results in $ad, $34, $12</i>
         <b class="k">.databank</b> <span>?</span>     <i>;no data bank</i>
@@ -2964,7 +2966,7 @@ bank. The default is 0, which means addresses in bank zero.
 <dd>Direct (zero) page addressing is only used for addresses falling
 into a specific 256 byte address range. The default is 0, which is the first page of bank zero.
 <p>When direct page is switched off only the direct page indexed (,d) addresses create direct page accessing instructions.</p>
-<pre width=80>
+<pre width="80">
         <b class="k">.dpage</b> <span>$400</span>     <i>;direct page $400-$4ff</i>
         <b>lda</b> <span>$456</span>        <i>;results in $a5, $56</i>
         <b class="k">.dpage</b> <span>?</span>        <i>;no direct page</i>
@@ -2983,7 +2985,7 @@ into a specific 256 byte address range. The default is 0, which is the first pag
 <dd>End of page check block
 <p>Gives an error on page boundary crossing, e.g. for timing sensitive code.</p>
 
-<pre width=80>
+<pre width="80">
 	<b class="k">.page</b>
 table   <b class="d">.byte</b> <span>0</span>, <span>1</span>, <span>2</span>, <span>3</span>, <span>4</span>, <span>5</span>, <span>6</span>, <span>7</span>
 	<b class="k">.endp</b>
@@ -2993,7 +2995,7 @@ table   <b class="d">.byte</b> <span>0</span>, <span>1</span>, <span>2</span>, <
 <dd>Switches error generation on page boundary crossing during relative branch.
 Such a condition on 6502 adds 1 extra cycle to the execution time, which
 can ruin the timing of a carefully cycle counted code.
-<pre width=80>
+<pre width="80">
         <b class="k">.option</b> allow_branch_across_page = <span>0</span>
         <b>ldx</b> #<span>3</span>          <i>;now this will execute in</i>
 -       <b>dex</b>             <i>;16 cycles for sure</i>
@@ -3004,7 +3006,7 @@ can ruin the timing of a carefully cycle counted code.
 <dt><code><b class="k">.error</b></code> &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_error" href="#d_error"></a>
 <dt><code><b class="k">.cerror</b></code> &lt;condition&gt;, &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_cerror" href="#d_cerror"></a>
 <dd>Exit with error or conditionally exit with error
-<pre width=80>
+<pre width="80">
         <b class="k">.error</b> <span class="s">"Unfinished here..."</span>
         <b class="k">.cerror</b> <u>*</u> &gt; <span>$1200</span>, <span class="s">"Program too long by "</span>, <u>*</u> - <span>$1200</span>, <span class="s">" bytes"</span>
 </pre>
@@ -3012,7 +3014,7 @@ can ruin the timing of a carefully cycle counted code.
 <dt><code><b class="k">.warn</b></code> &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_warn" href="#d_warn"></a>
 <dt><code><b class="k">.cwarn</b></code> &lt;condition&gt;, &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_cwarn" href="#d_cwarn"></a>
 <dd>Display a warning message always or depending on a condition
-<pre width=80>
+<pre width="80">
         <b class="k">.warn</b> <span class="s">"FIXME: handle negative values too!"</span>
         <b class="k">.cwarn</b> <u>*</u> &gt; <span>$1200</span>, <span class="s">"This may not work!"</span>
 </pre>
@@ -3023,7 +3025,7 @@ can ruin the timing of a carefully cycle counted code.
 
 <dt><code><b class="k">.cpu</b></code> &lt;expression&gt;<a name="d_cpu" href="#d_cpu"></a>
 <dd>Selects CPU according to the string argument.
-<pre width=80>
+<pre width="80">
 	<b class="k">.cpu</b> <span class="s">"6502"</span>	<i>;standard 65xx</i>
 	<b class="k">.cpu</b> <span class="s">"65c02"</span>	<i>;CMOS 65C02</i>
 	<b class="k">.cpu</b> <span class="s">"65ce02"</span>	<i>;CSG 65CE02</i>
@@ -3068,7 +3070,7 @@ is set to the value of expression or reference of variable.
 <dt><code><b class="k">.proff</b></code><a name="d_proff" href="#d_proff"></a>
 <dd>Turn on or off source listing on part of the file.
 
-<pre width=80>
+<pre width="80">
         <b class="k">.proff</b>           <i>;Don't put filler bytes into listing</i>
 *       <b>=</b> <span>$8000</span>
         <b class="d">.fill</b> <span>$2000</span>, <span>$ff</span> <i>;Pre-fill ROM area</i>
@@ -3219,7 +3221,7 @@ source file directly, or do the following:</p>
 </ul>
 <p>The resulting file should then (with the restrictions below) assemble using the
 following command line:</p>
-<pre width=80>
+<pre width="80">
 64tass -C -T -a -W -i source.asm -o outfile.prg
 </pre>
 
@@ -3283,7 +3285,7 @@ system specific.</p>
 <dl class="dir">
 <dt><b>-o</b> &lt;filename&gt;, <b>--output</b> &lt;filename&gt;<a name="o_output" href="#o_output"></a>
 <dd>Place output into &lt;filename&gt;. The default output filename is <q>a.out</q>. This option changes it.
-<pre width=80>
+<pre width="80">
 64tass a.asm -o a.prg
 </pre>
 
@@ -3307,7 +3309,7 @@ formats. Using the same name multiple times is not a good idea.</p>
 <dd>By default all sections go into the output file. Using this option
 limits the output to specific section and it's children. This is useful
 to split a larger program into several files.
-<pre width=80>
+<pre width="80">
 64tass a.asm --output-section main -o main.prg
 64tass a.asm --output-section loader -o loader.prg
 </pre>
@@ -3315,7 +3317,7 @@ to split a larger program into several files.
 <dt><b>-X</b>, <b>--long-address</b><a name="o_long-address" href="#o_long-address"></a>
 <dd>Use 3 byte address/length for CBM and nonlinear output instead of 2
 bytes. Also increases the size of raw output to 16&nbsp;MiB.
-<pre width=80>
+<pre width="80">
 64tass --long-address --m65816 a.asm
 </pre>
 
@@ -3342,7 +3344,7 @@ zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp
 <dd>Generate nonlinear output file.
 <p>Overlapping blocks are flattened. Blocks are saved in sorted order and uninitialized memory is skipped. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.</p>
 <p>Used for linkers and downloading.</p>
-<pre width=80>
+<pre width="80">
 64tass --nonlinear a.asm
 *       <b>=</b> <span>$1000</span>
         <b>lda</b> #<span>2</span>
@@ -3368,7 +3370,7 @@ zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp
 happens in the definition order without sorting, and uninitialized memory is
 skipped in the output. Up to 64&nbsp;KiB.</p>
 <p>Used for Atari executables.</p>
-<pre width=80>
+<pre width="80">
 64tass --atari-xex a.asm
 *       <b>=</b> <span>$02e0</span>
         <b class="d">.addr</b> <u>start</u>      <i>;run address</i>
@@ -3393,7 +3395,7 @@ start	<b>rts</b>
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with zeros. Uninitialized memory
 before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB.</p>
 <p>Used for Apple II executables.</p>
-<pre width=80>
+<pre width="80">
 64tass --apple-ii a.asm
 *       <b>=</b> <span>$0c00</span>
         <b>rts</b>
@@ -3412,13 +3414,13 @@ before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB
 <p>Overlapping blocks are kept, data is stored in the definition order,
 and uninitialized areas are skipped. I8HEX up to 64&nbsp;KiB, I32HEX up to 4&nbsp;GiB.</p>
 <p>Used for EPROM programming or downloading.</p>
-<pre width=80>
+<pre width="80">
 64tass --intel-hex a.asm
 *       <b>=</b> <span>$0c00</span>
         <b>rts</b>
 </pre>
 Result of compilation:
-<pre width=80>
+<pre width="80">
 :010C00006093
 :00000001FF
 </pre>
@@ -3429,13 +3431,13 @@ Result of compilation:
 and uninitialized memory areas are skipped. S19 up to 64&nbsp;KiB, S28 up to 16&nbsp;MiB
 and S37 up to 4&nbsp;GiB.</p>
 <p>Used for EPROM programming or downloading.</p>
-<pre width=80>
+<pre width="80">
 64tass --s-record a.asm
 *       <b>=</b> <span>$0c00</span>
         <b>rts</b>
 </pre>
 Result of compilation:
-<pre width=80>
+<pre width="80">
 S1040C00608F
 S9030C00F0
 </pre>
@@ -3455,7 +3457,7 @@ which is more suitable for an ASCII editor. It also adds predefined petcat style
 PETSCII literals to the default encodings, and enables Unicode letters in symbol names.</p>
 
 <p><b>For writing sources in UTF-8/UTF-16 encodings this option is required!</b></p>
-<pre width=80>
+<pre width="80">
 64tass a.asm
 
 .0000    a9 61          lda #$61        <b>lda</b> #<span class="s">"a"</span>
@@ -3478,7 +3480,7 @@ PETSCII literals to the default encodings, and enables Unicode letters in symbol
 by manually rewriting them as <code>BXX &lowast;+5 JMP xxx</code>.
 64tass can do this automatically if this option is used. <code>BRA</code>
 is of course not converted.
-<pre width=80>
+<pre width="80">
 64tass a.asm
 *       <b>=</b> <span>$1000</span>
         <b>bcc</b> <span>$1233</span>	<i>;error...</i>
@@ -3518,7 +3520,7 @@ them as variables. Either quoting or backslash escaping might help.</p>
 <p>In Makefiles all $ signs need to be escaped by doubling them. This needs to
 be done over the normal shell escaping. For example <q>$1000</q> becomes <q>\$$1000</q>.</p>
 
-<pre width=80>
+<pre width="80">
 64tass -D ii=2 -D var=\"string\" -D FAST:=true a.asm
         <b>lda</b> #<u>ii</u> <i>;result: $a9, $02</i>
 FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
@@ -3528,7 +3530,7 @@ FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
 <dd>Suppress warnings.
 
 <p>Disables warnings during compile. For fine grained diagnostic message suppression see the <a href="#commandline-diagnostic">diagnostic options</a> section.</p>
-<pre width=80>
+<pre width="80">
 64tass --no-warn a.asm
 </pre>
 
@@ -3537,7 +3539,7 @@ FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
 fault messages.
 <p>This is for cases where the fault log is automatically processed and no one
 ever looks at it and therefore there's no point to display the source lines.</p>
-<pre width=80>
+<pre width="80">
 64tass --no-caret-diag a.asm
 </pre>
 
@@ -3547,13 +3549,13 @@ ever looks at it and therefore there's no point to display the source lines.</p>
 displays the compilation output somewhere. Only lines which are the result of
 macro processing will be output to aid debugging. Those which would just
 duplicate what's in the source editor window will be not.</p>
-<pre width=80>
+<pre width="80">
 64tass --macro-caret-diag a.asm
 </pre>
 
 <dt><b>-q</b><a name="o_q"></a>, <b>--quiet</b><a name="o_quiet" href="#o_quiet"></a>
 <dd>Suppress messages. Disables header and summary messages.
-<pre width=80>
+<pre width="80">
 64tass --quiet a.asm
 </pre>
 
@@ -3582,7 +3584,7 @@ are very little escaping possibilities.</p>
 <p>The following Makefile uses the rules generated by 64tass (in <q>.dep</q>)
 to achieve automatic dependency tracking:</p>
 
-<pre width=80 class="make">
+<pre width="80" class="make">
 <span>demo:</span> demo.asm .dep
 	<span class="cmd">64tass --make-phony -M.dep</span> $&lt; <span class="cmd">-o</span> $@
 
@@ -3766,7 +3768,7 @@ available space up until nothing remains.</p>
 <p>On the other hand if a negative offset is used then more space will be 
 available (ahead of the area) which may or may not be desired.</p>
 
-<pre width=80>
+<pre width="80">
 var     <b class="d">.byte</b> <span>?</span>, <span>?</span>, <span>?</span>
 var2    <b>=</b> <u>var</u> - <span>2</span>       <i>; start 2 bytes earlier</i>
         <b>ldx</b> #<span class="k">size</span>(<u>var2</u>) <i>; size is 6 bytes due to 2 bytes ahead</i>
@@ -3868,7 +3870,7 @@ ambiguous ways.</p>
 <p>This is useful to detect hard to notice bugs where a new local
 variable takes the place of a global one by mistake.</p>
 
-<pre width=80>
+<pre width="80">
 bl      <b class="k">.block</b>
 a       <b class="d">.byte</b> <span>2</span>         <i>;'a' is a built-in register</i>
 x       <b class="d">.byte</b> <span>2</span>         <i>;'x' is a built-in register</i>
@@ -3927,7 +3929,7 @@ using the <a href="#d_cpu"><code>.cpu</code></a> directive in the source.</p>
 <dt><b>--m65xx</b><a name="o_m65xx" href="#o_m65xx"></a>
 <dd>Standard 65xx (default). For writing compatible code, no extra codes. This
 is the default.
-<pre width=80>
+<pre width="80">
 64tass --m65xx a.asm
         <b>lda</b> <span>$14</span>		<i>;regular instructions</i>
 </pre>
@@ -3935,7 +3937,7 @@ is the default.
 <dt><b>-c</b>, <b>--m65c02</b><a name="o_m65c02" href="#o_m65c02"></a>
 <dd>CMOS 65C02. Enables extra opcodes and addressing modes specific to this
 CPU.
-<pre width=80>
+<pre width="80">
 64tass --m65c02 a.asm
         <b>stz</b> <span>$d020</span>	<i>;65c02 instruction</i>
 </pre>
@@ -3943,7 +3945,7 @@ CPU.
 <dt><b>--m65ce02</b><a name="o_m65ce02" href="#o_m65ce02"></a>
 <dd>CSG 65CE02. Enables extra opcodes and addressing modes specific to this
 CPU.
-<pre width=80>
+<pre width="80">
 64tass --m65ce02 a.asm
         <b>inz</b>
 </pre>
@@ -3951,49 +3953,49 @@ CPU.
 <dt><b>-i</b>, <b>--m6502</b><a name="o_m6502" href="#o_m6502"></a>
 <dd>NMOS 65xx. Enables extra illegal opcodes. Useful for demo coding for C64,
 disk drive code, etc.
-<pre width=80>
+<pre width="80">
 64tass --m6502 a.asm
         <b>lax</b> <span>$14</span>		<i>;illegal instruction</i>
 </pre>
 
 <dt><b>-t</b>, <b>--m65dtv02</b><a name="o_m65dtv02" href="#o_m65dtv02"></a>
 <dd>65DTV02. Enables extra opcodes specific to DTV.
-<pre width=80>
+<pre width="80">
 64tass --m65dtv02 a.asm
         <b>sac</b> #<span>$00</span>
 </pre>
 
 <dt><b>-x</b>, <b>--m65816</b><a name="o_m65816" href="#o_m65816"></a>
 <dd>W65C816. Enables extra opcodes. Useful for SuperCPU projects.
-<pre width=80>
+<pre width="80">
 64tass --m65816 a.asm
         <b>lda</b> <span>$123456</span>,x
 </pre>
 
 <dt><b>-e</b><a name="o_e"></a>, <b>--m65el02</b><a name="o_m65el02" href="#o_m65el02"></a>
 <dd>65EL02. Enables extra opcodes, useful <a href="http://www.eloraam.com/nonwp/redcpu.php">RedPower CPU</a> projects. Probably you'll need <q>--nostart</q> as well.
-<pre width=80>
+<pre width="80">
 64tass --m65el02 a.asm
         <b>lda</b> #<span>0</span>,r
 </pre>
 
 <dt><b>--mr65c02</b><a name="o_mr65c02" href="#o_mr65c02"></a>
 <dd>R65C02. Enables extra opcodes and addressing modes specific to this CPU.
-<pre width=80>
+<pre width="80">
 64tass --mr65c02 a.asm
         <b>rmb</b> <span>7</span>,<span>$20</span>
 </pre>
 
 <dt><b>--mw65c02</b><a name="o_mw65c02" href="#o_mw65c02"></a>
 <dd>W65C02. Enables extra opcodes and addressing modes specific to this CPU.
-<pre width=80>
+<pre width="80">
 64tass --mw65c02 a.asm
         <b>wai</b>
 </pre>
 
 <dt><b>--m4510</b><a name="o_m4510" href="#o_m4510"></a>
 <dd>CSG 4510. Enables extra opcodes and addressing modes specific to this CPU. Useful for C65 projects.
-<pre width=80>
+<pre width="80">
 64tass --m4510 a.asm
         <b>map</b>
         <b>eom</b>
@@ -4005,7 +4007,7 @@ disk drive code, etc.
 <dl class="dir">
 <dt><b>-l</b> &lt;file&gt;, <b>--labels</b>=&lt;file&gt;<a name="o_labels" href="#o_labels"></a>
 <dd>List symbols into &lt;file&gt;.
-<pre width=80>
+<pre width="80">
 64tass -l labels.txt a.asm
 *       <b>=</b> <span>$1000</span>
 label   <b>jmp</b> <u>label</u>
@@ -4015,7 +4017,7 @@ label           = $1000
 </pre>
 <p>This option may be used multiple times. In this case the format and root scope
 options must be placed before this option. Using the same name multiple times is not a good idea.</p>
-<pre width=80>
+<pre width="80">
 64tass --vice-labels -l all.l --export-labels --labels-root=export -l myexport.inc source.asm
 </pre>
 <p>This writes symbols for VICE into <q>all.l</q> and symbols from scope
@@ -4053,7 +4055,7 @@ are now unavailable for commands like setting breakpoints. As the latter use
 case is rather more important than some bogus import warnings one has to
 live with them.</p>
 
-<pre width=80>
+<pre width="80">
 64tass --vice-labels -l labels.l a.asm
 *       <b>=</b> <span>$1000</span>
 label   <b>jmp</b> <u>label</u>
@@ -4070,7 +4072,7 @@ this will be changed to dots in the future.</b></p>
 $ffd2</code> or <code>keybuff = 631</code> as these are numeric constants and
 not memory addresses.</p>
 <p>Of course there are ways around that. For example:</p>
-<pre width=80>
+<pre width="80">
 chrout  <b>=</b> <span class="k">address</span>(<span>$ffd2</span>)
 keybuff <b>=</b> <span class="k">address</span>(<span>631</span>)
 *       <b>=</b> <span>$ffd2</span>
@@ -4098,7 +4100,7 @@ uses numeric constants for addresses only this may be acceptable.</p>
 <dd>List into &lt;file&gt;. Dumps source code and compiled code into file.
 Useful for debugging, it's much easier to identify the code in memory within
 the source files.
-<pre width=80>
+<pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass -L list.txt a.asm
 ; Fri Dec  9 19:08:55 2005
@@ -4117,7 +4119,7 @@ the source files.
 
 <dt><b>-m</b>, <b>--no-monitor</b><a name="o_no-monitor" href="#o_no-monitor"></a>
 <dd>Don't put monitor code into listing. There won't be any monitor listing in the list file.
-<pre width=80>
+<pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass --no-monitor -L list.txt a.asm
 ; Fri Dec  9 19:11:43 2005
@@ -4136,7 +4138,7 @@ the source files.
 
 <dt><b>-s</b><a name="o_s"></a>, <b>--no-source</b><a name="o_no-source" href="#o_no-source"></a>
 <dd>Don't put source code into listing. There won't be any source listing in the list file.
-<pre width=80>
+<pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass --no-source -L list.txt a.asm
 ; Fri Dec  9 19:13:25 2005
@@ -4159,7 +4161,7 @@ the source files.
 identification of source origin. The line number is followed with an optional colon
 separated file number in case it comes from a different file then the previous lines.
 
-<pre width=80>
+<pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass --line-numbers -L list.txt a.asm
 ; Fri Dec  9 19:13:25 2005
@@ -4189,7 +4191,7 @@ no effect on the source code on the right hand side.
 "unimportant" lines. But sometimes it's better to just list everything
 including comments and empty lines.
 
-<pre width=80>
+<pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass --verbose-list -L list.txt a.asm
 ; Fri Dec  9 19:13:25 2005
@@ -4261,7 +4263,7 @@ line option. The message format is the following:</p>
 the error location unless this is disabled by using <q><a
 href="#o_no-caret-diag"><code>--no-caret-diag</code></a></q> option.</p>
 
-<pre width=80><strong>a.asm:3:21: <span style="color:red">error:</span> not defined symbol 'label'</strong>
+<pre width="80"><strong>a.asm:3:21: <span style="color:red">error:</span> not defined symbol 'label'</strong>
                  lda label
                      <strong><span style="color:green">^</span></strong>
 <strong>a.asm:3:21: <span style="color:darkcyan">note:</span></strong> searched in the global scope</pre>
@@ -4269,7 +4271,7 @@ href="#o_no-caret-diag"><code>--no-caret-diag</code></a></q> option.</p>
 looks different to the one in the original source file.</p>
 Error buried deep in included files or macros display a backtrace of files after an <q>In
 file included from</q> text where all the files and positions involved are listed down to the main file.
-<pre width=80>In file included from <strong>main.asm:3:3</strong>:
+<pre width="80">In file included from <strong>main.asm:3:3</strong>:
 <strong>included.asm:2:11: <span style="color:red">error:</span> not defined symbol 'test'</strong>
  		#macro1 test
  		        <strong><span style="color:green">^</span></strong>
