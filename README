@@ -195,7 +195,7 @@ that the resulting file is directly runnable without additional compression:
 
 *       = $0801
         .word (+), 2005  ;pointer, line number
-        .null $9e, format("%d", start);will be sys 4096
+        .null $9e, format("%4d", start);will be sys 4096
 +       .word 0          ;basic line end
 
 *       = $1000
@@ -2408,7 +2408,7 @@ start of .dsection is not allowed.
 ;--------------------
         .section code
         .word ss, 2005
-        .null $9e, format("%d", start)
+        .null $9e, format("%4d", start)
 ss      .word 0
 
 start   sei
@@ -2437,7 +2437,7 @@ p3      .addr ?         ;a pointer
 The compiled code will look like:
 
 >0801    0b 08 d5 07                            .word ss, 2005
->0805    9e 32 30 36 31 00                      .null $9e, format("%d", start)
+>0805    9e 32 30 36 31 00                      .null $9e, format("%4d", start)
 >080b    00 00                          ss      .word 0
 
 .080d    78                             start   sei
