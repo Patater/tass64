@@ -1425,7 +1425,7 @@ static bool get_exp2(int stop) {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
                     err->u.notdef.symbol = (Obj *)new_anonsymbol(db - opr.p - 1);
                     err->u.notdef.names = ref_namespace(current_context);
-                    err->u.notdef.down = (opr.p + 1 == db);
+                    err->u.notdef.down = true;
                     val = &err->v;
                 }
                 push_oper(val, &opr.data[opr.p].epoint);
@@ -1449,7 +1449,7 @@ static bool get_exp2(int stop) {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
                     err->u.notdef.symbol = (Obj *)new_anonsymbol(opr.p - db);
                     err->u.notdef.names = ref_namespace(current_context);
-                    err->u.notdef.down = (opr.p + 1 == db);
+                    err->u.notdef.down = true;
                     val = &err->v;
                 }
                 push_oper(val, &opr.data[opr.p].epoint);
