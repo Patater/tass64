@@ -381,6 +381,7 @@ Label *find_anonlabel(int32_t count) {
         label.hash = str_hash(&label.cfname);
         c = namespace_lookup(context, &label);
         if (c != NULL) return c;
+        if (count != 0 && count != -1) break;
     }
     return NULL;
 }
