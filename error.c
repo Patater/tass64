@@ -983,6 +983,24 @@ void err_msg_not_defined(const str_t *name, linepos_t epoint) {
     err_msg_str_name("not defined", name, epoint);
 }
 
+unsigned int err_msg_unknown_formatchar(const Str *s, size_t offs, linepos_t epoint) {
+    struct linepos_s epoint2 = *epoint;
+    unsigned int len;
+    bool more;
+    epoint2.pos = interstring_position(&epoint2, s->data, offs);
+    len = offs < s->len ? utf8len(s->data[offs]) : 0;
+    more = new_error_msg(SV_ERROR, current_file_list, &epoint2);
+    if (len == 0) {
+        adderror("format character expected");
+    } else {
+        adderror("unknown format character '");
+        adderror2(s->data + offs, len);
+        adderror("'");
+    }
+    if (more) new_error_msg_more();
+    return len;
+}
+
 static void err_msg_double_note(const struct file_list_s *cflist, linepos_t epoint, const str_t *labelname2) {
     new_error_msg(SV_NOTE, cflist, epoint);
     adderror("original definition of");

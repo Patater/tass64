@@ -75,12 +75,12 @@ static Obj *failure;
 
 /* this struct holds everything we need */
 typedef struct Data {
-  const uint8_t *pf;
-  const uint8_t *pfend;
-/* FLAGS */
-  int width, precision;
-  uchar_t pad;
-  bool left, square, space, plus, star_w, star_p, dot;
+    const uint8_t *pf;
+    const uint8_t *pfend;
+    /* FLAGS */
+    int width, precision;
+    uchar_t pad;
+    bool left, square, space, plus, star_w, star_p, dot;
 } Data;
 
 /* those are defines specific to snprintf to hopefully
@@ -481,6 +481,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
     none = returnsize = 0;
 
     for (; data.pf < data.pfend; data.pf++) {
+        const uint8_t *pf = data.pf;
         uchar_t c = *data.pf;
         if (c != '%') {
             if ((c & 0x80) != 0) data.pf += utf8in(data.pf, &c) - 1;
@@ -493,10 +494,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         data.square = data.plus = data.space = false;
         data.left = false; data.dot = false;
         data.pad = ' ';
-        while (data.pf < data.pfend - 1) {
-            struct linepos_s epoint2;
-            str_t msg;
-
+        while (data.pf < data.pfend) {
             c = *(++data.pf);
             switch (c) {
             case 'e':
@@ -525,6 +523,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                 strings(&data);
                 break;
             case '%':  /* nothing just % */
+                if (pf + 1 != data.pf) goto error;
                 put_char('%');
                 break;
             case ' ':
@@ -571,16 +570,13 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                 }
                 /* fall through */
             default:
-                epoint2 = v[0].epoint;
-                epoint2.pos = interstring_position(&epoint2, ((Str *)val)->data, (size_t)(data.pf - ((Str *)val)->data));
-                msg.data = data.pf;
-                if ((c & 0x80) != 0) msg.len = utf8in(data.pf, &c); else msg.len = 1;
-                err_msg_not_defined(&msg, &epoint2);
+            error:
+                data.pf += err_msg_unknown_formatchar((Str *)val, (size_t)(data.pf - ((Str *)val)->data), &v[0].epoint);
                 next_arg();
                 star_args(&data);
-                put_char('%');
-                put_char(c);
-                data.pf += msg.len - 1;
+                while (pf < data.pf) {
+                    put_char(*pf++);
+                }
                 break;
             }
             break;
