@@ -3387,8 +3387,9 @@ MUST_CHECK Obj *compile(void)
             case CMD_DWORD: /* .dword */
             case CMD_BINARY: if ((waitfor->skip & 1) != 0)
                 { /* .binary */
+                    struct mem_mark_s mm;
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    mark_mem(current_address->mem, current_address->address, star);
+                    mark_mem(&mm, current_address->mem, current_address->address, star);
 
                     if (prm<CMD_BYTE) {    /* .text .ptext .shift .shiftl .null */
                         size_t ln;
@@ -3437,7 +3438,7 @@ MUST_CHECK Obj *compile(void)
                         if (trec.len > 0) memcpy(pokealloc(trec.len, trec.epoint), trec.buff, trec.len);
                         if (prm == CMD_PTEXT) {
                             if (trec.sum > 0x100) err_msg2(ERROR____PTEXT_LONG, &trec.sum, &epoint);
-                            write_mark_mem(current_address->mem, (trec.sum-1) ^ outputeor);
+                            write_mark_mem(&mm, current_address->mem, (trec.sum-1) ^ outputeor);
                         }
                     } else if (prm<=CMD_DWORD) { /* .byte .word .int .rta .long */
                         int bits;
@@ -3531,7 +3532,7 @@ MUST_CHECK Obj *compile(void)
                     }
 
                     if (nolisting == 0) {
-                        list_mem(current_address->mem);
+                        list_mem(&mm, current_address->mem);
                     }
                 }
                 break;
@@ -3791,6 +3792,7 @@ MUST_CHECK Obj *compile(void)
                     address_t db = 0;
                     uval_t uval;
                     struct values_s *vs;
+                    struct mem_mark_s mm;
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         ((Code *)newlabel->value)->dtype = D_BYTE;
@@ -3814,7 +3816,7 @@ MUST_CHECK Obj *compile(void)
                         if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
                         else db = uval;
                     }
-                    mark_mem(current_address->mem, current_address->address, star);
+                    mark_mem(&mm, current_address->mem, current_address->address, star);
                     if ((vs = get_val()) != NULL) {
                         struct textrecursion_s trec;
                         size_t membp = get_mem(current_address->mem);
@@ -3872,7 +3874,7 @@ MUST_CHECK Obj *compile(void)
                         memskip(db, &epoint);
                     }
                     if (nolisting == 0) {
-                        list_mem(current_address->mem);
+                        list_mem(&mm, current_address->mem);
                     }
                 }
                 break;
