@@ -4568,7 +4568,7 @@ MUST_CHECK Obj *compile(void)
                                 tmp3->address.address = (tmp3->address.address + change) & all_mem2;
                                 tmp3->address.start = tmp3->restart = current_address->address;
                                 if (tmp3->address.end < tmp3->address.start) tmp3->address.end = all_mem2 + 1;
-                                memjmp(tmp3->address.mem, current_address->address);
+                                tmp3->address.mem->lastaddr = (tmp3->address.mem->lastaddr + change) & all_mem2;
                             }
                             if (tmp3->l_restart != current_address->l_address) {
                                 tmp3->address.l_address = (tmp3->address.l_address + current_address->l_address - tmp3->l_restart) & all_mem;
