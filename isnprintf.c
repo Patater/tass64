@@ -436,6 +436,10 @@ static inline void floating(Data *p)
     *t++ = 0;
     l = snprintf(tmp, sizeof tmp, form, (p->precision < 80) ? (p->precision > 0 ? p->precision : 0) : 80, d);
     t = tmp;
+    if ((t[1] | 0x20) == 'x') {
+        l--;
+        *(++t) = '$';
+    }
 
     p->precision = 0;
     pad_right2(p, 0, minus, (l > 0) ? (size_t)l : 0);
