@@ -3389,7 +3389,6 @@ MUST_CHECK Obj *compile(void)
                 { /* .binary */
                     struct mem_mark_s mm;
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    mark_mem(&mm, current_address->mem, current_address->address, star);
 
                     if (prm<CMD_BYTE) {    /* .text .ptext .shift .shiftl .null */
                         size_t ln;
@@ -3409,6 +3408,7 @@ MUST_CHECK Obj *compile(void)
                         trec.prm = prm;
                         trec.error = ERROR__USER_DEFINED;
                         trec.epoint = &epoint;
+                        mark_mem(&mm, current_address->mem, current_address->address, star);
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             if (trec.len != 0) {
                                 if (trec.len > 0) memcpy(pokealloc(trec.len, trec.epoint), trec.buff, trec.len);
@@ -3440,6 +3440,7 @@ MUST_CHECK Obj *compile(void)
                             if (trec.sum > 0x100) err_msg2(ERROR____PTEXT_LONG, &trec.sum, &epoint);
                             write_mark_mem(&mm, current_address->mem, (trec.sum-1) ^ outputeor);
                         }
+                        if (nolisting == 0) list_mem(&mm, current_address->mem);
                     } else if (prm<=CMD_DWORD) { /* .byte .word .int .rta .long */
                         int bits;
                         size_t ln;
@@ -3476,6 +3477,7 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
                         brec.len = 0;
                         brec.warn = false;
+                        mark_mem(&mm, current_address->mem, current_address->address, star);
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             brec.epoint = &vs->epoint;
                             byterecursion(vs->val, prm, &brec, bits);
@@ -3485,6 +3487,7 @@ MUST_CHECK Obj *compile(void)
                             else memskip(-brec.len, brec.epoint);
                             brec.len = 0;
                         }
+                        if (nolisting == 0) list_mem(&mm, current_address->mem);
                     } else if (prm==CMD_BINARY) { /* .binary */
                         struct file_s *cfile2 = NULL;
                         ival_t foffs = 0;
@@ -3515,6 +3518,7 @@ MUST_CHECK Obj *compile(void)
 
                         if (cfile2 != NULL) {
                             size_t foffset;
+                            mark_mem(&mm, current_address->mem, current_address->address, star);
                             if (foffs < 0) foffset = (uval_t)-foffs < cfile2->len ? (cfile2->len - (uval_t)-foffs) : 0;
                             else foffset = (uval_t)foffs;
                             for (; fsize != 0 && foffset < cfile2->len;) {
@@ -3528,11 +3532,8 @@ MUST_CHECK Obj *compile(void)
                                 foffset += ln;
                                 fsize -= ln;
                             }
+                            if (nolisting == 0) list_mem(&mm, current_address->mem);
                         }
-                    }
-
-                    if (nolisting == 0) {
-                        list_mem(&mm, current_address->mem);
                     }
                 }
                 break;
