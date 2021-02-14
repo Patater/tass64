@@ -57,12 +57,7 @@ typedef void (*avltree_free_fn_t)(struct avltree_node *);
 
 struct avltree {
         struct avltree_node *root;
-        struct avltree_node *first;
 };
-
-struct avltree_node *avltree_first(const struct avltree *);
-struct avltree_node *avltree_next(const struct avltree_node *);
-struct avltree_node *avltree_prev(const struct avltree_node *);
 
 FAST_CALL struct avltree_node *avltree_lookup(const struct avltree_node *, const struct avltree *, avltree_cmp_fn_t);
 struct avltree_node *avltree_insert(struct avltree_node *, struct avltree *, avltree_cmp_fn_t);

@@ -25,33 +25,6 @@
 #include "stdbool.h"
 
 /*
- * Iterators
- */
-static inline struct avltree_node *get_first(struct avltree_node *node)
-{
-        while (node->left != NULL)
-                node = node->left;
-        return node;
-}
-
-struct avltree_node *avltree_first(const struct avltree *tree)
-{
-        return tree->first;
-}
-
-struct avltree_node *avltree_next(const struct avltree_node *node)
-{
-        struct avltree_node *parent;
-
-        if (node->right != NULL)
-                return get_first(node->right);
-
-        while ((parent = node->parent) != NULL && parent->right == node)
-                node = parent;
-        return parent;
-}
-
-/*
  * The AVL tree is more rigidly balanced than Red-Black trees, leading
  * to slower insertion and removal but faster retrieval.
  */
@@ -164,12 +137,9 @@ struct avltree_node *avltree_insert(struct avltree_node *node, struct avltree *t
 
         if (parent == NULL) {
                 tree->root = node;
-                tree->first = node;
                 return NULL;
         }
         if (is_left) {
-                if (parent == tree->first)
-                        tree->first = node;
                 parent->left = node;
         } else {
                 parent->right = node;
@@ -254,7 +224,6 @@ struct avltree_node *avltree_insert(struct avltree_node *node, struct avltree *t
 void avltree_init(struct avltree *tree)
 {
         tree->root = NULL;
-        tree->first = NULL;
 }
 
 static void destroy(struct avltree_node *node, avltree_free_fn_t free_fn)
