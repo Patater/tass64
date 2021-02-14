@@ -1105,8 +1105,7 @@ format(<string expression>[, <expression>, ...])
 
     The following conversion types are implemented:
 
-          Formatting conversion types
-    a A   hexadecimal floating point (uppercase)
+      Formatting conversion types
     b     binary
     c     Unicode character
     d     decimal
