@@ -1577,7 +1577,7 @@ which accepts strings of any length.
     Create bytes from 24 bit signed constants (-8388608-8388607)
 
     >1000  56 34 12                          .long $123456
-    >1003                                    .long ?                ; reserve 3 bytes
+    >1003                                    .long ?        ; reserve 3 bytes
     >1006  eb fd ff 51 11 00                 .lint -533, 4433
     ;Store 8.16 signed fixed point constants
     >100c  5d 8f fc 66 66 03 1e 85           .lint (-3.44, 3.4, 3.52) * 1p16
