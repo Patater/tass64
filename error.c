@@ -170,7 +170,6 @@ static void error_extend(void) {
         if (err->node.parent != NULL) err->node.parent = (struct avltree_node *)((uint8_t *)err->node.parent + diff);
     }
     if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((uint8_t *)error_list.members.root + diff);
-    if (error_list.members.first != NULL) error_list.members.first = (struct avltree_node *)((uint8_t *)error_list.members.first + diff);
 }
 
 static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len, size_t pos) {
@@ -1410,15 +1409,11 @@ static bool different_line(const struct errorentry_s *err, const struct errorent
     return memcmp(err + 1, err2 + 1, err->line_len) != 0;
 }
 
-static void walkfilelist(struct file_listnode_s *cflist) {
-    struct avltree_node *n;
-
-    for (n = avltree_first(&cflist->members); n != NULL; n = avltree_next(n)) {
-        struct file_listnode_s *l = avltree_container_of(n, struct file_listnode_s, node);
-        if (l->flist.file->entercount > 1 || l->pass != pass) continue;
-        l->flist.file->entercount++;
-        walkfilelist(l);
-    }
+static void walkfilelist(struct avltree_node *aa) {
+    struct file_listnode_s *l = avltree_container_of(aa, struct file_listnode_s, node);
+    if (l->flist.file->entercount > 1 || l->pass != pass) return;
+    l->flist.file->entercount++;
+    avltree_destroy(&l->members, walkfilelist);
 }
 
 void error_print(void) {
@@ -1429,7 +1424,7 @@ void error_print(void) {
     struct linepos_s nopoint = {0, 0};
 
     if (error_list.header_pos != 0) {
-        walkfilelist(&file_list);
+        avltree_destroy(&file_list.members, walkfilelist);
     }
 
     if (arguments.error != NULL) {
