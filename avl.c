@@ -221,11 +221,6 @@ struct avltree_node *avltree_insert(struct avltree_node *node, struct avltree *t
         return NULL;
 }
 
-void avltree_init(struct avltree *tree)
-{
-        tree->root = NULL;
-}
-
 static void destroy(struct avltree_node *node, avltree_free_fn_t free_fn)
 {
         do {
