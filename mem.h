@@ -26,9 +26,15 @@
 struct Memblocks;
 struct output_s;
 
-extern void mark_mem(const struct Memblocks *, address_t, address_t);
-extern void write_mark_mem(struct Memblocks *, unsigned int);
-extern void list_mem(const struct Memblocks *);
+struct mem_mark_s {
+    size_t omemp;
+    size_t ptextaddr;
+    address_t oaddr, oaddr2, olastaddr;
+};
+
+extern void mark_mem(struct mem_mark_s *, const struct Memblocks *, address_t, address_t);
+extern void write_mark_mem(const struct mem_mark_s *, struct Memblocks *, unsigned int);
+extern void list_mem(const struct mem_mark_s *, const struct Memblocks *);
 extern void memjmp(struct Memblocks *, address_t);
 extern void memref(struct Memblocks *, struct Memblocks *);
 extern void memprint(struct Memblocks *, FILE *);
