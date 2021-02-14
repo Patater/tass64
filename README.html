@@ -83,7 +83,7 @@ q { quotes: "\201C" "\201D" "\2018" "\2019"; }
 <h1>64tass v1.55 r2200 reference manual</h1>
 
 <p>This is the manual for 64tass, the multi pass optimizing macro assembler for
-the 65xx series of processors. Key features:</p>
+the 65xx series of processors. Key features:
 
 <ul>
 <li>Open source portable C with minimal dependencies
@@ -102,13 +102,13 @@ the 65xx series of processors. Key features:</p>
 <p>Contrary how the length of this document suggests 64tass can be used with
 just basic 6502 assembly knowledge in simple ways like any other assembler. If
 some advanced functionality is needed then this document can serve as a
-reference.</p>
+reference.
 
 <p><b>This is a development version. Features or syntax may change as a result
 of corrections in non-backwards compatible ways in some rare cases. It's
-difficult to get everything <q>right</q> first time.</b></p>
+difficult to get everything <q>right</q> first time.</b>
 
-<p>Project page: <a href="https://sourceforge.net/projects/tass64/">https://sourceforge.net/projects/tass64/</a></p>
+<p>Project page: <a href="https://sourceforge.net/projects/tass64/">https://sourceforge.net/projects/tass64/</a>
 
 <p>The page hosts the latest and older versions with sources and a bug and a feature request tracker.</p>
 
@@ -268,15 +268,15 @@ difficult to get everything <q>right</q> first time.</b></p>
 <p>64tass is a command line assembler, the source can be written in any text
 editor. As a minimum the source filename must be given on the command line. The
 <q><a href="#o_ascii"><code>-a</code></a></q> command line option is highly recommended if the source is Unicode or
-ASCII.</p>
+ASCII.
 
 <pre width="80">
 64tass -a src.asm
 </pre>
 
-<p>There are also some useful parameters which are described later.</p>
+<p>There are also some useful parameters which are described later.
 
-<p>For comfortable compiling I use such <q>Makefile</q>s (for <a href="https://en.wikipedia.org/wiki/Make_%28software%29">make</a>):</p>
+<p>For comfortable compiling I use such <q>Makefile</q>s (for <a href="https://en.wikipedia.org/wiki/Make_%28software%29">make</a>):
 
 <pre width="80" class="make">
 <span>demo.prg:</span> source.asm macros.asm pic.drp music.bin
@@ -285,10 +285,10 @@ ASCII.</p>
 </pre>
 
 <p>This way <q>demo.prg</q> is recreated by compiling <q>source.asm</q>
-whenever <q>source.asm</q>, <q>macros.asm</q>, <q>pic.drp</q> or <q>music.bin</q> had changed.</p>
+whenever <q>source.asm</q>, <q>macros.asm</q>, <q>pic.drp</q> or <q>music.bin</q> had changed.
 
 <p>Of course it's not much harder to create something similar for win32 (make.bat),
-however this will always compile and compress:</p>
+however this will always compile and compress:
 
 <pre width="80">
 64tass.exe -C -a -B -i source.asm -o demo.tmp
@@ -297,7 +297,7 @@ pucrunch.exe -ffast -x 2048 demo.tmp &gt;demo.prg
 
 <p>Here's a slightly more advanced Makefile example with default action as
 testing in VICE, clean target for removal of temporary files and compressing
-using an intermediate temporary file:</p>
+using an intermediate temporary file:
 
 <pre width="80" class="make">
 <span>all:</span> demo.prg
@@ -317,7 +317,7 @@ using an intermediate temporary file:</p>
 
 <p>It's useful to add a basic header to your source files like the one below,
 so that the resulting file is directly runnable without additional
-compression:</p>
+compression:
 
 <pre width="80">
 *       <b>=</b> <span>$0801</span>
@@ -335,7 +335,7 @@ memory, without hacks like <code>&lowast;=&lowast;+1</code>? Sure
 there's <a href="#d_byte"><code>.byte</code></a> and friends for variables with initial values
 but what about zero page, or RAM outside of program area? The solution
 is to not use an initial value by using <q><a href="#uninitialized"><code>?</code></a></q> or not
-giving a fill byte value to <a href="#d_fill"><code>.fill</code></a>.</p>
+giving a fill byte value to <a href="#d_fill"><code>.fill</code></a>.
 
 <pre width="80">
 *       <b>=</b> <span>$02</span>
@@ -345,11 +345,11 @@ temp	<b class="d">.fill</b> <span>10</span>        <i>;a 10 byte temporary area<
 
 <p>Space allocated this way
 is not saved in the output as there's no data to save at those
-addresses.</p>
+addresses.
 
 <p>What about some code running on zero page for speed? It needs to be
 relocated, and the length must be known to copy it there. Here's
-an example:</p>
+an example:
 
 <pre width="80">
         <b>ldx</b> #<span class="k">size</span>(<u>zpcode</u>)-<span>1</span><i>;calculate length</i>
@@ -368,13 +368,16 @@ wrbyte  <b>sta</b> <span>$ffff</span>       <i>;quick byte writer at $02</i>
 +	<b>rts</b>
 	<b class="k">.here</b>
 </pre>
+
 <p>The assembler supports lists and tuples, which does not seems interesting at
 first as it sound like something which is only useful when heavy scripting is
 involved. But as normal arithmetic operations also apply on all their elements at
-once, this could spare quite some typing and repetition.</p>
+once, this could spare quite some typing and repetition.
+
 <p>Let's take a simple example of a low/high byte jump table of return
 addresses, this usually involves some unnecessary copy/pasting to create a pair
-of tables with constructs like <code>&gt;(label&minus;1)</code>.</p>
+of tables with constructs like <code>&gt;(label&minus;1)</code>.
+
 <pre width="80">
 jumpcmd <b>lda</b> <u>hibytes</u>,x   <i>; selected routine in X register</i>
         <b>pha</b>
@@ -397,7 +400,7 @@ hibytes <b class="d">.byte</b> &gt;<u>_</u>        <i>; high bytes</i>
 <p>Integer constants can be entered as decimal digits of arbitrary
 length. An underscore can be used between digits as a separator for
 better readability of long numbers. The following operations are
-accepted:</p>
+accepted:
 
 <div><table border="0">
 <caption>Integer operators and functions</caption>
@@ -421,7 +424,7 @@ accepted:</p>
 
 <p>Integers are automatically promoted to float as necessary in expressions.
 Other types can be converted to integer using the integer type
-<code>int</code>.</p>
+<code>int</code>.
 
 <pre width="80">
         <b class="d">.byte</b> <span>23</span>        <i>; as unsigned</i>
@@ -441,7 +444,7 @@ num     <b>=</b> <span>-3</span>
 <p>Bit string constants can be entered in hexadecimal form with a leading
 dollar sign or in binary with a leading percent sign. An underscore can
 be used between digits as a separator for better readability of long
-numbers. The following operations are accepted:</p>
+numbers. The following operations are accepted:
 
 <div><table border="0">
 <caption>Bit string operators and functions</caption>
@@ -460,15 +463,15 @@ numbers. The following operations are accepted:</p>
 </table></div>
 
 <p>Length of bit string constants are defined in bits and is calculated from
-the number of bit digits used including leading zeros.</p>
+the number of bit digits used including leading zeros.
 
 <p>Bit strings are automatically promoted to integer or floating point as necessary in
-expressions. The higher bits are extended with zeros or ones as needed.</p>
+expressions. The higher bits are extended with zeros or ones as needed.
 
 <p>Bit strings support indexing and slicing. This is explained in detail
-in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
+in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.
 
-<p>Other types can be converted to bit string using the bit string type <code>bits</code>.</p>
+<p>Other types can be converted to bit string using the bit string type <code>bits</code>.
 
 <pre width="80">
         <b class="d">.byte</b> <span>$33</span>       <i>; 8 bits in hexadecimal</i>
@@ -490,7 +493,7 @@ in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
 <p>Floating point constants have a radix point in them and optionally an
 exponent. A decimal exponent is <q>e</q> while a binary one is <q>p</q>.
 An underscore can be used between digits as a separator for better
-readability. The following operations can be used:</p>
+readability. The following operations can be used:
 
 <div><table border="0">
 <caption>Floating point operators and functions</caption>
@@ -512,17 +515,17 @@ readability. The following operations can be used:</p>
 </tbody>
 </table></div>
 
-<p>As usual comparing floating point numbers for (non) equality is a bad idea due to rounding errors.</p>
+<p>As usual comparing floating point numbers for (non) equality is a bad idea due to rounding errors.
 
-<p>The only predefined constant is <code>pi</code>.</p>
+<p>The only predefined constant is <code>pi</code>.
 
 <p>Floating point numbers are automatically truncated to integer as necessary.
-Other types can be converted to floating point by using the type <code>float</code>.</p>
+Other types can be converted to floating point by using the type <code>float</code>.
 
 <p>Fixed point conversion can be done by using the shift operators. For example
 an 8.16 fixed point number can be calculated as <code>(3.14 &lt;&lt; 16) &amp; $ffffff</code>.
 The binary operators operate like if the floating point number would be a fixed
-point one. This is the reason for the strange definition of inversion.</p>
+point one. This is the reason for the strange definition of inversion.
 
 <pre width="80">
         <b class="d">.byte</b> <span>3.66e1</span>       <i>; 36.6, truncated to 36</i>
@@ -533,13 +536,13 @@ point one. This is the reason for the strange definition of inversion.</p>
 <h3>Character string constants<a name="character-string" href="#character-string"></a></h3>
 
 <p>Character strings are enclosed in single or double quotes and can hold any Unicode
-character.</p>
+character.
 
 <p>Operations like indexing or slicing are always done on the original
 representation. The current encoding is only applied when it's used in
-expressions as numeric constants or in context of text data directives.</p>
+expressions as numeric constants or in context of text data directives.
 
-<p>Doubling the quotes inside string literals escapes them and results in a single quote.</p>
+<p>Doubling the quotes inside string literals escapes them and results in a single quote.
 
 <div><table border="0">
 <caption>Character string operators and functions</caption>
@@ -558,14 +561,14 @@ expressions as numeric constants or in context of text data directives.</p>
 
 <p>Character strings are converted to integers, byte and bit strings as necessary using the current
 encoding and escape rules. For example when using a sane encoding <code>"z"&minus;"a"</code> is
-<code>25</code>.</p>
+<code>25</code>.
 
 <p>Other types can be converted to character strings by using the type
 <code>str</code> or by using the <code>repr</code> and <code>format</code>
-functions.</p>
+functions.
 
 <p>Character strings support indexing and slicing. This is explained in detail
-in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
+in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.
 
 <pre width="80">
 mystr   <b>=</b> <span class="s">"oeU"</span>         <i>; character string constant</i>
@@ -579,14 +582,16 @@ mystr   <b>=</b> <span class="s">"oeU"</span>         <i>; character string cons
 </pre>
 
 <h3>Byte string constants<a name="byte-string" href="#byte-string"></a></h3>
-<p>Byte strings are like character strings, but hold bytes instead of characters.</p>
+
+<p>Byte strings are like character strings, but hold bytes instead of characters.
+
 <p>Quoted character strings prefixing by <q>b</q>, <q>l</q>, <q>n</q>, <q>p</q>, <q>s</q>, <q>x</q>
 or <q>z</q> characters can be used to create byte strings. The resulting byte
 string contains what <a href="#d_text"><code>.text</code></a>, <a href="#d_shiftl"><code>.shiftl</code></a>,
 <a href="#d_null"><code>.null</code></a>, <a href="#d_ptext"><code>.ptext</code></a> and <a href="#d_shift"><code>.shift</code></a> would
 create. Direct hexadecimal entry can be done using the <q>x</q> prefix and
 <q>z</q> denotes a z85 encoded byte string. Spaces can be used between pairs of
-hexadecimal digits as a separator for better readability.</p>
+hexadecimal digits as a separator for better readability.
 
 <div><table border="0">
 <caption>Byte string operators and functions</caption>
@@ -604,9 +609,9 @@ hexadecimal digits as a separator for better readability.</p>
 </table></div>
 
 <p>Byte strings support indexing and slicing. This is explained in detail
-in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
+in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.
 
-<p>Other types can be converted to byte strings by using the type <code>bytes</code>.</p>
+<p>Other types can be converted to byte strings by using the type <code>bytes</code>.
 
 <pre width="80">
         <b class="k">.enc</b> <span class="s">"screen"</span>	<i>;use screen encoding</i>
@@ -622,7 +627,7 @@ mystr   <b>=</b> <span class="s">b"oeU"</span>        <i>;convert text to bytes,
 
 <p>Binary data may be embedded in source code by using hexadecimal byte
 strings. This is more compact than using <code>.byte</code> followed by a lot
-of numbers. As expected 1 byte becomes 2 characters.</p>
+of numbers. As expected 1 byte becomes 2 characters.
 
 <pre width="80">
         <b class="d">.text</b> <span class="s">x"fce2"</span>   <i>;2 bytes: $fc and $e2 (big endian)</i>
@@ -630,7 +635,7 @@ of numbers. As expected 1 byte becomes 2 characters.</p>
 
 <p>If readability is not a concern then the more compact z85 encoding may be used
 which encodes 4 bytes into 5 characters. Data lengths not a multiple of 4 are
-handled by omitting leading zeros in the last group.</p>
+handled by omitting leading zeros in the last group.
 
 <pre width="80">
         <b class="d">.text</b> <span class="s">z"FiUj*2M$hf"</span><i>;8 bytes: 80 40 20 10 08 04 02 01</i>
@@ -640,7 +645,7 @@ handled by omitting leading zeros in the last group.</p>
 simplest way to encode a binary file into a z85 string is to create a source file
 which reads it using the line <q>label = binary('filename')</q>. Now if the labels
 are listed to a file then there will be a z85 encoded definition for this
-label.</p>
+label.
 
 <h3>Lists and tuples<a name="list-tuples" href="#list-tuples"></a></h3>
 
@@ -650,7 +655,7 @@ empty list is <code>[]</code>. Tuples are similar but are enclosed in
 parentheses instead. An empty tuple is <code>()</code>, a single element tuple
 is <code>(4,)</code> to differentiate from normal numeric expression
 parentheses. When nested they function similar to an array. Both
-types are immutable.</p>
+types are immutable.
 
 <div><table border="0">
 <caption>List and tuple operators and functions</caption>
@@ -672,17 +677,17 @@ types are immutable.</p>
 
 <p>Arithmetic operations are applied on the all elements recursively,
 therefore <code>[1, 2] + 1</code> is <code>[2, 3]</code>, and <code>abs([1,
-&minus;1])</code> is <code>[1, 1]</code>.</p>
+&minus;1])</code> is <code>[1, 1]</code>.
 
 <p>Arithmetic operations between lists are applied one by one on their
-elements, so <code>[1, 2] + [3, 4]</code> is <code>[4, 6]</code>.</p>
+elements, so <code>[1, 2] + [3, 4]</code> is <code>[4, 6]</code>.
 
 <p>When lists form an array and columns/rows are missing the smaller array is
 stretched to fill in the gaps if possible, so <code>[[1], [2]] &lowast; [3, 4]</code>
-is <code>[[3, 4], [6, 8]]</code>.</p>
+is <code>[[3, 4], [6, 8]]</code>.
 
 <p>Lists and tuples support indexing and slicing. This is explained in detail
-in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.</p>
+in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.
 
 <pre width="80">
 mylist  <b>=</b> [<span>1</span>, <span>2</span>, <span class="s">"whatever"</span>]
@@ -696,14 +701,14 @@ call_h  <b class="d">.byte</b> &gt;<u>mylist</u>[<span>1</span>::<span>2</span>]
 
 <p>Although lists elements of variables can't be changed using indexing (at the
 moment) the same effect can be achieved by combining slicing and
-concatenation:</p>
+concatenation:
 
 <pre width="80">
 lst     := <u>lst</u>[:<span>2</span>] .. [<span>4</span>] .. <u>lst</u>[<span>3</span>:]<i>; same as lst[2] := 4 would be</i>
 </pre>
 
 <p>Folding is done on pair of elements either forward (left) or reverse
-(right). The list must contain at least one element. Here are some folding examples:</p>
+(right). The list must contain at least one element. Here are some folding examples:
 
 <pre width="80">
 minimum <b>=</b> size([<u>part1</u>, <u>part2</u>, <u>part3</u>]) &lt;? ...
@@ -719,7 +724,7 @@ any     <b>=</b> [<span>false</span>, <span>false</span>, <span>false</span>, <s
 <p>The <code>range(start, end, step)</code> built-in function can be used to
 create lists of integers in a range with a given step value. At least the end
 must be given, the start defaults to 0 and the step to 1. Sounds not very
-useful, so here are a few examples:</p>
+useful, so here are a few examples:
 
 <pre width="80">
 <i>;Bitmask table, 8 bits from left to right</i>
@@ -736,12 +741,12 @@ scrhi   <b class="d">.byte</b> &gt;<u>_</u>
 
 <p>Dictionaries hold key and value pairs. Definition is done by collecting
 key:value pairs separated by comma between braces <code>{"key":"value", 
-:"default value"}</code>.</p>
+:"default value"}</code>.
 
 <p>Looking up a non-existing key is normally an error
 unless a default value is given. An empty dictionary is <code>{}</code>.
 This type is immutable. There are limitations what may be used as a
-key but the value can be anything.</p>
+key but the value can be anything.
 
 <div><table border="0">
 <caption>Dictionary operators and functions</caption>
@@ -764,11 +769,11 @@ key but the value can be anything.</p>
 <p>Code holds the result of compilation in binary and other enclosed objects.
 In an arithmetic operation it's used as the numeric address of the memory where
 it starts. The compiled content remains static even if later parts of the
-source overwrite the same memory area.</p>
+source overwrite the same memory area.
 
 <p><b>Indexing and slicing of code to access the compiled content might be
 implemented differently in future releases. Use this feature at your own
-risk for now, you might need to update your code later.</b></p>
+risk for now, you might need to update your code later.</b>
 
 <div><table border="0">
 <caption>Label operators and functions</caption>
@@ -799,12 +804,12 @@ local   <b>lda</b> #<span>0</span>
 <h3>Addressing modes<a name="addressing" href="#addressing"></a></h3>
 
 <p>Addressing modes are used for determining addressing modes of
-instructions.</p>
+instructions.
 
 <p>For indexing there must be no white space between the comma and the register letter,
 otherwise the indexing operator is not recognized. On the other hand put a space between
 the comma and a single letter symbol in a list to avoid it being recognized
-as an operator.</p>
+as an operator.
 
 <div><table border="0">
 <caption>Addressing mode operators</caption>
@@ -827,11 +832,11 @@ as an operator.</p>
 
 <p>Parentheses are used for indirection and square brackets for long
 indirection. These operations are only available after instructions and
-functions to not interfere with their normal use in expressions.</p>
+functions to not interfere with their normal use in expressions.
 
 <p>Several addressing mode operators can be combined together. <b>Currently the
 complexity is limited to 4 operators. This is enough to describe all addressing
-modes of the supported CPUs.</b></p>
+modes of the supported CPUs.</b>
 
 <div><table border="0">
 <caption>Valid addressing mode operator combinations</caption>
@@ -876,48 +881,48 @@ modes of the supported CPUs.</b></p>
 of instructions are intelligently chosen based on the instruction type,
 the address ranges set up by <a href="#d_dpage"><code>.dpage</code></a>, <a href="#d_databank"><code>.databank</code></a>
 and the current program counter address. Therefore the <q>,d</q>,
-<q>,b</q> and <q>,k</q> indexing is only used in very special cases.</p>
+<q>,b</q> and <q>,k</q> indexing is only used in very special cases.
 
 <p>The immediate direct page indexed <q><code>#0,d</code></q> addressing
 mode is usable for direct page access. The 8&nbsp;bit constant is a
 direct offset from the start of actual direct page. Alternatively it may
-be written as <q><code>0,d</code></q>.</p>
+be written as <q><code>0,d</code></q>.
 
 <p>The immediate data bank indexed <q><code>#0,b</code></q> addressing
 mode is usable for data bank access. The 16&nbsp;bit constant is a direct
 offset from the start of actual data bank. Alternatively it may be
-written as <q><code>0,b</code></q>.</p>
+written as <q><code>0,b</code></q>.
 
 <p>The immediate program bank indexed <q><code>#0,k</code></q> addressing mode
 is usable for program bank jumps, branches and calls. The 16&nbsp;bit constant
 is a direct offset from the start of actual program bank. Alternatively it may
-be written as <q><code>0,k</code></q>.</p>
+be written as <q><code>0,k</code></q>.
 
 <p>The immediate stack indexed <q><code>#0,s</code></q> and data stack indexed
 <q><code>#0,r</code></q> accept 8&nbsp;bit constants as an offset from the
 start of (data) stack. These are sometimes written without the immediate
 notation, but this makes it more clear what's going on. For the same reason the
-move instructions are written with an immediate addressing mode <q><code>#0,#0</code></q> as well.</p>
+move instructions are written with an immediate addressing mode <q><code>#0,#0</code></q> as well.
 
 <p>The immediate (<code>#</code>) addressing mode expects unsigned values of byte or
 word size. Therefore it only accepts constants of 1 byte or in range 0&ndash;255
-or 2 bytes or in range 0&ndash;65535.</p>
+or 2 bytes or in range 0&ndash;65535.
 
 <p>The signed immediate (<code>#+</code> and <code>#&minus;</code>) addressing
 mode is to allow signed numbers to be used as immediate constants. It accepts
 a single byte or an integer in range &minus;128&ndash;127, or two bytes or an integer of
-&minus;32768&ndash;32767.</p>
+&minus;32768&ndash;32767.
 
 <p>The use of signed immediate (like <code>#&minus;3</code>) is seamless, but
 it needs to be explicitly written out for variables or expressions
 (<code>#+variable</code>). In case the unsigned variant is needed but the
 expression starts with a negation then it needs to be put into parentheses
 (<code>#(-variable)</code>) or else it'll change the address mode to
-signed.</p>
+signed.
 
 <p>Normally addressing mode operators are used in expressions right after
 instructions. They can also be used for defining stack variable symbols when
-using a 65816, or to force a specific addressing mode.</p>
+using a 65816, or to force a specific addressing mode.
 
 <pre width="80">
 param   <b>=</b> #<span>1</span>,s            <i>;define a stack variable</i>
@@ -934,15 +939,15 @@ const   <b>=</b> #<span>1</span>              <i>;immediate constant</i>
 
 <p>There's a special value for uninitialized memory, it's represented by a
 question mark. Whenever it's used to generate data it creates a <q>hole</q>
-where the previous content of memory is visible.</p>
+where the previous content of memory is visible.
 
 <p>Uninitialized memory holes without previous content are not saved unless
 it's really necessary for the output format, in that case it's replaced with
-zeros.</p>
+zeros.
 
 <p>It's not just data generation statements (e.g. <a href="#d_byte"><code>.byte</code></a>) that can
 create uninitialized memory, but <a href="#d_fill"><code>.fill</code></a>, <a href="#d_align"><code>.align</code></a> or address manipulation as
-well.</p>
+well.
 
 <pre width="80">
 *       <b>=</b> <span>$200</span>          <i>;bytes as necessary</i>
@@ -953,19 +958,19 @@ well.</p>
 
 <h3>Booleans<a name="booleans" href="#booleans"></a></h3>
 
-<p>There are two predefined boolean constant variables, <code>true</code> and <code>false</code>.</p>
+<p>There are two predefined boolean constant variables, <code>true</code> and <code>false</code>.
 
 <p>Booleans are created by comparison operators (<code>&lt;</code>,
 <code>&lt;=</code>, <code>!=</code>, <code>==</code>, <code>&gt;=</code>, <code>&gt;</code>),
 logical operators (<code>&amp;&amp;</code>, <code>||</code>, <code>^^</code>,
 <code>!</code>), the membership operator (<code>in</code>) and the
-<code>all</code> and <code>any</code> functions.</p>
+<code>all</code> and <code>any</code> functions.
 
 <p>Normally in numeric expressions <code>true</code> is <code>1</code> and
 <code>false</code> is <code>0</code>, unless the <q><a href="#o_Wstrict-bool"><code>-Wstrict-bool</code></a></q> command line option was
-used.</p>
+used.
 
-<p>Other types can be converted to boolean by using the type <code>bool</code>.</p>
+<p>Other types can be converted to boolean by using the type <code>bool</code>.
 
 <div><table border="0">
 <caption>Boolean values of various types</caption>
@@ -983,7 +988,7 @@ used.</p>
 <h3>Types<a name="type" href="#type"></a></h3>
 
 <p>The various types mentioned earlier have predefined names. These can
-used for conversions or type checks.</p>
+used for conversions or type checks.
 
 <div><table border="0">
 <caption>Built-in type names</caption>
@@ -1012,44 +1017,44 @@ used for conversions or type checks.</p>
 <h3>Symbols<a name="symbols" href="#symbols"></a></h3>
 
 <p>Symbols are used to reference objects. Regularly named, anonymous and local
-symbols are supported. These can be constant or re-definable.</p>
+symbols are supported. These can be constant or re-definable.
 
 <p>Scopes are where symbols are stored and looked up. The global scope is
-always defined and it can contain any number of nested scopes.</p>
+always defined and it can contain any number of nested scopes.
 
 <p>Symbols must be uniquely named in a scope, therefore in big programs it's
 hard to come up with useful and easy to type names. That's why local and anonymous symbols
 exists. And grouping certain related symbols into a scope makes sense sometimes
-too.</p>
+too.
 
 <p>Scopes are usually created by <a href="#d_proc"><code>.proc</code></a> and <a href="#d_block"><code>.block</code></a>
 directives, but there are a few other ways. Symbols in a scope can be accessed
-by using the dot operator, which is applied between the name of the scope and the symbol (e.g. <code>myconsts.math.pi</code>).</p>
+by using the dot operator, which is applied between the name of the scope and the symbol (e.g. <code>myconsts.math.pi</code>).
 
 <h4>Regular symbols<a name="symbols-regular" href="#symbols-regular"></a></h4>
 
 <p>Regular symbol names are starting with a letter and containing
 letters, numbers and underscores. Unicode letters are allowed if the <q><a href="#o_ascii"><code>-a</code></a></q> command line option was used.
-There's no restriction on the length of symbol names.</p>
+There's no restriction on the length of symbol names.
 
 <p>Care must be taken to not use duplicate names in the same scope when
-the symbol is used as a constant as there can be only one definition for them.</p>
+the symbol is used as a constant as there can be only one definition for them.
 
 <p>Duplicate names in parent scopes are not a problem and this gives the
 ability to override names defined in lower scopes. However this can just as well lead to mistakes if
 a lower scoped symbol with the same name was meant so there's a
-<a href="#o_Wshadow">-Wshadow</a> command line option to warn if such ambiguity exists.</p>
+<a href="#o_Wshadow">-Wshadow</a> command line option to warn if such ambiguity exists.
 
 <p>Case sensitivity can be enabled with the
 <q><a href="#o_case-sensitive"><code>-C</code></a></q> command line option, otherwise all
-symbols are matched case insensitive.</p>
+symbols are matched case insensitive.
 
 <p>For case insensitive matching it's possible to check for consistent symbol name use
 with the <q><a href="#o_Wcase-symbol"><code>-Wcase-symbol</code></a></q> command
-line option.</p>
+line option.
 
 <p>A regular symbol is looked up first in the current scope, then in lower scopes
-until the global scope is reached.</p>
+until the global scope is reached.
 
 <pre width="80">
 f       <b class="k">.block</b>
@@ -1065,23 +1070,23 @@ f.x     <b>=</b> <span>3</span>             <i>;create x in scope f with value 3
 <h4>Local symbols<a name="symbols-local" href="#symbols-local"></a></h4>
 
 <p>Local symbols have their own scope between two regularly named code symbols
-and are assigned to the code symbol above them.</p>
+and are assigned to the code symbol above them.
 
-<p>Therefore they're easy to reuse without explicit scope declaration directives.</p>
+<p>Therefore they're easy to reuse without explicit scope declaration directives.
 
 <p>Not all regularly named symbols can be scope boundaries just plain code symbol ones
 without anything or an opcode after them (no macros!). Symbols defined as procedures, blocks,
 macros, functions, structures and unions are ignored. Also symbols defined by
 <a href="#d_var"><code>.var</code></a>, <code>:=</code> or <code>=</code> don't apply, and there are a few more
-exceptions, so stick to using plain code labels.</p>
+exceptions, so stick to using plain code labels.
 
 <p>The name must start with an underscore (<code>_</code>), otherwise the same character
-restrictions apply as for regular symbols. There's no restriction on the length of the name.</p>
+restrictions apply as for regular symbols. There's no restriction on the length of the name.
 
 <p>Care must be taken to not use the duplicate names in the same scope when the
-symbol is used as a constant.</p>
+symbol is used as a constant.
 
-<p>A local symbol is only looked up in it's own scope and nowhere else.</p>
+<p>A local symbol is only looked up in it's own scope and nowhere else.
 
 <pre width="80">
 incr	<b>inc</b> <u>ac</u>
@@ -1099,10 +1104,11 @@ _skip	<b>dec</b> <u>ac</u>          <i>;symbol reused here</i>
 <h4>Anonymous symbols<a name="symbols-anonymous" href="#symbols-anonymous"></a></h4>
 
 <p>Anonymous symbols don't have a unique name and are always called as a single plus or minus sign. They are also called as forward (<code>+</code>)
-and backward (<code>&minus;</code>) references.</p>
+and backward (<code>&minus;</code>) references.
+
 <p>When referencing them <q><code>&minus;</code></q> means the first backward,
 <q><code>&minus;&minus;</code></q> means the second backwards and so on. It's the same for forward, but with
-<q><code>+</code></q>. In expressions it may be necessary to put them into brackets.</p>
+<q><code>+</code></q>. In expressions it may be necessary to put them into brackets.
 
 <pre width="80">
         <b>ldy</b> #<span>4</span>
@@ -1121,10 +1127,10 @@ and backward (<code>&minus;</code>) references.</p>
 <p>Excessive nesting or long distance references create poorly readable code.
 It's also very easy to copy-paste a few lines of code with these references into
 a code fragment already containing similar references. The result is usually a
-long debugging session to find out what went wrong.</p>
+long debugging session to find out what went wrong.
 
 <p>These references are also useful in segments, but this can create a nice
-trap when segments are copied into the code with their internal references.</p>
+trap when segments are copied into the code with their internal references.
 
 <pre width="80">
 	<b>bne</b> +
@@ -1133,30 +1139,30 @@ trap when segments are copied into the code with their internal references.</p>
 </pre>
 
 <p>Anonymous symbols are looked up first in the current scope, then in lower scopes
-until the global scope is reached.</p>
+until the global scope is reached.
 
 <p>Anonymous labels within conditionally assembled code are counted even
 if the code itself is not compiled and the label won't get defined.
 This ensures that anonymous labels are always at the same "distance"
-independent of the conditions in between.</p>
+independent of the conditions in between.
 
 <h4>Constant and re-definable symbols<a name="symbols-constant" href="#symbols-constant"></a></h4>
 
 <p>Constant symbols can be created with the equal sign. These are not
 re-definable. Forward referencing of them is allowed as they retain the
-objects over compilation passes.</p>
+objects over compilation passes.
 
 <p>Symbols in front of code or certain assembler directives are created as
-constant symbols too. They are bound to the object following them.</p>
+constant symbols too. They are bound to the object following them.
 
 <p>Re-definable symbols can be created by the <a href="#d_var"><code>.var</code></a> directive
 or <code>:=</code> construct. These are also called as variables. They
 don't carry their content over from the previous pass therefore it's not
-possible to use them before their definition.</p>
+possible to use them before their definition.
 
 <p>Variables can be conditionally defined using the <code>:?=</code> construct.
 If the variable was defined already then the original value is retained
-otherwise a new one is created with this value.</p>
+otherwise a new one is created with this value.
 
 <pre width="80">
 WIDTH   <b>=</b> <span>40</span>            <i>;a constant</i>
@@ -1173,17 +1179,17 @@ var3	<b>:?=</b> <span>5</span>           <i>;assign 5 if undefined</i>
 <p>The <q><code>&lowast;</code></q> symbol denotes the current program
 counter value. When accessed it's value is the program counter at the
 beginning of the line. Assigning to it changes the program counter and
-the compiling offset.</p>
+the compiling offset.
 
 <h3>Built-in functions<a name="builtin-functions" href="#builtin-functions"></a></h3>
 
 <p>Built-in functions are pre-assigned to the symbols listed below. If you reuse these
 symbols in a scope for other purposes then they become inaccessible, or can
-perform a different function.</p>
+perform a different function.
 
 <p>Built-in functions can be assigned to symbols (e.g. <code>sinus = sin</code>), and
 the new name can be used as the original function. They can even be passed as
-parameters to functions.</p>
+parameters to functions.
 
 <h4>Mathematical functions<a name="math-functions" href="#math-functions"></a></h4>
 
@@ -1297,10 +1303,10 @@ parameters to functions.</p>
 <h4>Byte string functions<a name="byte-functions" href="#byte-functions"></a></h4>
 
 <p>These functions return byte strings of various lengths for signed numbers,
-unsigned numbers and addresses.</p>
+unsigned numbers and addresses.
 
 <p>The naming of functions is not a coincidence and they return the bytes what
-the <a href="#data-dumping">data directives</a> with the same names normally emit.</p>
+the <a href="#data-dumping">data directives</a> with the same names normally emit.
 
 <dl class="dir">
 <dt><code><b>byte(</b>&lt;expression&gt;<b>)</b></code><a name="f_byte" href="#f_byte"></a>
@@ -1518,7 +1524,7 @@ irqs    <b class="d">.addr</b> <u>sorted</u>[:, <span>1</span>] <i>; irq2, irq1<
 <h4>Operators<a name="operators" href="#operators"></a></h4>
 
 <p>The following operators are available. Not all are defined for all types of
-arguments and their meaning might slightly vary depending on the type.</p>
+arguments and their meaning might slightly vary depending on the type.
 
 <div><table border="0">
 <caption>Unary operators</caption>
@@ -1534,7 +1540,7 @@ arguments and their meaning might slightly vary depending on the type.</p>
 
 <p><b>The <q>^</q> decimal string operator will be changed to mean the
 bank byte soon. Please update your sources to use format("%d", xxx) instead!</b>
-This is done to be in line with it's use in most other assemblers.</p>
+This is done to be in line with it's use in most other assemblers.
 
 <div><table border="0">
 <caption>Binary operators</caption>
@@ -1559,11 +1565,11 @@ This is done to be in line with it's use in most other assemblers.</p>
 </table></div>
 
 <p>Spacing must be used for the <q>x</q> and <q>in</q> operators or else they won't
-be recognized as such. For example the expression <q>[1,2]x2</q> should be written as <q>[1,2]x 2</q> instead.</p>
+be recognized as such. For example the expression <q>[1,2]x2</q> should be written as <q>[1,2]x 2</q> instead.
 
 <p>Parenthesis (<code>( )</code>) can be used to override operator precedence.
 Don't forget that they also denote indirect addressing mode for certain
-opcodes.</p>
+opcodes.
 
 <pre width="80">
         <b>lda</b> #(<span>4</span>+<span>2</span>)*<span>3</span>
@@ -1571,14 +1577,16 @@ opcodes.</p>
 
 <h4>Comparison operators<a name="comparison" href="#comparison"></a></h4>
 
-<p>Traditional comparison operators give false or true depending on the result.</p>
-<p>The compare operator (<code>&lt;=&gt;</code>) gives &minus;1 for less, 0 for equal and 1 for more.</p>
+<p>Traditional comparison operators give false or true depending on the result.
+
+<p>The compare operator (<code>&lt;=&gt;</code>) gives &minus;1 for less, 0 for equal and 1 for more.
+
 
 <div><table border="0">
 <caption>Comparison operators</caption>
 <tbody>
 <tr><td><code>&lt;=&gt;</code><td>compare
-<td>&nbsp;<td>&nbsp;
+<td>===<td>identical
 <tr><td><code>==</code><td>equals
 <td><code>!=</code><td>not equal
 <tr><td><code>&lt;</code><td>less than
@@ -1591,7 +1599,7 @@ opcodes.</p>
 <h4>Byte extraction operators<a name="bitstringextractor" href="#bitstringextractor"></a></h4>
 
 <p>These unary operators extract 8 or 16&nbsp;bits. Usually they are used to get
-parts of a memory address.</p>
+parts of a memory address.
 
 <div><table border="0">
 <caption>Byte/word extraction operators</caption>
@@ -1619,7 +1627,7 @@ parts of a memory address.</p>
 <p>Please note that these prefix operators are not strongly binding like
 negation or inversion. Instead they apply to the whole expression to the right.
 This may be unexpected but is required for compatibility with old sources which
-expect this behaviour.</p>
+expect this behaviour.
 
 <pre width="80">
         <b>lda</b> #&lt;<u>label</u>+<span>10</span>  <i>;This is &lt;(label+10) and not (&lt;label)+10</i>
@@ -1629,8 +1637,9 @@ expect this behaviour.</p>
 </pre>
 
 <h4>Conditional operators<a name="conditionals" href="#conditionals"></a></h4>
+
 <p>Boolean conditional operators give false or true or one of the
-operands as the result.</p>
+operands as the result.
 
 <div><table border="0">
 <caption>Logical and conditional operators</caption>
@@ -1654,16 +1663,16 @@ light   <b class="d">.byte</b> <span>0</span> &gt;? <span class="k">range</span>
 </pre>
 
 <p>Please note that these are not short circuiting operations and both sides are
-calculated even if thrown away later.</p>
+calculated even if thrown away later.
 
 <p>With the <q><a href="#o_Wstrict-bool"><code>-Wstrict-bool</code></a></q> command line option
-booleans are required as arguments and only the <q><code>?</code></q> operator may return something else.</p>
+booleans are required as arguments and only the <q><code>?</code></q> operator may return something else.
 
 <h4>Address length forcing<a name="addresslength" href="#addresslength"></a></h4>
 
 <p>Special addressing length forcing operators in front of an expression can be
 used to make sure the expected addressing mode is used. Only applicable when used
-directly at the mnemonic.</p>
+directly at the mnemonic.
 
 <div><table border="0">
 <caption>Address size forcing</caption>
@@ -1682,10 +1691,10 @@ directly at the mnemonic.</p>
 
 <h4>Compound assignment<a name="compound" href="#compound"></a></h4>
 
-<p>These assignment operators are short hands for updating variables.</p>
+<p>These assignment operators are short hands for updating variables.
 
 <p>The variables on the left must be defined beforehand by <q><code>:=</code></q>
-or <q><a href="#d_var"><code>.var</code></a></q>. Constants can't be changed of course.</p>
+or <q><a href="#d_var"><code>.var</code></a></q>. Constants can't be changed of course.
 
 <div><table border="0">
 <caption>Compound assignments</caption>
@@ -1718,12 +1727,12 @@ v       <b>+=</b> <span>1</span>            <i>; same as 'v .var v + 1'</i>
 <h4>Slicing and indexing<a name="slicing_indexing" href="#slicing_indexing"></a></h4>
 
 <p>Lists, character strings, byte strings and bit strings support various
-slicing and indexing possibilities through the <code>[]</code> operator.</p>
+slicing and indexing possibilities through the <code>[]</code> operator.
 
 <p>Indexing elements with positive integers is zero based. Negative indexes
 are transformed to positive by adding the number of elements to them, therefore
 &minus;1 is the last element. Indexing with list of integers is possible as well so
-<code>[1, 2, 3][(&minus;1, 0, 1)]</code> is <code>[3, 1, 2]</code>.</p>
+<code>[1, 2, 3][(&minus;1, 0, 1)]</code> is <code>[3, 1, 2]</code>.
 
 <p>Slicing is an operation when parts of sequence is extracted from a start
 position to an end position with a step value. These parameters are separated
@@ -1731,9 +1740,9 @@ with colons enclosed in square brackets and are all optional. Their default
 values are <code>[start:maximum:step=1]</code>. Negative start and end characters are
 converted to positive internally by adding the length of string to them.
 Negative step operates in reverse direction, non-single steps will jump over
-elements.</p>
+elements.
 
-<p>This is quite powerful and therefore a few examples will be given here:</p>
+<p>This is quite powerful and therefore a few examples will be given here:
 
 <dl>
 <dt>Positive indexing <code>a[x]</code>
@@ -1764,7 +1773,7 @@ beginning or end at the end. If the <q>step</q> is negative then it's done in re
 
 <p>The fun start with nested lists and tuples, as these can be used to create a matrix. The
 examples will be given for a two dimensional matrix for easier understanding,
-but this also works in higher dimensions.</p>
+but this also works in higher dimensions.
 
 <dl>
 <dt>Extract row <code>a[x]</code>
@@ -1778,7 +1787,7 @@ but this also works in higher dimensions.</p>
 </dl>
 
 <p>And it works for list of indexes, negative indexes, stepped ranges,
-reversing, etc. on all axes in too many ways to show all possibilities.</p>
+reversing, etc. on all axes in too many ways to show all possibilities.
 
 <p>Basically it's just the indexing and slicing applied on nested
 constructs, where each nesting level is separated by a comma.</p>
@@ -1788,20 +1797,21 @@ constructs, where each nesting level is separated by a comma.</p>
 
 <h3>Controlling the compile offset and program counter<a name="program-counter" href="#program-counter"></a></h3>
 
-<p>Two counters are used while assembling.</p>
+<p>Two counters are used while assembling.
 
-<p>The compile offset is where the data and code ends up in memory (or in image file).</p>
+<p>The compile offset is where the data and code ends up in memory (or in image file).
 
 <p>The program counter is what labels get set to and what the special star
-label refers to.</p>
+label refers to.
 
 <p>Normally both are the same (code is compiled to the location it runs from)
-but it does not need to be.</p>
+but it does not need to be.
 
 <dl class="dir">
 <dt><code><b>&lowast;=</b></code> &lt;expression&gt;<a name="d_star" href="#d_star"></a>
 <dd>The compile offset is adjusted so that the program counter
 will match the requested address in the expression.
+
 <pre width="80">
 <i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$0800</span>
@@ -1813,11 +1823,14 @@ will match the requested address in the expression.
 							<b class="k">.here</b>
 .0a00						label4
 </pre>
+
 <dt><code><b class="k">.offs</b></code> &lt;expression&gt;<a name="d_offs" href="#d_offs"></a>
 <dd>Sets the compile offset relative to the program counter.
+
 <p>Popular in old TASM code where this was the only way to create
 relocated code, otherwise it's use is not recommended as there are easier
 to use alternatives below.</p>
+
 <pre width="80">
 <i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$1000</span>
@@ -1830,9 +1843,13 @@ to use alternatives below.</p>
 <dt><code><b class="k">.here</b></code><a name="d_here" href="#d_here"></a>
 <dt><code><b class="k">.endlogical</b></code><a name="d_endlogical" href="#d_endlogical"></a>
 <dd>Ends a relocation block
+
 <p>Changes the program counter only, the compile offset is not changed. When finished all continues where it was left off before.</p>
+
 <p>The naming is not logical at all for relocated code, but that's how it was named in old 6502tass.</p>
+
 <p>It's used for code copied to it's proper location at runtime. Can be nested of course.</p>
+
 <pre width="80">
 <i>;Offset	;PC	;Hex		;Monitor	;Source</i>
 						*	<b>=</b> <span>$1000</span>
@@ -1848,8 +1865,10 @@ to use alternatives below.</p>
 <dt><code><b class="k">.endv</b></code><a name="d_endv" href="#d_endv"></a>
 <dt><code><b class="k">.endvirtual</b></code><a name="d_endvirtual" href="#d_endvirtual"></a>
 <dd>Ends a virtual block
+
 <p>Changes the program counter to the expression (if given) and discards the result of compilation.
 This is useful to define structures to fixed addresses.</p>
+
 <pre width="80">
 	<b class="k">.virtual</b> <span>$d400</span>	<i>; base address</i>
 sid	<b class="k">.block</b>
@@ -1861,7 +1880,9 @@ sr	<b class="d">.byte</b> <span>?</span>	        <i>; sustain/release</i>
 	<b class="k">.bend</b>
 	<b class="k">.endv</b>
 </pre>
+
 <p>Or to define stack "allocated" variables on 65816.</p>
+
 <pre width="80">
 	<b class="k">.virtual</b> #<span>1</span>,s
 p1	<b class="d">.addr</b> <span>?</span>	        <i>; at #1,s</i>
@@ -1872,7 +1893,9 @@ tmp	<b class="d">.byte</b> <span>?</span>	        <i>; at #3,s</i>
 
 <dt><code><b class="k">.align</b></code> &lt;expression&gt;[, &lt;fill&gt;]<a name="d_align" href="#d_align"></a>
 <dd>Align the program counter to a dividable address by inserting uninitialized memory or repeated bytes.
+
 <p>Usually used to page align data or code to avoid penalty cycles when indexing or branching.</p>
+
 <pre width="80">
 <i>;Offset PC       Bytes          Disassembly     Source</i>
 						*	<b>=</b> <span>$ffc</span>
@@ -1881,6 +1904,7 @@ tmp	<b class="d">.byte</b> <span>?</span>	        <i>; at #3,s</i>
 &gt;1003		 ea					<b class="k">.align</b> <span>4</span>, <span>$ea</span>
 .1004		 69 01		adc #$01	loop	<b>adc</b> #<span>1</span>
 </pre>
+
 <p>When alignment is done within named structures then it's relative to the start
 of the structure. This means the structure layout will be always the same
 independent which address it's instantiated at. Anonymous structures do not
@@ -1888,21 +1912,27 @@ change the way the alignment works.</p>
 </dl>
 
 <h3>Dumping data<a name="data-dumping" href="#data-dumping"></a></h3>
+
 <h4>Storing numeric values<a name="data-numeric" href="#data-numeric"></a></h4>
+
 <p>Multi byte numeric data is stored in the little-endian order, which is the
 natural byte order for 65xx processors. Numeric ranges are enforced depending
-on the directives used.</p>
+on the directives used.
+
 <p>When using lists or tuples their content will be used one by one.
 Uninitialized data (<q><a href="#uninitialized"><code>?</code></a></q>) creates holes of different sizes. Character string constants
-are converted using the current encoding.</p>
+are converted using the current encoding.
+
 <p>Please note that multi character strings usually don't fit into 8&nbsp;bits
 and therefore the <a href="#d_byte"><code>.byte</code></a> directive is not appropriate for them.
-Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of any length.</p>
+Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of any length.
+
 <dl class="dir">
 <dt><code><b class="d">.byte</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_byte" href="#d_byte"></a>
 <dd>Create bytes from 8&nbsp;bit unsigned constants (0&ndash;255)
 <dt><code><b class="d">.char</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_char" href="#d_char"></a>
 <dd>Create bytes from 8&nbsp;bit signed constants (&minus;128&ndash;127)
+
 <pre width="80">
 &gt;1000  ff 03                             <b class="d">.byte</b> <span>255</span>, <span>$03</span>
 &gt;1002  41                                <b class="d">.byte</b> <span class="s">"a"</span>
@@ -1922,6 +1952,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create bytes from 16&nbsp;bit unsigned constants (0&ndash;65535)
 <dt><code><b class="d">.sint</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_int" href="#d_int"></a>
 <dd>Create bytes from 16&nbsp;bit signed constants (&minus;32768&ndash;32767)
+
 <pre width="80">
 &gt;1000  42 23 55 45                       <b class="d">.word</b> <span>$2342</span>, <span>$4555</span>
 &gt;1004                                    <b class="d">.word</b> <span>?</span>        <i>; reserve 2 bytes</i>
@@ -1938,6 +1969,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create 16&nbsp;bit address constants for addresses (in current program bank)
 <dt><code><b class="d">.rta</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_rta" href="#d_rta"></a>
 <dd>Create 16&nbsp;bit return address constants for addresses (in current program bank)
+
 <pre width="80">
                                         *       <b>=</b> <span>$12000</span>
 .012000  7c 03 20       jmp ($012003,x)         <b>jmp</b> (<u>jumps</u>,x)
@@ -1956,6 +1988,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create bytes from 24&nbsp;bit unsigned constants (0&ndash;16777215)
 <dt><code><b class="d">.lint</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_lint" href="#d_lint"></a>
 <dd>Create bytes from 24&nbsp;bit signed constants (&minus;8388608&ndash;8388607)
+
 <pre width="80">
 &gt;1000  56 34 12                          <b class="d">.long</b> <span>$123456</span>
 &gt;1003                                    <b class="d">.long</b> <span>?</span>	        <i>; reserve 3 bytes</i>
@@ -1978,6 +2011,7 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 <dd>Create bytes from 32&nbsp;bit constants (0&ndash;4294967295)
 <dt><code><b class="d">.dint</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_dint" href="#d_dint"></a>
 <dd>Create bytes from 32&nbsp;bit signed constants (&minus;2147483648&ndash;2147483647)
+
 <pre width="80">
 &gt;1000  78 56 34 12              <b class="d">.dword</b> <span>$12345678</span>
 &gt;1004                           <b class="d">.dword</b> <span>?</span>        <i>; reserve 4 bytes</i>
@@ -1989,14 +2023,18 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 </dl>
 
 <h4>Storing string values<a name="data-text" href="#data-text"></a></h4>
+
 <p>The following directives store strings of characters, bytes or bits as bytes. Small
-numeric constants can be mixed in to represent single byte control characters.</p>
+numeric constants can be mixed in to represent single byte control characters.
+
 <p>When using lists or tuples their content will be used one by one.
 Uninitialized data (<q><a href="#uninitialized"><code>?</code></a></q>) creates byte sized holes. Character string constants
-are converted using the current encoding.</p>
+are converted using the current encoding.
+
 <dl class="dir">
 <dt><code><b class="d">.text</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_text" href="#d_text"></a>
 <dd>Assemble strings into 8&nbsp;bit bytes.
+
 <pre width="80">
 &gt;1000  4f 45 d5  <b class="d">.text</b> <span class="s">"oeU"</span>
 &gt;1003  4f 45 d5  <b class="d">.text</b> <span class="s">'oeU'</span>
@@ -2007,6 +2045,7 @@ are converted using the current encoding.</p>
 
 <dt><code><b class="d">.fill</b></code> &lt;length&gt;[, &lt;fill&gt;]<a name="d_fill" href="#d_fill"></a>
 <dd>Reserve space (using uninitialized data), or fill with repeated bytes.
+
 <pre width="80">
 &gt;1000            <b class="d">.fill</b> <span>$100</span>      <i>;no fill, just reserve $100 bytes</i>
 &gt;1100  00 00 00  <b class="d">.fill</b> <span>$4000</span>, <span>0</span>  <i>;16384 bytes of 0</i>
@@ -2019,9 +2058,12 @@ are converted using the current encoding.</p>
 
 <dt><code><b class="d">.shift</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_shift" href="#d_shift"></a>
 <dd>Assemble strings of 7&nbsp;bit bytes and mark the last byte by setting it's most significant bit.
+
 <p>Any byte which already has the most significant bit set will cause an error.
 The last byte can't be uninitialized or missing of course.</p>
+
 <p>The naming comes from old TASM and is a reference to setting the high bit of alphabetic letters which results in it's uppercase version in PETSCII.</p>
+
 <pre width="80">
 .1000  a2 00          ldx #$00                <b>ldx</b> #<span>0</span>
 .1002  bd 10 10       lda $1010,x     loop    <b>lda</b> <u>txt</u>,x
@@ -2038,9 +2080,11 @@ The last byte can't be uninitialized or missing of course.</p>
 
 <dt><code><b class="d">.shiftl</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_shiftl" href="#d_shiftl"></a>
 <dd>Assemble strings of 7&nbsp;bit bytes shifted to the left once with the last byte's least significant bit set.
+
 <p>Any byte which already has the most significant
 bit set will cause an error as this is cut off on shifting.
 The last byte can't be uninitialized or missing of course.</p>
+
 <p>The naming is a reference to left shifting.</p>
 
 <pre width="80">
@@ -2059,6 +2103,7 @@ The last byte can't be uninitialized or missing of course.</p>
 <dt><code><b class="d">.null</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_null" href="#d_null"></a>
 <dd>Same as <a href="#d_text"><code>.text</code></a>, but adds a zero byte to the end. An existing
 zero byte is an error as it'd cause a false end marker.
+
 <pre width="80">
 .1000  a9 07          lda #$07                <b>lda</b> #&lt;<u>txt</u>
 .1002  a0 10          ldy #$10                <b>ldy</b> #&gt;<u>txt</u>
@@ -2070,6 +2115,7 @@ zero byte is an error as it'd cause a false end marker.
 <dt><code><b class="d">.ptext</b></code> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]<a name="d_ptext" href="#d_ptext"></a>
 <dd>Same as <a href="#d_text"><code>.text</code></a>, but prepend the number of bytes in front of the
 string (pascal style string). Therefore it can't do more than 255 bytes.
+
 <pre width="80">
 .1000  a9 1d          lda #$1d                <b>lda</b> #&lt;<u>txt</u>
 .1002  a2 10          ldx #$10                <b>ldx</b> #&gt;<u>txt</u>
@@ -2094,9 +2140,11 @@ string (pascal style string). Therefore it can't do more than 255 bytes.
 </dl>
 
 <h3>Text encoding<a name="text-encoding" href="#text-encoding"></a></h3>
+
 <p>64tass supports sources written in UTF-8, UTF-16 (be/le) and RAW 8&nbsp;bit encoding. To take
 advantage of this capability custom encodings can be defined to map Unicode characters
-to 8&nbsp;bit values in strings.</p>
+to 8&nbsp;bit values in strings.
+
 <dl class="dir">
 <dt><code><b class="k">.enc</b></code> "&lt;name&gt;"<a name="d_enc" href="#d_enc"></a>
 <dd>Selects text encoding, predefined encodings are <q>none</q> and
@@ -2113,20 +2161,24 @@ start without any character or escape definitions, add some as required.
 <dt><code><b class="k">.cdef</b></code> &lt;start&gt;, &lt;end&gt;, &lt;coded&gt; [, &lt;start&gt;, &lt;end&gt;, &lt;coded&gt;, &hellip;]<a name="d_cdef" href="#d_cdef"></a>
 <dt><code><b class="k">.cdef</b></code> "&lt;start&gt;&lt;end&gt;", &lt;coded&gt; [, "&lt;start&gt;&lt;end&gt;", &lt;coded&gt;, &hellip;]
 <dd>Assigns characters in a range to single bytes.
+
 <p>This is a simple single character to byte translation definition. It is
 applied to a range as characters and bytes are usually assigned sequentially.
 The start and end positions are Unicode character codes either by numbers or by
 typing them. Overlapping ranges are not allowed.</p>
+
 <pre width="80">
         <b class="k">.enc</b> <span class="s">"ascii"</span>	<i>;define an ascii encoding</i>
         <b class="k">.cdef</b> <span class="s">" ~"</span>, <span>32</span>  <i>;identity for printable</i>
 </pre>
 <dt><code><b class="k">.edef</b></code> "&lt;escapetext&gt;", &lt;value&gt; [, "&lt;escapetext&gt;", &lt;value&gt;, &hellip;]<a name="d_edef" href="#d_edef"></a>
 <dd>Assigns strings to byte sequences as a translated value.
+
 <p>When these substrings are found in a text they are replaced by bytes defined here.
 When strings with common prefixes are used the longest match wins. Useful for defining
 non-typeable control code aliases, or as a simple tokenizer.</p>
 </dl>
+
 <pre width="80">
         <b class="k">.enc</b> <span class="s">"petscii"</span>  <i>;define an ascii-&gt;petscii encoding</i>
         <b class="k">.cdef</b> <span class="s">" @"</span>, <span>32</span>  <i>;characters</i>
@@ -2143,23 +2195,24 @@ non-typeable control code aliases, or as a simple tokenizer.</p>
         <b class="k">.edef</b> <span class="s">"{crlf}"</span>, [<span>13</span>, <span>10</span>]<i>;two byte control code</i>
         <b class="k">.edef</b> <span class="s">"&lt;nothing&gt;"</span>, []<i>;replace with no bytes</i>
 
->1000  93 d4 45 58 54 20 49 4e     <b class="d">.text</b> <span class="s">"<span>{clr}</span>Text in PETSCII<span>\n</span>"</span>
->1008  20 d0 c5 d4 d3 c3 c9 c9 0d
+&gt;1000  93 d4 45 58 54 20 49 4e     <b class="d">.text</b> <span class="s">"<span>{clr}</span>Text in PETSCII<span>\n</span>"</span>
+&gt;1008  20 d0 c5 d4 d3 c3 c9 c9 0d
 </pre>
 
 <h3>Structured data<a name="structures" href="#structures"></a></h3>
 
 <p>Structures and unions can be defined to create complex data types. The
 offset of fields are available by using the definition's name. The fields
-themselves by using the instance name.</p>
+themselves by using the instance name.
 
 <p>The initialization method is very similar to macro parameters, the
 difference is that unset parameters always return uninitialized data (<q><a href="#uninitialized"><code>?</code></a></q>)
-instead of an error.</p>
+instead of an error.
 
 <h4>Structure<a name="structure" href="#structure"></a></h4>
+
 <p>Structures are for organizing sequential data, so the length of a structure
-is the sum of lengths of all items.</p>
+is the sum of lengths of all items.
 
 <dl class="dir">
 <dt><code><b class="k">.struct</b></code> [&lt;name&gt;][=&lt;default&gt;]][, [&lt;name&gt;][=&lt;default&gt;] &hellip;]<a name="d_struct" href="#d_struct"></a>
@@ -2167,7 +2220,9 @@ is the sum of lengths of all items.</p>
 <dt><code><b class="k">.ends</b></code> [&lt;result&gt;][, &lt;result&gt; &hellip;]<a name="d_ends" href="#d_ends"></a>
 <dt><code><b class="k">.endstruct</b></code> [&lt;result&gt;][, &lt;result&gt; &hellip;]<a name="d_endstruct" href="#d_endstruct"></a>
 <dd>Ends a structure block
+
 <p>Structure definition, with named parameters and default values</p>
+
 <dt><code><b class="d">.dstruct</b></code> &lt;name&gt;[, &lt;initialization values&gt;]<a name="d_dstruct" href="#d_dstruct"></a>
 <dt><code><b class="d">.&lt;name&gt;</b></code> [&lt;initialization values&gt;]
 <dd>Create instance of structure with initialization values
@@ -2192,9 +2247,10 @@ nn      <b class="d">.dstruct</b> <u>nn_s</u>, <span>1</span>, <span>2</span><i>
 </pre>
 
 <h4>Union<a name="union" href="#union"></a></h4>
+
 <p>Unions can be used for overlapping data as the compile offset and program
 counter remains the same on each line. Therefore the length of a union is the
-length of it's longest item.</p>
+length of it's longest item.
 
 <dl class="dir">
 <dt><code><b class="k">.union</b></code> [&lt;name&gt;][=&lt;default&gt;]][, [&lt;name&gt;][=&lt;default&gt;] &hellip;]<a name="d_union" href="#d_union"></a>
@@ -2202,7 +2258,9 @@ length of it's longest item.</p>
 <dt><code><b class="k">.endu</b></code><a name="d_endu" href="#d_endu"></a>
 <dt><code><b class="k">.endunion</b></code><a name="d_endunion" href="#d_endunion"></a>
 <dd>Ends a union block
+
 <p>Union definition, with named parameters and default values</p>
+
 <dt><code><b class="d">.dunion</b></code> &lt;name&gt;[, &lt;initialization values&gt;]<a name="d_dunion" href="#d_dunion"></a>
 <dt><code><b class="d">.&lt;name&gt;</b></code> [&lt;initialization values&gt;]
 <dd>Create instance of union with initialization values
@@ -2227,7 +2285,8 @@ nn      <b class="d">.dunion</b> <u>nn_u</u>, <span>1</span> <i>;union instance 
 </pre>
 
 <h4>Combined use of structures and unions<a name="struct-and-union" href="#struct-and-union"></a></h4>
-<p>The example below shows how to define structure to a binary include.</p>
+
+<p>The example below shows how to define structure to a binary include.
 
 <pre width="80">
         <b class="k">.union</b>
@@ -2244,7 +2303,7 @@ backg	<b class="d">.byte</b> <span>?</span>
 <p>Anonymous structures and unions in combination with sections are useful for
 overlapping memory assignment. The example below shares zero page allocations
 for two separate parts of a bigger program. The common subroutine variables
-are assigned after in the <q>zp</q> section.</p>
+are assigned after in the <q>zp</q> section.
 
 <pre width="80">
 *       <b>=</b> <span>$02</span>
@@ -2260,9 +2319,10 @@ are assigned after in the <q>zp</q> section.</p>
 </pre>
 
 <h3>Macros<a name="macros" href="#macros"></a></h3>
+
 <p>Macros can be used to reduce typing of frequently used source lines.
 Each invocation is a copy of the macro's content with parameter references
-replaced by the parameter texts.</p>
+replaced by the parameter texts.
 
 <dl class="dir">
 <dt><code><b class="k">.segment</b></code> [&lt;name&gt;][=&lt;default&gt;]][, [&lt;name&gt;][=&lt;default&gt;] &hellip;]<a name="d_segment" href="#d_segment"></a>
@@ -2270,17 +2330,21 @@ replaced by the parameter texts.</p>
 <dt><code><b class="k">.endm</b></code> [&lt;result&gt;][, &lt;result&gt; &hellip;]<a name="d_endm" href="#d_endm"></a>
 <dt><code><b class="k">.endsegment</b></code> [&lt;result&gt;][, &lt;result&gt; &hellip;]<a name="d_endsegment" href="#d_endsegment"></a>
 <dd>End of segment block
+
 <p>Copies the code segment as it is, so symbols can be used from
 outside, but this also means multiple use will result in double defines
 unless anonymous labels are used.</p>
+
 <dt><code><b class="k">.macro</b></code> [&lt;name&gt;][=&lt;default&gt;]][, [&lt;name&gt;][=&lt;default&gt;] &hellip;]<a name="d_macro" href="#d_macro"></a>
 <dd>Start of macro block
 <dt><code><b class="k">.endm</b></code> [&lt;result&gt;][, &lt;result&gt; &hellip;]
 <dt><code><b class="k">.endmacro</b></code> [&lt;result&gt;][, &lt;result&gt; &hellip;]<a name="d_endmacro" href="#d_endmacro"></a>
 <dd>End of macro block
+
 <p>The code is enclosed in it's own block so symbols inside are
 non-accessible, unless a label is prefixed at the place of use, then local
 labels can be accessed through that label.</p>
+
 <dt><code><b class="k">#&lt;name&gt;</b></code> [&lt;param&gt;][[,][&lt;param&gt;] &hellip;]
 <dt><code><b class="k">.&lt;name&gt;</b></code> [&lt;param&gt;][[,][&lt;param&gt;] &hellip;]
 <dd>Invoke the macro after <q>#</q> or <q>.</q> with the parameters. Normally the name of
@@ -2312,8 +2376,10 @@ var     <b class="k">.lohi</b> <span>1234</span>, <span>5678</span>
 </pre>
 
 <h4>Parameter references<a name="macro-parameters" href="#macro-parameters"></a></h4>
+
 <p>The first 9 parameters can be referenced by <q><code>\1</code></q>&ndash;<q><code>\9</code></q>.
-The entire parameter list including separators is <q><code>\@</code></q>.</p>
+The entire parameter list including separators is <q><code>\@</code></q>.
+
 <pre width="80">
 name	<b class="k">.macro</b>
         <b>lda</b> #<span class="k">\1</span> 	<i>;first parameter 23+1</i>
@@ -2323,11 +2389,12 @@ name	<b class="k">.macro</b>
 </pre>
 
 <p>Parameters can be named, and it's possible to set a default value after an
-equal sign which is used as a replacement when the parameter is missing.</p>
+equal sign which is used as a replacement when the parameter is missing.
 
 <p>These named parameters can be referenced by <code>\name</code> or
 <code>\{name}</code>. Names must match completely, if unsure use the quoted
-name reference syntax.</p>
+name reference syntax.
+
 <pre width="80">
 name	<b class="k">.macro</b> first, b=<span>2</span>, , last
         <b>lda</b> #<span class="k">\first</span>	<i>;first parameter</i>
@@ -2340,11 +2407,13 @@ name	<b class="k">.macro</b> first, b=<span>2</span>, , last
 </pre>
 
 <h4>Text references<a name="macro-textreference" href="#macro-textreference"></a></h4>
+
 <p>In the original turbo assembler normal references are passed by value and
 can only appear in place of one. Text references on the other hand can appear
 everywhere and will work in place of e.g. quoted text or opcodes and labels. The
 first 9 parameters can be referenced as text by
-<code>@1</code>&ndash;<code>@9</code>.</p>
+<code>@1</code>&ndash;<code>@9</code>.
+
 <pre width="80">
 name    <b class="k">.macro</b>
         <b>jsr</b> <u>print</u>
@@ -2355,8 +2424,9 @@ name    <b class="k">.macro</b>
 </pre>
 
 <h3>Custom functions<a name="user-functions" href="#user-functions"></a></h3>
+
 <p>Beyond the built-in functions mentioned earlier it's possible to define
-custom ones for frequently used calculations.</p>
+custom ones for frequently used calculations.
 
 <dl class="dir">
 <dt><code><b class="k">.sfunction</b></code> [&lt;name&gt;[=&lt;default&gt;], &hellip;][&lowast;&lt;name&gt;,] &lt;expression&gt;<a name="d_sfunction" href="#d_sfunction"></a>
@@ -2374,11 +2444,13 @@ custom ones for frequently used calculations.</p>
 
 <p>Parameters are assigned to variables in the function scope on
 invocation. The default values are calculated at function definition time only,
-and these values are used at invocation time when a parameter is missing.</p>
+and these values are used at invocation time when a parameter is missing.
+
 <p>Extra parameters are not accepted, unless the last parameter symbol is
-preceded with a star, in this case these parameters are collected into a tuple.</p>
+preceded with a star, in this case these parameters are collected into a tuple.
+
 <p>Only those external variables and functions are available which were accessible at
-the place of definition, but not those at the place of invocation.</p>
+the place of definition, but not those at the place of invocation.
 
 <pre width="80">
 vicmem  <b class="k">.sfunction</b> <u>_font</u>, <u>_scr</u>=<span>0</span>, ((<u>_font</u> &gt;&gt; <span>10</span>) &amp; <span>$0f</span>) | ((<u>_scr</u> &gt;&gt; <span>6</span>) &amp; <span>$f0</span>)
@@ -2388,10 +2460,11 @@ vicmem  <b class="k">.sfunction</b> <u>_font</u>, <u>_scr</u>=<span>0</span>, ((
 </pre>
 
 <p>If a multi line macro is used in an expression only the returned result is
-used. If multiple values are returned these will form a tuple.</p>
+used. If multiple values are returned these will form a tuple.
+
 <p>If a multi line function is used as macro, directive or pseudo instruction
 and there's a label in front then the returned value is assigned to it. If
-nothing is returned then it's used as regular label.</p>
+nothing is returned then it's used as regular label.
 
 <pre width="80">
 mva     <b class="k">.function</b> <u>value</u>, <u>target</u>
@@ -2403,13 +2476,14 @@ mva     <b class="k">.function</b> <u>value</u>, <u>target</u>
 </pre>
 
 <h3>Conditional assembly<a name="conditional-assembly" href="#conditional-assembly"></a></h3>
+
 <p>To prevent parts of source from compiling conditional constructs can be
 used. This is useful when multiple slightly different versions needs to be
-compiled from the same source.</p>
+compiled from the same source.
 
 <p>Anonymous labels are still recognized in the non-compiling parts even if
 they won't get defined. This ensures consistent relative referencing
-across conditionally compiled areas with such labels.</p>
+across conditionally compiled areas with such labels.
 
 <h4>If, else if, else<a name="conditional-if" href="#conditional-if"></a></h4>
 <dl class="dir">
@@ -2434,7 +2508,7 @@ across conditionally compiled areas with such labels.</p>
 
 <p>The <a href="#d_ifne"><code>.ifne</code></a>, <a href="#d_ifeq"><code>.ifeq</code></a>, <a href="#d_ifpl"><code>.ifpl</code></a> and
 <a href="#d_ifmi"><code>.ifmi</code></a> directives exists for compatibility only, in practice it's
-better to use comparison operators instead.</p>
+better to use comparison operators instead.
 
 <pre width="80">
         <b class="k">.if</b> <u>wait</u>==<span>2</span>	<i>;2 cycles</i>
@@ -2449,9 +2523,10 @@ better to use comparison operators instead.</p>
 </pre>
 
 <h4>Switch, case, default<a name="conditional-switch" href="#conditional-switch"></a></h4>
+
 <p>Similar to the <a href="#d_if"><code>.if</code></a>/<a href="#d_elsif"><code>.elsif</code></a>/<a href="#d_else"><code>.else</code></a>/<a href="#d_fi"><code>.fi</code></a>
 construct, but the compared value needs to be written only once in the switch
-statement.</p>
+statement.
 
 <dl class="dir">
 <dt><code><b class="k">.switch</b></code> &lt;expression&gt;<a name="d_switch" href="#d_switch"></a>
@@ -2495,14 +2570,17 @@ statement.</p>
 
 <h3>Repetitions<a name="repetitions" href="#repetitions"></a></h3>
 
-<p>The following directives are used to repeat code or data.</p>
+<p>The following directives are used to repeat code or data.
+
 <p>The regular non-scoped variants cover most cases except when normal labels
-are required as those will be double defined.</p>
+are required as those will be double defined.
+
 <p>Scoped variants (those starting with the letter b) create a new scope
 for each iteration. This allows normal labels without collision but it's a bit more
-resource intensive.</p>
+resource intensive.
+
 <p>If the scoped variant is prefixed with a label then the list of individual scopes for
-each iteration will be assigned to it. This allows accessing labels within.</p>
+each iteration will be assigned to it. This allows accessing labels within.
 
 <dl class="dir">
 <dt><code><b class="k">.for</b></code> [&lt;assignment&gt;], [&lt;condition&gt;], [&lt;assignment&gt;]<a name="d_for" href="#d_for"></a>
@@ -2511,7 +2589,9 @@ each iteration will be assigned to it. This allows accessing labels within.</p>
 <dd>Assign initial value, loop while the condition is true and modify value.
 
 <p>First a variable is set, usually this is used for counting. This is optional, the variable may be set already before the loop.</p>
+
 <p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.</p>
+
 <p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.</p>
 
 <pre width="80">
@@ -2528,7 +2608,9 @@ lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <sp
 <dt><code><b class="k">.bfor</b></code> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;
 <dt><code><b class="k">.next</b></code>
 <dd>Assign variable(s) to values in sequence one-by-one in order.
+
 <p>The expression is usually the <a href="#f_range"><code>range</code></a> function or some sort of <a href="#list-tuples">list</a>.</p>
+
 <pre width="80">
         <b class="k">.for</b> <u>col</u> <span class="k">in</span> <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
         <b>lda</b> #<u>col</u>         <i>;0, 11, 12, 15 and 1</i>
@@ -2605,15 +2687,15 @@ i       <b class="k">.var</b> <u>i</u> - <span>1</span>
 
 <p>Longer sources are usually separated into multiple files for easier
 handling. Precomputed binary data can also be included directly without
-converting it into source code first.</p>
+converting it into source code first.
 
 <p>Search path is relative to the location of current source file. If it's not
 found there the include search path is consulted for further possible
-locations.</p>
+locations.
 
 <p>To make your sources portable please always use forward slashes
 (<code>/</code>) as a directory separator and use lower/uppercase consistently
-in file names!</p>
+in file names!
 
 <dl class="dir">
 <dt><code><b class="k">.include</b></code> &lt;filename&gt;<a name="d_include" href="#d_include"></a>
@@ -2633,7 +2715,7 @@ menu    <b class="k">.binclude</b> <span class="s">"menu.asm"</span>        <i>;
 <dd>Include raw binary data from file.
 
 <p>By using offset and length it's possible to break out chunks of data from a
-file separately, like bitmap and colors for example. Negative offsets are calculated from the end of file.</p>
+file separately, like bitmap and colors for example. Negative offsets are calculated from the end of file.
 
 <pre width="80">
         <b class="d">.binary</b> <span class="s">"stuffz.bin"</span>        <i>;simple include, all bytes</i>
@@ -2643,15 +2725,19 @@ file separately, like bitmap and colors for example. Negative offsets are calcul
 
 </dl>
 <h3>Scopes<a name="scopes" href="#scopes"></a></h3>
+
 <p>Scopes may contain symbols or further nested scopes. The same symbol name
-can be reused as long as it's in a different scope.</p>
+can be reused as long as it's in a different scope.
+
 <p>A symbol is looked up in the local scope first. If it's a non-local symbol
 then parent scopes and the global scope may be searched in addition.  This means
-that a symbol in a parent or global scope may be <q>shadowed</q>.</p>
+that a symbol in a parent or global scope may be <q>shadowed</q>.
+
 <p>Symbols of a named scope can be looked up using the <q>.</q> operator.
 The searched symbol stands on the right and it's looked up in the scope on the
 left. More than one symbol may be looked up at the same time and the result
-will be a list or tuple.</p>
+will be a list or tuple.
+
 <pre width="80">
         <b>lda</b> #<span>0</span>
         <b>sta</b> <u>vic</u>.<u>sprite</u>.<u>enable</u>
@@ -2664,11 +2750,14 @@ ctable  <b class="d">.byte</b> <u>colors</u>.(<u>red</u>, <u>green</u>, <u>blue<
 <dt><code><b class="k">.pend</b></code><a name="d_pend" href="#d_pend"></a>
 <dt><code><b class="k">.endproc</b></code><a name="d_endproc" href="#d_endproc"></a>
 <dd>End of a procedure block
+
 <p>If the symbol in front is not referenced anywhere then the enclosed source
 won't be compiled.</p>
+
 <p>Symbols inside are enclosed in a scope and are accessible through the
 symbol of the procedure using the dot notation. This forces compilation of the
 whole procedure of course.</p>
+
 <pre width="80">
 ize     <b class="k">.proc</b>
 	<b>nop</b>
@@ -2681,7 +2770,9 @@ cucc    <b>nop</b>
 
 <p>The <q>compilation only if used</q> behaviour of <code>.proc</code> eases the building of <q>libraries</q> from a
 collection of subroutines and tables where not everything is needed all the time.</p>
+
 <p>Alternative dead-code reduction techniques I encountered:</p>
+
 <dl>
 <dt>Separate source files
 <dd>This potentially results in a lot of small files and manually managed include
@@ -2703,8 +2794,10 @@ but these macro calls still need to be manually managed.
 <dt><code><b class="k">.bend</b></code><a name="d_bend" href="#d_bend"></a>
 <dt><code><b class="k">.endblock</b></code><a name="d_endblock" href="#d_endblock"></a>
 <dd>Block scoping area end
+
 <p>All symbols inside a block are enclosed in a scope. If the block had a symbol
 then local symbols are accessible through that using the dot notation.</p>
+
 <pre width="80">
 	<b class="k">.block</b>
         <b>inc</b> <u>count</u> + <span>1</span>
@@ -2717,15 +2810,20 @@ count	<b>ldx</b> #<span>0</span>
 <dt><code><b class="k">.endn</b></code><a name="d_endn" href="#d_endn"></a>
 <dt><code><b class="k">.endnamespace</b></code><a name="d_endnamespace" href="#d_endnamespace"></a>
 <dd>Namespace area end
+
 <p>This directive either creates a new scope (if used without a parameter) or activates the one in the parameter.</p>
+
 <p>The scope can be assigned to a symbol in front of the directive so that it can be reactivated later.</p>
+
 <p>This enabled label definitions into the same scope in different files.</p>
 
 <dt><code><b class="k">.weak</b></code><a name="d_weak" href="#d_weak"></a>
 <dt><code><b class="k">.endweak</b></code><a name="d_endweak" href="#d_endweak"></a>
 <dd>Weak symbol area
+
 <p>Any symbols defined inside can be overridden by <q>stronger</q> symbols in
 the same scope from outside. Can be nested as necessary.</p>
+
 <p>This gives the possibility of giving default values for symbols which might
 not always exist without resorting to <code>.ifdef</code>/<code>.ifndef</code> or
 similar directives in other assemblers.</p>
@@ -2755,20 +2853,20 @@ anytime soon.</p>
 <dt><code><b class="k">.with</b> &lt;symbol&gt;</code><a name="d_with" href="#d_with"></a>
 <dt><code><b class="k">.endwith</b></code><a name="d_endwith" href="#d_endwith"></a>
 <dd>Namespace access
+
 <p>This directive is similar to <a href="#d_namespace"><code>.namespace</code></a> but it gives access to
 another scope's variables without leaving the current scope. May be
 useful to allow a short hand access in some situations.</p>
 
 <p>It's advised to use the <a href="#o_Wshadow">-Wshadow</a> command line
 option to warn about any unexpected symbol ambiguity.</p>
-
 </dl>
 
 <h3>Sections<a name="sections" href="#sections"></a></h3>
 
 <p>Sections can be used to collect data or code into separate memory areas
 without moving source code lines around. This is achieved by having separate
-compile offset and program counters for each defined section.</p>
+compile offset and program counters for each defined section.
 
 <dl class="dir">
 <dt><code><b class="k">.section</b></code> &lt;name&gt;<a name="d_section" href="#d_section"></a>
@@ -2776,8 +2874,10 @@ compile offset and program counters for each defined section.</p>
 <dt><code><b class="k">.send</b></code> [&lt;name&gt;]<a name="d_send" href="#d_send"></a>
 <dt><code><b class="k">.endsection</b></code> [&lt;name&gt;]<a name="d_endsection" href="#d_endsection"></a>
 <dd>Ends a segment block
+
 <p>Defines a section fragment. The name at <code>.send</code> must match but
 it's optional.</p>
+
 <dt><code><b class="d">.dsection</b></code> &lt;name&gt;<a name="d_dsection" href="#d_dsection"></a>
 <dd>Collect the section fragments here.
 </dl>
@@ -2785,12 +2885,12 @@ it's optional.</p>
 <p>All <a href="#d_section"><code>.section</code></a> fragments are compiled to the memory area
 allocated by the <a href="#d_dsection"><code>.dsection</code></a> directive. Compilation happens as the
 code appears, this directive only assigns enough space to hold all the content
-in the section fragments.</p>
+in the section fragments.
 
 <p>The space used by section fragments is calculated from the difference of
 starting compile offset and the maximum compile offset reached. It is possible
 to manipulate the compile offset in fragments, but putting code before the
-start of <a href="#d_dsection"><code>.dsection</code></a> is not allowed.</p>
+start of <a href="#d_dsection"><code>.dsection</code></a> is not allowed.
 
 <pre width="80">
 *       <b>=</b> <span>$02</span>
@@ -2837,7 +2937,9 @@ p3	<b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
         <b class="k">.send</b> <u>zp</u>
         <b class="k">.send</b> <u>code</u>
 </pre>
-<p>The compiled code will look like:</p>
+
+<p>The compiled code will look like:
+
 <pre width="80">
 &gt;0801	 0b 08 d5 07			        <b class="d">.word</b> <u>ss</u>, <span>2005</span>
 &gt;0805	 9e 32 30 36 31 00		        <b class="d">.null</b> <span>$9e</span>, <span class="k">format</span>(<span class="s">"%4d"</span>, <u>start</u>)
@@ -2863,11 +2965,11 @@ p3	<b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
 <p>Sections can form a hierarchy by nesting a <a href="#d_dsection"><code>.dsection</code></a> into
 another section. The section names must only be unique within a section but can
 be reused otherwise. Parent section names are visible for children, siblings can be
-reached through parents.</p>
+reached through parents.
 
 <p>In the following example the included sources don't have to know which
 <q>code</q> and <q>data</q> sections they use, while the <q>bss</q> section is
-shared for all banks.</p>
+shared for all banks.
 
 <pre width="80">
 <i>;First 8K bank at the beginning, PC at $8000</i>
@@ -2944,6 +3046,7 @@ routine <b class="d">.addr</b> <u>print</u>
 <dt><code><b class="k">.mansiz</b></code><a name="d_mansiz" href="#d_mansiz"></a>
 <dd>Select automatic adjustment of immediate constant sizes based on
 <code>SEP</code>/<code>REP</code> instructions.
+
 <pre width="80">
 	<b class="k">.autsiz</b>
         <b>rep</b> #<span>$10</span>        <i>;implicit .xl</i>
@@ -2953,7 +3056,9 @@ routine <b class="d">.addr</b> <u>print</u>
 <dt><code><b class="k">.databank</b></code> &lt;expression&gt;<a name="d_databank" href="#d_databank"></a>
 <dd>Data bank (absolute) addressing is only used for addresses falling into this 64&nbsp;KiB
 bank. The default is 0, which means addresses in bank zero.
+
 <p>When data bank is switched off only data bank indexed (,b) addresses create data bank accessing instructions.</p>
+
 <pre width="80">
         <b class="k">.databank</b> <span>$10</span>   <i>;data bank at $10xxxx</i>
         <b>lda</b> <span>$101234</span>     <i>;results in $ad, $34, $12</i>
@@ -2965,7 +3070,9 @@ bank. The default is 0, which means addresses in bank zero.
 <dt><code><b class="k">.dpage</b></code> &lt;expression&gt;<a name="d_dpage" href="#d_dpage"></a>
 <dd>Direct (zero) page addressing is only used for addresses falling
 into a specific 256 byte address range. The default is 0, which is the first page of bank zero.
+
 <p>When direct page is switched off only the direct page indexed (,d) addresses create direct page accessing instructions.</p>
+
 <pre width="80">
         <b class="k">.dpage</b> <span>$400</span>     <i>;direct page $400-$4ff</i>
         <b>lda</b> <span>$456</span>        <i>;results in $a5, $56</i>
@@ -2973,16 +3080,17 @@ into a specific 256 byte address range. The default is 0, which is the first pag
         <b>lda</b> <span>$56</span>         <i>;data bank or long addressing</i>
         <b>lda</b> #<span>$56</span>,d      <i>;results in $a5, $56</i>
 </pre>
-
 </dl>
-<h3>Controlling errors<a name="compiletime-checks" href="#compiletime-checks"></a></h3>
-<dl class="dir">
 
+<h3>Controlling errors<a name="compiletime-checks" href="#compiletime-checks"></a></h3>
+
+<dl class="dir">
 <dt><code><b class="k">.page</b></code><a name="d_page" href="#d_page"></a>
 <dd>Start of page check block
 <dt><code><b class="k">.endp</b></code><a name="d_endp" href="#d_endp"></a>
 <dt><code><b class="k">.endpage</b></code><a name="d_endpage" href="#d_endpage"></a>
 <dd>End of page check block
+
 <p>Gives an error on page boundary crossing, e.g. for timing sensitive code.</p>
 
 <pre width="80">
@@ -2995,6 +3103,7 @@ table   <b class="d">.byte</b> <span>0</span>, <span>1</span>, <span>2</span>, <
 <dd>Switches error generation on page boundary crossing during relative branch.
 Such a condition on 6502 adds 1 extra cycle to the execution time, which
 can ruin the timing of a carefully cycle counted code.
+
 <pre width="80">
         <b class="k">.option</b> allow_branch_across_page = <span>0</span>
         <b>ldx</b> #<span>3</span>          <i>;now this will execute in</i>
@@ -3006,6 +3115,7 @@ can ruin the timing of a carefully cycle counted code.
 <dt><code><b class="k">.error</b></code> &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_error" href="#d_error"></a>
 <dt><code><b class="k">.cerror</b></code> &lt;condition&gt;, &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_cerror" href="#d_cerror"></a>
 <dd>Exit with error or conditionally exit with error
+
 <pre width="80">
         <b class="k">.error</b> <span class="s">"Unfinished here..."</span>
         <b class="k">.cerror</b> <u>*</u> &gt; <span>$1200</span>, <span class="s">"Program too long by "</span>, <u>*</u> - <span>$1200</span>, <span class="s">" bytes"</span>
@@ -3014,17 +3124,20 @@ can ruin the timing of a carefully cycle counted code.
 <dt><code><b class="k">.warn</b></code> &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_warn" href="#d_warn"></a>
 <dt><code><b class="k">.cwarn</b></code> &lt;condition&gt;, &lt;message&gt; [, &lt;message&gt;, &hellip;]<a name="d_cwarn" href="#d_cwarn"></a>
 <dd>Display a warning message always or depending on a condition
+
 <pre width="80">
         <b class="k">.warn</b> <span class="s">"FIXME: handle negative values too!"</span>
         <b class="k">.cwarn</b> <u>*</u> &gt; <span>$1200</span>, <span class="s">"This may not work!"</span>
 </pre>
 
 </dl>
-<h3>Target<a name="target-cpu" href="#target-cpu"></a></h3>
-<dl class="dir">
 
+<h3>Target<a name="target-cpu" href="#target-cpu"></a></h3>
+
+<dl class="dir">
 <dt><code><b class="k">.cpu</b></code> &lt;expression&gt;<a name="d_cpu" href="#d_cpu"></a>
 <dd>Selects CPU according to the string argument.
+
 <pre width="80">
 	<b class="k">.cpu</b> <span class="s">"6502"</span>	<i>;standard 65xx</i>
 	<b class="k">.cpu</b> <span class="s">"65c02"</span>	<i>;CMOS 65C02</i>
@@ -3038,11 +3151,11 @@ can ruin the timing of a carefully cycle counted code.
 	<b class="k">.cpu</b> <span class="s">"4510"</span>	<i>;CSG 4510</i>
 	<b class="k">.cpu</b> <span class="s">"default"</span>	<i>;cpu set on commandline</i>
 </pre>
-
 </dl>
-<h3>Misc<a name="misc" href="#misc"></a></h3>
-<dl class="dir">
 
+<h3>Misc<a name="misc" href="#misc"></a></h3>
+
+<dl class="dir">
 <dt><code><b class="k">.end</b></code><a name="d_end" href="#d_end"></a>
 <dd>Terminate assembly. Any content after this directive is ignored.
 
@@ -3061,11 +3174,11 @@ is set to the value of expression or reference of variable.
 <dt><code><b class="k">.assert</b></code><a name="d_assert" href="#d_assert"></a>
 <dt><code><b class="k">.check</b></code><a name="d_check" href="#d_check"></a>
 <dd>Do not use these, the syntax will change in next version!
-
 </dl>
-<h3>Printer control<a name="listing-control" href="#listing-control"></a></h3>
-<dl class="dir">
 
+<h3>Printer control<a name="listing-control" href="#listing-control"></a></h3>
+
+<dl class="dir">
 <dt><code><b class="k">.pron</b></code><a name="d_pron" href="#d_pron"></a>
 <dt><code><b class="k">.proff</b></code><a name="d_proff" href="#d_proff"></a>
 <dd>Turn on or off source listing on part of the file.
@@ -3092,25 +3205,25 @@ reset   <b>cld</b>
 <h3>Aliases<a name="aliases" href="#aliases"></a></h3>
 
 <p>For better code readability <code>BCC</code> has an alias named <code>BLT</code>
-(<b>B</b>ranch <b>L</b>ess <b>T</b>han) and <code>BCS</code> one named <code>BGE</code> (<b>B</b>ranch <b>G</b>reater <b>E</b>qual).</p>
+(<b>B</b>ranch <b>L</b>ess <b>T</b>han) and <code>BCS</code> one named <code>BGE</code> (<b>B</b>ranch <b>G</b>reater <b>E</b>qual).
 
-<pre>
+<pre width="80">
         <b>cmp</b> #<span>3</span>
         <b>blt</b> <u>exit</u>        <i>; less than 3?</i>
 </pre>
 
 <p>For similar reasons <code>ASL</code> has an alias named <code>SHL</code>
 (<b>SH</b>ift <b>L</b>eft) and <code>LSR</code> one named <code>SHR</code>
-(<b>SH</b>ift <b>R</b>ight). This naming however is not very common.</p>
+(<b>SH</b>ift <b>R</b>ight). This naming however is not very common.
 
 <p>The implied variants <code>LSR</code>, <code>ROR</code>, <code>ASL</code> and <code>ROL</code> are a
 shorthand for <code>LSR A</code>, <code>ROR A</code>, <code>ASL A</code> and
-<code>ROL A</code>. Using the implied form is considered poor coding style.</p>
+<code>ROL A</code>. Using the implied form is considered poor coding style.
 
 <p>For compatibility <code>INA</code> and <code>DEA</code> is a shorthand of
 <code>INC A</code> and <code>DEC A</code>. Therefore there's no <q>implied</q>
 variants like <code>INC</code> or <code>DEC</code>. The full form with the
-accumulator is preferred.</p>
+accumulator is preferred.
 
 <p>The longer forms of <code>INC X</code>, <code>DEC X</code>, <code>INC
 Y</code>, <code>DEC Y</code>, <code>INC Z</code> and <code>DEC Z</code> are
@@ -3118,29 +3231,29 @@ available for <code>INX</code>, <code>DEX</code>, <code>INY</code>,
 <code>DEY</code>, <code>INZ</code> and <code>DEZ</code>. For this to work care
 must be taken to not reuse the <q>x</q>, <q>y</q> and
 <q>z</q> single letter register symbols for other purposes. Same goes for
-<q>a</q> of course.</p>
+<q>a</q> of course.
 
 <p>Load instructions with registers are translated to transfer instructions.
-For example <code>LDA X</code> becomes <code>TXA</code>.</p>
+For example <code>LDA X</code> becomes <code>TXA</code>.
 
 <p>Store instructions with registers are translated to transfer instructions,
 but only if it involves the <q>s</q> or <q>b</q> registers. For example
-<code>STX S</code> becomes <code>TXS</code>.</p>
+<code>STX S</code> becomes <code>TXS</code>.
 
 <p>Many illegal opcodes have aliases for compatibility as there's no standard
-naming convention.</p>
+naming convention.
 
 <h3>Always taken branches<a name="branch-always" href="#branch-always"></a></h3>
 
 <p>For writing short code there are some special pseudo instructions for always
 taken branches. These are automatically compiled as relative branches when the
 jump distance is short enough and as <code>JMP</code> or <code>BRL</code> when
-longer.</p>
+longer.
 
 <p>The names are derived from conditional branches and are:
 <code>GEQ</code>, <code>GNE</code>, <code>GCC</code>, <code>GCS</code>,
 <code>GPL</code>, <code>GMI</code>, <code>GVC</code>, <code>GVS</code>,
-<code>GLT</code> and <code>GGE</code>.</p>
+<code>GLT</code> and <code>GGE</code>.
 
 <pre>
 .0000    a9 03          lda #$03        in1     <b>lda</b> #<span>3</span>
@@ -3153,14 +3266,14 @@ longer.</p>
 compiled and only the first byte is emitted. This is now a never executed jump,
 and the relative distance byte after the opcode is the jumped over byte. If the
 CPU has long conditional branches (65CE02/4510) then the same method is applied
-to two byte skips as well.</p>
+to two byte skips as well.
 
 <p>There's a pseudo opcode called <code>GRA</code> for CPUs supporting
 <code>BRA</code>, which is expanded to <code>BRL</code> (if available) or
 <code>JMP</code>. A one byte skip will be shortened to a single byte if the
-CPU has a <code>NOP</code> immediate instruction (R65C02/W65C02).</p>
+CPU has a <code>NOP</code> immediate instruction (R65C02/W65C02).
 
-<p>If the branch would not skip anything at all then no code is generated.</p>
+<p>If the branch would not skip anything at all then no code is generated.
 
 <pre>
 .0009                                           <b>geq</b> <u>in3</u>         <i>;zero length "branch"</i>
@@ -3174,14 +3287,14 @@ CPU has a <code>NOP</code> immediate instruction (R65C02/W65C02).</p>
 <p>Please note that expressions like <code>Gxx &lowast;+2</code> or <code>Gxx
 &lowast;+3</code> are not allowed as the compiler can't figure out if it has to create
 no code at all, the 1 byte variant or the 2 byte one. Therefore use normal or
-anonymous labels defined after the jump instruction when jumping forward!</p>
+anonymous labels defined after the jump instruction when jumping forward!
 
 <h3>Long branches<a name="branch-long" href="#branch-long"></a></h3>
 
 <p>To avoid branch too long errors the assembler also supports long branches.
 It can automatically convert conditional relative branches to it's opposite and
 a <code>JMP</code> or <code>BRL</code>. This can be enabled on the command
-line using the <q><a href="#o_long-branch"><code>--long-branch</code></a></q> option.</p>
+line using the <q><a href="#o_long-branch"><code>--long-branch</code></a></q> option.
 
 <pre>
 .0000    ea             nop                     <b>nop</b>
@@ -3200,7 +3313,7 @@ line using the <q><a href="#o_long-branch"><code>--long-branch</code></a></q> op
 <code>Bxx &lowast;+131</code> and <code>Bxx &lowast;+132</code> are not allowed as the
 compiler can't decide between a short/long branch. Of course these destinations
 can be used, but only with normal or anonymous labels defined after the jump
-instruction.</p>
+instruction.
 
 <p>In the above example extra <code>JMP</code> instructions are emitted for
 each long branch. This is suboptimal and wasting space if there are several
@@ -3210,39 +3323,47 @@ space.</p>
 
 <hr>
 <h2>Original turbo assembler compatibility<a name="tasm-compatibility" href="#tasm-compatibility"></a></h2>
+
 <h3>How to convert source code for use with 64tass<a name="tasm-convert" href="#tasm-convert"></a></h3>
+
 <p>Currently there are two options, either use <q>TMPview</q> by Style to convert the
-source file directly, or do the following:</p>
+source file directly, or do the following:
+
 <ul>
 <li>load turbo assembler, start (by <code>SYS 9&lowast;4096</code> or <code>SYS 8&lowast;4096</code> depending on version)
 <li>&larr; then l to load a source file
 <li>&larr; then w to write a source file in PETSCII format
 <li>convert the result to ASCII using petcat (from the vice package)
 </ul>
+
 <p>The resulting file should then (with the restrictions below) assemble using the
-following command line:</p>
+following command line:
+
 <pre width="80">
 64tass -C -T -a -W -i source.asm -o outfile.prg
 </pre>
 
 <h3>Differences to the original turbo ass macro on the C64<a name="tasm-diff" href="#tasm-diff"></a></h3>
+
 <p>64tass is nearly 100% compatible with the original <q>Turbo Assembler</q>, and supports
 most of the features of the original <q>Turbo Assembler Macro</q>.
-The remaining notable differences are listed here.</p>
+The remaining notable differences are listed here.
+
 <h3>Labels<a name="tasm-labels" href="#tasm-labels"></a></h3>
+
 <p>The original turbo assembler uses case sensitive labels, use the <q><a href="#o_case-sensitive"><code>--case-sensitive</code></a></q>
-command line option to enable this behaviour.</p>
+command line option to enable this behaviour.
 
 <h3>Expression evaluation<a name="tasm-expression" href="#tasm-expression"></a></h3>
 
 <p>There are a few differences which can be worked around by the <q><a href="#o_tasm-compatible"><code>--tasm-compatible</code></a></q> command line option.
-These are:</p>
+These are:
 
 <p>The original expression parser has no operator precedence, but 64tass has. That
 means that you will have to fix expressions using braces accordingly, for example
-<code>1+2&lowast;3</code> becomes <code>(1+2)&lowast;3</code>.</p>
+<code>1+2&lowast;3</code> becomes <code>(1+2)&lowast;3</code>.
 
-<p>The following operators used by the original Turbo Assembler are different:</p>
+<p>The following operators used by the original Turbo Assembler are different:
 
 <div><table border="0">
 <caption>TASM Operator differences</caption>
@@ -3253,17 +3374,21 @@ means that you will have to fix expressions using braces accordingly, for exampl
 </tbody>
 </table></div>
 
-<p>The default expression evaluation is not limited to 16&nbsp;bit unsigned numbers anymore.</p>
+<p>The default expression evaluation is not limited to 16&nbsp;bit unsigned numbers anymore.
 
 <h3>Macros<a name="tasm-macros" href="#tasm-macros"></a></h3>
-<p>Macro parameters are referenced by <q><code>\1</code></q>&ndash;<q><code>\9</code></q> instead of using the pound sign.</p>
+
+<p>Macro parameters are referenced by <q><code>\1</code></q>&ndash;<q><code>\9</code></q> instead of using the pound sign.
+
 <p>Parameters are always copied as text into the macro and not passed by value as the
 original turbo assembler does, which sometimes may lead to unexpected behaviour. You may
-need to make use of braces around arguments and/or references to fix this.</p>
+need to make use of braces around arguments and/or references to fix this.
 
 <h3>Bugs<a name="tasm-bugs" href="#tasm-bugs"></a></h3>
+
 <p>Some versions of the original turbo assembler had bugs that are not reproduced
-by 64tass, you will have to fix the code instead.</p>
+by 64tass, you will have to fix the code instead.
+
 <p>In some versions labels used in the first <a href="#d_block"><code>.block</code></a> are globally available. If
 you get a related error move the respective label out of the <a href="#d_block"><code>.block</code></a>.</p>
 
@@ -3271,26 +3396,28 @@ you get a related error move the respective label out of the <a href="#d_block">
 <h2>Command line options<a name="commandline-options" href="#commandline-options"></a></h2>
 
 <p>Short command line options consist of <q>-</q> and a letter, long options
-start with <q>--</q>.</p>
+start with <q>--</q>.
 
 <p>If <q>--</q> is encountered then further options are not recognized and are
-assumed to be file names.</p>
+assumed to be file names.
 
 <p>Options requiring file names are marked with <q>&lt;filename&gt;</q>. A
 single <q>-</q> as name means standard input or output. File name quoting is
-system specific.</p>
+system specific.
 
 <h3>Output options<a name="commandline-output" href="#commandline-output"></a></h3>
 
 <dl class="dir">
 <dt><b>-o</b> &lt;filename&gt;, <b>--output</b> &lt;filename&gt;<a name="o_output" href="#o_output"></a>
 <dd>Place output into &lt;filename&gt;. The default output filename is <q>a.out</q>. This option changes it.
+
 <pre width="80">
 64tass a.asm -o a.prg
 </pre>
 
 <p>This option may be used multiple times to output different sections in
 different formats of a single compilation.</p>
+
 <p>For multiple outputs the format options and output section selection must be
 placed before this option. The format selection will be unchanged if no new
 selection was made but the output section selection must be repeated for each
@@ -3309,6 +3436,7 @@ formats. Using the same name multiple times is not a good idea.</p>
 <dd>By default all sections go into the output file. Using this option
 limits the output to specific section and it's children. This is useful
 to split a larger program into several files.
+
 <pre width="80">
 64tass a.asm --output-section main -o main.prg
 64tass a.asm --output-section loader -o loader.prg
@@ -3317,33 +3445,43 @@ to split a larger program into several files.
 <dt><b>-X</b>, <b>--long-address</b><a name="o_long-address" href="#o_long-address"></a>
 <dd>Use 3 byte address/length for CBM and nonlinear output instead of 2
 bytes. Also increases the size of raw output to 16&nbsp;MiB.
+
 <pre width="80">
 64tass --long-address --m65816 a.asm
 </pre>
 
 <dt><b>--cbm-prg</b><a name="o_cbm-prg" href="#o_cbm-prg"></a>
 <dd>Generate CBM format binaries (default)
+
 <p>The first 2 bytes are the little endian address of the first valid byte (start
 address). Overlapping blocks are flattened and uninitialized memory is filled up with zeros.
 Uninitialized memory before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.</p>
+
 <p>Used for C64 binaries.</p>
 
 <dt><b>-b</b>, <b>--nostart</b><a name="o_nostart" href="#o_nostart"></a>
 <dd>Output raw data without start address.
+
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with zeros. Uninitialized memory
 before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.</p>
+
 <p>Useful for small ROM files.</p>
 
 <dt><b>-f</b><a name="o_f"></a>, <b>--flat</b><a name="o_flat" href="#o_flat"></a>
 <dd>Flat address space output mode.
+
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with
 zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp;GiB.</p>
+
 <p>Useful for creating huge multi bank ROM files. See sections for an example.</p>
 
 <dt><b>-n</b><a name="o_n"></a>, <b>--nonlinear</b><a name="o_nonlinear" href="#o_nonlinear"></a>
 <dd>Generate nonlinear output file.
+
 <p>Overlapping blocks are flattened. Blocks are saved in sorted order and uninitialized memory is skipped. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.</p>
+
 <p>Used for linkers and downloading.</p>
+
 <pre width="80">
 64tass --nonlinear a.asm
 *       <b>=</b> <span>$1000</span>
@@ -3351,6 +3489,7 @@ zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp
 *       <b>=</b> <span>$2000</span>
 	<b>nop</b>
 </pre>
+
 <div><table border="0">
 <caption>Result of compilation</caption>
 <tbody>
@@ -3366,10 +3505,13 @@ zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp
 
 <dt><b>--atari-xex</b><a name="o_atari-xex" href="#o_atari-xex"></a>
 <dd>Generate an Atari XEX output file.
+
 <p>Overlapping blocks are kept, continuing blocks are concatenated. Saving
 happens in the definition order without sorting, and uninitialized memory is
 skipped in the output. Up to 64&nbsp;KiB.</p>
+
 <p>Used for Atari executables.</p>
+
 <pre width="80">
 64tass --atari-xex a.asm
 *       <b>=</b> <span>$02e0</span>
@@ -3377,6 +3519,7 @@ skipped in the output. Up to 64&nbsp;KiB.</p>
 *       <b>=</b> <span>$2000</span>
 start	<b>rts</b>
 </pre>
+
 <div><table border="0">
 <caption>Result of compilation</caption>
 <tbody>
@@ -3392,14 +3535,18 @@ start	<b>rts</b>
 
 <dt><b>--apple2</b><a name="o_apple2" href="#o_apple2"></a>
 <dd>Generate an Apple II output file (DOS 3.3).
+
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with zeros. Uninitialized memory
 before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB.</p>
+
 <p>Used for Apple II executables.</p>
+
 <pre width="80">
 64tass --apple-ii a.asm
 *       <b>=</b> <span>$0c00</span>
         <b>rts</b>
 </pre>
+
 <div><table border="0">
 <caption>Result of compilation</caption>
 <tbody>
@@ -3411,15 +3558,20 @@ before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB
 
 <dt><b>--intel-hex</b><a name="o_intel-hex" href="#o_intel-hex"></a>
 <dd>Use Intel HEX output file format.
+
 <p>Overlapping blocks are kept, data is stored in the definition order,
 and uninitialized areas are skipped. I8HEX up to 64&nbsp;KiB, I32HEX up to 4&nbsp;GiB.</p>
+
 <p>Used for EPROM programming or downloading.</p>
+
 <pre width="80">
 64tass --intel-hex a.asm
 *       <b>=</b> <span>$0c00</span>
         <b>rts</b>
 </pre>
-Result of compilation:
+
+<p>Result of compilation:</p>
+
 <pre width="80">
 :010C00006093
 :00000001FF
@@ -3427,16 +3579,21 @@ Result of compilation:
 
 <dt><b>--s-record</b><a name="o_s-record" href="#o_s-record"></a>
 <dd>Use Motorola S-record output file format.
+
 <p>Overlapping blocks are kept, data is stored in the definition order,
 and uninitialized memory areas are skipped. S19 up to 64&nbsp;KiB, S28 up to 16&nbsp;MiB
 and S37 up to 4&nbsp;GiB.</p>
+
 <p>Used for EPROM programming or downloading.</p>
+
 <pre width="80">
 64tass --s-record a.asm
 *       <b>=</b> <span>$0c00</span>
         <b>rts</b>
 </pre>
-Result of compilation:
+
+<p>Result of compilation:</p>
+
 <pre width="80">
 S1040C00608F
 S9030C00F0
@@ -3448,15 +3605,18 @@ S9030C00F0
 <dl class="dir">
 <dt><b>-a</b><a name="o_a"></a>, <b>--ascii</b><a name="o_ascii" href="#o_ascii"></a>
 <dd>Use ASCII/Unicode text encoding instead of raw 8-bit
+
 <p>Normally no conversion takes place, this is for backwards compatibility with
 a DOS based Turbo Assembler editor, which could create PETSCII files for
 6502tass. (including control characters of course)</p>
+
 <p>Using this option will change the default <q>none</q> and <q>screen</q> encodings to
 map <code>'a'&ndash;'z'</code> and <code>'A'&ndash;'Z'</code> into the correct PETSCII range of <code>$41&ndash;$5A</code> and <code>$C1&ndash;$DA</code>,
 which is more suitable for an ASCII editor. It also adds predefined petcat style
 PETSCII literals to the default encodings, and enables Unicode letters in symbol names.</p>
 
 <p><b>For writing sources in UTF-8/UTF-16 encodings this option is required!</b></p>
+
 <pre width="80">
 64tass a.asm
 
@@ -3480,6 +3640,7 @@ PETSCII literals to the default encodings, and enables Unicode letters in symbol
 by manually rewriting them as <code>BXX &lowast;+5 JMP xxx</code>.
 64tass can do this automatically if this option is used. <code>BRA</code>
 is of course not converted.
+
 <pre width="80">
 64tass a.asm
 *       <b>=</b> <span>$1000</span>
@@ -3498,7 +3659,8 @@ is of course not converted.
 <dt><b>-C</b>, <b>--case-sensitive</b><a name="o_case-sensitive" href="#o_case-sensitive"></a>
 <dd>Make all symbols (variables, opcodes, directives, operators, etc.) case
 sensitive. Otherwise everything is case insensitive by default.
-<pre>
+
+<pre width="80">
 64tass a.asm
 label	<b>nop</b>
 Label	<b>nop</b>	<i>;double defined...</i>
@@ -3530,6 +3692,7 @@ FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
 <dd>Suppress warnings.
 
 <p>Disables warnings during compile. For fine grained diagnostic message suppression see the <a href="#commandline-diagnostic">diagnostic options</a> section.</p>
+
 <pre width="80">
 64tass --no-warn a.asm
 </pre>
@@ -3537,48 +3700,58 @@ FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
 <dt><b>--no-caret-diag</b><a name="o_no-caret-diag" href="#o_no-caret-diag"></a>
 <dd>Suppress displaying of faulty source line and fault position after
 fault messages.
+
 <p>This is for cases where the fault log is automatically processed and no one
 ever looks at it and therefore there's no point to display the source lines.</p>
+
 <pre width="80">
 64tass --no-caret-diag a.asm
 </pre>
 
 <dt><b>--macro-caret-diag</b><a name="o_macro-caret-diag" href="#o_macro-caret-diag"></a>
 <dd>Restrict source line and fault position display to macro expansions only.
+
 <p>This is for cases where the fault log is processed by an editor which also
 displays the compilation output somewhere. Only lines which are the result of
 macro processing will be output to aid debugging. Those which would just
 duplicate what's in the source editor window will be not.</p>
+
 <pre width="80">
 64tass --macro-caret-diag a.asm
 </pre>
 
 <dt><b>-q</b><a name="o_q"></a>, <b>--quiet</b><a name="o_quiet" href="#o_quiet"></a>
 <dd>Suppress messages. Disables header and summary messages.
+
 <pre width="80">
 64tass --quiet a.asm
 </pre>
 
 <dt><b>-T</b>, <b>--tasm-compatible</b><a name="o_tasm-compatible" href="#o_tasm-compatible"></a>
 <dd>Enable TASM compatible operators and precedence
+
 <p>Switches the expression evaluator into compatibility mode. This
 enables <q>.</q>, <q>:</q> and <q>!</q> operators and disables 64tass specific extensions, disables precedence handling
 and forces 16&nbsp;bit unsigned evaluation (see <q>differences to original Turbo Assembler</q> below)</p>
 
 <dt><b>-I</b> &lt;path&gt;<a name="o_I" href="#o_I"></a>
 <dd>Specify include search path
+
 <p>If an included source or binary file can't be found in the directory of the
 source file then this path is tried. More than one directories can be specified
 by repeating this option. If multiple matches exist the first one is used.</p>
 
 <dt><b>-M</b> &lt;file&gt;, <b>--dependencies</b> &lt;file&gt;<a name="o_dependencies" href="#o_dependencies"></a>
 <dd>Specify make rule output file
+
 <p>Writes a dependency rules suitable for <q>make</q> from the list of files used during compilation.</p>
+
 <p>Please choose source file names which are compatible with Makefiles as there
 are very little escaping possibilities.</p>
 
 <dt><b>--make-phony</b><a name="o_make-phony" href="#o_make-phony"></a>
 <dd>Enable phony targets for dependencies
+
 <p>This is useful for automatic dependency generation to avoid missing target errors on file rename.</p>
 
 <p>The following Makefile uses the rules generated by 64tass (in <q>.dep</q>)
@@ -3594,6 +3767,7 @@ to achieve automatic dependency tracking:</p>
 
 <dt><b>-E</b> &lt;file&gt;, <b>--error</b> &lt;file&gt;<a name="o_error" href="#o_error"></a>
 <dd>Specify error output file
+
 <p>Normally compilation errors a written to the standard error output.
 It's possible to redirect them to a file or to the standard output by
 using <q>-</q> as the file name.</p>
@@ -3602,7 +3776,7 @@ using <q>-</q> as the file name.</p>
 <h3>Diagnostic options<a name="commandline-diagnostic" href="#commandline-diagnostic"></a></h3>
 
 <p>Diagnostic message switched start with a <q>-W</q> and can have an optional <q>no-</q> prefix to
-disable them. The options below with this prefix are enabled by default, the others are disabled.</p>
+disable them. The options below with this prefix are enabled by default, the others are disabled.
 
 <dl class="dir">
 <dt><b>-Wall</b><a name="o_Wall" href="#o_Wall"></a>
@@ -3613,24 +3787,29 @@ disable them. The options below with this prefix are enabled by default, the oth
 
 <dt><b>-Werror=</b>&lt;name&gt;<a name="o_Werror" href="#o_Werror"></a>
 <dd>Change a diagnostic warning to an error.
+
 <p>For example <q>-Werror=implied-reg</q> makes this check an error. The <q>-Wno-error=</q> variant is useful with <q>-Werror</q> to set some to warnings.</p>
 
 <dt><b>-Walias</b><a name="o_Walias" href="#o_Walias"></a>
 <dd>Warns about alias opcodes.
+
 <p>There are several opcodes for the same task, especially for the "6502i" target.</p>
 
 <dt><b>-Waltmode</b><a name="o_Waltmode" href="#o_Waltmode"></a>
 <dd>Warn about alternative address modes.
+
 <p>Sometimes alternative addressing modes are used as the fitting one is not
 available. For example there's no lda direct page y so instead data bank y is
 used with a warning.</p>
 
 <dt><b>-Wbranch-page</b><a name="o_Wbranch-page" href="#o_Wbranch-page"></a>
 <dd>Warns if a branch is crossing a page.
+
 <p>Page crossing branches execute with a penalty cycle. This option helps to locate them easily.</p>
 
 <dt><b>-Wcase-symbol</b><a name="o_Wcase-symbol" href="#o_Wcase-symbol"></a>
 <dd>Warn if symbol letter case is used inconsistently.
+
 <p>This option can be used to enforce letter case matching of symbols in case
 insensitive mode. This gives similar results to the case sensitive mode (symbols
 must match exactly) with the main difference of disallowing symbol name
@@ -3638,6 +3817,7 @@ definitions differing only in case (these are reported as duplicates).</p>
 
 <dt><b>-Wimmediate</b><a name="o_Wimmediate" href="#o_Wimmediate"></a>
 <dd>Warns for cases where immediate addressing is more likely.
+
 <p>It may be hard to notice if a <q>#</q> was missed. The code still compiles but
 there's a huge difference between <q><code>cpx #const</code></q> and
 <q><code>cpx const</code></q>. Unless the right sort of garbage was on zero
@@ -3654,22 +3834,26 @@ traditional "label" or derived from a label with an offset.</p>
 
 <dt><b>-Wimplied-reg</b><a name="o_Wimplied-reg" href="#o_Wimplied-reg"></a>
 <dd>Warns if implied addressing is used instead of register.
+
 <p>Some instructions have implied aliases like <q><code>asl</code></q>
 for <q><code>asl a</code></q> for compatibility
 reasons, but this shorthand is not the preferred form.</p>
 
 <dt><b>-Wleading-zeros</b><a name="o_Wleading-zeros" href="#o_Wleading-zeros"></a>
 <dd>Warns if about leading zeros.
+
 <p>A leading zero could be a prefix for an octal number but as octals
 are not supported the result will be decimal.</p>
 
 <dt><b>-Wlong-branch</b><a name="o_Wlong-branch" href="#o_Wlong-branch"></a>
 <dd>Warns when a long branch is used.
+
 <p>This option gives a warning for instructions which were modified by the long branch function.
 Less intrusive than disabling long branches and see where it fails.</p>
 
 <dt><b>-Wmacro-prefix</b><a name="o_Wmacro-prefix" href="#o_Wmacro-prefix"></a>
 <dd>Warn about macro call without prefix.
+
 <p>Such macro calls can easily be mistaken to be labels if invoked without parameters.
 Also it's hard to notice that an unchanged call turned into label after the
 definition got renamed. This warning helps to find such calls so that prefixes
@@ -3677,11 +3861,13 @@ can be added.</p>
 
 <dt><b>-Wno-deprecated</b><a name="o_Wdeprecated" href="#o_Wdeprecated"></a>
 <dd>Don't warn about deprecated features.
+
 <p>Unfortunately there were some features added previously which shouldn't have
 been included. This option disables warnings about their uses.</p>
 
 <dt><b>-Wno-float-compare</b><a name="o_Wfloat-compare" href="#o_Wfloat-compare"></a>
 <dd>Don't warn if floating point comparisons are only approximate.
+
 <p>Floating point numbers have a finite precision and comparing them might give
 unexpected results.</p>
 
@@ -3692,6 +3878,7 @@ is actually bigger by approximately 4.44E-16.</p>
 
 <dt><b>-Wfloat-round</b><a name="o_Wfloat-round" href="#o_Wfloat-round"></a>
 <dd>Warn when floating point numbers are implicitly rounded.
+
 <p>A lot of parameters and the data dumping directives need integers but
 floating point numbers are accepted as well. The style of rounding used may or
 may not be what you wanted.</p>
@@ -3716,25 +3903,30 @@ explicit rounding was done.</p>
 
 <dt><b>-Wno-jmp-bug</b><a name="o_Wjmp-bug" href="#o_Wjmp-bug"></a>
 <dd>Don't warn about the <code>jmp ($xxff)</code> bug.
+
 <p>With this option it's fine that the high byte is read from the <q>wrong</q>
 address on a 6502, NMOS 6502 and 65DTV02.</p>
 
 <dt><b>-Wno-label-left</b><a name="o_Wlabel-left" href="#o_Wlabel-left"></a>
 <dd>Don't warn about certain labels not being on left side.
+
 <p>You may disable this if you use labels which look like mistyped versions of
 implied addressing mode instructions and you don't want to put them in the first
 column.</p>
+
 <p>This check is there to catch typos, unsupported implied instructions, or
 unknown aliases and not for enforcing label placement.</p>
 
 <dt><b>-Wno-page</b><a name="o_Wpage" href="#o_Wpage"></a>
 <dd>Don't do an error for page crossing
+
 <p>Normally the <a href="#d_page"><code>.page</code></a> directive gives an
 error on page crossing, this directive can disable it. Using
 <q><code>-Wno-error=page</code></q> can turn it into a warning only.</p>
 
 <dt><b>-Wno-pitfalls</b><a name="o_Wpitfalls" href="#o_Wpitfalls"></a>
 <dd>Don't note about common pitfalls.
+
 <p>There are some common mistakes, but experts and those who read this don't
 need extra notes about them. These are:</p>
 
@@ -3751,6 +3943,7 @@ need extra notes about them. These are:</p>
 
 <dt><b>-Wno-portable</b><a name="o_Wportable" href="#o_Wportable"></a>
 <dd>Don't warn about source portability problems.
+
 <p>These cross platform development annoyances are checked for:</p>
 
 <ul>
@@ -3762,9 +3955,11 @@ need extra notes about them. These are:</p>
 
 <dt><b>-Wno-size-larger</b><a name="o_Wsize-larger" href="#o_Wsize-larger"></a>
 <dd>Don't warn if size is larger due to negative offset
+
 <p><a href="#f_size">size()</a> and <a href="#f_len">len()</a> can be used to measure a memory area.
 Normally there's no offset used but a positive offset may be used to reduce
 available space up until nothing remains.</p>
+
 <p>On the other hand if a negative offset is used then more space will be 
 available (ahead of the area) which may or may not be desired.</p>
 
@@ -3776,8 +3971,10 @@ var2    <b>=</b> <u>var</u> - <span>2</span>       <i>; start 2 bytes earlier</i
 
 <dt><b>-Wno-star-assign</b><a name="o_Wstar-assign" href="#o_Wstar-assign"></a>
 <dd>Don't warn about ignored compound multiply.
+
 <p>Normally <q><code>symbol &lowast;= ...</code></q> means compound multiply of the variable in front.
 Unfortunately this looks the same a <q><code>label &lowast;=&lowast;+x</code></q> which is an old-school way to allocate space.</p>
+
 <p>If the symbol was a variable defined earlier then the multiply is performed without a warning.
 If it's a new label definition then this warning is used to note that maybe a variable definition was missed earlier.</p>
 <p>If the intention was really a label definition then the <q><code>&lowast;=</code></q>
@@ -3786,6 +3983,7 @@ improved to use <q><code>.byte&nbsp;?</code></q> or <q><code>.fill&nbsp;x</code>
 
 <dt><b>-Wno-wrap-addr</b><a name="o_Wwrap-addr" href="#o_Wwrap-addr"></a>
 <dd>Don't warn about memory location address space wrap around.
+
 <p>Applying offsets to memory locations may result in addresses which end up
 outside of the processors address space.</p>
 
@@ -3797,6 +3995,7 @@ warning can be disabled otherwise it can be made into an error by using
 
 <dt><b>-Wno-wrap-bank0</b><a name="o_Wwrap-bank0" href="#o_Wwrap-bank0"></a>
 <dd>Don't warn for bank 0 wrap around.
+
 <p>Adding an offset to a bank 0 address may end up outside of bank 0. If this
 happens a warning is issued and the address wraps around.</p>
 
@@ -3805,6 +4004,7 @@ it could be turned into an error by using <code>-Werror=wrap-bank0</code>.</p>
 
 <dt><b>-Wno-wrap-dpage</b><a name="o_Wwrap-dpage" href="#o_Wwrap-dpage"></a>
 <dd>Don't warn for direct page wrap around.
+
 <p>Adding an offset to a direct page address may end up outside of the direct
 page. For a 65816 or 65EL02 an alternative addressing mode is used but on other
 processors if this happens a warning is issued and the address wraps
@@ -3815,6 +4015,7 @@ it could be turned into an error by using <code>-Werror=wrap-dpage</code>.</p>
 
 <dt><b>-Wno-wrap-mem</b><a name="o_Wwrap-mem" href="#o_Wwrap-mem"></a>
 <dd>Don't warn for compile offset wrap around.
+
 <p>While assembling the compile offset may reach the end of memory image. If
 this happens a warning is issued and the compile offset is set to the start of
 image.</p>
@@ -3826,6 +4027,7 @@ it could be turned into an error by using <code>-Werror=wrap-mem</code>.</p>
 
 <dt><b>-Wno-wrap-pc</b><a name="o_Wwrap-pc" href="#o_Wwrap-pc"></a>
 <dd>Don't warn for program counter bank crossing.
+
 <p>While assembling the program counter may reach the end of the current
 program bank. If this happens a warning is issued as a real CPU will not cross
 the bank on execution. On the other hand some addressing modes handle bank
@@ -3836,6 +4038,7 @@ it could be turned into an error by using <code>-Werror=wrap-pc</code>.</p>
 
 <dt><b>-Wno-wrap-pbank</b><a name="o_Wwrap-pbank" href="#o_Wwrap-pbank"></a>
 <dd>Don't warn for program bank address calculation wrap around.
+
 <p>Adding an offset to a program bank address may end up outside of the current
 program bank. If this happens a warning is issued and the address wraps around.</p>
 
@@ -3844,10 +4047,12 @@ it could be turned into an error by using <code>-Werror=wrap-pbank</code>.</p>
 
 <dt><b>-Wold-equal</b><a name="o_Wold-equal" href="#o_Wold-equal"></a>
 <dd>Warn about old equal operator.
+
 <p>The single <q>=</q> operator is only there for compatibility reasons and should be written as <q>==</q> normally.</p>
 
 <dt><b>-Woptimize</b><a name="o_Woptimize" href="#o_Woptimize"></a>
 <dd>Warn about optimizable code.
+
 <p>Warns on things that could be optimized, at least according to the limited
 analysis done. Currently it's easy to fool with these constructs:</p>
 
@@ -3865,8 +4070,10 @@ but this could improve in later versions.</p>
 
 <dt><b>-Wshadow</b><a name="o_Wshadow" href="#o_Wshadow"></a>
 <dd>Warn about symbol shadowing.
+
 <p>Checks if local variables <q>shadow</q> other variables of same name in upper scopes in
 ambiguous ways.</p>
+
 <p>This is useful to detect hard to notice bugs where a new local
 variable takes the place of a global one by mistake.</p>
 
@@ -3881,8 +4088,10 @@ x       <b class="d">.byte</b> <span>2</span>         <i>;'x' is a built-in regi
 
 <dt><b>-Wstrict-bool</b><a name="o_Wstrict-bool" href="#o_Wstrict-bool"></a>
 <dd>Warn about implicit boolean conversions.
+
 <p>Boolean values can be interpreted as numeric 0/1 and other types as
 booleans. This is convenient but may cause mistakes.</p>
+
 <p>To pass this option the following constructs need improvements:</p>
 
 <ul>
@@ -3922,13 +4131,15 @@ symbols are treated as used for exporting purposes.</p>
 </dl>
 
 <h3>Target selection on command line<a name="commandline-target" href="#commandline-target"></a></h3>
+
 <p>These options will select the default architecture. It can be overridden by
-using the <a href="#d_cpu"><code>.cpu</code></a> directive in the source.</p>
+using the <a href="#d_cpu"><code>.cpu</code></a> directive in the source.
 
 <dl class="dir">
 <dt><b>--m65xx</b><a name="o_m65xx" href="#o_m65xx"></a>
 <dd>Standard 65xx (default). For writing compatible code, no extra codes. This
 is the default.
+
 <pre width="80">
 64tass --m65xx a.asm
         <b>lda</b> <span>$14</span>		<i>;regular instructions</i>
@@ -3937,6 +4148,7 @@ is the default.
 <dt><b>-c</b>, <b>--m65c02</b><a name="o_m65c02" href="#o_m65c02"></a>
 <dd>CMOS 65C02. Enables extra opcodes and addressing modes specific to this
 CPU.
+
 <pre width="80">
 64tass --m65c02 a.asm
         <b>stz</b> <span>$d020</span>	<i>;65c02 instruction</i>
@@ -3945,6 +4157,7 @@ CPU.
 <dt><b>--m65ce02</b><a name="o_m65ce02" href="#o_m65ce02"></a>
 <dd>CSG 65CE02. Enables extra opcodes and addressing modes specific to this
 CPU.
+
 <pre width="80">
 64tass --m65ce02 a.asm
         <b>inz</b>
@@ -3953,6 +4166,7 @@ CPU.
 <dt><b>-i</b>, <b>--m6502</b><a name="o_m6502" href="#o_m6502"></a>
 <dd>NMOS 65xx. Enables extra illegal opcodes. Useful for demo coding for C64,
 disk drive code, etc.
+
 <pre width="80">
 64tass --m6502 a.asm
         <b>lax</b> <span>$14</span>		<i>;illegal instruction</i>
@@ -3960,6 +4174,7 @@ disk drive code, etc.
 
 <dt><b>-t</b>, <b>--m65dtv02</b><a name="o_m65dtv02" href="#o_m65dtv02"></a>
 <dd>65DTV02. Enables extra opcodes specific to DTV.
+
 <pre width="80">
 64tass --m65dtv02 a.asm
         <b>sac</b> #<span>$00</span>
@@ -3967,6 +4182,7 @@ disk drive code, etc.
 
 <dt><b>-x</b>, <b>--m65816</b><a name="o_m65816" href="#o_m65816"></a>
 <dd>W65C816. Enables extra opcodes. Useful for SuperCPU projects.
+
 <pre width="80">
 64tass --m65816 a.asm
         <b>lda</b> <span>$123456</span>,x
@@ -3974,6 +4190,7 @@ disk drive code, etc.
 
 <dt><b>-e</b><a name="o_e"></a>, <b>--m65el02</b><a name="o_m65el02" href="#o_m65el02"></a>
 <dd>65EL02. Enables extra opcodes, useful <a href="http://www.eloraam.com/nonwp/redcpu.php">RedPower CPU</a> projects. Probably you'll need <q>--nostart</q> as well.
+
 <pre width="80">
 64tass --m65el02 a.asm
         <b>lda</b> #<span>0</span>,r
@@ -3981,6 +4198,7 @@ disk drive code, etc.
 
 <dt><b>--mr65c02</b><a name="o_mr65c02" href="#o_mr65c02"></a>
 <dd>R65C02. Enables extra opcodes and addressing modes specific to this CPU.
+
 <pre width="80">
 64tass --mr65c02 a.asm
         <b>rmb</b> <span>7</span>,<span>$20</span>
@@ -3988,6 +4206,7 @@ disk drive code, etc.
 
 <dt><b>--mw65c02</b><a name="o_mw65c02" href="#o_mw65c02"></a>
 <dd>W65C02. Enables extra opcodes and addressing modes specific to this CPU.
+
 <pre width="80">
 64tass --mw65c02 a.asm
         <b>wai</b>
@@ -3995,6 +4214,7 @@ disk drive code, etc.
 
 <dt><b>--m4510</b><a name="o_m4510" href="#o_m4510"></a>
 <dd>CSG 4510. Enables extra opcodes and addressing modes specific to this CPU. Useful for C65 projects.
+
 <pre width="80">
 64tass --m4510 a.asm
         <b>map</b>
@@ -4007,6 +4227,7 @@ disk drive code, etc.
 <dl class="dir">
 <dt><b>-l</b> &lt;file&gt;, <b>--labels</b>=&lt;file&gt;<a name="o_labels" href="#o_labels"></a>
 <dd>List symbols into &lt;file&gt;.
+
 <pre width="80">
 64tass -l labels.txt a.asm
 *       <b>=</b> <span>$1000</span>
@@ -4015,26 +4236,32 @@ label   <b>jmp</b> <u>label</u>
 result (labels.txt):
 label           = $1000
 </pre>
+
 <p>This option may be used multiple times. In this case the format and root scope
 options must be placed before this option. Using the same name multiple times is not a good idea.</p>
+
 <pre width="80">
 64tass --vice-labels -l all.l --export-labels --labels-root=export -l myexport.inc source.asm
 </pre>
+
 <p>This writes symbols for VICE into <q>all.l</q> and symbols from scope
 <q>export</q> into <q>myexport.inc</q>.</p>
 
 <dt><b>--labels-root</b>=&lt;path&gt;<a name="o_labels-root" href="#o_labels-root"></a>
 <dd>Specify the scope to list labels from
+
 <p>This option can be used to limit the output to only a subset of labels. The
 parameter is a dot separated path to a scope started from the global scope.</p>
 
 <dt><b>--normal-labels</b><a name="o_normal-labels" href="#o_normal-labels"></a>
 <dd>Lists labels in a 64tass readable format. (default)
+
 <p>List labels without any side effects. Usually for display purposes or for later
 include.</p>
 
 <dt><b>--export-labels</b><a name="o_export-labels" href="#o_export-labels"></a>
 <dd>List labels for include in a 64tass readable format.
+
 <p>The difference to normal symbol listing is that 64tass assumes these
 symbols will be used in another source. In practice this means that any
 <a href="#d_proc"><code>.proc</code></a>/<a
@@ -4043,11 +4270,14 @@ always be compiled even if unused otherwise.</p>
 
 <dt><b>--vice-labels</b><a name="o_vice-labels" href="#o_vice-labels"></a>
 <dd>List labels in a VICE readable format.
+
 <p>This format may be used to translate memory locations to something readable in
 VICE monitor. Therefore simple numeric constants will not show up unless
 converted to an address first.</p>
+
 <p>VICE symbols may only contain ASCII letters, numbers and underscore. Symbols
 not meeting this requirement will be omitted.</p>
+
 <p>There's a good chance VICE will complain about already existing labels on
 import. In the past an attempt was made to filter out such duplicates to
 eliminate these warnings. However soon it was pointed out that omitted labels
@@ -4063,15 +4293,19 @@ label   <b>jmp</b> <u>label</u>
 result (labels.l):
 al 1000 .label
 </pre>
+
 <p><b>For now colons are used as scope delimiter due to a VICE limitation, but
 this will be changed to dots in the future.</b></p>
 
 <dt><b>--vice-labels-numeric</b><a name="o_vice-labels-numeric" href="#o_vice-labels-numeric"></a>
 <dd>List address like symbols in a VICE readable format including numeric constants.
+
 <p>The normal VICE label list does not include symbols like <code>chrout =
 $ffd2</code> or <code>keybuff = 631</code> as these are numeric constants and
 not memory addresses.</p>
+
 <p>Of course there are ways around that. For example:</p>
+
 <pre width="80">
 chrout  <b>=</b> <span class="k">address</span>(<span>$ffd2</span>)
 keybuff <b>=</b> <span class="k">address</span>(<span>631</span>)
@@ -4080,6 +4314,7 @@ chrout  <b class="d">.fill</b> <span>3</span>
 *       <b>=</b> <span>631</span>
 keybuff <b class="d">.fill</b> <span>10</span>
 </pre>
+
 <p>For those who don't want to waste time on explicitly marking addresses as
 such there's an easy way out by using this command line option.</p>
 
@@ -4089,8 +4324,8 @@ uses numeric constants for addresses only this may be acceptable.</p>
 
 <dt><b>--dump-labels</b><a name="o_dump-labels" href="#o_dump-labels"></a>
 <dd>List labels for debugging.
-<p>The output will contain symbol locations and paths.</p>
 
+<p>The output will contain symbol locations and paths.</p>
 </dl>
 
 <h3>Assembly listing<a name="commandline-assembly" href="#commandline-assembly"></a></h3>
@@ -4100,6 +4335,7 @@ uses numeric constants for addresses only this may be acceptable.</p>
 <dd>List into &lt;file&gt;. Dumps source code and compiled code into file.
 Useful for debugging, it's much easier to identify the code in memory within
 the source files.
+
 <pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass -L list.txt a.asm
@@ -4119,6 +4355,7 @@ the source files.
 
 <dt><b>-m</b>, <b>--no-monitor</b><a name="o_no-monitor" href="#o_no-monitor"></a>
 <dd>Don't put monitor code into listing. There won't be any monitor listing in the list file.
+
 <pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass --no-monitor -L list.txt a.asm
@@ -4138,6 +4375,7 @@ the source files.
 
 <dt><b>-s</b><a name="o_s"></a>, <b>--no-source</b><a name="o_no-source" href="#o_no-source"></a>
 <dd>Don't put source code into listing. There won't be any source listing in the list file.
+
 <pre width="80">
 ; 64tass Turbo Assembler Macro V1.5x listing file
 ; 64tass --no-source -L list.txt a.asm
@@ -4209,7 +4447,6 @@ including comments and empty lines.
 
 ;&lowast;&lowast;&lowast;&lowast;&lowast;&lowast;  End of listing
 </pre>
-
 </dl>
 
 <h3>Other options<a name="commandline-other" href="#commandline-other"></a></h3>
@@ -4229,18 +4466,18 @@ including comments and empty lines.
 
 <p>Command line arguments can be read from a file as well. This is useful to store
 common options for multiple files in one place or to overcome the argument list length
-limitations of some systems.</p>
+limitations of some systems.
 
 <p>The filename needs to be prefixed with an at sign, so <q>@argsfile</q>
 reads options from <q>argsfile</q>. It will only work if there's not another file
 named <q>@argsfile</q>. The content is expanded in-place of <q>@argsfile</q>.
 
 <p>Stored options must be separated by white space. Single or double quotes can
-be used in case file names have white space in their names.</p>
+be used in case file names have white space in their names.
 
 <p>Backslash can be used to escape the character following it and it must
 be used to escape itself. Single and double quotes need to be escaped if
-needed for string quoting.</p>
+needed for string quoting.
 
 <p>Forward slashes can be used as a portable path separation on all systems.</p>
 
@@ -4250,8 +4487,10 @@ needed for string quoting.</p>
 <p>Faults and warnings encountered are sent to the standard error for logging. To
 redirect them to a file append <q>2&gt;filename.log</q> after the
 command or use the <q><a href="#o_error"><code>-E</code></a></q> command
-line option. The message format is the following:</p>
-<p>&lt;filename&gt;:&lt;line&gt;:&lt;character&gt;: &lt;severity&gt;: &lt;message&gt;</p>
+line option. The message format is the following:
+
+<p>&lt;filename&gt;:&lt;line&gt;:&lt;character&gt;: &lt;severity&gt;: &lt;message&gt;
+
 <ul>
 <li>filename: The name and path of source file where the error happened.
 <li>line: Line number in file, starts from 1.
@@ -4259,19 +4498,26 @@ line option. The message format is the following:</p>
 <li>severity: Note, warning, error or fatal.
 <li>message: The fault message itself.
 </ul>
+
 <p>The faulty line will be displayed after the message with a caret pointing to
 the error location unless this is disabled by using <q><a
-href="#o_no-caret-diag"><code>--no-caret-diag</code></a></q> option.</p>
+href="#o_no-caret-diag"><code>--no-caret-diag</code></a></q> option.
 
-<pre width="80"><strong>a.asm:3:21: <span style="color:red">error:</span> not defined symbol 'label'</strong>
+<pre width="80">
+<strong>a.asm:3:21: <span style="color:red">error:</span> not defined symbol 'label'</strong>
                  lda label
                      <strong><span style="color:green">^</span></strong>
-<strong>a.asm:3:21: <span style="color:darkcyan">note:</span></strong> searched in the global scope</pre>
+<strong>a.asm:3:21: <span style="color:darkcyan">note:</span></strong> searched in the global scope
+</pre>
+
 <p>This is helpful for macro expansions as it displays the processed line which usually
-looks different to the one in the original source file.</p>
-Error buried deep in included files or macros display a backtrace of files after an <q>In
+looks different to the one in the original source file.
+
+<p>Error buried deep in included files or macros display a backtrace of files after an <q>In
 file included from</q> text where all the files and positions involved are listed down to the main file.
-<pre width="80">In file included from <strong>main.asm:3:3</strong>:
+
+<pre width="80">
+In file included from <strong>main.asm:3:3</strong>:
 <strong>included.asm:2:11: <span style="color:red">error:</span> not defined symbol 'test'</strong>
  		#macro1 test
  		        <strong><span style="color:green">^</span></strong>
@@ -4281,11 +4527,14 @@ In file included from <strong>included.asm:2:3</strong>,
  		lda test
  		    <strong><span style="color:green">^</span></strong>
 </pre>
+
 <p>Messages ending with <q><code>[-Wxxx]</code></q> are user controllable. This means
 that using <q><code>-Wno-xxx</code></q> on the command line will silence them and
 <q><code>-Werror=xxx</code></q> will turn them it into a fault. See <a
-href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
+href="#commandline-diagnostic">Diagnostic options</a> for more details.
+
 <h3>Warnings<a name="messages-warnings" href="#messages-warnings"></a></h3>
+
 <dl class="errorlist">
 <dt>approximate floating point<dd>floating point comparisons are not exact and the numbers were close but maybe not quite
 <dt>bank 0 address overflow<dd>the calculated memory location address ended up outside of bank 0 and is now wrapped.
@@ -4429,29 +4678,39 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.</p>
 <hr>
 <h2>Credits<a name="credits" href="#credits"></a></h2>
 
-<p>Original 6502tass written for DOS by Marek Matula of Taboo.</p>
-<p>It was ported to ANSI C by BigFoot/Breeze. This is when it's name changed to 64tass.</p>
+<p>Original 6502tass written for DOS by Marek Matula of Taboo.
+
+<p>It was ported to ANSI C by BigFoot/Breeze. This is when it's name changed to 64tass.
+
 <p>Soci/Singular reworked the code over the years to the point that practically
-nothing was left from original at this point.</p>
-<p>Improved TASS compatibility, PETSCII codes by Groepaz.</p>
+nothing was left from original at this point.
+
+<p>Improved TASS compatibility, PETSCII codes by Groepaz.
 
 <p>Additional code: my_getopt command-line argument parser by Benjamin
 Sittler, avl tree code by Franck Bui-Huu, ternary tree code by Daniel
-Berlin, snprintf Alain Magloire, Amiga OS4 support files by Janne Per&auml;aho.</p>
+Berlin, snprintf Alain Magloire, Amiga OS4 support files by Janne Per&auml;aho.
 
 <p>Pierre Zero helped to uncover a lot of faults by fuzzing. Also there were a
-lot of discussions with oziphantom about the need of various features.</p>
+lot of discussions with oziphantom about the need of various features.
 
 <p>Main developer and maintainer: soci at c64.rulez.org</p>
+
 <hr>
 <h2>Default translation and escape sequences<a name="builtin-translations-escapes" href="#builtin-translations-escapes"></a></h2>
 <h3>Raw 8-bit source<a name="translate-raw8" href="#translate-raw8"></a></h3>
+
 <p>By default raw 8-bit encoding is used and nothing is translated or escaped.
-This mode is for compiling sources which are already PETSCII.</p>
+This mode is for compiling sources which are already PETSCII.
+
 <h4>The <q>none</q> encoding for raw 8-bit<a name="translate-raw8-none" href="#translate-raw8-none"></a></h4>
-<p>Does no translation at all, no translation table, no escape sequences.</p>
+
+<p>Does no translation at all, no translation table, no escape sequences.
+
 <h4>The <q>screen</q> encoding for raw 8-bit<a name="translate-raw8-screen" href="#translate-raw8-screen"></a></h4>
-<p>The following translation table applies, no escape sequences.</p>
+
+<p>The following translation table applies, no escape sequences.
+
 <div><table width="100%">
 <caption>Built-in PETSCII to PETSCII screen code translation table</caption>
 <thead>
@@ -4470,9 +4729,13 @@ This mode is for compiling sources which are already PETSCII.</p>
 </table></div>
 
 <h3>Unicode and ASCII source<a name="translate-unicode" href="#translate-unicode"></a></h3>
-<p>Unicode encoding is used when the <q><a href="#o_ascii"><code>-a</code></a></q> option is given on the command line.</p>
+
+<p>Unicode encoding is used when the <q><a href="#o_ascii"><code>-a</code></a></q> option is given on the command line.
+
 <h4>The <q>none</q> encoding for Unicode<a name="translate-unicode-none" href="#translate-unicode-none"></a></h4>
-This is a Unicode to PETSCII mapping, including escape sequences for control codes.
+
+<p>This is a Unicode to PETSCII mapping, including escape sequences for control codes.
+
 <div><table width="100%" class="trans">
 <caption>Built-in Unicode to PETSCII translation table</caption>
 <thead>
@@ -4796,7 +5059,9 @@ This is a Unicode to PETSCII mapping, including escape sequences for control cod
 </table></div>
 
 <h4>The <q>screen</q> encoding for Unicode<a name="translate-unicode-screen" href="#translate-unicode-screen"></a></h4>
-This is a Unicode to PETSCII screen code mapping, including escape sequences for control code screen codes.
+
+<p>This is a Unicode to PETSCII screen code mapping, including escape sequences for control code screen codes.
+
 <div><table width="100%" class="trans">
 <caption>Built-in Unicode to PETSCII screen code translation table</caption>
 <thead>
@@ -4986,7 +5251,9 @@ This is a Unicode to PETSCII screen code mapping, including escape sequences for
 
 <hr>
 <h2>Opcodes<a name="opcodes" href="#opcodes"></a></h2>
+
 <h3>Standard 6502 opcodes<a name="opcodes-6502" href="#opcodes-6502"></a></h3>
+
 <div><table width="100%" class="opcodes">
 <caption>The standard 6502 opcodes</caption>
 <tbody>
@@ -5077,7 +5344,9 @@ This is a Unicode to PETSCII screen code mapping, including escape sequences for
 
 <hr>
 <h3>6502 illegal opcodes<a name="opcodes-6502i" href="#opcodes-6502i"></a></h3>
-<p>This processor is a standard 6502 with the NMOS illegal opcodes.</p>
+
+<p>This processor is a standard 6502 with the NMOS illegal opcodes.
+
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
 <tbody>
@@ -5124,7 +5393,9 @@ This is a Unicode to PETSCII screen code mapping, including escape sequences for
 
 <hr>
 <h3>65DTV02 opcodes<a name="opcodes-65dtv02" href="#opcodes-65dtv02"></a></h3>
-<p>This processor is an enhanced version of standard 6502 with some illegal opcodes.</p>
+
+<p>This processor is an enhanced version of standard 6502 with some illegal opcodes.
+
 <div><table width="100%" class="opcodes">
 <caption>Additionally to 6502 illegal opcodes</caption>
 <tbody>
@@ -5173,7 +5444,9 @@ This is a Unicode to PETSCII screen code mapping, including escape sequences for
 
 <hr>
 <h3>Standard 65C02 opcodes<a name="opcodes-65c02" href="#opcodes-65c02"></a></h3>
-<p>This processor is an enhanced version of standard 6502.</p>
+
+<p>This processor is an enhanced version of standard 6502.
+
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
 <tbody>
@@ -5214,11 +5487,12 @@ This is a Unicode to PETSCII screen code mapping, including escape sequences for
 
 <hr>
 <h3>R65C02 opcodes<a name="opcodes-r65c02" href="#opcodes-r65c02"></a></h3>
-<p>This processor is an enhanced version of standard 65C02.</p>
+
+<p>This processor is an enhanced version of standard 65C02.
 
 <p>Please note that the bit number is not part of the instruction name (like
 <code>rmb7 $20</code>). Instead it's the first element of coma separated
-parameters (e.g. <code>rmb 7,$20</code>).</p>
+parameters (e.g. <code>rmb 7,$20</code>).
 
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
@@ -5233,7 +5507,9 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 
 <hr>
 <h3>W65C02 opcodes<a name="opcodes-w65c02" href="#opcodes-w65c02"></a></h3>
-<p>This processor is an enhanced version of R65C02.</p>
+
+<p>This processor is an enhanced version of R65C02.
+
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
 <tbody>
@@ -5252,7 +5528,9 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 
 <hr>
 <h3>W65816 opcodes<a name="opcodes-w65816" href="#opcodes-w65816"></a></h3>
-<p>This processor is an enhanced version of 65C02.</p>
+
+<p>This processor is an enhanced version of 65C02.
+
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
 <tbody>
@@ -5315,7 +5593,9 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 
 <hr>
 <h3>65EL02 opcodes<a name="opcodes-65el02" href="#opcodes-65el02"></a></h3>
-<p>This processor is an enhanced version of standard 65C02.</p>
+
+<p>This processor is an enhanced version of standard 65C02.
+
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
 <tbody>
@@ -5382,7 +5662,9 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 
 <hr>
 <h3>65CE02 opcodes<a name="opcodes-65ce02" href="#opcodes-65ce02"></a></h3>
-<p>This processor is an enhanced version of R65C02.</p>
+
+<p>This processor is an enhanced version of R65C02.
+
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
 <tbody>
@@ -5449,7 +5731,9 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 
 <hr>
 <h3>CSG 4510 opcodes<a name="opcodes-4510" href="#opcodes-4510"></a></h3>
-<p>This processor is an enhanced version of 65CE02.</p>
+
+<p>This processor is an enhanced version of 65CE02.
+
 <div><table width="100%" class="opcodes">
 <caption>Additional opcodes</caption>
 <tbody>
@@ -5470,6 +5754,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <h2>Appendix<a name="appendix" href="#appendix"></a></h2>
 
 <h3>Assembler directives<a name="directives" href="#directives"></a></h3>
+
 <p class="links">
 <a href="#d_addr">.addr</a>
 <a href="#d_al">.al</a>
@@ -5595,6 +5880,7 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 
 <hr>
 <h3>Built-in functions<a name="functions" href="#functions"></a></h3>
+
 <p class="links">
 <a href="#f_abs">abs</a>
 <a href="#f_acos">acos</a>
@@ -5643,7 +5929,9 @@ parameters (e.g. <code>rmb 7,$20</code>).</p>
 <a href="#f_trunc">trunc</a>
 <a href="#f_word">word</a>
 </p>
+
 <h3>Built-in types<a name="types" href="#types"></a></h3>
+
 <p class="links">
 <a href="#t_address">address</a>
 <a href="#t_bits">bits</a>

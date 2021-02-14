@@ -1227,10 +1227,10 @@ Traditional comparison operators give false or true depending on the result.
 The compare operator (<=>) gives -1 for less, 0 for equal and 1 for more.
 
         Comparison operators
-<=> compare
-==  equals    != not equal
-<   less than >= more than or equals
->   more than <= less than or equals
+<=> compare   === identical
+==  equals    !=  not equal
+<   less than >=  more than or equals
+>   more than <=  less than or equals
 
 Byte extraction operators
 
