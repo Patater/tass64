@@ -4041,6 +4041,8 @@ extra characters on line
     there's some garbage on the end of line
 floating point overflow
     infinity reached during a calculation
+format character expected
+    string ended before a format character was found
 general syntax
     can't do anything with this
 index out of range
@@ -4116,6 +4118,8 @@ unknown processor '?'
     unknown cpu name
 unknown argument name '?'
     no parameter argument known like this
+unknown format character '?'
+    no format character known like this
 value needs to be non-negative
     only positive numbers or zero is accepted here
 wrong type <?>
