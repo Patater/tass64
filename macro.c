@@ -871,6 +871,18 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         const uint8_t *ollist = llist;
         size_t oldbottom;
         bool in_macro_old = in_macro;
+        struct section_address_s section_address, *oldsection_address = current_address;
+        bool starexists;
+        struct star_s *s = new_star(vline, &starexists);
+        struct star_s *stree_old = star_tree;
+
+        if (starexists && s->addr != star) {
+            if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &lpoint);
+            fixeddig = false;
+        }
+        s->addr = star;
+        star_tree->vline = vline; star_tree = s; vline = s->vline;
+
         in_macro = false;
 
         lpoint.line = mfunc->epoint.line;
@@ -890,18 +902,6 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
                 retval = get_vals_tuple();
             }
         } else {
-            struct section_address_s section_address, *oldsection_address = current_address;
-            bool starexists;
-            struct star_s *s = new_star(vline, &starexists);
-            struct star_s *stree_old = star_tree;
-
-            if (starexists && s->addr != star) {
-                if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &lpoint);
-                fixeddig = false;
-            }
-            s->addr = star;
-            star_tree->vline = vline; star_tree = s; vline = s->vline;
-
             if (diagnostics.optimize) cpu_opt_invalidate();
 
             new_waitfor(W_ENDF3, epoint);
@@ -929,10 +929,9 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
             }
 
             close_waitfor(W_ENDF3);
-
-            star = s->addr;
-            s->vline = vline; star_tree = stree_old; vline = star_tree->vline;
         }
+        star = s->addr;
+        s->vline = vline; star_tree = stree_old; vline = star_tree->vline;
         functionrecursion--;
         context_set_bottom(oldbottom);
         pop_context();
