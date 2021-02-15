@@ -866,16 +866,13 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
     if (tuple != NULL) val_destroy(&tuple->v);
     else if (i < args) err_msg_argnum(args, i, i, &vals[i].epoint);
     {
-        line_t lin = lpoint.line;
         struct linepos_s opoint = lpoint;
         const uint8_t *opline = pline;
         const uint8_t *ollist = llist;
         size_t oldbottom;
         bool in_macro_old = in_macro;
-        struct section_address_s section_address, *oldsection_address = current_address;
         in_macro = false;
 
-        if (diagnostics.optimize) cpu_opt_invalidate();
         lpoint.line = mfunc->epoint.line;
         oldbottom = context_get_bottom();
         for (i = 0; i < mfunc->nslen; i++) {
@@ -893,6 +890,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
                 retval = get_vals_tuple();
             }
         } else {
+            struct section_address_s section_address, *oldsection_address = current_address;
             bool starexists;
             struct star_s *s = new_star(vline, &starexists);
             struct star_s *stree_old = star_tree;
@@ -903,6 +901,8 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
             }
             s->addr = star;
             star_tree->vline = vline; star_tree = s; vline = s->vline;
+
+            if (diagnostics.optimize) cpu_opt_invalidate();
 
             new_waitfor(W_ENDF3, epoint);
 
@@ -943,7 +943,6 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         lpoint = opoint;
         pline = opline;
         llist = ollist;
-        lpoint.line = lin;
         in_macro = in_macro_old;
     }
     exitfile();
