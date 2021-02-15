@@ -867,9 +867,6 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
     else if (i < args) err_msg_argnum(args, i, i, &vals[i].epoint);
     {
         line_t lin = lpoint.line;
-        bool starexists;
-        struct star_s *s = new_star(vline, &starexists);
-        struct star_s *stree_old = star_tree;
         struct linepos_s opoint = lpoint;
         const uint8_t *opline = pline;
         const uint8_t *ollist = llist;
@@ -879,14 +876,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         in_macro = false;
 
         if (diagnostics.optimize) cpu_opt_invalidate();
-        if (starexists && s->addr != star) {
-            if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &lpoint);
-            fixeddig = false;
-        }
-        s->addr = star;
-        star_tree->vline = vline; star_tree = s; vline = s->vline;
         lpoint.line = mfunc->epoint.line;
-        if (!mfunc->single) new_waitfor(W_ENDF3, epoint);
         oldbottom = context_get_bottom();
         for (i = 0; i < mfunc->nslen; i++) {
             push_context(mfunc->namespaces[i]);
@@ -903,6 +893,19 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
                 retval = get_vals_tuple();
             }
         } else {
+            bool starexists;
+            struct star_s *s = new_star(vline, &starexists);
+            struct star_s *stree_old = star_tree;
+
+            if (starexists && s->addr != star) {
+                if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &lpoint);
+                fixeddig = false;
+            }
+            s->addr = star;
+            star_tree->vline = vline; star_tree = s; vline = s->vline;
+
+            new_waitfor(W_ENDF3, epoint);
+
             section_address.moved = section_address.wrapwarn = section_address.bankwarn = section_address.unionmode = false;
             section_address.address = 0;
             section_address.start = 0;
@@ -924,6 +927,11 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
                 err_msg_big_address(epoint);
                 current_address->l_address &= all_mem;
             }
+
+            close_waitfor(W_ENDF3);
+
+            star = s->addr;
+            s->vline = vline; star_tree = stree_old; vline = star_tree->vline;
         }
         functionrecursion--;
         context_set_bottom(oldbottom);
@@ -931,13 +939,10 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         for (i = 0; i < mfunc->nslen; i++) {
             pop_context();
         }
-        if (!mfunc->single) close_waitfor(W_ENDF3);
-        star = s->addr;
         temporary_label_branch--;
         lpoint = opoint;
         pline = opline;
         llist = ollist;
-        s->vline = vline; star_tree = stree_old; vline = star_tree->vline;
         lpoint.line = lin;
         in_macro = in_macro_old;
     }
