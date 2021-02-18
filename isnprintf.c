@@ -606,7 +606,7 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         str->data = return_value.data;
         return &str->v;
     }
-    memcpy(str->u.val, return_value.data, return_value.len);
+    if (return_value.len != 0) memcpy(str->u.val, return_value.data, return_value.len);
     str->data = str->u.val;
     free(return_value.data);
     return &str->v;

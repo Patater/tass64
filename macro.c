@@ -109,17 +109,19 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
 }
 
 size_t macro_error_translate2(size_t pos) {
-    const struct macro_pline_s *mline = &macro_parameters.current->pline;
-    if (macro_parameters.p != 0 && pline == mline->data) {
-        size_t i, pos2 = pos;
-        for (i = 0; i < mline->rp; i++) {
-            const struct macro_rpos_s *rpositions = &mline->rpositions[i];
-            if (rpositions->pos > pos2) break;
-            if (rpositions->pos + rpositions->len > pos2) {
-                pos = rpositions->opos;
-                break;
+    if (macro_parameters.p != 0) {
+        const struct macro_pline_s *mline = &macro_parameters.current->pline;
+        if (pline == mline->data) {
+            size_t i, pos2 = pos;
+            for (i = 0; i < mline->rp; i++) {
+                const struct macro_rpos_s *rpositions = &mline->rpositions[i];
+                if (rpositions->pos > pos2) break;
+                if (rpositions->pos + rpositions->len > pos2) {
+                    pos = rpositions->opos;
+                    break;
+                }
+                pos = pos + rpositions->olen - rpositions->len;
             }
-            pos = pos + rpositions->olen - rpositions->len;
         }
     }
     return pos;

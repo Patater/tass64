@@ -23,7 +23,7 @@
 #include "error.h"
 #include "arguments.h"
 
-int str_hash(const str_t *s) {
+unsigned int str_hash(const str_t *s) {
     size_t l = s->len;
     const uint8_t *s2 = s->data;
     unsigned int h;
