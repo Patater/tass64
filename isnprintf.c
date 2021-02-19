@@ -219,6 +219,7 @@ static inline void decimal(Data *p)
     if (v == NULL) {
         str = ref_str(null_str);
         minus = false;
+        if (p->precision < 1) p->precision = 1;
     } else {
         Obj *val = v->val;
         Obj *err = INT_OBJ->create(val, &v->epoint);
