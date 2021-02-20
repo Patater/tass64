@@ -160,17 +160,19 @@ static void error_extend(void) {
     struct errorentry_s *err;
     uint8_t *data = (uint8_t *)realloc(error_list.data, error_list.max);
     size_t diff, pos;
+    bool dir;
     if (data == NULL) err_msg_out_of_memory2();
-    diff = data - error_list.data;
+    dir = data >= error_list.data;
+    diff = dir ? (data - error_list.data) : (error_list.data - data);
     error_list.data = data;
     if (diff == 0) return;
     for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (struct errorentry_s *)&data[pos];
-        if (err->node.left != NULL) err->node.left = (struct avltree_node *)((uint8_t *)err->node.left + diff);
-        if (err->node.right != NULL) err->node.right = (struct avltree_node *)((uint8_t *)err->node.right + diff);
-        if (err->node.parent != NULL) err->node.parent = (struct avltree_node *)((uint8_t *)err->node.parent + diff);
+        if (err->node.left != NULL) err->node.left = (struct avltree_node *)((uint8_t *)(dir ? (err->node.left + diff) : (err->node.left - diff)));
+        if (err->node.right != NULL) err->node.right = (struct avltree_node *)((uint8_t *)(dir ? (err->node.right + diff) : (err->node.right - diff)));
+        if (err->node.parent != NULL) err->node.parent = (struct avltree_node *)((uint8_t *)(dir ? (err->node.parent + diff) : (err->node.parent - diff)));
     }
-    if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((uint8_t *)error_list.members.root + diff);
+    if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((uint8_t *)(dir ? (error_list.members.root + diff) : (error_list.members.root - diff)));
 }
 
 static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len, size_t pos) {
