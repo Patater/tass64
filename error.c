@@ -168,11 +168,11 @@ static void error_extend(void) {
     if (diff == 0) return;
     for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (struct errorentry_s *)&data[pos];
-        if (err->node.left != NULL) err->node.left = (struct avltree_node *)((uint8_t *)(dir ? (err->node.left + diff) : (err->node.left - diff)));
-        if (err->node.right != NULL) err->node.right = (struct avltree_node *)((uint8_t *)(dir ? (err->node.right + diff) : (err->node.right - diff)));
-        if (err->node.parent != NULL) err->node.parent = (struct avltree_node *)((uint8_t *)(dir ? (err->node.parent + diff) : (err->node.parent - diff)));
+        if (err->node.left != NULL) err->node.left = (struct avltree_node *)((dir ? ((uint8_t *)err->node.left + diff) : ((uint8_t *)err->node.left - diff)));
+        if (err->node.right != NULL) err->node.right = (struct avltree_node *)((dir ? ((uint8_t *)err->node.right + diff) : ((uint8_t *)err->node.right - diff)));
+        if (err->node.parent != NULL) err->node.parent = (struct avltree_node *)((dir ? ((uint8_t *)err->node.parent + diff) : ((uint8_t *)err->node.parent - diff)));
     }
-    if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((uint8_t *)(dir ? (error_list.members.root + diff) : (error_list.members.root - diff)));
+    if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((dir ? ((uint8_t *)error_list.members.root + diff) : ((uint8_t *)error_list.members.root - diff)));
 }
 
 static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len, size_t pos) {
