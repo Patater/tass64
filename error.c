@@ -39,6 +39,7 @@
 #include "errorobj.h"
 #include "noneobj.h"
 #include "symbolobj.h"
+#include "anonsymbolobj.h"
 #include "console.h"
 
 struct file_list_s *current_file_list;
