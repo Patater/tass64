@@ -569,7 +569,7 @@ static void imul(const Int *vv1, const Int *vv2, Int *vv) {
     while (i != 0 && v[i - 1] == 0) i--;
     if (vv == vv1 || vv == vv2) destroy(&vv->v);
     if (i <= lenof(vv->val)) {
-        memcpy(vv->val, v, i * sizeof *v);
+        if (i != 0) memcpy(vv->val, v, i * sizeof *v); else vv->val[0] = 0;
         if (tmp.val != v) free(v);
         v = vv->val;
     }
@@ -1502,7 +1502,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linep
         for (;;k++) {
             uint8_t c = s[k] ^ 0x30;
             if (c < 10) {
-                val = (val < ((~(digit_t)0)-9)/10) ? val * 10 + c : ~(digit_t)0;
+                val = (val <= ((~(digit_t)0)-9)/10) ? val * 10 + c : ~(digit_t)0;
                 continue;
             }
             if (c != ('_' ^ 0x30)) break;
