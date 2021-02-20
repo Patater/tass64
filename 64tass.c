@@ -3722,7 +3722,7 @@ MUST_CHECK Obj *compile(void)
                         push_context2((Namespace *)val);
                         waitfor->what = W_ENDWITH2;
                     }
-                } else new_waitfor(W_ENDWITH, &epoint);
+                } else { new_waitfor(W_ENDWITH, &epoint); waitfor->u.cmd_with.label = NULL; }
                 break;
             case CMD_WEAK: if ((waitfor->skip & 1) != 0)
                 { /* .weak */
