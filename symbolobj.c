@@ -184,7 +184,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_ERROR:
         return val_reference(o2);
     default:
-        if (op->op != &o_MEMBER && op->op != &o_X) {
+        if (o2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
             return o2->obj->rcalc2(op);
         }
         break;
