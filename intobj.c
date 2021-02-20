@@ -841,13 +841,20 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
             return val_reference(&minus1_value->v);
         }
         sz = (size_t)vv->len - word;
+        v = vv->data;
     } else {
         if ((size_t)vv1->len <= word) return val_reference(&int_value[0]->v);
         sz = (size_t)vv1->len - word;
-        vv = new_int();
+        if (op->inplace == &vv1->v) {
+            vv = ref_int(vv1);
+            v = vv->data;
+        }
+        else {
+            vv = new_int();
+            vv->data = v = inew2(vv, sz);
+            if (v == NULL) goto failed2;
+        }
     }
-    vv->data = v = inew2(vv, sz);
-    if (v == NULL) goto failed2;
     v1 = vv1->data + word;
     if (bit != 0) {
         for (i = 0; i < sz - 1; i++) {
@@ -855,7 +862,7 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
             v[i] |= v1[i + 1] << (SHIFT - bit);
         }
         v[i] = v1[i] >> bit;
-    } else if (sz != 0) memcpy(v, v1, sz * sizeof *v);
+    } else if (sz != 0) memmove(v, v1, sz * sizeof *v);
 
     if (neg) {
         vv->len = (ssize_t)sz;
