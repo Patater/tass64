@@ -1463,9 +1463,7 @@ static bool get_exp2(int stop) {
                 if (opr.data[opr.p - 1].val == &o_SPLAT) {
                     opr.p--;
                     if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                        str_t symbol;
-                        symbol.data = pline + opr.data[opr.p].epoint.pos;
-                        symbol.len = 1;
+                        static const str_t symbol = { (const uint8_t *)"*", 1 };
                         push_oper((Obj *)new_symbol(&symbol, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                         goto other;
                     }
@@ -1481,9 +1479,7 @@ static bool get_exp2(int stop) {
             opr.p--;
             lpoint.pos = epoint.pos;
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                str_t symbol;
-                symbol.data = pline + opr.data[opr.p].epoint.pos;
-                symbol.len = 1;
+                static const str_t symbol = { (const uint8_t *)"*", 1 };
                 push_oper((Obj *)new_symbol(&symbol, &opr.data[opr.p].epoint), &opr.data[opr.p].epoint);
                 goto other;
             }
