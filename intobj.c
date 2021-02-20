@@ -1502,7 +1502,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linep
         for (;;k++) {
             uint8_t c = s[k] ^ 0x30;
             if (c < 10) {
-                val = val * 10 + c;
+                val = (val < ((~(digit_t)0)-9)/10) ? val * 10 + c : ~(digit_t)0;
                 continue;
             }
             if (c != ('_' ^ 0x30)) break;
@@ -1516,7 +1516,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linep
     *ln = k;
     i = k - i;
     *ln2 = i;
-    if (i < 10) {
+    if (~val != 0) {
         if (val >= lenof(int_value)) {
             v = new_int();
             v->data = v->val;
