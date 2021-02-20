@@ -83,7 +83,7 @@ static FAST_CALL void garbage(Obj *o1, int j) {
         return;
     case 1:
         for (i = 0; i <= v1->mask; i++) {
-            Obj *v = &v1->data[i]->v;
+            Obj *v = (Obj *)v1->data[i];
             if (v == NULL) continue;
             if ((v->refcount & SIZE_MSB) != 0) {
                 v->refcount -= SIZE_MSB - 1;
