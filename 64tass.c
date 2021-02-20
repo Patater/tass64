@@ -1986,7 +1986,11 @@ MUST_CHECK Obj *compile(void)
                                 wht = '*';
                                 break;
                             }
-                            err_msg_not_defined2(&labelname, mycontext, false, &epoint);
+                            if (labelname.data == (const uint8_t *)&anonsymbol) {
+                                err_msg_not_defined2a((anonsymbol.dir == '-') ? -1 : 0, mycontext, false, &epoint);
+                            } else {
+                                err_msg_not_defined2(&labelname, mycontext, false, &epoint);
+                            }
                             goto breakerr;
                         }
                         if (label->constant) {
