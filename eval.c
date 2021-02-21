@@ -1838,12 +1838,19 @@ Obj *get_vals_tuple(void) {
 Obj *get_vals_addrlist(struct linepos_s *epoints) {
     size_t i, j, len = get_val_remaining();
     Addrlist *list;
+    Obj *val;
 
     switch (len) {
     case 0:
         return (Obj *)ref_addrlist(null_addrlist);
     case 1:
-        return pull_val(&epoints[0]);
+        val = pull_val(&epoints[0]);
+        if (val->obj == ADDRLIST_OBJ) {
+            list = (Addrlist *)val;
+            i = list->len < 3 ? list->len : 3;
+            for (j = 1; j < i; j++) epoints[j] = epoints[0];
+        }
+        return val;
     default:
         break;
     }
