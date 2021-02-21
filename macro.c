@@ -638,16 +638,16 @@ bool get_func_params(Mfunc *v, bool single) {
                     v->epoint.pos = lpoint.pos;
                 }
                 break;
-            } else {
-                param[i].init = NULL;
-                if (here() == '=') {
-                    lpoint.pos++;
-                    if (!get_exp(1, 1, 1, &lpoint)) {
-                        ret = true;
-                        break;
-                    }
-                    param[i].init = pull_val(NULL);
+            }
+            param[i].init = NULL;
+            if (here() == '=') {
+                lpoint.pos++;
+                if (!get_exp(1, 1, 1, &lpoint)) {
+                    i++;
+                    ret = true;
+                    break;
                 }
+                param[i].init = pull_val(NULL);
             }
             i++;
             if (here() == 0 || here() == ';') {
