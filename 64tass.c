@@ -3368,6 +3368,9 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_ENDWITH: /* .endwith */
                 if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->what==W_ENDWITH || waitfor->what==W_ENDWITH2) && waitfor->u.cmd_with.label != NULL) {
+                    set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(&waitfor->u.cmd_with.label->v);
+                }
                 if (close_waitfor(W_ENDWITH)) {
                 } else if (waitfor->what==W_ENDWITH2) {
                     if (pop_context2()) err_msg2(ERROR__MISSING_OPEN, ".with", &epoint);
@@ -3708,7 +3711,7 @@ MUST_CHECK Obj *compile(void)
                 } else {push_dummy_context(); new_waitfor(W_ENDN, &epoint);}
                 break;
             case CMD_WITH: if ((waitfor->skip & 1) != 0)
-                { /* .namespace */
+                { /* .with */
                     struct values_s *vs;
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_ENDWITH, &epoint);
@@ -3744,7 +3747,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_DATABANK:
             case CMD_DPAGE:
             case CMD_EOR: if ((waitfor->skip & 1) != 0)
-                { /* .databank, .dpage, .eor */
+                { /* .seed .databank, .dpage, .eor */
                     uval_t uval;
                     struct values_s *vs;
                     listing_line(listing, epoint.pos);
@@ -4258,7 +4261,7 @@ MUST_CHECK Obj *compile(void)
                 } else new_waitfor(W_NEXT, &epoint);
                 break;
             case CMD_REPT: if ((waitfor->skip & 1) != 0)
-                { /* .for */
+                { /* .rept */
                     rept_command(NULL, NULL, &epoint);
                     goto breakerr;
                 } else new_waitfor(W_NEXT, &epoint);
