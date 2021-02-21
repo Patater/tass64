@@ -589,8 +589,11 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                 next_arg();
                 star_args(&data);
                 while (pf < data.pf) {
-                    put_char(*pf++);
+                    c = *pf;
+                    if ((c & 0x80) != 0) pf += utf8in(pf, &c); else pf++;
+                    put_char(c);
                 }
+                data.pf--;
                 break;
             }
             break;
