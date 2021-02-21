@@ -496,7 +496,9 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         data.left = false; data.dot = false;
         data.pad = ' ';
         while (data.pf < data.pfend) {
-            c = *(++data.pf);
+            data.pf++;
+            if (data.pf >= data.pfend) goto error;
+            c = *data.pf;
             switch (c) {
             case 'e':
             case 'E':  /* Exponent double */
@@ -528,27 +530,36 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
                 put_char('%');
                 break;
             case ' ':
+                if (data.dot) goto error;
                 data.space = true;
                 continue;
             case '#':
+                if (data.dot) goto error;
                 data.square = true;
                 continue;
             case '*':
-                if (data.width == NOT_FOUND) {
+                if (data.dot) {
+                    if (data.precision == NOT_FOUND) {
+                        data.precision = 0;
+                        data.star_p = true;
+                        continue;
+                    }
+                } else if (data.width == NOT_FOUND) {
                     data.width = 0;
                     data.star_w = true;
-                } else if (data.dot && data.precision == NOT_FOUND) {
-                    data.precision = 0;
-                    data.star_p = true;
+                    continue;
                 }
-                continue;
+                goto error;
             case '+':
+                if (data.dot) goto error;
                 data.plus = true;
                 continue;
             case '-':
+                if (data.dot) goto error;
                 data.left = true;
                 continue;
             case '.':
+                if (data.dot) goto error;
                 data.dot = true;
                 if (data.width == NOT_FOUND) data.width = 0;
                 continue;
@@ -562,9 +573,11 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
             case '2': case '3': case '4': case '5':
             case '6': case '7': case '8': case '9':
                 c -= '0';
-                if (data.dot && !data.star_p) {
-                    data.precision = ((data.precision == NOT_FOUND) ? 0 : data.precision * 10) + (int)c;
-                    if (data.precision < 100000) continue;
+                if (data.dot) {
+                    if (!data.star_p) {
+                        data.precision = ((data.precision == NOT_FOUND) ? 0 : data.precision * 10) + (int)c;
+                        if (data.precision < 100000) continue;
+                    }
                 } else if (!data.star_w) {
                     data.width = ((data.width == NOT_FOUND) ? 0 : data.width * 10) + (int)c;
                     if (data.width < 100000) continue;
