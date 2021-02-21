@@ -885,7 +885,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     len1 = intlen(vv1);
     len2 = intlen(vv2);
 
-    if (len1 <= 1 || len2 <= 1) {
+    if (len1 <= 1 && len2 <= 1) {
         digit_t c;
         neg1 = (vv1->len < 0); neg2 = (vv2->len < 0);
         c = neg1 ? -vv1->val[0] : vv1->val[0];
@@ -903,6 +903,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
 
     sz = neg2 ? len1 : len2;
     if (neg1 && neg2) sz++;
+    if (sz == 0) return (Obj *)ref_int(int_value[0]);
     vv = new_int();
     vv->data = v = inew2(vv, sz);
     if (v == NULL) goto failed2;
