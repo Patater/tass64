@@ -1483,7 +1483,7 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
     while (osz != 0 && d[osz - 1] == 0) osz--;
     if (v->val != d) {
         if (osz <= lenof(v->val)) {
-            memcpy(v->val, d, osz * sizeof *d);
+            if (osz != 0) memcpy(v->val, d, osz * sizeof *d); else v->val[0] = 0;
             free(d);
             v->data = v->val;
         } else if (osz < sz) {
