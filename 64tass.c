@@ -2027,7 +2027,7 @@ MUST_CHECK Obj *compile(void)
                         label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                         if (labelexists) {
                             if (label->constant) {
-                                err_msg_not_variable(label, &labelname, &epoint); goto breakerr;
+                                err_msg_not_variable(label, &labelname, &epoint);
                                 val_destroy(val2);
                                 goto breakerr;
                             }
