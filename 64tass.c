@@ -2015,7 +2015,10 @@ MUST_CHECK Obj *compile(void)
                         struct linepos_s epoints[3];
                         bool oldreferenceit = referenceit;
                         referenceit &= 1; /* not good... */
-                        if (!get_exp(0, 0, 0, NULL)) goto breakerr;
+                        if (!get_exp(0, 0, 0, NULL)) {
+                            if (label == NULL && val != NULL) val_destroy(val);
+                            goto breakerr;
+                        }
                         val2 = get_vals_addrlist(epoints);
                         referenceit = oldreferenceit;
                     }
