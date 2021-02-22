@@ -2804,9 +2804,11 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (!labelexists) newlabel = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                     oaddr = current_address->address;
+                    ref_label(newlabel);
                     if (labelexists) {
                         if (newlabel->defpass == pass) {
                             err_msg_double_defined(newlabel, &labelname, &epoint);
+                            val_destroy(&newlabel->v);
                             newlabel = NULL;
                             if (wht == '.') {
                                 epoint = cmdpoint;
@@ -2899,6 +2901,7 @@ MUST_CHECK Obj *compile(void)
                             listing_line(listing, 0);
                             waitfor->skip = 0; push_dummy_context();
                             waitfor->u.cmd_proc.label = NULL;
+                            val_destroy(&newlabel->v);
                         } else if (!newlabel->ref && ((Code *)newlabel->value)->pass != 0) {
                             listing_line(listing, 0);
                             waitfor->skip = 0; 
@@ -2906,22 +2909,23 @@ MUST_CHECK Obj *compile(void)
                             ((Code *)newlabel->value)->pass = 1;
                             push_dummy_context();
                             waitfor->u.cmd_proc.label = NULL;
+                            val_destroy(&newlabel->v);
                         } else {         /* TODO: first time it should not compile */
                             listing_line(listing, epoint.pos);
                             push_context(((Code *)newlabel->value)->names);
                             newlabel->ref = false;
-                            waitfor->u.cmd_proc.addr = current_address->address;waitfor->u.cmd_proc.membp = newmembp;waitfor->u.cmd_proc.label = ref_label(newlabel);
+                            waitfor->u.cmd_proc.addr = current_address->address;waitfor->u.cmd_proc.membp = newmembp;waitfor->u.cmd_proc.label = newlabel;
                         }
                         newlabel = NULL;
                         goto finish;
                     case CMD_SECTION:
-                        waitfor->u.cmd_section.addr = current_address->address;waitfor->u.cmd_section.membp = newmembp;waitfor->u.cmd_section.label = ref_label(newlabel);
+                        waitfor->u.cmd_section.addr = current_address->address;waitfor->u.cmd_section.membp = newmembp;waitfor->u.cmd_section.label = newlabel;
                         listing_line(listing, epoint.pos);
                         newlabel->ref = false;
                         newlabel = NULL;
                         goto finish;
                     case CMD_VIRTUAL:
-                        waitfor->u.cmd_virtual.membp = newmembp;waitfor->u.cmd_virtual.label = ref_label(newlabel);
+                        waitfor->u.cmd_virtual.membp = newmembp;waitfor->u.cmd_virtual.label = newlabel;
                         listing_line(listing, epoint.pos);
                         newlabel->ref = false;
                         newlabel = NULL;
@@ -3588,10 +3592,12 @@ MUST_CHECK Obj *compile(void)
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_HERE2, &epoint);
-                    waitfor->u.cmd_logical.laddr = current_address->unionmode ? current_address->l_union : current_address->l_address;waitfor->u.cmd_logical.addr = current_address->address;waitfor->u.cmd_logical.val = val_reference(current_address->l_address_val);
-                    if (newlabel == NULL) waitfor->u.cmd_logical.label = NULL;
-                    else {
-                        waitfor->u.cmd_logical.membp = newmembp;waitfor->u.cmd_logical.label = ref_label(newlabel);
+                    waitfor->u.cmd_logical.laddr = current_address->unionmode ? current_address->l_union : current_address->l_address;
+                    waitfor->u.cmd_logical.addr = current_address->address;
+                    waitfor->u.cmd_logical.val = val_reference(current_address->l_address_val);
+                    waitfor->u.cmd_logical.label = newlabel;
+                    if (newlabel != NULL) {
+                        waitfor->u.cmd_logical.membp = newmembp;
                         newlabel = NULL;
                     }
                     current_section->logicalrecursion++;
@@ -3649,7 +3655,7 @@ MUST_CHECK Obj *compile(void)
                     new_waitfor(W_BEND2, &epoint);
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         push_context(((Code *)newlabel->value)->names);
-                        waitfor->u.cmd_block.addr = current_address->address;waitfor->u.cmd_block.membp = newmembp;waitfor->u.cmd_block.label = ref_label(newlabel);
+                        waitfor->u.cmd_block.addr = current_address->address;waitfor->u.cmd_block.membp = newmembp;waitfor->u.cmd_block.label = newlabel;
                         newlabel = NULL;
                     } else {
                         waitfor->u.cmd_block.label = NULL;
@@ -3715,9 +3721,9 @@ MUST_CHECK Obj *compile(void)
                     struct values_s *vs;
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_ENDWITH, &epoint);
-                    if (newlabel == NULL) waitfor->u.cmd_with.label = NULL;
-                    else {
-                        waitfor->u.cmd_with.addr = current_address->address;waitfor->u.cmd_with.membp = newmembp;waitfor->u.cmd_with.label = ref_label(newlabel);
+                    waitfor->u.cmd_with.label = newlabel;
+                    if (newlabel != NULL) {
+                        waitfor->u.cmd_with.addr = current_address->address;waitfor->u.cmd_with.membp = newmembp;
                         newlabel = NULL;
                     }
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
@@ -3734,9 +3740,9 @@ MUST_CHECK Obj *compile(void)
                 { /* .weak */
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_WEAK2, &epoint);
-                    if (newlabel == NULL) waitfor->u.cmd_weak.label = NULL;
-                    else {
-                        waitfor->u.cmd_weak.addr = current_address->address;waitfor->u.cmd_weak.membp = newmembp;waitfor->u.cmd_weak.label = ref_label(newlabel);
+                    waitfor->u.cmd_weak.label = newlabel;
+                    if (newlabel != NULL) {
+                        waitfor->u.cmd_weak.addr = current_address->address;waitfor->u.cmd_weak.membp = newmembp;
                         newlabel = NULL;
                     }
                     strength++;
@@ -4310,9 +4316,9 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, epoint.pos);
                     new_waitfor(W_ENDP2, &epoint);
                     waitfor->u.cmd_page.laddr = current_address->l_address;
-                    if (newlabel == NULL) waitfor->u.cmd_page.label = NULL;
-                    else {
-                        waitfor->u.cmd_page.addr = current_address->address;waitfor->u.cmd_page.membp = newmembp;waitfor->u.cmd_page.label = ref_label(newlabel);
+                    waitfor->u.cmd_page.label = newlabel;
+                    if (newlabel != NULL) {
+                        waitfor->u.cmd_page.addr = current_address->address;waitfor->u.cmd_page.membp = newmembp;
                         newlabel = NULL;
                     }
                 } else new_waitfor(W_ENDP, &epoint);
@@ -4730,7 +4736,10 @@ MUST_CHECK Obj *compile(void)
     finish:
         ignore();if (here() != 0 && here() != ';' && (waitfor->skip & 1) != 0) err_msg(ERROR_EXTRA_CHAR_OL,NULL);
     breakerr:
-        if (newlabel != NULL && !newlabel->update_after) set_size(newlabel, current_address->address - oaddr, current_address->mem, oaddr, newmembp);
+        if (newlabel != NULL) { 
+            if (!newlabel->update_after) set_size(newlabel, current_address->address - oaddr, current_address->mem, oaddr, newmembp);
+            val_destroy(&newlabel->v);
+        }
     }
 
     while (oldwaitforp < waitfor_p) {
