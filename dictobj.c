@@ -723,7 +723,14 @@ static MUST_CHECK Obj *concat(oper_t op) {
     for (j = 0; j < v2->len; j++) {
         dict_update(dict, &v2->data[j]);
     }
-    dict->def = v2->def != NULL ? val_reference(v2->def) : v1->def != NULL ? val_reference(v1->def) : NULL;
+    if (op->inplace == &v1->v) {
+        if (v2->def != NULL) {
+            if (dict->def != NULL) val_destroy(dict->def);
+            dict->def = val_reference(v2->def);
+        }
+    } else {
+        dict->def = v2->def != NULL ? val_reference(v2->def) : v1->def != NULL ? val_reference(v1->def) : NULL;
+    }
     if (dict == v1) return &dict->v;
     return normalize(dict);
 failed:
