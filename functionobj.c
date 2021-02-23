@@ -114,6 +114,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
     };
     struct elements_s elements3[3], *elements;
     for (j = 0; j < args; j++) {
+        List *vv;
         const Type *objt2, *objt = v[j].val->obj;
         if (objt->iterable) {
             struct iter_s iter;
@@ -166,7 +167,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
             }
             if (ln != 0) {
                 size_t i;
-                List *vv = (List *)val_alloc(objt == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+                vv = (List *)val_alloc(objt == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
                 Obj **vals2 = vv->data = list_create_elements(vv, ln);
                 for (i = 0; i < ln; i++) {
                     for (k = j; k < args; k++) {
@@ -175,16 +176,15 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                     vals2[i] = gen_broadcast(vals, epoint, f);
                 }
                 vv->len = i;
-                for (k = j; k < args; k++) {
-                    if (elements[k].iters.data != NULL) iter_destroy(&elements[k].iters);
-                    v[k].val = elements[k].oval;
-                }
-                if (elements != elements3) free(elements);
-                return &vv->v;
+            } else {
+                vv = (List *)val_reference(objt == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
+            }
+            for (k = j; k < args; k++) {
+                if (elements[k].iters.data != NULL) iter_destroy(&elements[k].iters);
+                v[k].val = elements[k].oval;
             }
             if (elements != elements3) free(elements);
-            iter_destroy(&iter);
-            return val_reference(objt == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
+            return &vv->v;
         }
     }
     return f(vals, epoint);
