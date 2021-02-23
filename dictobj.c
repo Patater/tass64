@@ -602,8 +602,11 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             vv = findit(v1, o2, epoint2);
             if (vv->obj != ERROR_OBJ && more) {
+                Obj *result;
                 op->v1 = vv;
-                vv = vv->obj->slice(op, indx + 1);
+                result = vv->obj->slice(op, indx + 1);
+                val_destroy(vv);
+                vv = result;
             }
             vals[i] = vv;
         }
@@ -656,8 +659,11 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
     vv = findit(v1, o2, epoint2);
     if (vv->obj != ERROR_OBJ && more) {
+        Obj *result;
         op->v1 = vv;
-        vv = vv->obj->slice(op, indx + 1);
+        result = vv->obj->slice(op, indx + 1);
+        val_destroy(vv);
+        return result;
     }
     return vv;
 }
