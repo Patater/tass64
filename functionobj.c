@@ -131,22 +131,22 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
             }
             iter = &elements[j].iters;
             elements[j].oval = iter->data = v[j].val; objt->getiter(iter);
-            if (iter->len != ln) {
+            if (iter->len == 1) {
+                v[j].val = iter->next(iter);
+            } else if (iter->len != ln) {
                 if (ln != 1) {
                     Error *err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
                     err->u.broadcast.v1 = ln;
                     err->u.broadcast.v2 = iter->len;
-                    for (; k < j; k++) {
+                    for (; k < j + 1; k++) {
                         if (elements[k].oval == NULL) continue;
                         v[k].val = elements[k].oval;
                         iter_destroy(&elements[k].iters);
                     }
+                    if (elements != elements3) free(elements);
                     return &err->v;
                 }
                 ln = iter->len;
-            }
-            if (iter->len == 1) {
-                v[j].val = iter->next(iter);
             }
         } else if (elements != NULL) {
             elements[j].oval = NULL;
