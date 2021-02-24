@@ -263,7 +263,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
         if (chars > maxsize) return NULL;
         list = (Tuple *)val_alloc(TUPLE_OBJ);
         vals = lnew(list, llen);
-        if (vals == NULL) return (Obj *)new_error_mem(epoint);
+        if (vals == NULL) return (epoint != NULL) ? (Obj *)new_error_mem(epoint) : NULL;
         for (i = 0;i < llen; i++) {
             Obj *o2 = v1->data[i];
             if (o2 == &default_value->v && o1->obj == COLONLIST_OBJ) {
