@@ -171,7 +171,7 @@ static MUST_CHECK Obj *function(oper_t op) {
 }
 
 static MUST_CHECK Obj *float_from_double_inplace(double d, oper_t op) {
-    if (d == HUGE_VAL || d == -HUGE_VAL) {
+    if (d == HUGE_VAL || d == -HUGE_VAL || d != d) {
         return (Obj *)new_error(ERROR_NUMERIC_OVERF, op->epoint3);
     }
     if (op->inplace == op->v1) {
@@ -283,7 +283,7 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
 }
 
 MUST_CHECK Obj *float_from_double(double d, linepos_t epoint) {
-    if (d == HUGE_VAL || d == -HUGE_VAL) {
+    if (d == HUGE_VAL || d == -HUGE_VAL || d != d) {
         return (Obj *)new_error(ERROR_NUMERIC_OVERF, epoint);
     }
     return (Obj *)new_float(d);

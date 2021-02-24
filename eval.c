@@ -160,7 +160,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
     if (expo != 0) {
         real = (base == 'p') ? ldexp(real, neg ? -(ival_t)expo : (ival_t)expo) : ldexp10(real, expo, neg);
     }
-    if (real == HUGE_VAL || real == -HUGE_VAL) {
+    if (real == HUGE_VAL || real == -HUGE_VAL || real != real) {
         val_destroy(v);
         return (Obj *)new_error(ERROR_NUMERIC_OVERF, epoint);
     }
