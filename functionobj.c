@@ -619,7 +619,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
     case F_TANH: real = tanh(real);break;
     default: real = HUGE_VAL; break; /* can't happen */
     }
-    if (!inplace || real == HUGE_VAL || real == -HUGE_VAL) {
+    if (!inplace || real == HUGE_VAL || real == -HUGE_VAL || real != real) {
         if (typ != FLOAT_OBJ) val_destroy(o2);
         return float_from_double(real, op->epoint2);
     }
