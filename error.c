@@ -1410,7 +1410,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
 }
 
 static inline bool caret_needed(const struct errorentry_s *err) {
-    return (arguments.caret == CARET_ALWAYS || (arguments.caret != CARET_NEVER && (err->line_len != 0 || err->file_list->file->name[0] == 0)));
+    return (arguments.error.caret == CARET_ALWAYS || (arguments.error.caret != CARET_NEVER && (err->line_len != 0 || err->file_list->file->name[0] == 0)));
 }
 
 static bool different_line(const struct errorentry_s *err, const struct errorentry_s *err2) {
@@ -1428,7 +1428,7 @@ static void walkfilelist(struct avltree_node *aa) {
     avltree_destroy(&l->members, walkfilelist);
 }
 
-void error_print(void) {
+void error_print(const struct error_output_s *output) {
     const struct errorentry_s *err, *err2, *err3;
     size_t pos;
     bool noneerr = false, anyerr = false, usenote;
@@ -1439,15 +1439,17 @@ void error_print(void) {
         avltree_destroy(&file_list.members, walkfilelist);
     }
 
-    if (arguments.error != NULL) {
-        ferr = dash_name(arguments.error) ? stdout : file_open(arguments.error, "wt");
+    if (output->name != NULL) {
+        ferr = dash_name(output->name) ? stdout : file_open(output->name, output->append ? "at" : "wt");
         if (ferr == NULL) {
-            err_msg_file(ERROR_CANT_WRTE_ERR, arguments.error, &nopoint);
+            err_msg_file(ERROR_CANT_WRTE_ERR, output->name, &nopoint);
             ferr = stderr;
         }
-    } else ferr = stderr;
+    } else ferr = output->no_output ? NULL : stderr;
 
-    if (ferr != stderr) console_use(ferr); else if (arguments.quiet) fflush(stdout);
+    if (ferr != NULL) {
+        if (ferr != stderr) console_use(ferr); else if (arguments.quiet) fflush(stdout);
+    }
 
     warnings = errors = 0;
     close_error();
@@ -1470,7 +1472,7 @@ void error_print(void) {
         switch (err->severity) {
         case SV_NOTE:
             if (!usenote) continue;
-            if (err3 != NULL) {
+            if (err3 != NULL && ferr != NULL) {
                 if (err->severity != err3->severity || err->file_list != err3->file_list ||
                         err->line_len != err3->line_len || err->error_len != err3->error_len ||
                         err->epoint.line != err3->epoint.line || err->epoint.pos != err3->epoint.pos ||
@@ -1482,7 +1484,7 @@ void error_print(void) {
             err2 = err;
             continue;
         case SV_WARNING:
-            if (!arguments.warning) {
+            if (!output->warning) {
                 usenote = false;
                 continue;
             }
@@ -1502,11 +1504,12 @@ void error_print(void) {
             errors++;
             break;
         }
-        if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
+        if (err3 != NULL && ferr != NULL) print_error(ferr, err3, different_line(err2, err3));
         err3 = err2;
         err2 = err;
         usenote = true;
     }
+    if (ferr == NULL) return;
     if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
     if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
     if (ferr != stderr) console_use(stderr);
@@ -1582,7 +1585,7 @@ NO_RETURN void err_msg_out_of_memory2(void)
 
 NO_RETURN void err_msg_out_of_memory(void)
 {
-    error_print();
+    error_print(&arguments.error);
     err_msg_out_of_memory2();
 }
 

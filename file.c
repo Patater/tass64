@@ -971,9 +971,9 @@ void makefile(int argc, char *argv[], bool make_phony) {
         if (dash_name(output->name)) continue;
         len = wrap_print(output->name, f, len);
     }
-    if (arguments.list != NULL) {
-        if (!dash_name(arguments.list)) {
-            len = wrap_print(arguments.list, f, len);
+    if (arguments.list.name != NULL) {
+        if (!dash_name(arguments.list.name)) {
+            len = wrap_print(arguments.list.name, f, len);
         }
     }
     for (j = 0; j < arguments.symbol_output_len; j++) {

@@ -151,17 +151,17 @@ MUST_CHECK Listing *listing_open(const char *filename, int argc, char *argv[]) {
     memcpy(ls->hex, "0123456789abcdef", 16);
     ls->filename = filename;
     ls->flist = flist;
-    ls->linenum = arguments.linenum;
+    ls->linenum = arguments.list.linenum;
     ls->pccolumn = listing_pccolumn;
-    ls->columns.addr = arguments.linenum ? LINE_WIDTH : 0;
+    ls->columns.addr = arguments.list.linenum ? LINE_WIDTH : 0;
     ls->columns.laddr = ls->columns.addr + ADDR_WIDTH;
     ls->columns.hex = ls->columns.laddr + (ls->pccolumn ? LADDR_WIDTH : 0);
     ls->columns.monitor = ls->columns.hex + HEX_WIDTH;
-    ls->columns.source = ls->columns.monitor + (arguments.monitor ? MONITOR_WIDTH : 0);
+    ls->columns.source = ls->columns.monitor + (arguments.list.monitor ? MONITOR_WIDTH : 0);
     ls->tab_size = arguments.tab_size;
-    ls->verbose = arguments.verbose;
-    ls->monitor = arguments.monitor;
-    ls->source = arguments.source;
+    ls->verbose = arguments.list.verbose;
+    ls->monitor = arguments.list.monitor;
+    ls->source = arguments.list.source;
     ls->lastfile = 0;
     ls->i = 0;
 
@@ -393,7 +393,7 @@ FAST_CALL void listing_line(Listing *ls, linecpos_t pos) {
     if (nolisting != 0  || temporary_label_branch != 0 || llist == NULL) return;
     if (ls == NULL) {
         address_t addr;
-        if (!fixeddig || constcreated || listing_pccolumn || !arguments.source) return;
+        if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
         addr = current_address->l_address;
         i = 0;
         while (i < pos && (llist[i] == 0x20 || llist[i] == 0x09)) i++;
@@ -430,7 +430,7 @@ FAST_CALL void listing_line_cut(Listing *ls, linecpos_t pos) {
     size_t i;
     if (nolisting != 0 || temporary_label_branch != 0 || llist == NULL) return;
     if (ls == NULL) {
-        if (!fixeddig || constcreated || listing_pccolumn || !arguments.source) return;
+        if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
         i = 0;
         while (i < pos && (llist[i] == 0x20 || llist[i] == 0x09)) i++;
         if (i < pos && current_address->address != current_address->l_address) listing_pccolumn = true;
