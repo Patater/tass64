@@ -596,7 +596,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 {
                     bool inplace;
                     ival_t iv;
-                    err = o2->obj->ival(o2, &iv, 31, op->epoint2);
+                    err = o2->obj->ival(o2, &iv, 30, op->epoint2);
                     if (err != NULL) return &err->v;
                     if (iv == 0) return val_reference(&v1->v);
                     inplace = (op->inplace == &v1->v);
