@@ -2866,6 +2866,9 @@ Output options
 
 --no-output
     Same as output but no file will be written.
+
+    Useful for test compiles.
+
 --output-section <sectionname>
     By default all sections go into the output file. Using this option limits
     the output to specific section and it's children. This is useful to split a
@@ -3089,34 +3092,6 @@ Operation options
             lda #ii ;result: $a9, $02
     FAST    :?= false ;define if undefined
 
--w, --no-warn
-    Suppress warnings.
-
-    Disables warnings during compile. For fine grained diagnostic message
-    suppression see the diagnostic options section.
-
-    64tass --no-warn a.asm
-
---no-caret-diag
-    Suppress displaying of faulty source line and fault position after fault
-    messages.
-
-    This is for cases where the fault log is automatically processed and no one
-    ever looks at it and therefore there's no point to display the source
-    lines.
-
-    64tass --no-caret-diag a.asm
-
---macro-caret-diag
-    Restrict source line and fault position display to macro expansions only.
-
-    This is for cases where the fault log is processed by an editor which also
-    displays the compilation output somewhere. Only lines which are the result
-    of macro processing will be output to aid debugging. Those which would just
-    duplicate what's in the source editor window will be not.
-
-    64tass --macro-caret-diag a.asm
-
 -q, --quiet
     Suppress messages. Disables header and summary messages.
 
@@ -3162,6 +3137,12 @@ Operation options
     .dep:
     -include .dep
 
+Diagnostic options
+
+Diagnostic message switched start with a `-W' and can have an optional `no-'
+prefix to disable them. The options below with this prefix are enabled by
+default, the others are disabled.
+
 -E <file>, --error <file>
     Specify error output file
 
@@ -3169,11 +3150,37 @@ Operation options
     possible to redirect them to a file or to the standard output by using `-'
     as the file name.
 
-Diagnostic options
+--error-append <filename>
+    Same as the error option but appends instead of overwrites.
+--no-error
+    Do not output any error messages, just count them.
+-w, --no-warn
+    Suppress warnings.
 
-Diagnostic message switched start with a `-W' and can have an optional `no-'
-prefix to disable them. The options below with this prefix are enabled by
-default, the others are disabled.
+    Disables warnings during compile. For fine grained diagnostic message
+    suppression see the diagnostic options section.
+
+    64tass --no-warn a.asm
+
+--no-caret-diag
+    Suppress displaying of faulty source line and fault position after fault
+    messages.
+
+    This is for cases where the fault log is automatically processed and no one
+    ever looks at it and therefore there's no point to display the source
+    lines.
+
+    64tass --no-caret-diag a.asm
+
+--macro-caret-diag
+    Restrict source line and fault position display to macro expansions only.
+
+    This is for cases where the fault log is processed by an editor which also
+    displays the compilation output somewhere. Only lines which are the result
+    of macro processing will be output to aid debugging. Those which would just
+    duplicate what's in the source editor window will be not.
+
+    64tass --macro-caret-diag a.asm
 
 -Wall
     Enable most diagnostic warnings, except those individually disabled. Or

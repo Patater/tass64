@@ -4841,17 +4841,17 @@ int main2(int *argc2, char **argv2[]) {
         one_pass(argc, argv, opts, fin);
     } while (!fixeddig || constcreated);
 
-    if (arguments.list == NULL) {
+    if (arguments.list.name == NULL) {
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
     }
     failed = error_serious();
     if (!failed) {
         /* assemble again to create listing */
-        if (arguments.list != NULL) {
+        if (arguments.list.name != NULL) {
             nolisting = 0;
 
             max_pass = pass; pass++;
-            listing = listing_open(arguments.list, argc, argv);
+            listing = listing_open(arguments.list.name, argc, argv);
             one_pass(argc, argv, opts, fin);
             listing_close(listing);
             listing = NULL;
@@ -4892,7 +4892,7 @@ int main2(int *argc2, char **argv2[]) {
         failed = error_serious();
     }
 
-    error_print();
+    error_print(&arguments.error);
     if (arguments.quiet) {
         error_status();
         printf("Passes: %12u\n",pass);

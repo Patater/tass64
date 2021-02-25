@@ -43,6 +43,7 @@ struct Error;
 struct Namespace;
 struct oper_s;
 struct str_t;
+struct error_output_s;
 
 extern void err_msg(Error_types, const void *);
 extern void err_msg2(Error_types, const void *, linepos_t);
@@ -100,7 +101,7 @@ extern void err_msg_char_note(const char *, linepos_t);
 extern void err_msg_immediate_note(linepos_t);
 extern void err_msg_big_address(linepos_t);
 extern void error_reset(void);
-extern void error_print(void);
+extern void error_print(const struct error_output_s *);
 extern const struct file_list_s *parent_file_list(const struct file_list_s *);
 extern void enterfile(struct file_s *, linepos_t);
 extern void exitfile(void);
