@@ -684,7 +684,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             Obj *tmp, *result;
             if (op->op == &o_ADD) {
                 ival_t iv;
-                err = o1->obj->ival(o1, &iv, 31, op->epoint);
+                err = o1->obj->ival(o1, &iv, 30, op->epoint);
                 if (err != NULL) return &err->v;
                 v = new_code();
                 memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v2) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
