@@ -1324,7 +1324,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
                 }
                 if (bl != 0) {
                     v[sz] = sz < wl2 ? (v1[sz] >> bo) : 0;
-                    if (bl > (SHIFT - bo)) v[sz] |= v1[sz + 1] << (SHIFT - bo);
+                    if (bl > (SHIFT - bo) && (sz + 1 < wl2)) v[sz] |= v1[sz + 1] << (SHIFT - bo);
                     v[sz] ^= inv;
                 }
             } else {
