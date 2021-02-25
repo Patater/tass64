@@ -195,9 +195,16 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        real = floor(real);
-        if (diagnostics.float_round && real != v1->real) err_msg2(ERROR___FLOAT_ROUND, NULL, op->epoint3);
-        return bytes_calc1(op->op->op, (unsigned int)((ival_t)real));
+        {
+            uint32_t r;
+            bool neg = (real < 0.0);
+            real = floor(real);
+            if (diagnostics.float_round && real != v1->real) err_msg2(ERROR___FLOAT_ROUND, NULL, op->epoint3);
+            if (neg) real = -real;
+            if (real >= 4294967296.0) real = fmod(real, 4294967296.0);
+            r = (uint32_t)real;
+            return bytes_calc1(op->op->op, neg ? ~r + 1U : r);
+        }
     case O_INV: 
         return float_from_double_inplace(-0.5 / ((double)((uint32_t)1 << (8 * sizeof(uint32_t) - 1))) - real, op);
     case O_NEG: 
@@ -287,7 +294,7 @@ static MUST_CHECK Obj *bitoper(oper_t op) {
     default: 
         if (neg1) {
             if (neg2) {
-                v = ((~v1 + (uint64_t)1) ^ (~v2 + (uint64_t)1));
+                v = (~v1 + (uint64_t)1) ^ (~v2 + (uint64_t)1);
             } else {
                 v = ~((~v1 + (uint64_t)1) ^ v2);
             }
