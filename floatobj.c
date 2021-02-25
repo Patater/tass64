@@ -229,6 +229,80 @@ static bool almost_equal(oper_t op, double a, double b) {
     return false;
 }
 
+static MUST_CHECK Obj *bitoper(oper_t op) {
+    uint64_t v, v1, v2;
+    bool neg, neg1, neg2;
+    int e, e1, e2;
+    double r, r1, r2;
+
+    r1 = frexp(((Float *)op->v1)->real, &e1);
+    neg1 = (r1 < 0.0); 
+    if (neg1) r1 = -r1;
+
+    r2 = frexp(((Float *)op->v2)->real, &e2);
+    neg2 = (r2 < 0.0);
+    if (neg2) r2 = -r2;
+
+    if (e1 > e2) {
+        e = e1 - 63;
+        e2 = 63 - (e1 - e2);
+        e1 = 63;
+    } else {
+        e = e2 - 63;
+        e1 = 63 - (e2 - e1);
+        e2 = 63;
+    }
+    v1 = (uint64_t)ldexp(r1, e1);
+    v2 = (uint64_t)ldexp(r2, e2);
+
+    switch (op->op->op) {
+    case O_AND: 
+        if (neg1) {
+            if (neg2) {
+                v = ~((~v1 + (uint64_t)1) & (~v2 + (uint64_t)1));
+            } else {
+                v = (~v1 + (uint64_t)1) & v2;
+            }
+        } else if (neg2) {
+            v = v1 & (~v2 + (uint64_t)1);
+        } else { 
+            v = v1 & v2;
+        }
+        neg = neg1 && neg2;
+        break;
+    case O_OR: 
+        if (neg1) {
+            if (neg2) {
+                v = ~((~v1 + (uint64_t)1) | (~v2 + (uint64_t)1));
+            } else {
+                v = ~((~v1 + (uint64_t)1) | v2);
+            }
+        } else if (neg2) {
+            v = ~(v1 | (~v2 + (uint64_t)1));
+        } else { 
+            v = v1 | v2;
+        }
+        neg = neg1 || neg2;
+        break;
+    default: 
+        if (neg1) {
+            if (neg2) {
+                v = ((~v1 + (uint64_t)1) ^ (~v2 + (uint64_t)1));
+            } else {
+                v = ~((~v1 + (uint64_t)1) ^ v2);
+            }
+        } else if (neg2) {
+            v = ~(v1 ^ (~v2 + (uint64_t)1));
+        } else { 
+            v = v1 ^ v2;
+        }
+        neg = neg1 != neg2;
+        break;
+    }
+    r = ldexp(v, e);
+    return float_from_double_inplace(neg ? -r : r, op);
+}
+
 static MUST_CHECK Obj *calc2_double(oper_t op) {
     double r, v1 = ((Float *)op->v1)->real, v2 = ((Float *)op->v2)->real;
     switch (op->op->op) {
@@ -258,9 +332,9 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
         r = fmod(v1, v2);
         if (r != 0.0 && ((v2 < 0.0) != (r < 0))) r += v2;
         return float_from_double_inplace(r, op);
-    case O_AND: return float_from_double_inplace((double)((uint64_t)(v1 * 4294967296.0) & (uint64_t)(v2 * 4294967296.0)) / 4294967296.0, op);
-    case O_OR: return float_from_double_inplace((double)((uint64_t)(v1 * 4294967296.0) | (uint64_t)(v2 * 4294967296.0)) / 4294967296.0, op);
-    case O_XOR: return float_from_double_inplace((double)((uint64_t)(v1 * 4294967296.0) ^ (uint64_t)(v2 * 4294967296.0)) / 4294967296.0, op);
+    case O_AND:
+    case O_OR: 
+    case O_XOR: return bitoper(op);
     case O_LSHIFT: return float_from_double_inplace(v1 * pow(2.0, v2), op);
     case O_RSHIFT: return float_from_double_inplace(v1 * pow(2.0, -v2), op);
     case O_EXP:
