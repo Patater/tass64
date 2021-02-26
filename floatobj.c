@@ -81,10 +81,10 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     h1 = (unsigned int)floor(integer);
     h2 = (unsigned int)floor(r);
     if (neg) {
-        h1 = ~h1 + 1;
-        h2 = ~h2 + 1;
+        h1 = ~h1 + 1U;
+        h2 = ~h2 + 1U;
     }
-    h = (expo < 0) ? ~((unsigned int)-expo) + 1 : (unsigned int)expo;
+    h = (expo < 0) ? ~((unsigned int)-expo) + 1U : (unsigned int)expo;
     h ^= h1 ^ h2;
     *hs = h & ((~0U) >> 1);
     return NULL;
