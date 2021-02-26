@@ -71,20 +71,21 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Float *v1 = (Float *)o1;
-    double integer, r;
+    double integer, r = v1->real;
     int expo;
-    unsigned int h;
-    r = v1->real;
+    unsigned int h, h1, h2;
+    bool neg = (r < 0.0);
+    if (neg) r = -r; 
 
-    if (modf(r, &integer) == 0.0) {
-        *hs = ((unsigned int)integer) & ((~0U) >> 1);
-        return NULL;
+    r = modf(frexp(r, &expo) * 2147483648.0, &integer) * 2147483648.0;
+    h1 = (unsigned int)floor(integer);
+    h2 = (unsigned int)floor(r);
+    if (neg) {
+        h1 = ~h1 + 1;
+        h2 = ~h2 + 1;
     }
-    r = frexp(r, &expo);
-    r *= 2147483648.0;
-    h = (unsigned int)r;
-    r = (r - (double)h) * 2147483648.0;
-    h ^= (unsigned int)r ^ ((unsigned int)expo << 15);
+    h = (expo < 0) ? ~((unsigned int)-expo) + 1 : (unsigned int)expo;
+    h ^= h1 ^ h2;
     *hs = h & ((~0U) >> 1);
     return NULL;
 }
