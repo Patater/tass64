@@ -300,9 +300,9 @@ static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t 
             if (bits <= SHIFT && (d >> (bits - 1)) != 0) break;
             return NULL;
     case 0: *iv = 0; return NULL;
-    case -1: d = -v1->data[0];
-             *iv = (ival_t)d;
-             if (bits <= SHIFT && (~d >> (bits - 1)) != 0) break;
+    case -1: d = v1->data[0];
+             *iv = -(ival_t)d;
+             if (bits <= SHIFT && ((d - 1) >> (bits - 1)) != 0) break;
              return NULL;
     default: break;
     }
@@ -367,7 +367,7 @@ static void isub(const Int *, const Int *, Int *);
 
 static inline unsigned int ldigit(const Int *v1) {
     ssize_t len = v1->len;
-    if (len < 0) return -v1->data[0];
+    if (len < 0) return ~v1->data[0] + 1U;
     return (len != 0) ? v1->data[0] : 0;
 }
 
