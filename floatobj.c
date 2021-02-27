@@ -350,10 +350,7 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
             if (v2 < 0.0) {
                 return (Obj *)new_error(ERROR_DIVISION_BY_Z, op->epoint3);
             }
-            if (v2 != 0.0) {
-                return (Obj *)new_float(0.0);
-            }
-            return (Obj *)new_float(1.0);
+            return (Obj *)new_float((v2 == 0.0) ? 1.0 : 0.0);
         }
         if (v1 < 0.0 && floor(v2) != v2) {
             return (Obj *)new_error(ERROR_NEGFRAC_POWER, op->epoint3);
