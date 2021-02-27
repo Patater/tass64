@@ -199,6 +199,15 @@ static MUST_CHECK Obj *get_hex(linepos_t epoint) {
     return (here() | 0x20) == 'p' ? get_exponent2(v, epoint) : v;
 }
 
+static MUST_CHECK Obj *get_hex_compat(linepos_t epoint) {
+    size_t len;
+    Obj *v;
+
+    v = bits_from_hexstr(pline + lpoint.pos + 1, &len, epoint);
+    lpoint.pos += len + 1;
+    return v;
+}
+
 static MUST_CHECK Obj *get_bin(linepos_t epoint) {
     size_t len;
     Obj *v, *v2;
@@ -219,6 +228,15 @@ static MUST_CHECK Obj *get_bin(linepos_t epoint) {
     default:
         return v;
     }
+}
+
+static MUST_CHECK Obj *get_bin_compat(linepos_t epoint) {
+    size_t len;
+    Obj *v;
+
+    v = bits_from_binstr(pline + lpoint.pos + 1, &len, epoint);
+    lpoint.pos += len + 1;
+    return v;
 }
 
 static MUST_CHECK Obj *get_float(linepos_t epoint) {
@@ -434,8 +452,8 @@ rest:
 
         switch (ch) {
         case '(': op = &o_PARENT;goto add;
-        case '$': push_oper(get_hex(&epoint), &epoint);goto other;
-        case '%': push_oper(get_bin(&epoint), &epoint);goto other;
+        case '$': push_oper(get_hex_compat(&epoint), &epoint);goto other;
+        case '%': push_oper(get_bin_compat(&epoint), &epoint);goto other;
         case '"': push_oper(get_string(&epoint), &epoint);goto other;
         case '*': lpoint.pos++;push_oper(get_star(), &epoint);goto other;
         case '0':
@@ -507,6 +525,7 @@ rest:
             goto rest;
         case '&': op = &o_AND; goto add;
         case '.': op = &o_OR; goto add;
+        case '(': /* yes, this is accepted by the original */
         case ':': op = &o_XOR; goto add;
         case '*': op = &o_MUL; goto add;
         case '/': op = &o_DIV; goto add;
