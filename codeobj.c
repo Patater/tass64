@@ -115,12 +115,13 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static inline address_t code_address(const Code *v1) {
-    return (v1->addr + v1->offs) & all_mem;
+    return v1->offs < 0 ? v1->addr - (uval_t)-v1->offs : v1->addr + (uval_t)v1->offs;
 }
 
 static MUST_CHECK Obj *get_code_address(const Code *v1, linepos_t epoint) {
-    address_t addr = code_address(v1);
-    if (v1->addr + v1->offs != addr) err_msg_addr_wrap(epoint);
+    address_t addr2 = code_address(v1);
+    address_t addr = addr2 & all_mem;
+    if (addr2 != addr) err_msg_addr_wrap(epoint);
     return get_star_value(addr, v1->typ);
 }
 
@@ -135,7 +136,7 @@ MUST_CHECK Error *code_uaddress(Obj *o1, uval_t *uv, uval_t *uv2, linepos_t epoi
     Code *v1 = (Code *)o1;
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
-    *uv = v1->addr + v1->offs;
+    *uv = code_address(v1);
     *uv2 = v1->addr;
     if (bits >= sizeof(*uv2)*8 || (*uv2 >> bits) == 0) {
         return NULL;
@@ -165,7 +166,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         Error *err = access_check(v1, epoint);
         if (err != NULL) return &err->v;
         v = get_code_address(v1, epoint);
-    } else v = get_star_value(code_address(v1), v1->typ);
+    } else v = get_star_value(code_address(v1) & all_mem, v1->typ);
     result = v->obj->repr(v, epoint, maxsize);
     val_destroy(v);
     return result;
@@ -178,7 +179,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
         Error *err = access_check(v1, epoint);
         if (err != NULL) return &err->v;
         v = get_code_address(v1, epoint);
-    } else v = get_star_value(code_address(v1), v1->typ);
+    } else v = get_star_value(code_address(v1) & all_mem, v1->typ);
     result = v->obj->str(v, epoint, maxsize);
     val_destroy(v);
     return result;
@@ -186,13 +187,14 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
 
 static MUST_CHECK Error *iaddress(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
     Code *v1 = (Code *)o1;
-    address_t addr;
+    address_t addr, addr2;
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
-    addr = code_address(v1);
+    addr2 = code_address(v1);
+    addr = addr2 & all_mem;
     *iv = (ival_t)addr;
     if ((addr >> (bits - 1)) == 0) {
-        if (v1->addr + v1->offs != addr) err_msg_addr_wrap(epoint);
+        if (addr2 != addr) err_msg_addr_wrap(epoint);
         return NULL;
     }
     v = new_error(ERROR_____CANT_IVAL, epoint);
@@ -203,13 +205,14 @@ static MUST_CHECK Error *iaddress(Obj *o1, ival_t *iv, unsigned int bits, linepo
 
 static MUST_CHECK Error *uaddress(Obj *o1, uval_t *uv, unsigned int bits, linepos_t epoint) {
     Code *v1 = (Code *)o1;
-    address_t addr;
+    address_t addr, addr2;
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
-    addr = code_address(v1);
+    addr2 = code_address(v1);
+    addr = addr2 & all_mem;
     *uv = addr;
     if (bits >= sizeof(addr)*8 || (addr >> bits) == 0) {
-        if (v1->addr + v1->offs != addr) err_msg_addr_wrap(epoint);
+        if (addr2 != addr) err_msg_addr_wrap(epoint);
         return NULL;
     }
     v = new_error(ERROR_____CANT_UVAL, epoint);
@@ -222,7 +225,7 @@ static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t 
     Code *v1 = (Code *)o1;
     if (v1->typ->obj->address(v1->typ) != A_NONE) {
         Error *v = new_error(ERROR______CANT_INT, epoint);
-        v->u.obj = get_star_value(code_address(v1), v1->typ);
+        v->u.obj = get_star_value(code_address(v1) & all_mem, v1->typ);
         return v;
     }
     return iaddress(o1, iv, bits, epoint);
@@ -232,7 +235,7 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
     Code *v1 = (Code *)o1;
     if (v1->typ->obj->address(v1->typ) != A_NONE) {
         Error *v = new_error(ERROR______CANT_INT, epoint);
-        v->u.obj = get_star_value(code_address(v1), v1->typ);
+        v->u.obj = get_star_value(code_address(v1) & all_mem, v1->typ);
         return v;
     }
     return uaddress(o1, uv, bits, epoint);
@@ -477,8 +480,9 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 }
 
 static inline address_t ldigit(Code *v1, linepos_t epoint) {
-    address_t addr = code_address(v1);
-    if (v1->addr + v1->offs != addr) err_msg_addr_wrap(epoint);
+    address_t addr2 = code_address(v1);
+    address_t addr = addr2 & all_mem;
+    if (addr2 != addr) err_msg_addr_wrap(epoint);
     return addr;
 }
 
@@ -503,7 +507,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, code_address(v1));
+        return bytes_calc1(op->op->op, code_address(v1) & all_mem);
     case O_STRING:
     case O_INV:
     case O_NEG:
@@ -534,7 +538,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 str_cfcpy(&cf, &v2->name);
                 if (str_cmp(&cf, &of) == 0) {
                     if (diagnostics.case_symbol && str_cmp(&v2->name, &cf) != 0) err_msg_symbol_case(&v2->name, NULL, op->epoint2);
-                    return (Obj *)int_from_uval((v1->memaddr + v1->offs) & all_mem2);
+                    return (Obj *)int_from_uval(code_address(v1) & all_mem2);
                 }
             }
         }
@@ -563,11 +567,9 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             err = access_check(v2, op->epoint2);
             if (err != NULL) return &err->v;
             if (op->op->op == O_SUB) {
-                address_t addr1 = code_address(v1);
-                address_t addr2 = code_address(v2);
-                if (v1->addr + v1->offs != addr1) err_msg_addr_wrap(op->epoint);
-                if (v2->addr + v2->offs != addr2) err_msg_addr_wrap(op->epoint2);
-                return (Obj *)int_from_ival(addr1 - addr2);
+                address_t addr1 = ldigit(v1, op->epoint);
+                address_t addr2 = ldigit(v2, op->epoint2);
+                return (Obj *)int_from_ival((ival_t)addr1 - (ival_t)addr2);
             }
             tmp1 = get_code_address(v1, op->epoint);
             tmp2 = get_code_address(v2, op->epoint2);

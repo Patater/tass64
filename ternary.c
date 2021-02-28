@@ -155,7 +155,7 @@ void *ternary_search(const ternary_node *curr, const uint8_t *s, size_t *len)
     while (last != NULL && (~last->splitchar) != 0) {
         last = last->hikid;
     }
-    *len = prev - start;
+    *len = (size_t)(prev - start);
     return (last != NULL) ? (void *)last->eqkid : NULL;
 }
 

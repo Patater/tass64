@@ -427,9 +427,9 @@ size_t argv_print(const char *line, FILE *f) {
         if (ch == 0) break;
 
         if (quote) {
-            if (strchr("$`\"\\", ch) != NULL) {len++;putc('\\', f);}
+            if (strchr("$`\"\\", (int)ch) != NULL) {len++;putc('\\', f);}
         } else {
-            if (strchr(" !\"$&()*;<>'?[\\]`{|}", ch) != NULL) {
+            if (strchr(" !\"$&()*;<>'?[\\]`{|}", (int)ch) != NULL) {
                 len++;putc('\\', f);
             }
         }
@@ -440,7 +440,7 @@ size_t argv_print(const char *line, FILE *f) {
             if (ln > 0) len += (size_t)ln;
             continue;
         }
-        len++;putc(ch, f);
+        len++;putc((int)ch, f);
     }
     if (quote) {len++;putc('"', f);}
 #endif
@@ -512,7 +512,7 @@ size_t makefile_print(const char *line, FILE *f) {
 
         i++;
         if (isprint(ch) == 0) ch = '?';
-        len++; putc(ch, f);
+        len++; putc((int)ch, f);
     }
     return len;
 }

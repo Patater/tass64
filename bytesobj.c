@@ -246,10 +246,10 @@ static uint8_t *z85_encode(uint8_t *dest, const uint8_t *src, size_t len) {
 
         for (j = 4; j > 0; j--) {
             uint32_t divided = tmp / 85;
-            dest[j] = z85[tmp - divided * 85];
+            dest[j] = (uint8_t)z85[tmp - divided * 85];
             tmp = divided;
         }
-        dest[j] = z85[tmp];
+        dest[j] = (uint8_t)z85[tmp];
         dest += 5;
     }
     return dest;
@@ -365,8 +365,8 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     while ((l--) != 0) h = (1000003 * h) ^ *s2++;
     h ^= (unsigned int)v1->len;
     h &= ((~0U) >> 1);
-    if (v1->data != v1->u.val) v1->u.s.hash = h;
-    *hs = h;
+    if (v1->data != v1->u.val) v1->u.s.hash = (int)h;
+    *hs = (int)h;
     return NULL;
 }
 
@@ -462,7 +462,7 @@ MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, size_t *ln, linepos_t epoint
     sz = (i > 1) ? (j + i - 1) : j;
     v = new_bytes2(sz);
     if (v == NULL) return (Obj *)new_error_mem(epoint);
-    v->len = sz;
+    v->len = (ssize_t)sz;
     s = z85_decode(v->data, s + 1, j);
     if (i > 1) {
         uint8_t tmp2[4], tmp[5] = {'0', '0', '0', '0', '0'};
@@ -592,7 +592,7 @@ MUST_CHECK Obj *bytes_calc1(Oper_types op, unsigned int val) {
     default: return (Obj *)bytes_from_u8(val);
     case O_HWORD: val >>= 8; /* fall through */
     case O_WORD: return (Obj *)bytes_from_u16(val);
-    case O_BSWORD: return (Obj *)bytes_from_u16((uint8_t)(val >> 8) | (uint16_t)(val << 8));
+    case O_BSWORD: return (Obj *)bytes_from_u16(((uint16_t)val >> 8) | (uint16_t)(val << 8));
     }
 }
 
@@ -1049,27 +1049,27 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     switch (op->op->op) {
     case O_BANK:
         if (v1->len > 2) return (Obj *)bytes_from_u8(v1->data[2]);
-        if (v1->len < ~2) return (Obj *)bytes_from_u8(~v1->data[2]);
+        if (v1->len < ~2) return (Obj *)bytes_from_u8(~(unsigned int)v1->data[2]);
         return (Obj *)bytes_from_u8((v1->len < 0) ? ~0U : 0);
     case O_HIGHER:
         if (v1->len > 1) return (Obj *)bytes_from_u8(v1->data[1]);
-        if (v1->len < ~1) return (Obj *)bytes_from_u8(~v1->data[1]);
+        if (v1->len < ~1) return (Obj *)bytes_from_u8(~(unsigned int)v1->data[1]);
         return (Obj *)bytes_from_u8((v1->len < 0) ? ~0U : 0);
     case O_LOWER:
         if (v1->len > 0) return (Obj *)bytes_from_u8(v1->data[0]);
-        if (v1->len < ~0) return (Obj *)bytes_from_u8(~v1->data[0]);
+        if (v1->len < ~0) return (Obj *)bytes_from_u8(~(unsigned int)v1->data[0]);
         return (Obj *)bytes_from_u8((v1->len < 0) ? ~0U : 0);
     case O_HWORD:
         if (v1->len > 2) return (Obj *)bytes_from_u16(v1->data[1] + ((unsigned int)v1->data[2] << 8));
         if (v1->len > 1) return (Obj *)bytes_from_u16(v1->data[1]);
         if (v1->len < ~2) return (Obj *)bytes_from_u16(~(v1->data[1] + ((unsigned int)v1->data[2] << 8)));
-        if (v1->len < ~1) return (Obj *)bytes_from_u16(~v1->data[1]);
+        if (v1->len < ~1) return (Obj *)bytes_from_u16(~(unsigned int)v1->data[1]);
         return (Obj *)bytes_from_u16((v1->len < 0) ? ~0U : 0);
     case O_WORD:
         if (v1->len > 1) return (Obj *)bytes_from_u16(v1->data[0] + ((unsigned int)v1->data[1] << 8));
         if (v1->len > 0) return (Obj *)bytes_from_u16(v1->data[0]);
         if (v1->len < ~1) return (Obj *)bytes_from_u16(~(v1->data[0] + ((unsigned int)v1->data[1] << 8)));
-        if (v1->len < ~0) return (Obj *)bytes_from_u16(~v1->data[0]);
+        if (v1->len < ~0) return (Obj *)bytes_from_u16(~(unsigned int)v1->data[0]);
         return (Obj *)bytes_from_u16((v1->len < 0) ? ~0U : 0);
     case O_BSWORD:
         if (v1->len > 1) return (Obj *)bytes_from_u16(v1->data[1] + ((unsigned int)v1->data[0] << 8));
@@ -1205,7 +1205,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
         v->len = 0;
         while ((rep--) != 0) {
             memcpy(s + v->len, v1->data, len1);
-            v->len += len1;
+            v->len += (ssize_t)len1;
         }
         if (v1->len < 0) v->len = ~v->len;
         return &v->v;

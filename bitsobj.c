@@ -203,7 +203,7 @@ static FAST_CALL NO_INLINE bool bits_same(const Bits *v1, const Bits *v2) {
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Bits *v1 = (const Bits *)o1, *v2 = (const Bits *)o2;
-    if (o1->obj != o2->obj || ((v1->len ^ v2->len) | (v1->bits ^ v2->bits)) != 0) return false;
+    if (o1->obj != o2->obj || v1->len != v2->len || v1->bits != v2->bits) return false;
     switch (v1->len) {
     case 0: return true;
     case -1:
@@ -288,7 +288,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Bits *v1 = (Bits *)o1;
     size_t l;
-    int h;
+    unsigned int h;
 
     switch (v1->len) {
     case ~1: *hs = (v1->bits ^ ~v1->data[0]) & ((~0U) >> 1); return NULL;
@@ -303,7 +303,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     }
     if (v1->len < 0) {
         l = (size_t)~v1->len;
-        h = -1;
+        h = ~0U;
         while ((l--) != 0) {
             h -= v1->data[l];
         }
@@ -316,8 +316,8 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     }
     h ^= v1->bits;
     h &= ((~0U) >> 1);
-    if (v1->data != v1->u.val) v1->u.hash = h;
-    *hs = h;
+    if (v1->data != v1->u.val) v1->u.hash = (int)h;
+    *hs = (int)h;
     return NULL;
 }
 

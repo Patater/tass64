@@ -210,7 +210,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
         digit_t dec;
         i = 9;
         if (len != 0) {
-            len = (v1->len < 0) ? 1 : 0;
+            len = (v1->len < 0) ? 1U : 0U;
             dec = v1->val[0];
             for (; i > 0; i--) {
                 if (dec < d[i - 1]) break;
@@ -1297,7 +1297,7 @@ MUST_CHECK Obj *int_from_float(const Float *v1, linepos_t epoint) {
     if (d == NULL) goto failed2;
     v->len = neg ? -(ssize_t)sz : (ssize_t)sz;
 
-    frac = ldexp(frac, (expo - 1) % SHIFT + 1);
+    frac = ldexp(frac, (int)((expo - 1) % SHIFT + 1));
 
     while ((sz--) != 0) {
         digit_t dg = (digit_t)frac;
@@ -1321,7 +1321,7 @@ MUST_CHECK Obj *int_from_bytes(const Bytes *v1, linepos_t epoint) {
     case 1: return (Obj *)return_int(v1->data[0], false);
     case 0: return val_reference(&int_value[0]->v);
     case ~0: return val_reference(&minus1_value->v);
-    case ~1: return (Obj *)return_int(v1->data[0] + 1, true);
+    case ~1: return (Obj *)return_int(v1->data[0] + 1U, true);
     }
 
     inv = v1->len < 0;

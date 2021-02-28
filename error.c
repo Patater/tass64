@@ -100,7 +100,7 @@ static FAST_CALL int duplicate_compare(const struct avltree_node *aa, const stru
     const struct errorentry_s *b = cavltree_container_of(bb, struct errorentry_s, node);
     const uint8_t *aerr, *berr;
 
-    if (a->severity != b->severity) return a->severity - b->severity;
+    if (a->severity != b->severity) return (int)a->severity - (int)b->severity;
     if (a->file_list != b->file_list) return a->file_list > b->file_list ? 1 : -1;
     if (a->error_len != b->error_len) return a->error_len > b->error_len ? 1 : -1;
     if (a->epoint.line != b->epoint.line) return a->epoint.line > b->epoint.line ? 1 : -1;
@@ -163,7 +163,7 @@ static void error_extend(void) {
     bool dir;
     if (data == NULL) err_msg_out_of_memory2();
     dir = data >= error_list.data;
-    diff = dir ? (data - error_list.data) : (error_list.data - data);
+    diff = dir ? (size_t)(data - error_list.data) : (size_t)(error_list.data - data);
     error_list.data = data;
     if (diff == 0) return;
     for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
@@ -1108,7 +1108,7 @@ static const char * const opr_names[ADR_LEN] = {
     "", /* ADR_BIT_ZP_REL */
 };
 
-void err_msg_address_mismatch(int a, int b, linepos_t epoint) {
+void err_msg_address_mismatch(unsigned int a, unsigned int b, linepos_t epoint) {
     new_error_msg2(diagnostic_errors.altmode, epoint);
     adderror("using ");
     adderror(opr_names[a]);
@@ -1156,7 +1156,7 @@ static const char * const order_suffix[4] = {
 
 void err_msg_missing_argument(linepos_t epoint, size_t n) {
     char msg2[4];
-    int i = n % 10;
+    unsigned int i = n % 10;
     bool more = new_error_msg(SV_ERROR, &((const struct file_listnode_s *)current_file_list)->parent->flist, &current_file_list->epoint);
     msg2[0] = n + '1';
     memcpy(msg2 + 1, order_suffix[i < 4 ? i : 3], 3);
