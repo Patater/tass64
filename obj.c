@@ -64,7 +64,6 @@ MUST_CHECK Obj *obj_oper_error(oper_t op) {
     Obj *v1, *v2;
     Error *err;
     switch (op->op->op) {
-    case O_IDENTITY:
     case O_EQ: return truth_reference(op->v1 == op->v2 || op->v1->obj->same(op->v1, op->v2));
     case O_NE: return truth_reference(op->v1 != op->v2 && !op->v1->obj->same(op->v1, op->v2));
     case O_X:
