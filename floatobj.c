@@ -60,7 +60,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Float *v1 = Float(o1), *v2 = Float(o2);
-    return o2->obj == FLOAT_OBJ && v1->real == v2->real;
+    return o1->obj == o2->obj && v1->real == v2->real;
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {

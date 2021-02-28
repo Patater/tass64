@@ -81,7 +81,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Address *v1 = Address(o1), *v2 = Address(o2);
-    return o2->obj == ADDRESS_OBJ && v1->type == v2->type && v1->val->obj->same(v1->val, v2->val);
+    return o1->obj == o2->obj && v1->type == v2->type && v1->val->obj->same(v1->val, v2->val);
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {

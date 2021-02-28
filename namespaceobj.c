@@ -142,7 +142,7 @@ static bool namespace_issubset(Namespace *v1, const Namespace *v2) {
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     Namespace *v1 = Namespace(o1), *v2 = Namespace(o2);
-    if (o2->obj != NAMESPACE_OBJ) return false;
+    if (o1->obj != o2->obj) return false;
     return namespace_issubset(v1, v2) && namespace_issubset(v2, v1);
 }
 

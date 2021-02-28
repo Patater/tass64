@@ -48,8 +48,7 @@ Anonsymbol *new_anonsymbol(ssize_t count) {
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Anonsymbol *v1 = Anonsymbol(o1), *v2 = Anonsymbol(o2);
-    if (o1->obj != o2->obj) return false;
-    return v1->count == v2->count;
+    return o1->obj == o2->obj && v1->count == v2->count;
 }
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
