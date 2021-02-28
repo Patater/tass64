@@ -2422,8 +2422,8 @@ MUST_CHECK Obj *compile(void)
                                     }
                                     label->epoint = epoint;
                                     label->ref = false;
-                                    failed = get_func_params(mfunc, prm == CMD_SFUNCTION);
                                     get_namespaces(mfunc);
+                                    failed = get_func_params(mfunc, prm == CMD_SFUNCTION);
                                     const_assign(label, &mfunc->v);
                                     if (label->value != &mfunc->v) Mfunc(label->value)->ipoint = 0;
                                     if (prm == CMD_FUNCTION) waitfor->u.cmd_function.val = val_reference(label->value);
@@ -2440,10 +2440,10 @@ MUST_CHECK Obj *compile(void)
                                 mfunc->inamespaces = ref_tuple(null_tuple);
                                 label->epoint = epoint;
                                 label->ref = false;
-                                failed = get_func_params(mfunc, prm == CMD_SFUNCTION);
                                 get_namespaces(mfunc);
                                 mfunc->names = new_namespace(current_file_list, &epoint);
                                 if (prm == CMD_FUNCTION) waitfor->u.cmd_function.val = val_reference(&mfunc->v);
+                                failed = get_func_params(mfunc, prm == CMD_SFUNCTION);
                             }
                             if (prm == CMD_FUNCTION) {
                                 if (!failed && here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
