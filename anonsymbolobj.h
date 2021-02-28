@@ -26,12 +26,12 @@ struct file_list_s;
 
 typedef struct Anonsymbol {
     Obj v;
-    int32_t count;
+    ssize_t count;
 } Anonsymbol;
 
 extern void anonsymbolobj_init(void);
 
-extern Anonsymbol *new_anonsymbol(int32_t);
+extern Anonsymbol *new_anonsymbol(ssize_t);
 
 static inline Anonsymbol *ref_anonsymbol(Anonsymbol *v1) {
     v1->v.refcount++; return v1;

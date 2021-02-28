@@ -133,9 +133,7 @@ static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint))
     l = s.len;
     while ((l--) != 0) h = (1000003 * h) ^ *s.data++;
     h ^= s.len;
-    h &= ((~0U) >> 1);
-    v1->hash = h;
-    *hs = h;
+    *hs = v1->hash = h & ((~0U) >> 1);
     return NULL;
 }
 

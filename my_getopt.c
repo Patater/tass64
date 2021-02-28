@@ -187,7 +187,7 @@ static int my_getopt_internal(int argc, char *argv[], const char *shortopts,
   } else if ((!long_only) && (argv[my_optind][1] != '-'))
     opt = my_getopt(argc, argv, shortopts);
   else {
-    int charind, offset;
+    size_t charind, offset;
     int found = 0, ind, hits = 0;
 
     if (((my_optopt = argv[my_optind][1]) != '-') && argv[my_optind][2] == 0) {
