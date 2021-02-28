@@ -689,7 +689,7 @@ static MUST_CHECK Obj *function_pow(oper_t op) {
     return float_from_double(pow(real, real2), op->epoint);
 }
 
-static MUST_CHECK Obj *function_all_any(oper_t op) {
+static MUST_CHECK Obj *function_all_any(oper_t op, Obj **warn, bool first) {
     Truth_types typ = (Function(op->v1)->func == F_ALL) ? TRUTH_ALL : TRUTH_ANY;
     struct values_s *v = Funcargs(op->v2)->val;
     Obj *val = v->val;
@@ -700,7 +700,14 @@ static MUST_CHECK Obj *function_all_any(oper_t op) {
         Obj *result2 = (Obj *)ref_bool(good);
         iter.data = val; objt->getiter(&iter);
         while ((v->val = iter.next(&iter)) != NULL) {
-            Obj *result = function_all_any(op);
+            Obj *result = v->val;
+            if (result->obj == BOOL_OBJ) {
+                if (Bool(result) == good) continue;
+                val_destroy(result2);
+                result2 = val_reference(result);
+                break;
+            }
+            result = function_all_any(op, warn, false);
             if (Bool(result) == good) {
                 val_destroy(result);
                 continue;
@@ -714,7 +721,13 @@ static MUST_CHECK Obj *function_all_any(oper_t op) {
         v->val = val;
         return result2;
     }
-    if (diagnostics.strict_bool && val->obj != BOOL_OBJ) err_msg_bool(ERROR_____CANT_BOOL, val, &v->epoint);
+    if (objt == BOOL_OBJ) {
+        return val_reference(val);
+    }
+    if (!first) {
+        if (diagnostics.strict_bool && *warn == NULL) *warn = val_reference(val);
+        typ = TRUTH_BOOL;
+    }
     return objt->truth(val, typ, &v->epoint);
 }
 
@@ -784,14 +797,23 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     }
                     switch (func) {
                     case F_ANY:
-                    case F_ALL: return function_all_any(op);
+                    case F_ALL:
+                        {
+                            Obj *warn = NULL;
+                            Obj *ret = function_all_any(op, &warn, true);
+                            if (warn != NULL) {
+                                if (ret->obj == BOOL_OBJ) err_msg_bool(ERROR_____CANT_BOOL, warn, &v->epoint);
+                                val_destroy(warn);
+                            }
+                            return ret;
+                        }
                     case F_LEN: 
-                        op->v2 = v[0].val;
-                        return v[0].val->obj->len(op);
-                    case F_SORT: return function_sort(v[0].val, &v[0].epoint);
+                        op->v2 = v->val;
+                        return v->val->obj->len(op);
+                    case F_SORT: return function_sort(v->val, &v->epoint);
                     default: 
-                        op->v2 = v[0].val;
-                        op->inplace = v[0].val->refcount == 1 ? v[0].val : NULL;
+                        op->v2 = v->val;
+                        op->inplace = v->val->refcount == 1 ? v->val : NULL;
                         return apply_func(op);
                     }
                 }
