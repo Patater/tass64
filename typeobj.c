@@ -65,7 +65,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Type *v1 = (Type *)o1;
-    *hs = v1->type;
+    *hs = (int)v1->type;
     return NULL;
 }
 

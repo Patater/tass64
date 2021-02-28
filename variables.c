@@ -530,7 +530,7 @@ static void labelname_print(const Label *l, FILE *flab, char d) {
     printable_print2(l->name.data, flab, l->name.len);
 }
 
-static void labelprint2(Namespace *names, FILE *flab, int labelmode) {
+static void labelprint2(Namespace *names, FILE *flab, Symbollist_types labelmode) {
     size_t n, ln;
 
     if (names->len == 0) return;
