@@ -602,7 +602,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
     if (listp != largs) {
         err_msg_argnum(args, listp + 1, listp + 1, op->epoint);
     } else if (failure != NULL) {
-        err_msg_output((const Error *)failure);
+        err_msg_output(Error(failure));
     } else if (none != 0) {
         err_msg_still_none(NULL, (largs >= none) ? &v[none].epoint : op->epoint);
     }

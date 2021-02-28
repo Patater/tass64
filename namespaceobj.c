@@ -147,7 +147,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
-    const Namespace *v1 = (const Namespace *)o1;
+    const Namespace *v1 = Namespace(o1);
     size_t i = 0, j, ln = 13, chars = 13;
     Obj **vals;
     Str *str;
