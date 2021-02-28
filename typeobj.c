@@ -52,8 +52,7 @@ void new_type(Type *t, Type_types type, const char *name, size_t length) {
 static MUST_CHECK Obj *create(Obj *v1, linepos_t UNUSED(epoint)) {
     switch (v1->obj->type) {
     case T_NONE:
-    case T_ERROR:
-    case T_TYPE: return val_reference(v1);
+    case T_ERROR: return val_reference(v1);
     default: break;
     }
     return val_reference((Obj *)&v1->obj->v);
