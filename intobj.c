@@ -165,10 +165,8 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     }
 }
 
-static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
-    const Int *v1 = Int(o1);
-    if (diagnostics.strict_bool && type != TRUTH_BOOL) err_msg_bool(ERROR_____CANT_BOOL, o1, epoint);
-    return truth_reference(v1->len != 0);
+static MUST_CHECK Obj *truth(Obj *o1, Truth_types UNUSED(type), linepos_t UNUSED(epoint)) {
+    return truth_reference(Int(o1)->len != 0);
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {

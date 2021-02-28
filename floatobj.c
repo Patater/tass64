@@ -59,19 +59,15 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Float *v1 = Float(o1), *v2 = Float(o2);
-    return o1->obj == o2->obj && v1->real == v2->real;
+    return o1->obj == o2->obj && Float(o1)->real == Float(o2)->real;
 }
 
-static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
-    Float *v1 = Float(o1);
-    if (diagnostics.strict_bool && type != TRUTH_BOOL) err_msg_bool(ERROR_____CANT_BOOL, o1, epoint);
-    return truth_reference(v1->real != 0.0);
+static MUST_CHECK Obj *truth(Obj *o1, Truth_types UNUSED(type), linepos_t UNUSED(epoint)) {
+    return truth_reference(Float(o1)->real != 0.0);
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Float *v1 = Float(o1);
-    double integer, r = v1->real;
+    double integer, r = Float(o1)->real;
     int expo;
     unsigned int h, h1, h2;
     bool neg = (r < 0.0);
@@ -91,11 +87,10 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Float *v1 = Float(o1);
     Str *v;
     char line[100];
     int i = 0;
-    size_t len = (size_t)sprintf(line, "%.10g", v1->real);
+    size_t len = (size_t)sprintf(line, "%.10g", Float(o1)->real);
     while (line[i] != 0 && line[i]!='.' && line[i]!='e' && line[i]!='n' && line[i]!='i') i++;
     if (line[i] == 0) {line[i++] = '.';line[i++] = '0';len += 2;}
     if (len > maxsize) return NULL;
@@ -148,9 +143,9 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
 }
 
 static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
-    Float *v1 = Float(o1);
-    if (v1->real < 0.0) return (Obj *)ref_int(minus1_value);
-    return (Obj *)ref_int(int_value[(v1->real > 0.0) ? 1 : 0]);
+    double v1 = Float(o1)->real;
+    if (v1 < 0.0) return (Obj *)ref_int(minus1_value);
+    return (Obj *)ref_int(int_value[(v1 > 0.0) ? 1 : 0]);
 }
 
 static MUST_CHECK Obj *function(oper_t op) {

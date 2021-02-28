@@ -77,11 +77,8 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
-    Str *v1 = Str(o1);
-    Obj *tmp, *ret;
-    if (diagnostics.strict_bool && type != TRUTH_BOOL) err_msg_bool(ERROR_____CANT_BOOL, o1, epoint);
-    tmp = bytes_from_str(v1, epoint, BYTES_MODE_TEXT);
-    ret = tmp->obj->truth(tmp, type, epoint);
+    Obj *tmp = bytes_from_str(Str(o1), epoint, BYTES_MODE_TEXT);
+    Obj *ret = tmp->obj->truth(tmp, type, epoint);
     val_destroy(tmp);
     return ret;
 }
