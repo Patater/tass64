@@ -340,7 +340,7 @@ static void output_mem_ihex_line(struct ihex_s *ihex, unsigned int length, addre
     }
     hexput(&h, (-h.sum) & 0xff);
     *h.line++ = '\n';
-    fwrite(line, h.line - line, 1, ihex->file);
+    fwrite(line, (size_t)(h.line - line), 1, ihex->file);
 }
 
 static void output_mem_ihex_data(struct ihex_s *ihex) {
@@ -424,7 +424,7 @@ static void output_mem_srec_line(struct srecord_s *srec) {
     *h.line++ = '\n';
     srec->address += srec->length;
     srec->length = 0;
-    fwrite(line, h.line - line, 1, srec->file);
+    fwrite(line, (size_t)(h.line - line), 1, srec->file);
 }
 
 static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {

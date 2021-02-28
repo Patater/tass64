@@ -72,7 +72,7 @@ extern void err_msg_not_defined2a(int32_t, struct Namespace *, bool, linepos_t);
 extern void err_msg_symbol_case(const struct str_t *, const struct Label *, linepos_t);
 extern void err_msg_symbol_case2(const struct Symbol *, const struct Symbol *);
 extern void err_msg_macro_prefix(linepos_t);
-extern void err_msg_address_mismatch(int, int, linepos_t);
+extern void err_msg_address_mismatch(unsigned int, unsigned int, linepos_t);
 extern void err_msg_file(Error_types, const char *, linepos_t);
 extern void err_msg_output(const struct Error *);
 extern void err_msg_output_and_destroy(struct Error *);

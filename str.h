@@ -25,7 +25,7 @@ typedef struct str_t {
     size_t len;
 } str_t;
 
-extern unsigned int str_hash(const str_t *);
+extern int str_hash(const str_t *);
 extern int str_cmp(const str_t *, const str_t *);
 extern void str_cfcpy(str_t *, const str_t *);
 extern void str_cpy(str_t *, const str_t *);

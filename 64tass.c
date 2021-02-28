@@ -347,7 +347,7 @@ static void reset_waitfor(void) {
     struct waitfor_s dummy;
     struct linepos_s lpos = {0, 0};
     dummy.skip = 1;
-    waitfor_p = (size_t)-1;
+    waitfor_p = (size_t)0 - 1U;
     waitfor = &dummy;
     new_waitfor(W_NONE, &lpos);
 }
@@ -1134,7 +1134,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
             val_destroy(current_address->l_address_val);
             current_address->l_address_val = get_star_value(0, val);
             val_destroy(val);
-            addr = (address_t)uval & all_mem2;
+            addr = uval & all_mem2;
             if (current_address->address != addr) {
                 current_address->address = addr;
                 memjmp(current_address->mem, current_address->address);
@@ -1142,7 +1142,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
             return;
         }
         laddr = current_address->l_address;
-        addr = (address_t)uval & all_mem;
+        addr = uval & all_mem;
         if (arguments.tasmcomp) addr = (uint16_t)addr;
         else if (addr >= laddr) {
             addr = (current_address->address + (addr - laddr)) & all_mem2;
@@ -3423,9 +3423,12 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
                         if (prm == CMD_PTEXT) {
                             trec.buff[0] = outputeor;
+                            trec.sum = 1; 
                             trec.len = 1;
-                        } else trec.len = 0;
-                        trec.sum = trec.len;
+                        } else {
+                            trec.len = 0; 
+                            trec.len = 0;
+                        }
                         trec.max = SIZE_MAX;
                         trec.prm = prm;
                         trec.error = ERROR__USER_DEFINED;
@@ -3542,7 +3545,7 @@ MUST_CHECK Obj *compile(void)
                                 size_t i, ln = cfile2->len - foffset;
                                 uint8_t *d, *s = cfile2->data + foffset;
                                 if (ln > fsize) ln = fsize;
-                                d = pokealloc((address_t)ln, &epoint);
+                                d = pokealloc(ln, &epoint);
                                 if (outputeor != 0) {
                                     for (i = 0; i < ln; i++) d[i] = s[i] ^ outputeor;
                                 } else memcpy(d, s, ln);
@@ -3558,6 +3561,7 @@ MUST_CHECK Obj *compile(void)
                 {   /* .offs */
                     struct values_s *vs;
                     ival_t ival;
+                    address_t addr;
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     listing_line(listing, epoint.pos);
@@ -3569,8 +3573,9 @@ MUST_CHECK Obj *compile(void)
                         current_address->moved = true;
                     }
                     current_address->wrapwarn = false;
-                    if (current_address->address != ((address_t)(current_address->l_address + ival) & all_mem2)) {
-                        current_address->address = (address_t)(current_address->l_address + ival) & all_mem2;
+                    addr = (ival < 0 ? current_address->l_address - (uval_t)-ival : current_address->l_address + (uval_t)ival) & all_mem2;
+                    if (current_address->address != addr) {
+                        current_address->address = addr;
                         memjmp(current_address->mem, current_address->address);
                     }
                 }
@@ -3797,8 +3802,8 @@ MUST_CHECK Obj *compile(void)
                             if (uval > max) {
                                 if (itt != 0) db = max - itt + 1;
                             } else {
-                                address_t rem = itt % (address_t)uval;
-                                if (rem != 0) db = (address_t)uval - rem;
+                                address_t rem = itt % uval;
+                                if (rem != 0) db = uval - rem;
                             }
                         }
                     } else {

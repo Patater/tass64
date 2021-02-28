@@ -136,7 +136,7 @@ static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)
     if (ln >= 0) {
         uint8_t *d;
         uint32_t temp;
-        d = pokealloc(ln + 1, epoint);
+        d = pokealloc((unsigned int)(ln + 1), epoint);
         temp = adr ^ outputeor;
         switch (ln) {
         case 4: d[4] = temp >> 24; /* fall through */
@@ -514,7 +514,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                     invalid = touaddress(val, &uval, 16, epoint2);
                     if (invalid) uval = current_address->l_address + 1 + ln;
                     uval &= 0xffff;
-                    uval |= (uval_t)current_address->l_address & ~0xffff;
+                    uval |= current_address->l_address & ~(uval_t)0xffff;
                     crossbank = false;
                 } else {
             justrel:
@@ -524,7 +524,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                         crossbank = false;
                     } else {
                         uval &= all_mem;
-                        crossbank = ((uval_t)current_address->l_address ^ uval) > 0xffff;
+                        crossbank = (current_address->l_address ^ uval) > 0xffff;
                     }
                 }
                 xadr = (uint16_t)adr;
@@ -550,7 +550,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                     if (invalid) uval = 0;
                     if (!longpossible && (uval & 0x80) != 0) uval |= ~(uval_t)0xff;
                     uval &= 0xffff;
-                    uval |= (uval_t)current_address->l_address & ~0xffff;
+                    uval |= current_address->l_address & ~(uval_t)0xffff;
                     crossbank = false;
                     xadr = (uint16_t)adr;
                     starexists = false; s = NULL;

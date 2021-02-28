@@ -474,8 +474,9 @@ void listing_instr(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
     if (nolisting != 0 || temporary_label_branch != 0) return;
     if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn) return;
-        addr = (current_address->l_address - ln - 1) & all_mem;
-        addr2 = (current_address->address - ln - 1) & all_mem2;
+        ln++;
+        addr = (current_address->l_address - (unsigned int)ln) & all_mem;
+        addr2 = (current_address->address - (unsigned int)ln) & all_mem2;
         if (addr2 != addr) listing_pccolumn = true;
         return;
     }
@@ -484,8 +485,8 @@ void listing_instr(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
         if (llist != NULL) printline(ls);
         padding2(ls, ls->columns.addr);
     }
-    addr = (current_address->l_address - ln - 1) & all_mem;
-    addr2 = (current_address->address - ln - 1) & all_mem2;
+    addr = (current_address->l_address - (unsigned int)(ln + 1)) & all_mem;
+    addr2 = (current_address->address - (unsigned int)(ln + 1)) & all_mem2;
     printaddr(ls, '.', addr2, addr);
     if (ln >= 0) {
         printhex(ls, cod ^ outputeor, adr ^ outputeor, ln);

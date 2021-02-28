@@ -72,7 +72,7 @@ static FAST_CALL int encoding_compare(const struct avltree_node *aa, const struc
 
 static void escape_free(void *e) {
     struct escape_s *esc;
-    size_t i = (const uint8_t *)e - identmap;
+    size_t i = (size_t)((const uint8_t *)e - identmap);
     if (i < 256) return;
     esc = (struct escape_s *)e;
     if (esc->data != esc->val) free(esc->data);
@@ -266,7 +266,7 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
     }
     *b2 = b;
     if (i == 1) {
-        size_t j = (const uint8_t *)b - identmap;
+        size_t j = (size_t)((const uint8_t *)b - identmap);
         if (j < 256) {
             return b != (struct escape_s *)(identmap + tmp.val[0]);
         }
@@ -359,10 +359,10 @@ next:
         size_t len = encoder->len - encoder->i;
         struct escape_s *e = (struct escape_s *)ternary_search(encoding->escapes, encoder->data + encoder->i, &len);
         if (e != NULL) {
-            size_t i = (const uint8_t *)e - identmap;
+            size_t i = (size_t)((const uint8_t *)e - identmap);
             if (i < 256) {
                 encoder->i += len;
-                return i;
+                return (int)i;
             }
             if (e->pass >= pass || !fixeddig || e->pass == pass - 1) {
                 encoder->i += len;

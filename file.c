@@ -213,7 +213,7 @@ static bool portability(const str_t *name, linepos_t epoint) {
         pos = (const uint8_t *)memchr(name->data, *c, name->len);
         if (pos == NULL) continue;
         epoint2.line = epoint->line;
-        epoint2.pos = interstring_position(epoint, name->data, pos - name->data);
+        epoint2.pos = interstring_position(epoint, name->data, (size_t)(pos - name->data));
         err_msg2(ERROR__RESERVED_CHR, name, &epoint2);
         return false;
     }
@@ -442,7 +442,7 @@ static struct file_s *command_line = NULL;
 static struct file_s *lastfi = NULL;
 static struct ubuff_s last_ubuff;
 static uint16_t curfnum;
-struct file_s *openfile(const char *name, const char *base, int ftype, const str_t *val, linepos_t epoint) {
+struct file_s *openfile(const char *name, const char *base, unsigned int ftype, const str_t *val, linepos_t epoint) {
     struct file_s *tmp;
     char *s;
     if (lastfi == NULL) {
@@ -456,7 +456,7 @@ struct file_s *openfile(const char *name, const char *base, int ftype, const str
         lastfi->name = name;
         n.data = (const uint8_t *)name;
         n.len = strlen(name);
-        lastfi->hash = (str_hash(&n) + str_hash(&lastfi->base) + lastfi->type) & ((~0U) >> 1);
+        lastfi->hash = ((unsigned int)str_hash(&n) + (unsigned int)str_hash(&lastfi->base) + lastfi->type) & ((~0U) >> 1);
         tmp = file_table_update(lastfi);
     } else {
         tmp = (command_line != NULL) ? command_line : NULL;

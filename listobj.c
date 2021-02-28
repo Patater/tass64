@@ -237,12 +237,12 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
         Obj *o2 = vals[i];
         Error *err = o2->obj->hash(o2, &h2, epoint);
         if (err != NULL) return err;
-        h += h2;
+        h += (unsigned int)h2;
     }
     h ^= i;
     h &= ((~0U) >> 1);
-    if (vals != v1->u.val) v1->u.s.hash = h;
-    *hs = h;
+    if (vals != v1->u.val) v1->u.s.hash = (int)h;
+    *hs = (int)h;
     return NULL;
 }
 

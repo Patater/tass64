@@ -214,8 +214,8 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     while ((l--) != 0) h = (1000003 * h) ^ *s2++;
     h ^= v1->len;
     h &= ((~0U) >> 1);
-    if (v1->data != v1->u.val) v1->u.s.hash = h;
-    *hs = h;
+    if (v1->data != v1->u.val) v1->u.s.hash = (int)h;
+    *hs = (int)h;
     return NULL;
 }
 

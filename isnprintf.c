@@ -141,10 +141,10 @@ static inline void pad_right(Data *p)
 static void pad_right2(Data *p, uint8_t c, bool minus, size_t ln)
 {
     size_t n = 0;
-    p->width -= ln;
-    if (p->precision > 0 && (size_t)p->precision > ln) {
-        n = (size_t)p->precision - ln;
-        p->width -= n;
+    p->width = (p->width < 0 || ln > (unsigned int)p->width) ? -1 : p->width - (int)ln;
+    if (p->precision > 0 && (unsigned int)p->precision > ln) {
+        n = (unsigned int)p->precision - ln;
+        p->width = (p->width < 0 || n > (unsigned int)p->width) ? -1 : p->width - (int)n;
     }
     if (minus || p->plus || p->space) p->width--;
     if (c != 0 && p->square) p->width--;
@@ -274,7 +274,7 @@ static inline void hexa(Data *p)
 
     integer = get_int(p);
     minus = (integer->len < 0);
-    bp2 = (size_t)(minus ? -integer->len : integer->len);
+    bp2 = minus ? (size_t)-integer->len : (size_t)integer->len;
     bp = b = 0;
     do {
         if (bp == 0) {
@@ -309,7 +309,7 @@ static inline void bin(Data *p)
 
     integer = get_int(p);
     minus = (integer->len < 0);
-    bp2 = (size_t)(minus ? -integer->len : integer->len);
+    bp2 = minus ? (size_t)-integer->len : (size_t)integer->len;
     bp = b = 0;
     do {
         if (bp == 0) {
@@ -360,7 +360,7 @@ static inline void chars(void)
 static inline void strings(Data *p)
 {
     const struct values_s *v = next_arg();
-    int i;
+    size_t i;
     const uint8_t *tmp;
     uchar_t ch;
     Str *str;
@@ -387,14 +387,13 @@ static inline void strings(Data *p)
     }
 
     tmp = str->data;
-    i = (int)str->chars;
-    if (p->dot) { /* the smallest number */
-        i = (i < p->precision ? i : p->precision);
+    i = str->chars;
+    if (p->dot) { /* the smaller number */
+        i = (p->precision < 0) ? 0 : (i < (unsigned int)p->precision) ? i : (unsigned int)p->precision;
     }
-    if (i < 0) i = 0;
-    p->width -= i;
+    p->width = (p->width < 0 || i > (unsigned int)p->width) ? -1 : p->width - (int)i;
     pad_right(p);
-    while (i-- > 0) { /* put the string */
+    for (; i != 0; i--) { /* put the string */
         ch = *tmp;
         if ((ch & 0x80) != 0) tmp += utf8in(tmp, &ch); else tmp++;
         put_char(ch);
