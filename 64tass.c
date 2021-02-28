@@ -1955,7 +1955,7 @@ MUST_CHECK Obj *compile(void)
                     } else break;
 
                     if (labelname.data == (const uint8_t *)&anonsymbol) {
-                        uint32_t count = (uint32_t)((anonsymbol.dir == '-') ? --current_context->backr :  --current_context->forwr);
+                        uint32_t count = (anonsymbol.dir == '-') ? --current_context->backr :  --current_context->forwr;
                         count--;
                         labelname.len = 2;
                         while (count != 0) {
@@ -2968,7 +2968,7 @@ MUST_CHECK Obj *compile(void)
                 case ';':
                 case '\0':
                     {
-                        uint32_t count = (uint32_t)((wht == '-') ? current_context->backr++ : current_context->forwr++);
+                        uint32_t count = (wht == '-') ? current_context->backr++ : current_context->forwr++;
                         anonsymbol.dir = (uint8_t)wht;
                         anonsymbol.pad = 0;
                         labelname.len = 2;

@@ -139,7 +139,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
     } else {
         bool bits = v2->obj == BITS_OBJ;
         if (bits) {
-            len = (size_t)((Bits *)v2)->bits;
+            len = ((Bits *)v2)->bits;
         }
         v = FLOAT_OBJ->create(v2, epoint);
         val_destroy(v2);
@@ -148,7 +148,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
             return v;
         }
         real = ((Float *)v)->real;
-        if (len != 0 && real != 0.0) real = bits ? ldexp(real, -(int)len) : ldexp10(real, (unsigned int)len, true);
+        if (len != 0 && real != 0.0) real = bits ? ldexp(real, -(int)len) : ldexp10(real, len, true);
         val_destroy(v);
     }
     v = FLOAT_OBJ->create(v1, epoint);
