@@ -64,8 +64,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Type *v1 = Type(o1);
-    *hs = (int)v1->type;
+    *hs = (int)Type(o1)->type;
     return NULL;
 }
 
@@ -92,40 +91,21 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     return &v->v;
 }
 
-static inline int icmp(const Type *vv1, const Type *vv2) {
-    Type_types v1 = vv1->type;
-    Type_types v2 = vv2->type;
-    if (v1 < v2) return -1;
-    return (v1 > v2) ? 1 : 0;
+static inline int icmp(oper_t op) {
+    Type_types v1 = Type(op->v1)->type;
+    Type_types v2 = Type(op->v2)->type;
+    return (v1 < v2) ? -1 : (v1 > v2) ? 1 : 0;
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
-    Type *v1 = Type(op->v1);
     Obj *o2 = op->v2;
 
     switch (o2->obj->type) {
     case T_TYPE:
-        {
-            Type *v2 = Type(o2);
-            int val = icmp(v1, v2);
-            switch (op->op->op) {
-            case O_CMP:
-                if (val < 0) return (Obj *)ref_int(minus1_value);
-                return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
-            case O_EQ: return truth_reference(val == 0);
-            case O_NE: return truth_reference(val != 0);
-            case O_MIN:
-            case O_LT: return truth_reference(val < 0);
-            case O_LE: return truth_reference(val <= 0);
-            case O_MAX:
-            case O_GT: return truth_reference(val > 0);
-            case O_GE: return truth_reference(val >= 0);
-            default: break;
-            }
-        }
-        break;
+        return obj_oper_compare(op, icmp(op));
     case T_FUNCARGS:
         if (op->op == &o_FUNC) {
+            Type *v1 = Type(op->v1);
             Funcargs *v2 = Funcargs(o2);
             size_t args = v2->len;
             if (args != 1) {
