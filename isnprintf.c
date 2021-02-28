@@ -447,8 +447,9 @@ static inline void floating(Data *p)
     pad_left(p);
 }
 
-MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
+MUST_CHECK Obj *isnprintf(oper_t op)
 {
+    Funcargs *vals = (Funcargs *)op->v2;
     struct values_s *v = vals->val;
     size_t args = vals->len;
     Obj *val;
@@ -600,11 +601,11 @@ MUST_CHECK Obj *isnprintf(Funcargs *vals, linepos_t epoint)
         }
     }
     if (listp != largs) {
-        err_msg_argnum(args, listp + 1, listp + 1, epoint);
+        err_msg_argnum(args, listp + 1, listp + 1, op->epoint);
     } else if (failure != NULL) {
         err_msg_output((const Error *)failure);
     } else if (none != 0) {
-        err_msg_still_none(NULL, (largs >= none) ? &v[none].epoint : epoint);
+        err_msg_still_none(NULL, (largs >= none) ? &v[none].epoint : op->epoint);
     }
     if (failure != NULL) val_destroy(failure);
     str = new_str(0);
