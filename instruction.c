@@ -132,18 +132,18 @@ static MUST_CHECK Error *err_addressize(Error_types no, linepos_t epoint, int pr
 }
 
 static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)  {
-    if (diagnostics.optimize) cpu_opt(cod, adr, ln, epoint);
+    if (diagnostics.optimize) cpu_opt((uint8_t)cod, adr, ln, epoint);
     if (ln >= 0) {
         uint8_t *d;
         uint32_t temp;
         d = pokealloc((unsigned int)(ln + 1), epoint);
         temp = adr ^ outputeor;
         switch (ln) {
-        case 4: d[4] = temp >> 24; /* fall through */
-        case 3: d[3] = temp >> 16; /* fall through */
-        case 2: d[2] = temp >> 8; /* fall through */
-        case 1: d[1] = temp; /* fall through */
-        default: d[0] = cod ^ outputeor;
+        case 4: d[4] = (uint8_t)(temp >> 24); /* fall through */
+        case 3: d[3] = (uint8_t)(temp >> 16); /* fall through */
+        case 2: d[2] = (uint8_t)(temp >> 8); /* fall through */
+        case 1: d[1] = (uint8_t)temp; /* fall through */
+        default: d[0] = (uint8_t)(cod ^ outputeor);
         }
     }
     listing_instr(listing, cod, adr, ln);
@@ -614,7 +614,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                             if (current_cpu->brl >= 0 && !longbranchasjmp) { /* bra -> brl */
                             asbrl:
                                 if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
-                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100);
+                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100U);
                                 err = instruction(current_cpu->brl, w, vals, epoint, epoints);
                                 cpu_opt_long_branch(0);
                                 goto branchend;
@@ -626,7 +626,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                             } else { /* bra -> jmp */
                             asjmp:
                                 if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
-                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100);
+                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100U);
                                 err = instruction(current_cpu->jmp, w, vals, epoint, epoints);
                                 cpu_opt_long_branch(0);
                             branchend:
@@ -669,14 +669,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                         }
                         if (adr == 1) {
                             if ((cnmemonic[ADR_REL] & 0x1f) == 0x10) {
-                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100);
+                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100U);
                                 dump_instr(cnmemonic[ADR_REL] ^ 0x20, 1, 0, epoint);
                                 cpu_opt_long_branch(0);
                                 err = NULL;
                                 goto branchend;
                             }
                             if (cnmemonic[ADR_REL] == 0x80 && (opcode == r65c02.opcode || opcode == w65c02.opcode)) {
-                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100);
+                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100U);
                                 dump_instr(0x82, 1, 0, epoint);
                                 cpu_opt_long_branch(0);
                                 err = NULL;
@@ -685,7 +685,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                         }
                         if (adr == 2 && (opcode == c65ce02.opcode || opcode == c4510.opcode)) {
                             if ((cnmemonic[ADR_REL] & 0x1f) == 0x10) {
-                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100);
+                                cpu_opt_long_branch(cnmemonic[ADR_REL] | 0x100U);
                                 dump_instr(cnmemonic[ADR_REL] ^ 0x23, 2, 0, epoint);
                                 cpu_opt_long_branch(0);
                                 err = NULL;

@@ -373,7 +373,7 @@ Label *find_anonlabel(int32_t count) {
         count2 = (uint32_t)((int32_t)((count >= 0) ? context->forwr : context->backr) + count);
         label.cfname.len = 2;
         while (count2 != 0) {
-            anonsymbol.count[label.cfname.len - 2] = count2;
+            anonsymbol.count[label.cfname.len - 2] = (uint8_t)count2;
             label.cfname.len++;
             count2 >>= 8;
         } 
@@ -396,7 +396,7 @@ Label *find_anonlabel2(int32_t count, Namespace *context) {
     label.cfname.data = (const uint8_t *)&anonsymbol;
     label.cfname.len = 2;
     while (count2 != 0) {
-        anonsymbol.count[label.cfname.len - 2] = count2;
+        anonsymbol.count[label.cfname.len - 2] = (uint8_t)count2;
         label.cfname.len++;
         count2 >>= 8;
     } 

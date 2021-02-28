@@ -23,10 +23,10 @@
 struct optimizer_s;
 struct cpu_s;
 
-extern void cpu_opt(uint8_t, uint32_t, int, linepos_t);
+extern void cpu_opt(unsigned int, uint32_t, int, linepos_t);
 extern void cpu_opt_invalidate(void);
 extern void cpu_opt_destroy(struct optimizer_s *);
-extern void cpu_opt_long_branch(uint16_t);
+extern void cpu_opt_long_branch(unsigned int);
 extern void cpu_opt_set_cpumode(const struct cpu_s *);
 
 #endif

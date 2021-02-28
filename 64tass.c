@@ -569,7 +569,7 @@ static void textrecursion_flush(struct textrecursion_s *trec) {
     trec->len = 0;
 }
 
-static void textdump(struct textrecursion_s *trec, uval_t uval) {
+static void textdump(struct textrecursion_s *trec, unsigned int uval) {
     switch (trec->prm) {
     case CMD_SHIFT:
         if ((uval & 0x80) != 0) trec->error = ERROR___NO_HIGH_BIT;
@@ -586,7 +586,7 @@ static void textdump(struct textrecursion_s *trec, uval_t uval) {
         break;
     }
     if (trec->len >= (ssize_t)sizeof trec->buff) textrecursion_flush(trec);
-    trec->buff[trec->len++] = uval ^ outputeor;
+    trec->buff[trec->len++] = (uint8_t)(uval ^ outputeor);
 }
 
 static void textrecursion(struct textrecursion_s *trec, Obj *val) {
@@ -826,12 +826,12 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
         if (brec->len < 0) { memskip((size_t)-brec->len, brec->epoint);brec->len = 0; }
         else if (brec->len >= (ssize_t)(sizeof brec->buff) - 4) byterecursion_flush(brec);
         ch2 ^= outputeor;
-        brec->buff[brec->len++] = ch2;
+        brec->buff[brec->len++] = (uint8_t)ch2;
         if (prm >= CMD_RTA) {
-            brec->buff[brec->len++] = ch2 >> 8;
+            brec->buff[brec->len++] = (uint8_t)(ch2 >> 8);
             if (prm >= CMD_LINT) {
-                brec->buff[brec->len++] = ch2 >> 16;
-                if (prm >= CMD_DINT) brec->buff[brec->len++] = ch2 >> 24;
+                brec->buff[brec->len++] = (uint8_t)(ch2 >> 16);
+                if (prm >= CMD_DINT) brec->buff[brec->len++] = (uint8_t)(ch2 >> 24);
             }
         }
         if (iter.data == NULL) return;
@@ -1027,7 +1027,7 @@ static bool section_start(linepos_t epoint) {
             if (fixeddig && pass > max_pass) err_msg_cant_calculate(&sectionname, epoint);
             fixeddig = false;
         }
-        tmp->defpass = pass - 1;
+        tmp->defpass = (uint8_t)(pass - 1);
         val_destroy(&tmp->address.mem->v);
         tmp->address.mem = new_memblocks(ln, ln2);
         tmp->address.mem->lastaddr = tmp->address.address;
@@ -1959,7 +1959,7 @@ MUST_CHECK Obj *compile(void)
                         count--;
                         labelname.len = 2;
                         while (count != 0) {
-                            anonsymbol.count[labelname.len - 2] = count;
+                            anonsymbol.count[labelname.len - 2] = (uint8_t)count;
                             labelname.len++;
                             count >>= 8;
                         }
@@ -2973,7 +2973,7 @@ MUST_CHECK Obj *compile(void)
                         anonsymbol.pad = 0;
                         labelname.len = 2;
                         while (count != 0) {
-                            anonsymbol.count[labelname.len - 2] = count;
+                            anonsymbol.count[labelname.len - 2] = (uint8_t)count;
                             labelname.len++;
                             count >>= 8;
                         }
@@ -3422,7 +3422,7 @@ MUST_CHECK Obj *compile(void)
                         if (here() == 0 || here() == ';') { err_msg_argnum(0, 1, 0, &epoint); goto breakerr; }
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
                         if (prm == CMD_PTEXT) {
-                            trec.buff[0] = outputeor;
+                            trec.buff[0] = (uint8_t)outputeor;
                             trec.sum = 1; 
                             trec.len = 1;
                         } else {
@@ -3447,13 +3447,15 @@ MUST_CHECK Obj *compile(void)
                         switch (prm) {
                         case CMD_SHIFTL:
                         case CMD_SHIFT:
-                            if (trec.len > 0) trec.buff[trec.len - 1] ^= (prm == CMD_SHIFT) ? 0x80 : 0x01;
-                            else if (trec.sum != 0) err_msg2(ERROR___NO_LAST_GAP, NULL, trec.epoint);
+                            if (trec.len > 0) {
+                                uint8_t inv = (prm == CMD_SHIFT) ? 0x80 : 0x01;
+                                trec.buff[trec.len - 1] ^= inv;
+                            } else if (trec.sum != 0) err_msg2(ERROR___NO_LAST_GAP, NULL, trec.epoint);
                             else err_msg2(ERROR__BYTES_NEEDED, NULL, &epoint);
                             break;
                         case CMD_NULL:
                             if (trec.len >= (ssize_t)sizeof trec.buff) textrecursion_flush(&trec);
-                            trec.buff[trec.len++] = outputeor; break;
+                            trec.buff[trec.len++] = (uint8_t)outputeor; break;
                         default: break;
                         }
                         if (trec.len > 0) textrecursion_flush(&trec);
@@ -3547,7 +3549,7 @@ MUST_CHECK Obj *compile(void)
                                 if (ln > fsize) ln = fsize;
                                 d = pokealloc(ln, &epoint);
                                 if (outputeor != 0) {
-                                    for (i = 0; i < ln; i++) d[i] = s[i] ^ outputeor;
+                                    for (i = 0; i < ln; i++) d[i] = s[i] ^ (uint8_t)outputeor;
                                 } else memcpy(d, s, ln);
                                 foffset += ln;
                                 fsize -= ln;
@@ -3846,7 +3848,7 @@ MUST_CHECK Obj *compile(void)
                                     } else {
                                         if (trec.len < 0) { memskip((size_t)-trec.len, trec.epoint); trec.len = 0; }
                                         else if (trec.len >= (ssize_t)sizeof trec.buff) textrecursion_flush(&trec);
-                                        trec.buff[trec.len++] = ch;
+                                        trec.buff[trec.len++] = (uint8_t)ch;
                                     }
                                     offs++;
                                     if (offs >= trec.sum) offs = 0;

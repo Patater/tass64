@@ -156,7 +156,7 @@ static void dict_update(Dict *dict, const struct pair_s *p) {
             hash >>= 5;
             offs = (5 * offs + hash + 1) & mask;
         } 
-        indexes[offs] = dict->len;
+        indexes[offs] = (uint8_t)dict->len;
     } else {
         size_t mask = dict->u.s.mask;
         size_t hash = (size_t)p->hash;
@@ -226,7 +226,7 @@ static void reindex(Dict *dict) {
                 hash >>= 5;
                 offs = (5 * offs + hash + 1) & mask;
             }
-            indexes[offs] = i;
+            indexes[offs] = (uint8_t)i;
         }
     } else {
         size_t i;

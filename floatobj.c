@@ -267,12 +267,12 @@ static MUST_CHECK Obj *bitoper(oper_t op) {
     case O_AND: 
         if (neg1) {
             if (neg2) {
-                v = ~((~v1 + (uint64_t)1) & (~v2 + (uint64_t)1));
+                v = ~((~v1 + 1U) & (~v2 + 1U));
             } else {
-                v = (~v1 + (uint64_t)1) & v2;
+                v = (~v1 + 1U) & v2;
             }
         } else if (neg2) {
-            v = v1 & (~v2 + (uint64_t)1);
+            v = v1 & (~v2 + 1U);
         } else { 
             v = v1 & v2;
         }
@@ -281,12 +281,12 @@ static MUST_CHECK Obj *bitoper(oper_t op) {
     case O_OR: 
         if (neg1) {
             if (neg2) {
-                v = ~((~v1 + (uint64_t)1) | (~v2 + (uint64_t)1));
+                v = ~((~v1 + 1U) | (~v2 + 1U));
             } else {
-                v = ~((~v1 + (uint64_t)1) | v2);
+                v = ~((~v1 + 1U) | v2);
             }
         } else if (neg2) {
-            v = ~(v1 | (~v2 + (uint64_t)1));
+            v = ~(v1 | (~v2 + 1U));
         } else { 
             v = v1 | v2;
         }
@@ -295,19 +295,19 @@ static MUST_CHECK Obj *bitoper(oper_t op) {
     default: 
         if (neg1) {
             if (neg2) {
-                v = (~v1 + (uint64_t)1) ^ (~v2 + (uint64_t)1);
+                v = (~v1 + 1U) ^ (~v2 + 1U);
             } else {
-                v = ~((~v1 + (uint64_t)1) ^ v2);
+                v = ~((~v1 + 1U) ^ v2);
             }
         } else if (neg2) {
-            v = ~(v1 ^ (~v2 + (uint64_t)1));
+            v = ~(v1 ^ (~v2 + 1U));
         } else { 
             v = v1 ^ v2;
         }
         neg = neg1 != neg2;
         break;
     }
-    r = ldexp(v, e);
+    r = ldexp((double)v, e);
     return float_from_double_inplace(neg ? -r : r, op);
 }
 
