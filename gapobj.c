@@ -96,15 +96,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     switch (v2->obj->type) {
     case T_GAP:
         switch (op->op->op) {
-        case O_CMP: return (Obj *)ref_int(int_value[0]);
-        case O_GE:
-        case O_LE:
-        case O_EQ: return (Obj *)ref_bool(true_value);
-        case O_NE:
-        case O_MIN:
-        case O_LT:
-        case O_MAX:
-        case O_GT: return (Obj *)ref_bool(false_value);
         case O_ADD:
         case O_SUB:
         case O_MUL:
@@ -118,7 +109,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         case O_RSHIFT: return val_reference(op->v1);
         default: break;
         }
-        break;
+        return obj_oper_compare(op, 0);
     case T_STR:
     case T_BOOL:
     case T_INT:

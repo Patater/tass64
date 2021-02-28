@@ -138,9 +138,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 static MUST_CHECK Obj *calc2(oper_t op) {
     switch (op->v2->obj->type) {
     case T_FUNCARGS:
-        switch (op->op->op) {
-        case O_FUNC:
-        {
+        if (op->op->op == O_FUNC) {
             Mfunc *v1 = Mfunc(op->v1);
             Funcargs *v2 = Funcargs(op->v2);
             Obj *val;
@@ -155,8 +153,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             val = mfunc2_recurse(v1, v2->val, args, op->epoint);
             eval_leave();
             return (val != NULL) ? val : (Obj *)ref_tuple(null_tuple);
-        }
-        default: break;
         }
         break;
     case T_NONE:

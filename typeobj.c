@@ -103,7 +103,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_TYPE:
         return obj_oper_compare(op, icmp(op));
     case T_FUNCARGS:
-        if (op->op == &o_FUNC) {
+        if (op->op->op == O_FUNC) {
             Type *v1 = Type(op->v1);
             Funcargs *v2 = Funcargs(o2);
             size_t args = v2->len;
