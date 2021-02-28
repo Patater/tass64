@@ -773,9 +773,9 @@ static void err_opcode(uint32_t cod) {
     if (cod != 0) {
         char tmp[17];
         memcpy(tmp, "for opcode 'xxx'", sizeof tmp);
-        tmp[12] = cod >> 16;
-        tmp[13] = cod >> 8;
-        tmp[14] = cod;
+        tmp[12] = (char)(cod >> 16);
+        tmp[13] = (char)(cod >> 8);
+        tmp[14] = (char)cod;
         adderror(tmp);
     } else adderror("accepted");
 }
@@ -1158,7 +1158,7 @@ void err_msg_missing_argument(linepos_t epoint, size_t n) {
     char msg2[4];
     unsigned int i = n % 10;
     bool more = new_error_msg(SV_ERROR, &((const struct file_listnode_s *)current_file_list)->parent->flist, &current_file_list->epoint);
-    msg2[0] = n + '1';
+    msg2[0] = (char)(n + '1');
     memcpy(msg2 + 1, order_suffix[i < 4 ? i : 3], 3);
     adderror(msg2);
     adderror(" argument is missing");

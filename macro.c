@@ -309,7 +309,7 @@ bool mtranslate(void) {
             if (cfile->nomacro == NULL) err_msg_out_of_memory();
         }
         lnum = lpoint.line - 1;
-        cfile->nomacro[lnum / 8] |= 1 << (lnum & 7);
+        cfile->nomacro[lnum / 8] |= (uint8_t)(1U << (lnum & 7));
     }
     lpoint.pos = 0;
     return false;

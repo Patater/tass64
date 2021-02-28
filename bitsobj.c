@@ -263,7 +263,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
         *s++ = '%';
         for (i = len2; (i--) != 0;) {
             size_t j = i / SHIFT;
-            *s++ = (j >= sz) ? 0x30 : 0x30 | ((v1->data[j] >> (i % SHIFT)) & 1);
+            *s++ = (j < sz && (v1->data[j] & (1U << (i % SHIFT))) != 0) ? '1' : '0';
         }
         return &v->v;
     }
@@ -445,7 +445,7 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint)
                 uv = (uv << 4) | c;
                 continue;
             }
-            c2 = (c | 0x20) - 0x71;
+            c2 = (uint8_t)((c | 0x20) - 0x71);
             if (c2 < 6) {
                 uv = (uv << 4) | (c2 + 10U);
                 continue;

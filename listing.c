@@ -121,7 +121,7 @@ static void out_pb(Listing *ls, unsigned int adr) {
 }
 
 static void out_bit(Listing *ls, unsigned int cod, unsigned int c) {
-    ls->s[ls->i++] = 0x30 + ((cod >> 4) & 7);
+    ls->s[ls->i++] = (char)('0' + ((cod >> 4) & 7));
     ls->s[ls->i++] = ',';
     out_zp(ls, c);
 }
@@ -232,9 +232,9 @@ static void printdec(Listing *ls, uint32_t dec) {
     for (; i < 9; i++) {
         uint32_t a = dec / d[i];
         dec = dec % d[i];
-        ls->s[ls->i++] = '0' + a;
+        ls->s[ls->i++] = (char)('0' + a);
     }
-    ls->s[ls->i++] = '0' + dec;
+    ls->s[ls->i++] = (char)('0' + dec);
 }
 
 static void printfile(Listing *ls) {

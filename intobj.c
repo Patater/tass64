@@ -226,9 +226,9 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
         for (; i < 9; i++) {
             digit_t a = dec / d[i];
             dec = dec % d[i];
-            *s++ = '0' + a;
+            *s++ = (uint8_t)('0' + a);
         }
-        *s = '0' + dec;
+        *s = (uint8_t)('0' + dec);
         return &v->v;
     }
 
@@ -275,13 +275,13 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     for (i = 0; i < sz; i++) {
         r = out[i];
         for (j = 0; j < DSHIFT; j++) {
-            *--s = 0x30 | (r % 10);
+            *--s = (uint8_t)('0' + (r % 10));
             r /= 10;
         }
     }
     r = out[i];
     do {
-        *--s = 0x30 | (r % 10);
+        *--s = (uint8_t)('0' + (r % 10));
         r /= 10;
     } while (r != 0);
     if (neg) *--s = '-';
@@ -544,7 +544,7 @@ static void imul(const Int *vv1, const Int *vv2, Int *vv) {
         vv->data = v;
         if (c > (twodigits_t)MASK) {
             v[0] = (digit_t)c;
-            v[1] = c >> SHIFT;
+            v[1] = (digit_t)(c >> SHIFT);
             vv->len = 2;
             return;
         }

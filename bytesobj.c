@@ -166,7 +166,7 @@ static MUST_CHECK Obj *negate(Bytes *v1, linepos_t epoint) {
         if (i == sz) return NULL;
         v = new_bytes2(sz);
         if (v == NULL) goto failed;
-        v->data[i] = v1->data[i] + 1;
+        v->data[i] = (uint8_t)(v1->data[i] + 1U);
     } else {
         for (i = 0; i < sz; i++) {
             if (v1->data[i] != 0) break;
@@ -174,7 +174,7 @@ static MUST_CHECK Obj *negate(Bytes *v1, linepos_t epoint) {
         if (i == sz) return val_reference(&v1->v);
         v = new_bytes2(sz);
         if (v == NULL) goto failed;
-        v->data[i] = v1->data[i] - 1;
+        v->data[i] = (uint8_t)(v1->data[i] - 1U);
     }
     if (i != 0) memset(v->data, (v1->len < 0) ? 0 : ~0, i);
     i++;
@@ -275,10 +275,10 @@ static const uint8_t *z85_decode(uint8_t *dest, const uint8_t *src, size_t len) 
         for (j = 1; j < 5; j++) {
             tmp = tmp * 85 + z85_dec[src[j] - 33];
         }
-        dest[i] = tmp >> 24;
-        dest[i+1] = tmp >> 16;
-        dest[i+2] = tmp >> 8;
-        dest[i+3] = tmp;
+        dest[i] = (uint8_t)(tmp >> 24);
+        dest[i+1] = (uint8_t)(tmp >> 16);
+        dest[i+2] = (uint8_t)(tmp >> 8);
+        dest[i+3] = (uint8_t)tmp;
         src += 5;
     }
     return src;
@@ -387,7 +387,7 @@ MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint
         }
         ch2 ^= 0x30;
         if (ch2 < 10) continue;
-        ch2 = (ch2 | 0x20) - 0x71;
+        ch2 = (uint8_t)((ch2 | 0x20) - 0x71);
         if (ch2 >= 6 && j == 0) {
             if (ch2 == 0xbf && ((i - spc) & 1) == 0) {
                 spc++;
@@ -412,7 +412,7 @@ MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint
     if (v == NULL) return (Obj *)new_error_mem(epoint);
     v->len = (ssize_t)j;
     for (i = 0; i < j; i++) {
-        uint8_t c1, c2;
+        unsigned int c1, c2;
         s++;
         c1 = s[i] ^ 0x30;
         if (c1 >= 10) {
@@ -421,7 +421,7 @@ MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint
         }
         c2 = s[i+1] ^ 0x30;
         if (c2 >= 10) c2 = (c2 | 0x20) - 0x67;
-        v->data[i] = (c1 << 4) | c2;
+        v->data[i] = (uint8_t)((c1 << 4) | c2);
     }
     return &v->v;
 }
@@ -893,11 +893,11 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
             for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
             for (; i < len1; i++) v[i] = v1[i];
         } else {
-            for (i = 0; i < len2; i++) v[i] = ~v1[i] & v2[i];
+            for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
         }
     } else {
         if (neg2) {
-            for (i = 0; i < len2; i++) v[i] = v1[i] & ~v2[i];
+            for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
             for (; i < len1; i++) v[i] = v1[i];
         } else {
             for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
@@ -942,12 +942,12 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
         if (neg2) {
             for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
         } else {
-            for (i = 0; i < len2; i++) v[i] = v1[i] & ~v2[i];
+            for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
             for (; i < len1; i++) v[i] = v1[i];
         }
     } else {
         if (neg2) {
-            for (i = 0; i < len2; i++) v[i] = ~v1[i] & v2[i];
+            for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
         } else {
             for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
             for (; i < len1; i++) v[i] = v1[i];
@@ -1025,7 +1025,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
         memcpy(s, v1->data, len1);
     }
     if ((v2->len ^ v1->len) < 0) {
-        for (i = 0; i < len2; i++) s[i + len1] = ~v2->data[i];
+        for (i = 0; i < len2; i++) s[i + len1] = (uint8_t)~v2->data[i];
     } else memcpy(s + len1, v2->data, len2);
     v->len = (v1->len < 0) ? (ssize_t)~ln : (ssize_t)ln;
     return &v->v;

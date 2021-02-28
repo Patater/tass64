@@ -718,7 +718,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     val2 = (uint16_t)uval;
 
                     switch (op) {
-                    case O_MUL: val1 *= val2; break;
+                    case O_MUL: val1 = (uint16_t)(val1 * val2); break;
                     case O_DIV:
                         if (val2 == 0) {
                             err = new_error(ERROR_DIVISION_BY_Z, &o_out->epoint);
@@ -726,8 +726,8 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                             continue;
                         }
                         val1 /= val2; break;
-                    case O_ADD: val1 += val2; break;
-                    case O_SUB: val1 -= val2; break;
+                    case O_ADD: val1 = (uint16_t)(val1 + val2); break;
+                    case O_SUB: val1 = (uint16_t)(val1 - val2); break;
                     case O_AND: val1 &= val2; break;
                     case O_OR:  val1 |= val2; break;
                     case O_XOR: val1 ^= val2; break;
