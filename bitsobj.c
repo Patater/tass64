@@ -202,7 +202,7 @@ static FAST_CALL NO_INLINE bool bits_same(const Bits *v1, const Bits *v2) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Bits *v1 = (const Bits *)o1, *v2 = (const Bits *)o2;
+    const Bits *v1 = Bits(o1), *v2 = Bits(o2);
     if (o1->obj != o2->obj || v1->len != v2->len || v1->bits != v2->bits) return false;
     switch (v1->len) {
     case 0: return true;

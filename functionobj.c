@@ -57,7 +57,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Function *v1 = (const Function *)o1, *v2 = (const Function *)o2;
+    const Function *v1 = Function(o1), *v2 = Function(o2);
     return o2->obj == FUNCTION_OBJ && v1->func == v2->func;
 }
 

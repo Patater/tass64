@@ -51,7 +51,7 @@ static FAST_CALL void macro_destroy(Obj *o1) {
 }
 
 static FAST_CALL bool macro_same(const Obj *o1, const Obj *o2) {
-    const Macro *v1 = (const Macro *)o1, *v2 = (const Macro *)o2;
+    const Macro *v1 = Macro(o1), *v2 = Macro(o2);
     size_t i;
     if (o1->obj != o2->obj || v1->file_list != v2->file_list || v1->line != v2->line || v1->retval != v2->retval || v1->argc != v2->argc) return false;
     for (i = 0; i < v1->argc; i++) {
@@ -101,7 +101,7 @@ static FAST_CALL void struct_garbage(Obj *o1, int i) {
 }
 
 static FAST_CALL bool struct_same(const Obj *o1, const Obj *o2) {
-    const Struct *v1 = (const Struct *)o1, *v2 = (const Struct *)o2;
+    const Struct *v1 = Struct(o1), *v2 = Struct(o2);
     size_t i;
     if (o1->obj != o2->obj || v1->size != v2->size || v1->file_list != v2->file_list || v1->line != v2->line || v1->retval != v2->retval || v1->argc != v2->argc) return false;
     if (v1->names != v2->names && !v1->names->v.obj->same(&v1->names->v, &v2->names->v)) return false;

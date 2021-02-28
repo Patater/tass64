@@ -155,7 +155,7 @@ static FAST_CALL NO_INLINE bool int_same(const Int *v1, const Int *v2) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Int *v1 = (const Int *)o1, *v2 = (const Int *)o2;
+    const Int *v1 = Int(o1), *v2 = Int(o2);
     if (o1->obj != o2->obj || v1->len != v2->len) return false;
     switch (v1->len) {
     case 0: return true;
