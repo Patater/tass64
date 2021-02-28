@@ -29,7 +29,7 @@ Type *const MEMBLOCKS_OBJ = &obj;
 
 static FAST_CALL void destroy(Obj *o1) {
     size_t i;
-    Memblocks *v1 = (Memblocks *)o1;
+    Memblocks *v1 = Memblocks(o1);
     free(v1->mem.data);
     for (i = 0; i < v1->p; i++) {
         const struct memblock_s *b = &v1->data[i];
@@ -54,7 +54,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 MALLOC Memblocks *new_memblocks(size_t ln, size_t ln2) {
-    Memblocks *val = (Memblocks *)val_alloc(MEMBLOCKS_OBJ);
+    Memblocks *val = Memblocks(val_alloc(MEMBLOCKS_OBJ));
     val->mem.p = 0;
     val->mem.len = ln;
     val->mem.data = (ln == 0) ? NULL : (uint8_t*)mallocx(ln);
@@ -70,7 +70,7 @@ MALLOC Memblocks *new_memblocks(size_t ln, size_t ln2) {
 }
 
 MALLOC Memblocks *copy_memblocks(Memblocks *m) {
-    Memblocks *val = (Memblocks *)val_alloc(MEMBLOCKS_OBJ);
+    Memblocks *val = Memblocks(val_alloc(MEMBLOCKS_OBJ));
     size_t i;
     val->mem.p = m->mem.p;
     val->mem.len = m->mem.len;

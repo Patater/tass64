@@ -34,7 +34,7 @@ static Type obj;
 Type *const ERROR_OBJ = &obj;
 
 static FAST_CALL void destroy(Obj *o1) {
-    Error *v1 = (Error *)o1;
+    Error *v1 = Error(o1);
     if (v1->line != NULL) free((uint8_t *)v1->line);
     switch (v1->num) {
     case ERROR__INVALID_OPER:
@@ -77,7 +77,7 @@ static FAST_CALL void destroy(Obj *o1) {
 }
 
 static FAST_CALL void garbage(Obj *o1, int i) {
-    Error *v1 = (Error *)o1;
+    Error *v1 = Error(o1);
     Obj *v;
     switch (v1->num) {
     case ERROR__INVALID_OPER:
@@ -164,7 +164,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
 }
 
 MALLOC Error *new_error(Error_types num, linepos_t epoint) {
-    Error *v = (Error *)val_alloc(ERROR_OBJ);
+    Error *v = Error(val_alloc(ERROR_OBJ));
     v->num = num;
     v->file_list = current_file_list;
     v->epoint.line = epoint->line;

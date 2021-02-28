@@ -64,13 +64,13 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Type *v1 = (Type *)o1;
+    Type *v1 = Type(o1);
     *hs = (int)v1->type;
     return NULL;
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
-    Type *v1 = (Type *)o1;
+    Type *v1 = Type(o1);
     Str *v;
     uint8_t *s;
     const char *name;
@@ -100,13 +100,13 @@ static inline int icmp(const Type *vv1, const Type *vv2) {
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
-    Type *v1 = (Type *)op->v1;
+    Type *v1 = Type(op->v1);
     Obj *o2 = op->v2;
 
     switch (o2->obj->type) {
     case T_TYPE:
         {
-            Type *v2 = (Type *)o2;
+            Type *v2 = Type(o2);
             int val = icmp(v1, v2);
             switch (op->op->op) {
             case O_CMP:
@@ -126,7 +126,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         break;
     case T_FUNCARGS:
         if (op->op == &o_FUNC) {
-            Funcargs *v2 = (Funcargs *)o2;
+            Funcargs *v2 = Funcargs(o2);
             size_t args = v2->len;
             if (args != 1) {
                 return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);

@@ -29,6 +29,8 @@ typedef struct Fold {
     struct Str *repr;
 } Fold;
 
+#define Fold(a) ((Fold *)(1 ? (a) : (Obj *)a))
+
 extern Fold *fold_value;
 
 extern void foldobj_init(void);

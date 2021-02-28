@@ -31,6 +31,8 @@ typedef struct Oper {
     unsigned int len;
 } Oper;
 
+#define Oper(a) ((Oper *)(1 ? (a) : (Obj *)a))
+
 extern void operobj_init(void);
 
 extern Oper o_TUPLE;

@@ -29,6 +29,8 @@ typedef struct Anonsymbol {
     ssize_t count;
 } Anonsymbol;
 
+#define Anonsymbol(a) ((Anonsymbol *)(1 ? (a) : (Obj *)a))
+
 extern void anonsymbolobj_init(void);
 
 extern Anonsymbol *new_anonsymbol(ssize_t);

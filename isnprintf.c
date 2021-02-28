@@ -235,8 +235,8 @@ static inline void decimal(Data *p)
                 str = ref_str(null_str);
                 minus = false;
             } else {
-                str = (Str *)err2;
-                minus = ((Int *)err)->len < 0;
+                str = Str(err2);
+                minus = Int(err)->len < 0;
             }
             val_destroy(err);
         }
@@ -257,7 +257,7 @@ static MUST_CHECK Int *get_int(Data *p) {
     if (v != NULL) {
         Obj *val = v->val;
         Obj *err = INT_OBJ->create(val, &v->epoint);
-        if (err->obj == INT_OBJ) return (Int *)err;
+        if (err->obj == INT_OBJ) return Int(err);
         note_failure(err);
     }
     return ref_int(int_value[0]);
@@ -382,7 +382,7 @@ static inline void strings(Data *p)
             note_failure(err);
             str = ref_str(null_str);
         } else {
-            str = (Str *)err;
+            str = Str(err);
         }
     }
 
@@ -421,7 +421,7 @@ static inline void floating(Data *p)
             note_failure(err);
             d = 0.0;
         } else {
-            d = ((Float *)err)->real;
+            d = Float(err)->real;
             val_destroy(err);
         }
     }
@@ -448,7 +448,7 @@ static inline void floating(Data *p)
 
 MUST_CHECK Obj *isnprintf(oper_t op)
 {
-    Funcargs *vals = (Funcargs *)op->v2;
+    Funcargs *vals = Funcargs(op->v2);
     struct values_s *v = vals->val;
     size_t args = vals->len;
     Obj *val;
@@ -462,14 +462,14 @@ MUST_CHECK Obj *isnprintf(oper_t op)
         return val_reference(val);
     case T_STR: break;
     case T_ADDRESS:
-        if (((Address *)val)->val == &none_value->v || ((Address *)val)->val->obj == ERROR_OBJ) return val_reference(((Address *)val)->val);
+        if (Address(val)->val == &none_value->v || Address(val)->val->obj == ERROR_OBJ) return val_reference(Address(val)->val);
         /* fall through */
     default:
         err_msg_wrong_type(val, STR_OBJ, &v[0].epoint);
         return (Obj *)ref_none();
     }
-    data.pf = ((Str *)val)->data;
-    data.pfend = data.pf +((Str *)val)->len;
+    data.pf = Str(val)->data;
+    data.pfend = data.pf + Str(val)->len;
 
     listp = 0;
     list = &v[1];
@@ -585,7 +585,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
                 /* fall through */
             default:
             error:
-                data.pf += err_msg_unknown_formatchar((Str *)val, (size_t)(data.pf - ((Str *)val)->data), &v[0].epoint);
+                data.pf += err_msg_unknown_formatchar(Str(val), (size_t)(data.pf - Str(val)->data), &v[0].epoint);
                 next_arg();
                 star_args(&data);
                 while (pf < data.pf) {

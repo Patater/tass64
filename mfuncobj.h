@@ -47,5 +47,8 @@ typedef struct Mfunc {
 } Mfunc;
 typedef struct Mfunc Sfunc;
 
+#define Mfunc(a) ((Mfunc *)(1 ? (a) : (Obj *)a))
+#define Sfunc(a) ((Sfunc *)(1 ? (a) : (Obj *)a))
+
 extern void mfuncobj_init(void);
 #endif

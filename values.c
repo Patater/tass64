@@ -147,7 +147,7 @@ size_t val_print(Obj *v1, FILE *f, size_t max) {
     size_t len;
     Obj *err = v1->obj->repr(v1, NULL, max);
     if (err == NULL) return 0;
-    if (err->obj == STR_OBJ) len = printable_print2(((Str *)err)->data, f, ((Str *)err)->len);
+    if (err->obj == STR_OBJ) len = printable_print2(Str(err)->data, f, Str(err)->len);
     else len = printable_print2((const uint8_t *)err->obj->name, f, strlen(err->obj->name));
     val_destroy(err);
     return len;

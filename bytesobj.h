@@ -36,6 +36,8 @@ typedef struct Bytes {
     } u;
 } Bytes;
 
+#define Bytes(a) ((Bytes *)(1 ? (a) : (Obj *)a))
+
 extern Bytes *null_bytes;
 extern Bytes *inv_bytes;
 

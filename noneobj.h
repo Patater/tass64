@@ -27,6 +27,8 @@ typedef struct None {
     int *dummy;
 } None;
 
+#define None(a) ((None *)(1 ? (a) : (Obj *)a))
+
 extern None *none_value;
 
 extern void noneobj_init(void);

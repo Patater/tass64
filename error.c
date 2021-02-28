@@ -414,7 +414,7 @@ static void err_msg_variable(Obj *val) {
     err = val->obj->str(val, NULL, 40);
     if (err != NULL) {
         if (err->obj == STR_OBJ) {
-            Str *str = (Str *)err;
+            Str *str = Str(err);
             adderror(" '");
             adderror2(str->data, str->len);
             adderror("'");
@@ -715,7 +715,7 @@ static void err_msg_not_defined3(const Error *err) {
     }
 
     if (err->u.notdef.symbol->obj == SYMBOL_OBJ) {
-        const str_t *name = &((Symbol *)err->u.notdef.symbol)->name;
+        const str_t *name = &Symbol(err->u.notdef.symbol)->name;
         str_cfcpy(&lastnd->cfname, name);
         lastnd->file_list = l->file_list;
         lastnd->epoint = l->epoint;
@@ -956,10 +956,10 @@ void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
 
 void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
     if (val->obj == ADDRESS_OBJ) {
-        const Obj *val2 = ((Address *)val)->val;
+        const Obj *val2 = Address(val)->val;
         if (val2 == &none_value->v || val2->obj == ERROR_OBJ) val = val2;
     }
-    if (val->obj == ERROR_OBJ) err_msg_output((Error *)val);
+    if (val->obj == ERROR_OBJ) err_msg_output(Error(val));
     else if (val->obj == NONE_OBJ) err_msg_still_none(NULL, epoint);
     else err_msg_wrong_type(val, expected, epoint);
 }
