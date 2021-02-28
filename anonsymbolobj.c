@@ -40,7 +40,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     return (Obj *)new_error_conv(v1, ANONSYMBOL_OBJ, epoint);
 }
 
-Anonsymbol *new_anonsymbol(int32_t count) {
+Anonsymbol *new_anonsymbol(ssize_t count) {
     Anonsymbol *anonsymbol = (Anonsymbol *)val_alloc(ANONSYMBOL_OBJ);
     anonsymbol->count = count;
     return anonsymbol;
@@ -54,29 +54,28 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Anonsymbol *v1 = (Anonsymbol *)o1;
-    unsigned int h = v1->count;
-    h &= ((~0U) >> 1);
-    *hs = h;
+    unsigned int h = v1->count < 0 ? 1U + ~(size_t)-v1->count : (size_t)v1->count;
+    *hs = h & ((~0U) >> 1);
     return NULL;
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Anonsymbol *v1 = (Anonsymbol *)o1;
     Str *v;
-    size_t len = v1->count < 0 ? (1 - v1->count) : (v1->count + 2);
+    size_t len = v1->count < 0 ? (size_t)(1 - v1->count) : ((size_t)v1->count + 2U);
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
     v->chars = len;
     v->data[0] = '.';
-    memset(v->data + 1, v1->count >= 0 ? '+' : '-', len);
+    memset(v->data + 1, v1->count >= 0 ? '+' : '-', len - 1);
     return &v->v;
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Anonsymbol *v1 = (Anonsymbol *)o1;
     Str *v;
-    size_t len = v1->count < 0 ? -v1->count : (v1->count + 1);
+    size_t len = v1->count < 0 ? (size_t)-v1->count : ((size_t)v1->count + 1U);
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
@@ -86,8 +85,8 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static inline int icmp(oper_t op) {
-    const int32_t v1 = ((Anonsymbol *)op->v1)->count, v2 = ((Anonsymbol *)op->v2)->count;
-    return v1 - v2;
+    const ssize_t v1 = ((Anonsymbol *)op->v1)->count, v2 = ((Anonsymbol *)op->v2)->count;
+    return (v1 > v2) ? 1 : (v1 < v2) ? -1 : 0;
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {

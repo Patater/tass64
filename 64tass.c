@@ -503,7 +503,7 @@ static int get_command(void) {
         const uint8_t *cmd2 = (const uint8_t *)command[no];
         int s4 = label[0] - cmd2[1];
         if (s4 == 0) {
-            int l = 1;
+            unsigned int l = 1;
             for (;;) {
                 s4 = label[l] - cmd2[l + 1];
                 if (s4 != 0) break;
@@ -3827,7 +3827,7 @@ MUST_CHECK Obj *compile(void)
                                 trec.len = 0;
                             } else if (trec.sum == (size_t)-trec.len) {
                                 if (trec.sum == 0) err_msg2(ERROR__BYTES_NEEDED, NULL, trec.epoint);
-                                trec.len -= db; /* gap shortcut */
+                                trec.len -= (ssize_t)db; /* gap shortcut */
                             } else {
                                 size_t offs = 0;
                                 if (trec.len > 0) textrecursion_flush(&trec);
@@ -4756,7 +4756,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         current_address = &root_section.address;
         reset_section(current_section);
         init_macro();
-        star_tree = init_star(i);
+        star_tree = init_star((line_t)i);
 
         if (i == opts - 1) {
             if (fin->lines != 0) {

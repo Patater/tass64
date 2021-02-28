@@ -1337,7 +1337,7 @@ static bool get_exp2(int stop) {
                 if (symbol.data[0] == '+' || symbol.data[0] == '-') {
                     while (symbol.data[0] == symbol.data[++symbol.len]);
                     lpoint.pos += symbol.len + 1;
-                    push_oper((Obj *)new_anonsymbol((symbol.data[0] == '+') ? (symbol.len - 1) : -symbol.len), &epoint);
+                    push_oper((Obj *)new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len), &epoint);
                     goto other;
                 }
                 if (symbol.data[0] == '*') {
@@ -1428,13 +1428,14 @@ static bool get_exp2(int stop) {
             db = opr.p;
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_POS) opr.p--;
             if (db != opr.p) {
+                ssize_t as = (ssize_t)(db - opr.p) - 1;
                 Label *l;
                 Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                    push_oper((Obj *)new_anonsymbol(db - opr.p - 1), &opr.data[opr.p].epoint);
+                    push_oper((Obj *)new_anonsymbol(as), &opr.data[opr.p].epoint);
                     goto other;
                 }
-                l = find_anonlabel(db - opr.p -1);
+                l = find_anonlabel(as);
                 if (l != NULL) {
                     touch_label(l);
                     val = val_reference(l->value);
@@ -1442,7 +1443,7 @@ static bool get_exp2(int stop) {
                     val = (Obj *)ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                    err->u.notdef.symbol = (Obj *)new_anonsymbol(db - opr.p - 1);
+                    err->u.notdef.symbol = (Obj *)new_anonsymbol(as);
                     err->u.notdef.names = ref_namespace(current_context);
                     err->u.notdef.down = true;
                     val = &err->v;
@@ -1452,13 +1453,14 @@ static bool get_exp2(int stop) {
             }
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_NEG) opr.p--;
             if (db != opr.p) {
+                ssize_t as = -(ssize_t)(db - opr.p);
                 Label *l;
                 Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                    push_oper((Obj *)new_anonsymbol(opr.p - db), &opr.data[opr.p].epoint);
+                    push_oper((Obj *)new_anonsymbol(as), &opr.data[opr.p].epoint);
                     goto other;
                 }
-                l = find_anonlabel(opr.p - db);
+                l = find_anonlabel(as);
                 if (l != NULL) {
                     touch_label(l);
                     val = val_reference(l->value);
@@ -1466,7 +1468,7 @@ static bool get_exp2(int stop) {
                     val = (Obj *)ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                    err->u.notdef.symbol = (Obj *)new_anonsymbol(opr.p - db);
+                    err->u.notdef.symbol = (Obj *)new_anonsymbol(as);
                     err->u.notdef.names = ref_namespace(current_context);
                     err->u.notdef.down = true;
                     val = &err->v;
