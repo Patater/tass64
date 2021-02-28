@@ -107,7 +107,7 @@ static MUST_CHECK Error *access_check(const Code *v1, linepos_t epoint) {
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     const Code *v1 = Code(o1), *v2 = Code(o2);
-    return o2->obj == CODE_OBJ && v1->addr == v2->addr && (v1->typ == v2->typ || v1->typ->obj->same(v1->typ, v2->typ))
+    return o1->obj == o2->obj && v1->addr == v2->addr && (v1->typ == v2->typ || v1->typ->obj->same(v1->typ, v2->typ))
         && v1->size == v2->size && v1->offs == v2->offs && v1->dtype == v2->dtype
         && v1->requires == v2->requires && v1->conflicts == v2->conflicts
 /*        && (v1->memblocks == v2->memblocks || v1->memblocks->v.obj->same(&v1->memblocks->v, &v2->memblocks->v)) */

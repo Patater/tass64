@@ -112,8 +112,8 @@ static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     return (Obj *)ref_none();
 }
 
-static FAST_CALL bool invalid_same(const Obj *v1, const Obj *v2) {
-    return v1->obj == v2->obj;
+static FAST_CALL bool invalid_same(const Obj *o1, const Obj *o2) {
+    return o1->obj == o2->obj;
 }
 
 static MUST_CHECK Error *generic_invalid(Obj *v1, linepos_t epoint, Error_types num) {
@@ -264,7 +264,7 @@ static void invalid_getiter(struct iter_s *v) {
 
 static FAST_CALL bool lbl_same(const Obj *o1, const Obj *o2) {
     const Lbl *v1 = Lbl(o1), *v2 = Lbl(o2);
-    return o2->obj == LBL_OBJ && v1->sline == v2->sline && v1->waitforp == v2->waitforp && v1->file_list == v2->file_list && v1->parent == v2->parent;
+    return o1->obj == o2->obj && v1->sline == v2->sline && v1->waitforp == v2->waitforp && v1->file_list == v2->file_list && v1->parent == v2->parent;
 }
 
 static FAST_CALL bool default_same(const Obj *o1, const Obj *o2) {
@@ -273,7 +273,7 @@ static FAST_CALL bool default_same(const Obj *o1, const Obj *o2) {
 
 static FAST_CALL bool funcargs_same(const Obj *o1, const Obj *o2) {
     const Funcargs *v1 = Funcargs(o1), *v2 = Funcargs(o2);
-    return o2->obj == FUNCARGS_OBJ && v1->val == v2->val && v1->len == v2->len;
+    return o1->obj == o2->obj && v1->val == v2->val && v1->len == v2->len;
 }
 
 void obj_init(Type *obj) {
