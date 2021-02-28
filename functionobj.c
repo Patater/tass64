@@ -102,9 +102,10 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     return &v->v;
 }
 
-typedef MUST_CHECK Obj *(*func_t)(Funcargs *, linepos_t);
+typedef MUST_CHECK Obj *(*func_t)(oper_t op);
 
-static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f) {
+static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
+    Funcargs *vals = (Funcargs *)op->v2;
     struct values_s *v = vals->val;
     size_t args = vals->len;
     size_t j, k, ln = 1;
@@ -153,7 +154,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
         }
     }
     if (elements == NULL) {
-        return f(vals, epoint);
+        return f(op);
     }
     if (ln != 0) {
         size_t i;
@@ -164,7 +165,7 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
                 if (elements[j].oval == NULL) continue;
                 if (elements[j].iters.len != 1) v[j].val = elements[j].iters.next(&elements[j].iters);
             }
-            vals2[i] = gen_broadcast(vals, epoint, f);
+            vals2[i] = gen_broadcast(op, f);
         }
         vv->len = i;
     } else {
@@ -178,11 +179,12 @@ static MUST_CHECK Obj *gen_broadcast(Funcargs *vals, linepos_t epoint, func_t f)
     if (elements != elements3) free(elements);
     return &vv->v;
 failed:
-    return (Obj *)new_error_mem(epoint);
+    return (Obj *)new_error_mem(op->epoint);
 }
 
 /* range([start],end,[step]) */
-static MUST_CHECK Obj *function_range(Funcargs *vals, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *function_range(oper_t op) {
+    Funcargs *vals = (Funcargs *)op->v2;
     struct values_s *v = vals->val;
     List *new_value;
     Error *err = NULL;
@@ -269,7 +271,8 @@ void random_reseed(Obj *o1, linepos_t epoint) {
 }
 
 /* random() */
-static MUST_CHECK Obj *function_random(Funcargs *vals, linepos_t epoint) {
+static MUST_CHECK Obj *function_random(oper_t op) {
+    Funcargs *vals = (Funcargs *)op->v2;
     struct values_s *v = vals->val;
     Error *err = NULL;
     ival_t start = 0, end, step = 1;
@@ -314,7 +317,7 @@ static MUST_CHECK Obj *function_random(Funcargs *vals, linepos_t epoint) {
         }
         return (Obj *)int_from_ival(start + (ival_t)(random64() & (len2 - 1)));
     }
-    return (Obj *)new_error(ERROR___EMPTY_RANGE, epoint);
+    return (Obj *)new_error(ERROR___EMPTY_RANGE, op->epoint);
 }
 
 static struct oper_s sort_tmp;
@@ -423,7 +426,8 @@ failed:
 }
 
 /* binary(name,[start],[length]) */
-static MUST_CHECK Obj *function_binary(Funcargs *vals, linepos_t epoint) {
+static MUST_CHECK Obj *function_binary(oper_t op) {
+    Funcargs *vals = (Funcargs *)op->v2;
     struct values_s *v = vals->val;
     Error *err;
     ival_t offs = 0;
@@ -458,7 +462,7 @@ static MUST_CHECK Obj *function_binary(Funcargs *vals, linepos_t epoint) {
         if (offset < ln) ln -= offset; else ln = 0;
         if (length < ln) ln = length;
         if (ln == 0) return (Obj *)ref_bytes(null_bytes);
-        if (ln > SSIZE_MAX) return (Obj *)new_error_mem(epoint);
+        if (ln > SSIZE_MAX) return (Obj *)new_error_mem(op->epoint);
         b = new_bytes(ln);
         b->len = ln;
         memcpy(b->data, cfile2->data + offset, ln);
@@ -642,8 +646,8 @@ static MUST_CHECK Obj *to_real(struct values_s *v, double *r) {
     return NULL;
 }
 
-static MUST_CHECK Obj *function_hypot(Funcargs *vals, linepos_t epoint) {
-    struct values_s *v = vals->val;
+static MUST_CHECK Obj *function_hypot(oper_t op) {
+    struct values_s *v = ((Funcargs *)op->v2)->val;
     Obj *val;
     double real, real2;
 
@@ -651,11 +655,11 @@ static MUST_CHECK Obj *function_hypot(Funcargs *vals, linepos_t epoint) {
     if (val != NULL) return val;
     val = to_real(&v[1], &real2);
     if (val != NULL) return val;
-    return float_from_double(hypot(real, real2), epoint);
+    return float_from_double(hypot(real, real2), op->epoint);
 }
 
-static MUST_CHECK Obj *function_atan2(Funcargs *vals, linepos_t epoint) {
-    struct values_s *v = vals->val;
+static MUST_CHECK Obj *function_atan2(oper_t op) {
+    struct values_s *v = ((Funcargs *)op->v2)->val;
     Obj *val;
     double real, real2;
 
@@ -663,11 +667,11 @@ static MUST_CHECK Obj *function_atan2(Funcargs *vals, linepos_t epoint) {
     if (val != NULL) return val;
     val = to_real(&v[1], &real2);
     if (val != NULL) return val;
-    return float_from_double(atan2(real, real2), epoint);
+    return float_from_double(atan2(real, real2), op->epoint);
 }
 
-static MUST_CHECK Obj *function_pow(Funcargs *vals, linepos_t epoint) {
-    struct values_s *v = vals->val;
+static MUST_CHECK Obj *function_pow(oper_t op) {
+    struct values_s *v = ((Funcargs *)op->v2)->val;
     Obj *val;
     double real, real2;
 
@@ -676,12 +680,12 @@ static MUST_CHECK Obj *function_pow(Funcargs *vals, linepos_t epoint) {
     val = to_real(&v[1], &real2);
     if (val != NULL) return val;
     if (real2 < 0.0 && real == 0.0) {
-        return (Obj *)new_error(ERROR_DIVISION_BY_Z, epoint);
+        return (Obj *)new_error(ERROR_DIVISION_BY_Z, op->epoint);
     }
     if (real < 0.0 && floor(real2) != real2) {
-        return (Obj *)new_error(ERROR_NEGFRAC_POWER, epoint);
+        return (Obj *)new_error(ERROR_NEGFRAC_POWER, op->epoint);
     }
-    return float_from_double(pow(real, real2), epoint);
+    return float_from_double(pow(real, real2), op->epoint);
 }
 
 static inline int icmp(oper_t op) {
@@ -713,37 +717,37 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     if (args != 2) {
                         return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
                     }
-                    return gen_broadcast(v2, op->epoint, function_hypot);
+                    return gen_broadcast(op, function_hypot);
                 case F_ATAN2:
                     if (args != 2) {
                         return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
                     }
-                    return gen_broadcast(v2, op->epoint, function_atan2);
+                    return gen_broadcast(op, function_atan2);
                 case F_POW:
                     if (args != 2) {
                         return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
                     }
-                    return gen_broadcast(v2, op->epoint, function_pow);
+                    return gen_broadcast(op, function_pow);
                 case F_RANGE:
                     if (args < 1 || args > 3) {
                         return (Obj *)new_error_argnum(args, 1, 3, op->epoint2);
                     }
-                    return gen_broadcast(v2, op->epoint, function_range);
+                    return gen_broadcast(op, function_range);
                 case F_BINARY:
                     if (args < 1 || args > 3) {
                         return (Obj *)new_error_argnum(args, 1, 3, op->epoint2);
                     }
-                    return gen_broadcast(v2, op->epoint, function_binary);
+                    return gen_broadcast(op, function_binary);
                 case F_FORMAT:
                     if (args < 1) {
                         return (Obj *)new_error_argnum(args, 1, 0, op->epoint2);
                     }
-                    return gen_broadcast(v2, op->epoint, isnprintf);
+                    return gen_broadcast(op, isnprintf);
                 case F_RANDOM:
                     if (args > 3) {
                         return (Obj *)new_error_argnum(args, 0, 3, op->epoint2);
                     }
-                    return gen_broadcast(v2, op->epoint, function_random);
+                    return gen_broadcast(op, function_random);
                 default:
                     if (args != 1) {
                         return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);
