@@ -158,8 +158,9 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
     }
     if (ln != 0) {
         size_t i;
+        Obj **vals2;
         vv = List(val_alloc(v[k].val->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ));
-        Obj **vals2 = vv->data = list_create_elements(vv, ln);
+        vals2 = vv->data = list_create_elements(vv, ln);
         for (i = 0; i < ln; i++) {
             for (j = k; j < args; j++) {
                 if (elements[j].oval == NULL) continue;
