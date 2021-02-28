@@ -1141,6 +1141,14 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_IDENTITY: 
             v2 = v1; v1 = &values[--vsp - 1];
             if (vsp == 0) goto syntaxe;
+            val = v1->val;
+            if (val->obj == NONE_OBJ || val->obj == ERROR_OBJ) continue;
+            val = v2->val;
+            if (val->obj == NONE_OBJ || val->obj == ERROR_OBJ) {
+                v2->val = v1->val;
+                v1->val = val;
+                continue;
+            }
             val = truth_reference(v1->val == v2->val || v1->val->obj->same(v1->val, v2->val));
             val_destroy(v1->val); v1->val = val;
             continue;
