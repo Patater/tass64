@@ -208,7 +208,7 @@ static int my_getopt_internal(int argc, char *argv[], const char *shortopts,
           (argv[my_optind][charind] != '=');
         charind++);
     for (ind = 0; longopts[ind].name != NULL && hits == 0; ind++)
-      if ((strlen(longopts[ind].name) == (size_t) (charind - offset)) &&
+      if ((strlen(longopts[ind].name) == charind - offset) &&
          (strncmp(longopts[ind].name,
                   argv[my_optind] + offset, charind - offset) == 0))
         found = ind, hits++;
