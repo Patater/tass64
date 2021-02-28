@@ -40,7 +40,7 @@ static FAST_CALL void destroy(Obj *o1) {
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     size_t i;
-    const Memblocks *v1 = (const Memblocks *)o1, *v2 = (const Memblocks *)o2;
+    const Memblocks *v1 = Memblocks(o1), *v2 = Memblocks(o2);
     if (v1->p != v2->p) return false;
     for (i = 0; i < v1->p; i++) {
         struct memblock_s *b1 = &v1->data[i];

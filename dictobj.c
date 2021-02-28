@@ -288,7 +288,7 @@ static MUST_CHECK Obj *normalize(Dict *dict) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Dict *v1 = (const Dict *)o1, *v2 = (const Dict *)o2;
+    const Dict *v1 = Dict(o1), *v2 = Dict(o2);
     size_t n;
     if (o2->obj != DICT_OBJ || v1->len != v2->len) return false;
     if (v1->def != v2->def) {

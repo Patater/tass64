@@ -174,7 +174,7 @@ static MUST_CHECK Obj *tuple_create(Obj *o1, linepos_t epoint) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const List *v1 = (const List *)o1, *v2 = (const List *)o2;
+    const List *v1 = List(o1), *v2 = List(o2);
     size_t i;
     if (o1->obj != o2->obj || v1->len != v2->len) return false;
     for (i = 0; i < v2->len; i++) {

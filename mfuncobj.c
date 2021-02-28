@@ -118,7 +118,7 @@ static FAST_CALL void garbage(Obj *o1, int j) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Mfunc *v1 = (const Mfunc *)o1, *v2 = (const Mfunc *)o2;
+    const Mfunc *v1 = Mfunc(o1), *v2 = Mfunc(o2);
     size_t i;
     if (o1->obj != o2->obj || v1->file_list != v2->file_list || v1->epoint.line != v2->epoint.line || v1->epoint.pos != v2->epoint.pos) return false;
     if (v1->argc != v2->argc || v1->nslen != v2->nslen || v1->single != v2->single) return false;

@@ -263,7 +263,7 @@ static void invalid_getiter(struct iter_s *v) {
 }
 
 static FAST_CALL bool lbl_same(const Obj *o1, const Obj *o2) {
-    const Lbl *v1 = (const Lbl *)o1, *v2 = (const Lbl *)o2;
+    const Lbl *v1 = Lbl(o1), *v2 = Lbl(o2);
     return o2->obj == LBL_OBJ && v1->sline == v2->sline && v1->waitforp == v2->waitforp && v1->file_list == v2->file_list && v1->parent == v2->parent;
 }
 
@@ -272,7 +272,7 @@ static FAST_CALL bool default_same(const Obj *o1, const Obj *o2) {
 }
 
 static FAST_CALL bool funcargs_same(const Obj *o1, const Obj *o2) {
-    const Funcargs *v1 = (const Funcargs *)o1, *v2 = (const Funcargs *)o2;
+    const Funcargs *v1 = Funcargs(o1), *v2 = Funcargs(o2);
     return o2->obj == FUNCARGS_OBJ && v1->val == v2->val && v1->len == v2->len;
 }
 

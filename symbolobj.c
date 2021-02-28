@@ -65,7 +65,7 @@ static FAST_CALL NO_INLINE bool symbol_same(const Symbol *v1, const Symbol *v2) 
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Symbol *v1 = (const Symbol *)o1, *v2 = (const Symbol *)o2;
+    const Symbol *v1 = Symbol(o1), *v2 = Symbol(o2);
     if (o1->obj != o2->obj || v1->name.len != v2->name.len) return false;
     switch (v1->name.len) {
     case 0: return true;

@@ -75,7 +75,7 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Register *v1 = (const Register *)o1, *v2 = (const Register *)o2;
+    const Register *v1 = Register(o1), *v2 = Register(o2);
     return o2->obj == REGISTER_OBJ && v1->len == v2->len && (
             v1->data == v2->data ||
             memcmp(v1->data, v2->data, v2->len) == 0);

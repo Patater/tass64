@@ -73,7 +73,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    const Label *v1 = (const Label *)o1, *v2 = (const Label *)o2;
+    const Label *v1 = Label(o1), *v2 = Label(o2);
     return o2->obj == LABEL_OBJ
         && v1->epoint.pos == v2->epoint.pos
         && v1->epoint.line == v2->epoint.line
