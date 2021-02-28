@@ -74,6 +74,8 @@ typedef struct Error {
     } u;
 } Error;
 
+#define Error(a) ((Error *)(1 ? (a) : (Obj *)a))
+
 extern void errorobj_init(void);
 
 extern MALLOC Error *new_error(Error_types, linepos_t);

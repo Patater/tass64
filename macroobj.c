@@ -40,7 +40,7 @@ Type *const STRUCT_OBJ = &struct_obj;
 Type *const UNION_OBJ = &union_obj;
 
 static FAST_CALL void macro_destroy(Obj *o1) {
-    Macro *v1 = (Macro *)o1;
+    Macro *v1 = Macro(o1);
     const struct file_s *cfile = v1->file_list->file;
     while (v1->argc != 0) {
         const struct macro_param_s *param = &v1->param[--v1->argc];
@@ -62,7 +62,7 @@ static FAST_CALL bool macro_same(const Obj *o1, const Obj *o2) {
 }
 
 static FAST_CALL void struct_destroy(Obj *o1) {
-    Struct *v1 = (Struct *)o1;
+    Struct *v1 = Struct(o1);
     const struct file_s *cfile = v1->file_list->file;
     while (v1->argc != 0) {
         const struct macro_param_s *param = &v1->param[--v1->argc];
@@ -74,7 +74,7 @@ static FAST_CALL void struct_destroy(Obj *o1) {
 }
 
 static FAST_CALL void struct_garbage(Obj *o1, int i) {
-    Struct *v1 = (Struct *)o1;
+    Struct *v1 = Struct(o1);
     Obj *v;
     const struct file_s *cfile;
     switch (i) {
@@ -113,13 +113,13 @@ static FAST_CALL bool struct_same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Obj *struct_size(oper_t op) {
-    Struct *v1 = (Struct *)op->v2;
+    Struct *v1 = Struct(op->v2);
     return (Obj *)int_from_size(v1->size);
 }
 
 static MUST_CHECK Obj *struct_calc2(oper_t op) {
     if (op->op == &o_MEMBER) {
-        return namespace_member(op, ((Struct *)op->v1)->names);
+        return namespace_member(op, Struct(op->v1)->names);
     }
     if (op->v2 == &none_value->v || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
     return obj_oper_error(op);

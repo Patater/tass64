@@ -139,7 +139,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
     } else {
         bool bits = v2->obj == BITS_OBJ;
         if (bits) {
-            len = ((Bits *)v2)->bits;
+            len = Bits(v2)->bits;
         }
         v = FLOAT_OBJ->create(v2, epoint);
         val_destroy(v2);
@@ -147,7 +147,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
             val_destroy(v1);
             return v;
         }
-        real = ((Float *)v)->real;
+        real = Float(v)->real;
         if (len != 0 && real != 0.0) real = bits ? ldexp(real, -(int)len) : ldexp10(real, len, true);
         val_destroy(v);
     }
@@ -156,7 +156,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
     if (v->obj != FLOAT_OBJ) {
         return v;
     }
-    real += ((Float *)v)->real;
+    real += Float(v)->real;
     if (expo != 0) {
         real = (base == 'p') ? ldexp(real, neg ? -(ival_t)expo : (ival_t)expo) : ldexp10(real, expo, neg);
     }
@@ -165,7 +165,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
         return (Obj *)new_error(ERROR_NUMERIC_OVERF, epoint);
     }
     if (v->refcount == 1) {
-        ((Float *)v)->real = real;
+        Float(v)->real = real;
         return v;
     }
     val_destroy(v);
@@ -324,15 +324,15 @@ static uval_t bytescalc(address_t addr, Bytes *val) {
 
 MUST_CHECK Obj *get_star_value(address_t addr, Obj *val) {
     switch (val->obj->type) {
-    case T_BITS: return (Obj *)bits_from_uval(addr, bitscalc(addr, (Bits *)val));
-    case T_CODE: return get_star_value(addr, ((Code *)val)->typ);
+    case T_BITS: return (Obj *)bits_from_uval(addr, bitscalc(addr, Bits(val)));
+    case T_CODE: return get_star_value(addr, Code(val)->typ);
     default:
     case T_BOOL:
     case T_INT: return (Obj *)int_from_uval(addr);
-    case T_FLOAT: return (Obj *)new_float(addr + (((Float *)val)->real - trunc(((Float *)val)->real)));
+    case T_FLOAT: return (Obj *)new_float(addr + (Float(val)->real - trunc(Float(val)->real)));
     case T_STR: return (Obj *)bytes_from_uval(addr, all_mem_bits >> 3);
-    case T_BYTES: return (Obj *)bytes_from_uval(addr, bytescalc(addr, (Bytes *)val));
-    case T_ADDRESS: return (Obj *)new_address(get_star_value(addr, ((Address *)val)->val), ((Address *)val)->type);
+    case T_BYTES: return (Obj *)bytes_from_uval(addr, bytescalc(addr, Bytes(val)));
+    case T_ADDRESS: return (Obj *)new_address(get_star_value(addr, Address(val)->val), Address(val)->type);
     }
 }
 
@@ -601,7 +601,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
             continue;
         }
 
-        op2 = (Oper *)val;
+        op2 = Oper(val);
         op = op2->op;
 
         if (vsp < 1) goto syntaxe;
@@ -620,7 +620,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 case O_COMMAY:
                 case O_TUPLE:
                     {
-                        Address *old = (Address *)v1->val;
+                        Address *old = Address(v1->val);
                         Address *val2 = new_address(val_reference(old->val), (old->type << 4) | ((op == O_TUPLE) ? A_I : (op == O_COMMAX) ? A_XR : A_YR));
                         val_destroy(v1->val); v1->val = (Obj *)val2;
                         v1->epoint = o_out->epoint;
@@ -771,7 +771,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
             return val_reference(o1->obj == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
         }
 
-        v = (List *)val_alloc(o1->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ);
+        v = List(val_alloc(o1->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ));
         vals = list_create_elements(v, iter.len);
         for (i = 0; i < iter.len && (o1 = iter.next(&iter)) != NULL; i++) {
             vals[i] = apply_addressing(o1, am, inplace);
@@ -782,7 +782,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
         return &v->v;
     }
     if (o1->obj == ADDRESS_OBJ) {
-        Address *v1 = (Address *)o1;
+        Address *v1 = Address(o1);
         if (inplace && o1->refcount == 1) {
             v1->type = am | (v1->type << 4);
             return val_reference(o1);
@@ -819,7 +819,7 @@ static bool get_val2(struct eval_context_s *ev) {
         }
 
         if (val == &o_COMMA.v || val == &o_COLON2.v) continue;
-        oper.op = (Oper *)val;
+        oper.op = Oper(val);
         op = oper.op->op;
         if (vsp == 0) goto syntaxe;
         v1 = &values[vsp - 1];
@@ -830,7 +830,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 size_t args = 0;
                 Funcargs tmp;
                 op = (op == O_FUNC) ? O_PARENT : O_BRACKET;
-                while (v1->val->obj != OPER_OBJ || ((Oper *)v1->val)->op != op) {
+                while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != op) {
                     args++;
                     if (vsp <= args) goto syntaxe;
                     v1 = &values[vsp - 1 - args];
@@ -869,7 +869,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 bool tup = (op == O_RPARENT), expc = (op == O_TUPLE || op == O_LIST);
                 size_t args = 0;
                 op = (op == O_RBRACKET || op == O_LIST) ? O_BRACKET : O_PARENT;
-                while (v1->val->obj != OPER_OBJ || ((Oper *)v1->val)->op != op) {
+                while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != op) {
                     args++;
                     if (vsp <= args) goto syntaxe;
                     v1 = &values[vsp - 1 - args];
@@ -886,7 +886,7 @@ static bool get_val2(struct eval_context_s *ev) {
                                      obj != &o_FUNC.v &&      /* f((3)) */
                                      obj != &o_LIST.v &&      /* [(3),] */
                                      obj != &o_COMMA.v &&     /* [(3),(3)] */
-                                     !(((Oper *)obj)->op >= O_COMMAX && ((Oper *)obj)->op <= O_COMMAK) /* (3),y */
+                                     !(Oper(obj)->op >= O_COMMAX && Oper(obj)->op <= O_COMMAK) /* (3),y */
                                     )) {
                                 v1->val = values[vsp].val;
                                 values[vsp].val = NULL;
@@ -907,7 +907,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     }
                 }
                 if (args != 0) {
-                    list = (List *)val_alloc((op == O_BRACKET) ? LIST_OBJ : TUPLE_OBJ);
+                    list = List(val_alloc((op == O_BRACKET) ? LIST_OBJ : TUPLE_OBJ));
                     list->len = args;
                     list->data = list_create_elements(list, args);
                     while ((args--) != 0) {
@@ -916,7 +916,7 @@ static bool get_val2(struct eval_context_s *ev) {
                         v2->val = NULL;
                         vsp--;
                     }
-                } else list = (List *)val_reference((op == O_BRACKET) ? &null_list->v : &null_tuple->v);
+                } else list = List(val_reference((op == O_BRACKET) ? &null_list->v : &null_tuple->v));
                 v1->val = (Obj *)list;
                 continue;
             }
@@ -924,7 +924,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_DICT:
             {
                 size_t args = 0;
-                while (v1->val->obj != OPER_OBJ || ((Oper *)v1->val)->op != O_BRACE) {
+                while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != O_BRACE) {
                     args++;
                     if (vsp <= args) goto syntaxe;
                     v1 = &values[vsp - 1 - args];
@@ -976,10 +976,10 @@ static bool get_val2(struct eval_context_s *ev) {
             v2 = v1; v1 = &values[--vsp - 1];
             if (vsp == 0) goto syntaxe;
             if (v1->val->obj == COLONLIST_OBJ && v1->val->refcount == 1) {
-                Colonlist *l1 = (Colonlist *)v1->val;
+                Colonlist *l1 = Colonlist(v1->val);
                 Colonlist *list = new_colonlist();
                 if (v2->val->obj == COLONLIST_OBJ && v2->val->refcount == 1) {
-                    Colonlist *l2 = (Colonlist *)v2->val;
+                    Colonlist *l2 = Colonlist(v2->val);
                     list->len = l1->len + l2->len;
                     if (list->len < l2->len) err_msg_out_of_memory(); /* overflow */
                     list->data = list_create_elements(list, list->len);
@@ -1001,7 +1001,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 continue;
             }
             if (v2->val->obj == COLONLIST_OBJ && v2->val->refcount == 1) {
-                Colonlist *l2 = (Colonlist *)v2->val;
+                Colonlist *l2 = Colonlist(v2->val);
                 Colonlist *list = new_colonlist();
                 list->len = l2->len + 1;
                 if (list->len < 1) err_msg_out_of_memory(); /* overflow */
@@ -1082,12 +1082,12 @@ static bool get_val2(struct eval_context_s *ev) {
                 iter.data = v1->val; v1->val->obj->getiter(&iter);
                 len = iter.len;
 
-                if (v1->val->obj == DICT_OBJ && ((Dict *)v1->val)->def != NULL) {
+                if (v1->val->obj == DICT_OBJ && Dict(v1->val)->def != NULL) {
                     Colonlist *list = new_colonlist();
                     list->len = 2;
                     list->data = list->u.val;
                     list->data[0] = (Obj *)ref_default();
-                    list->data[1] = val_reference(((Dict *)v1->val)->def);
+                    list->data[1] = val_reference(Dict(v1->val)->def);
                     def = &list->v;
                     len++;
                     if (len < 1) err_msg_out_of_memory(); /* overflow */
@@ -1129,10 +1129,10 @@ static bool get_val2(struct eval_context_s *ev) {
                     continue;
                 }
                 if (diagnostics.strict_bool && v2->val->obj != BOOL_OBJ) err_msg_bool(ERROR_____CANT_BOOL, v2->val, &v2->epoint); /* TODO */
-                if ((Bool *)val == true_value) {
-                    if ((Bool *)val2 == true_value) val_replace(&v1->val, &false_value->v);
+                if (Bool(val) == true_value) {
+                    if (Bool(val2) == true_value) val_replace(&v1->val, &false_value->v);
                 } else {
-                    val_replace(&v1->val, (Bool *)val2 == true_value ? v2->val : &false_value->v);
+                    val_replace(&v1->val, Bool(val2) == true_value ? v2->val : &false_value->v);
                 }
                 val_destroy(val2);
             }
@@ -1392,7 +1392,7 @@ static bool get_exp2(int stop) {
                         Obj *str = get_string(&epoint);
                         if (str->obj == STR_OBJ) {
                             epoint.pos++;
-                            val = bytes_from_str((Str *)str, &epoint, mode);
+                            val = bytes_from_str(Str(str), &epoint, mode);
                             epoint.pos--;
                             push_oper(val, &epoint);
                             val_destroy(str);
@@ -1867,7 +1867,7 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
     case 1:
         val = pull_val(&epoints[0]);
         if (val->obj == ADDRLIST_OBJ) {
-            list = (Addrlist *)val;
+            list = Addrlist(val);
             i = list->len < 3 ? list->len : 3;
             for (j = 1; j < i; j++) epoints[j] = epoints[0];
         }
@@ -1879,9 +1879,9 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
     list->data = list_create_elements(list, len);
     for (i = j = 0; j < len; j++) {
         Obj *val2 = pull_val((i < 3) ? &epoints[i] : NULL);
-        if (val2->obj == REGISTER_OBJ && ((Register *)val2)->len == 1 && i != 0) {
+        if (val2->obj == REGISTER_OBJ && Register(val2)->len == 1 && i != 0) {
             Address_types am;
-            switch (((Register *)val2)->data[0]) {
+            switch (Register(val2)->data[0]) {
             case 's': am = A_SR; break;
             case 'r': am = A_RR; break;
             case 'z': am = A_ZR; break;

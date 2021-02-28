@@ -29,6 +29,8 @@ typedef struct Gap {
     struct Str *repr;
 } Gap;
 
+#define Gap(a) ((Gap *)(1 ? (a) : (Obj *)a))
+
 extern Gap *gap_value;
 
 extern void gapobj_init(void);

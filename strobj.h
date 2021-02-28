@@ -37,6 +37,8 @@ typedef struct Str {
     } u;
 } Str;
 
+#define Str(a) ((Str *)(1 ? (a) : (Obj *)a))
+
 extern Str *null_str;
 
 extern void strobj_init(void);

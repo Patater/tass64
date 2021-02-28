@@ -43,6 +43,8 @@ typedef struct Memblocks {
     struct memblock_s *data;
 } Memblocks;
 
+#define Memblocks(a) ((Memblocks *)(1 ? (a) : (Obj *)a))
+
 extern void memblocksobj_init(void);
 
 static inline Memblocks *ref_memblocks(Memblocks *v1) {

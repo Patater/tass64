@@ -47,19 +47,19 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ERROR:
     case T_NAMESPACE: return val_reference(v1);
     case T_CODE:
-        return val_reference(&((Code *)v1)->names->v);
+        return val_reference(&Code(v1)->names->v);
     case T_UNION:
     case T_STRUCT:
-        return val_reference(&((Struct *)v1)->names->v);
+        return val_reference(&Struct(v1)->names->v);
     case T_MFUNC:
-        return val_reference(&((Mfunc *)v1)->names->v);
+        return val_reference(&Mfunc(v1)->names->v);
     default: break;
     }
     return (Obj *)new_error_conv(v1, NAMESPACE_OBJ, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {
-    Namespace *v1 = (Namespace *)o1;
+    Namespace *v1 = Namespace(o1);
     size_t i;
     if (v1->data == NULL) return;
     for (i = 0; i <= v1->mask; i++) {
@@ -69,7 +69,7 @@ static FAST_CALL void destroy(Obj *o1) {
 }
 
 static FAST_CALL void garbage(Obj *o1, int j) {
-    Namespace *v1 = (Namespace *)o1;
+    Namespace *v1 = Namespace(o1);
     size_t i;
     if (v1->data == NULL) return;
     switch (j) {
@@ -141,7 +141,7 @@ static bool namespace_issubset(Namespace *v1, const Namespace *v2) {
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
-    Namespace *v1 = (Namespace *)o1, *v2 = (Namespace *)o2;
+    Namespace *v1 = Namespace(o1), *v2 = Namespace(o2);
     if (o2->obj != NAMESPACE_OBJ) return false;
     return namespace_issubset(v1, v2) && namespace_issubset(v2, v1);
 }
@@ -175,7 +175,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
             }
             v = p->v.obj->repr(&p->v, epoint, maxsize - chars);
             if (v == NULL || v->obj != STR_OBJ) goto error;
-            str = (Str *)v;
+            str = Str(v);
             ln += str->len;
             if (ln < str->len) goto error2; /* overflow */
             chars += str->chars;
@@ -203,7 +203,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     memcpy(s, "namespace({", 11);
     s += 11;
     for (j = 0; j < i; j++) {
-        Str *str2 = (Str *)vals[j];
+        Str *str2 = Str(vals[j]);
         if (j != 0) *s++ = ',';
         if (str2->len != 0) {
             memcpy(s, str2->data, str2->len);
@@ -223,7 +223,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
     switch (o2->obj->type) {
     case T_SYMBOL:
         {
-            Symbol *v2 = (Symbol *)o2;
+            Symbol *v2 = Symbol(o2);
             l = find_label2(&v2->name, v1);
             if (l != NULL) {
                 if (diagnostics.case_symbol && str_cmp(&v2->name, &l->name) != 0) err_msg_symbol_case(&v2->name, l, op->epoint2);
@@ -241,7 +241,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
         }
     case T_ANONSYMBOL:
         {
-            Anonsymbol *v2 = (Anonsymbol *)o2;
+            Anonsymbol *v2 = Anonsymbol(o2);
             l = find_anonlabel2(v2->count, v1);
             if (l != NULL) {
                 touch_label(l);
@@ -268,7 +268,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
 }
 
 MALLOC Namespace *new_namespace(const struct file_list_s *file_list, linepos_t epoint) {
-    Namespace *val = (Namespace *)val_alloc(NAMESPACE_OBJ);
+    Namespace *val = Namespace(val_alloc(NAMESPACE_OBJ));
     val->data = NULL;
     val->mask = 0;
     val->file_list = file_list;
@@ -281,7 +281,7 @@ MALLOC Namespace *new_namespace(const struct file_list_s *file_list, linepos_t e
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     if (op->op == &o_MEMBER) {
-        return namespace_member(op, (Namespace *)op->v1);
+        return namespace_member(op, Namespace(op->v1));
     }
     if (op->v2 == &none_value->v || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
     return obj_oper_error(op);
@@ -304,14 +304,14 @@ void namespaceobj_names(void) {
 Namespace *get_namespace(const Obj *o) {
     switch (o->obj->type) {
     case T_CODE:
-        return ((Code *)o)->names;
+        return Code(o)->names;
     case T_UNION:
     case T_STRUCT:
-        return ((Struct *)o)->names;
+        return Struct(o)->names;
     case T_MFUNC:
-        return ((Mfunc *)o)->names;
+        return Mfunc(o)->names;
     case T_NAMESPACE:
-        return (Namespace *)o;
+        return Namespace(o);
     default:
         return NULL;
     }

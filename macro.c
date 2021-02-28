@@ -197,7 +197,7 @@ bool mtranslate(void) {
                 lpoint.pos += param.len;
             }
             if (param.len != 0) {
-                Macro *macro = (Macro *)macro_parameters.current->macro;
+                Macro *macro = Macro(macro_parameters.current->macro);
                 str_t cf;
                 p += p2 - last2;
                 op = p2;
@@ -350,7 +350,7 @@ static size_t macro_param_find(void) {
 Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint) {
     bool in_macro_old;
     Obj *val;
-    Macro *macro = (Macro *)tmp2;
+    Macro *macro = Macro(tmp2);
     if (macro->recursion_pass == pass) return NULL;
     if (macro_parameters.p > 100) {
         macro->recursion_pass = pass;
@@ -676,7 +676,7 @@ bool get_func_params(Mfunc *v, bool single) {
 }
 
 void get_macro_params(Obj *v) {
-    Macro *macro = (Macro *)v;
+    Macro *macro = Macro(v);
     struct macro_param_s *param;
     size_t len = macro->argc, i, j;
     str_t label;
@@ -803,7 +803,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
             }
             lst->len++;
             context = NULL;
-        } else context = (Namespace *)lst->data[mfunc->ipoint];
+        } else context = Namespace(lst->data[mfunc->ipoint]);
     }
     if (context == NULL) {
         struct linepos_s xpoint;
@@ -832,7 +832,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
                     j++;
                 }
             } else {
-                tuple = (Tuple *)val_reference(&null_tuple->v);
+                tuple = ref_tuple(null_tuple);
             }
             val = &tuple->v;
         } else {

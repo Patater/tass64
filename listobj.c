@@ -51,7 +51,7 @@ static FAST_CALL NO_INLINE void list_destroy(List *v1) {
 }
 
 static FAST_CALL void destroy(Obj *o1) {
-    List *v1 = (List *)o1;
+    List *v1 = List(o1);
     size_t i;
     for (i = 0; i < v1->len; i++) {
         val_destroy(v1->data[i]);
@@ -60,7 +60,7 @@ static FAST_CALL void destroy(Obj *o1) {
 }
 
 static FAST_CALL void garbage(Obj *o1, int j) {
-    List *v1 = (List *)o1;
+    List *v1 = List(o1);
     size_t i;
     Obj *v;
     switch (j) {
@@ -137,7 +137,7 @@ static Obj **lextend(List *v, size_t len) {
 static MUST_CHECK Obj *tuple_from_list(List *v1, Type *typ, linepos_t epoint) {
     size_t i, ln;
     Obj **vals, **data = v1->data;
-    Tuple *v = (Tuple *)val_alloc(typ);
+    Tuple *v = Tuple(val_alloc(typ));
 
     ln = v1->len;
     vals = lnew(v, ln);
@@ -154,8 +154,8 @@ static MUST_CHECK Obj *list_create(Obj *o1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
     case T_LIST: return val_reference(o1);
-    case T_TUPLE: return tuple_from_list((List *)o1, LIST_OBJ, epoint);
-    case T_CODE: return tuple_from_code((Code *)o1, LIST_OBJ);
+    case T_TUPLE: return tuple_from_list(List(o1), LIST_OBJ, epoint);
+    case T_CODE: return tuple_from_code(Code(o1), LIST_OBJ);
     default: break;
     }
     return (Obj *)new_error_conv(o1, LIST_OBJ, epoint);
@@ -166,8 +166,8 @@ static MUST_CHECK Obj *tuple_create(Obj *o1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
     case T_TUPLE: return val_reference(o1);
-    case T_LIST: return tuple_from_list((List *)o1, TUPLE_OBJ, epoint);
-    case T_CODE: return tuple_from_code((Code *)o1, TUPLE_OBJ);
+    case T_LIST: return tuple_from_list(List(o1), TUPLE_OBJ, epoint);
+    case T_CODE: return tuple_from_code(Code(o1), TUPLE_OBJ);
     default: break;
     }
     return (Obj *)new_error_conv(o1, TUPLE_OBJ, epoint);
@@ -185,7 +185,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
-    List *v1 = (List *)o1;
+    List *v1 = List(o1);
     size_t i;
     Obj *val, *val2;
     switch (type) {
@@ -193,12 +193,12 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
         val2 = NULL;
         for (i = 0; i < v1->len; i++) {
             val = v1->data[i]->obj->truth(v1->data[i], type, epoint);
-            if ((Bool *)val == true_value) {
+            if (Bool(val) == true_value) {
                 val_destroy(val);
                 continue;
             }
             if (val2 != NULL) val_destroy(val2);
-            if ((Bool *)val == false_value) {
+            if (Bool(val) == false_value) {
                 return val;
             }
             val2 = val;
@@ -208,12 +208,12 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
         val2 = NULL;
         for (i = 0; i < v1->len; i++) {
             val = v1->data[i]->obj->truth(v1->data[i], type, epoint);
-            if ((Bool *)val == false_value) {
+            if (Bool(val) == false_value) {
                 val_destroy(val);
                 continue;
             }
             if (val2 != NULL) val_destroy(val2);
-            if ((Bool *)val == true_value) return val;
+            if (Bool(val) == true_value) return val;
             val2 = val;
         }
         return (val2 != NULL) ? val2 : (Obj *)ref_bool(false_value);
@@ -223,7 +223,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
-    List *v1 = (List *)o1;
+    List *v1 = List(o1);
     size_t i, l = v1->len;
     Obj **vals = v1->data;
     unsigned int h;
@@ -247,10 +247,10 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize) {
-    Tuple *v1 = (List *)o1;
+    Tuple *v1 = List(o1);
     bool tupleorlist = (o1->obj != ADDRLIST_OBJ && o1->obj != COLONLIST_OBJ);
     size_t i, len = tupleorlist ? 2 : 0, chars = len;
-    List *list = NULL;
+    Tuple *list = NULL;
     Obj **vals = NULL, *val;
     Str *v;
     uint8_t *s;
@@ -261,7 +261,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
         if (len < i) return NULL; /* overflow */
         chars = len;
         if (chars > maxsize) return NULL;
-        list = (Tuple *)val_alloc(TUPLE_OBJ);
+        list = Tuple(val_alloc(TUPLE_OBJ));
         vals = lnew(list, llen);
         if (vals == NULL) return (epoint != NULL) ? (Obj *)new_error_mem(epoint) : NULL;
         for (i = 0;i < llen; i++) {
@@ -272,7 +272,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
                 val = o2->obj->repr(o2, epoint, maxsize - chars);
                 if (val == NULL || val->obj != STR_OBJ) goto error;
             }
-            v = (Str *)val;
+            v = Str(val);
             len += v->len;
             if (len < v->len) goto error2; /* overflow */
             chars += v->chars;
@@ -298,7 +298,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
     s = v->data;
     if (tupleorlist) *s++ = (o1->obj == LIST_OBJ) ? '[' : '(';
     for (i = 0; i < llen; i++) {
-        Str *str = (Str *)vals[i];
+        Str *str = Str(vals[i]);
         if (i != 0) *s++ = (o1->obj == COLONLIST_OBJ) ? ':' : ',';
         if (str->len != 0) {
             memcpy(s, str->data, str->len);
@@ -312,13 +312,13 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
 }
 
 static MUST_CHECK Obj *len(oper_t op) {
-    List *v1 = (List *)op->v2;
+    List *v1 = List(op->v2);
     return (Obj *)int_from_size(v1->len);
 }
 
 static FAST_CALL MUST_CHECK Obj *iter_forward(struct iter_s *v1) {
     if (v1->val >= v1->len) return NULL;
-    return ((List *)v1->data)->data[v1->val++];
+    return List(v1->data)->data[v1->val++];
 }
 
 static void getiter(struct iter_s *v) {
@@ -326,12 +326,12 @@ static void getiter(struct iter_s *v) {
     v->val = 0;
     v->data = val_reference(v->data);
     v->next = iter_forward;
-    v->len = ((List *)v->data)->len;
+    v->len = List(v->data)->len;
 }
 
 static FAST_CALL MUST_CHECK Obj *iter_reverse(struct iter_s *v1) {
     if (v1->val >= v1->len) return NULL;
-    return ((List *)v1->data)->data[v1->len - ++v1->val];
+    return List(v1->data)->data[v1->len - ++v1->val];
 }
 
 static void getriter(struct iter_s *v) {
@@ -339,7 +339,7 @@ static void getriter(struct iter_s *v) {
     v->val = 0;
     v->data = val_reference(v->data);
     v->next = iter_reverse;
-    v->len = ((List *)v->data)->len;
+    v->len = List(v->data)->len;
 }
 
 Obj **list_create_elements(List *v, size_t n) {
@@ -394,7 +394,7 @@ void list_shrink(List *lst, size_t i) {
 }
 
 MUST_CHECK Tuple *new_tuple(size_t n) {
-     Tuple *v = (Tuple *)val_alloc(TUPLE_OBJ);
+     Tuple *v = Tuple(val_alloc(TUPLE_OBJ));
      v->len = n;
      if (n <= lenof(v->u.val)) {
          v->data = v->u.val;
@@ -409,7 +409,7 @@ MUST_CHECK Tuple *new_tuple(size_t n) {
 
 static MUST_CHECK Obj *calc1(oper_t op) {
     Obj *o1 = op->v1;
-    List *v1 = (List *)o1, *v;
+    List *v1 = List(o1), *v;
     if (v1->len != 0) {
         Obj **vals;
         bool inplace = (op->inplace == o1);
@@ -419,7 +419,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
             vals = v1->data;
             if (vals != v->u.val) v->u.s.hash = -1;
         } else {
-            v = (List *)val_alloc(o1->obj);
+            v = List(val_alloc(o1->obj));
             vals = lnew(v, v1->len);
             if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }
@@ -438,7 +438,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
 
 static MUST_CHECK Obj *calc2_list(oper_t op) {
     Obj *o1 = op->v1, *o2 = op->v2;
-    List *v1 = (List *)o1, *v2 = (List *)o2;
+    List *v1 = List(o1), *v2 = List(o2);
     size_t i;
     Error *err;
 
@@ -483,7 +483,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                         inplace = v2;
                         if (vals != v->u.val) v->u.s.hash = -1;
                     } else {
-                        v = (List *)val_alloc(o1->obj);
+                        v = List(val_alloc(o1->obj));
                         vals = lnew(v, v1->len);
                         if (vals == NULL) goto failed;
                         inplace = NULL;
@@ -539,7 +539,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                 if (vals == NULL) goto failed;
                 i = v1->len;
                 v1->len = ln;
-                v = (List *)val_reference(o1);
+                v = ref_list(List(o1));
             } else if (o1->obj == o2->obj && op->inplace == &v2->v) {
                 vals = lextend(v2, ln);
                 if (vals == NULL) goto failed;
@@ -550,7 +550,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                 }
                 return val_reference(o2);
             } else {
-                v = (List *)val_alloc(o1->obj);
+                v = List(val_alloc(o1->obj));
                 vals = lnew(v, ln);
                 if (vals == NULL) goto failed;
                 for (i = 0; i < v1->len; i++) {
@@ -571,7 +571,7 @@ failed:
 
 static inline MUST_CHECK Obj *repeat(oper_t op) {
     Obj **vals, *o1 = op->v1;
-    List *v1 = (List *)o1, *v;
+    List *v1 = List(o1), *v;
     uval_t rep;
     Error *err;
 
@@ -585,7 +585,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
             return val_reference(o1);
         }
         if (v1->len > SIZE_MAX / rep) break; /* overflow */
-        v = (List *)val_alloc(o1->obj);
+        v = List(val_alloc(o1->obj));
         ln = v1->len * rep;
         vals = lnew(v, ln);
         if (vals == NULL) break;
@@ -619,22 +619,22 @@ MUST_CHECK Error *indexoffs(Obj *v1, size_t len, size_t *offs, linepos_t epoint)
     return new_error_obj(ERROR___INDEX_RANGE, v1, epoint);
 }
 
-MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_s *s, linepos_t epoint) {
+MUST_CHECK Error *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_s *s, linepos_t epoint) {
     Error *err;
     ival_t len, offs, end, step = 1;
 
-    if (len2 >= (1U << (8 * sizeof(ival_t) - 1))) return (Obj *)new_error_mem(epoint); /* overflow */
+    if (len2 >= (1U << (8 * sizeof(ival_t) - 1))) return new_error_mem(epoint); /* overflow */
     len = (ival_t)len2;
     if (v2->len > 3 || v2->len < 1) {
-        return (Obj *)new_error_argnum(v2->len, 1, 3, epoint);
+        return new_error_argnum(v2->len, 1, 3, epoint);
     }
     end = len;
     if (v2->len > 2) {
         if (v2->data[2] != &default_value->v) {
             err = v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint);
-            if (err != NULL) return &err->v;
+            if (err != NULL) return err;
             if (step == 0) {
-                return (Obj *)new_error(ERROR_NO_ZERO_VALUE, epoint);
+                return new_error(ERROR_NO_ZERO_VALUE, epoint);
             }
         }
     }
@@ -642,7 +642,7 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
         if (v2->data[1] == &default_value->v) end = (step > 0) ? len : -1;
         else {
             err = v2->data[1]->obj->ival(v2->data[1], &end, 8 * sizeof end, epoint);
-            if (err != NULL) return &err->v;
+            if (err != NULL) return err;
             if (end >= 0) {
                 if (end > len) end = len;
             } else {
@@ -655,7 +655,7 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
     else {
         ival_t minus;
         err = v2->data[0]->obj->ival(v2->data[0], &offs, 8 * sizeof offs, epoint);
-        if (err != NULL) return &err->v;
+        if (err != NULL) return err;
         minus = (step < 0) ? -1 : 0;
         if (offs >= 0) {
             if (offs > len + minus) offs = len + minus;
@@ -683,8 +683,8 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Obj **vals;
     Obj *o2 = op->v2;
     size_t offs2;
-    List *v, *v1 = (List *)op->v1;
-    Funcargs *args = (Funcargs *)o2;
+    List *v, *v1 = List(op->v1);
+    Funcargs *args = Funcargs(o2);
     size_t i, ln;
     Error *err;
     bool more = args->len > indx + 1;
@@ -707,7 +707,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
             iter_destroy(&iter);
             return val_reference((v1->v.obj == TUPLE_OBJ) ? &null_tuple->v : &null_list->v);
         }
-        v = (List *)val_alloc(v1->v.obj);
+        v = List(val_alloc(v1->v.obj));
         vals = lnew(v, iter.len);
         if (vals == NULL) {
             iter_destroy(&iter);
@@ -733,7 +733,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     if (o2->obj == COLONLIST_OBJ) {
         struct sliceparam_s s;
 
-        err = (Error *)sliceparams((Colonlist *)o2, ln, &s, epoint2);
+        err = sliceparams(Colonlist(o2), ln, &s, epoint2);
         if (err != NULL) return &err->v;
 
         if (s.length == 0) {
@@ -743,7 +743,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         if (s.step == 1 && s.length == v1->len && !more) {
             return val_reference(&v1->v); /* original tuple */
         }
-        v = (List *)val_alloc(v1->v.obj);
+        v = List(val_alloc(v1->v.obj));
         vals = lnew(v, s.length);
         if (vals == NULL) goto failed;
         for (i = 0; i < s.length; i++) {
@@ -770,7 +770,7 @@ failed:
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o1 = op->v1, *o2 = op->v2;
-    List *v1 = (List *)o1;
+    List *v1 = List(o1);
     size_t i;
     Obj **vals;
 
@@ -791,11 +791,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o1);
         List *list;
         if (inplace) {
-            list = (List *)val_reference(o1);
+            list = ref_list(List(o1));
             vals = list->data;
             if (vals != list->u.val) list->u.s.hash = -1;
         } else {
-            list = (List *)val_alloc(o1->obj);
+            list = List(val_alloc(o1->obj));
             vals = lnew(list, v1->len);
             if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }
@@ -820,7 +820,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
 static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *o1 = op->v1, *o2 = op->v2;
-    List *v2 = (List *)o2;
+    List *v2 = List(o2);
     size_t i;
     Obj **vals;
 
@@ -832,7 +832,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             op->v2 = v2->data[i];
             op->inplace = NULL;
             result = o1->obj->calc2(op);
-            if ((Bool *)result == true_value) {
+            if (Bool(result) == true_value) {
                 op->op = &o_IN;
                 return result;
             }
@@ -851,11 +851,11 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o2);
         List *v;
         if (inplace) {
-            v = (List *)val_reference(o2);
+            v = ref_list(List(o2));
             vals = v->data;
             if (vals != v->u.val) v->u.s.hash = -1;
         } else {
-            v = (List *)val_alloc(o2->obj);
+            v = List(val_alloc(o2->obj));
             vals = lnew(v, v2->len);
             if (vals == NULL) return (Obj *)new_error_mem(op->epoint3);
         }

@@ -55,7 +55,10 @@ static Type funcargs_obj;
 Type *const LBL_OBJ = &lbl_obj;
 Type *const DEFAULT_OBJ = &default_obj;
 Type *const FUNCARGS_OBJ = &funcargs_obj;
-Default *default_value;
+
+static Default defaultval = { { &default_obj, 1}, NULL };
+
+Default *default_value = &defaultval;
 
 MUST_CHECK Obj *obj_oper_error(oper_t op) {
     Obj *v1, *v2;
@@ -101,7 +104,7 @@ static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR: return val_reference(v1);
     case T_ADDRESS:
-        if (((Address *)v1)->val == &none_value->v || ((Address *)v1)->val->obj == ERROR_OBJ) return val_reference(((Address *)v1)->val);
+        if (Address(v1)->val == &none_value->v || Address(v1)->val->obj == ERROR_OBJ) return val_reference(Address(v1)->val);
         break;
     default: break;
     }
@@ -116,7 +119,7 @@ static FAST_CALL bool invalid_same(const Obj *v1, const Obj *v2) {
 static MUST_CHECK Error *generic_invalid(Obj *v1, linepos_t epoint, Error_types num) {
     Error *err;
     if (v1->obj == ERROR_OBJ) {
-        return (Error *)val_reference(v1);
+        return Error(val_reference(v1));
     }
     err = new_error(num, epoint);
     err->u.obj = val_reference(v1);
@@ -168,7 +171,7 @@ static MUST_CHECK Obj *invalid_calc2(oper_t op) {
         return val_reference(o2);
     }
     if (o2->obj == ADDRESS_OBJ) {
-        Obj *val = ((Address *)o2)->val;
+        Obj *val = Address(o2)->val;
         if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
@@ -180,14 +183,14 @@ static MUST_CHECK Obj *invalid_rcalc2(oper_t op) {
         return val_reference(o1);
     }
     if (o1->obj == ADDRESS_OBJ) {
-        Obj *val = ((Address *)o1)->val;
+        Obj *val = Address(o1)->val;
         if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
 }
 
 static MUST_CHECK Obj *invalid_slice(oper_t op, size_t indx) {
-    Funcargs *args = (Funcargs *)op->v2;
+    Funcargs *args = Funcargs(op->v2);
     if (indx == 0) {
         if (args->len > 0) {
             Obj *o2 = args->val[0].val;
@@ -195,7 +198,7 @@ static MUST_CHECK Obj *invalid_slice(oper_t op, size_t indx) {
                 return val_reference(o2);
             }
             if (o2->obj == ADDRESS_OBJ) {
-                Obj *val = ((Address *)o2)->val;
+                Obj *val = Address(o2)->val;
                 if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
             }
         }
@@ -234,7 +237,7 @@ static MUST_CHECK Obj *invalid_sign(Obj *v1, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *invalid_function(oper_t op) {
-    return (Obj *)generic_invalid(op->v2, op->epoint2, (((Function *)op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
+    return (Obj *)generic_invalid(op->v2, op->epoint2, (Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
 }
 
 static MUST_CHECK Obj *invalid_len(oper_t op) {
@@ -334,8 +337,6 @@ void objects_init(void) {
     default_obj.same = default_same;
     new_type(&funcargs_obj, T_FUNCARGS, "funcargs", sizeof(Funcargs));
     funcargs_obj.same = funcargs_same;
-
-    default_value = (Default *)val_alloc(DEFAULT_OBJ);
 }
 
 void objects_destroy(void) {
@@ -352,6 +353,4 @@ void objects_destroy(void) {
 #ifdef DEBUG
     if (default_value->v.refcount != 1) fprintf(stderr, "default %" PRIuSIZE "\n", default_value->v.refcount - 1);
 #endif
-
-    val_destroy(&default_value->v);
 }

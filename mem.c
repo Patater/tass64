@@ -148,7 +148,7 @@ void memref(Memblocks *memblocks, Memblocks *ref) {
     block = &memblocks->data[memblocks->p++];
     block->len = 0;
     block->p = memblocks->lastp;
-    block->ref = (Memblocks *)val_reference(&ref->v);
+    block->ref = Memblocks(val_reference(&ref->v));
     block->addr = memblocks->lastaddr;
 }
 

@@ -68,12 +68,12 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types UNUSED(type), linepos_t UNUSED
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    *hs = (Bool *)o1 == true_value ? 1 : 0;
+    *hs = Bool(o1) == true_value ? 1 : 0;
     return NULL;
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Bool *v1 = (Bool *)o1;
+    Bool *v1 = Bool(o1);
     Str *v;
     bool val = (o1 == &true_value->v);
     size_t len = val ? 4 : 5;
@@ -91,13 +91,13 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 
 static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int UNUSED(bits), linepos_t epoint) {
     if (diagnostics.strict_bool) err_msg_bool(ERROR______CANT_INT, o1, epoint);
-    *iv = (Bool *)o1 == true_value ? 1 : 0;
+    *iv = Bool(o1) == true_value ? 1 : 0;
     return NULL;
 }
 
 static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int UNUSED(bits), linepos_t epoint) {
     if (diagnostics.strict_bool) err_msg_bool(ERROR______CANT_INT, o1, epoint);
-    *uv = (Bool *)o1 == true_value ? 1 : 0;
+    *uv = Bool(o1) == true_value ? 1 : 0;
     return NULL;
 }
 
@@ -119,12 +119,12 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *function(oper_t op) {
-    if (diagnostics.strict_bool) err_msg_bool((((Function *)op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT, op->v2, op->epoint2);
+    if (diagnostics.strict_bool) err_msg_bool((Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT, op->v2, op->epoint2);
     return (Obj *)ref_int(int_value[op->v2 == &true_value->v ? 1 : 0]);
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {
-    bool v1 = (Bool *)op->v1 == true_value;
+    bool v1 = Bool(op->v1) == true_value;
     Str *v;
     if (diagnostics.strict_bool && op->op != &o_LNOT) err_msg_bool_oper(op);
     switch (op->op->op) {

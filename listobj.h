@@ -43,6 +43,11 @@ typedef struct List Tuple;
 typedef struct List Addrlist;
 typedef struct List Colonlist;
 
+#define List(a) ((List *)(1 ? (a) : (Obj *)a))
+#define Tuple(a) ((Tuple *)(1 ? (a) : (Obj *)a))
+#define Addrlist(a) ((Addrlist *)(1 ? (a) : (Obj *)a))
+#define Colonlist(a) ((Colonlist *)(1 ? (a) : (Obj *)a))
+
 extern Tuple *null_tuple;
 extern List *null_list;
 extern Addrlist *null_addrlist;
@@ -68,13 +73,13 @@ static inline Colonlist *ref_colonlist(Colonlist *v1) {
 }
 
 static inline MUST_CHECK List *new_list(void) {
-    return (List *)val_alloc(LIST_OBJ);
+    return List(val_alloc(LIST_OBJ));
 }
 static inline MUST_CHECK Addrlist *new_addrlist(void) {
-    return (Addrlist *)val_alloc(ADDRLIST_OBJ);
+    return Addrlist(val_alloc(ADDRLIST_OBJ));
 }
 static inline MUST_CHECK Colonlist *new_colonlist(void) {
-    return (Colonlist *)val_alloc(COLONLIST_OBJ);
+    return Colonlist(val_alloc(COLONLIST_OBJ));
 }
 
 struct sliceparam_s {
@@ -83,7 +88,7 @@ struct sliceparam_s {
 };
 
 extern MUST_CHECK struct Error *indexoffs(Obj *, size_t, size_t *, linepos_t);
-extern MUST_CHECK Obj *sliceparams(const Colonlist *, size_t, struct sliceparam_s *, linepos_t);
+extern MUST_CHECK struct Error *sliceparams(const Colonlist *, size_t, struct sliceparam_s *, linepos_t);
 extern MUST_CHECK Tuple *new_tuple(size_t);
 extern Obj **list_create_elements(List *, size_t);
 extern MUST_CHECK bool list_extend(List *);

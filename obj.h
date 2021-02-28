@@ -29,7 +29,7 @@ typedef struct Obj {
     size_t refcount;
 } Obj;
 
-typedef struct Lbl_s {
+typedef struct Lbl {
     Obj v;
     line_t sline;
     size_t waitforp;
@@ -37,16 +37,22 @@ typedef struct Lbl_s {
     struct Namespace *parent;
 } Lbl;
 
+#define Lbl(a) ((Lbl *)(1 ? (a) : (Obj *)a))
+
 typedef struct Funcargs {
     Obj v;
     size_t len;
     struct values_s *val;
 } Funcargs;
 
+#define Funcargs(a) ((Funcargs *)(1 ? (a) : (Obj *)a))
+
 typedef struct Default {
     Obj v;
     int *dummy;
 } Default;
+
+#define Default(a) ((Default *)(1 ? (a) : (Obj *)a))
 
 static inline Obj *val_reference(Obj *v1) {
     v1->refcount++; return v1;

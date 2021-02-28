@@ -43,6 +43,8 @@ typedef struct Label {
     uint8_t fwpass;
 } Label;
 
+#define Label(a) ((Label *)(1 ? (a) : (Obj *)a))
+
 extern void labelobj_init(void);
 
 static inline Label *ref_label(Label *v1) {

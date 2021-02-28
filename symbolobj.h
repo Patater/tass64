@@ -35,6 +35,8 @@ typedef struct Symbol {
     struct linepos_s epoint;
 } Symbol;
 
+#define Symbol(a) ((Symbol *)(1 ? (a) : (Obj *)a))
+
 extern void symbolobj_init(void);
 
 extern Symbol *new_symbol(const str_t *name, linepos_t);

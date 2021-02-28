@@ -115,7 +115,7 @@ Oper o_COMMAK      = { {&obj, 0}, "register indexing ',k", O_COMMAK, 21, 2};
 Oper o_MEMBER      = { {&obj, 0}, "member '.", O_MEMBER, 22, 1};
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
-    Oper *v1 = (Oper *)o1;
+    Oper *v1 = Oper(o1);
     const char *txt;
     size_t len, len2;
     uint8_t *s;

@@ -39,6 +39,8 @@ typedef struct Function {
     Function_types func;
 } Function;
 
+#define Function(a) ((Function *)(1 ? (a) : (Obj *)a))
+
 struct oper_s;
 
 extern MUST_CHECK Obj *apply_convert(struct oper_s *);

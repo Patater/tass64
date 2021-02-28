@@ -43,6 +43,9 @@ typedef struct Macro {
 } Macro;
 typedef struct Macro Segment;
 
+#define Macro(a) ((Macro *)(1 ? (a) : (Obj *)a))
+#define Segment(a) ((Segment *)(1 ? (a) : (Obj *)a))
+
 typedef struct Struct {
     Obj v;
     size_t argc;
@@ -55,6 +58,9 @@ typedef struct Struct {
     struct Namespace *names;
 } Struct;
 typedef struct Struct Union;
+
+#define Struct(a) ((Struct *)(1 ? (a) : (Obj *)a))
+#define Union(a) ((Union *)(1 ? (a) : (Obj *)a))
 
 extern void macroobj_init(void);
 

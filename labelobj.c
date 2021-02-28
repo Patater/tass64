@@ -42,7 +42,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 }
 
 static FAST_CALL void destroy(Obj *o1) {
-    Label *v1 = (Label *)o1;
+    Label *v1 = Label(o1);
     const struct file_s *cfile = v1->file_list->file;
     if ((size_t)(v1->name.data - cfile->data) >= cfile->len) free((char *)v1->name.data);
     if (v1->name.data != v1->cfname.data) free((uint8_t *)v1->cfname.data);
@@ -50,7 +50,7 @@ static FAST_CALL void destroy(Obj *o1) {
 }
 
 static FAST_CALL void garbage(Obj *o1, int i) {
-    Label *v1 = (Label *)o1;
+    Label *v1 = Label(o1);
     Obj *v;
     const struct file_s *cfile;
     switch (i) {
@@ -84,7 +84,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxlen) {
-    Label *v1 = (Label *)o1;
+    Label *v1 = Label(o1);
     size_t len, len2;
     uint8_t *s;
     Str *v;
@@ -111,7 +111,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxlen) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxlen) {
-    Label *v1 = (Label *)o1;
+    Label *v1 = Label(o1);
     size_t len, chars;
     Str *v;
     switch (v1->name.data[0]) {

@@ -45,7 +45,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 }
 
 Symbol *new_symbol(const str_t *name, linepos_t epoint) {
-    Symbol *idn = (Symbol *)val_alloc(SYMBOL_OBJ);
+    Symbol *idn = Symbol(val_alloc(SYMBOL_OBJ));
     if ((size_t)(name->data - current_file_list->file->data) < current_file_list->file->len) idn->name = *name;
     else str_cpy(&idn->name, name);
     idn->cfname.data = NULL;
@@ -75,14 +75,14 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static FAST_CALL void destroy(Obj *o1) {
-    Symbol *v1 = (Symbol *)o1;
+    Symbol *v1 = Symbol(o1);
     const struct file_s *cfile = v1->file_list->file;
     if ((size_t)(v1->name.data - cfile->data) >= cfile->len) symbol_destroy(v1);
     if (v1->cfname.data != NULL && v1->name.data != v1->cfname.data) free((uint8_t *)v1->cfname.data);
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Symbol *v1 = (Symbol *)o1;
+    Symbol *v1 = Symbol(o1);
     size_t chars;
     Str *v;
     size_t len;
@@ -100,7 +100,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Symbol *v1 = (Symbol *)o1;
+    Symbol *v1 = Symbol(o1);
     Str *v;
     size_t chars = calcpos(v1->name.data, v1->name.len);
     if (chars > maxsize) return NULL;
@@ -112,7 +112,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Symbol *v1 = (Symbol *)o1;
+    Symbol *v1 = Symbol(o1);
     str_t s;
     size_t l;
     unsigned int h;
@@ -153,7 +153,7 @@ bool symbol_cfsame(Symbol *v1, Symbol *v2) {
 }
 
 static inline int icmp(oper_t op) {
-    Symbol *v1 = (Symbol *)op->v1, *v2 = (Symbol *)op->v2;
+    Symbol *v1 = Symbol(op->v1), *v2 = Symbol(op->v2);
     str_t *n1 = &v1->cfname, *n2 = &v2->cfname;
     int h;
     if (n1->data == NULL) {
@@ -176,7 +176,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     switch (o2->obj->type) {
     case T_SYMBOL:
         i = icmp(op);
-        if (i == 0 && diagnostics.case_symbol && str_cmp(&((Symbol *)op->v1)->name, &((Symbol *)o2)->name) != 0) err_msg_symbol_case2((Symbol *)op->v1, (Symbol *)o2);
+        if (i == 0 && diagnostics.case_symbol && str_cmp(&Symbol(op->v1)->name, &Symbol(o2)->name) != 0) err_msg_symbol_case2(Symbol(op->v1), Symbol(o2));
         return obj_oper_compare(op, i);
     case T_NONE:
     case T_ERROR:

@@ -38,12 +38,12 @@ static FAST_CALL NO_INLINE void register_destroy(Register *v1) {
 }
 
 static FAST_CALL void destroy(Obj *o1) {
-    Register *v1 = (Register *)o1;
+    Register *v1 = Register(o1);
     if (v1->val != v1->data) register_destroy(v1);
 }
 
 static inline MALLOC Register *new_register(void) {
-    return (Register *)val_alloc(REGISTER_OBJ);
+    return Register(val_alloc(REGISTER_OBJ));
 }
 
 static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
@@ -55,7 +55,7 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
         return val_reference(o1);
     case T_STR:
         {
-            Str *v1 = (Str *)o1;
+            Str *v1 = Str(o1);
             Register *v = new_register();
             v->chars = v1->chars;
             v->len = v1->len;
@@ -82,7 +82,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Register *v1 = (Register *)o1;
+    Register *v1 = Register(o1);
     size_t l = v1->len;
     const uint8_t *s2 = v1->data;
     unsigned int h;
@@ -98,7 +98,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Register *v1 = (Register *)o1;
+    Register *v1 = Register(o1);
     size_t i2, i;
     uint8_t *s, *s2;
     uint8_t q;
@@ -131,7 +131,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Register *v1 = (Register *)o1;
+    Register *v1 = Register(o1);
     Str *v;
 
     if (v1->chars > maxsize) return NULL;
@@ -143,7 +143,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static inline int icmp(oper_t op) {
-    const Register *v1 = (Register *)op->v1, *v2 = (Register *)op->v2;
+    const Register *v1 = Register(op->v1), *v2 = Register(op->v2);
     int h = memcmp(v1->data, v2->data, (v1->len < v2->len) ? v1->len : v2->len);
     if (h != 0) return h;
     if (v1->len < v2->len) return -1;

@@ -52,11 +52,13 @@ typedef struct Code {
     uval_t conflicts;
 } Code;
 
+#define Code(a) ((Code *)(1 ? (a) : (Obj *)a))
+
 extern void codeobj_init(void);
 extern void codeobj_names(void);
 
 static inline MUST_CHECK Code *new_code(void) {
-    return (Code *)val_alloc(CODE_OBJ);
+    return Code(val_alloc(CODE_OBJ));
 }
 
 struct Error;

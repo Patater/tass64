@@ -41,7 +41,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 }
 
 Anonsymbol *new_anonsymbol(ssize_t count) {
-    Anonsymbol *anonsymbol = (Anonsymbol *)val_alloc(ANONSYMBOL_OBJ);
+    Anonsymbol *anonsymbol = Anonsymbol(val_alloc(ANONSYMBOL_OBJ));
     anonsymbol->count = count;
     return anonsymbol;
 }
@@ -53,14 +53,14 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    Anonsymbol *v1 = (Anonsymbol *)o1;
+    Anonsymbol *v1 = Anonsymbol(o1);
     unsigned int h = v1->count < 0 ? 1U + ~(size_t)-v1->count : (size_t)v1->count;
     *hs = h & ((~0U) >> 1);
     return NULL;
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Anonsymbol *v1 = (Anonsymbol *)o1;
+    Anonsymbol *v1 = Anonsymbol(o1);
     Str *v;
     size_t len = v1->count < 0 ? (size_t)(1 - v1->count) : ((size_t)v1->count + 2U);
     if (len > maxsize) return NULL;
@@ -73,7 +73,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    Anonsymbol *v1 = (Anonsymbol *)o1;
+    Anonsymbol *v1 = Anonsymbol(o1);
     Str *v;
     size_t len = v1->count < 0 ? (size_t)-v1->count : ((size_t)v1->count + 1U);
     if (len > maxsize) return NULL;
@@ -85,7 +85,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 }
 
 static inline int icmp(oper_t op) {
-    const ssize_t v1 = ((Anonsymbol *)op->v1)->count, v2 = ((Anonsymbol *)op->v2)->count;
+    const ssize_t v1 = Anonsymbol(op->v1)->count, v2 = Anonsymbol(op->v2)->count;
     return (v1 > v2) ? 1 : (v1 < v2) ? -1 : 0;
 }
 

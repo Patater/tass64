@@ -35,7 +35,7 @@ Type *const MFUNC_OBJ = &mfunc_obj;
 Type *const SFUNC_OBJ = &sfunc_obj;
 
 static FAST_CALL void destroy(Obj *o1) {
-    Mfunc *v1 = (Mfunc *)o1;
+    Mfunc *v1 = Mfunc(o1);
     const struct file_s *cfile = v1->file_list->file;
     size_t i = v1->argc;
     while ((i--) != 0) {
@@ -55,7 +55,7 @@ static FAST_CALL void destroy(Obj *o1) {
 }
 
 static FAST_CALL void garbage(Obj *o1, int j) {
-    Mfunc *v1 = (Mfunc *)o1;
+    Mfunc *v1 = Mfunc(o1);
     size_t i = v1->argc;
     Obj *v ;
     const struct file_s *cfile;
@@ -141,8 +141,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         switch (op->op->op) {
         case O_FUNC:
         {
-            Mfunc *v1 = (Mfunc *)op->v1;
-            Funcargs *v2 = (Funcargs *)op->v2;
+            Mfunc *v1 = Mfunc(op->v1);
+            Funcargs *v2 = Funcargs(op->v2);
             Obj *val;
             size_t i, max = 0, args = v2->len;
             for (i = args; i < v1->argc; i++) {
@@ -164,7 +164,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         return val_reference(op->v2);
     default: 
         if (op->op == &o_MEMBER) {
-            return namespace_member(op, ((Mfunc *)op->v1)->names);
+            return namespace_member(op, Mfunc(op->v1)->names);
         }
         break;
     }

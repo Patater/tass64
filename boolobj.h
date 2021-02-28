@@ -30,6 +30,8 @@ typedef struct Bool {
     struct Str *repr;
 } Bool;
 
+#define Bool(a) ((Bool *)(1 ? (a) : (Obj *)a))
+
 extern Bool *true_value;
 extern Bool *false_value;
 extern Bool *bool_value[2];

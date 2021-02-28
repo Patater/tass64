@@ -35,6 +35,8 @@ typedef struct Bits {
     } u;
 } Bits;
 
+#define Bits(a) ((Bits *)(1 ? (a) : (Obj *)a))
+
 extern Bits *null_bits;
 extern Bits *inv_bits;
 extern Bits *bits_value[2];

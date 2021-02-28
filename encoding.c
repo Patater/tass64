@@ -211,7 +211,7 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
     d = tmp.val;
 
     if (val->obj == STR_OBJ) {
-        Obj *tmp2 = bytes_from_str((Str *)val, epoint, BYTES_MODE_TEXT);
+        Obj *tmp2 = bytes_from_str(Str(val), epoint, BYTES_MODE_TEXT);
         iter.data = tmp2; tmp2->obj->getiter(&iter);
         val_destroy(tmp2);
     } else { iter.data = val; val->obj->getiter(&iter); }

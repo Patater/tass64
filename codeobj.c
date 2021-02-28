@@ -58,14 +58,14 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 }
 
 static FAST_CALL void destroy(Obj *o1) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     val_destroy(v1->typ);
     val_destroy(&v1->memblocks->v);
     val_destroy(&v1->names->v);
 }
 
 static FAST_CALL void garbage(Obj *o1, int i) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     Obj *v;
     switch (i) {
     case -1:
@@ -133,7 +133,7 @@ MUST_CHECK Obj *get_code_value(const Code *v1, linepos_t epoint) {
 
 MUST_CHECK Error *code_uaddress(Obj *o1, uval_t *uv, uval_t *uv2, linepos_t epoint) {
     unsigned int bits = all_mem_bits;
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
     *uv = code_address(v1);
@@ -148,7 +148,7 @@ MUST_CHECK Error *code_uaddress(Obj *o1, uval_t *uv, uval_t *uv2, linepos_t epoi
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     Obj *v, *result;
     Error *err;
     err = access_check(v1, epoint);
@@ -160,7 +160,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     Obj *v, *result;
     if (epoint != NULL) {
         Error *err = access_check(v1, epoint);
@@ -173,7 +173,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     Obj *v, *result;
     if (epoint != NULL) {
         Error *err = access_check(v1, epoint);
@@ -186,7 +186,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
 }
 
 static MUST_CHECK Error *iaddress(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     address_t addr, addr2;
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
@@ -204,7 +204,7 @@ static MUST_CHECK Error *iaddress(Obj *o1, ival_t *iv, unsigned int bits, linepo
 }
 
 static MUST_CHECK Error *uaddress(Obj *o1, uval_t *uv, unsigned int bits, linepos_t epoint) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     address_t addr, addr2;
     Error *v = access_check(v1, epoint);
     if (v != NULL) return v;
@@ -222,7 +222,7 @@ static MUST_CHECK Error *uaddress(Obj *o1, uval_t *uv, unsigned int bits, linepo
 }
 
 static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t epoint) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     if (v1->typ->obj->address(v1->typ) != A_NONE) {
         Error *v = new_error(ERROR______CANT_INT, epoint);
         v->u.obj = get_star_value(code_address(v1) & all_mem, v1->typ);
@@ -232,7 +232,7 @@ static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t 
 }
 
 static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t epoint) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     if (v1->typ->obj->address(v1->typ) != A_NONE) {
         Error *v = new_error(ERROR______CANT_INT, epoint);
         v->u.obj = get_star_value(code_address(v1) & all_mem, v1->typ);
@@ -242,7 +242,7 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
 }
 
 static FAST_CALL uint32_t address(const Obj *o1) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     Obj *v = v1->typ;
     return v->obj->address(v);
 }
@@ -258,7 +258,7 @@ MUST_CHECK Obj *float_from_code(const Code *v1, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
-    Code *v1 = (Code *)o1;
+    Code *v1 = Code(o1);
     Obj *v, *result;
     Error *err = access_check(v1, epoint);
     if (err != NULL) return &err->v;
@@ -269,7 +269,7 @@ static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *function(oper_t op) {
-    Code *v1 = (Code *)op->v2;
+    Code *v1 = Code(op->v2);
     Obj *v, *result;
     Error *err = access_check(v1, op->epoint2);
     if (err != NULL) return &err->v;
@@ -301,7 +301,7 @@ static address_t calc_size(const Code *v1) {
 
 static MUST_CHECK Obj *len(oper_t op) {
     address_t ln, s;
-    Code *v1 = (Code *)op->v2;
+    Code *v1 = Code(op->v2);
     if (v1->pass == 0) {
         return (Obj *)ref_none();
     }
@@ -321,7 +321,7 @@ static MUST_CHECK Obj *len(oper_t op) {
 
 static MUST_CHECK Obj *size(oper_t op) {
     address_t s;
-    Code *v1 = (Code *)op->v2;
+    Code *v1 = Code(op->v2);
     if (v1->pass == 0) {
         return (Obj *)ref_none();
     }
@@ -391,7 +391,7 @@ MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
         return val_reference(typ == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
     }
 
-    v = (List *)val_alloc(typ);
+    v = List(val_alloc(typ));
     v->len = ln;
     v->data = vals = list_create_elements(v, ln);
     if (v1->offs >= 0) {
@@ -411,10 +411,10 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     address_t ln, ln2;
     size_t offs1;
     ssize_t offs0;
-    Code *v1 = (Code *)op->v1;
+    Code *v1 = Code(op->v1);
     Obj *o2 = op->v2;
     Error *err;
-    Funcargs *args = (Funcargs *)o2;
+    Funcargs *args = Funcargs(o2);
     linepos_t epoint2;
 
     if (args->len < 1 || args->len > indx + 1) {
@@ -459,7 +459,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         struct sliceparam_s s;
         Tuple *v;
 
-        err = (Error *)sliceparams((Colonlist *)o2, ln, &s, epoint2);
+        err = sliceparams(Colonlist(o2), ln, &s, epoint2);
         if (err != NULL) return &err->v;
 
         if (s.length == 0) {
@@ -489,7 +489,7 @@ static inline address_t ldigit(Code *v1, linepos_t epoint) {
 static MUST_CHECK Obj *calc1(oper_t op) {
     Obj *v, *result;
     Error *err;
-    Code *v1 = (Code *)op->v1;
+    Code *v1 = Code(op->v1);
     switch (op->op->op) {
     case O_LNOT:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
@@ -526,12 +526,12 @@ static MUST_CHECK Obj *calc1(oper_t op) {
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
-    Code *v1 = (Code *)op->v1, *v;
+    Code *v1 = Code(op->v1), *v;
     Obj *o2 = op->v2;
     Error *err;
     if (op->op == &o_MEMBER) {
         if (o2->obj == SYMBOL_OBJ) {
-            Symbol *v2 = (Symbol *)o2;
+            Symbol *v2 = Symbol(o2);
             if (v2->name.len == 10 && v2->name.data[0] == '_' && v2->name.data[1] == '_') {
                 static const str_t of = {(const uint8_t *)"__offset__", 10};
                 str_t cf;
@@ -561,7 +561,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_CODE:
         {
             Obj *tmp1, *tmp2, *result;
-            Code *v2 = (Code *)o2;
+            Code *v2 = Code(o2);
             err = access_check(v1, op->epoint);
             if (err != NULL) return &err->v;
             err = access_check(v2, op->epoint2);
@@ -603,7 +603,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     if (iv == 0) return val_reference(&v1->v);
                     inplace = (op->inplace == &v1->v);
                     if (inplace) {
-                        v = (Code *)val_reference(&v1->v);
+                        v = Code(val_reference(&v1->v));
                     } else {
                         v = new_code();
                         memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
@@ -634,7 +634,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 }
 
 static MUST_CHECK Obj *rcalc2(oper_t op) {
-    Code *v2 = (Code *)op->v2, *v;
+    Code *v2 = Code(op->v2), *v;
     Obj *o1 = op->v1;
     Error *err;
     if (op->op == &o_IN) {
@@ -669,7 +669,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             oper.inplace = NULL;
             result = tmp->obj->calc2(&oper);
             val_destroy(tmp);
-            if ((Bool *)result == true_value) return result;
+            if (Bool(result) == true_value) return result;
             val_destroy(result);
         }
         return (Obj *)ref_bool(false_value);

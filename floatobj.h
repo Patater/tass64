@@ -28,11 +28,13 @@ typedef struct Float {
     double real;
 } Float;
 
+#define Float(a) ((Float *)(1 ? (a) : (Obj *)a))
+
 extern void floatobj_init(void);
 extern void floatobj_names(void);
 
 static inline MUST_CHECK Float *new_float(double d) {
-    Float *v = (Float *)val_alloc(FLOAT_OBJ);
+    Float *v = Float(val_alloc(FLOAT_OBJ));
     v->real = d;
     return v;
 }
