@@ -70,7 +70,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
-    const Function *v1 = (const Function *)o1;
+    const Function *v1 = Function(o1);
     uint8_t *s;
     size_t len;
     Str *v;
@@ -92,7 +92,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    const Function *v1 = (const Function *)o1;
+    const Function *v1 = Function(o1);
     Str *v;
     if (v1->name.len > maxsize) return NULL;
     v = new_str2(v1->name.len);

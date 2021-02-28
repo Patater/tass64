@@ -212,7 +212,7 @@ static bool to_bool(const Bytes *v1) {
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
-    const Bytes *v1 = (const Bytes *)o1;
+    const Bytes *v1 = Bytes(o1);
     size_t i, sz;
     uint8_t inv;
     switch (type) {

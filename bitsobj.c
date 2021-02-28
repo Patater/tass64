@@ -213,7 +213,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
-    const Bits *v1 = (const Bits *)o1;
+    const Bits *v1 = Bits(o1);
     size_t i, sz, sz2;
     bdigit_t b, inv;
     switch (type) {
@@ -240,7 +240,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
-    const Bits *v1 = (const Bits *)o1;
+    const Bits *v1 = Bits(o1);
     size_t len, i, len2, sz;
     uint8_t *s;
     bool inv;
