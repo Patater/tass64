@@ -835,8 +835,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
 MUST_CHECK Obj *apply_convert(oper_t op) {
     struct values_s *v = Funcargs(op->v2)->val;
-    op->v2 = v[0].val;
-    op->inplace = v[0].val->refcount == 1 ? v[0].val : NULL;
+    op->v2 = v->val;
+    op->inplace = v->val->refcount == 1 ? v->val : NULL;
     return apply_func(op);
 }
 
