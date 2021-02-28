@@ -218,7 +218,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     bdigit_t b, inv;
     switch (type) {
     case TRUTH_ALL:
-        if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, o1, epoint);
+        if (v1->bits == 0) return (Obj *)ref_bool(true_value);
         sz = bitslen(v1);
         sz2 = v1->bits / SHIFT;
         if (sz2 > sz) sz2 = sz;
@@ -231,8 +231,8 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
         b <<= SHIFT - v1->bits % SHIFT;
         return truth_reference(b == 0);
     case TRUTH_ANY:
-        if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, o1, epoint);
-        return truth_reference(v1->len != 0 && v1->len != ~0);
+        if (v1->bits == 0) return (Obj *)ref_bool(false_value);
+        /* fall through */
     default:
         return truth_reference(v1->len != 0);
     }

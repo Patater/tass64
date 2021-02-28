@@ -689,6 +689,35 @@ static MUST_CHECK Obj *function_pow(oper_t op) {
     return float_from_double(pow(real, real2), op->epoint);
 }
 
+static MUST_CHECK Obj *function_all_any(oper_t op) {
+    Truth_types typ = (Function(op->v1)->func == F_ALL) ? TRUTH_ALL : TRUTH_ANY;
+    struct values_s *v = Funcargs(op->v2)->val;
+    Obj *val = v->val;
+    const Type *objt = val->obj;
+    if (objt->iterable) {
+        struct iter_s iter;
+        Bool *good = (typ == TRUTH_ALL) ? true_value : false_value;
+        Obj *result2 = (Obj *)ref_bool(good);
+        iter.data = val; objt->getiter(&iter);
+        while ((v->val = iter.next(&iter)) != NULL) {
+            Obj *result = function_all_any(op);
+            if (Bool(result) == good) {
+                val_destroy(result);
+                continue;
+            }
+            val_destroy(result2); result2 = result;
+            if (result->obj == BOOL_OBJ) {
+                break;
+            }
+        }
+        iter_destroy(&iter);
+        v->val = val;
+        return result2;
+    }
+    if (diagnostics.strict_bool && val->obj != BOOL_OBJ) err_msg_bool(ERROR_____CANT_BOOL, val, &v->epoint);
+    return objt->truth(val, typ, &v->epoint);
+}
+
 static inline int icmp(oper_t op) {
     Function_types v1 = Function(op->v1)->func;
     Function_types v2 = Function(op->v2)->func;
@@ -754,8 +783,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                         return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);
                     }
                     switch (func) {
-                    case F_ANY: return v[0].val->obj->truth(v[0].val, TRUTH_ANY, &v[0].epoint);
-                    case F_ALL: return v[0].val->obj->truth(v[0].val, TRUTH_ALL, &v[0].epoint);
+                    case F_ANY:
+                    case F_ALL: return function_all_any(op);
                     case F_LEN: 
                         op->v2 = v[0].val;
                         return v[0].val->obj->len(op);
