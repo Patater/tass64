@@ -730,6 +730,7 @@ struct byterecursion_s {
     uint8_t buff[16];
     bool warn;
     linepos_t epoint;
+    linepos_t epoint2;
 };
 
 static void byterecursion_flush(struct byterecursion_s *brec) {
@@ -792,9 +793,9 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
                 if (touval(val2, &uv, (unsigned int)bits, brec->epoint)) {
                     if (diagnostics.pitfalls) {
                         static unsigned int once;
-                        if (prm == CMD_BYTE && val2->obj == STR_OBJ) err_msg_byte_note(brec->epoint);
+                        if (prm == CMD_BYTE && val2->obj == STR_OBJ) err_msg_byte_note(brec->epoint2);
                         else if (prm != CMD_RTA && prm != CMD_ADDR && once != pass) {
-                            Error *err = val2->obj->ival(val2, &iv, (unsigned int)bits, brec->epoint);
+                            Error *err = val2->obj->ival(val2, &iv, (unsigned int)bits, brec->epoint2);
                             if (err != NULL) val_destroy(&err->v);
                             else {
                                 const char *txt;
@@ -3500,6 +3501,7 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
                         brec.len = 0;
                         brec.warn = false;
+                        brec.epoint2 = &epoint;
                         mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             brec.epoint = &vs->epoint;
