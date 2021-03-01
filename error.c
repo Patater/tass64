@@ -1225,8 +1225,26 @@ void err_msg_bool(Error_types no, Obj *o, linepos_t epoint) {
 }
 
 void err_msg_bool_oper(oper_t op) {
+    Obj *v2;
     new_error_msg2(diagnostic_errors.strict_bool, op->epoint3);
-    err_msg_invalid_oper2(op->op, op->v1, op->v2);
+    switch (op->op->op) {
+    case O_WORD:
+    case O_HWORD:
+    case O_BSWORD:
+    case O_LOWER:
+    case O_HIGHER:
+    case O_BANK:
+    case O_STRING:
+    case O_INV:
+    case O_NEG:
+    case O_POS:
+    case O_LNOT:
+    case O_X:
+    case O_FUNC:
+    case O_INDEX: v2 = NULL; break;
+    default: v2 = op->v2; break;
+    }
+    err_msg_invalid_oper2(op->op, op->v1, v2);
     adderror(" [-Wstrict-bool]");
 }
 
