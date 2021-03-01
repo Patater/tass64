@@ -806,7 +806,7 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
                                 default:
                                 case CMD_WORD:  txt = ".sint"; break;
                                 }
-                                err_msg_char_note(txt, brec->epoint);
+                                err_msg_char_note(txt, brec->epoint2);
                                 once = pass;
                             }
                         }
