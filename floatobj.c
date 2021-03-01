@@ -343,7 +343,7 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
     case O_EXP:
         if (v1 == 0.0) {
             if (v2 < 0.0) {
-                return (Obj *)new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
+                return (Obj *)new_error_obj(ERROR_ZERO_NEGPOWER, op->v2, op->epoint3);
             }
             return (Obj *)new_float((v2 == 0.0) ? 1.0 : 0.0);
         }

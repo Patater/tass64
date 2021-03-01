@@ -4131,6 +4131,8 @@ value needs to be non-negative
     only positive numbers or zero is accepted here
 wrong type <?>
     wrong object type used
+zero raised to negative power
+    can't calculate this
 zero value not allowed
     do not use zero for example with .null
 
