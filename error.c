@@ -353,6 +353,7 @@ static const char * const terr_error[] = {
     "address in different program bank ",
     "address out of section",
     "negative number raised on fractional power",
+    "zero raised to negative power ",
     "square root of negative number ",
     "logarithm of non-positive number ",
     "not in range -1.0 to 1.0 ",
@@ -917,6 +918,7 @@ void err_msg_output(const Error *val) {
     case ERROR__NO_WORD_ADDR:
     case ERROR__NO_LONG_ADDR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_opcode(val->u.addresssize.cod); break;
     case ERROR_DIVISION_BY_Z:
+    case ERROR_ZERO_NEGPOWER:
     case ERROR__NOT_KEYVALUE:
     case ERROR__NOT_HASHABLE:
     case ERROR_____CANT_SIGN:
