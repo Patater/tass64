@@ -170,12 +170,12 @@ static MUST_CHECK Obj *calc2_bool(oper_t op) {
     case O_MUL: return int_from_bool2(v1 && v2);
     case O_DIV:
         if (!v2) {
-            return (Obj *)new_error(ERROR_DIVISION_BY_Z, op->epoint3);
+            return (Obj *)new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
         }
         return int_from_bool2(v1);
     case O_MOD:
         if (!v2) {
-            return (Obj *)new_error(ERROR_DIVISION_BY_Z, op->epoint3);
+            return (Obj *)new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
         }
         return int_from_bool2(false);
     case O_EXP: return int_from_bool2(v1 || !v2);

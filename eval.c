@@ -721,7 +721,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_MUL: val1 = (uint16_t)(val1 * val2); break;
                     case O_DIV:
                         if (val2 == 0) {
-                            err = new_error(ERROR_DIVISION_BY_Z, &o_out->epoint);
+                            err = new_error_obj(ERROR_DIVISION_BY_Z, v2->val, &o_out->epoint);
                             val_destroy(v1->val); v1->val = &err->v;
                             continue;
                         }

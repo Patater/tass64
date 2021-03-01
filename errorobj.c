@@ -67,6 +67,7 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
+    case ERROR_DIVISION_BY_Z:
         val_destroy(v1->u.obj);
         return;
     case ERROR__INVALID_CONV:
@@ -138,6 +139,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
+    case ERROR_DIVISION_BY_Z:
         v = v1->u.obj;
         break;
     case ERROR__INVALID_CONV:
