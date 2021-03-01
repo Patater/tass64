@@ -66,6 +66,17 @@ MUST_CHECK Obj *obj_oper_error(oper_t op) {
     switch (op->op->op) {
     case O_EQ: return truth_reference(op->v1 == op->v2 || op->v1->obj->same(op->v1, op->v2));
     case O_NE: return truth_reference(op->v1 != op->v2 && !op->v1->obj->same(op->v1, op->v2));
+    case O_WORD:
+    case O_HWORD:
+    case O_BSWORD:
+    case O_LOWER:
+    case O_HIGHER:
+    case O_BANK:
+    case O_STRING:
+    case O_INV:
+    case O_NEG:
+    case O_POS:
+    case O_LNOT:
     case O_X:
     case O_FUNC:
     case O_INDEX: v2 = NULL; break;
