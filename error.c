@@ -634,11 +634,13 @@ void err_msg_big_address(linepos_t epoint) {
     if (more) new_error_msg_more();
 }
 
-static void err_msg_big_integer(const char *msg, unsigned int bits, Obj *val) {
+static bool err_msg_big_integer(const Error *err) {
     char msg2[256];
-    sprintf(msg2, msg, bits);
+    bool more = new_error_msg_err(err); 
+    sprintf(msg2, terr_error[err->num - 0x40], err->u.intconv.bits);
     adderror(msg2);
-    err_msg_variable(val);
+    err_msg_variable(err->u.intconv.val);
+    return more;
 }
 
 static void new_error_msg_err_more(const Error *err) {
@@ -806,24 +808,31 @@ static void err_msg_no_addressing(atype_t addrtype, uint32_t cod) {
     err_opcode(cod);
 }
 
-static void err_msg_no_register(Register *val, uint32_t cod) {
+static bool err_msg_no_register(const Error *err) {
+    bool more = new_error_msg_err(err); 
+    Register *val = err->u.reg.reg;
     adderror("no register '");
     adderror2(val->data, val->len);
     adderror("'");
-    err_opcode(cod);
+    err_opcode(err->u.reg.cod);
+    return more;
 }
 
-static void err_msg_no_lot_operand(size_t opers, uint32_t cod) {
+static bool err_msg_no_lot_operand(const Error *err) {
     char msg2[256];
-    sprintf(msg2, "no %" PRIuSIZE " operand", opers);
+    bool more = new_error_msg_err(err); 
+    sprintf(msg2, "no %" PRIuSIZE " operand", err->u.opers.num);
     adderror(msg2);
-    err_opcode(cod);
+    err_opcode(err->u.opers.cod);
+    return more;
 }
 
-static void err_msg_cant_broadcast(const char *msg, size_t v1, size_t v2) {
+static bool err_msg_cant_broadcast(const Error *err) {
     char msg2[256];
-    sprintf(msg2, msg, v1, v2);
+    bool more = new_error_msg_err(err); 
+    sprintf(msg2, terr_error[err->num - 0x40], err->u.broadcast.v1, err->u.broadcast.v2);
     adderror(msg2);
+    return more;
 }
 
 static void err_msg_invalid_oper2(const Oper *op, Obj *v1, Obj *v2) {
@@ -894,7 +903,7 @@ void err_msg_output(const Error *val) {
     case ERROR____STILL_NONE: more = err_msg_still_none2(val); break;
     case ERROR_____CANT_IVAL:
     case ERROR_____CANT_UVAL:
-    case ERROR______NOT_UVAL: more = new_error_msg_err(val); err_msg_big_integer(terr_error[val->num - 0x40], val->u.intconv.bits, val->u.intconv.val); break;
+    case ERROR______NOT_UVAL: more = err_msg_big_integer(val); break;
     case ERROR_REQUIREMENTS_:
     case ERROR______CONFLICT:
     case ERROR_NOT_TWO_CHARS:
@@ -911,9 +920,9 @@ void err_msg_output(const Error *val) {
     case ERROR__ADDR_COMPLEX:
     case ERROR_NEGATIVE_SIZE: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); break;
     case ERROR_NO_ADDRESSING: more = new_error_msg_err(val); err_msg_no_addressing(val->u.addressing.am, val->u.addressing.cod);break;
-    case ERROR___NO_REGISTER: more = new_error_msg_err(val); err_msg_no_register(val->u.reg.reg, val->u.reg.cod);break;
-    case ERROR___NO_LOT_OPER: more = new_error_msg_err(val); err_msg_no_lot_operand(val->u.opers.num, val->u.opers.cod);break;
-    case ERROR_CANT_BROADCAS: more = new_error_msg_err(val); err_msg_cant_broadcast(terr_error[val->num - 0x40], val->u.broadcast.v1, val->u.broadcast.v2);break;
+    case ERROR___NO_REGISTER: more = err_msg_no_register(val);break;
+    case ERROR___NO_LOT_OPER: more = err_msg_no_lot_operand(val);break;
+    case ERROR_CANT_BROADCAS: more = err_msg_cant_broadcast(val);break;
     case ERROR__NO_BYTE_ADDR:
     case ERROR__NO_WORD_ADDR:
     case ERROR__NO_LONG_ADDR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_opcode(val->u.addresssize.cod); break;
