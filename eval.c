@@ -902,6 +902,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     if (tup) {
                         vsp--;
                         v1->val = values[vsp].val;
+                        v1->epoint = values[vsp].epoint;
                         values[vsp].val = NULL;
                         continue;
                     }
@@ -1110,7 +1111,6 @@ static bool get_val2(struct eval_context_s *ev) {
                 }
                 continue;
             }
-            v1->epoint = o_out->epoint;
             continue;
         case O_LXOR: /* ^^ */
             v2 = v1; v1 = &values[--vsp - 1];
@@ -1168,6 +1168,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 continue;
             }
             if (val != &true_value->v) {
+                v1->epoint = v2->epoint;
                 val_replace(&v1->val, v2->val);
             }
             val_destroy(val);
