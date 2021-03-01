@@ -127,13 +127,10 @@ static FAST_CALL bool invalid_same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Error *generic_invalid(Obj *v1, linepos_t epoint, Error_types num) {
-    Error *err;
     if (v1->obj == ERROR_OBJ) {
         return Error(val_reference(v1));
     }
-    err = new_error(num, epoint);
-    err->u.obj = val_reference(v1);
-    return err;
+    return new_error_obj(num, v1, epoint);
 }
 
 static MUST_CHECK Obj *invalid_truth(Obj *v1, Truth_types UNUSED(type), linepos_t epoint) {

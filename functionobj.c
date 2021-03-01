@@ -681,7 +681,7 @@ static MUST_CHECK Obj *function_pow(oper_t op) {
     val = to_real(&v[1], &real2);
     if (val != NULL) return val;
     if (real2 < 0.0 && real == 0.0) {
-        return (Obj *)new_error(ERROR_DIVISION_BY_Z, op->epoint);
+        return (Obj *)new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
     }
     if (real < 0.0 && floor(real2) != real2) {
         return (Obj *)new_error(ERROR_NEGFRAC_POWER, op->epoint);

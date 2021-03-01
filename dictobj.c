@@ -815,8 +815,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         else {
             Colonlist *list = Colonlist(p.key);
             if (list->len != 2 || (list->data[0] != &default_value->v && list->data[1] == &default_value->v)) {
-                err = new_error(ERROR__NOT_KEYVALUE, &v2->epoint);
-                err->u.obj = val_reference(p.key);
+                err = new_error_obj(ERROR__NOT_KEYVALUE, p.key, &v2->epoint);
                 val_destroy(&dict->v);
                 return &err->v;
             }
