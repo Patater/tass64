@@ -29,6 +29,7 @@
 
 #include "strobj.h"
 #include "bytesobj.h"
+#include "bitsobj.h"
 #include "typeobj.h"
 #include "errorobj.h"
 
@@ -214,7 +215,13 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
         Obj *tmp2 = bytes_from_str(Str(val), epoint, BYTES_MODE_TEXT);
         iter.data = tmp2; tmp2->obj->getiter(&iter);
         val_destroy(tmp2);
-    } else { iter.data = val; val->obj->getiter(&iter); }
+    } else if (val->obj == BITS_OBJ) {
+        Obj *tmp2 = bytes_from_bits(Bits(val), epoint);
+        iter.data = tmp2; tmp2->obj->getiter(&iter);
+        val_destroy(tmp2);
+    } else { 
+        iter.data = val; val->obj->getiter(&iter); 
+    }
 
     while ((val2 = iter.next(&iter)) != NULL) {
         Error *err = val2->obj->uval(val2, &uval, 8, epoint);
