@@ -363,10 +363,30 @@ static MUST_CHECK Obj *function(oper_t op) {
 static void iadd(const Int *, const Int *, Int *);
 static void isub(const Int *, const Int *, Int *);
 
-static inline unsigned int ldigit(const Int *v1) {
-    ssize_t len = v1->len;
-    if (len < 0) return ~v1->data[0] + 1U;
-    return (len != 0) ? v1->data[0] : 0;
+static inline MUST_CHECK Obj *calc1_int(oper_t op) {
+    Int *v1 = Int(op->v1);
+    digit_t c = (v1->len < 0) ? ~v1->data[0] + 1U : v1->data[0];
+    Int *vv;
+
+    if (op->inplace == &v1->v) {
+        vv = ref_int(v1);
+        if (vv->data != vv->val) int_destroy(vv);
+    } else {
+        vv = new_int();
+    }
+    vv->data = vv->val;
+    switch (op->op->op) {
+    default: /* impossible */
+    case O_BANK: c >>= 8; /* fall through */
+    case O_HIGHER: c >>= 8; /* fall through */
+    case O_LOWER: c &= 0xff; break;
+    case O_HWORD: c >>= 8; /* fall through */
+    case O_WORD: c &= 0xffff; break;
+    case O_BSWORD: c = ((uint16_t)c >> 8) | ((uint16_t)c << 8); break;
+    }
+    vv->val[0] = c;
+    vv->len = c == 0 ? 0 : 1;
+    return &vv->v;
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {
@@ -378,7 +398,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, ldigit(v1));
+        return calc1_int(op);
     case O_INV:
         v = new_int();
         if (v1->len < 0) isub(v1, int_value[1], v);
