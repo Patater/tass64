@@ -1673,6 +1673,10 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
             op->v2 = vv2;
             op->inplace = (vv1->refcount == 1) ? vv1 : NULL;
             val = vv1->obj->calc2(op);
+            if (val->obj == ERROR_OBJ) {
+                error_obj_update(Error(val), vv1, &v1->v);
+                error_obj_update(Error(val), vv2, &v2->v);
+            }
             val_destroy(vv1);
             val_destroy(vv2);
             return val;
@@ -1711,8 +1715,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_INT: return calc2_int(op);
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        op->v2 = (Obj *)int_value[Bool(v2) == true_value ? 1 : 0];
-        return calc2_int(op);
+        tmp = (Obj *)int_value[Bool(v2) == true_value ? 1 : 0];
+        op->v2 = tmp;
+        ret = calc2_int(op);
+        if (ret->obj == ERROR_OBJ) error_obj_update(Error(ret), tmp, v2);
+        return ret;
     case T_BYTES:
         tmp = int_from_bytes(Bytes(v2), op->epoint2);
         goto conv;
@@ -1725,6 +1732,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         op->v2 = tmp;
         if (op->inplace != NULL && op->inplace->refcount != 1) op->inplace = NULL;
         ret = calc2(op);
+        if (ret->obj == ERROR_OBJ) error_obj_update(Error(ret), tmp, v2);
         val_destroy(tmp);
         return ret;
     default:
