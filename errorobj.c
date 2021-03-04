@@ -233,3 +233,30 @@ void errorobj_init(void) {
     obj.rcalc2 = rcalc2;
     obj.slice = slice;
 }
+
+void error_obj_update(Error *err, const Obj *v1, Obj *v2) {
+    switch (err->num) {
+    case ERROR__NOT_KEYVALUE:
+    case ERROR__NOT_HASHABLE:
+    case ERROR_____CANT_SIGN:
+    case ERROR______CANT_ABS:
+    case ERROR______CANT_INT:
+    case ERROR______CANT_LEN:
+    case ERROR_____CANT_SIZE:
+    case ERROR_____CANT_BOOL:
+    case ERROR______NOT_ITER:
+    case ERROR___MATH_DOMAIN:
+    case ERROR_LOG_NON_POSIT:
+    case ERROR_SQUARE_ROOT_N:
+    case ERROR___INDEX_RANGE:
+    case ERROR_____KEY_ERROR:
+    case ERROR_DIVISION_BY_Z:
+    case ERROR_ZERO_NEGPOWER:
+        if (err->u.obj == v1) {
+            val_replace(&err->u.obj, v2);
+        }
+        return;
+    default:
+        return;
+    }
+}

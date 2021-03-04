@@ -365,15 +365,16 @@ MUST_CHECK Obj *float_from_double(double d, linepos_t epoint) {
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *err, *val;
+    Obj *v2 = op->v2;
     if (op->op == &o_LAND) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        return val_reference((Float(op->v1)->real != 0.0) ? op->v2 : op->v1);
+        return val_reference((Float(op->v1)->real != 0.0) ? v2 : op->v1);
     }
     if (op->op == &o_LOR) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        return val_reference((Float(op->v1)->real != 0.0) ? op->v1 : op->v2);
+        return val_reference((Float(op->v1)->real != 0.0) ? op->v1 : v2);
     }
-    switch (op->v2->obj->type) {
+    switch (v2->obj->type) {
     case T_FLOAT: return calc2_double(op);
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
@@ -384,41 +385,44 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BYTES:
         if (op->op == &o_LSHIFT || op->op == &o_RSHIFT) {
             ival_t shift;
-            err = (Obj *)op->v2->obj->ival(op->v2, &shift, 8 * sizeof shift, op->epoint2);
+            err = (Obj *)v2->obj->ival(v2, &shift, 8 * sizeof shift, op->epoint2);
             if (err != NULL) return err;
             if (shift == 0) return val_reference(op->v1);
             if (op->op == &o_RSHIFT) shift = -shift;
             return float_from_double_inplace(ldexp(Float(op->v1)->real, shift), op);
         }
-        err = create(op->v2, op->epoint2);
+        err = create(v2, op->epoint2);
         if (err->obj != FLOAT_OBJ) return err;
         op->v2 = err;
         op->inplace = (err->refcount == 1) ? err : NULL;
         val = calc2_double(op);
+        if (val->obj == ERROR_OBJ) error_obj_update(Error(val), err, v2);
         val_destroy(err);
         return val;
     default:
         if (op->op != &o_MEMBER && op->op != &o_X) {
-            return op->v2->obj->rcalc2(op);
+            return v2->obj->rcalc2(op);
         }
-        if (op->v2 == &none_value->v || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
+        if (v2 == &none_value->v || v2->obj == ERROR_OBJ) return val_reference(v2);
     }
     return obj_oper_error(op);
 }
 
 static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *err, *val;
-    switch (op->v1->obj->type) {
+    Obj *v1 = op->v1;
+    switch (v1->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         /* fall through */
     case T_INT:
     case T_BITS:
-        err = create(op->v1, op->epoint);
+        err = create(v1, op->epoint);
         if (err->obj != FLOAT_OBJ) return err;
         op->v1 = err;
         op->inplace = (err->refcount == 1) ? err : NULL;
         val = calc2_double(op);
+        if (val->obj == ERROR_OBJ) error_obj_update(Error(val), err, v1);
         val_destroy(err);
         return val;
     default: break;
