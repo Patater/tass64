@@ -181,30 +181,6 @@ static MUST_CHECK Obj *float_from_double_inplace(double d, oper_t op) {
     return (Obj *)new_float(d);
 }
 
-static inline MUST_CHECK Obj *calc1_float(oper_t op) {
-    uint32_t c;
-    Float *v1 = Float(op->v1);
-    double real = v1->real;
-    bool neg = (real < 0.0);
-    real = floor(real);
-    if (diagnostics.float_round && real != v1->real) err_msg2(ERROR___FLOAT_ROUND, NULL, op->epoint3);
-    if (neg) real = -real;
-    if (real >= 4294967296.0) real = fmod(real, 4294967296.0);
-    c = (uint32_t)real;
-    if (neg) c = ~c + 1U;
-
-    switch (op->op->op) {
-    default: /* impossible */
-    case O_BANK: c >>= 8; /* fall through */
-    case O_HIGHER: c >>= 8; /* fall through */
-    case O_LOWER: c &= 0xff; break;
-    case O_HWORD: c >>= 8; /* fall through */
-    case O_WORD: c &= 0xffff; break;
-    case O_BSWORD: c = ((uint16_t)c >> 8) | ((uint16_t)c << 8); break;
-    }
-    return &int_from_uval(c)->v;
-}
-
 static MUST_CHECK Obj *calc1(oper_t op) {
     Float *v1 = Float(op->v1);
     double real = v1->real;
@@ -215,7 +191,16 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return calc1_float(op);
+        {
+            uint32_t r;
+            bool neg = (real < 0.0);
+            real = floor(real);
+            if (diagnostics.float_round && real != v1->real) err_msg2(ERROR___FLOAT_ROUND, NULL, op->epoint3);
+            if (neg) real = -real;
+            if (real >= 4294967296.0) real = fmod(real, 4294967296.0);
+            r = (uint32_t)real;
+            return bytes_calc1(op->op->op, neg ? ~r + 1U : r);
+        }
     case O_INV: 
         return float_from_double_inplace(-0.5 / ((double)((uint32_t)1 << (8 * sizeof(uint32_t) - 1))) - real, op);
     case O_NEG: 

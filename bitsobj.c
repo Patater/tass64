@@ -731,32 +731,13 @@ static ssize_t icmp(oper_t op) {
     return 0;
 }
 
-static inline MUST_CHECK Obj *calc1_bits(oper_t op) {
-    Bits *v1 = Bits(op->v1);
-    bdigit_t c = (v1->len < 0) ? ~v1->data[0] : v1->data[0];
-    Bits *vv;
-    size_t bits = 16;
-
-    if (op->inplace == &v1->v) {
-        vv = ref_bits(v1);
-        if (vv->data != vv->u.val) bits_destroy(vv);
-    } else {
-        vv = Bits(val_alloc(BITS_OBJ));
-    }
-    vv->data = vv->u.val;
-    switch (op->op->op) {
-    default: /* impossible */
-    case O_BANK: c >>= 8; /* fall through */
-    case O_HIGHER: c >>= 8; /* fall through */
-    case O_LOWER: c &= 0xff; bits = 8; break;
-    case O_HWORD: c >>= 8; /* fall through */
-    case O_WORD: c &= 0xffff; break;
-    case O_BSWORD: c = ((uint16_t)c >> 8) | ((uint16_t)c << 8); break;
-    }
-    vv->u.val[0] = c;
-    vv->len = c == 0 ? 0 : 1;
-    vv->bits = bits;
-    return &vv->v;
+static inline unsigned int ldigit(const Bits *v1) {
+    ssize_t ln = v1->len;
+    if (ln > 0) return v1->data[0];
+    if (ln == 0) return 0;
+    ln = ~ln;
+    if (ln == 0) return ~(bdigit_t)0;
+    return ~v1->data[0];
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {
@@ -769,7 +750,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return calc1_bits(op);
+        return bytes_calc1(op->op->op, ldigit(v1));
     case O_INV:
         if (op->inplace != &v1->v) return invert(v1, op->epoint3);
         v1->len = ~v1->len;
