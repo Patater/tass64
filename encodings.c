@@ -535,7 +535,7 @@ static void add_trans(struct encoding_s *enc, const struct translate_table_s *ta
         uint32_t start = table[i].start;
         if (start >= 0x8000) start += 0x10000;
         range.start = start;
-        range.end = start + table[i].length;
+        range.end = (start + table[i].length) & 0xffffff;
         range.offset = table[i].offset;
         new_trans(enc, &range, &nopoint);
     }

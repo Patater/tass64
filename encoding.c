@@ -369,7 +369,7 @@ next:
         }
         ln = 1;
     }
-    tmp.range.start = tmp.range.end = ch;
+    tmp.range.start = tmp.range.end = ch & 0xffffff;
 
     c = avltree_lookup(&tmp.node, &encoding->ranges, trans_compare);
     if (c != NULL) {
