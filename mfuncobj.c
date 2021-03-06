@@ -46,11 +46,11 @@ static FAST_CALL void destroy(Obj *o1) {
     }
     i = v1->nslen;
     while ((i--) != 0) {
-        val_destroy(&v1->namespaces[i]->v);
+        val_destroy(Obj(v1->namespaces[i]));
     }
     free(v1->namespaces);
-    val_destroy(&v1->names->v);
-    val_destroy(&v1->inamespaces->v);
+    val_destroy(Obj(v1->names));
+    val_destroy(Obj(v1->inamespaces));
     free(v1->param);
 }
 
@@ -67,12 +67,12 @@ static FAST_CALL void garbage(Obj *o1, int j) {
         }
         i = v1->nslen;
         while ((i--) != 0) {
-            v = &v1->namespaces[i]->v;
+            v = Obj(v1->namespaces[i]);
             v->refcount--;
         }
-        v = &v1->names->v;
+        v = Obj(v1->names);
         v->refcount--;
-        v = &v1->inamespaces->v;
+        v = Obj(v1->inamespaces);
         v->refcount--;
         return;
     case 0:
@@ -97,18 +97,18 @@ static FAST_CALL void garbage(Obj *o1, int j) {
         }
         i = v1->nslen;
         while ((i--) != 0) {
-            v = &v1->namespaces[i]->v;
+            v = Obj(v1->namespaces[i]);
             if ((v->refcount & SIZE_MSB) != 0) {
                 v->refcount -= SIZE_MSB - 1;
                 v->obj->garbage(v, 1);
             } else v->refcount++;
         }
-        v = &v1->names->v;
+        v = Obj(v1->names);
         if ((v->refcount & SIZE_MSB) != 0) {
             v->refcount -= SIZE_MSB - 1;
             v->obj->garbage(v, 1);
         } else v->refcount++;
-        v = &v1->inamespaces->v;
+        v = Obj(v1->inamespaces);
         if ((v->refcount & SIZE_MSB) != 0) {
             v->refcount -= SIZE_MSB - 1;
             v->obj->garbage(v, 1);
@@ -129,9 +129,9 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
         if (v1->param[i].epoint.pos != v2->param[i].epoint.pos) return false;
     }
     for (i = 0; i < v1->nslen; i++) {
-        if (v1->namespaces[i] != v2->namespaces[i] && !v1->namespaces[i]->v.obj->same(&v1->namespaces[i]->v, &v2->namespaces[i]->v)) return false;
+        if (v1->namespaces[i] != v2->namespaces[i] && !v1->namespaces[i]->v.obj->same(Obj(v1->namespaces[i]), Obj(v2->namespaces[i]))) return false;
     }
-    if (v1->names != v2->names && !v1->names->v.obj->same(&v1->names->v, &v2->names->v)) return false;
+    if (v1->names != v2->names && !v1->names->v.obj->same(Obj(v1->names), Obj(v2->names))) return false;
     return true;
 }
 
@@ -152,7 +152,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             eval_enter();
             val = mfunc2_recurse(v1, v2->val, args, op->epoint);
             eval_leave();
-            return (val != NULL) ? val : (Obj *)ref_tuple(null_tuple);
+            return (val != NULL) ? val : Obj(ref_tuple(null_tuple));
         }
         break;
     case T_NONE:

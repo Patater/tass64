@@ -70,7 +70,7 @@ static FAST_CALL void struct_destroy(Obj *o1) {
         if ((size_t)(param->init.data - cfile->data) >= cfile->len) free((char *)param->init.data);
     }
     free(v1->param);
-    val_destroy((Obj *)v1->names);
+    val_destroy(Obj(v1->names));
 }
 
 static FAST_CALL void struct_garbage(Obj *o1, int i) {
@@ -79,7 +79,7 @@ static FAST_CALL void struct_garbage(Obj *o1, int i) {
     const struct file_s *cfile;
     switch (i) {
     case -1:
-        ((Obj *)v1->names)->refcount--;
+        Obj(v1->names)->refcount--;
         return;
     case 0:
         cfile = v1->file_list->file;
@@ -91,7 +91,7 @@ static FAST_CALL void struct_garbage(Obj *o1, int i) {
         free(v1->param);
         return;
     case 1:
-        v = (Obj *)v1->names;
+        v = Obj(v1->names);
         if ((v->refcount & SIZE_MSB) != 0) {
             v->refcount -= SIZE_MSB - 1;
             v->obj->garbage(v, 1);
@@ -104,7 +104,7 @@ static FAST_CALL bool struct_same(const Obj *o1, const Obj *o2) {
     const Struct *v1 = Struct(o1), *v2 = Struct(o2);
     size_t i;
     if (o1->obj != o2->obj || v1->size != v2->size || v1->file_list != v2->file_list || v1->line != v2->line || v1->retval != v2->retval || v1->argc != v2->argc) return false;
-    if (v1->names != v2->names && !v1->names->v.obj->same(&v1->names->v, &v2->names->v)) return false;
+    if (v1->names != v2->names && !v1->names->v.obj->same(Obj(v1->names), Obj(v2->names))) return false;
     for (i = 0; i < v1->argc; i++) {
         if (str_cmp(&v1->param[i].cfname, &v2->param[i].cfname) != 0) return false;
         if (str_cmp(&v1->param[i].init, &v2->param[i].init) != 0) return false;
@@ -114,14 +114,14 @@ static FAST_CALL bool struct_same(const Obj *o1, const Obj *o2) {
 
 static MUST_CHECK Obj *struct_size(oper_t op) {
     Struct *v1 = Struct(op->v2);
-    return (Obj *)int_from_size(v1->size);
+    return Obj(int_from_size(v1->size));
 }
 
 static MUST_CHECK Obj *struct_calc2(oper_t op) {
     if (op->op == &o_MEMBER) {
         return namespace_member(op, Struct(op->v1)->names);
     }
-    if (op->v2 == &none_value->v || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
+    if (op->v2 == Obj(none_value) || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
     return obj_oper_error(op);
 }
 

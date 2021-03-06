@@ -53,7 +53,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_FUNCTION: return val_reference(v1);
     default: break;
     }
-    return (Obj *)new_error_conv(v1, FUNCTION_OBJ, epoint);
+    return Obj(new_error_conv(v1, FUNCTION_OBJ, epoint));
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -88,7 +88,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     s += v1->name.len;
     *s = '\'';
     s[1] = '>';
-    return &v->v;
+    return Obj(v);
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
@@ -99,7 +99,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     if (v == NULL) return NULL;
     v->chars = v1->name.len;
     memcpy(v->data, v1->name.data, v1->name.len);
-    return &v->v;
+    return Obj(v);
 }
 
 typedef MUST_CHECK Obj *(*func_t)(oper_t op);
@@ -145,7 +145,7 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
                         iter_destroy(&elements[k].iters);
                     }
                     if (elements != elements3) free(elements);
-                    return &err->v;
+                    return Obj(err);
                 }
                 ln = iter->len;
             }
@@ -170,7 +170,7 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
         }
         vv->len = i;
     } else {
-        vv = List(val_reference(v[k].val->obj == TUPLE_OBJ ? &null_tuple->v : &null_list->v));
+        vv = List(val_reference(v[k].val->obj == TUPLE_OBJ ? Obj(null_tuple) : Obj(null_list)));
     }
     for (; k < args; k++) {
         if (elements[k].oval == NULL) continue;
@@ -178,9 +178,9 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
         iter_destroy(&elements[k].iters);
     }
     if (elements != elements3) free(elements);
-    return &vv->v;
+    return Obj(vv);
 failed:
-    return (Obj *)new_error_mem(op->epoint);
+    return Obj(new_error_mem(op->epoint));
 }
 
 /* range([start],end,[step]) */
@@ -200,17 +200,17 @@ static MUST_CHECK Obj *function_range(oper_t op) {
         break;
     case 3:
         err = v[2].val->obj->ival(v[2].val, &step, 8 * sizeof step, &v[2].epoint);
-        if (err != NULL) return &err->v;
+        if (err != NULL) return Obj(err);
         /* fall through */
     case 2:
         err = v[0].val->obj->ival(v[0].val, &start, 8 * sizeof start, &v[0].epoint);
-        if (err != NULL) return &err->v;
+        if (err != NULL) return Obj(err);
         err = v[1].val->obj->ival(v[1].val, &end, 8 * sizeof end, &v[1].epoint);
         break;
     }
-    if (err != NULL) return &err->v;
+    if (err != NULL) return Obj(err);
     if (step == 0) {
-        return (Obj *)new_error(ERROR_NO_ZERO_VALUE, &v[2].epoint);
+        return Obj(new_error(ERROR_NO_ZERO_VALUE, &v[2].epoint));
     }
     if (step > 0) {
         if (end < start) end = start;
@@ -222,12 +222,12 @@ static MUST_CHECK Obj *function_range(oper_t op) {
     new_value = new_list();
     val = list_create_elements(new_value, len2);
     for (i = 0; i < len2; i++) {
-        val[i] = (Obj *)int_from_ival(start);
+        val[i] = Obj(int_from_ival(start));
         start += step;
     }
     new_value->len = len2;
     new_value->data = val;
-    return &new_value->v;
+    return Obj(new_value);
 }
 
 static uint64_t state[2];
@@ -246,7 +246,7 @@ static uint64_t random64(void) {
 void random_reseed(Obj *o1, linepos_t epoint) {
     Obj *v = INT_OBJ->create(o1, epoint);
     if (v->obj != INT_OBJ) {
-        if (v == &none_value->v) err_msg_still_none(NULL, epoint);
+        if (v == Obj(none_value)) err_msg_still_none(NULL, epoint);
         else if (v->obj == ERROR_OBJ) err_msg_output(Error(v));
     } else {
         Int *v1 = Int(v);
@@ -281,23 +281,23 @@ static MUST_CHECK Obj *function_random(oper_t op) {
 
     switch (vals->len) {
     default:
-        return (Obj *)new_float((double)(random64() & (((uint64_t)1 << 53) - 1)) * ldexp(1, -53));
+        return Obj(new_float((double)(random64() & (((uint64_t)1 << 53) - 1)) * ldexp(1, -53)));
     case 1:
         err = v[0].val->obj->ival(v[0].val, &end, 8 * sizeof end, &v[0].epoint);
         break;
     case 3:
         err = v[2].val->obj->ival(v[2].val, &step, 8 * sizeof step, &v[2].epoint);
-        if (err != NULL) return &err->v;
+        if (err != NULL) return Obj(err);
         /* fall through */
     case 2:
         err = v[0].val->obj->ival(v[0].val, &start, 8 * sizeof start, &v[0].epoint);
-        if (err != NULL) return &err->v;
+        if (err != NULL) return Obj(err);
         err = v[1].val->obj->ival(v[1].val, &end, 8 * sizeof end, &v[1].epoint);
         break;
     }
-    if (err != NULL) return &err->v;
+    if (err != NULL) return Obj(err);
     if (step == 0) {
-        return (Obj *)new_error(ERROR_NO_ZERO_VALUE, &v[2].epoint);
+        return Obj(new_error(ERROR_NO_ZERO_VALUE, &v[2].epoint));
     }
     if (step > 0) {
         if (end < start) end = start;
@@ -314,11 +314,11 @@ static MUST_CHECK Obj *function_random(oper_t op) {
             do {
                 r = (uval_t)random64();
             } while (r >= b);
-            return (Obj *)int_from_ival(start + (ival_t)(r / a) * step);
+            return Obj(int_from_ival(start + (ival_t)(r / a) * step));
         }
-        return (Obj *)int_from_ival(start + (ival_t)(random64() & (len2 - 1)));
+        return Obj(int_from_ival(start + (ival_t)(random64() & (len2 - 1))));
     }
-    return (Obj *)new_error(ERROR___EMPTY_RANGE, op->epoint);
+    return Obj(new_error(ERROR___EMPTY_RANGE, op->epoint));
 }
 
 static struct oper_s sort_tmp;
@@ -415,7 +415,7 @@ static MUST_CHECK Obj *function_sort(Obj *o1, linepos_t epoint) {
                 v->data = vals = list_create_elements(v, ln);
                 v->len = ln;
                 for (i = 0; i < ln; i++) vals[i] = val_reference(List(o1)->data[sort_index[i]]);
-                o1 = &v->v;
+                o1 = Obj(v);
             }
             free(sort_index);
             return o1;
@@ -423,7 +423,7 @@ static MUST_CHECK Obj *function_sort(Obj *o1, linepos_t epoint) {
     }
     return val_reference(o1);
 failed:
-    return (Obj *)new_error_mem(epoint);
+    return Obj(new_error_mem(epoint));
 }
 
 /* binary(name,[start],[length]) */
@@ -445,11 +445,11 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
     switch (vals->len) {
     case 3:
         err = v[2].val->obj->uval(v[2].val, &length, 8 * sizeof length, &v[2].epoint);
-        if (err != NULL) return &err->v;
+        if (err != NULL) return Obj(err);
         /* fall through */
     case 2:
         err = v[1].val->obj->ival(v[1].val, &offs, 8 * sizeof offs, &v[1].epoint);
-        if (err != NULL) return &err->v;
+        if (err != NULL) return Obj(err);
         /* fall through */
     default:
         break;
@@ -462,26 +462,26 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
         else offset = (uval_t)offs;
         if (offset < ln) ln -= offset; else ln = 0;
         if (length < ln) ln = length;
-        if (ln == 0) return (Obj *)ref_bytes(null_bytes);
-        if (ln > SSIZE_MAX) return (Obj *)new_error_mem(op->epoint);
+        if (ln == 0) return Obj(ref_bytes(null_bytes));
+        if (ln > SSIZE_MAX) return Obj(new_error_mem(op->epoint));
         b = new_bytes(ln);
         b->len = (ssize_t)ln;
         memcpy(b->data, cfile2->data + offset, ln);
-        return &b->v;
+        return Obj(b);
     }
-    return (Obj *)ref_none();
+    return Obj(ref_none());
 }
 
 static Obj *function_unsigned_bytes(oper_t op, unsigned int bits) {
     uval_t uv;
     if (touval(op->v2, &uv, bits, op->epoint2)) uv = 0;
-    return (Obj *)bytes_from_uval(uv, bits >> 3);
+    return Obj(bytes_from_uval(uv, bits >> 3));
 }
 
 static Obj *function_signed_bytes(oper_t op, unsigned int bits) {
     ival_t iv;
     if (toival(op->v2, &iv, bits, op->epoint2)) iv = 0;
-    return (Obj *)bytes_from_uval((uval_t)iv, bits >> 3);
+    return Obj(bytes_from_uval((uval_t)iv, bits >> 3));
 }
 
 static Obj *function_rta_addr(oper_t op, bool rta) {
@@ -503,7 +503,7 @@ static Obj *function_rta_addr(oper_t op, bool rta) {
         }
         if (rta) uv--;
     }
-    return (Obj *)bytes_from_uval(uv, 2);
+    return Obj(bytes_from_uval(uv, 2));
 }
 
 static MUST_CHECK Obj *apply_func(oper_t op) {
@@ -523,7 +523,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
             iter.data = o2; typ->getiter(&iter);
             if (iter.len == 0) {
                 iter_destroy(&iter);
-                return val_reference(typ == TUPLE_OBJ ? &null_tuple->v : &null_list->v);
+                return val_reference(typ == TUPLE_OBJ ? Obj(null_tuple) : Obj(null_list));
             }
             v = List(val_alloc(typ == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ));
             v->data = vals = list_create_elements(v, iter.len);
@@ -534,7 +534,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
             }
             iter_destroy(&iter);
             v->len = i;
-            return &v->v;
+            return Obj(v);
         } 
         v = ref_list(List(o2));
         len = v->len;
@@ -545,7 +545,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
             vals[i] = apply_func(op);
             val_destroy(o2);
         }
-        return &v->v;
+        return Obj(v);
     }
     if (op->v1->obj != FUNCTION_OBJ) return Type(op->v1)->create(op->v2, op->epoint2);
     switch (Function(op->v1)->func) {
@@ -569,7 +569,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
     case F_REPR:
         {
             Obj *v = typ->repr(o2, op->epoint2, SIZE_MAX);
-            return v != NULL ? v : (Obj *)new_error_mem(op->epoint2);
+            return v != NULL ? v : Obj(new_error_mem(op->epoint2));
         }
     default: break;
     }
@@ -632,7 +632,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
     return typ != FLOAT_OBJ ? o2 : val_reference(o2);
 failed:
     if (typ != FLOAT_OBJ) val_destroy(o2);
-    return (Obj *)new_error_obj(err, op->v2, op->epoint2);
+    return Obj(new_error_obj(err, op->v2, op->epoint2));
 }
 
 static MUST_CHECK Obj *to_real(struct values_s *v, double *r) {
@@ -681,10 +681,10 @@ static MUST_CHECK Obj *function_pow(oper_t op) {
     val = to_real(&v[1], &real2);
     if (val != NULL) return val;
     if (real2 < 0.0 && real == 0.0) {
-        return (Obj *)new_error_obj(ERROR_ZERO_NEGPOWER, op->v2, op->epoint3);
+        return Obj(new_error_obj(ERROR_ZERO_NEGPOWER, op->v2, op->epoint3));
     }
     if (real < 0.0 && floor(real2) != real2) {
-        return (Obj *)new_error(ERROR_NEGFRAC_POWER, op->epoint);
+        return Obj(new_error(ERROR_NEGFRAC_POWER, op->epoint));
     }
     return float_from_double(pow(real, real2), op->epoint);
 }
@@ -697,7 +697,7 @@ static MUST_CHECK Obj *function_all_any(oper_t op, Obj **warn, bool first) {
     if (objt->iterable) {
         struct iter_s iter;
         Bool *good = (typ == TRUTH_ALL) ? true_value : false_value;
-        Obj *result2 = (Obj *)ref_bool(good);
+        Obj *result2 = Obj(ref_bool(good));
         iter.data = val; objt->getiter(&iter);
         while ((v->val = iter.next(&iter)) != NULL) {
             Obj *result = v->val;
@@ -758,42 +758,42 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 switch (func) {
                 case F_HYPOT:
                     if (args != 2) {
-                        return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
+                        return Obj(new_error_argnum(args, 2, 2, op->epoint2));
                     }
                     return gen_broadcast(op, function_hypot);
                 case F_ATAN2:
                     if (args != 2) {
-                        return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
+                        return Obj(new_error_argnum(args, 2, 2, op->epoint2));
                     }
                     return gen_broadcast(op, function_atan2);
                 case F_POW:
                     if (args != 2) {
-                        return (Obj *)new_error_argnum(args, 2, 2, op->epoint2);
+                        return Obj(new_error_argnum(args, 2, 2, op->epoint2));
                     }
                     return gen_broadcast(op, function_pow);
                 case F_RANGE:
                     if (args < 1 || args > 3) {
-                        return (Obj *)new_error_argnum(args, 1, 3, op->epoint2);
+                        return Obj(new_error_argnum(args, 1, 3, op->epoint2));
                     }
                     return gen_broadcast(op, function_range);
                 case F_BINARY:
                     if (args < 1 || args > 3) {
-                        return (Obj *)new_error_argnum(args, 1, 3, op->epoint2);
+                        return Obj(new_error_argnum(args, 1, 3, op->epoint2));
                     }
                     return gen_broadcast(op, function_binary);
                 case F_FORMAT:
                     if (args < 1) {
-                        return (Obj *)new_error_argnum(args, 1, 0, op->epoint2);
+                        return Obj(new_error_argnum(args, 1, 0, op->epoint2));
                     }
                     return gen_broadcast(op, isnprintf);
                 case F_RANDOM:
                     if (args > 3) {
-                        return (Obj *)new_error_argnum(args, 0, 3, op->epoint2);
+                        return Obj(new_error_argnum(args, 0, 3, op->epoint2));
                     }
                     return gen_broadcast(op, function_random);
                 default:
                     if (args != 1) {
-                        return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);
+                        return Obj(new_error_argnum(args, 1, 1, op->epoint2));
                     }
                     switch (func) {
                     case F_ANY:
@@ -914,6 +914,6 @@ void functionobj_names(void) {
         func->name.len = strlen(builtin_functions[i].name);
         func->func = builtin_functions[i].func;
         func->name_hash = -1;
-        new_builtin(builtin_functions[i].name, &func->v);
+        new_builtin(builtin_functions[i].name, Obj(func));
     }
 }

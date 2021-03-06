@@ -90,8 +90,8 @@ void push_dummy_context(void) {
 bool pop_context(void) {
     if (context_stack.p > 1 + context_stack.bottom) {
         struct cstack_s *c = &context_stack.stack[--context_stack.p];
-        val_destroy(&c->normal->v);
-        val_destroy(&cheap_context->v);
+        val_destroy(Obj(c->normal));
+        val_destroy(Obj(cheap_context));
         cheap_context = c->cheap;
         c = &context_stack.stack[context_stack.p - 1];
         current_context = c->normal;
@@ -115,9 +115,9 @@ void push_context2(Namespace *name) {
 bool pop_context2(void) {
     if (context_stack.p > 1 + context_stack.bottom) {
         struct cstack_s *c = &context_stack.stack[--context_stack.p];
-        val_destroy(&context_stack.stack[context_stack.p - 1].normal->v);
+        val_destroy(Obj(context_stack.stack[context_stack.p - 1].normal));
         context_stack.stack[context_stack.p - 1].normal = c->normal;
-        val_destroy(&c->cheap->v);
+        val_destroy(Obj(c->cheap));
         return false;
     }
     return true;
@@ -127,10 +127,10 @@ void reset_context(void) {
     context_stack.bottom = 0;
     while (context_stack.p != 0) {
         struct cstack_s *c = &context_stack.stack[--context_stack.p];
-        val_destroy(&c->normal->v);
-        val_destroy(&c->cheap->v);
+        val_destroy(Obj(c->normal));
+        val_destroy(Obj(c->cheap));
     }
-    val_destroy(&cheap_context->v);
+    val_destroy(Obj(cheap_context));
     cheap_context = ref_namespace(root_namespace);
     push_context(root_namespace);
     root_namespace->backr = root_namespace->forwr = 0;
@@ -578,7 +578,7 @@ static void labelprint2(Namespace *names, FILE *flab, Symbollist_types labelmode
                     fprintf(flab, "al %" PRIx32 " .", uv & 0xffffff);
                     labelname_print(l, flab, ':');
                     putc('\n', flab);
-                } else val_destroy(&err->v);
+                } else val_destroy(Obj(err));
             }
             if (l->owner) {
                 Namespace *ns = get_namespace(val);
@@ -795,21 +795,21 @@ void init_variables(void)
 void destroy_lastlb(void) {
     if (lastlb != NULL) {
         lastlb->v.obj = NONE_OBJ;
-        val_destroy(&lastlb->v);
+        val_destroy(Obj(lastlb));
         lastlb = NULL;
     }
 }
 
 void destroy_variables(void)
 {
-    val_destroy(&builtin_namespace->v);
-    val_destroy(&root_namespace->v);
-    val_destroy(&cheap_context->v);
+    val_destroy(Obj(builtin_namespace));
+    val_destroy(Obj(root_namespace));
+    val_destroy(Obj(cheap_context));
     destroy_lastlb();
     while (context_stack.p != 0) {
         struct cstack_s *c = &context_stack.stack[--context_stack.p];
-        val_destroy(&c->normal->v);
-        val_destroy(&c->cheap->v);
+        val_destroy(Obj(c->normal));
+        val_destroy(Obj(c->cheap));
     }
     free(context_stack.stack);
 }

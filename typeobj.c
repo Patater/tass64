@@ -55,7 +55,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t UNUSED(epoint)) {
     case T_ERROR: return val_reference(v1);
     default: break;
     }
-    return val_reference((Obj *)&v1->obj->v);
+    return val_reference((Obj *)Obj(v1->obj));
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -87,7 +87,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     memcpy(s, name, ln);
     s[ln] = '\'';
     s[ln + 1] = '>';
-    return &v->v;
+    return Obj(v);
 }
 
 static inline int icmp(oper_t op) {
@@ -108,7 +108,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Funcargs *v2 = Funcargs(o2);
             size_t args = v2->len;
             if (args != 1) {
-                return (Obj *)new_error_argnum(args, 1, 1, op->epoint2);
+                return Obj(new_error_argnum(args, 1, 1, op->epoint2));
             }
             if (v1 == LIST_OBJ || v1 == TUPLE_OBJ || v1 == TYPE_OBJ) return v1->create(v2->val[0].val, &v2->val[0].epoint);
             return apply_convert(op);
@@ -137,5 +137,5 @@ void typeobj_init(void) {
 }
 
 void typeobj_names(void) {
-    new_builtin("type", val_reference(&TYPE_OBJ->v));
+    new_builtin("type", val_reference(Obj(TYPE_OBJ)));
 }

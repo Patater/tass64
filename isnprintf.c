@@ -98,7 +98,7 @@ static const struct values_s *next_arg(void) {
         Obj *val;
         ret = &list[listp];
         val = ret->val;
-        if (val == &none_value->v) {
+        if (val == Obj(none_value)) {
             if (none != 0) none = listp;
             ret = NULL;
         } else if (val->obj == ERROR_OBJ) {
@@ -185,7 +185,7 @@ static ival_t get_ival(void) {
         Obj *val = v->val;
         Error *err = val->obj->ival(val, &ival, 8 * (sizeof ival), &v->epoint);
         if (err == NULL) return ival;
-        note_failure(&err->v);
+        note_failure(Obj(err));
     }
     return 0;
 }
@@ -229,7 +229,7 @@ static inline void decimal(Data *p)
             minus = false;
         } else {
             Obj *err2 = INT_OBJ->repr(err, &v->epoint, SIZE_MAX);
-            if (err2 == NULL) err2 = (Obj *)new_error_mem(&v->epoint);
+            if (err2 == NULL) err2 = Obj(new_error_mem(&v->epoint));
             if (err2->obj != STR_OBJ) {
                 note_failure(err2);
                 str = ref_str(null_str);
@@ -245,7 +245,7 @@ static inline void decimal(Data *p)
     i = minus ? 1 : 0;
     pad_right2(p, 0, minus, str->len - i);
     for (; i < str->len; i++) put_char(str->data[i]);
-    val_destroy(&str->v);
+    val_destroy(Obj(str));
     pad_left(p);
 }
 
@@ -295,7 +295,7 @@ static inline void hexa(Data *p)
         } else bp -= 4;
         b = (integer->data[bp2] >> bp) & 0xf;
     }
-    val_destroy(&integer->v);
+    val_destroy(Obj(integer));
     pad_left(p);
 }
 
@@ -330,7 +330,7 @@ static inline void bin(Data *p)
         } else bp--;
         b = (integer->data[bp2] >> bp) & 1;
     }
-    val_destroy(&integer->v);
+    val_destroy(Obj(integer));
     pad_left(p);
 }
 
@@ -346,7 +346,7 @@ static inline void chars(void)
         Obj *val = v->val;
         Error *err = val->obj->uval(val, &uval, 24, &v->epoint);
         if (err != NULL) {
-            note_failure(&err->v);
+            note_failure(Obj(err));
             uval = 63;
         } else {
             uval &= 0xffffff;
@@ -374,7 +374,7 @@ static inline void strings(Data *p)
         if (*p->pf == 'r') {
             Obj *val = v->val;
             err = val->obj->repr(val, &v->epoint, SIZE_MAX);
-            if (err == NULL) err = (Obj *)new_error_mem(&v->epoint);
+            if (err == NULL) err = Obj(new_error_mem(&v->epoint));
         } else {
             err = STR_OBJ->create(v->val, &v->epoint);
         }
@@ -398,7 +398,7 @@ static inline void strings(Data *p)
         if ((ch & 0x80) != 0) tmp += utf8in(tmp, &ch); else tmp++;
         put_char(ch);
     }
-    val_destroy(&str->v);
+    val_destroy(Obj(str));
     pad_left(p);
 }
 
@@ -462,11 +462,11 @@ MUST_CHECK Obj *isnprintf(oper_t op)
         return val_reference(val);
     case T_STR: break;
     case T_ADDRESS:
-        if (Address(val)->val == &none_value->v || Address(val)->val->obj == ERROR_OBJ) return val_reference(Address(val)->val);
+        if (Address(val)->val == Obj(none_value) || Address(val)->val->obj == ERROR_OBJ) return val_reference(Address(val)->val);
         /* fall through */
     default:
         err_msg_wrong_type(val, STR_OBJ, &v[0].epoint);
-        return (Obj *)ref_none();
+        return Obj(ref_none());
     }
     data.pf = Str(val)->data;
     data.pfend = data.pf + Str(val)->len;
@@ -617,15 +617,15 @@ MUST_CHECK Obj *isnprintf(oper_t op)
             uint8_t *d = (uint8_t *)realloc(return_value.data, return_value.len);
             if (d != NULL) {
                 str->data = d;
-                return &str->v;
+                return Obj(str);
             }
         }
         str->data = return_value.data;
-        return &str->v;
+        return Obj(str);
     }
     if (return_value.len != 0) memcpy(str->u.val, return_value.data, return_value.len);
     str->data = str->u.val;
     free(return_value.data);
-    return &str->v;
+    return Obj(str);
 }
 

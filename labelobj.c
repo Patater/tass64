@@ -38,7 +38,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_LABEL: return val_reference(v1);
     default: break;
     }
-    return (Obj *)new_error_conv(v1, LABEL_OBJ, epoint);
+    return Obj(new_error_conv(v1, LABEL_OBJ, epoint));
 }
 
 static FAST_CALL void destroy(Obj *o1) {
@@ -107,7 +107,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxlen) {
     memcpy(s, v1->name.data, len);
     s[len] = '\'';
     s[len + 1] = '>';
-    return &v->v;
+    return Obj(v);
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxlen) {
@@ -127,7 +127,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxlen) {
     if (v == NULL) return NULL;
     v->chars = chars;
     memcpy(v->data, v1->name.data, len);
-    return &v->v;
+    return Obj(v);
 }
 
 void labelobj_init(void) {

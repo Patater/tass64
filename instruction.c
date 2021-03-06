@@ -72,7 +72,7 @@ void select_opcodes(const struct cpu_s *cpumode) {
 
 MUST_CHECK bool touval(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epoint) {
     Error *err;
-    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    if (v1 == Obj(none_value) && (constcreated || !fixeddig) && pass < max_pass) return true;
     err = v1->obj->uval(v1, uv, bits, epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
@@ -81,7 +81,7 @@ MUST_CHECK bool touval(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epoint)
 
 MUST_CHECK bool toival(Obj *v1, ival_t *iv, unsigned int bits, linepos_t epoint) {
     Error *err;
-    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    if (v1 == Obj(none_value) && (constcreated || !fixeddig) && pass < max_pass) return true;
     err = v1->obj->ival(v1, iv, bits, epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
@@ -90,7 +90,7 @@ MUST_CHECK bool toival(Obj *v1, ival_t *iv, unsigned int bits, linepos_t epoint)
 
 MUST_CHECK bool touaddress(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epoint) {
     Error *err;
-    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    if (v1 == Obj(none_value) && (constcreated || !fixeddig) && pass < max_pass) return true;
     err = v1->obj->uaddress(v1, uv, bits, epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
@@ -99,7 +99,7 @@ MUST_CHECK bool touaddress(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epo
 
 MUST_CHECK bool toiaddress(Obj *v1, ival_t *iv, unsigned int bits, linepos_t epoint) {
     Error *err;
-    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    if (v1 == Obj(none_value) && (constcreated || !fixeddig) && pass < max_pass) return true;
     err = v1->obj->iaddress(v1, iv, bits, epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
@@ -108,7 +108,7 @@ MUST_CHECK bool toiaddress(Obj *v1, ival_t *iv, unsigned int bits, linepos_t epo
 
 static MUST_CHECK bool tocode_uaddress(Obj *v1, uval_t *uv, uval_t *uv2, linepos_t epoint) {
     Error *err;
-    if (v1 == &none_value->v && (constcreated || !fixeddig) && pass < max_pass) return true;
+    if (v1 == Obj(none_value) && (constcreated || !fixeddig) && pass < max_pass) return true;
     err = code_uaddress(v1, uv, uv2, epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
@@ -498,7 +498,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 err->u.reg.reg = ref_register(cpureg);
                 err->u.reg.cod = mnemonic[prm];
                 err_msg_output_and_destroy(err);
-                val = &none_value->v;
+                val = Obj(none_value);
             }
             if (cnmemonic[ADR_REL] != ____) {
                 struct star_s *s;
@@ -726,7 +726,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 adrgen = AG_DB3; opr = ADR_ZP; /* lda $ff lda $ffff lda $ffffff */
                 break;
             }
-            if (val == &none_value->v) {
+            if (val == Obj(none_value)) {
                 return new_error(ERROR____STILL_NONE, epoint2);
             }
             err = new_error(ERROR___NO_LOT_OPER, epoint2);
@@ -772,10 +772,10 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 opr = ADR_BIT_ZP;
                 break;
             }
-            if (addrlist->data[0] == &none_value->v) {
+            if (addrlist->data[0] == Obj(none_value)) {
                 return new_error(ERROR____STILL_NONE, epoint2);
             }
-            if (addrlist->data[1] == &none_value->v) {
+            if (addrlist->data[1] == Obj(none_value)) {
                 return new_error(ERROR____STILL_NONE, &epoints[1]);
             }
             err = new_error(ERROR___NO_LOT_OPER, epoint2);
@@ -825,19 +825,19 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             /* fall through */
         default:
             addrlist = Addrlist(vals);
-            if (addrlist->data[0] == &none_value->v) {
+            if (addrlist->data[0] == Obj(none_value)) {
                 return new_error(ERROR____STILL_NONE, epoint2);
             }
-            if (addrlist->data[1] == &none_value->v) {
+            if (addrlist->data[1] == Obj(none_value)) {
                 return new_error(ERROR____STILL_NONE, &epoints[1]);
             }
-            if (addrlist->data[2] == &none_value->v) {
+            if (addrlist->data[2] == Obj(none_value)) {
                 return new_error(ERROR____STILL_NONE, &epoints[2]);
             }
             {
                 size_t i;
                 for (i = 3; i < addrlist->len; i++) {
-                    if (addrlist->data[i] == &none_value->v) {
+                    if (addrlist->data[i] == Obj(none_value)) {
                         return new_error(ERROR____STILL_NONE, epoint);
                     }
                 }
@@ -930,9 +930,9 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (toiaddress(val, (ival_t *)&uval, 8, epoint2)) break;
         } else {
             if (touaddress(val, &uval, 8, epoint2)) {
-                if (adrgen == AG_SBYTE && diagnostics.pitfalls && val != &none_value->v) {
+                if (adrgen == AG_SBYTE && diagnostics.pitfalls && val != Obj(none_value)) {
                     err = val->obj->iaddress(val, (ival_t *)&uval, 8, epoint2);
-                    if (err != NULL) val_destroy(&err->v);
+                    if (err != NULL) val_destroy(Obj(err));
                     else if (once != pass) {
                         err_msg_immediate_note(epoint2);
                         once = pass;
@@ -1057,9 +1057,9 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             if (toiaddress(val, (ival_t *)&uval, 16, epoint2)) break;
         } else {
             if (touaddress(val, &uval, 16, epoint2)) {
-                if (adrgen == AG_SWORD && diagnostics.pitfalls && val != &none_value->v) {
+                if (adrgen == AG_SWORD && diagnostics.pitfalls && val != Obj(none_value)) {
                     err = val->obj->iaddress(val, (ival_t *)&uval, 16, epoint2);
-                    if (err != NULL) val_destroy(&err->v);
+                    if (err != NULL) val_destroy(Obj(err));
                     else if (once != pass) {
                         err_msg_immediate_note(epoint2);
                         once = pass;

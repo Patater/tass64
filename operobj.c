@@ -134,7 +134,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     memcpy(s, txt, len);
     s[len] = '\'';
     s[len + 1] = '>';
-    return &v->v;
+    return Obj(v);
 }
 
 void operobj_init(void) {

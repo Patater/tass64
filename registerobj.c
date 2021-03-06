@@ -62,16 +62,16 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
             if (v->len != 0) {
                 if (v->len > sizeof v->val) {
                     s = (uint8_t *)malloc(v->len);
-                    if (s == NULL) return (Obj *)new_error_mem(epoint);
+                    if (s == NULL) return Obj(new_error_mem(epoint));
                 } else s = v->val;
                 memcpy(s, v1->data, v->len);
             } else s = NULL;
             v->data = s;
-            return &v->v;
+            return Obj(v);
         }
     default: break;
     }
-    return (Obj *)new_error_conv(o1, REGISTER_OBJ, epoint);
+    return Obj(new_error_conv(o1, REGISTER_OBJ, epoint));
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -127,7 +127,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     }
     s[i] = q;
     s[i + 1] = ')';
-    return &v->v;
+    return Obj(v);
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
@@ -139,7 +139,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     if (v == NULL) return NULL;
     v->chars = v1->chars;
     memcpy(v->data, v1->data, v1->len);
-    return &v->v;
+    return Obj(v);
 }
 
 static inline int icmp(oper_t op) {
@@ -198,7 +198,7 @@ void registerobj_init(void) {
 }
 
 void registerobj_names(void) {
-    new_builtin("register", val_reference(&REGISTER_OBJ->v));
+    new_builtin("register", val_reference(Obj(REGISTER_OBJ)));
 }
 
 static uint32_t register_names;
@@ -218,7 +218,7 @@ bool registerobj_createnames(uint32_t registers) {
         reg->data = reg->val;
         reg->len = 1;
         reg->chars = 1;
-        new_builtin((const char *)reg->val, &reg->v);
+        new_builtin((const char *)reg->val, Obj(reg));
     }
     return true;
 }

@@ -65,7 +65,7 @@ static FAST_CALL NO_INLINE Obj *value_alloc(const Type *obj) {
 
     slot->v.obj = obj;
     *obj->slot = slot->next;
-    return &slot->v;
+    return Obj(slot);
 }
 
 FAST_CALL MALLOC Obj *val_alloc(const Type *obj) {
@@ -73,7 +73,7 @@ FAST_CALL MALLOC Obj *val_alloc(const Type *obj) {
     if (slot == NULL) return value_alloc(obj);
     slot->v.obj = obj;
     *obj->slot = slot->next;
-    return &slot->v;
+    return Obj(slot);
 }
 
 void garbage_collect(void) {
