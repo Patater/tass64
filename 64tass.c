@@ -4016,7 +4016,7 @@ MUST_CHECK Obj *compile(void)
                                 if (str->len > i) {
                                     ch = str->data[i];
                                     if ((ch & 0x80) != 0) i += utf8in(str->data + i, &ch); else i++;
-                                    tmp.end = ch;
+                                    tmp.end = ch & 0xffffff;
                                     endok = true;
                                     if (str->len > i) {err_msg2(ERROR_NOT_TWO_CHARS, NULL, &vs->epoint); tryit = false;}
                                 }
@@ -4036,12 +4036,12 @@ MUST_CHECK Obj *compile(void)
                                 else {
                                     uchar_t ch = str->data[0];
                                     if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
-                                    tmp.end = ch;
+                                    tmp.end = ch & 0xffffff;
                                     if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, NULL, &vs->epoint); tryit = false;}
                                 }
                             } else {
                                 if (touval2(val, &uval, 24, &vs->epoint)) tryit = false;
-                                tmp.end = uval;
+                                tmp.end = uval & 0xffffff;
                             }
                         }
                         vs = get_val();
@@ -4052,7 +4052,7 @@ MUST_CHECK Obj *compile(void)
                             if (tmp.start > tmp.end) {
                                 uchar_t tmpe = tmp.start;
                                 tmp.start = tmp.end;
-                                tmp.end = tmpe;
+                                tmp.end = tmpe & 0xffffff;
                             }
                             if (new_trans(actual_encoding, &tmp, &epoint)) {
                                 err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); goto breakerr;
