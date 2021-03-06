@@ -338,7 +338,7 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
     for (;;) {
         if ((ch2 = s[i]) == 0) {
             *ln = i;
-            return Obj(ref_none());
+            return ref_none();
         }
         if ((ch2 & 0x80) != 0) i += utf8len(ch2); else i++;
         if (ch2 == ch) {
@@ -866,7 +866,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *tmp;
 
     if (op->op == &o_X) {
-        if (v2 == Obj(none_value) || v2->obj == ERROR_OBJ) return val_reference(v2);
+        if (v2 == none_value || v2->obj == ERROR_OBJ) return val_reference(v2);
         return repeat(op);
     }
     if (op->op == &o_LAND || op->op == &o_LOR) {

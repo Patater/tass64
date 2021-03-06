@@ -29,7 +29,7 @@ Type *const NONE_OBJ = &obj;
 
 static None noneval = { { &obj, 1}, NULL };
 
-None *none_value = &noneval;
+Obj *none_value = &noneval.v;
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return o1 == o2;

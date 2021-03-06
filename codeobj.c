@@ -303,7 +303,7 @@ static MUST_CHECK Obj *len(oper_t op) {
     address_t ln, s;
     Code *v1 = Code(op->v2);
     if (v1->pass == 0) {
-        return Obj(ref_none());
+        return ref_none();
     }
     if (v1->offs == 0) {
         s = v1->size;
@@ -323,7 +323,7 @@ static MUST_CHECK Obj *size(oper_t op) {
     address_t s;
     Code *v1 = Code(op->v2);
     if (v1->pass == 0) {
-        return Obj(ref_none());
+        return ref_none();
     }
     if (v1->offs == 0) {
         s = v1->size;
@@ -545,7 +545,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         return namespace_member(op, v1->names);
     }
     if (op->op == &o_X) {
-        if (o2 == Obj(none_value) || o2->obj == ERROR_OBJ) return val_reference(o2);
+        if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
         return obj_oper_error(op);
     }
     if (op->op == &o_LAND || op->op == &o_LOR) {

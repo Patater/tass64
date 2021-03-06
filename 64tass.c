@@ -1303,7 +1303,7 @@ static MUST_CHECK bool list_extend2(List *lst) {
     if (list_extend(lst)) return true;
     o = lst->len;
     vals = lst->data;
-    while (o < lst->u.s.max) vals[o++] = Obj(ref_none());
+    while (o < lst->u.s.max) vals[o++] = ref_none();
     lst->len = o;
     return false;
 }
@@ -1345,7 +1345,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         if (wht == ',') {
             lpoint.pos++;
             foreach = true;
-            val = Obj(ref_none());
+            val = ref_none();
         } else {
             if (wht != '=' || foreach) {
                 if (wht == ':' && pline[lpoint.pos + 1] == '=' && !arguments.tasmcomp && !foreach) lpoint.pos += 2;
@@ -1365,7 +1365,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 if (val->obj == ERROR_OBJ) {
                     err_msg_output(Error(val));
                 } else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
-                    if (val != Obj(none_value)) {
+                    if (val != none_value) {
                         Obj *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
                         val_destroy(val); val = err;
                         err_msg_output(Error(val));
@@ -1373,7 +1373,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 } else {
                     iter.data = val; val->obj->getiter(&iter);
                 }
-                val_destroy(val); val = Obj(ref_none());
+                val_destroy(val); val = ref_none();
             } else {
                 if (!get_exp(1, 1, 1, &lpoint)) goto error;
                 val = pull_val(NULL);
@@ -1589,7 +1589,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                     } else {
                         label->constant = false;
                         label->owner = false;
-                        label->value = Obj(ref_none());
+                        label->value = ref_none();
                         label->epoint = bpoint;
                     }
                 } else {
@@ -1902,7 +1902,7 @@ MUST_CHECK Obj *compile(void)
                         Namespace *context = get_namespace(tmp2->value);
                         if (context == NULL) {
                             epoint.pos--;
-                            if (tmp2->value == Obj(none_value)) err_msg_still_none(NULL, &epoint);
+                            if (tmp2->value == none_value) err_msg_still_none(NULL, &epoint);
                             else if (tmp2->value->obj == ERROR_OBJ) err_msg_output(Error(tmp2->value));
                             else {
                                 Symbol *symbol = new_symbol(&labelname, &epoint);
@@ -2274,7 +2274,7 @@ MUST_CHECK Obj *compile(void)
                                     constcreated = true;
                                 }
                                 label->owner = true;
-                                label->value = Obj(none_value);
+                                label->value = none_value;
                             }
                             label->constant = true;
                             label->epoint = epoint;
@@ -2609,7 +2609,7 @@ MUST_CHECK Obj *compile(void)
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
-                                label->value = Obj(ref_none());
+                                label->value = ref_none();
                             }
                             label->constant = true;
                             label->owner = true;
@@ -2621,7 +2621,7 @@ MUST_CHECK Obj *compile(void)
                                 for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
                             } else {
                                 lst = new_tuple(lenof(lst->u.val));
-                                for (i = 0; i < lst->len; i++) lst->data[i] = Obj(ref_none());
+                                for (i = 0; i < lst->len; i++) lst->data[i] = ref_none();
                             }
                             label = ref_label(label);
                             i = (prm == CMD_BFOR) ? for_command(label, lst, &cmdpoint) : (prm == CMD_BREPT) ? rept_command(label, lst, &cmdpoint) : while_command(label, lst, &cmdpoint);
@@ -2663,7 +2663,7 @@ MUST_CHECK Obj *compile(void)
                                     if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                     constcreated = true;
                                 }
-                                label->value = Obj(ref_none());
+                                label->value = ref_none();
                                 label->constant = true;
                                 label->owner = true;
                                 label->epoint = epoint;
@@ -3115,7 +3115,7 @@ MUST_CHECK Obj *compile(void)
                     case CMD_IFEQ:
                         err = val->obj->sign(val, &vs->epoint);
                         if (err->obj != INT_OBJ) {
-                            if (err == Obj(none_value)) err_msg_still_none(NULL, &vs->epoint);
+                            if (err == none_value) err_msg_still_none(NULL, &vs->epoint);
                             else if (err->obj == ERROR_OBJ) err_msg_output(Error(err));
                             val_destroy(err);
                             waitfor->skip = 0; break;
@@ -3131,7 +3131,7 @@ MUST_CHECK Obj *compile(void)
                         } else {
                             err = val->obj->sign(val, &vs->epoint);
                             if (err->obj != INT_OBJ) {
-                                if (err == Obj(none_value)) err_msg_still_none(NULL, &vs->epoint);
+                                if (err == none_value) err_msg_still_none(NULL, &vs->epoint);
                                 else if (err->obj == ERROR_OBJ) err_msg_output(Error(err));
                                 val_destroy(err);
                                 waitfor->skip = 0; break;
@@ -3167,11 +3167,11 @@ MUST_CHECK Obj *compile(void)
                         struct values_s *vs;
                         if (!get_exp(0, 1, 1, &epoint)) {waitfor->skip = 0; waitfor->u.cmd_switch.val = NULL; goto breakerr;}
                         vs = get_val(); val = vs->val;
-                        if (val->obj == ERROR_OBJ) { err_msg_output(Error(val)); val = Obj(none_value); }
-                        else if (val == Obj(none_value)) err_msg_still_none(NULL, &vs->epoint);
-                    } else val = Obj(none_value);
+                        if (val->obj == ERROR_OBJ) { err_msg_output(Error(val)); val = none_value; }
+                        else if (val == none_value) err_msg_still_none(NULL, &vs->epoint);
+                    } else val = none_value;
                     waitfor->u.cmd_switch.val = val_reference(val);
-                    waitfor->skip = (val == Obj(none_value)) ? 0 : (uint8_t)((skwait & 1) << 1);
+                    waitfor->skip = (val == none_value) ? 0 : (uint8_t)((skwait & 1) << 1);
                 }
                 break;
             case CMD_CASE: /* .case */
@@ -3193,7 +3193,7 @@ MUST_CHECK Obj *compile(void)
                         while (!truth && (vs = get_val()) != NULL) {
                             val = vs->val;
                             if (val->obj == ERROR_OBJ) { if (skwait == 2) err_msg_output(Error(val)); continue; }
-                            if (val == Obj(none_value)) { if (skwait == 2) err_msg_still_none(NULL, &vs->epoint);continue; }
+                            if (val == none_value) { if (skwait == 2) err_msg_still_none(NULL, &vs->epoint);continue; }
                             tmp.v1 = waitfor->u.cmd_switch.val;
                             tmp.v2 = val;
                             tmp.epoint2 = &vs->epoint;
@@ -3932,7 +3932,7 @@ MUST_CHECK Obj *compile(void)
                     for (i = 0; i < len; i++, vs++) {
                         val = STR_OBJ->create(vs->val, &vs->epoint);
                         if (val->obj != STR_OBJ) {
-                            if (val == Obj(none_value)) err_msg_still_none(NULL, &vs->epoint);
+                            if (val == none_value) err_msg_still_none(NULL, &vs->epoint);
                             else if (val->obj == ERROR_OBJ) { err_msg_output_and_destroy(Error(val)); break; }
                             val_destroy(val);
                             val = Obj(ref_str(null_str));
@@ -4088,7 +4088,7 @@ MUST_CHECK Obj *compile(void)
                         vs2 = get_val();
                         if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr; }
                         val = vs2->val;
-                        if (val == Obj(none_value)) err_msg_still_none(NULL, &vs2->epoint);
+                        if (val == none_value) err_msg_still_none(NULL, &vs2->epoint);
                         else if (tryit && new_escape(actual_encoding, &escape, val, &vs2->epoint)) {
                             err_msg2(ERROR_DOUBLE_ESCAPE, NULL, &vs->epoint); goto breakerr;
                         }
@@ -4168,7 +4168,7 @@ MUST_CHECK Obj *compile(void)
 
                     if (newlabel != NULL && prm == CMD_BINCLUDE && (f == NULL || f->open > 1) && newlabel->value->obj == CODE_OBJ) {
                         newlabel->update_after = true;
-                        const_assign(newlabel, Obj(ref_none()));
+                        const_assign(newlabel, ref_none());
                     }
                     if (f == NULL) goto breakerr;
                     if (f->open>1) {
@@ -4231,7 +4231,7 @@ MUST_CHECK Obj *compile(void)
                         else if (label->fwpass == pass) fwcount--;
                         label->defpass = pass;
                     } else {
-                        label->value = Obj(ref_none());
+                        label->value = ref_none();
                         label->epoint = epoint;
                     }
                     label->constant = true;
@@ -4242,7 +4242,7 @@ MUST_CHECK Obj *compile(void)
                         for (i = 0; i < old->len; i++) lst->data[i] = val_reference(old->data[i]);
                     } else {
                         lst = new_tuple(lenof(lst->u.val));
-                        for (i = 0; i < lst->len; i++) lst->data[i] = Obj(ref_none());
+                        for (i = 0; i < lst->len; i++) lst->data[i] = ref_none();
                     }
                     i = (prm == CMD_BFOR) ? for_command(NULL, lst, &epoint) : (prm == CMD_BREPT) ? rept_command(NULL, lst, &epoint) : while_command(NULL, lst, &epoint);
                     if (lst->len > i) list_shrink(lst, i);

@@ -231,7 +231,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
                 return val_reference(l->value);
             }
             if (!referenceit || (constcreated && pass < max_pass)) {
-                return Obj(ref_none());
+                return ref_none();
             }
             err = new_error(ERROR___NOT_DEFINED, op->epoint2);
             err->u.notdef.names = ref_namespace(v1);
@@ -248,7 +248,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
                 return val_reference(l->value);
             }
             if (!referenceit || (constcreated && pass < max_pass)) {
-                return Obj(ref_none());
+                return ref_none();
             }
             err = new_error(ERROR___NOT_DEFINED, op->epoint2);
             err->u.notdef.names = ref_namespace(v1);
@@ -283,7 +283,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     if (op->op == &o_MEMBER) {
         return namespace_member(op, Namespace(op->v1));
     }
-    if (op->v2 == Obj(none_value) || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
+    if (op->v2 == none_value || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
     return obj_oper_error(op);
 }
 

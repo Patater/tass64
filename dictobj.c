@@ -435,7 +435,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                     chars += str->chars;
                     if (chars > maxsize) goto error2;
                 } else {
-                    v = Obj(ref_none());
+                    v = ref_none();
                     ln--;
                     chars--;
                 }
@@ -588,7 +588,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     o2 = args->val[indx].val;
     epoint2 = &args->val[indx].epoint;
 
-    if (o2 == Obj(none_value)) return val_reference(o2);
+    if (o2 == none_value) return val_reference(o2);
     if (o2->obj->iterable) {
         struct iter_s iter;
         size_t i;
@@ -807,7 +807,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         struct values_s *v2 = &values[j];
 
         p.key = v2->val;
-        if (p.key == Obj(none_value) || p.key->obj == ERROR_OBJ) {
+        if (p.key == none_value || p.key->obj == ERROR_OBJ) {
             val_destroy(Obj(dict));
             return val_reference(p.key);
         }

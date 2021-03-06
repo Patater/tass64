@@ -98,7 +98,7 @@ static const struct values_s *next_arg(void) {
         Obj *val;
         ret = &list[listp];
         val = ret->val;
-        if (val == Obj(none_value)) {
+        if (val == none_value) {
             if (none != 0) none = listp;
             ret = NULL;
         } else if (val->obj == ERROR_OBJ) {
@@ -462,11 +462,11 @@ MUST_CHECK Obj *isnprintf(oper_t op)
         return val_reference(val);
     case T_STR: break;
     case T_ADDRESS:
-        if (Address(val)->val == Obj(none_value) || Address(val)->val->obj == ERROR_OBJ) return val_reference(Address(val)->val);
+        if (Address(val)->val == none_value || Address(val)->val->obj == ERROR_OBJ) return val_reference(Address(val)->val);
         /* fall through */
     default:
         err_msg_wrong_type(val, STR_OBJ, &v[0].epoint);
-        return Obj(ref_none());
+        return ref_none();
     }
     data.pf = Str(val)->data;
     data.pfend = data.pf + Str(val)->len;
