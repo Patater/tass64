@@ -32,20 +32,24 @@ typedef struct Bool {
 
 #define Bool(a) ((Bool *)(1 ? (a) : (Obj *)a))
 
-extern Bool *true_value;
-extern Bool *false_value;
-extern Bool *bool_value[2];
+extern Obj *const true_value;
+extern Obj *const false_value;
+extern Obj *const bool_value[2];
 
 extern void boolobj_init(void);
 extern void boolobj_names(void);
 extern void boolobj_destroy(void);
 
-static inline Bool *ref_bool(Bool *v1) {
-    v1->v.refcount++; return v1;
+static inline Obj *ref_true() {
+    true_value->refcount++; return true_value;
+}
+
+static inline Obj *ref_false() {
+    false_value->refcount++; return false_value;
 }
 
 static inline MUST_CHECK Obj *truth_reference(bool i) {
-    return (Obj *)ref_bool(bool_value[i ? 1 : 0]);
+    return val_reference(bool_value[i ? 1 : 0]);
 }
 
 extern MUST_CHECK Obj *int_from_bool(const struct Bool *);

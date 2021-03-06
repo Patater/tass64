@@ -120,8 +120,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BYTES:
     case T_REGISTER:
         switch (op->op->op) {
-        case O_EQ: return Obj(ref_bool(false_value));
-        case O_NE: return Obj(ref_bool(true_value));
+        case O_EQ: return ref_false();
+        case O_NE: return ref_true();
         case O_ADD:
         case O_SUB:
         case O_MUL:
@@ -162,8 +162,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BYTES:
     case T_REGISTER:
         switch (op->op->op) {
-        case O_EQ: return Obj(ref_bool(false_value));
-        case O_NE: return Obj(ref_bool(true_value));
+        case O_EQ: return ref_false();
+        case O_NE: return ref_true();
         case O_ADD:
         case O_SUB:
         case O_MUL:

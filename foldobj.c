@@ -88,8 +88,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             op->inplace = (ret->refcount == 1 && !minmax) ? ret : NULL;
             val = ret->obj->calc2(op);
             if (minmax) {
-                if (val == Obj(true_value)) val_replace(&val, ret);
-                else if (val == Obj(false_value)) val_replace(&val, v2);
+                if (val == true_value) val_replace(&val, ret);
+                else if (val == false_value) val_replace(&val, v2);
             }
             val_destroy(ret); ret = val;
         }
@@ -126,8 +126,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
                 op->inplace = (ret->refcount == 1 && !minmax) ? ret : NULL;
                 val = v1->obj->calc2(op);
                 if (minmax) {
-                    if (val == Obj(true_value)) val_replace(&val, v1);
-                    else if (val == Obj(false_value)) val_replace(&val, ret);
+                    if (val == true_value) val_replace(&val, v1);
+                    else if (val == false_value) val_replace(&val, ret);
                 }
                 val_destroy(ret); ret = val;
             }

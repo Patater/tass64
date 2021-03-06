@@ -60,7 +60,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
     case T_BYTES: return val_reference(v1);
-    case T_BOOL: return bytes_from_u8(Bool(v1) == true_value ? 1 : 0);
+    case T_BOOL: return bytes_from_u8(v1 == true_value ? 1 : 0);
     case T_BITS: return bytes_from_bits(Bits(v1), epoint);
     case T_STR: return bytes_from_str(Str(v1), epoint, BYTES_MODE_TEXT);
     case T_INT: return bytes_from_int(Int(v1), epoint);
@@ -220,11 +220,11 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
         sz = byteslen(v1);
         inv = (v1->len < 0) ? (uint8_t)~0 : 0;
         for (i = 0; i < sz; i++) {
-            if (v1->data[i] == inv) return Obj(ref_bool(false_value));
+            if (v1->data[i] == inv) return ref_false();
         }
-        return Obj(ref_bool(true_value));
+        return ref_true();
     case TRUTH_ANY:
-        if (v1->len == 0 || v1->len == ~0) return Obj(ref_bool(false_value));
+        if (v1->len == 0 || v1->len == ~0) return ref_false();
         /* fall through */
     default:
         return truth_reference(to_bool(v1));
@@ -1154,25 +1154,25 @@ static MUST_CHECK Obj *calc2_bytes(oper_t op) {
         {
             const uint8_t *c, *c2, *e;
             size_t len1 = byteslen(v1), len2 = byteslen(v2), i;
-            if (len1 == 0) return Obj(ref_bool(true_value));
-            if (len1 > len2) return Obj(ref_bool(false_value));
+            if (len1 == 0) return ref_true();
+            if (len1 > len2) return ref_false();
             c2 = v2->data;
             e = c2 + len2 - len1;
             if ((v1->len ^ v2->len) < 0) {
                 for (;;) {
                     c = (uint8_t *)memchr(c2, ~v1->data[0], (size_t)(e - c2) + 1);
-                    if (c == NULL) return Obj(ref_bool(false_value));
+                    if (c == NULL) return ref_false();
                     for (i = 1; i < len1; i++) {
                         if (c[i] != (0xff - v1->data[i])) break;
                     }
-                    if (i == len1) return Obj(ref_bool(true_value));
+                    if (i == len1) return ref_true();
                     c2 = c + 1;
                 }
             } else {
                 for (;;) {
                     c = (uint8_t *)memchr(c2, v1->data[0], (size_t)(e - c2) + 1);
-                    if (c == NULL) return Obj(ref_bool(false_value));
-                    if (memcmp(c, v1->data, len1) == 0) return Obj(ref_bool(true_value));
+                    if (c == NULL) return ref_false();
+                    if (memcmp(c, v1->data, len1) == 0) return ref_true();
                     c2 = c + 1;
                 }
             }

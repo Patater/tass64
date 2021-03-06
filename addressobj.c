@@ -388,7 +388,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         bool i;
         result = truth(Obj(v1), TRUTH_BOOL, op->epoint);
         if (result->obj != BOOL_OBJ) return result;
-        i = (result == Obj(true_value)) != (op->op == &o_LOR);
+        i = (result == true_value) != (op->op == &o_LOR);
         val_destroy(result);
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference(i ? o2 : Obj(v1));
@@ -417,8 +417,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 switch (op->op->op) {
                 default: /* can't happen */
                 case O_CMP: return Obj(ref_int((am < v2->type) ? minus1_value : int_value[1]));
-                case O_EQ: return Obj(ref_bool(false_value));
-                case O_NE: return Obj(ref_bool(true_value));
+                case O_EQ: return ref_false();
+                case O_NE: return ref_true();
                 case O_LE:
                 case O_MIN:
                 case O_LT: return truth_reference(am < v2->type);
