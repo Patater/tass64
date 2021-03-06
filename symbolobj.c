@@ -41,7 +41,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_SYMBOL: return val_reference(v1);
     default: break;
     }
-    return (Obj *)new_error_conv(v1, SYMBOL_OBJ, epoint);
+    return Obj(new_error_conv(v1, SYMBOL_OBJ, epoint));
 }
 
 Symbol *new_symbol(const str_t *name, linepos_t epoint) {
@@ -96,7 +96,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     v->chars = chars;
     v->data[0] = '.';
     memcpy(v->data + 1, v1->name.data, len - 1);
-    return &v->v;
+    return Obj(v);
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
@@ -108,7 +108,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     if (v == NULL) return NULL;
     v->chars = chars;
     memcpy(v->data, v1->name.data, v1->name.len);
-    return &v->v;
+    return Obj(v);
 }
 
 static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {

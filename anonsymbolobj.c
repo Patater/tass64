@@ -37,7 +37,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ANONSYMBOL: return val_reference(v1);
     default: break;
     }
-    return (Obj *)new_error_conv(v1, ANONSYMBOL_OBJ, epoint);
+    return Obj(new_error_conv(v1, ANONSYMBOL_OBJ, epoint));
 }
 
 Anonsymbol *new_anonsymbol(ssize_t count) {
@@ -68,7 +68,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     v->chars = len;
     v->data[0] = '.';
     memset(v->data + 1, v1->count >= 0 ? '+' : '-', len - 1);
-    return &v->v;
+    return Obj(v);
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
@@ -80,7 +80,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     if (v == NULL) return NULL;
     v->chars = len;
     memset(v->data, v1->count >= 0 ? '+' : '-', len);
-    return &v->v;
+    return Obj(v);
 }
 
 static inline int icmp(oper_t op) {

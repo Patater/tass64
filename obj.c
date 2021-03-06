@@ -87,15 +87,15 @@ MUST_CHECK Obj *obj_oper_error(oper_t op) {
     err->u.invoper.op = op->op;
     err->u.invoper.v1 = (v1 != NULL) ? ((v1->refcount != 0) ? val_reference(v1) : v1) : NULL;
     err->u.invoper.v2 = (v2 != NULL) ? ((v2->refcount != 0) ? val_reference(v2) : v2) : NULL;
-    return &err->v;
+    return Obj(err);
 }
 
 MUST_CHECK Obj *obj_oper_compare(oper_t op, int val) {
     bool result;
     switch (op->op->op) {
     case O_CMP:
-        if (val < 0) return (Obj *)ref_int(minus1_value);
-        return (Obj *)ref_int(int_value[(val > 0) ? 1 : 0]);
+        if (val < 0) return Obj(ref_int(minus1_value));
+        return Obj(ref_int(int_value[(val > 0) ? 1 : 0]));
     case O_EQ: result = (val == 0); break;
     case O_NE: result = (val != 0); break;
     case O_MIN:
@@ -114,12 +114,12 @@ static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR: return val_reference(v1);
     case T_ADDRESS:
-        if (Address(v1)->val == &none_value->v || Address(v1)->val->obj == ERROR_OBJ) return val_reference(Address(v1)->val);
+        if (Address(v1)->val == Obj(none_value) || Address(v1)->val->obj == ERROR_OBJ) return val_reference(Address(v1)->val);
         break;
     default: break;
     }
     err_msg_wrong_type(v1, NULL, epoint);
-    return (Obj *)ref_none();
+    return Obj(ref_none());
 }
 
 static FAST_CALL bool invalid_same(const Obj *o1, const Obj *o2) {
@@ -134,7 +134,7 @@ static MUST_CHECK Error *generic_invalid(Obj *v1, linepos_t epoint, Error_types 
 }
 
 static MUST_CHECK Obj *invalid_truth(Obj *v1, Truth_types UNUSED(type), linepos_t epoint) {
-    return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_BOOL);
+    return Obj(generic_invalid(v1, epoint, ERROR_____CANT_BOOL));
 }
 
 static MUST_CHECK Error *invalid_hash(Obj *v1, int *UNUSED(hash), linepos_t epoint) {
@@ -161,7 +161,7 @@ static MUST_CHECK Obj *invalid_repr(Obj *v1, linepos_t epoint, size_t maxsize) {
     *s++ = '<';
     memcpy(s, name, len2);
     s[len2] = '>';
-    return &v->v;
+    return Obj(v);
 }
 
 static MUST_CHECK Obj *invalid_str(Obj *v1, linepos_t epoint, size_t maxsize) {
@@ -174,24 +174,24 @@ static MUST_CHECK Obj *invalid_calc1(oper_t op) {
 
 static MUST_CHECK Obj *invalid_calc2(oper_t op) {
     Obj *o2 = op->v2;
-    if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
+    if (o2 == Obj(none_value) || o2->obj == ERROR_OBJ) {
         return val_reference(o2);
     }
     if (o2->obj == ADDRESS_OBJ) {
         Obj *val = Address(o2)->val;
-        if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
+        if (val == Obj(none_value) || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
 }
 
 static MUST_CHECK Obj *invalid_rcalc2(oper_t op) {
     Obj *o1 = op->v1;
-    if (o1 == &none_value->v || o1->obj == ERROR_OBJ) {
+    if (o1 == Obj(none_value) || o1->obj == ERROR_OBJ) {
         return val_reference(o1);
     }
     if (o1->obj == ADDRESS_OBJ) {
         Obj *val = Address(o1)->val;
-        if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
+        if (val == Obj(none_value) || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
 }
@@ -201,16 +201,16 @@ static MUST_CHECK Obj *invalid_slice(oper_t op, size_t indx) {
     if (indx == 0) {
         if (args->len > 0) {
             Obj *o2 = args->val[0].val;
-            if (o2 == &none_value->v || o2->obj == ERROR_OBJ) {
+            if (o2 == Obj(none_value) || o2->obj == ERROR_OBJ) {
                 return val_reference(o2);
             }
             if (o2->obj == ADDRESS_OBJ) {
                 Obj *val = Address(o2)->val;
-                if (val == &none_value->v || val->obj == ERROR_OBJ) return val_reference(val);
+                if (val == Obj(none_value) || val->obj == ERROR_OBJ) return val_reference(val);
             }
         }
     } else {
-        return (Obj *)new_error_argnum(args->len, 1, indx, op->epoint2);
+        return Obj(new_error_argnum(args->len, 1, indx, op->epoint2));
     }
     return obj_oper_error(op);
 }
@@ -240,19 +240,19 @@ static MUST_CHECK Error *invalid_uaddress(Obj *v1, uval_t *uv, unsigned int bits
 }
 
 static MUST_CHECK Obj *invalid_sign(Obj *v1, linepos_t epoint) {
-    return (Obj *)generic_invalid(v1, epoint, ERROR_____CANT_SIGN);
+    return Obj(generic_invalid(v1, epoint, ERROR_____CANT_SIGN));
 }
 
 static MUST_CHECK Obj *invalid_function(oper_t op) {
-    return (Obj *)generic_invalid(op->v2, op->epoint2, (Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
+    return Obj(generic_invalid(op->v2, op->epoint2, (Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT));
 }
 
 static MUST_CHECK Obj *invalid_len(oper_t op) {
-    return (Obj *)generic_invalid(op->v2, op->epoint2, ERROR______CANT_LEN);
+    return Obj(generic_invalid(op->v2, op->epoint2, ERROR______CANT_LEN));
 }
 
 static MUST_CHECK Obj *invalid_size(oper_t op) {
-    return (Obj *)generic_invalid(op->v2, op->epoint2, ERROR_____CANT_SIZE);
+    return Obj(generic_invalid(op->v2, op->epoint2, ERROR_____CANT_SIZE));
 }
 
 static FAST_CALL MUST_CHECK Obj *invalid_next(struct iter_s *v1) {

@@ -42,7 +42,7 @@ static FAST_CALL void destroy(Obj *o1) {
         if (v1->u.invoper.v2 != NULL) val_destroy(v1->u.invoper.v2);
         return;
     case ERROR___NO_REGISTER:
-        val_destroy(&v1->u.reg.reg->v);
+        val_destroy(Obj(v1->u.reg.reg));
         return;
     case ERROR_____CANT_UVAL:
     case ERROR_____CANT_IVAL:
@@ -51,7 +51,7 @@ static FAST_CALL void destroy(Obj *o1) {
         return;
     case ERROR___NOT_DEFINED:
         val_destroy(v1->u.notdef.symbol);
-        val_destroy((Obj *)v1->u.notdef.names);
+        val_destroy(Obj(v1->u.notdef.names));
         return;
     case ERROR__NOT_KEYVALUE:
     case ERROR__NOT_HASHABLE:
@@ -102,7 +102,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
         }
         break;
     case ERROR___NO_REGISTER:
-        v = &v1->u.reg.reg->v;
+        v = Obj(v1->u.reg.reg);
         break;
     case ERROR_____CANT_UVAL:
     case ERROR_____CANT_IVAL:
@@ -124,7 +124,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
             } else v->refcount++;
             break;
         }
-        v = &v1->u.notdef.names->v;
+        v = Obj(v1->u.notdef.names);
         break;
     case ERROR__NOT_KEYVALUE:
     case ERROR__NOT_HASHABLE:

@@ -44,7 +44,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_GAP: return val_reference(v1);
     default: break;
     }
-    return (Obj *)new_error_conv(v1, GAP_OBJ, epoint);
+    return Obj(new_error_conv(v1, GAP_OBJ, epoint));
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -67,7 +67,7 @@ static MUST_CHECK Obj *repr(Obj *UNUSED(v1), linepos_t UNUSED(epoint), size_t ma
         v->data[0] = '?';
         gapval.repr = v;
     }
-    return val_reference(&v->v);
+    return val_reference(Obj(v));
 }
 
 static MUST_CHECK Obj *function(oper_t op) {
@@ -120,8 +120,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BYTES:
     case T_REGISTER:
         switch (op->op->op) {
-        case O_EQ: return (Obj *)ref_bool(false_value);
-        case O_NE: return (Obj *)ref_bool(true_value);
+        case O_EQ: return Obj(ref_bool(false_value));
+        case O_NE: return Obj(ref_bool(true_value));
         case O_ADD:
         case O_SUB:
         case O_MUL:
@@ -162,8 +162,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BYTES:
     case T_REGISTER:
         switch (op->op->op) {
-        case O_EQ: return (Obj *)ref_bool(false_value);
-        case O_NE: return (Obj *)ref_bool(true_value);
+        case O_EQ: return Obj(ref_bool(false_value));
+        case O_NE: return Obj(ref_bool(true_value));
         case O_ADD:
         case O_SUB:
         case O_MUL:
@@ -204,7 +204,7 @@ void gapobj_init(void) {
 }
 
 void gapobj_names(void) {
-    new_builtin("gap", val_reference(&GAP_OBJ->v));
+    new_builtin("gap", val_reference(Obj(GAP_OBJ)));
 }
 
 void gapobj_destroy(void) {
@@ -213,5 +213,5 @@ void gapobj_destroy(void) {
     if (gapval.repr != NULL && gapval.repr->v.refcount != 1) fprintf(stderr, "gaprepr %" PRIuSIZE "\n", gapval.repr->v.refcount - 1);
 #endif
 
-    if (gapval.repr != NULL) val_destroy(&gapval.repr->v);
+    if (gapval.repr != NULL) val_destroy(Obj(gapval.repr));
 }

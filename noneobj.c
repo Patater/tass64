@@ -36,7 +36,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static MUST_CHECK Obj *truth(Obj *UNUSED(v1), Truth_types UNUSED(type), linepos_t epoint) {
-    return (Obj *)new_error(ERROR____STILL_NONE, epoint);
+    return Obj(new_error(ERROR____STILL_NONE, epoint));
 }
 
 static MUST_CHECK Error *hash(Obj *UNUSED(v1), int *UNUSED(v), linepos_t epoint) {

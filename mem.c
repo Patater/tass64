@@ -78,7 +78,7 @@ static void memcomp(Memblocks *memblocks, bool nomerge) {
                     memcpy(&memblocks->mem.data[b2->p], &b->mem.data[b->data[k].p], b2->len);
                 }
                 j--;
-                val_destroy(&b->v);
+                val_destroy(Obj(b));
             }
         }
     }
@@ -148,7 +148,7 @@ void memref(Memblocks *memblocks, Memblocks *ref) {
     block = &memblocks->data[memblocks->p++];
     block->len = 0;
     block->p = memblocks->lastp;
-    block->ref = Memblocks(val_reference(&ref->v));
+    block->ref = Memblocks(val_reference(Obj(ref)));
     block->addr = memblocks->lastaddr;
 }
 

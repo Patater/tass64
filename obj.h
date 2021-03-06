@@ -29,6 +29,8 @@ typedef struct Obj {
     size_t refcount;
 } Obj;
 
+#define Obj(a) ((0 ? &(a)->v : (Obj *)(a)))
+
 typedef struct Lbl {
     Obj v;
     line_t sline;

@@ -757,18 +757,18 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     Error *err = new_error(ERROR___NOT_DEFINED, epoint);
     err->u.notdef.down = down;
     err->u.notdef.names = ref_namespace(l);
-    err->u.notdef.symbol = (Obj *)new_symbol(name, epoint);
+    err->u.notdef.symbol = Obj(new_symbol(name, epoint));
     err_msg_not_defined3(err);
-    val_destroy(&err->v);
+    val_destroy(Obj(err));
 }
 
 void err_msg_not_defined2a(int32_t count, Namespace *l, bool down, linepos_t epoint) {
     Error *err = new_error(ERROR___NOT_DEFINED, epoint);
     err->u.notdef.down = down;
     err->u.notdef.names = ref_namespace(l);
-    err->u.notdef.symbol = (Obj *)new_anonsymbol(count);
+    err->u.notdef.symbol = Obj(new_anonsymbol(count));
     err_msg_not_defined3(err);
-    val_destroy(&err->v);
+    val_destroy(Obj(err));
 }
 
 static void err_opcode(uint32_t cod) {
@@ -950,7 +950,7 @@ void err_msg_output(const Error *val) {
 
 void err_msg_output_and_destroy(Error *val) {
     err_msg_output(val);
-    val_destroy(&val->v);
+    val_destroy(Obj(val));
 }
 
 void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
@@ -968,7 +968,7 @@ void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
 void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
     if (val->obj == ADDRESS_OBJ) {
         const Obj *val2 = Address(val)->val;
-        if (val2 == &none_value->v || val2->obj == ERROR_OBJ) val = val2;
+        if (val2 == Obj(none_value) || val2->obj == ERROR_OBJ) val = val2;
     }
     if (val->obj == ERROR_OBJ) err_msg_output(Error(val));
     else if (val->obj == NONE_OBJ) err_msg_still_none(NULL, epoint);
@@ -1219,7 +1219,7 @@ void err_msg_invalid_oper(const Oper *op, Obj *v1, Obj *v2, linepos_t epoint) {
     err->u.invoper.v1 = (v1 != NULL) ? ((v1->refcount != 0) ? val_reference(v1) : v1) : NULL;
     err->u.invoper.v2 = (v2 != NULL) ? ((v2->refcount != 0) ? val_reference(v2) : v2) : NULL;
     err_msg_invalid_oper3(err);
-    val_destroy(&err->v);
+    val_destroy(Obj(err));
 }
 
 void err_msg_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {

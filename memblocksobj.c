@@ -33,7 +33,7 @@ static FAST_CALL void destroy(Obj *o1) {
     free(v1->mem.data);
     for (i = 0; i < v1->p; i++) {
         const struct memblock_s *b = &v1->data[i];
-        if (b->ref != NULL) val_destroy(&b->ref->v);
+        if (b->ref != NULL) val_destroy(Obj(b->ref));
     }
     free(v1->data);
 }
@@ -48,7 +48,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
         if (b1->p != b2->p || b1->addr != b2->addr || b1->len != b2->len) return false;
         if (b1->ref == b2->ref) continue;
         if (b1->ref == NULL || b2->ref == NULL) return false;
-        if (!same(&b1->ref->v, &b2->ref->v)) return false;
+        if (!same(Obj(b1->ref), Obj(b2->ref))) return false;
     }
     return v1->mem.p == v2->mem.p && !memcmp(v1->mem.data, v2->mem.data, v1->mem.p);
 }

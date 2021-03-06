@@ -47,15 +47,15 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ERROR:
     case T_NAMESPACE: return val_reference(v1);
     case T_CODE:
-        return val_reference(&Code(v1)->names->v);
+        return val_reference(Obj(Code(v1)->names));
     case T_UNION:
     case T_STRUCT:
-        return val_reference(&Struct(v1)->names->v);
+        return val_reference(Obj(Struct(v1)->names));
     case T_MFUNC:
-        return val_reference(&Mfunc(v1)->names->v);
+        return val_reference(Obj(Mfunc(v1)->names));
     default: break;
     }
-    return (Obj *)new_error_conv(v1, NAMESPACE_OBJ, epoint);
+    return Obj(new_error_conv(v1, NAMESPACE_OBJ, epoint));
 }
 
 static FAST_CALL void destroy(Obj *o1) {
@@ -63,7 +63,7 @@ static FAST_CALL void destroy(Obj *o1) {
     size_t i;
     if (v1->data == NULL) return;
     for (i = 0; i <= v1->mask; i++) {
-        if (v1->data[i] != NULL) val_destroy(&v1->data[i]->v);
+        if (v1->data[i] != NULL) val_destroy(Obj(v1->data[i]));
     }
     free(v1->data);
 }
@@ -83,7 +83,7 @@ static FAST_CALL void garbage(Obj *o1, int j) {
         return;
     case 1:
         for (i = 0; i <= v1->mask; i++) {
-            Obj *v = (Obj *)v1->data[i];
+            Obj *v = Obj(v1->data[i]);
             if (v == NULL) continue;
             if ((v->refcount & SIZE_MSB) != 0) {
                 v->refcount -= SIZE_MSB - 1;
@@ -130,7 +130,7 @@ static bool namespace_issubset(Namespace *v1, const Namespace *v2) {
                 ret = false;
                 break;
             }
-            if (!p->v.obj->same(&p->v, &p2->v)) {
+            if (!p->v.obj->same(Obj(p), Obj(p2))) {
                 ret = false;
                 break;
             }
@@ -173,7 +173,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                 chars--;
                 continue;
             }
-            v = p->v.obj->repr(&p->v, epoint, maxsize - chars);
+            v = p->v.obj->repr(Obj(p), epoint, maxsize - chars);
             if (v == NULL || v->obj != STR_OBJ) goto error;
             str = Str(v);
             ln += str->len;
@@ -185,7 +185,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                 v = NULL;
             error:
                 tuple->len = i;
-                val_destroy(&tuple->v);
+                val_destroy(Obj(tuple));
                 return v;
             }
             vals[i++] = v;
@@ -195,7 +195,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     }
     str = new_str2(ln);
     if (str == NULL) {
-        if (tuple != NULL) val_destroy(&tuple->v);
+        if (tuple != NULL) val_destroy(Obj(tuple));
         return NULL;
     }
     str->chars = chars;
@@ -212,8 +212,8 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     }
     *s++ = '}';
     *s = ')';
-    if (tuple != NULL) val_destroy(&tuple->v);
-    return &str->v;
+    if (tuple != NULL) val_destroy(Obj(tuple));
+    return Obj(str);
 }
 
 MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
@@ -231,13 +231,13 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
                 return val_reference(l->value);
             }
             if (!referenceit || (constcreated && pass < max_pass)) {
-                return (Obj *)ref_none();
+                return Obj(ref_none());
             }
             err = new_error(ERROR___NOT_DEFINED, op->epoint2);
             err->u.notdef.names = ref_namespace(v1);
-            err->u.notdef.symbol = (Obj *)ref_symbol(v2);
+            err->u.notdef.symbol = Obj(ref_symbol(v2));
             err->u.notdef.down = false;
-            return &err->v;
+            return Obj(err);
         }
     case T_ANONSYMBOL:
         {
@@ -248,13 +248,13 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
                 return val_reference(l->value);
             }
             if (!referenceit || (constcreated && pass < max_pass)) {
-                return (Obj *)ref_none();
+                return Obj(ref_none());
             }
             err = new_error(ERROR___NOT_DEFINED, op->epoint2);
             err->u.notdef.names = ref_namespace(v1);
-            err->u.notdef.symbol = (Obj *)ref_anonsymbol(v2);
+            err->u.notdef.symbol = Obj(ref_anonsymbol(v2));
             err->u.notdef.down = false;
-            return &err->v;
+            return Obj(err);
         }
     case T_ERROR:
     case T_NONE: return val_reference(o2);
@@ -283,7 +283,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     if (op->op == &o_MEMBER) {
         return namespace_member(op, Namespace(op->v1));
     }
-    if (op->v2 == &none_value->v || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
+    if (op->v2 == Obj(none_value) || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
     return obj_oper_error(op);
 }
 
@@ -298,7 +298,7 @@ void namespaceobj_init(void) {
 }
 
 void namespaceobj_names(void) {
-    new_builtin("namespace", val_reference(&NAMESPACE_OBJ->v));
+    new_builtin("namespace", val_reference(Obj(NAMESPACE_OBJ)));
 }
 
 Namespace *get_namespace(const Obj *o) {
