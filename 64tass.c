@@ -1366,8 +1366,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                     err_msg_output(Error(val));
                 } else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
                     if (val != Obj(none_value)) {
-                        Error *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
-                        val_destroy(val); val = Obj(err);
+                        Obj *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
+                        val_destroy(val); val = err;
                         err_msg_output(Error(val));
                     }
                 } else {

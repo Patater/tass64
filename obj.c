@@ -126,18 +126,18 @@ static FAST_CALL bool invalid_same(const Obj *o1, const Obj *o2) {
     return o1->obj == o2->obj;
 }
 
-static MUST_CHECK Error *generic_invalid(Obj *v1, linepos_t epoint, Error_types num) {
+static MUST_CHECK Obj *generic_invalid(Obj *v1, linepos_t epoint, Error_types num) {
     if (v1->obj == ERROR_OBJ) {
-        return Error(val_reference(v1));
+        return val_reference(v1);
     }
     return new_error_obj(num, v1, epoint);
 }
 
 static MUST_CHECK Obj *invalid_truth(Obj *v1, Truth_types UNUSED(type), linepos_t epoint) {
-    return Obj(generic_invalid(v1, epoint, ERROR_____CANT_BOOL));
+    return generic_invalid(v1, epoint, ERROR_____CANT_BOOL);
 }
 
-static MUST_CHECK Error *invalid_hash(Obj *v1, int *UNUSED(hash), linepos_t epoint) {
+static MUST_CHECK Obj *invalid_hash(Obj *v1, int *UNUSED(hash), linepos_t epoint) {
     return generic_invalid(v1, epoint, ERROR__NOT_HASHABLE);
 }
 
@@ -210,17 +210,17 @@ static MUST_CHECK Obj *invalid_slice(oper_t op, size_t indx) {
             }
         }
     } else {
-        return Obj(new_error_argnum(args->len, 1, indx, op->epoint2));
+        return new_error_argnum(args->len, 1, indx, op->epoint2);
     }
     return obj_oper_error(op);
 }
 
 static MUST_CHECK Error *invalid_ival(Obj *v1, ival_t *UNUSED(iv), unsigned int UNUSED(bits), linepos_t epoint) {
-    return generic_invalid(v1, epoint, ERROR______CANT_INT);
+    return Error(generic_invalid(v1, epoint, ERROR______CANT_INT));
 }
 
 static MUST_CHECK Error *invalid_uval(Obj *v1, uval_t *UNUSED(uv), unsigned int UNUSED(bits), linepos_t epoint) {
-    return generic_invalid(v1, epoint, ERROR______CANT_INT);
+    return Error(generic_invalid(v1, epoint, ERROR______CANT_INT));
 }
 
 static MUST_CHECK Error *invalid_uval2(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epoint) {
@@ -240,19 +240,19 @@ static MUST_CHECK Error *invalid_uaddress(Obj *v1, uval_t *uv, unsigned int bits
 }
 
 static MUST_CHECK Obj *invalid_sign(Obj *v1, linepos_t epoint) {
-    return Obj(generic_invalid(v1, epoint, ERROR_____CANT_SIGN));
+    return generic_invalid(v1, epoint, ERROR_____CANT_SIGN);
 }
 
 static MUST_CHECK Obj *invalid_function(oper_t op) {
-    return Obj(generic_invalid(op->v2, op->epoint2, (Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT));
+    return generic_invalid(op->v2, op->epoint2, (Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT);
 }
 
 static MUST_CHECK Obj *invalid_len(oper_t op) {
-    return Obj(generic_invalid(op->v2, op->epoint2, ERROR______CANT_LEN));
+    return generic_invalid(op->v2, op->epoint2, ERROR______CANT_LEN);
 }
 
 static MUST_CHECK Obj *invalid_size(oper_t op) {
-    return Obj(generic_invalid(op->v2, op->epoint2, ERROR_____CANT_SIZE));
+    return generic_invalid(op->v2, op->epoint2, ERROR_____CANT_SIZE);
 }
 
 static FAST_CALL MUST_CHECK Obj *invalid_next(struct iter_s *v1) {

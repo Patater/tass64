@@ -56,7 +56,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
         }
         break;
     }
-    return Obj(new_error_conv(v1, BOOL_OBJ, epoint));
+    return new_error_conv(v1, BOOL_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -67,7 +67,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types UNUSED(type), linepos_t UNUSED
     return val_reference(o1);
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     *hs = Bool(o1) == true_value ? 1 : 0;
     return NULL;
 }
@@ -170,12 +170,12 @@ static MUST_CHECK Obj *calc2_bool(oper_t op) {
     case O_MUL: return int_from_bool2(v1 && v2);
     case O_DIV:
         if (!v2) {
-            return Obj(new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3));
+            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
         }
         return int_from_bool2(v1);
     case O_MOD:
         if (!v2) {
-            return Obj(new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3));
+            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
         }
         return int_from_bool2(false);
     case O_EXP: return int_from_bool2(v1 || !v2);

@@ -49,7 +49,7 @@ typedef struct Type {
     void (*garbage)(Obj *, int) FAST_CALL;
     bool (*same)(const Obj *, const Obj *) FAST_CALL;
     Obj *(*truth)(Obj *, Truth_types, linepos_t) MUST_CHECK;
-    struct Error *(*hash)(Obj *, int *, linepos_t) MUST_CHECK;
+    Obj *(*hash)(Obj *, int *, linepos_t) MUST_CHECK;
     Obj *(*repr)(Obj *, linepos_t, size_t) MUST_CHECK;
     Obj *(*str)(Obj *, linepos_t, size_t) MUST_CHECK;
     Obj *(*calc1)(struct oper_s *) MUST_CHECK;

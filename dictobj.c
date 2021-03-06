@@ -72,7 +72,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_DICT: return val_reference(v1);
     default: break;
     }
-    return Obj(new_error_conv(v1, DICT_OBJ, epoint));
+    return new_error_conv(v1, DICT_OBJ, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {
@@ -306,7 +306,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return true;
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t epoint) {
     Dict *v1 = Dict(o1);
     size_t i, l = v1->len;
     struct pair_s *vals = v1->data;
@@ -320,7 +320,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
         Obj *o2 = vals[i].data;
         if (o2 != NULL) {
             int h2;
-            Error *err = o2->obj->hash(o2, &h2, epoint);
+            Obj *err = o2->obj->hash(o2, &h2, epoint);
             if (err != NULL) return err;
             h += (unsigned int)h2;
         }
@@ -329,7 +329,7 @@ static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
     if (v1->def != NULL) {
         Obj *o2 = v1->def;
         int h2;
-        Error *err = o2->obj->hash(o2, &h2, epoint);
+        Obj *err = o2->obj->hash(o2, &h2, epoint);
         if (err != NULL) return err;
         h += (unsigned int)h2;
     }
@@ -495,24 +495,24 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 
 static MUST_CHECK Obj *findit(const Dict *v1, Obj *o2, linepos_t epoint) {
     if (v1->len != 0) {
-        Error *err;
+        Obj *err;
         const struct pair_s *p;
         struct pair_s pair;
         pair.key = o2;
         err = o2->obj->hash(o2, &pair.hash, epoint);
-        if (err != NULL) return Obj(err);
+        if (err != NULL) return err;
         p = dict_lookup(v1, &pair);
         if (p != NULL && p->data != NULL) return val_reference(p->data);
     }
     if (v1->def != NULL) {
         return val_reference(v1->def);
     }
-    return Obj(new_error_obj(ERROR_____KEY_ERROR, o2, epoint));
+    return new_error_obj(ERROR_____KEY_ERROR, o2, epoint);
 }
 
-static MUST_CHECK Error *indexof(const Dict *v1, Obj *o2, ival_t *r, linepos_t epoint) {
+static MUST_CHECK Obj *indexof(const Dict *v1, Obj *o2, ival_t *r, linepos_t epoint) {
     if (v1->len != 0) {
-        Error *err;
+        Obj *err;
         const struct pair_s *p;
         struct pair_s pair;
         pair.key = o2;
@@ -527,8 +527,8 @@ static MUST_CHECK Error *indexof(const Dict *v1, Obj *o2, ival_t *r, linepos_t e
     return new_error_obj(ERROR_____KEY_ERROR, o2, epoint);
 }
 
-static MUST_CHECK Error *dictsliceparams(const Dict *v1, const Colonlist *v2, struct sliceparam_s *s, linepos_t epoint) {
-    Error *err;
+static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, struct sliceparam_s *s, linepos_t epoint) {
+    Obj *err;
     ival_t len, offs, end, step = 1;
 
     s->length = 0;
@@ -540,10 +540,10 @@ static MUST_CHECK Error *dictsliceparams(const Dict *v1, const Colonlist *v2, st
     end = len;
     if (v2->len > 2) {
         if (v2->data[2] != Obj(default_value)) {
-            err = v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint);
+            err = Obj(v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint));
             if (err != NULL) return err;
             if (step == 0) {
-                return new_error(ERROR_NO_ZERO_VALUE, epoint);
+                return Obj(new_error(ERROR_NO_ZERO_VALUE, epoint));
             }
         }
     }
@@ -582,7 +582,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     linepos_t epoint2;
 
     if (args->len < 1) {
-        return Obj(new_error_argnum(args->len, 1, 0, op->epoint2));
+        return new_error_argnum(args->len, 1, 0, op->epoint2);
     }
 
     o2 = args->val[indx].val;
@@ -621,8 +621,8 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         struct sliceparam_s s;
         uval_t i;
         Dict *v;
-        Error *err = dictsliceparams(v1, Colonlist(o2), &s, epoint2);
-        if (err != NULL) return Obj(err);
+        Obj *err = dictsliceparams(v1, Colonlist(o2), &s, epoint2);
+        if (err != NULL) return err;
 
         if (s.length == 0) {
             return val_reference((v1->v.obj == TUPLE_OBJ) ? Obj(null_tuple) : Obj(null_list));
@@ -632,7 +632,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
             return val_reference(Obj(v1)); /* original tuple */
         }
         v = new_dict(s.length);
-        if (v == NULL) return Obj(new_error_mem(epoint2)); /* overflow */
+        if (v == NULL) return new_error_mem(epoint2); /* overflow */
         v->def = NULL;
         for (i = 0; i < s.length; i++) {
             struct pair_s *p = &v->data[i];
@@ -640,7 +640,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
                 if (more) {
                     v->len = i;
                     val_destroy(Obj(v));
-                    return Obj(new_error_obj(ERROR_____KEY_ERROR, v1->data[s.offset].key, epoint2));
+                    return new_error_obj(ERROR_____KEY_ERROR, v1->data[s.offset].key, epoint2);
                 }
                 p->data = NULL;
             } else {
@@ -737,7 +737,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
     if (dict == v1) return Obj(dict);
     return normalize(dict);
 failed:
-    return Obj(new_error_mem(op->epoint3)); /* overflow */
+    return new_error_mem(op->epoint3); /* overflow */
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
@@ -772,12 +772,12 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *o1 = op->v1;
     if (op->op == &o_IN) {
         struct pair_s p;
-        Error *err;
+        Obj *err;
 
         if (v2->len == 0) return val_reference(Obj(false_value));
         p.key = o1;
         err = o1->obj->hash(o1, &p.hash, op->epoint);
-        if (err != NULL) return Obj(err);
+        if (err != NULL) return err;
         return truth_reference(dict_lookup(v2, &p) != NULL);
     }
     switch (o1->obj->type) {
@@ -798,11 +798,11 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 Obj *dictobj_parse(struct values_s *values, size_t args) {
     size_t j;
     Dict *dict = new_dict(args);
-    if (dict == NULL) return Obj(new_error_mem(&values->epoint));
+    if (dict == NULL) return new_error_mem(&values->epoint);
     dict->def = NULL;
 
     for (j = 0; j < args; j++) {
-        Error *err;
+        Obj *err;
         struct pair_s p;
         struct values_s *v2 = &values[j];
 
@@ -817,7 +817,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
             if (list->len != 2 || (list->data[0] != Obj(default_value) && list->data[1] == Obj(default_value))) {
                 err = new_error_obj(ERROR__NOT_KEYVALUE, p.key, &v2->epoint);
                 val_destroy(Obj(dict));
-                return Obj(err);
+                return err;
             }
             p.key = list->data[0];
             p.data = list->data[1];
@@ -830,7 +830,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         err = p.key->obj->hash(p.key, &p.hash, &v2->epoint);
         if (err != NULL) {
             val_destroy(Obj(dict));
-            return Obj(err);
+            return err;
         }
         dict_update(dict, &p);
     }

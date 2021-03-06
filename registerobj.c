@@ -62,7 +62,7 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
             if (v->len != 0) {
                 if (v->len > sizeof v->val) {
                     s = (uint8_t *)malloc(v->len);
-                    if (s == NULL) return Obj(new_error_mem(epoint));
+                    if (s == NULL) return new_error_mem(epoint);
                 } else s = v->val;
                 memcpy(s, v1->data, v->len);
             } else s = NULL;
@@ -71,7 +71,7 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
         }
     default: break;
     }
-    return Obj(new_error_conv(o1, REGISTER_OBJ, epoint));
+    return new_error_conv(o1, REGISTER_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -81,7 +81,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
             memcmp(v1->data, v2->data, v2->len) == 0);
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Register *v1 = Register(o1);
     size_t l = v1->len;
     const uint8_t *s2 = v1->data;

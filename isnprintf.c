@@ -229,7 +229,7 @@ static inline void decimal(Data *p)
             minus = false;
         } else {
             Obj *err2 = INT_OBJ->repr(err, &v->epoint, SIZE_MAX);
-            if (err2 == NULL) err2 = Obj(new_error_mem(&v->epoint));
+            if (err2 == NULL) err2 = new_error_mem(&v->epoint);
             if (err2->obj != STR_OBJ) {
                 note_failure(err2);
                 str = ref_str(null_str);
@@ -374,7 +374,7 @@ static inline void strings(Data *p)
         if (*p->pf == 'r') {
             Obj *val = v->val;
             err = val->obj->repr(val, &v->epoint, SIZE_MAX);
-            if (err == NULL) err = Obj(new_error_mem(&v->epoint));
+            if (err == NULL) err = new_error_mem(&v->epoint);
         } else {
             err = STR_OBJ->create(v->val, &v->epoint);
         }

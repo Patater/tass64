@@ -44,14 +44,14 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_GAP: return val_reference(v1);
     default: break;
     }
-    return Obj(new_error_conv(v1, GAP_OBJ, epoint));
+    return new_error_conv(v1, GAP_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return o1 == o2;
 }
 
-static MUST_CHECK Error *hash(Obj *UNUSED(v1), int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *UNUSED(v1), int *hs, linepos_t UNUSED(epoint)) {
     *hs = 0; /* whatever, there's only one */
     return NULL;
 }

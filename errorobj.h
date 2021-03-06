@@ -79,10 +79,10 @@ typedef struct Error {
 extern void errorobj_init(void);
 
 extern MALLOC Error *new_error(Error_types, linepos_t);
-extern MALLOC Error *new_error_mem(linepos_t);
-extern MALLOC Error *new_error_obj(Error_types, Obj *, linepos_t);
-extern MALLOC Error *new_error_conv(Obj *, struct Type *, linepos_t);
-extern MALLOC Error *new_error_argnum(size_t, size_t, size_t, linepos_t);
+extern MALLOC Obj *new_error_mem(linepos_t);
+extern MALLOC Obj *new_error_obj(Error_types, Obj *, linepos_t);
+extern MALLOC Obj *new_error_conv(Obj *, struct Type *, linepos_t);
+extern MALLOC Obj *new_error_argnum(size_t, size_t, size_t, linepos_t);
 extern void error_obj_update(Error *, const Obj *, Obj *);
 
 #endif

@@ -37,7 +37,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ANONSYMBOL: return val_reference(v1);
     default: break;
     }
-    return Obj(new_error_conv(v1, ANONSYMBOL_OBJ, epoint));
+    return new_error_conv(v1, ANONSYMBOL_OBJ, epoint);
 }
 
 Anonsymbol *new_anonsymbol(ssize_t count) {
@@ -51,7 +51,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return o1->obj == o2->obj && v1->count == v2->count;
 }
 
-static MUST_CHECK struct Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Anonsymbol *v1 = Anonsymbol(o1);
     unsigned int h = v1->count < 0 ? 1U + ~(size_t)-v1->count : (size_t)v1->count;
     *hs = h & ((~0U) >> 1);

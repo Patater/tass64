@@ -62,7 +62,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return o1 == o2;
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     *hs = (int)Type(o1)->type;
     return NULL;
 }
@@ -108,7 +108,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Funcargs *v2 = Funcargs(o2);
             size_t args = v2->len;
             if (args != 1) {
-                return Obj(new_error_argnum(args, 1, 1, op->epoint2));
+                return new_error_argnum(args, 1, 1, op->epoint2);
             }
             if (v1 == LIST_OBJ || v1 == TUPLE_OBJ || v1 == TYPE_OBJ) return v1->create(v2->val[0].val, &v2->val[0].epoint);
             return apply_convert(op);
