@@ -42,7 +42,7 @@ char *my_optarg = NULL;
 
 static int my_getopt(int argc, char *argv[], const char *opts)
 {
-  int charind = 0;
+  static int charind = 0;
   const char *s;
   char mode, colon_mode;
   int off = 0, opt = -1;

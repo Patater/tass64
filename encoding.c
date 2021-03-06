@@ -199,62 +199,38 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
     size_t i;
     uint8_t *d;
     bool ret;
+    struct iter_s iter;
 
     b2 = (struct escape_s **)ternary_insert(&enc->escapes, v->data, v->data + v->len);
     if (b2 == NULL) err_msg_out_of_memory();
     b = *b2;
     *b2 = NULL;
 
-    if (val->obj->iterable) {
-        struct iter_s iter;
-        iter.data = val; val->obj->getiter(&iter); 
-        d = (iter.len <= lenof(tmp.val)) ? tmp.val : (uint8_t *)mallocx(iter.len * sizeof *d);
-        for (i = 0; i < iter.len && (val2 = iter.next(&iter)) != NULL; i++) {
-            uval_t uval;
-            Error *err = val2->obj->uval(val2, &uval, 8, epoint);
-            if (err != NULL) {
-                err_msg_output_and_destroy(err);
-                uval = 0;
-            }
-            d[i] = (uint8_t)uval;
-        }
-        iter_destroy(&iter);
-        val2 = NULL;
-    } else if (val->obj == BYTES_OBJ) {
-        d = Bytes(val)->data;
-        i = Bytes(val)->len;
-        val2 = NULL;
-    } else if (val->obj == BITS_OBJ && (Bits(val)->bits == 0 || Bits(val)->bits > 8)) {
+    if (val->obj == STR_OBJ || val->obj == BITS_OBJ) {
         val2 = BYTES_OBJ->create(val, epoint);
-        if (val2->obj == BYTES_OBJ) {
-            d = Bytes(val2)->data;
-            i = Bytes(val2)->len;
-        } else {
-            d = NULL;
-            i = 0;
-        }
+        iter.data = val2; val->obj->getiter(&iter); 
+        val_destroy(val2);
     } else {
+        iter.data = val; val->obj->getiter(&iter); 
+    }
+
+    d = (iter.len <= lenof(tmp.val)) ? tmp.val : (uint8_t *)mallocx(iter.len * sizeof *d);
+    for (i = 0; i < iter.len && (val2 = iter.next(&iter)) != NULL; i++) {
         uval_t uval;
-        Error *err = val->obj->uval(val, &uval, 8, epoint);
+        Error *err = val2->obj->uval(val2, &uval, 8, epoint);
         if (err != NULL) {
             err_msg_output_and_destroy(err);
             uval = 0;
         }
-        tmp.val[0] = (uint8_t)uval;
-        d = tmp.val;
-        i = 1;
-        val2 = NULL;
+        d[i] = (uint8_t)uval;
     }
+    iter_destroy(&iter);
 
     if (b == NULL) { /* new escape */
         b = (struct escape_s *)mallocx(sizeof *b);
-        if (i <= lenof(b->val)) {
+        if (d == tmp.val) {
             if (i != 0) memcpy(b->val, d, i);
             d = b->val;
-        } else if (!val->obj->iterable) {
-            uint8_t *d2 = (uint8_t *)mallocx(i);
-            memcpy(d2, d, i);
-            d = d2;
         }
         b->len = i;
         b->data = d;
@@ -271,7 +247,6 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
         }
         
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
-        if (val2 != NULL) val_destroy(val2);
         fixeddig = false;
         return false;
     }
@@ -279,7 +254,6 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
     if (i == 1) {
         size_t j = (size_t)((const uint8_t *)b - identmap);
         if (j < 256) {
-            if (val2 != NULL) val_destroy(val2);
             return b != (struct escape_s *)(identmap + tmp.val[0]);
         }
         ret = (b->len != 1 || *d != *b->data);
@@ -287,29 +261,23 @@ bool new_escape(struct encoding_s *enc, const str_t *v, Obj *val, linepos_t epoi
         ret = (i != b->len || memcmp(d, b->data, i) != 0);
     }
     if (b->pass == pass) {
-        if (tmp.val != d && val->obj->iterable) free(d);
-        if (val2 != NULL) val_destroy(val2);
+        if (tmp.val != d) free(d);
         return ret;            /* already exists */
     }
     b->pass = pass;
     if (b->fwpass == pass) efwcount--;
     if (ret) {
         if (b->data != b->val) free(b->data);
-        if (i <= lenof(b->val)) {
+        if (d == tmp.val) {
             if (i != 0) memcpy(b->val, d, i);
             d = b->val;
-        } else if (!val->obj->iterable) {
-            uint8_t *d2 = (uint8_t *)mallocx(i);
-            memcpy(d2, d, i);
-            d = d2;
         }
         b->data = d;
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
     } else {
-        if (tmp.val != d && val->obj->iterable) free(d);
+        if (tmp.val != d) free(d);
     }
-    if (val2 != NULL) val_destroy(val2);
     return false;
 }
 
