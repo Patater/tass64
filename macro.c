@@ -482,7 +482,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
     for (i = 0; i < mfunc->argc; i++) {
         const struct mfunc_param_s *param = &mfunc->param[i];
         bool labelexists;
-        if (param->init == Obj(default_value)) {
+        if (param->init == default_value) {
             size_t j, len = get_val_remaining();
             tuple = new_tuple(len);
             for (j = 0; j < len; j++) {
@@ -624,7 +624,7 @@ bool get_func_params(Mfunc *v, bool single) {
             }
             ignore();
             if (stard) {
-                param[i].init = Obj(ref_default());
+                param[i].init = ref_default();
                 i++;
                 if (single) {
                     if (here() != ',') {
@@ -821,7 +821,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
     for (i = 0; i < mfunc->argc; i++) {
         const struct mfunc_param_s *param = &mfunc->param[i];
         bool labelexists;
-        if (param->init == Obj(default_value)) {
+        if (param->init == default_value) {
             if (i < args) {
                 size_t j = i;
                 tuple = new_tuple(args - i);

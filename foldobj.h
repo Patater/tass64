@@ -31,13 +31,13 @@ typedef struct Fold {
 
 #define Fold(a) ((Fold *)(1 ? (a) : (Obj *)a))
 
-extern Fold *fold_value;
+extern Obj *const fold_value;
 
 extern void foldobj_init(void);
 extern void foldobj_destroy(void);
 
-static inline Fold *ref_fold(void) {
-    fold_value->v.refcount++; return fold_value;
+static inline Obj *ref_fold(void) {
+    fold_value->refcount++; return fold_value;
 }
 
 #endif

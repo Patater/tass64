@@ -31,14 +31,14 @@ typedef struct Gap {
 
 #define Gap(a) ((Gap *)(1 ? (a) : (Obj *)a))
 
-extern Gap *gap_value;
+extern Obj *const gap_value;
 
 extern void gapobj_init(void);
 extern void gapobj_names(void);
 extern void gapobj_destroy(void);
 
-static inline Gap *ref_gap(void) {
-    gap_value->v.refcount++; return gap_value;
+static inline Obj *ref_gap(void) {
+    gap_value->refcount++; return gap_value;
 }
 
 #endif

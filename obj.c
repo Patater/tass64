@@ -58,7 +58,7 @@ Type *const FUNCARGS_OBJ = &funcargs_obj;
 
 static Default defaultval = { { &default_obj, 1}, NULL };
 
-Default *default_value = &defaultval;
+Obj *const default_value = &defaultval.v;
 
 MUST_CHECK Obj *obj_oper_error(oper_t op) {
     Obj *v1, *v2;

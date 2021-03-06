@@ -69,9 +69,9 @@ extern void objects_destroy(void);
 extern struct Type *const LBL_OBJ;
 extern struct Type *const DEFAULT_OBJ;
 extern struct Type *const FUNCARGS_OBJ;
-extern Default *default_value;
+extern Obj *const default_value;
 
-static inline Default *ref_default(void) {
-    default_value->v.refcount++; return default_value;
+static inline Obj *ref_default(void) {
+    default_value->refcount++; return default_value;
 }
 #endif

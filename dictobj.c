@@ -539,7 +539,7 @@ static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, stru
     }
     end = len;
     if (v2->len > 2) {
-        if (v2->data[2] != Obj(default_value)) {
+        if (v2->data[2] != default_value) {
             err = Obj(v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint));
             if (err != NULL) return err;
             if (step == 0) {
@@ -548,13 +548,13 @@ static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, stru
         }
     }
     if (v2->len > 1) {
-        if (v2->data[1] == Obj(default_value)) end = (step > 0) ? len : -1;
+        if (v2->data[1] == default_value) end = (step > 0) ? len : -1;
         else {
             err = indexof(v1, v2->data[1], &end, epoint);
             if (err != NULL) return err;
         }
     } else end = len;
-    if (v2->data[0] == Obj(default_value)) offs = (step > 0) ? 0 : len - 1;
+    if (v2->data[0] == default_value) offs = (step > 0) ? 0 : len - 1;
     else {
         err = indexof(v1, v2->data[0], &offs, epoint);
         if (err != NULL) return err;
@@ -814,7 +814,7 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
         if (p.key->obj != COLONLIST_OBJ) p.data = NULL;
         else {
             Colonlist *list = Colonlist(p.key);
-            if (list->len != 2 || (list->data[0] != Obj(default_value) && list->data[1] == Obj(default_value))) {
+            if (list->len != 2 || (list->data[0] != default_value && list->data[1] == default_value)) {
                 err = new_error_obj(ERROR__NOT_KEYVALUE, p.key, &v2->epoint);
                 val_destroy(Obj(dict));
                 return err;
@@ -822,9 +822,9 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
             p.key = list->data[0];
             p.data = list->data[1];
         }
-        if (p.key == Obj(default_value)) {
+        if (p.key == default_value) {
             if (dict->def != NULL) val_destroy(dict->def);
-            dict->def = (p.data == NULL || p.data == Obj(default_value)) ? NULL : val_reference(p.data);
+            dict->def = (p.data == NULL || p.data == default_value) ? NULL : val_reference(p.data);
             continue;
         }
         err = p.key->obj->hash(p.key, &p.hash, &v2->epoint);

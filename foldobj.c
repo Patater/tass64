@@ -34,7 +34,7 @@ Type *const FOLD_OBJ = &obj;
 
 static Fold foldval = { { &obj, 1 }, NULL };
 
-Fold *fold_value = &foldval;
+Obj *const fold_value = &foldval.v;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {

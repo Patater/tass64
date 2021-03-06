@@ -35,7 +35,7 @@ Type *const GAP_OBJ = &obj;
 
 static Gap gapval = { { &obj, 1 }, NULL};
 
-Gap *gap_value = &gapval;
+Obj *const gap_value = &gapval.v;
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {

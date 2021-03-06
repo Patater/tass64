@@ -1087,7 +1087,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     Colonlist *list = new_colonlist();
                     list->len = 2;
                     list->data = list->u.val;
-                    list->data[0] = Obj(ref_default());
+                    list->data[0] = ref_default();
                     list->data[1] = val_reference(Dict(v1->val)->def);
                     def = Obj(list);
                     len++;
@@ -1259,7 +1259,7 @@ static bool get_exp2(int stop) {
         switch (ch) {
         case ',':
             if (stop != 4 || opr.p != 0) goto tryanon;
-            lpoint.pos++;push_oper(Obj(ref_default()), &epoint);
+            lpoint.pos++;push_oper(ref_default(), &epoint);
             continue;
         case ')':
             if (opr.p != 0) {
@@ -1287,7 +1287,7 @@ static bool get_exp2(int stop) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
                 if (o != O_PARENT && o != O_BRACKET && o != O_BRACE && o != O_FUNC && o != O_INDEX && o != O_COMMA) goto tryanon;
             }
-            push_oper(Obj(ref_default()), &epoint);
+            push_oper(ref_default(), &epoint);
             goto other;
         case '(':
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) symbollist++;
@@ -1334,12 +1334,12 @@ static bool get_exp2(int stop) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
                 if (o == O_SPLAT || o == O_POS || o == O_NEG) goto tryanon;
             }
-            lpoint.pos++;push_oper(Obj(ref_gap()), &epoint);goto other;
+            lpoint.pos++;push_oper(ref_gap(), &epoint);goto other;
         case '.':
             if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) {
                 str_t symbol;
                 if (pline[lpoint.pos + 1] == '.' && pline[lpoint.pos + 2] == '.') {
-                    lpoint.pos += 3;push_oper(Obj(ref_fold()), &epoint);goto other;
+                    lpoint.pos += 3;push_oper(ref_fold(), &epoint);goto other;
                 }
                 symbol.data = pline + lpoint.pos + 1;
                 symbol.len = get_label(symbol.data);
@@ -1493,7 +1493,7 @@ static bool get_exp2(int stop) {
             }
             if (opr.p != 0) {
                 if (opr.data[opr.p - 1].val == &o_COLON) {
-                    push_oper(Obj(ref_default()), &epoint);
+                    push_oper(ref_default(), &epoint);
                     goto other;
                 }
                 if (opr.data[opr.p - 1].val == &o_SPLAT) {

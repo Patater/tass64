@@ -3763,12 +3763,12 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val();
                     switch (prm) {
                     case CMD_DATABANK:
-                        if (vs->val == Obj(gap_value)) databank = 256;
+                        if (vs->val == gap_value) databank = 256;
                         else if (touval(vs->val, &uval, 8, &vs->epoint)) {}
                         else databank = uval & 0xff;
                         break;
                     case CMD_DPAGE:
-                        if (vs->val == Obj(gap_value)) dpage = 65536;
+                        if (vs->val == gap_value) dpage = 65536;
                         else if (touval(vs->val, &uval, 16, &vs->epoint)) {}
                         else dpage = uval & 0xffff;
                         break;

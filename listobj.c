@@ -228,7 +228,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
         if (vals == NULL) return (epoint != NULL) ? new_error_mem(epoint) : NULL;
         for (i = 0;i < llen; i++) {
             Obj *o2 = v1->data[i];
-            if (o2 == Obj(default_value) && o1->obj == COLONLIST_OBJ) {
+            if (o2 == default_value && o1->obj == COLONLIST_OBJ) {
                 val = Obj(ref_str(null_str));
             } else {
                 val = o2->obj->repr(o2, epoint, maxsize - chars);
@@ -592,7 +592,7 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
     }
     end = len;
     if (v2->len > 2) {
-        if (v2->data[2] != Obj(default_value)) {
+        if (v2->data[2] != default_value) {
             err = Obj(v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint));
             if (err != NULL) return err;
             if (step == 0) {
@@ -601,7 +601,7 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
         }
     }
     if (v2->len > 1) {
-        if (v2->data[1] == Obj(default_value)) end = (step > 0) ? len : -1;
+        if (v2->data[1] == default_value) end = (step > 0) ? len : -1;
         else {
             err = Obj(v2->data[1]->obj->ival(v2->data[1], &end, 8 * sizeof end, epoint));
             if (err != NULL) return err;
@@ -613,7 +613,7 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
             }
         }
     } else end = len;
-    if (v2->data[0] == Obj(default_value)) offs = (step > 0) ? 0 : len - 1;
+    if (v2->data[0] == default_value) offs = (step > 0) ? 0 : len - 1;
     else {
         ival_t minus;
         err = Obj(v2->data[0]->obj->ival(v2->data[0], &offs, 8 * sizeof offs, epoint));
