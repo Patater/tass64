@@ -41,9 +41,9 @@ Type *const BOOL_OBJ = &obj;
 static Bool trueval = { { &obj, 2 }, NULL };
 static Bool falseval = { { &obj, 2 }, NULL };
 
-Bool *true_value = &trueval;
-Bool *false_value = &falseval;
-Bool *bool_value[2] = { &falseval, &trueval };
+Obj *const true_value = &trueval.v;
+Obj *const false_value = &falseval.v;
+Obj *const bool_value[2] = { &falseval.v, &trueval.v };
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
@@ -68,14 +68,14 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types UNUSED(type), linepos_t UNUSED
 }
 
 static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
-    *hs = Bool(o1) == true_value ? 1 : 0;
+    *hs = o1 == true_value ? 1 : 0;
     return NULL;
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Bool *v1 = Bool(o1);
     Str *v;
-    bool val = (o1 == Obj(true_value));
+    bool val = (o1 == true_value);
     size_t len = val ? 4 : 5;
     if (len > maxsize) return NULL;
     v = v1->repr;
@@ -91,22 +91,22 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 
 static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int UNUSED(bits), linepos_t epoint) {
     if (diagnostics.strict_bool) err_msg_bool(ERROR______CANT_INT, o1, epoint);
-    *iv = Bool(o1) == true_value ? 1 : 0;
+    *iv = o1 == true_value ? 1 : 0;
     return NULL;
 }
 
 static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int UNUSED(bits), linepos_t epoint) {
     if (diagnostics.strict_bool) err_msg_bool(ERROR______CANT_INT, o1, epoint);
-    *uv = Bool(o1) == true_value ? 1 : 0;
+    *uv = o1 == true_value ? 1 : 0;
     return NULL;
 }
 
 MUST_CHECK Float *float_from_bool(const Bool *v1) {
-    return new_float(v1 == true_value ? 1.0 : 0.0);
+    return new_float(Obj(v1) == true_value ? 1.0 : 0.0);
 }
 
 MUST_CHECK Obj *int_from_bool(const Bool *v1) {
-    return val_reference(Obj(int_value[v1 == true_value ? 1 : 0]));
+    return val_reference(Obj(int_value[Obj(v1) == true_value ? 1 : 0]));
 }
 
 static inline MUST_CHECK Obj *int_from_bool2(bool i) {
@@ -115,16 +115,16 @@ static inline MUST_CHECK Obj *int_from_bool2(bool i) {
 
 static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
     if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_SIGN, o1, epoint);
-    return Obj(ref_int(int_value[o1 == Obj(true_value) ? 1 : 0]));
+    return Obj(ref_int(int_value[o1 == true_value ? 1 : 0]));
 }
 
 static MUST_CHECK Obj *function(oper_t op) {
     if (diagnostics.strict_bool) err_msg_bool((Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT, op->v2, op->epoint2);
-    return Obj(ref_int(int_value[op->v2 == Obj(true_value) ? 1 : 0]));
+    return Obj(ref_int(int_value[op->v2 == true_value ? 1 : 0]));
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {
-    bool v1 = Bool(op->v1) == true_value;
+    bool v1 = op->v1 == true_value;
     Str *v;
     if (diagnostics.strict_bool && op->op != &o_LNOT) err_msg_bool_oper(op);
     switch (op->op->op) {
@@ -151,8 +151,8 @@ static MUST_CHECK Obj *calc1(oper_t op) {
 }
 
 static MUST_CHECK Obj *calc2_bool(oper_t op) {
-    bool v1 = op->v1 == Obj(true_value);
-    bool v2 = op->v2 == Obj(true_value);
+    bool v1 = op->v1 == true_value;
+    bool v2 = op->v2 == true_value;
     switch (op->op->op) {
     case O_SUB:
     case O_CMP:
@@ -198,11 +198,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
     if (oper == &o_LAND) {
         if (diagnostics.strict_bool && !is_bool) err_msg_bool_oper(op);
-        return val_reference(o1 == Obj(true_value) ? o2 : o1);
+        return val_reference(o1 == true_value ? o2 : o1);
     }
     if (oper == &o_LOR) {
         if (diagnostics.strict_bool && !is_bool) err_msg_bool_oper(op);
-        return val_reference(o1 == Obj(true_value) ? o1 : o2);
+        return val_reference(o1 == true_value ? o1 : o2);
     }
     if (is_bool) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
@@ -248,8 +248,8 @@ void boolobj_init(void) {
 void boolobj_names(void) {
     new_builtin("bool", val_reference(Obj(BOOL_OBJ)));
 
-    new_builtin("true", Obj(true_value));
-    new_builtin("false", Obj(false_value));
+    new_builtin("true", true_value);
+    new_builtin("false", false_value);
 }
 
 void boolobj_destroy(void) {

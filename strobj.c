@@ -524,14 +524,14 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
     case O_IN:
         {
             const uint8_t *c, *c2, *e;
-            if (v1->len == 0) return Obj(ref_bool(true_value));
-            if (v1->len > v2->len) return Obj(ref_bool(false_value));
+            if (v1->len == 0) return ref_true();
+            if (v1->len > v2->len) return ref_false();
             c2 = v2->data;
             e = c2 + v2->len - v1->len;
             for (;;) {
                 c = (uint8_t *)memchr(c2, v1->data[0], (size_t)(e - c2) + 1);
-                if (c == NULL) return Obj(ref_bool(false_value));
-                if (memcmp(c, v1->data, v1->len) == 0) return Obj(ref_bool(true_value));
+                if (c == NULL) return ref_false();
+                if (memcmp(c, v1->data, v1->len) == 0) return ref_true();
                 c2 = c + 1;
             }
         }
@@ -873,7 +873,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         Obj *result = truth(Obj(v1), TRUTH_BOOL, op->epoint);
         bool i;
         if (result->obj != BOOL_OBJ) return result;
-        i = (result == Obj(true_value)) != (op->op == &o_LOR);
+        i = (result == true_value) != (op->op == &o_LOR);
         val_destroy(result);
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference(i ? v2 : Obj(v1));

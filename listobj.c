@@ -457,8 +457,8 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
                         op->inplace = (inplace == v1 && oo1->refcount == 1 && !minmax) ? oo1 : NULL;
                         val = op->v1->obj->calc2(op);
                         if (minmax) {
-                            if (val == Obj(true_value)) val_replace(&val, oo1);
-                            else if (val == Obj(false_value)) val_replace(&val, oo2);
+                            if (val == true_value) val_replace(&val, oo1);
+                            else if (val == false_value) val_replace(&val, oo2);
                         }
                         if (inplace != NULL) val_destroy(vals[i]);
                         vals[i] = val;
@@ -769,8 +769,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             op->inplace = (inplace && oo1->refcount == 1 && !minmax) ? oo1 : NULL;
             val = op->v1->obj->calc2(op);
             if (minmax) {
-                if (val == Obj(true_value)) val_replace(&val, oo1);
-                else if (val == Obj(false_value)) val_replace(&val, o2);
+                if (val == true_value) val_replace(&val, oo1);
+                else if (val == false_value) val_replace(&val, o2);
             }
             if (inplace) val_destroy(vals[i]);
             vals[i] = val;
@@ -794,14 +794,14 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             op->v2 = v2->data[i];
             op->inplace = NULL;
             result = o1->obj->calc2(op);
-            if (Bool(result) == true_value) {
+            if (result == true_value) {
                 op->op = &o_IN;
                 return result;
             }
             val_destroy(result);
         }
         op->op = &o_IN;
-        return Obj(ref_bool(false_value));
+        return ref_false();
     }
     if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
         return calc2_list(op);
@@ -829,8 +829,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             op->inplace = (inplace && oo2->refcount == 1 && !minmax) ? oo2 : NULL;
             val = o1->obj->calc2(op);
             if (minmax) {
-                if (val == Obj(true_value)) val_replace(&val, o1);
-                else if (val == Obj(false_value)) val_replace(&val, oo2);
+                if (val == true_value) val_replace(&val, o1);
+                else if (val == false_value) val_replace(&val, oo2);
             }
             if (inplace) val_destroy(vals[i]);
             vals[i] = val;

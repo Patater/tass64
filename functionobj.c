@@ -696,19 +696,19 @@ static MUST_CHECK Obj *function_all_any(oper_t op, Obj **warn, bool first) {
     const Type *objt = val->obj;
     if (objt->iterable) {
         struct iter_s iter;
-        Bool *good = (typ == TRUTH_ALL) ? true_value : false_value;
-        Obj *result2 = Obj(ref_bool(good));
+        Obj *good = (typ == TRUTH_ALL) ? true_value : false_value;
+        Obj *result2 = val_reference(good);
         iter.data = val; objt->getiter(&iter);
         while ((v->val = iter.next(&iter)) != NULL) {
             Obj *result = v->val;
             if (result->obj == BOOL_OBJ) {
-                if (Bool(result) == good) continue;
+                if (result == good) continue;
                 val_destroy(result2);
                 result2 = val_reference(result);
                 break;
             }
             result = function_all_any(op, warn, false);
-            if (Bool(result) == good) {
+            if (result == good) {
                 val_destroy(result);
                 continue;
             }

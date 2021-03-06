@@ -774,7 +774,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         struct pair_s p;
         Obj *err;
 
-        if (v2->len == 0) return val_reference(Obj(false_value));
+        if (v2->len == 0) return ref_false();
         p.key = o1;
         err = o1->obj->hash(o1, &p.hash, op->epoint);
         if (err != NULL) return err;

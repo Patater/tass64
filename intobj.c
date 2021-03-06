@@ -1715,7 +1715,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_INT: return calc2_int(op);
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        tmp = Obj(int_value[Bool(v2) == true_value ? 1 : 0]);
+        tmp = Obj(int_value[v2 == true_value ? 1 : 0]);
         op->v2 = tmp;
         ret = calc2_int(op);
         if (ret->obj == ERROR_OBJ) error_obj_update(Error(ret), tmp, v2);
@@ -1750,8 +1750,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         switch (op->op->op) {
         case O_LSHIFT:
-        case O_RSHIFT: tmp = Obj(bits_value[Bool(v1) == true_value ? 1 : 0]); break;
-        default: tmp = Obj(int_value[Bool(v1) == true_value ? 1 : 0]); break;
+        case O_RSHIFT: tmp = Obj(bits_value[v1 == true_value ? 1 : 0]); break;
+        default: tmp = Obj(int_value[v1 == true_value ? 1 : 0]); break;
         }
         op->v1 = tmp;
         op->inplace = NULL;

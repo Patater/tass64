@@ -940,14 +940,14 @@ static bool get_val2(struct eval_context_s *ev) {
             v1 = &values[vsp - 1]; vsp--;
             if (vsp == 0) goto syntaxe;
             val = values[vsp - 1].val;
-            if (val == Obj(true_value)) {
+            if (val == true_value) {
             cond_true:
                 values[vsp - 1].val = v1->val;
                 values[vsp - 1].epoint = v1->epoint;
                 v1->val = val;
                 continue;
             }
-            if (val == Obj(false_value)) {
+            if (val == false_value) {
             cond_false:
                 values[vsp - 1].val = v2->val;
                 values[vsp - 1].epoint = v2->epoint;
@@ -963,7 +963,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 }
                 val_destroy(tmp);
                 if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, val, &values[vsp - 1].epoint);
-                if (tmp == Obj(true_value)) goto cond_true;
+                if (tmp == true_value) goto cond_true;
                 goto cond_false;
             }
         case O_QUEST:
@@ -1129,10 +1129,10 @@ static bool get_val2(struct eval_context_s *ev) {
                     continue;
                 }
                 if (diagnostics.strict_bool && v2->val->obj != BOOL_OBJ) err_msg_bool(ERROR_____CANT_BOOL, v2->val, &v2->epoint); /* TODO */
-                if (Bool(val) == true_value) {
-                    if (Bool(val2) == true_value) val_replace(&v1->val, Obj(false_value));
+                if (val == true_value) {
+                    if (val2 == true_value) val_replace(&v1->val, false_value);
                 } else {
-                    val_replace(&v1->val, Bool(val2) == true_value ? v2->val : Obj(false_value));
+                    val_replace(&v1->val, val2 == true_value ? v2->val : false_value);
                 }
                 val_destroy(val2);
             }
@@ -1167,7 +1167,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 val_destroy(v1->val); v1->val = val;
                 continue;
             }
-            if (val != Obj(true_value)) {
+            if (val != true_value) {
                 v1->epoint = v2->epoint;
                 val_replace(&v1->val, v2->val);
             }

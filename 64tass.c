@@ -386,7 +386,7 @@ static bool tobool(const struct values_s *v1, bool *truth) {
     const Type *obj = val->obj;
     bool error;
     if (obj == BOOL_OBJ) {
-        *truth = val == Obj(true_value);
+        *truth = val == true_value;
         return false;
     }
     err = obj->truth(val, TRUTH_BOOL, &v1->epoint);
@@ -396,7 +396,7 @@ static bool tobool(const struct values_s *v1, bool *truth) {
             err_msg_output(Error(err));
         }
     } else {
-        *truth = Bool(err) == true_value;
+        *truth = err == true_value;
         if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, val, &v1->epoint);
     }
     val_destroy(err);
@@ -1615,8 +1615,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                     tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
                     result2 = tmp.v1->obj->calc2(&tmp);
                     if (minmax) {
-                        if (result2 == Obj(true_value)) val_replace(&result2, val1);
-                        else if (result2 == Obj(false_value)) val_replace(&result2, val);
+                        if (result2 == true_value) val_replace(&result2, val1);
+                        else if (result2 == false_value) val_replace(&result2, val);
                     }
                     val_destroy(val);
                     val = result2;
@@ -2062,8 +2062,8 @@ MUST_CHECK Obj *compile(void)
                     tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
                     result2 = tmp.v1->obj->calc2(&tmp);
                     if (minmax) {
-                        if (result2 == Obj(true_value)) val_replace(&result2, val);
-                        else if (result2 == Obj(false_value)) val_replace(&result2, val2);
+                        if (result2 == true_value) val_replace(&result2, val);
+                        else if (result2 == false_value) val_replace(&result2, val2);
                     }
                     val_destroy(val2);
                     if (label != NULL) {
@@ -3199,7 +3199,7 @@ MUST_CHECK Obj *compile(void)
                             tmp.epoint2 = &vs->epoint;
                             tmp.inplace = NULL;
                             result2 = tmp.v1->obj->calc2(&tmp);
-                            truth = Bool(result2) == true_value;
+                            truth = result2 == true_value;
                             val_destroy(result2);
                         }
                     }
@@ -3246,7 +3246,7 @@ MUST_CHECK Obj *compile(void)
                 if (close_waitfor(W_NEXT)) {
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 } else if (waitfor->what == W_NEXT2) {
-                    retval = Obj(true_value); /* anything non-null */
+                    retval = true_value; /* anything non-null */
                     nobreak = false;
                 } else if (close_waitfor(W_NEXT3)) {
                     pop_context();

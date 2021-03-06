@@ -56,7 +56,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
     case T_BITS: return val_reference(v1);
-    case T_BOOL: return Obj(ref_bits(bits_value[Bool(v1) == true_value ? 1 : 0]));
+    case T_BOOL: return Obj(ref_bits(bits_value[v1 == true_value ? 1 : 0]));
     case T_STR: return bits_from_str(Str(v1), epoint);
     case T_BYTES: return bits_from_bytes(Bytes(v1), epoint);
     case T_INT: return bits_from_int(Int(v1), epoint);
@@ -218,20 +218,20 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     bdigit_t b, inv;
     switch (type) {
     case TRUTH_ALL:
-        if (v1->bits == 0) return Obj(ref_bool(true_value));
+        if (v1->bits == 0) return ref_true();
         sz = bitslen(v1);
         sz2 = v1->bits / SHIFT;
         if (sz2 > sz) sz2 = sz;
         inv = (v1->len >= 0) ? ~(bdigit_t)0 : 0;
         for (i = 0; i < sz2; i++) {
-            if (v1->data[i] != inv) return Obj(ref_bool(false_value));
+            if (v1->data[i] != inv) return ref_false();
         }
         b = (i >= sz) ? 0 : v1->data[i];
         b ^= inv;
         b <<= SHIFT - v1->bits % SHIFT;
         return truth_reference(b == 0);
     case TRUTH_ANY:
-        if (v1->bits == 0) return Obj(ref_bool(false_value));
+        if (v1->bits == 0) return ref_false();
         /* fall through */
     default:
         return truth_reference(v1->len != 0);
@@ -1396,7 +1396,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     switch (o2->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        op->v2 = tmp = Obj(ref_bits(bits_value[Bool(o2) == true_value ? 1 : 0]));
+        op->v2 = tmp = Obj(ref_bits(bits_value[o2 == true_value ? 1 : 0]));
         if (op->inplace != NULL && op->inplace->refcount != 1) op->inplace = NULL;
         result = calc2(op);
         val_destroy(tmp);
@@ -1442,7 +1442,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     switch (o1->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        op->v1 = tmp = Obj(ref_bits(bits_value[Bool(o1) == true_value ? 1 : 0]));
+        op->v1 = tmp = Obj(ref_bits(bits_value[o1 == true_value ? 1 : 0]));
         op->inplace = NULL;
         result = calc2(op);
         val_destroy(tmp);
