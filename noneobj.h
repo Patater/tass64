@@ -29,7 +29,7 @@ typedef struct None {
 
 #define None(a) ((None *)(1 ? (a) : (Obj *)a))
 
-extern Obj *none_value;
+extern Obj *const none_value;
 
 extern void noneobj_init(void);
 extern void noneobj_destroy(void);

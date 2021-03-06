@@ -362,12 +362,12 @@ static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
     int r;
     size_t i2, offs;
     uval_t val;
-    if (offs2 < 0) return Obj(ref_gap());
+    if (offs2 < 0) return ref_gap();
     offs = (size_t)offs2 * ln2;
     r = -1;
     for (val = i2 = 0; i2 < ln2; i2++, offs++) {
         r = read_mem(v1->memblocks, v1->memaddr, v1->membp, offs);
-        if (r < 0) return Obj(ref_gap());
+        if (r < 0) return ref_gap();
         val |= (uval_t)r << (i2 * 8);
     }
     if (v1->dtype < 0 && (r & 0x80) != 0) {
