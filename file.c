@@ -397,7 +397,7 @@ static uint8_t *flush_ubuff(struct ubuff_s *ubuff, uint8_t *p, struct file_s *tm
 }
 
 static uchar_t fromiso2(uchar_t c) {
-    static mbstate_t ps;
+    mbstate_t ps;
     wchar_t w;
     int olderrno;
     ssize_t l;
