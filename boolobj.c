@@ -211,7 +211,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     if (oper != &o_MEMBER && oper != &o_X) {
         return o2->obj->rcalc2(op);
     }
-    if (o2 == Obj(none_value) || o2->obj == ERROR_OBJ) return val_reference(o2);
+    if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
     return obj_oper_error(op);
 }
 

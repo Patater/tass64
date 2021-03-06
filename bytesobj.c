@@ -378,7 +378,7 @@ MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint
     for (;;) {
         if ((ch2 = s[i]) == 0) {
             *ln = i;
-            return Obj(ref_none());
+            return ref_none();
         }
         i++;
         if (ch2 == ch) {
@@ -402,7 +402,7 @@ MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint
         epoint2 = *epoint;
         epoint2.pos += j;
         err_msg2(ERROR______EXPECTED, "hex digit", &epoint2);
-        return Obj(ref_none());
+        return ref_none();
     }
     i -= spc;
     if ((i & 1) != 0) err_msg2(ERROR______EXPECTED, "even number of hex digits", epoint);
@@ -434,7 +434,7 @@ MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, size_t *ln, linepos_t epoint
     for (;;) {
         if ((ch2 = s[i]) == 0) {
             *ln = i;
-            return Obj(ref_none());
+            return ref_none();
         }
         i++;
         if (ch2 == ch) {
@@ -448,7 +448,7 @@ MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, size_t *ln, linepos_t epoint
         epoint2 = *epoint;
         epoint2.pos += j;
         err_msg2(ERROR______EXPECTED, "z85 character", &epoint2);
-        return Obj(ref_none());
+        return ref_none();
     }
     i = (i > 1) ? (i - 2) : 0;
     j = i / 5;
@@ -456,7 +456,7 @@ MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, size_t *ln, linepos_t epoint
     j *= 4;
     if (i == 1) {
         err_msg2(ERROR______EXPECTED, "valid z85 string", epoint);
-        return Obj(ref_none());
+        return ref_none();
     }
     sz = (i > 1) ? (j + i - 1) : j;
     v = new_bytes2(sz);
@@ -1332,7 +1332,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *tmp;
 
     if (op->op == &o_X) {
-        if (o2 == Obj(none_value) || o2->obj == ERROR_OBJ) return val_reference(o2);
+        if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
         return repeat(op);
     }
     if (op->op == &o_LAND) {

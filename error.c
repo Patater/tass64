@@ -968,7 +968,7 @@ void err_msg_wrong_type(const Obj *val, Type *expected, linepos_t epoint) {
 void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
     if (val->obj == ADDRESS_OBJ) {
         const Obj *val2 = Address(val)->val;
-        if (val2 == Obj(none_value) || val2->obj == ERROR_OBJ) val = val2;
+        if (val2 == none_value || val2->obj == ERROR_OBJ) val = val2;
     }
     if (val->obj == ERROR_OBJ) err_msg_output(Error(val));
     else if (val->obj == NONE_OBJ) err_msg_still_none(NULL, epoint);

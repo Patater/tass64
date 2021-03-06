@@ -480,7 +480,7 @@ rest:
             touch_label(l);
             val = val_reference(l->value);
         } else if (constcreated && pass < max_pass) {
-            val = Obj(ref_none());
+            val = ref_none();
         } else {
             Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
             err->u.notdef.symbol = Obj(new_symbol(&symbol, &epoint));
@@ -629,7 +629,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 default:break;
                 }
                 err_msg_invalid_oper(op2, v1->val, NULL, &o_out->epoint);
-                val_replace(&v1->val, Obj(none_value));
+                val_replace(&v1->val, none_value);
                 break;
             default:
                 {
@@ -749,7 +749,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
         case T_ERROR:
         case T_NONE: continue;
         }
-        val_replace(&v1->val, Obj(none_value));
+        val_replace(&v1->val, none_value);
     }
     ev->outp2 = i;
     ev->values_len = vsp;
@@ -971,7 +971,7 @@ static bool get_val2(struct eval_context_s *ev) {
             if (vsp == 0) goto syntaxe;
             v1 = &values[vsp - 1];
             err_msg2(ERROR______EXPECTED,"':'", &o_out->epoint);
-            val_replace(&v1->val, Obj(none_value));
+            val_replace(&v1->val, none_value);
             continue;
         case O_COLON:
             v2 = v1; v1 = &values[--vsp - 1];
@@ -1035,7 +1035,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_POS:     /* +  */
         case O_LNOT:    /* !  */
             oper.v1 = v1->val;
-            oper.v2 = Obj(none_value);
+            oper.v2 = none_value;
             oper.epoint = &v1->epoint;
             oper.epoint3 = &o_out->epoint;
             oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
@@ -1071,7 +1071,7 @@ static bool get_val2(struct eval_context_s *ev) {
                         continue;
                     }
                     err_msg2(ERROR_EXPRES_SYNTAX, NULL, &o_out->epoint);
-                    val_replace(&v1->val, Obj(none_value));
+                    val_replace(&v1->val, none_value);
                     continue;
                 }
             }
@@ -1428,7 +1428,7 @@ static bool get_exp2(int stop) {
                     touch_label(l);
                     val = val_reference(l->value);
                 } else if (constcreated && pass < max_pass) {
-                    val = Obj(ref_none());
+                    val = ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
                     err->u.notdef.symbol = Obj(new_symbol(&symbol, &epoint));
@@ -1455,7 +1455,7 @@ static bool get_exp2(int stop) {
                     touch_label(l);
                     val = val_reference(l->value);
                 } else if (constcreated && pass < max_pass) {
-                    val = Obj(ref_none());
+                    val = ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
                     err->u.notdef.symbol = Obj(new_anonsymbol(as));
@@ -1480,7 +1480,7 @@ static bool get_exp2(int stop) {
                     touch_label(l);
                     val = val_reference(l->value);
                 } else if (constcreated && pass < max_pass) {
-                    val = Obj(ref_none());
+                    val = ref_none();
                 } else {
                     Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
                     err->u.notdef.symbol = Obj(new_anonsymbol(as));

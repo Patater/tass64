@@ -121,7 +121,7 @@ static MUST_CHECK Obj *struct_calc2(oper_t op) {
     if (op->op == &o_MEMBER) {
         return namespace_member(op, Struct(op->v1)->names);
     }
-    if (op->v2 == Obj(none_value) || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
+    if (op->v2 == none_value || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);
     return obj_oper_error(op);
 }
 

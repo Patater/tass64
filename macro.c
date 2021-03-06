@@ -494,7 +494,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
             vs = get_val();
             if (vs == NULL) {
                 val = param->init;
-                if (val == NULL) { max = i + 1; val = Obj(none_value); }
+                if (val == NULL) { max = i + 1; val = none_value; }
             } else {
                 val = vs->val;
             }
@@ -798,7 +798,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
             if ((lst->data == lst->u.val ? mfunc->ipoint >= lenof(lst->u.val) : mfunc->ipoint >= lst->u.s.max)) {
                 if (list_extend(lst)) {
                     err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint);
-                    return Obj(ref_none());
+                    return ref_none();
                 }
             }
             lst->len++;
@@ -825,10 +825,10 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
             if (i < args) {
                 size_t j = i;
                 tuple = new_tuple(args - i);
-                none_value->v.refcount += args - i;
+                none_value->refcount += args - i;
                 while (j < args) {
                     tuple->data[j - i] = vals[j].val;
-                    vals[j].val = Obj(none_value);
+                    vals[j].val = none_value;
                     j++;
                 }
             } else {
@@ -836,7 +836,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
             }
             val = Obj(tuple);
         } else {
-            val = (i < args) ? vals[i].val : (param->init != NULL) ? param->init : Obj(none_value);
+            val = (i < args) ? vals[i].val : (param->init != NULL) ? param->init : none_value;
         }
         label = new_label(&param->name, context, 0, &labelexists, mfunc->file_list);
         if (labelexists) {

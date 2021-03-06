@@ -29,13 +29,13 @@ typedef struct None {
 
 #define None(a) ((None *)(1 ? (a) : (Obj *)a))
 
-extern None *none_value;
+extern Obj *none_value;
 
 extern void noneobj_init(void);
 extern void noneobj_destroy(void);
 
-static inline None *ref_none(void) {
-    none_value->v.refcount++; return none_value;
+static inline Obj *ref_none(void) {
+    none_value->refcount++; return none_value;
 }
 
 #endif

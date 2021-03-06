@@ -114,12 +114,12 @@ static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR: return val_reference(v1);
     case T_ADDRESS:
-        if (Address(v1)->val == Obj(none_value) || Address(v1)->val->obj == ERROR_OBJ) return val_reference(Address(v1)->val);
+        if (Address(v1)->val == none_value || Address(v1)->val->obj == ERROR_OBJ) return val_reference(Address(v1)->val);
         break;
     default: break;
     }
     err_msg_wrong_type(v1, NULL, epoint);
-    return Obj(ref_none());
+    return ref_none();
 }
 
 static FAST_CALL bool invalid_same(const Obj *o1, const Obj *o2) {
@@ -174,24 +174,24 @@ static MUST_CHECK Obj *invalid_calc1(oper_t op) {
 
 static MUST_CHECK Obj *invalid_calc2(oper_t op) {
     Obj *o2 = op->v2;
-    if (o2 == Obj(none_value) || o2->obj == ERROR_OBJ) {
+    if (o2 == none_value || o2->obj == ERROR_OBJ) {
         return val_reference(o2);
     }
     if (o2->obj == ADDRESS_OBJ) {
         Obj *val = Address(o2)->val;
-        if (val == Obj(none_value) || val->obj == ERROR_OBJ) return val_reference(val);
+        if (val == none_value || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
 }
 
 static MUST_CHECK Obj *invalid_rcalc2(oper_t op) {
     Obj *o1 = op->v1;
-    if (o1 == Obj(none_value) || o1->obj == ERROR_OBJ) {
+    if (o1 == none_value || o1->obj == ERROR_OBJ) {
         return val_reference(o1);
     }
     if (o1->obj == ADDRESS_OBJ) {
         Obj *val = Address(o1)->val;
-        if (val == Obj(none_value) || val->obj == ERROR_OBJ) return val_reference(val);
+        if (val == none_value || val->obj == ERROR_OBJ) return val_reference(val);
     }
     return obj_oper_error(op);
 }
@@ -201,12 +201,12 @@ static MUST_CHECK Obj *invalid_slice(oper_t op, size_t indx) {
     if (indx == 0) {
         if (args->len > 0) {
             Obj *o2 = args->val[0].val;
-            if (o2 == Obj(none_value) || o2->obj == ERROR_OBJ) {
+            if (o2 == none_value || o2->obj == ERROR_OBJ) {
                 return val_reference(o2);
             }
             if (o2->obj == ADDRESS_OBJ) {
                 Obj *val = Address(o2)->val;
-                if (val == Obj(none_value) || val->obj == ERROR_OBJ) return val_reference(val);
+                if (val == none_value || val->obj == ERROR_OBJ) return val_reference(val);
             }
         }
     } else {

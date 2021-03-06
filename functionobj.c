@@ -246,7 +246,7 @@ static uint64_t random64(void) {
 void random_reseed(Obj *o1, linepos_t epoint) {
     Obj *v = INT_OBJ->create(o1, epoint);
     if (v->obj != INT_OBJ) {
-        if (v == Obj(none_value)) err_msg_still_none(NULL, epoint);
+        if (v == none_value) err_msg_still_none(NULL, epoint);
         else if (v->obj == ERROR_OBJ) err_msg_output(Error(v));
     } else {
         Int *v1 = Int(v);
@@ -469,7 +469,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
         memcpy(b->data, cfile2->data + offset, ln);
         return Obj(b);
     }
-    return Obj(ref_none());
+    return ref_none();
 }
 
 static Obj *function_unsigned_bytes(oper_t op, unsigned int bits) {
