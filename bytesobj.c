@@ -52,7 +52,7 @@ static inline size_t byteslen(const Bytes *v1) {
 }
 
 static MUST_CHECK Obj *bytes_from_int(const Int *, linepos_t);
-static MUST_CHECK Bytes *bytes_from_u8(unsigned int i);
+static MUST_CHECK Obj *bytes_from_u8(unsigned int i);
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     Obj *err, *ret;
@@ -60,7 +60,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
     case T_BYTES: return val_reference(v1);
-    case T_BOOL: return (Obj *)bytes_from_u8(Bool(v1) == true_value ? 1 : 0);
+    case T_BOOL: return bytes_from_u8(Bool(v1) == true_value ? 1 : 0);
     case T_BITS: return bytes_from_bits(Bits(v1), epoint);
     case T_STR: return bytes_from_str(Str(v1), epoint, BYTES_MODE_TEXT);
     case T_INT: return bytes_from_int(Int(v1), epoint);
@@ -562,7 +562,7 @@ failed:
     return (Obj *)new_error_mem(epoint);
 }
 
-static MUST_CHECK Bytes *bytes_from_u8(unsigned int i) {
+static MUST_CHECK Obj *bytes_from_u8(unsigned int i) {
     Bytes *v;
     i &= 0xff;
     v = bytes_value[i];
@@ -572,15 +572,15 @@ static MUST_CHECK Bytes *bytes_from_u8(unsigned int i) {
         v->data[0] = (uint8_t)i;
         bytes_value[i] = v;
     }
-    return ref_bytes(v);
+    return &ref_bytes(v)->v;
 }
 
-static MUST_CHECK Bytes *bytes_from_u16(unsigned int i) {
+static MUST_CHECK Obj *bytes_from_u16(unsigned int i) {
     Bytes *v = new_bytes(2);
     v->len = 2;
     v->data[0] = (uint8_t)i;
     v->data[1] = (uint8_t)(i >> 8);
-    return v;
+    return &v->v;
 }
 
 MUST_CHECK Obj *bytes_calc1(Oper_types op, unsigned int val) {
@@ -588,10 +588,10 @@ MUST_CHECK Obj *bytes_calc1(Oper_types op, unsigned int val) {
     case O_BANK: val >>= 8; /* fall through */
     case O_HIGHER: val >>= 8; /* fall through */
     case O_LOWER: 
-    default: return (Obj *)bytes_from_u8(val);
+    default: return bytes_from_u8(val);
     case O_HWORD: val >>= 8; /* fall through */
-    case O_WORD: return (Obj *)bytes_from_u16(val);
-    case O_BSWORD: return (Obj *)bytes_from_u16(((uint16_t)val >> 8) | (uint16_t)(val << 8));
+    case O_WORD: return bytes_from_u16(val);
+    case O_BSWORD: return bytes_from_u16(((uint16_t)val >> 8) | (uint16_t)(val << 8));
     }
 }
 
@@ -619,7 +619,7 @@ MUST_CHECK Obj *bytes_from_bits(const Bits *v1, linepos_t epoint) {
         return val_reference(inv ? &inv_bytes->v : &null_bytes->v);
     }
     if (len1 <= 8 && !inv) {
-        return (Obj *)bytes_from_u8(v1->data[0]);
+        return bytes_from_u8(v1->data[0]);
     }
 
     sz = len1 / 8;
@@ -666,7 +666,7 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
     case 0:
         return val_reference(&null_bytes->v);
     case 1:
-        if (v1->data[0] < 256) return (Obj *)bytes_from_u8(v1->data[0]);
+        if (v1->data[0] < 256) return bytes_from_u8(v1->data[0]);
         break;
     default:
         break;
@@ -1047,35 +1047,35 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     Obj *tmp;
     switch (op->op->op) {
     case O_BANK:
-        if (v1->len > 2) return (Obj *)bytes_from_u8(v1->data[2]);
-        if (v1->len < ~2) return (Obj *)bytes_from_u8(~(unsigned int)v1->data[2]);
-        return (Obj *)bytes_from_u8((v1->len < 0) ? ~0U : 0);
+        if (v1->len > 2) return bytes_from_u8(v1->data[2]);
+        if (v1->len < ~2) return bytes_from_u8(~(unsigned int)v1->data[2]);
+        return bytes_from_u8((v1->len < 0) ? ~0U : 0);
     case O_HIGHER:
-        if (v1->len > 1) return (Obj *)bytes_from_u8(v1->data[1]);
-        if (v1->len < ~1) return (Obj *)bytes_from_u8(~(unsigned int)v1->data[1]);
-        return (Obj *)bytes_from_u8((v1->len < 0) ? ~0U : 0);
+        if (v1->len > 1) return bytes_from_u8(v1->data[1]);
+        if (v1->len < ~1) return bytes_from_u8(~(unsigned int)v1->data[1]);
+        return bytes_from_u8((v1->len < 0) ? ~0U : 0);
     case O_LOWER:
-        if (v1->len > 0) return (Obj *)bytes_from_u8(v1->data[0]);
-        if (v1->len < ~0) return (Obj *)bytes_from_u8(~(unsigned int)v1->data[0]);
-        return (Obj *)bytes_from_u8((v1->len < 0) ? ~0U : 0);
+        if (v1->len > 0) return bytes_from_u8(v1->data[0]);
+        if (v1->len < ~0) return bytes_from_u8(~(unsigned int)v1->data[0]);
+        return bytes_from_u8((v1->len < 0) ? ~0U : 0);
     case O_HWORD:
-        if (v1->len > 2) return (Obj *)bytes_from_u16(v1->data[1] + ((unsigned int)v1->data[2] << 8));
-        if (v1->len > 1) return (Obj *)bytes_from_u16(v1->data[1]);
-        if (v1->len < ~2) return (Obj *)bytes_from_u16(~(v1->data[1] + ((unsigned int)v1->data[2] << 8)));
-        if (v1->len < ~1) return (Obj *)bytes_from_u16(~(unsigned int)v1->data[1]);
-        return (Obj *)bytes_from_u16((v1->len < 0) ? ~0U : 0);
+        if (v1->len > 2) return bytes_from_u16(v1->data[1] + ((unsigned int)v1->data[2] << 8));
+        if (v1->len > 1) return bytes_from_u16(v1->data[1]);
+        if (v1->len < ~2) return bytes_from_u16(~(v1->data[1] + ((unsigned int)v1->data[2] << 8)));
+        if (v1->len < ~1) return bytes_from_u16(~(unsigned int)v1->data[1]);
+        return bytes_from_u16((v1->len < 0) ? ~0U : 0);
     case O_WORD:
-        if (v1->len > 1) return (Obj *)bytes_from_u16(v1->data[0] + ((unsigned int)v1->data[1] << 8));
-        if (v1->len > 0) return (Obj *)bytes_from_u16(v1->data[0]);
-        if (v1->len < ~1) return (Obj *)bytes_from_u16(~(v1->data[0] + ((unsigned int)v1->data[1] << 8)));
-        if (v1->len < ~0) return (Obj *)bytes_from_u16(~(unsigned int)v1->data[0]);
-        return (Obj *)bytes_from_u16((v1->len < 0) ? ~0U : 0);
+        if (v1->len > 1) return bytes_from_u16(v1->data[0] + ((unsigned int)v1->data[1] << 8));
+        if (v1->len > 0) return bytes_from_u16(v1->data[0]);
+        if (v1->len < ~1) return bytes_from_u16(~(v1->data[0] + ((unsigned int)v1->data[1] << 8)));
+        if (v1->len < ~0) return bytes_from_u16(~(unsigned int)v1->data[0]);
+        return bytes_from_u16((v1->len < 0) ? ~0U : 0);
     case O_BSWORD:
-        if (v1->len > 1) return (Obj *)bytes_from_u16(v1->data[1] + ((unsigned int)v1->data[0] << 8));
-        if (v1->len > 0) return (Obj *)bytes_from_u16((unsigned int)v1->data[0] << 8);
-        if (v1->len < ~1) return (Obj *)bytes_from_u16(~(v1->data[1] + ((unsigned int)v1->data[0] << 8)));
-        if (v1->len < ~0) return (Obj *)bytes_from_u16(~((unsigned int)v1->data[0] << 8));
-        return (Obj *)bytes_from_u16((v1->len < 0) ? ~0U : 0);
+        if (v1->len > 1) return bytes_from_u16(v1->data[1] + ((unsigned int)v1->data[0] << 8));
+        if (v1->len > 0) return bytes_from_u16((unsigned int)v1->data[0] << 8);
+        if (v1->len < ~1) return bytes_from_u16(~(v1->data[1] + ((unsigned int)v1->data[0] << 8)));
+        if (v1->len < ~0) return bytes_from_u16(~((unsigned int)v1->data[0] << 8));
+        return bytes_from_u16((v1->len < 0) ? ~0U : 0);
     case O_POS: return val_reference(&v1->v);
     case O_INV:
         if (op->inplace != &v1->v) return invert(v1, op->epoint3);
@@ -1269,7 +1269,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         case 0:
             return (Obj *)ref_bytes(null_bytes);
         case 1:
-            return (Obj *)bytes_from_u8(v1->data[s.offset] ^ inv);
+            return bytes_from_u8(v1->data[s.offset] ^ inv);
         }
         if (s.step == 1 && inv == 0) {
             if (s.length == byteslen(v1)) {
@@ -1319,7 +1319,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     }
     err = indexoffs(o2, len1, &offs2, epoint2);
     if (err != NULL) return &err->v;
-    return (Obj *)bytes_from_u8(v1->data[offs2] ^ inv);
+    return bytes_from_u8(v1->data[offs2] ^ inv);
 failed2:
     val_destroy(&v->v);
 failed:
