@@ -49,7 +49,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
         return val_reference(v1);
     default:
         v = v1->obj->str(v1, epoint, SIZE_MAX);
-        return v != NULL ? v : Obj(new_error_mem(epoint));
+        return v != NULL ? v : new_error_mem(epoint);
     }
 }
 
@@ -194,7 +194,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     return val_reference(o1);
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Str *v1 = Str(o1);
     size_t l = v1->len;
     const uint8_t *s2 = v1->data;
@@ -350,7 +350,7 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
     *ln = i;
     j = (i > 1) ? (i - 2) : 0;
     v = new_str2(j - r);
-    if (v == NULL) return Obj(new_error_mem(epoint));
+    if (v == NULL) return new_error_mem(epoint);
     v->chars = i2;
     if (r != 0) {
         const uint8_t *p = s + 1, *p2;
@@ -520,7 +520,7 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             memcpy(s + v1->len, v2->data, v2->len);
             return Obj(v);
         } while (false);
-        return Obj(new_error_mem(op->epoint3));
+        return new_error_mem(op->epoint3);
     case O_IN:
         {
             const uint8_t *c, *c2, *e;
@@ -567,7 +567,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
         }
         return Obj(v);
     } while (false);
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
@@ -577,11 +577,11 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Obj *o2 = op->v2;
     Str *v, *v1 = Str(op->v1);
     Funcargs *args = Funcargs(o2);
-    Error *err;
+    Obj *err;
     linepos_t epoint2;
 
     if (args->len < 1 || args->len > indx + 1) {
-        return Obj(new_error_argnum(args->len, 1, indx + 1, op->epoint2));
+        return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
 
     o2 = args->val[indx].val;
@@ -611,7 +611,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
                 if (err != NULL) {
                     val_destroy(Obj(v));
                     iter_destroy(&iter);
-                    return Obj(err);
+                    return err;
                 }
                 *p2++ = v1->data[offs2];
             }
@@ -636,7 +636,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
                 if (err != NULL) {
                     val_destroy(Obj(v));
                     iter_destroy(&iter);
-                    return Obj(err);
+                    return err;
                 }
                 while (offs2 != j) {
                     if (offs2 > j) {
@@ -700,7 +700,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         struct sliceparam_s s;
 
         err = sliceparams(Colonlist(o2), len1, &s, epoint2);
-        if (err != NULL) return Obj(err);
+        if (err != NULL) return err;
 
         if (s.length == 0) {
             return Obj(ref_str(null_str));
@@ -820,7 +820,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         return Obj(v);
     }
     err = indexoffs(o2, len1, &offs2, epoint2);
-    if (err != NULL) return Obj(err);
+    if (err != NULL) return err;
 
     if (v1->len == v1->chars) {
         p = v1->data + offs2;
@@ -857,7 +857,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 failed2:
     val_destroy(Obj(v));
 failed:
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {

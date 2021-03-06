@@ -55,7 +55,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
         return val_reference(Obj(Mfunc(v1)->names));
     default: break;
     }
-    return Obj(new_error_conv(v1, NAMESPACE_OBJ, epoint));
+    return new_error_conv(v1, NAMESPACE_OBJ, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {

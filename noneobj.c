@@ -39,8 +39,8 @@ static MUST_CHECK Obj *truth(Obj *UNUSED(v1), Truth_types UNUSED(type), linepos_
     return Obj(new_error(ERROR____STILL_NONE, epoint));
 }
 
-static MUST_CHECK Error *hash(Obj *UNUSED(v1), int *UNUSED(v), linepos_t epoint) {
-    return new_error(ERROR____STILL_NONE, epoint);
+static MUST_CHECK Obj *hash(Obj *UNUSED(v1), int *UNUSED(v), linepos_t epoint) {
+    return Obj(new_error(ERROR____STILL_NONE, epoint));
 }
 
 static MUST_CHECK Obj *repr(Obj *v1, linepos_t epoint, size_t UNUSED(maxsize)) {

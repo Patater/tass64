@@ -69,7 +69,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ADDRESS: return int_from_address(Address(v1), epoint);
     default: break;
     }
-    return Obj(new_error_conv(v1, INT_OBJ, epoint));
+    return new_error_conv(v1, INT_OBJ, epoint);
 }
 
 static FAST_CALL NO_INLINE void int_destroy(Int *v1) {
@@ -110,7 +110,7 @@ static MUST_CHECK Obj *negate(Int *v1, linepos_t epoint) {
     return Obj(v);
 failed2:
     val_destroy(Obj(v));
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *normalize(Int *v, size_t sz, bool neg) {
@@ -169,7 +169,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types UNUSED(type), linepos_t UNUSED
     return truth_reference(Int(o1)->len != 0);
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Int *v1 = Int(o1);
     ssize_t l = v1->len;
     unsigned int h;
@@ -395,7 +395,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_STRING:
         {
             Obj *o = repr(Obj(v1), op->epoint, SIZE_MAX);
-            return (o != NULL) ? o : Obj(new_error_mem(op->epoint3));
+            return (o != NULL) ? o : new_error_mem(op->epoint3);
         }
     case O_LNOT:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
@@ -584,7 +584,7 @@ static MUST_CHECK Obj *idivrem(oper_t op, bool divrem) {
 
     len2 = intlen(vv2);
     if (len2 == 0) {
-        return Obj(new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3));
+        return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
     }
     len1 = intlen(vv1);
     v1 = vv1->data;
@@ -804,7 +804,7 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
 failed2:
     val_destroy(Obj(vv));
 failed:
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
@@ -871,7 +871,7 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
     return normalize(vv, sz, false);
 failed2:
     val_destroy(Obj(vv));
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static inline MUST_CHECK Obj *and_(oper_t op) {
@@ -982,7 +982,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     return normalize(vv, sz, neg1 && neg2);
 failed2:
     val_destroy(Obj(vv));
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static inline MUST_CHECK Obj *or_(oper_t op) {
@@ -1096,7 +1096,7 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
     return normalize(vv, sz, neg1 || neg2);
 failed2:
     val_destroy(Obj(vv));
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static inline MUST_CHECK Obj *xor_(oper_t op) {
@@ -1221,7 +1221,7 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
     return normalize(vv, sz, neg1 != neg2);
 failed2:
     val_destroy(Obj(vv));
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static ssize_t icmp(oper_t op) {
@@ -1305,7 +1305,7 @@ MUST_CHECK Obj *int_from_float(const Float *v1, linepos_t epoint) {
     return Obj(v);
 failed2:
     val_destroy(Obj(v));
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 MUST_CHECK Obj *int_from_bytes(const Bytes *v1, linepos_t epoint) {
@@ -1365,7 +1365,7 @@ MUST_CHECK Obj *int_from_bytes(const Bytes *v1, linepos_t epoint) {
     return normalize(v, sz, inv);
 failed2:
     val_destroy(Obj(v));
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 MUST_CHECK Obj *int_from_bits(const Bits *v1, linepos_t epoint) {
@@ -1404,7 +1404,7 @@ MUST_CHECK Obj *int_from_bits(const Bits *v1, linepos_t epoint) {
 failed2:
     val_destroy(Obj(v));
 failed:
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
@@ -1494,7 +1494,7 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
     return Obj(v);
 failed2:
     val_destroy(Obj(v));
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linepos_t epoint) {
@@ -1588,7 +1588,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linep
     return normalize(v, sz, false);
 failed2:
     val_destroy(Obj(v));
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *calc2_int(oper_t op) {

@@ -54,7 +54,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_CODE: return val_reference(v1);
     default: break;
     }
-    return Obj(new_error_conv(v1, CODE_OBJ, epoint));
+    return new_error_conv(v1, CODE_OBJ, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {
@@ -413,12 +413,12 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     ssize_t offs0;
     Code *v1 = Code(op->v1);
     Obj *o2 = op->v2;
-    Error *err;
+    Obj *err;
     Funcargs *args = Funcargs(o2);
     linepos_t epoint2;
 
     if (args->len < 1 || args->len > indx + 1) {
-        return Obj(new_error_argnum(args->len, 1, indx + 1, op->epoint2));
+        return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
     o2 = args->val[indx].val;
     epoint2 = &args->val[indx].epoint;
@@ -446,7 +446,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(o2, ln, &offs1, epoint2);
             if (err != NULL) {
-                vals[i] = Obj(err);
+                vals[i] = err;
                 continue;
             }
             vals[i] = code_item(v1, (ssize_t)offs1 + offs0, ln2);
@@ -460,7 +460,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         Tuple *v;
 
         err = sliceparams(Colonlist(o2), ln, &s, epoint2);
-        if (err != NULL) return Obj(err);
+        if (err != NULL) return err;
 
         if (s.length == 0) {
             return Obj(ref_tuple(null_tuple));
@@ -474,7 +474,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         return Obj(v);
     }
     err = indexoffs(o2, ln, &offs1, epoint2);
-    if (err != NULL) return Obj(err);
+    if (err != NULL) return err;
 
     return code_item(v1, (ssize_t)offs1 + offs0, ln2);
 }

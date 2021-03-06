@@ -52,7 +52,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ADDRESS: return val_reference(v1);
     default: break;
     }
-    return Obj(new_error_conv(v1, ADDRESS_OBJ, epoint));
+    return new_error_conv(v1, ADDRESS_OBJ, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {
@@ -94,10 +94,10 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     return v->obj->truth(v, type, epoint);
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t epoint) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t epoint) {
     Address *v1 = Address(o1);
     Obj *v = v1->val;
-    Error *err = v->obj->hash(v, hs, epoint);
+    Obj *err = v->obj->hash(v, hs, epoint);
     if (err == NULL) {
         *hs = ((unsigned int)*hs + v1->type) & ((~0U) >> 1);
     }
@@ -293,28 +293,28 @@ static MUST_CHECK Error *uaddress(Obj *o1, uval_t *uv, unsigned int bits, linepo
 
 MUST_CHECK Obj *float_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE && v1->val != Obj(none_value) && v1->val->obj != ERROR_OBJ) {
-        return Obj(new_error_conv(Obj(v1), FLOAT_OBJ, epoint));
+        return new_error_conv(Obj(v1), FLOAT_OBJ, epoint);
     }
     return FLOAT_OBJ->create(v1->val, epoint);
 }
 
 MUST_CHECK Obj *int_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE && v1->val != Obj(none_value) && v1->val->obj != ERROR_OBJ) {
-        return Obj(new_error_conv(Obj(v1), INT_OBJ, epoint));
+        return new_error_conv(Obj(v1), INT_OBJ, epoint);
     }
     return INT_OBJ->create(v1->val, epoint);
 }
 
 MUST_CHECK Obj *bits_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE && v1->val != Obj(none_value) && v1->val->obj != ERROR_OBJ) {
-        return Obj(new_error_conv(Obj(v1), BITS_OBJ, epoint));
+        return new_error_conv(Obj(v1), BITS_OBJ, epoint);
     }
     return BITS_OBJ->create(v1->val, epoint);
 }
 
 MUST_CHECK Obj *bytes_from_address(Address *v1, linepos_t epoint) {
     if (v1->type != A_NONE && v1->val != Obj(none_value) && v1->val->obj != ERROR_OBJ) {
-        return Obj(new_error_conv(Obj(v1), BYTES_OBJ, epoint));
+        return new_error_conv(Obj(v1), BYTES_OBJ, epoint);
     }
     return BYTES_OBJ->create(v1->val, epoint);
 }

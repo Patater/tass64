@@ -74,7 +74,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
          return ret;
     default: break;
     }
-    return Obj(new_error_conv(v1, BYTES_OBJ, epoint));
+    return new_error_conv(v1, BYTES_OBJ, epoint);
 }
 
 static FAST_CALL NO_INLINE void bytes_destroy(Bytes *v1) {
@@ -147,7 +147,7 @@ static MUST_CHECK Obj *invert(const Bytes *v1, linepos_t epoint) {
     sz = byteslen(v1);
     if (sz != 0) {
         Bytes *v = new_bytes2(sz);
-        if (v == NULL) return Obj(new_error_mem(epoint));
+        if (v == NULL) return new_error_mem(epoint);
         v->len = ~v1->len;
         memcpy(v->data, v1->data, sz);
         return Obj(v);
@@ -182,7 +182,7 @@ static MUST_CHECK Obj *negate(Bytes *v1, linepos_t epoint) {
     v->len = ~v1->len;
     return Obj(v);
 failed:
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 static FAST_CALL NO_INLINE bool bytes_same(const Bytes *v1, const Bytes *v2) {
@@ -347,7 +347,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     return Obj(v);
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Bytes *v1 = Bytes(o1);
     size_t l = byteslen(v1);
     const uint8_t *s2 = v1->data;
@@ -408,7 +408,7 @@ MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint
     if ((i & 1) != 0) err_msg2(ERROR______EXPECTED, "even number of hex digits", epoint);
     j = (i - 2) / 2;
     v = new_bytes2(j);
-    if (v == NULL) return Obj(new_error_mem(epoint));
+    if (v == NULL) return new_error_mem(epoint);
     v->len = (ssize_t)j;
     for (i = 0; i < j; i++) {
         unsigned int c1, c2;
@@ -460,7 +460,7 @@ MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, size_t *ln, linepos_t epoint
     }
     sz = (i > 1) ? (j + i - 1) : j;
     v = new_bytes2(sz);
-    if (v == NULL) return Obj(new_error_mem(epoint));
+    if (v == NULL) return new_error_mem(epoint);
     v->len = (ssize_t)sz;
     s = z85_decode(v->data, s + 1, j);
     if (i > 1) {
@@ -559,7 +559,7 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
 failed2:
     val_destroy(Obj(v));
 failed:
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *bytes_from_u8(unsigned int i) {
@@ -649,7 +649,7 @@ MUST_CHECK Obj *bytes_from_bits(const Bits *v1, linepos_t epoint) {
     if (sz > i) memset(d + i , 0, sz - i);
     return Obj(v);
 failed:
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
@@ -728,7 +728,7 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
 failed2:
     val_destroy(Obj(v));
 failed:
-    return Obj(new_error_mem(epoint));
+    return new_error_mem(epoint);
 }
 
 static bool uvalx(Obj *o1, uval_t *uv, unsigned int bits) {
@@ -882,7 +882,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
     } else {
         vv = new_bytes2(sz);
-        if (vv == NULL) return Obj(new_error_mem(op->epoint3));
+        if (vv == NULL) return new_error_mem(op->epoint3);
     }
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
@@ -932,7 +932,7 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
     } else {
         vv = new_bytes2(sz);
-        if (vv == NULL) return Obj(new_error_mem(op->epoint3));
+        if (vv == NULL) return new_error_mem(op->epoint3);
     }
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
@@ -983,7 +983,7 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
     } else {
         vv = new_bytes2(sz);
-        if (vv == NULL) return Obj(new_error_mem(op->epoint3));
+        if (vv == NULL) return new_error_mem(op->epoint3);
     }
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
@@ -1029,7 +1029,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
     v->len = (v1->len < 0) ? (ssize_t)~ln : (ssize_t)ln;
     return Obj(v);
 failed:
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static int icmp(oper_t op) {
@@ -1209,7 +1209,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
         if (v1->len < 0) v->len = ~v->len;
         return Obj(v);
     } while (false);
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
@@ -1218,13 +1218,13 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     size_t i;
     Bytes *v, *v1 = Bytes(op->v1);
     Obj *o2 = op->v2;
-    Error *err;
+    Obj *err;
     uint8_t inv = (v1->len < 0) ? (uint8_t)~0 : 0;
     Funcargs *args = Funcargs(o2);
     linepos_t epoint2;
 
     if (args->len < 1 || args->len > indx + 1) {
-        return Obj(new_error_argnum(args->len, 1, indx + 1, op->epoint2));
+        return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
     o2 = args->val[indx].val;
     epoint2 = &args->val[indx].epoint;
@@ -1250,7 +1250,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
             if (err != NULL) {
                 val_destroy(Obj(v));
                 iter_destroy(&iter);
-                return Obj(err);
+                return err;
             }
             p2[i] = v1->data[offs2] ^ inv;
         }
@@ -1263,7 +1263,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         struct sliceparam_s s;
 
         err = sliceparams(Colonlist(o2), len1, &s, epoint2);
-        if (err != NULL) return Obj(err);
+        if (err != NULL) return err;
 
         switch (s.length) {
         case 0:
@@ -1318,12 +1318,12 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         return Obj(v);
     }
     err = indexoffs(o2, len1, &offs2, epoint2);
-    if (err != NULL) return Obj(err);
+    if (err != NULL) return err;
     return bytes_from_u8(v1->data[offs2] ^ inv);
 failed2:
     val_destroy(Obj(v));
 failed:
-    return Obj(new_error_mem(op->epoint3));
+    return new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {

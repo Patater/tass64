@@ -55,7 +55,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_ADDRESS: return float_from_address(Address(v1), epoint);
     default: break;
     }
-    return Obj(new_error_conv(v1, FLOAT_OBJ, epoint));
+    return new_error_conv(v1, FLOAT_OBJ, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -66,7 +66,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types UNUSED(type), linepos_t UNUSED
     return truth_reference(Float(o1)->real != 0.0);
 }
 
-static MUST_CHECK Error *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     double integer, r = Float(o1)->real;
     int expo;
     unsigned int h, h1, h2;
@@ -210,7 +210,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_STRING:
         {
             Obj *o = repr(op->v1, op->epoint, SIZE_MAX);
-            return (o != NULL) ? o : Obj(new_error_mem(op->epoint3));
+            return (o != NULL) ? o : new_error_mem(op->epoint3);
         }
     case O_LNOT:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
@@ -325,12 +325,12 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
     case O_MUL: return float_from_double_inplace(v1 * v2, op);
     case O_DIV:
         if (v2 == 0.0) {
-            return Obj(new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3));
+            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
         }
         return float_from_double_inplace(v1 / v2, op);
     case O_MOD:
         if (v2 == 0.0) {
-            return Obj(new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3));
+            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
         }
         r = fmod(v1, v2);
         if (r != 0.0 && ((v2 < 0.0) != (r < 0))) r += v2;
@@ -343,7 +343,7 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
     case O_EXP:
         if (v1 == 0.0) {
             if (v2 < 0.0) {
-                return Obj(new_error_obj(ERROR_ZERO_NEGPOWER, op->v2, op->epoint3));
+                return new_error_obj(ERROR_ZERO_NEGPOWER, op->v2, op->epoint3);
             }
             return Obj(new_float((v2 == 0.0) ? 1.0 : 0.0));
         }

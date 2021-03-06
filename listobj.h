@@ -87,8 +87,8 @@ struct sliceparam_s {
     ival_t offset, end, step;
 };
 
-extern MUST_CHECK struct Error *indexoffs(Obj *, size_t, size_t *, linepos_t);
-extern MUST_CHECK struct Error *sliceparams(const Colonlist *, size_t, struct sliceparam_s *, linepos_t);
+extern MUST_CHECK Obj *indexoffs(Obj *, size_t, size_t *, linepos_t);
+extern MUST_CHECK Obj *sliceparams(const Colonlist *, size_t, struct sliceparam_s *, linepos_t);
 extern MUST_CHECK Tuple *new_tuple(size_t);
 extern Obj **list_create_elements(List *, size_t);
 extern MUST_CHECK bool list_extend(List *);

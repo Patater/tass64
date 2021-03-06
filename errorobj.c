@@ -183,29 +183,29 @@ MALLOC Error *new_error(Error_types num, linepos_t epoint) {
     return v;
 }
 
-MALLOC Error *new_error_mem(linepos_t epoint) {
-    return new_error(ERROR_OUT_OF_MEMORY, epoint);
+MALLOC Obj *new_error_mem(linepos_t epoint) {
+    return Obj(new_error(ERROR_OUT_OF_MEMORY, epoint));
 }
 
-MALLOC Error *new_error_obj(Error_types num, Obj *v1, linepos_t epoint) {
+MALLOC Obj *new_error_obj(Error_types num, Obj *v1, linepos_t epoint) {
     Error *v = new_error(num, epoint);
     v->u.obj = val_reference(v1);
-    return v;
+    return Obj(v);
 }
 
-MALLOC Error *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
+MALLOC Obj *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
     Error *v = new_error(ERROR__INVALID_CONV, epoint);
     v->u.conv.t = t;
     v->u.conv.val = val_reference(v1);
-    return v;
+    return Obj(v);
 }
 
-MALLOC Error *new_error_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {
+MALLOC Obj *new_error_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {
     Error *v = new_error(ERROR__WRONG_ARGNUM, epoint);
     v->u.argnum.num = num;
     v->u.argnum.min = min;
     v->u.argnum.max = max;
-    return v;
+    return Obj(v);
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {

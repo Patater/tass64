@@ -702,17 +702,17 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 {
                     uint16_t val1, val2;
                     uval_t uval;
-                    Error *err = v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint);
+                    Obj *err = Obj(v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint));
                     if (err != NULL) {
                         val_destroy(v1->val);
-                        v1->val = Obj(err);
+                        v1->val = err;
                         continue;
                     }
                     val1 = (uint16_t)uval;
-                    err = v2->val->obj->uval(v2->val, &uval, 8 * sizeof uval, &v2->epoint);
+                    err = Obj(v2->val->obj->uval(v2->val, &uval, 8 * sizeof uval, &v2->epoint));
                     if (err != NULL) {
                         val_destroy(v1->val);
-                        v1->val = Obj(err);
+                        v1->val = err;
                         continue;
                     }
                     val2 = (uint16_t)uval;
@@ -722,7 +722,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_DIV:
                         if (val2 == 0) {
                             err = new_error_obj(ERROR_DIVISION_BY_Z, v2->val, &o_out->epoint);
-                            val_destroy(v1->val); v1->val = Obj(err);
+                            val_destroy(v1->val); v1->val = err;
                             continue;
                         }
                         val1 /= val2; break;
