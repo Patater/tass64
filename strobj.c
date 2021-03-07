@@ -356,6 +356,7 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
     }
     *ln = i;
     j = (i > 1) ? (i - 2) : 0;
+    if (j == r) return val_reference(null_str);
     v = new_str2(j - r);
     if (v == NULL) return new_error_mem(epoint);
     v->chars = i2;
