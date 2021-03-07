@@ -39,7 +39,7 @@ typedef struct Lbl {
     struct Namespace *parent;
 } Lbl;
 
-#define Lbl(a) ((Lbl *)(1 ? (a) : (Obj *)a))
+#define Lbl(a) ((Lbl *)(1 ? (a) : (Obj *)(Lbl *)(a)))
 
 typedef struct Funcargs {
     Obj v;
@@ -47,14 +47,14 @@ typedef struct Funcargs {
     struct values_s *val;
 } Funcargs;
 
-#define Funcargs(a) ((Funcargs *)(1 ? (a) : (Obj *)a))
+#define Funcargs(a) ((Funcargs *)(1 ? (a) : (Obj *)(Funcargs *)(a)))
 
 typedef struct Default {
     Obj v;
     int *dummy;
 } Default;
 
-#define Default(a) ((Default *)(1 ? (a) : (Obj *)a))
+#define Default(a) ((Default *)(1 ? (a) : (Obj *)(Default *)(a)))
 
 static inline Obj *val_reference(Obj *v1) {
     v1->refcount++; return v1;

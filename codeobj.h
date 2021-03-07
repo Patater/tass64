@@ -52,7 +52,7 @@ typedef struct Code {
     uval_t conflicts;
 } Code;
 
-#define Code(a) ((Code *)(1 ? (a) : (Obj *)a))
+#define Code(a) ((Code *)(1 ? (a) : (Obj *)(Code *)(a)))
 
 extern void codeobj_init(void);
 extern void codeobj_names(void);

@@ -39,7 +39,7 @@ typedef struct Function {
     Function_types func;
 } Function;
 
-#define Function(a) ((Function *)(1 ? (a) : (Obj *)a))
+#define Function(a) ((Function *)(1 ? (a) : (Obj *)(Function *)(a)))
 
 struct oper_s;
 

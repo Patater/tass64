@@ -43,10 +43,10 @@ typedef struct List Tuple;
 typedef struct List Addrlist;
 typedef struct List Colonlist;
 
-#define List(a) ((List *)(1 ? (a) : (Obj *)a))
-#define Tuple(a) ((Tuple *)(1 ? (a) : (Obj *)a))
-#define Addrlist(a) ((Addrlist *)(1 ? (a) : (Obj *)a))
-#define Colonlist(a) ((Colonlist *)(1 ? (a) : (Obj *)a))
+#define List(a) ((List *)(1 ? (a) : (Obj *)(List *)(a)))
+#define Tuple(a) ((Tuple *)(1 ? (a) : (Obj *)(Tuple *)(a)))
+#define Addrlist(a) ((Addrlist *)(1 ? (a) : (Obj *)(Addrlist *)(a)))
+#define Colonlist(a) ((Colonlist *)(1 ? (a) : (Obj *)(Colonlist *)(a)))
 
 extern Obj *const null_tuple;
 extern Obj *const null_list;

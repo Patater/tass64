@@ -29,7 +29,7 @@ typedef struct Gap {
     struct Str *repr;
 } Gap;
 
-#define Gap(a) ((Gap *)(1 ? (a) : (Obj *)a))
+#define Gap(a) ((Gap *)(1 ? (a) : (Obj *)(Gap *)(a)))
 
 extern Obj *const gap_value;
 

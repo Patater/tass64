@@ -32,7 +32,7 @@ typedef struct Int {
     digit_t *data;
 } Int;
 
-#define Int(a) ((Int *)(1 ? (a) : (Obj *)a))
+#define Int(a) ((Int *)(1 ? (a) : (Obj *)(Int *)(a)))
 
 extern Obj *const int_value[2];
 extern Obj *const minus1_value;
