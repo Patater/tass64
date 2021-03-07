@@ -29,7 +29,7 @@ typedef struct Fold {
     struct Str *repr;
 } Fold;
 
-#define Fold(a) ((Fold *)(1 ? (a) : (Obj *)a))
+#define Fold(a) ((Fold *)(1 ? (a) : (Obj *)(Fold *)(a)))
 
 extern Obj *const fold_value;
 

@@ -43,7 +43,7 @@ typedef struct Label {
     uint8_t fwpass;
 } Label;
 
-#define Label(a) ((Label *)(1 ? (a) : (Obj *)a))
+#define Label(a) ((Label *)(1 ? (a) : (Obj *)(Label *)(a)))
 
 extern void labelobj_init(void);
 

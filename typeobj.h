@@ -70,7 +70,7 @@ typedef struct Type {
     void (*getriter)(struct iter_s *);
 } Type;
 
-#define Type(a) ((Type *)(1 ? (a) : (Obj *)a))
+#define Type(a) ((Type *)(1 ? (a) : (Obj *)(Type *)(a)))
 
 extern void typeobj_init(void);
 extern void typeobj_names(void);

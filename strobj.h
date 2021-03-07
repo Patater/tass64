@@ -37,7 +37,7 @@ typedef struct Str {
     } u;
 } Str;
 
-#define Str(a) ((Str *)(1 ? (a) : (Obj *)a))
+#define Str(a) ((Str *)(1 ? (a) : (Obj *)(Str *)(a)))
 
 extern Obj *const null_str;
 

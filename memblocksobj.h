@@ -43,7 +43,7 @@ typedef struct Memblocks {
     struct memblock_s *data;
 } Memblocks;
 
-#define Memblocks(a) ((Memblocks *)(1 ? (a) : (Obj *)a))
+#define Memblocks(a) ((Memblocks *)(1 ? (a) : (Obj *)(Memblocks *)(a)))
 
 extern void memblocksobj_init(void);
 
