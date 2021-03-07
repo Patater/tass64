@@ -227,13 +227,8 @@ static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t 
     Str *v1 = Str(o1);
     Obj *tmp = bytes_from_str(v1, epoint, BYTES_MODE_TEXT);
     Error *ret = tmp->obj->ival(tmp, iv, bits, epoint);
+    if (ret != NULL) error_obj_update(ret, tmp, o1);
     val_destroy(tmp);
-    if (ret != NULL && ret->num == ERROR_____CANT_IVAL) {
-        val_destroy(Obj(ret));
-        ret = new_error(ERROR_____CANT_IVAL, epoint);
-        ret->u.intconv.bits = bits;
-        ret->u.intconv.val = val_reference(o1);
-    }
     return ret;
 }
 
@@ -241,10 +236,8 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
     Str *v1 = Str(o1);
     Obj *tmp = bytes_from_str(v1, epoint, BYTES_MODE_TEXT);
     Error *ret = tmp->obj->uval(tmp, uv, bits, epoint);
+    if (ret != NULL) error_obj_update(ret, tmp, o1);
     val_destroy(tmp);
-    if (ret != NULL && ret->num == ERROR_____CANT_UVAL) {
-        val_replace(&ret->u.intconv.val, o1);
-    }
     return ret;
 }
 
@@ -444,6 +437,10 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             op->v2 = tmp2;
             op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
+            if (result->obj == ERROR_OBJ) {
+                error_obj_update(Error(result), tmp, Obj(v1));
+                error_obj_update(Error(result), tmp2, Obj(v2));
+            }
             val_destroy(tmp2);
             val_destroy(tmp);
             return result;
@@ -459,6 +456,10 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             op->v2 = tmp2;
             op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
+            if (result->obj == ERROR_OBJ) {
+                error_obj_update(Error(result), tmp, Obj(v1));
+                error_obj_update(Error(result), tmp2, Obj(v2));
+            }
             val_destroy(tmp2);
             val_destroy(tmp);
             return result;
@@ -468,11 +469,15 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
         {
             Obj *tmp, *tmp2, *result;
             tmp = bits_from_str(v1, op->epoint);
-            tmp2 = bits_from_str(v2, op->epoint2);
+            tmp2 = int_from_str(v2, op->epoint2);
             op->v1 = tmp;
             op->v2 = tmp2;
             op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
+            if (result->obj == ERROR_OBJ) {
+                error_obj_update(Error(result), tmp, Obj(v1));
+                error_obj_update(Error(result), tmp2, Obj(v2));
+            }
             val_destroy(tmp2);
             val_destroy(tmp);
             return result;
@@ -912,6 +917,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             op->v1 = tmp;
             op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
+            if (result->obj == ERROR_OBJ) error_obj_update(Error(result), tmp, Obj(v1));
             val_destroy(tmp);
             return result;
         }
@@ -922,6 +928,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             op->v1 = tmp;
             op->inplace = (tmp->refcount == 1) ? tmp : NULL;
             result = tmp->obj->calc2(op);
+            if (result->obj == ERROR_OBJ) error_obj_update(Error(result), tmp, Obj(v1));
             val_destroy(tmp);
             return result;
         }
@@ -963,6 +970,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             op->v2 = tmp;
             op->inplace = NULL;
             result = t1->calc2(op);
+            if (result->obj == ERROR_OBJ) error_obj_update(Error(result), tmp, Obj(v2));
             val_destroy(tmp);
             return result;
         }
@@ -973,6 +981,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             op->v2 = tmp;
             op->inplace = NULL;
             result = t1->calc2(op);
+            if (result->obj == ERROR_OBJ) error_obj_update(Error(result), tmp, Obj(v2));
             val_destroy(tmp);
             return result;
         }

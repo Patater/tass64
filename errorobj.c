@@ -236,6 +236,21 @@ void errorobj_init(void) {
 
 void error_obj_update(Error *err, const Obj *v1, Obj *v2) {
     switch (err->num) {
+    case ERROR__INVALID_OPER:
+        if (err->u.invoper.v1 == v1) {
+            val_replace(&err->u.invoper.v1, v2);
+        }
+        if (err->u.invoper.v2 == v1) {
+            val_replace(&err->u.invoper.v2, v2);
+        }
+        return;
+    case ERROR_____CANT_UVAL:
+    case ERROR_____CANT_IVAL:
+    case ERROR______NOT_UVAL:
+        if (err->u.intconv.val == v1) {
+            val_replace(&err->u.intconv.val, v2);
+        }
+        return;
     case ERROR__NOT_KEYVALUE:
     case ERROR__NOT_HASHABLE:
     case ERROR_____CANT_SIGN:

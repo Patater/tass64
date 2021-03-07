@@ -1431,6 +1431,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         op->v1 = tmp;
         op->inplace = (tmp->refcount == 1) ? tmp : NULL;
         result = tmp->obj->calc2(op);
+        if (result->obj == ERROR_OBJ) error_obj_update(Error(result), tmp, Obj(v1));
         val_destroy(tmp);
         return result;
     default:
@@ -1464,6 +1465,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         op->v2 = tmp;
         op->inplace = NULL;
         result = o1->obj->calc2(op);
+        if (result->obj == ERROR_OBJ) error_obj_update(Error(result), tmp, Obj(v2));
         val_destroy(tmp);
         return result;
     default: break;
