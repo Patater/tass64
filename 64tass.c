@@ -1058,6 +1058,16 @@ static bool section_start(linepos_t epoint) {
     return false;
 }
 
+static void address_update(struct section_address_s *section_address, Obj *val) {
+    Obj *tmp = get_star_value(0, val);
+    if (tmp->obj->same(tmp, section_address->l_address_val)) {
+        val_destroy(tmp);
+        return;
+    }
+    val_destroy(section_address->l_address_val);
+    section_address->l_address_val = tmp;
+}
+
 static bool virtual_start(linepos_t epoint) {
     struct section_address_s *section_address;
     Obj *tmp = NULL;
@@ -1132,8 +1142,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
         }
         if (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) {
             current_address->l_address = uval & all_mem;
-            val_destroy(current_address->l_address_val);
-            current_address->l_address_val = get_star_value(0, val);
+            address_update(current_address, val);
             val_destroy(val);
             addr = uval & all_mem2;
             if (current_address->address != addr) {
@@ -1155,8 +1164,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
             memjmp(current_address->mem, current_address->address);
         }
         current_address->l_address = uval & all_mem;
-        val_destroy(current_address->l_address_val);
-        current_address->l_address_val = get_star_value(0, val);
+        address_update(current_address, val);
         val_destroy(val);
         return;
     } while (false);
@@ -3619,9 +3627,7 @@ MUST_CHECK Obj *compile(void)
                         current_address->l_address = uval;
                     }
                     current_address->bankwarn = false;
-                    val_destroy(current_address->l_address_val);
-                    tmp = vs->val;
-                    current_address->l_address_val = get_star_value(0, tmp);
+                    address_update(current_address, tmp);
                 } else new_waitfor(W_HERE, &epoint);
                 break;
             case CMD_VIRTUAL: if ((waitfor->skip & 1) != 0)
