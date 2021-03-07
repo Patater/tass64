@@ -749,7 +749,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
         return repeat(op);
     }
-    if (op->op == &o_IN || o2->obj == FOLD_OBJ) {
+    if (op->op == &o_IN || o2 == fold_value) {
         return o2->obj->rcalc2(op);
     }
     if (o2->obj == TUPLE_OBJ || o2->obj == LIST_OBJ) {
@@ -815,7 +815,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
         return calc2_list(op);
     }
-    if (o1 == none_value || o1->obj == ERROR_OBJ || o1->obj == FOLD_OBJ) {
+    if (o1 == none_value || o1->obj == ERROR_OBJ || o1 == fold_value) {
         return o1->obj->calc2(op);
     }
     if (v2->len != 0) {
