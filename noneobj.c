@@ -27,7 +27,7 @@ static Type obj;
 
 Type *const NONE_OBJ = &obj;
 
-static None noneval = { { &obj, 1}, NULL };
+static None noneval = { { &obj, 1} };
 
 Obj *const none_value = &noneval.v;
 

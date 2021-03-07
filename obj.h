@@ -51,7 +51,6 @@ typedef struct Funcargs {
 
 typedef struct Default {
     Obj v;
-    int *dummy;
 } Default;
 
 #define Default(a) ((Default *)(1 ? (a) : (Obj *)(Default *)(a)))

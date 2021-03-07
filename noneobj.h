@@ -24,7 +24,6 @@ extern struct Type *const NONE_OBJ;
 
 typedef struct None {
     Obj v;
-    int *dummy;
 } None;
 
 #define None(a) ((None *)(1 ? (a) : (Obj *)(None *)(a)))

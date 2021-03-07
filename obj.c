@@ -56,7 +56,7 @@ Type *const LBL_OBJ = &lbl_obj;
 Type *const DEFAULT_OBJ = &default_obj;
 Type *const FUNCARGS_OBJ = &funcargs_obj;
 
-static Default defaultval = { { &default_obj, 1}, NULL };
+static Default defaultval = { { &default_obj, 1} };
 
 Obj *const default_value = &defaultval.v;
 
