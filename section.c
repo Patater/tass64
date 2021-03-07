@@ -100,7 +100,7 @@ struct section_s *new_section(const str_t *name) {
         lastsc->parent = current_section;
         lastsc->provides = ~(uval_t)0;lastsc->requires = lastsc->conflicts = 0;
         lastsc->address.end = lastsc->address.address = lastsc->address.l_address = lastsc->address.l_start = lastsc->address.l_union = lastsc->size = 0;
-        lastsc->address.l_address_val = Obj(ref_int(int_value[0]));
+        lastsc->address.l_address_val = val_reference(int_value[0]);
         lastsc->defpass = 0;
         lastsc->usepass = 0;
         lastsc->address.unionmode = false;
@@ -147,7 +147,7 @@ void reset_section(struct section_s *section) {
     section->provides = ~(uval_t)0; section->requires = section->conflicts = 0;
     section->address.end = section->address.start = section->restart = section->l_restart = section->address.address = section->address.l_address = section->address.l_start = section->address.l_union = 0;
     val_destroy(section->address.l_address_val);
-    section->address.l_address_val = Obj(ref_int(int_value[0]));
+    section->address.l_address_val = val_reference(int_value[0]);
     section->logicalrecursion = 0;
     section->address.moved = false;
     section->address.wrapwarn = false;
@@ -164,7 +164,7 @@ void init_section(void) {
     root_section.next = NULL;
     root_section.optimizer = NULL;
     root_section.address.mem = new_memblocks(0, 0);
-    root_section.address.l_address_val = Obj(ref_int(int_value[0]));
+    root_section.address.l_address_val = val_reference(int_value[0]);
     avltree_init(&root_section.members);
     avltree_init(&root_section.longjump);
     prev_section = &root_section;

@@ -48,29 +48,13 @@ typedef struct List Colonlist;
 #define Addrlist(a) ((Addrlist *)(1 ? (a) : (Obj *)a))
 #define Colonlist(a) ((Colonlist *)(1 ? (a) : (Obj *)a))
 
-extern Tuple *null_tuple;
-extern List *null_list;
-extern Addrlist *null_addrlist;
+extern Obj *const null_tuple;
+extern Obj *const null_list;
+extern Obj *const null_addrlist;
 
 extern void listobj_init(void);
 extern void listobj_names(void);
 extern void listobj_destroy(void);
-
-static inline List *ref_list(List *v1) {
-    v1->v.refcount++; return v1;
-}
-
-static inline Tuple *ref_tuple(Tuple *v1) {
-    v1->v.refcount++; return v1;
-}
-
-static inline Addrlist *ref_addrlist(Addrlist *v1) {
-    v1->v.refcount++; return v1;
-}
-
-static inline Colonlist *ref_colonlist(Colonlist *v1) {
-    v1->v.refcount++; return v1;
-}
 
 static inline MUST_CHECK List *new_list(void) {
     return List(val_alloc(LIST_OBJ));

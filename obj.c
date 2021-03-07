@@ -93,9 +93,7 @@ MUST_CHECK Obj *obj_oper_error(oper_t op) {
 MUST_CHECK Obj *obj_oper_compare(oper_t op, int val) {
     bool result;
     switch (op->op->op) {
-    case O_CMP:
-        if (val < 0) return Obj(ref_int(minus1_value));
-        return Obj(ref_int(int_value[(val > 0) ? 1 : 0]));
+    case O_CMP: return val_reference(val < 0 ? minus1_value : int_value[(val > 0) ? 1 : 0]);
     case O_EQ: result = (val == 0); break;
     case O_NE: result = (val != 0); break;
     case O_MIN:
@@ -358,6 +356,6 @@ void objects_destroy(void) {
     foldobj_destroy();
 
 #ifdef DEBUG
-    if (default_value->v.refcount != 1) fprintf(stderr, "default %" PRIuSIZE "\n", default_value->v.refcount - 1);
+    if (default_value->refcount != 1) fprintf(stderr, "default %" PRIuSIZE "\n", default_value->refcount - 1);
 #endif
 }

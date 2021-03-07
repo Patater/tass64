@@ -39,15 +39,11 @@ typedef struct Str {
 
 #define Str(a) ((Str *)(1 ? (a) : (Obj *)a))
 
-extern Str *null_str;
+extern Obj *const null_str;
 
 extern void strobj_init(void);
 extern void strobj_names(void);
 extern void strobj_destroy(void);
-
-static inline Str *ref_str(Str *v1) {
-    v1->v.refcount++; return v1;
-}
 
 struct str_t;
 

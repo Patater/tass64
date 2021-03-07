@@ -42,9 +42,18 @@ Type *const LIST_OBJ = &list_obj;
 Type *const TUPLE_OBJ = &tuple_obj;
 Type *const ADDRLIST_OBJ = &addrlist_obj;
 Type *const COLONLIST_OBJ = &colonlist_obj;
-Tuple *null_tuple;
-List *null_list;
-Addrlist *null_addrlist;
+
+static Tuple null_tupleval = { { &tuple_obj, 1 }, 0, null_tupleval.u.val, {} };
+static List null_listval = { { &list_obj, 1 }, 0, null_listval.u.val, {} };
+static Addrlist null_addrlistval = { { &addrlist_obj, 1 }, 0, null_addrlistval.u.val, {} };
+
+Obj *const null_tuple = &null_tupleval.v;
+Obj *const null_list = &null_listval.v;
+Obj *const null_addrlist = &null_addrlistval.v;
+
+static inline List *ref_list(List *v1) {
+    v1->v.refcount++; return v1;
+}
 
 static FAST_CALL NO_INLINE void list_destroy(List *v1) {
     free(v1->data);
@@ -229,7 +238,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
         for (i = 0;i < llen; i++) {
             Obj *o2 = v1->data[i];
             if (o2 == default_value && o1->obj == COLONLIST_OBJ) {
-                val = Obj(ref_str(null_str));
+                val = val_reference(null_str);
             } else {
                 val = o2->obj->repr(o2, epoint, maxsize - chars);
                 if (val == NULL || val->obj != STR_OBJ) goto error;
@@ -275,7 +284,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
 
 static MUST_CHECK Obj *len(oper_t op) {
     List *v1 = List(op->v2);
-    return Obj(int_from_size(v1->len));
+    return int_from_size(v1->len);
 }
 
 static FAST_CALL MUST_CHECK Obj *iter_forward(struct iter_s *v1) {
@@ -540,7 +549,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     err = op->v2->obj->uval(op->v2, &rep, 8 * sizeof rep, op->epoint2);
     if (err != NULL) return Obj(err);
 
-    if (v1->len == 0 || rep == 0) return val_reference((o1->obj == TUPLE_OBJ) ? Obj(null_tuple) : Obj(null_list));
+    if (v1->len == 0 || rep == 0) return val_reference((o1->obj == TUPLE_OBJ) ? null_tuple : null_list);
     do {
         size_t i = 0, j, ln;
         if (rep == 1) {
@@ -667,7 +676,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return val_reference((v1->v.obj == TUPLE_OBJ) ? Obj(null_tuple) : Obj(null_list));
+            return val_reference((v1->v.obj == TUPLE_OBJ) ? null_tuple : null_list);
         }
         v = List(val_alloc(v1->v.obj));
         vals = lnew(v, iter.len);
@@ -699,7 +708,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         if (err != NULL) return err;
 
         if (s.length == 0) {
-            return val_reference((v1->v.obj == TUPLE_OBJ) ? Obj(null_tuple) : Obj(null_list));
+            return val_reference((v1->v.obj == TUPLE_OBJ) ? null_tuple : null_list);
         }
 
         if (s.step == 1 && s.length == v1->len && !more) {
@@ -873,14 +882,6 @@ void listobj_init(void) {
     colonlist_obj.garbage = garbage;
     colonlist_obj.same = same;
     colonlist_obj.repr = repr_listtuple;
-
-    null_tuple = new_tuple(0);
-    null_list = new_list();
-    null_list->len = 0;
-    null_list->data = null_list->u.val;
-    null_addrlist = new_addrlist();
-    null_addrlist->len = 0;
-    null_addrlist->data = null_addrlist->u.val;
 }
 
 void listobj_names(void) {
@@ -890,12 +891,8 @@ void listobj_names(void) {
 
 void listobj_destroy(void) {
 #ifdef DEBUG
-    if (null_tuple->v.refcount != 1) fprintf(stderr, "tuple %" PRIuSIZE "\n", null_tuple->v.refcount - 1);
-    if (null_list->v.refcount != 1) fprintf(stderr, "list %" PRIuSIZE "\n", null_list->v.refcount - 1);
-    if (null_addrlist->v.refcount != 1) fprintf(stderr, "addrlist %" PRIuSIZE "\n", null_addrlist->v.refcount - 1);
+    if (null_tuple->refcount != 1) fprintf(stderr, "tuple %" PRIuSIZE "\n", null_tuple->refcount - 1);
+    if (null_list->refcount != 1) fprintf(stderr, "list %" PRIuSIZE "\n", null_list->refcount - 1);
+    if (null_addrlist->refcount != 1) fprintf(stderr, "addrlist %" PRIuSIZE "\n", null_addrlist->refcount - 1);
 #endif
-
-    val_destroy(Obj(null_tuple));
-    val_destroy(Obj(null_list));
-    val_destroy(Obj(null_addrlist));
 }

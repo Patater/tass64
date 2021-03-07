@@ -101,26 +101,26 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int UNUSED(bits), li
     return NULL;
 }
 
-MUST_CHECK Float *float_from_bool(const Bool *v1) {
+MUST_CHECK Obj *float_from_bool(const Bool *v1) {
     return new_float(Obj(v1) == true_value ? 1.0 : 0.0);
 }
 
 MUST_CHECK Obj *int_from_bool(const Bool *v1) {
-    return val_reference(Obj(int_value[Obj(v1) == true_value ? 1 : 0]));
+    return val_reference(int_value[Obj(v1) == true_value ? 1 : 0]);
 }
 
 static inline MUST_CHECK Obj *int_from_bool2(bool i) {
-    return val_reference(Obj(int_value[i ? 1 : 0]));
+    return val_reference(int_value[i ? 1 : 0]);
 }
 
 static MUST_CHECK Obj *sign(Obj *o1, linepos_t epoint) {
     if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_SIGN, o1, epoint);
-    return Obj(ref_int(int_value[o1 == true_value ? 1 : 0]));
+    return val_reference(int_value[o1 == true_value ? 1 : 0]);
 }
 
 static MUST_CHECK Obj *function(oper_t op) {
     if (diagnostics.strict_bool) err_msg_bool((Function(op->v1)->func == F_ABS) ? ERROR______CANT_ABS : ERROR______CANT_INT, op->v2, op->epoint2);
-    return Obj(ref_int(int_value[op->v2 == true_value ? 1 : 0]));
+    return val_reference(int_value[op->v2 == true_value ? 1 : 0]);
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {
@@ -135,9 +135,9 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_WORD:
     case O_BSWORD:
         return bytes_calc1(op->op->op, v1 ? 1U : 0U);
-    case O_INV: return Obj(ibits_from_bool(v1));
-    case O_NEG: return v1 ? Obj(ibits_from_bool(false)) : Obj(ref_bits(bits_value[0]));
-    case O_POS: return Obj(ref_bits(bits_value[v1 ? 1 : 0]));
+    case O_INV: return ibits_from_bool(v1);
+    case O_NEG: return v1 ? ibits_from_bool(false) : val_reference(bits_value[0]);
+    case O_POS: return val_reference(bits_value[v1 ? 1 : 0]);
     case O_STRING:
         v = new_str2(1);
         if (v == NULL) return NULL;
@@ -156,7 +156,7 @@ static MUST_CHECK Obj *calc2_bool(oper_t op) {
     switch (op->op->op) {
     case O_SUB:
     case O_CMP:
-        if (!v1 && v2) return Obj(ref_int(minus1_value));
+        if (!v1 && v2) return val_reference(minus1_value);
         return int_from_bool2(v1 != v2);
     case O_EQ: return truth_reference(v1 == v2);
     case O_NE: return truth_reference(v1 != v2);
@@ -166,7 +166,7 @@ static MUST_CHECK Obj *calc2_bool(oper_t op) {
     case O_MAX:
     case O_GT: return truth_reference(v1 && !v2);
     case O_GE: return truth_reference(v1 || !v2);
-    case O_ADD: return Obj(int_from_uval((v1 ? 1U : 0U) + (v2 ? 1U : 0U)));
+    case O_ADD: return int_from_uval((v1 ? 1U : 0U) + (v2 ? 1U : 0U));
     case O_MUL: return int_from_bool2(v1 && v2);
     case O_DIV:
         if (!v2) {
@@ -182,9 +182,9 @@ static MUST_CHECK Obj *calc2_bool(oper_t op) {
     case O_AND: return truth_reference(v1 && v2);
     case O_OR: return truth_reference(v1 || v2);
     case O_XOR: return truth_reference(v1 != v2);
-    case O_LSHIFT: return v2 ? Obj(bits_from_bools(v1, false)) : Obj(ref_bits(bits_value[v1 ? 1 : 0]));
-    case O_RSHIFT: return v2 ? Obj(ref_bits(null_bits)) : Obj(ref_bits(bits_value[v1 ? 1 : 0]));
-    case O_CONCAT: return Obj(bits_from_bools(v1, v2));
+    case O_LSHIFT: return v2 ? bits_from_bools(v1, false) : val_reference(bits_value[v1 ? 1 : 0]);
+    case O_RSHIFT: return val_reference(v2 ? null_bits : bits_value[v1 ? 1 : 0]);
+    case O_CONCAT: return bits_from_bools(v1, v2);
     default: break;
     }
     return obj_oper_error(op);
@@ -254,8 +254,8 @@ void boolobj_names(void) {
 
 void boolobj_destroy(void) {
 #ifdef DEBUG
-    if (false_value->v.refcount != 1) fprintf(stderr, "false %" PRIuSIZE "\n", false_value->v.refcount - 1);
-    if (true_value->v.refcount != 1) fprintf(stderr, "true %" PRIuSIZE "\n", true_value->v.refcount - 1);
+    if (false_value->refcount != 1) fprintf(stderr, "false %" PRIuSIZE "\n", false_value->refcount - 1);
+    if (true_value->refcount != 1) fprintf(stderr, "true %" PRIuSIZE "\n", true_value->refcount - 1);
     if (falseval.repr != NULL && falseval.repr->v.refcount != 1) fprintf(stderr, "boolrepr[0] %" PRIuSIZE "\n", falseval.repr->v.refcount - 1);
     if (trueval.repr != NULL && trueval.repr->v.refcount != 1) fprintf(stderr, "boolrepr[1] %" PRIuSIZE "\n", trueval.repr->v.refcount - 1);
 #endif

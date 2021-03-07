@@ -2009,7 +2009,7 @@ MUST_CHECK Obj *compile(void)
                         val = label->value;
                         label->usepass = 0;
                     }
-                    if (here() == 0 || here() == ';') val2 = Obj(ref_addrlist(null_addrlist));
+                    if (here() == 0 || here() == ';') val2 = val_reference(null_addrlist);
                     else {
                         struct linepos_s epoints[3];
                         bool oldreferenceit = referenceit;
@@ -2098,7 +2098,7 @@ MUST_CHECK Obj *compile(void)
                                 err_msg(ERROR______EXPECTED, "an expression is");
                                 goto breakerr;
                             }
-                            val = Obj(ref_addrlist(null_addrlist));
+                            val = val_reference(null_addrlist);
                         } else {
                             bool oldreferenceit = referenceit;
                             if (label != NULL && !label->ref) {
@@ -2163,7 +2163,7 @@ MUST_CHECK Obj *compile(void)
                             bool labelexists;
                         itsvar:
                             label = find_label3(&labelname, mycontext, strength);
-                            if (here() == 0 || here() == ';') val = Obj(ref_addrlist(null_addrlist));
+                            if (here() == 0 || here() == ';') val = val_reference(null_addrlist);
                             else {
                                 struct linepos_s epoints[3];
                                 bool oldreferenceit = referenceit;
@@ -2394,7 +2394,7 @@ MUST_CHECK Obj *compile(void)
                                 mfunc->retval = (label->value->obj == obj) && Mfunc(label->value)->retval;
                                 if (label->defpass == pass) {
                                     mfunc->names = new_namespace(current_file_list, &epoint);
-                                    mfunc->inamespaces = ref_tuple(null_tuple);
+                                    mfunc->inamespaces = Tuple(val_reference(null_tuple));
                                     if (prm == CMD_FUNCTION) waitfor->u.cmd_function.val = Obj(mfunc); else val_destroy(Obj(mfunc));
                                     err_msg_double_defined(label, &labelname, &epoint);
                                     failed = true;
@@ -2415,11 +2415,11 @@ MUST_CHECK Obj *compile(void)
                                         mfunc->names->backr = mfunc->names->forwr = 0;
                                         mfunc->names->file_list = current_file_list;
                                         mfunc->names->epoint = epoint;
-                                        mfunc->inamespaces = ref_tuple(prev->inamespaces);
+                                        mfunc->inamespaces = Tuple(val_reference(Obj(prev->inamespaces)));
                                         mfunc->argc = prev->argc;
                                     } else {
                                         mfunc->names = new_namespace(current_file_list, &epoint);
-                                        mfunc->inamespaces = ref_tuple(null_tuple);
+                                        mfunc->inamespaces = Tuple(val_reference(null_tuple));
                                     }
                                     label->epoint = epoint;
                                     label->ref = false;
@@ -2438,7 +2438,7 @@ MUST_CHECK Obj *compile(void)
                                 label->constant = true;
                                 label->owner = true;
                                 label->value = Obj(mfunc);
-                                mfunc->inamespaces = ref_tuple(null_tuple);
+                                mfunc->inamespaces = Tuple(val_reference(null_tuple));
                                 label->epoint = epoint;
                                 label->ref = false;
                                 get_namespaces(mfunc);
@@ -2476,7 +2476,7 @@ MUST_CHECK Obj *compile(void)
                             section_address.l_start = 0;
                             section_address.l_union = 0;
                             section_address.l_address = 0;
-                            section_address.l_address_val = Obj(ref_int(int_value[0]));
+                            section_address.l_address_val = val_reference(int_value[0]);
                             section_address.mem = new_memblocks(0, 0);
                             section_address.mem->lastaddr = 0;
                             section_address.mem->enumeration = true;
@@ -3935,7 +3935,7 @@ MUST_CHECK Obj *compile(void)
                             if (val == none_value) err_msg_still_none(NULL, &vs->epoint);
                             else if (val->obj == ERROR_OBJ) { err_msg_output_and_destroy(Error(val)); break; }
                             val_destroy(val);
-                            val = Obj(ref_str(null_str));
+                            val = val_reference(null_str);
                         } else {
                             Str *str = Str(val);
                             len2 += str->len;
@@ -4659,7 +4659,7 @@ MUST_CHECK Obj *compile(void)
                     ignore();
                     oldlpoint = lpoint;
                     w = 3; /* 0=byte 1=word 2=long 3=negative/too big */
-                    if (here() == 0 || here() == ';') {val = Obj(ref_addrlist(null_addrlist));}
+                    if (here() == 0 || here() == ';') {val = val_reference(null_addrlist);}
                     else {
                         if (arguments.tasmcomp) {
                             if (here() == '!') {w = 1; lpoint.pos++;}
@@ -4748,7 +4748,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
     int i;
     size_t ln = root_section.address.mem->mem.p, ln2 = root_section.address.mem->p;
 
-    fixeddig = true;constcreated = false; fwcount = 0; efwcount = 0; error_reset();random_reseed(Obj(int_value[0]), NULL);
+    fixeddig = true;constcreated = false; fwcount = 0; efwcount = 0; error_reset();random_reseed(int_value[0], NULL);
     val_destroy(Obj(root_section.address.mem));
     root_section.address.mem = new_memblocks(0, 0);
     if (diagnostics.optimize) cpu_opt_invalidate();

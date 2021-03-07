@@ -169,7 +169,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
         return v;
     }
     val_destroy(v);
-    return Obj(new_float(real));
+    return new_float(real);
 }
 
 static MUST_CHECK Obj *get_exponent2(Obj *v, linepos_t epoint) {
@@ -324,14 +324,14 @@ static uval_t bytescalc(address_t addr, Bytes *val) {
 
 MUST_CHECK Obj *get_star_value(address_t addr, Obj *val) {
     switch (val->obj->type) {
-    case T_BITS: return Obj(bits_from_uval(addr, bitscalc(addr, Bits(val))));
+    case T_BITS: return bits_from_uval(addr, bitscalc(addr, Bits(val)));
     case T_CODE: return get_star_value(addr, Code(val)->typ);
     default:
     case T_BOOL:
-    case T_INT: return Obj(int_from_uval(addr));
-    case T_FLOAT: return Obj(new_float(addr + (Float(val)->real - trunc(Float(val)->real))));
-    case T_STR: return Obj(bytes_from_uval(addr, all_mem_bits >> 3));
-    case T_BYTES: return Obj(bytes_from_uval(addr, bytescalc(addr, Bytes(val))));
+    case T_INT: return int_from_uval(addr);
+    case T_FLOAT: return new_float(addr + (Float(val)->real - trunc(Float(val)->real)));
+    case T_STR: return bytes_from_uval(addr, all_mem_bits >> 3);
+    case T_BYTES: return bytes_from_uval(addr, bytescalc(addr, Bytes(val)));
     case T_ADDRESS: return Obj(new_address(get_star_value(addr, Address(val)->val), Address(val)->type));
     }
 }
@@ -669,7 +669,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     default: break;
                     }
                     val_destroy(v1->val);
-                    v1->val = Obj(int_from_uval(val1));
+                    v1->val = int_from_uval(val1);
                     break;
                 }
             case T_ERROR:
@@ -734,7 +734,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     default: break;
                     }
                     val_destroy(v1->val);
-                    v1->val = Obj(int_from_uval(val1));
+                    v1->val = int_from_uval(val1);
                     continue;
                 }
             default: err_msg_invalid_oper(op2, v1->val, v2->val, &o_out->epoint); break;
@@ -768,7 +768,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
         iter.data = o1; o1->obj->getiter(&iter);
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return val_reference(o1->obj == TUPLE_OBJ ? Obj(null_tuple) : Obj(null_list));
+            return val_reference(o1->obj == TUPLE_OBJ ? null_tuple : null_list);
         }
 
         v = List(val_alloc(o1->obj == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ));
@@ -917,7 +917,7 @@ static bool get_val2(struct eval_context_s *ev) {
                         v2->val = NULL;
                         vsp--;
                     }
-                } else list = List(val_reference((op == O_BRACKET) ? Obj(null_list) : Obj(null_tuple)));
+                } else list = List(val_reference((op == O_BRACKET) ? null_list : null_tuple));
                 v1->val = Obj(list);
                 continue;
             }
@@ -1858,7 +1858,7 @@ Obj *get_vals_tuple(void) {
 
     switch (len) {
     case 0:
-        return Obj(ref_tuple(null_tuple));
+        return val_reference(null_tuple);
     case 1:
         return pull_val(NULL);
     default:
@@ -1878,7 +1878,7 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
 
     switch (len) {
     case 0:
-        return Obj(ref_addrlist(null_addrlist));
+        return val_reference(null_addrlist);
     case 1:
         val = pull_val(&epoints[0]);
         if (val->obj == ADDRLIST_OBJ) {

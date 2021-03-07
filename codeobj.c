@@ -316,7 +316,7 @@ static MUST_CHECK Obj *len(oper_t op) {
         if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
     ln = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
-    return Obj(int_from_size((ln != 0) ? (s / ln) : s));
+    return int_from_size((ln != 0) ? (s / ln) : s);
 }
 
 static MUST_CHECK Obj *size(oper_t op) {
@@ -335,7 +335,7 @@ static MUST_CHECK Obj *size(oper_t op) {
         if (s < v1->size) err_msg_out_of_memory(); /* overflow */
         if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
-    return Obj(int_from_size(s));
+    return int_from_size(s);
 }
 
 MUST_CHECK Obj *bits_from_code(const Code *v1, linepos_t epoint) {
@@ -373,7 +373,7 @@ static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
     if (v1->dtype < 0 && (r & 0x80) != 0) {
         for (; i2 < sizeof val; i2++) val |= (uval_t)0xff << (i2 * 8);
     }
-    return (v1->dtype < 0) ? Obj(int_from_ival((ival_t)val)) : Obj(int_from_uval(val));
+    return (v1->dtype < 0) ? int_from_ival((ival_t)val) : int_from_uval(val);
 }
 
 MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
@@ -388,7 +388,7 @@ MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
     ln = calc_size(v1) / ln2;
 
     if (ln == 0) {
-        return val_reference(typ == TUPLE_OBJ ? Obj(null_tuple) : Obj(null_list));
+        return val_reference(typ == TUPLE_OBJ ? null_tuple : null_list);
     }
 
     v = List(val_alloc(typ));
@@ -439,7 +439,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return Obj(ref_tuple(null_tuple));
+            return val_reference(null_tuple);
         }
         v = new_tuple(iter.len);
         vals = v->data;
@@ -463,7 +463,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         if (err != NULL) return err;
 
         if (s.length == 0) {
-            return Obj(ref_tuple(null_tuple));
+            return val_reference(null_tuple);
         }
         v = new_tuple(s.length);
         vals = v->data;
@@ -538,7 +538,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 str_cfcpy(&cf, &v2->name);
                 if (str_cmp(&cf, &of) == 0) {
                     if (diagnostics.case_symbol && str_cmp(&v2->name, &cf) != 0) err_msg_symbol_case(&v2->name, NULL, op->epoint2);
-                    return Obj(int_from_uval(code_address(v1) & all_mem2));
+                    return int_from_uval(code_address(v1) & all_mem2);
                 }
             }
         }
@@ -569,7 +569,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (op->op->op == O_SUB) {
                 address_t addr1 = ldigit(v1, op->epoint);
                 address_t addr2 = ldigit(v2, op->epoint2);
-                return Obj(int_from_ival((ival_t)addr1 - (ival_t)addr2));
+                return int_from_ival((ival_t)addr1 - (ival_t)addr2);
             }
             tmp1 = get_code_address(v1, op->epoint);
             tmp2 = get_code_address(v2, op->epoint2);

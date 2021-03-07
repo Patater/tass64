@@ -48,7 +48,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_FLOAT: return val_reference(v1);
     case T_CODE: return float_from_code(Code(v1), epoint);
     case T_STR: return float_from_str(Str(v1), epoint);
-    case T_BOOL: return Obj(float_from_bool(Bool(v1)));
+    case T_BOOL: return float_from_bool(Bool(v1));
     case T_BYTES: return float_from_bytes(Bytes(v1), epoint);
     case T_INT: return float_from_int(Int(v1), epoint);
     case T_BITS: return float_from_bits(Bits(v1), epoint);
@@ -144,8 +144,7 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
 
 static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
     double v1 = Float(o1)->real;
-    if (v1 < 0.0) return Obj(ref_int(minus1_value));
-    return Obj(ref_int(int_value[(v1 > 0.0) ? 1 : 0]));
+    return val_reference(v1 < 0.0 ? minus1_value : int_value[(v1 > 0.0) ? 1 : 0]);
 }
 
 static MUST_CHECK Obj *function(oper_t op) {
@@ -163,7 +162,7 @@ static MUST_CHECK Obj *function(oper_t op) {
         v1->real = r;
         return val_reference(Obj(v1));
     } 
-    return Obj(new_float(r));
+    return new_float(r);
 }
 
 static MUST_CHECK Obj *float_from_double_inplace(double d, oper_t op) {
@@ -178,7 +177,7 @@ static MUST_CHECK Obj *float_from_double_inplace(double d, oper_t op) {
         Float(op->v2)->real = d;
         return val_reference(op->v2);
     } 
-    return Obj(new_float(d));
+    return new_float(d);
 }
 
 static MUST_CHECK Obj *calc1(oper_t op) {
@@ -309,9 +308,7 @@ static MUST_CHECK Obj *bitoper(oper_t op) {
 static MUST_CHECK Obj *calc2_double(oper_t op) {
     double r, v1 = Float(op->v1)->real, v2 = Float(op->v2)->real;
     switch (op->op->op) {
-    case O_CMP:
-        if (v1 == v2 || almost_equal(op, v1, v2)) return Obj(ref_int(int_value[0]));
-        return Obj(ref_int((v1 < v2) ? minus1_value : int_value[1]));
+    case O_CMP: return val_reference((v1 == v2 || almost_equal(op, v1, v2)) ? int_value[0] : (v1 < v2) ? minus1_value : int_value[1]);
     case O_EQ: return truth_reference(v1 == v2 || almost_equal(op, v1, v2));
     case O_NE: return truth_reference(v1 != v2 && !almost_equal(op, v1, v2));
     case O_MIN: return truth_reference(v1 < v2);
@@ -345,7 +342,7 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
             if (v2 < 0.0) {
                 return new_error_obj(ERROR_ZERO_NEGPOWER, op->v2, op->epoint3);
             }
-            return Obj(new_float((v2 == 0.0) ? 1.0 : 0.0));
+            return new_float((v2 == 0.0) ? 1.0 : 0.0);
         }
         if (v1 < 0.0 && floor(v2) != v2) {
             return Obj(new_error(ERROR_NEGFRAC_POWER, op->epoint3));
@@ -360,7 +357,7 @@ MUST_CHECK Obj *float_from_double(double d, linepos_t epoint) {
     if (d == HUGE_VAL || d == -HUGE_VAL || d != d) {
         return Obj(new_error(ERROR_NUMERIC_OVERF, epoint));
     }
-    return Obj(new_float(d));
+    return new_float(d);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
@@ -451,5 +448,5 @@ void floatobj_init(void) {
 
 void floatobj_names(void) {
     new_builtin("float", val_reference(Obj(FLOAT_OBJ)));
-    new_builtin("pi", Obj(new_float(M_PI)));
+    new_builtin("pi", new_float(M_PI));
 }

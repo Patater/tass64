@@ -170,7 +170,7 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
         }
         vv->len = i;
     } else {
-        vv = List(val_reference(v[k].val->obj == TUPLE_OBJ ? Obj(null_tuple) : Obj(null_list)));
+        vv = List(val_reference(v[k].val->obj == TUPLE_OBJ ? null_tuple : null_list));
     }
     for (; k < args; k++) {
         if (elements[k].oval == NULL) continue;
@@ -222,7 +222,7 @@ static MUST_CHECK Obj *function_range(oper_t op) {
     new_value = new_list();
     val = list_create_elements(new_value, len2);
     for (i = 0; i < len2; i++) {
-        val[i] = Obj(int_from_ival(start));
+        val[i] = int_from_ival(start);
         start += step;
     }
     new_value->len = len2;
@@ -281,7 +281,7 @@ static MUST_CHECK Obj *function_random(oper_t op) {
 
     switch (vals->len) {
     default:
-        return Obj(new_float((double)(random64() & (((uint64_t)1 << 53) - 1)) * ldexp(1, -53)));
+        return new_float((double)(random64() & (((uint64_t)1 << 53) - 1)) * ldexp(1, -53));
     case 1:
         err = v[0].val->obj->ival(v[0].val, &end, 8 * sizeof end, &v[0].epoint);
         break;
@@ -314,9 +314,9 @@ static MUST_CHECK Obj *function_random(oper_t op) {
             do {
                 r = (uval_t)random64();
             } while (r >= b);
-            return Obj(int_from_ival(start + (ival_t)(r / a) * step));
+            return int_from_ival(start + (ival_t)(r / a) * step);
         }
-        return Obj(int_from_ival(start + (ival_t)(random64() & (len2 - 1))));
+        return int_from_ival(start + (ival_t)(random64() & (len2 - 1)));
     }
     return Obj(new_error(ERROR___EMPTY_RANGE, op->epoint));
 }
@@ -462,7 +462,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
         else offset = (uval_t)offs;
         if (offset < ln) ln -= offset; else ln = 0;
         if (length < ln) ln = length;
-        if (ln == 0) return Obj(ref_bytes(null_bytes));
+        if (ln == 0) return val_reference(null_bytes);
         if (ln > SSIZE_MAX) return new_error_mem(op->epoint);
         b = new_bytes(ln);
         b->len = (ssize_t)ln;
@@ -475,13 +475,13 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
 static Obj *function_unsigned_bytes(oper_t op, unsigned int bits) {
     uval_t uv;
     if (touval(op->v2, &uv, bits, op->epoint2)) uv = 0;
-    return Obj(bytes_from_uval(uv, bits >> 3));
+    return bytes_from_uval(uv, bits >> 3);
 }
 
 static Obj *function_signed_bytes(oper_t op, unsigned int bits) {
     ival_t iv;
     if (toival(op->v2, &iv, bits, op->epoint2)) iv = 0;
-    return Obj(bytes_from_uval((uval_t)iv, bits >> 3));
+    return bytes_from_uval((uval_t)iv, bits >> 3);
 }
 
 static Obj *function_rta_addr(oper_t op, bool rta) {
@@ -503,7 +503,7 @@ static Obj *function_rta_addr(oper_t op, bool rta) {
         }
         if (rta) uv--;
     }
-    return Obj(bytes_from_uval(uv, 2));
+    return bytes_from_uval(uv, 2);
 }
 
 static MUST_CHECK Obj *apply_func(oper_t op) {
@@ -523,7 +523,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
             iter.data = o2; typ->getiter(&iter);
             if (iter.len == 0) {
                 iter_destroy(&iter);
-                return val_reference(typ == TUPLE_OBJ ? Obj(null_tuple) : Obj(null_list));
+                return val_reference(typ == TUPLE_OBJ ? null_tuple : null_list);
             }
             v = List(val_alloc(typ == TUPLE_OBJ ? TUPLE_OBJ : LIST_OBJ));
             v->data = vals = list_create_elements(v, iter.len);
@@ -536,7 +536,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
             v->len = i;
             return Obj(v);
         } 
-        v = ref_list(List(o2));
+        v = List(val_reference(o2));
         len = v->len;
         vals = v->data;
         for (i = 0; i < len; i++) {
