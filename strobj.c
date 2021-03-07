@@ -407,8 +407,6 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     Obj *v, *tmp;
     switch (op->op->op) {
     case O_LNOT:
-        if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
     case O_BANK:
     case O_HIGHER:
     case O_LOWER:
