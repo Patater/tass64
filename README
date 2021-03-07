@@ -1271,6 +1271,7 @@ x ^^ y      if both false or true then false otherwise x || y
 x && y      if x is true then y otherwise x
 !x          if x is true then false otherwise true
 c ? x : y   if c is true then x otherwise y
+c ?? x : y  if c is true then x otherwise y (broadcasting)
 x <? y      if x is smaller then x otherwise y
 x >? y      if x is greater then x otherwise y
 

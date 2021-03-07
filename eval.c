@@ -54,6 +54,7 @@
 #include "anonsymbolobj.h"
 #include "foldobj.h"
 #include "memblocksobj.h"
+#include "functionobj.h"
 
 static FAST_CALL NO_INLINE unsigned int get_label_start(const uint8_t *s) {
     unsigned int l;
@@ -966,7 +967,33 @@ static bool get_val2(struct eval_context_s *ev) {
                 if (tmp == true_value) goto cond_true;
                 goto cond_false;
             }
+        case O_DCOND:
+            {
+                Funcargs tmp;
+                vsp--;
+                if (vsp == 0) goto syntaxe;
+                vsp--;
+                if (vsp == 0) goto syntaxe;
+                v1 = &values[vsp - 1];
+                tmp.val = v1;
+                tmp.len = 3; /* assumes no referencing */
+                tmp.v.obj = FUNCARGS_OBJ;
+
+                oper.v1 = none_value; 
+                oper.v2 = &tmp.v;
+                oper.epoint = &o_out->epoint;
+                oper.epoint2 = &v1->epoint;
+                oper.epoint3 = &o_out->epoint;
+                val = apply_condition(&oper);
+                val_destroy(v1->val); v1->val = val;
+                val_destroy(v1[1].val);
+                val_destroy(v1[2].val);
+                v1[1].val = NULL;
+                v1[2].val = NULL;
+                continue;
+            }
         case O_QUEST:
+        case O_DQUEST:
             vsp--;
             if (vsp == 0) goto syntaxe;
             v1 = &values[vsp - 1];
@@ -1551,7 +1578,7 @@ static bool get_exp2(int stop) {
                     }
                     if (op != NULL) {
                         prec = o_HASH.prio;
-                        while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio && opr.data[opr.p - 1].val != &o_COLON2 && opr.data[opr.p - 1].val != &o_COND) {
+                        while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio && opr.data[opr.p - 1].val != &o_COLON2 && opr.data[opr.p - 1].val != &o_COND && opr.data[opr.p - 1].val != &o_DCOND) {
                             opr.p--;
                             push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
                         }
@@ -1614,7 +1641,7 @@ static bool get_exp2(int stop) {
         case '+': op = pline[lpoint.pos + 1] == '=' ? &o_ADD_ASSIGN : &o_ADD; goto push2;
         case '-': op = pline[lpoint.pos + 1] == '=' ? &o_SUB_ASSIGN : &o_SUB; goto push2;
         case '.': op = pline[lpoint.pos + 1] == '.' ? (pline[lpoint.pos + 2] == '=' ? &o_CONCAT_ASSIGN : &o_CONCAT) : (pline[lpoint.pos + 1] == '=' ? &o_MEMBER_ASSIGN : &o_MEMBER); goto push2;
-        case '?': lpoint.pos++;op = &o_QUEST; prec = o_COND.prio + 1; goto push3;
+        case '?': op = (pline[lpoint.pos + 1] == '?') ? &o_DQUEST : &o_QUEST; lpoint.pos += op->len; prec = o_COND.prio + 1; goto push3;
         case ':': if (pline[lpoint.pos + 1] == '=') {op = &o_COLON_ASSIGN;goto push2;}
             if (pline[lpoint.pos + 1] == '?' && pline[lpoint.pos + 2] == '=') {op = &o_COND_ASSIGN;goto push2;}
             op = &o_COLON;
@@ -1623,7 +1650,10 @@ static bool get_exp2(int stop) {
                 opr.p--;
                 push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
             }
-            if (opr.p != 0 && opr.data[opr.p - 1].val == &o_QUEST) { opr.data[opr.p - 1].val = &o_COND; op = &o_COLON2;}
+            if (opr.p != 0) {
+                if (opr.data[opr.p - 1].val == &o_QUEST) { opr.data[opr.p - 1].val = &o_COND; op = &o_COLON2;}
+                else if (opr.data[opr.p - 1].val == &o_DQUEST) { opr.data[opr.p - 1].val = &o_DCOND; op = &o_COLON2;}
+            }
             opr.data[opr.p].epoint = epoint;
             opr.data[opr.p++].val = op;
             if (opr.p >= opr.l) extend_opr(&opr);

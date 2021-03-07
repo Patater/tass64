@@ -731,6 +731,22 @@ static MUST_CHECK Obj *function_all_any(oper_t op, Obj **warn, bool first) {
     return objt->truth(val, typ, &v->epoint);
 }
 
+static MUST_CHECK Obj *function_condition(oper_t op) {
+    struct values_s *v = Funcargs(op->v2)->val;
+    bool cond;
+
+    if (v->val->obj == BOOL_OBJ) {
+        cond = (v->val == true_value);
+    } else {
+        Obj *val = v->val->obj->truth(v->val, TRUTH_BOOL, &v->epoint);
+        if (val->obj != BOOL_OBJ) return val;
+        cond = (val == true_value);
+        if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, v->val, &v->epoint);
+        val_destroy(val);
+    } 
+    return val_reference(v[cond ? 1 : 2].val);
+}
+
 static inline int icmp(oper_t op) {
     Function_types v1 = Function(op->v1)->func;
     Function_types v2 = Function(op->v2)->func;
@@ -838,6 +854,10 @@ MUST_CHECK Obj *apply_convert(oper_t op) {
     op->v2 = v->val;
     op->inplace = v->val->refcount == 1 ? v->val : NULL;
     return apply_func(op);
+}
+
+MUST_CHECK Obj *apply_condition(oper_t op) {
+    return gen_broadcast(op, function_condition);
 }
 
 void functionobj_init(void) {

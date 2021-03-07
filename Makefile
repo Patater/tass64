@@ -80,15 +80,15 @@ dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h eval.h \
  symbolobj.h str.h
 encoding.o: encoding.c encoding.h stdbool.h inttypes.h errors_e.h \
  encodings.h error.h attributes.h ternary.h unicode.h values.h 64tass.h \
- wait_e.h avl.h str.h strobj.h obj.h bytesobj.h oper_e.h typeobj.h \
- errorobj.h
+ wait_e.h avl.h str.h strobj.h obj.h bytesobj.h oper_e.h bitsobj.h \
+ typeobj.h errorobj.h
 encodings.o: encodings.c encodings.h stdbool.h inttypes.h 64tass.h \
  attributes.h wait_e.h encoding.h errors_e.h str.h
 error.o: error.c error.h attributes.h stdbool.h errors_e.h inttypes.h \
  wchar.h file.h str.h 64tass.h wait_e.h unicode.h eval.h arguments.h \
  opcodes.h section.h avl.h macro.h strobj.h obj.h addressobj.h values.h \
  registerobj.h namespaceobj.h operobj.h oper_e.h typeobj.h labelobj.h \
- errorobj.h noneobj.h symbolobj.h console.h
+ errorobj.h noneobj.h symbolobj.h anonsymbolobj.h console.h
 errorobj.o: errorobj.c errorobj.h obj.h attributes.h inttypes.h \
  errors_e.h stdbool.h eval.h values.h error.h 64tass.h wait_e.h file.h \
  str.h macro.h typeobj.h registerobj.h namespaceobj.h
@@ -98,7 +98,8 @@ eval.o: eval.c eval.h attributes.h inttypes.h stdbool.h math.h section.h \
  floatobj.h obj.h boolobj.h intobj.h bitsobj.h strobj.h codeobj.h \
  bytesobj.h oper_e.h addressobj.h listobj.h dictobj.h registerobj.h \
  namespaceobj.h operobj.h gapobj.h typeobj.h noneobj.h labelobj.h \
- errorobj.h symbolobj.h anonsymbolobj.h foldobj.h memblocksobj.h
+ errorobj.h symbolobj.h anonsymbolobj.h foldobj.h memblocksobj.h \
+ functionobj.h
 file.o: file.c file.h attributes.h stdbool.h inttypes.h str.h wchar.h \
  64tass.h wait_e.h unicode.h error.h errors_e.h arguments.h unicodedata.h \
  avl.h

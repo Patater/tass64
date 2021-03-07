@@ -48,6 +48,7 @@ typedef enum Oper_types {
     O_LAND_ASSIGN,   /* &&=   */
     O_COND_ASSIGN,   /* :?=   */
     O_COND,          /* ?     */
+    O_DCOND,         /* ??    */
     O_COLON2,        /* :     */
     O_LOR,           /* ||    */
     O_LXOR,          /* ^^    */
@@ -110,6 +111,7 @@ typedef enum Oper_types {
     O_RBRACKET,      /* ]     */
     O_RBRACE,        /* }     */
     O_QUEST,         /* ?     */
+    O_DQUEST,        /* ??    */
     O_COLON          /* :     */
 } Oper_types;
 
