@@ -971,7 +971,7 @@ void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
         if (val2 == none_value || val2->obj == ERROR_OBJ) val = val2;
     }
     if (val->obj == ERROR_OBJ) err_msg_output(Error(val));
-    else if (val->obj == NONE_OBJ) err_msg_still_none(NULL, epoint);
+    else if (val == none_value) err_msg_still_none(NULL, epoint);
     else err_msg_wrong_type(val, expected, epoint);
 }
 
