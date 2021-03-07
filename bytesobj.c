@@ -42,9 +42,17 @@
 static Type obj;
 
 Type *const BYTES_OBJ = &obj;
-Bytes *null_bytes;
-Bytes *inv_bytes;
+
+static Bytes null_bytesval = { { &obj, 1 }, 0, null_bytesval.u.val, {} };
+static Bytes inv_bytesval = { { &obj, 1 }, ~0, inv_bytesval.u.val, {} };
+
+Obj *const null_bytes = &null_bytesval.v;
+Obj *const inv_bytes = &inv_bytesval.v;
 static Bytes *bytes_value[256];
+
+static inline Bytes *ref_bytes(Bytes *v1) {
+    v1->v.refcount++; return v1;
+}
 
 static inline size_t byteslen(const Bytes *v1) {
     ssize_t len = v1->len;
@@ -152,7 +160,7 @@ static MUST_CHECK Obj *invert(const Bytes *v1, linepos_t epoint) {
         memcpy(v->data, v1->data, sz);
         return Obj(v);
     }
-    return Obj(ref_bytes((v1->len < 0) ? null_bytes : inv_bytes));
+    return val_reference((v1->len < 0) ? null_bytes : inv_bytes);
 }
 
 static MUST_CHECK Obj *negate(Bytes *v1, linepos_t epoint) {
@@ -487,13 +495,13 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
             if (v1->chars == 1) {
                 uchar_t ch2 = v1->data[0];
                 if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
-                return Obj(bytes_from_uval(ch2, 3));
+                return bytes_from_uval(ch2, 3);
             }
             return Obj(new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint));
         }
         if (len < sizeof v->u.val) len = sizeof v->u.val;
         if (len == 0) {
-            return Obj(ref_bytes(null_bytes));
+            return val_reference(null_bytes);
         }
         v = new_bytes2(len);
         if (v == NULL) goto failed;
@@ -555,7 +563,7 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
     if (actual_encoding != NULL) {
         if (mode == BYTES_MODE_SHIFT || mode == BYTES_MODE_SHIFTL) err_msg2(ERROR__EMPTY_STRING, NULL, epoint);
     }
-    return Obj(ref_bytes(null_bytes));
+    return val_reference(null_bytes);
 failed2:
     val_destroy(Obj(v));
 failed:
@@ -595,7 +603,7 @@ MUST_CHECK Obj *bytes_calc1(Oper_types op, unsigned int val) {
     }
 }
 
-MUST_CHECK Bytes *bytes_from_uval(uval_t i, unsigned int bytes) {
+MUST_CHECK Obj *bytes_from_uval(uval_t i, unsigned int bytes) {
     Bytes *v = new_bytes(bytes);
     v->len = (ssize_t)bytes;
     switch (bytes) {
@@ -605,7 +613,7 @@ MUST_CHECK Bytes *bytes_from_uval(uval_t i, unsigned int bytes) {
     case 1: v->data[0] = (uint8_t)i; /* fall through */
     case 0: break;
     }
-    return v;
+    return Obj(v);
 }
 
 MUST_CHECK Obj *bytes_from_bits(const Bits *v1, linepos_t epoint) {
@@ -616,7 +624,7 @@ MUST_CHECK Obj *bytes_from_bits(const Bits *v1, linepos_t epoint) {
 
     len1 = v1->bits;
     if (len1 == 0) {
-        return val_reference(inv ? Obj(inv_bytes) : Obj(null_bytes));
+        return val_reference(inv ? inv_bytes : null_bytes);
     }
     if (len1 <= 8 && !inv) {
         return bytes_from_u8(v1->data[0]);
@@ -661,10 +669,10 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
 
     switch (v1->len) {
     case -1:
-        if (v1->data[0] == 1) return val_reference(Obj(inv_bytes));
+        if (v1->data[0] == 1) return val_reference(inv_bytes);
         break;
     case 0:
-        return val_reference(Obj(null_bytes));
+        return val_reference(null_bytes);
     case 1:
         if (v1->data[0] < 256) return bytes_from_u8(v1->data[0]);
         break;
@@ -790,18 +798,18 @@ MUST_CHECK Obj *float_from_bytes(const Bytes *v1, linepos_t epoint) {
         if (v1->len < 0) d = -d;
         return float_from_double(d, epoint);
     }
-    return Obj(new_float(d));
+    return new_float(d);
 }
 
 static MUST_CHECK Obj *sign(Obj *o1, linepos_t UNUSED(epoint)) {
     Bytes *v1 = Bytes(o1);
     size_t i, sz;
-    if (v1->len < 0) return Obj(ref_int(minus1_value));
+    if (v1->len < 0) return val_reference(minus1_value);
     sz = byteslen(v1);
     for (i = 0; i < sz; i++) {
-        if (v1->data[i] != 0) return Obj(ref_int(int_value[1]));
+        if (v1->data[i] != 0) return val_reference(int_value[1]);
     }
-    return Obj(ref_int(int_value[0]));
+    return val_reference(int_value[0]);
 }
 
 static MUST_CHECK Obj *function(oper_t op) {
@@ -816,7 +824,7 @@ static MUST_CHECK Obj *function(oper_t op) {
 
 static MUST_CHECK Obj *len(oper_t op) {
     Bytes *v1 = Bytes(op->v2);
-    return Obj(int_from_size(byteslen(v1)));
+    return int_from_size(byteslen(v1));
 }
 
 static FAST_CALL MUST_CHECK Obj *iter_element(struct iter_s *v1, size_t i) {
@@ -873,7 +881,7 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
     sz = neg2 ? len1 : len2;
-    if (sz == 0) return val_reference((neg1 && neg2) ? Obj(inv_bytes) : Obj(null_bytes));
+    if (sz == 0) return val_reference((neg1 && neg2) ? inv_bytes : null_bytes);
     if (op->inplace == Obj(vv1)) {
         vv = ref_bytes(vv1);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
@@ -923,7 +931,7 @@ static inline MUST_CHECK Obj *or_(oper_t op) {
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
     sz = neg2 ? len2 : len1;
-    if (sz == 0) return val_reference((neg1 || neg2) ? Obj(inv_bytes) : Obj(null_bytes));
+    if (sz == 0) return val_reference((neg1 || neg2) ? inv_bytes : null_bytes);
     if (op->inplace == Obj(vv1)) {
         vv = ref_bytes(vv1);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
@@ -974,7 +982,7 @@ static inline MUST_CHECK Obj *xor_(oper_t op) {
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
     sz = len1;
-    if (sz == 0) return val_reference((neg1 != neg2) ? Obj(inv_bytes) : Obj(null_bytes));
+    if (sz == 0) return val_reference((neg1 != neg2) ? inv_bytes : null_bytes);
     if (op->inplace == Obj(vv1)) {
         vv = ref_bytes(vv1);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
@@ -1139,8 +1147,7 @@ static MUST_CHECK Obj *calc2_bytes(oper_t op) {
         }
     case O_CMP:
         val = icmp(op);
-        if (val < 0) return Obj(ref_int(minus1_value));
-        return Obj(ref_int(int_value[(val > 0) ? 1 : 0]));
+        return val_reference(val < 0 ? minus1_value : int_value[(val > 0) ? 1 : 0]);
     case O_EQ: return truth_reference(icmp(op) == 0);
     case O_NE: return truth_reference(icmp(op) != 0);
     case O_MIN:
@@ -1191,7 +1198,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     err = op->v2->obj->uval(op->v2, &rep, 8 * sizeof rep, op->epoint2);
     if (err != NULL) return Obj(err);
 
-    if (len1 == 0 || rep == 0) return Obj(ref_bytes((v1->len < 0) ? inv_bytes : null_bytes));
+    if (len1 == 0 || rep == 0) return val_reference((v1->len < 0) ? inv_bytes : null_bytes);
     do {
         uint8_t *s;
         if (rep == 1) {
@@ -1237,7 +1244,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return Obj(ref_bytes(null_bytes));
+            return val_reference(null_bytes);
         }
         v = new_bytes2(iter.len);
         if (v == NULL) {
@@ -1267,7 +1274,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
         switch (s.length) {
         case 0:
-            return Obj(ref_bytes(null_bytes));
+            return val_reference(null_bytes);
         case 1:
             return bytes_from_u8(v1->data[s.offset] ^ inv);
         }
@@ -1457,13 +1464,6 @@ void bytesobj_init(void) {
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;
     obj.slice = slice;
-
-    null_bytes = new_bytes(0);
-    null_bytes->len = 0;
-    null_bytes->data[0] = 0;
-    inv_bytes = new_bytes(0);
-    inv_bytes->len = ~0;
-    inv_bytes->data[0] = 0;
 }
 
 void bytesobj_names(void) {
@@ -1473,8 +1473,8 @@ void bytesobj_names(void) {
 void bytesobj_destroy(void) {
     int i;
 #ifdef DEBUG
-    if (null_bytes->v.refcount != 1) fprintf(stderr, "bytes %" PRIuSIZE "\n", null_bytes->v.refcount - 1);
-    if (inv_bytes->v.refcount != 1) fprintf(stderr, "invbytes %" PRIuSIZE "\n", inv_bytes->v.refcount - 1);
+    if (null_bytes->refcount != 1) fprintf(stderr, "bytes %" PRIuSIZE "\n", null_bytes->refcount - 1);
+    if (inv_bytes->refcount != 1) fprintf(stderr, "invbytes %" PRIuSIZE "\n", inv_bytes->refcount - 1);
     for (i = 0; i < 256; i++) {
         if (bytes_value[i] && bytes_value[i]->v.refcount != 1) {
             fprintf(stderr, "bytes[%d] %" PRIuSIZE "\n", i, bytes_value[i]->v.refcount - 1);
@@ -1482,8 +1482,6 @@ void bytesobj_destroy(void) {
     }
 #endif
 
-    val_destroy(Obj(null_bytes));
-    val_destroy(Obj(inv_bytes));
     for (i = 0; i < 256; i++) {
         if (bytes_value[i] != NULL) val_destroy(Obj(bytes_value[i]));
     }

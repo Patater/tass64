@@ -342,7 +342,7 @@ static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t epoint) {
 
 static MUST_CHECK Obj *len(oper_t op) {
     Dict *v1 = Dict(op->v2);
-    return Obj(int_from_size(v1->len));
+    return int_from_size(v1->len);
 }
 
 static FAST_CALL MUST_CHECK Obj *iter_element(struct iter_s *v1, size_t i) {
@@ -598,7 +598,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return val_reference(Obj(null_list));
+            return val_reference(null_list);
         }
         v = new_list();
         v->data = vals = list_create_elements(v, iter.len);
@@ -625,7 +625,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         if (err != NULL) return err;
 
         if (s.length == 0) {
-            return val_reference((v1->v.obj == TUPLE_OBJ) ? Obj(null_tuple) : Obj(null_list));
+            return val_reference((v1->v.obj == TUPLE_OBJ) ? null_tuple : null_list);
         }
 
         if (s.step == 1 && s.length == v1->len && v1->def == NULL && !more) {

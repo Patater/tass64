@@ -115,6 +115,6 @@ void noneobj_init(void) {
 
 void noneobj_destroy(void) {
 #ifdef DEBUG
-    if (none_value->v.refcount != 1) fprintf(stderr, "none %" PRIuSIZE "\n", none_value->v.refcount - 1);
+    if (none_value->refcount != 1) fprintf(stderr, "none %" PRIuSIZE "\n", none_value->refcount - 1);
 #endif
 }

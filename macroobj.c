@@ -114,7 +114,7 @@ static FAST_CALL bool struct_same(const Obj *o1, const Obj *o2) {
 
 static MUST_CHECK Obj *struct_size(oper_t op) {
     Struct *v1 = Struct(op->v2);
-    return Obj(int_from_size(v1->size));
+    return int_from_size(v1->size);
 }
 
 static MUST_CHECK Obj *struct_calc2(oper_t op) {

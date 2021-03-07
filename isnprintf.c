@@ -211,13 +211,13 @@ static inline void decimal(Data *p)
 {
     const struct values_s *v = next_arg();
     bool minus;
-    Str *str;
     size_t i;
+    Str *str;
+    Obj *err2 = NULL;
 
     star_args(p);
 
     if (v == NULL) {
-        str = ref_str(null_str);
         minus = false;
         if (p->precision < 1) p->precision = 1;
     } else {
@@ -225,23 +225,22 @@ static inline void decimal(Data *p)
         Obj *err = INT_OBJ->create(val, &v->epoint);
         if (err->obj != INT_OBJ) {
             note_failure(err);
-            str = ref_str(null_str);
             minus = false;
         } else {
-            Obj *err2 = INT_OBJ->repr(err, &v->epoint, SIZE_MAX);
+            err2 = INT_OBJ->repr(err, &v->epoint, SIZE_MAX);
             if (err2 == NULL) err2 = new_error_mem(&v->epoint);
             if (err2->obj != STR_OBJ) {
                 note_failure(err2);
-                str = ref_str(null_str);
+                err2 = NULL;
                 minus = false;
             } else {
-                str = Str(err2);
                 minus = Int(err)->len < 0;
             }
             val_destroy(err);
         }
     }
 
+    str = Str(err2 != NULL ? err2 : val_reference(null_str));
     i = minus ? 1 : 0;
     pad_right2(p, 0, minus, str->len - i);
     for (; i < str->len; i++) put_char(str->data[i]);
@@ -249,7 +248,7 @@ static inline void decimal(Data *p)
     pad_left(p);
 }
 
-static MUST_CHECK Int *get_int(Data *p) {
+static MUST_CHECK Obj *get_int(Data *p) {
     const struct values_s *v = next_arg();
 
     star_args(p);
@@ -257,10 +256,10 @@ static MUST_CHECK Int *get_int(Data *p) {
     if (v != NULL) {
         Obj *val = v->val;
         Obj *err = INT_OBJ->create(val, &v->epoint);
-        if (err->obj == INT_OBJ) return Int(err);
+        if (err->obj == INT_OBJ) return err;
         note_failure(err);
     }
-    return ref_int(int_value[0]);
+    return val_reference(int_value[0]);
 }
 
 /* for %x %X hexadecimal representation */
@@ -272,7 +271,7 @@ static inline void hexa(Data *p)
     unsigned int bp, b;
     size_t bp2;
 
-    integer = get_int(p);
+    integer = Int(get_int(p));
     minus = (integer->len < 0);
     bp2 = minus ? (size_t)-integer->len : (size_t)integer->len;
     bp = b = 0;
@@ -307,7 +306,7 @@ static inline void bin(Data *p)
     unsigned int bp, b;
     size_t bp2;
 
-    integer = get_int(p);
+    integer = Int(get_int(p));
     minus = (integer->len < 0);
     bp2 = minus ? (size_t)-integer->len : (size_t)integer->len;
     bp = b = 0;
@@ -364,13 +363,11 @@ static inline void strings(Data *p)
     const uint8_t *tmp;
     uchar_t ch;
     Str *str;
+    Obj *err = NULL;
 
     star_args(p);
 
-    if (v == NULL) {
-        str = ref_str(null_str);
-    } else {
-        Obj *err;
+    if (v != NULL) {
         if (*p->pf == 'r') {
             Obj *val = v->val;
             err = val->obj->repr(val, &v->epoint, SIZE_MAX);
@@ -380,12 +377,11 @@ static inline void strings(Data *p)
         }
         if (err->obj != STR_OBJ) {
             note_failure(err);
-            str = ref_str(null_str);
-        } else {
-            str = Str(err);
+            err = NULL;
         }
     }
 
+    str = Str(err != NULL ? err : val_reference(null_str));
     tmp = str->data;
     i = str->chars;
     if (p->dot) { /* the smaller number */

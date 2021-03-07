@@ -416,7 +416,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 }
                 switch (op->op->op) {
                 default: /* can't happen */
-                case O_CMP: return Obj(ref_int((am < v2->type) ? minus1_value : int_value[1]));
+                case O_CMP: return val_reference((am < v2->type) ? minus1_value : int_value[1]);
                 case O_EQ: return ref_false();
                 case O_NE: return ref_true();
                 case O_LE:

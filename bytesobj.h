@@ -38,8 +38,8 @@ typedef struct Bytes {
 
 #define Bytes(a) ((Bytes *)(1 ? (a) : (Obj *)a))
 
-extern Bytes *null_bytes;
-extern Bytes *inv_bytes;
+extern Obj *const null_bytes;
+extern Obj *const inv_bytes;
 
 extern void bytesobj_init(void);
 extern void bytesobj_names(void);
@@ -55,17 +55,13 @@ typedef enum Textconv_types {
     BYTES_MODE_PTEXT
 } Textconv_types;
 
-static inline Bytes *ref_bytes(Bytes *v1) {
-    v1->v.refcount++; return v1;
-}
-
 extern MALLOC Bytes *new_bytes(size_t);
 
 struct Str;
 struct Bits;
 
 extern MUST_CHECK Obj *bytes_calc1(enum Oper_types, unsigned int);
-extern MUST_CHECK Bytes *bytes_from_uval(uval_t, unsigned int);
+extern MUST_CHECK Obj *bytes_from_uval(uval_t, unsigned int);
 extern MUST_CHECK Obj *bytes_from_str(const struct Str *, linepos_t, Textconv_types);
 extern MUST_CHECK Obj *bytes_from_bits(const struct Bits *, linepos_t);
 extern MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *, size_t *, linepos_t);

@@ -53,5 +53,5 @@ static inline MUST_CHECK Obj *truth_reference(bool i) {
 }
 
 extern MUST_CHECK Obj *int_from_bool(const struct Bool *);
-extern MUST_CHECK struct Float *float_from_bool(const struct Bool *);
+extern MUST_CHECK Obj *float_from_bool(const struct Bool *);
 #endif

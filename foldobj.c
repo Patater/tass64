@@ -157,7 +157,7 @@ void foldobj_init(void) {
 
 void foldobj_destroy(void) {
 #ifdef DEBUG
-    if (fold_value->v.refcount != 1) fprintf(stderr, "fold %" PRIuSIZE "\n", fold_value->v.refcount - 1);
+    if (fold_value->refcount != 1) fprintf(stderr, "fold %" PRIuSIZE "\n", fold_value->refcount - 1);
 #endif
     if (foldval.repr != NULL) val_destroy(Obj(foldval.repr));
 }

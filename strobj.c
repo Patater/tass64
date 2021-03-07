@@ -38,7 +38,14 @@
 static Type obj;
 
 Type *const STR_OBJ = &obj;
-Str *null_str;
+
+static Str null_strval = { { &obj, 1 }, 0, 0, null_strval.u.val, {} };
+
+Obj *const null_str = &null_strval.v;
+
+static inline Str *ref_str(Str *v1) {
+    v1->v.refcount++; return v1;
+}
 
 static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     Obj *v;
@@ -265,7 +272,7 @@ static MUST_CHECK Obj *function(oper_t op) {
 
 static MUST_CHECK Obj *len(oper_t op) {
     Str *v1 = Str(op->v2);
-    return Obj(int_from_size(v1->chars));
+    return int_from_size(v1->chars);
 }
 
 static FAST_CALL MUST_CHECK Obj *iter_forward(struct iter_s *v1) {
@@ -473,8 +480,7 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
         }
     case O_CMP:
         val = icmp(op);
-        if (val < 0) return Obj(ref_int(minus1_value));
-        return Obj(ref_int(int_value[(val > 0) ? 1 : 0]));
+        return val_reference(val < 0 ? minus1_value : int_value[(val > 0) ? 1 : 0]);
     case O_EQ: return truth_reference(icmp(op) == 0);
     case O_NE: return truth_reference(icmp(op) != 0);
     case O_MIN:
@@ -548,7 +554,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     err = op->v2->obj->uval(op->v2, &rep, 8 * sizeof rep, op->epoint2);
     if (err != NULL) return Obj(err);
 
-    if (v1->len == 0 || rep == 0) return Obj(ref_str(null_str));
+    if (v1->len == 0 || rep == 0) return val_reference(null_str);
     do {
         uint8_t *s;
         size_t ln;
@@ -596,7 +602,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return Obj(ref_str(null_str));
+            return val_reference(null_str);
         }
 
         if (v1->len == v1->chars) {
@@ -703,7 +709,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
         if (err != NULL) return err;
 
         if (s.length == 0) {
-            return Obj(ref_str(null_str));
+            return val_reference(null_str);
         }
         if (s.step == 1) {
             if (s.length == v1->chars) {
@@ -1009,9 +1015,6 @@ void strobj_init(void) {
     obj.calc2 = calc2;
     obj.rcalc2 = rcalc2;
     obj.slice = slice;
-
-    null_str = new_str(0);
-    null_str->chars = 0;
 }
 
 void strobj_names(void) {
@@ -1020,8 +1023,6 @@ void strobj_names(void) {
 
 void strobj_destroy(void) {
 #ifdef DEBUG
-    if (null_str->v.refcount != 1) fprintf(stderr, "str %" PRIuSIZE "\n", null_str->v.refcount - 1);
+    if (null_str->refcount != 1) fprintf(stderr, "str %" PRIuSIZE "\n", null_str->refcount - 1);
 #endif
-
-    val_destroy(Obj(null_str));
 }

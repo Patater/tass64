@@ -788,7 +788,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
         return NULL;
     }
 
-    if (mfunc->inamespaces == null_tuple) {
+    if (mfunc->inamespaces == Tuple(null_tuple)) {
         val_destroy(Obj(mfunc->inamespaces));
         mfunc->inamespaces = new_tuple(1);
         context = NULL;
@@ -832,7 +832,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t 
                     j++;
                 }
             } else {
-                tuple = ref_tuple(null_tuple);
+                tuple = Tuple(val_reference(null_tuple));
             }
             val = Obj(tuple);
         } else {

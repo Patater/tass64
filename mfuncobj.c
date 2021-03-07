@@ -152,7 +152,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             eval_enter();
             val = mfunc2_recurse(v1, v2->val, args, op->epoint);
             eval_leave();
-            return (val != NULL) ? val : Obj(ref_tuple(null_tuple));
+            return (val != NULL) ? val : val_reference(null_tuple);
         }
         break;
     case T_NONE:
