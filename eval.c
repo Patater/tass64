@@ -926,7 +926,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_DICT:
             {
                 size_t args = 0;
-                while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != O_BRACE) {
+                while (v1->val != &o_BRACE.v) {
                     args++;
                     if (vsp <= args) goto syntaxe;
                     v1 = &values[vsp - 1 - args];
