@@ -46,7 +46,7 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     case T_FLOAT:
     case T_BYTES:
     case T_STR:
-        return Obj(new_address(val_reference(v1), A_NONE));
+        return new_address(val_reference(v1), A_NONE);
     case T_NONE:
     case T_ERROR:
     case T_ADDRESS: return val_reference(v1);
@@ -365,7 +365,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         op->inplace = NULL;
         result = op->v1->obj->calc1(op);
         if (am == A_NONE) return result;
-        return Obj(new_address(result, am));
+        return new_address(result, am);
     default: break;
     }
     if (v1->val == none_value || v1->val->obj == ERROR_OBJ) return val_reference(v1->val);
@@ -382,7 +382,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
 
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2, *result;
-    Address *v1 = Address(op->v1), *v;
+    Address *v1 = Address(op->v1);
     atype_t am;
     if (op->op == &o_LAND || op->op == &o_LOR) {
         bool i;
@@ -397,6 +397,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_ADDRESS:
         {
             Address *v2 = Address(o2);
+            atype_t am2 = v2->type;
             am = v1->type;
             switch (op->op->op) {
             case O_CMP:
@@ -408,42 +409,28 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             case O_MAX:
             case O_GT:
             case O_GE:
-                if (am == v2->type) {
+                if (am == am2) {
                     op->v1 = v1->val;
                     op->v2 = v2->val;
                     op->inplace = NULL;
                     return op->v1->obj->calc2(op);
                 }
-                switch (op->op->op) {
-                default: /* can't happen */
-                case O_CMP: return val_reference((am < v2->type) ? minus1_value : int_value[1]);
-                case O_EQ: return ref_false();
-                case O_NE: return ref_true();
-                case O_LE:
-                case O_MIN:
-                case O_LT: return truth_reference(am < v2->type);
-                case O_GE:
-                case O_MAX:
-                case O_GT: return truth_reference(am > v2->type);
-                }
+                return obj_oper_compare(op, (am < am2) ? -1 : 1);
             case O_ADD:
                 if (check_addr(am)) break;
-                if (check_addr(v2->type)) break;
+                if (check_addr(am2)) break;
                 op->v1 = v1->val;
                 op->v2 = v2->val;
                 op->inplace = NULL;
                 result = op->v1->obj->calc2(op);
                 if (am == A_NONE && v2->type == A_NONE) return result;
-                v = new_address(result, am);
-                am = v2->type;
-                while ((Address_types)(am & 0xf) != A_NONE) { v->type <<= 4; am >>= 4; }
-                v->type |= v2->type;
-                return Obj(v);
+                while ((Address_types)(am2 & 0xf) != A_NONE) { am <<= 4; am2 >>= 4; }
+                return new_address(result, am | v2->type);
             case O_SUB:
                 if (check_addr(am)) break;
-                if (check_addr(v2->type)) break;
+                if (check_addr(am2)) break;
                 {
-                    atype_t am1 = A_NONE, am2 = v2->type;
+                    atype_t am1 = A_NONE;
                     for (; (am & MAX_ADDRESS_MASK) != 0; am <<= 4) {
                         atype_t amc = (am >> 8) & 0xf;
                         atype_t am3, am4;
@@ -465,7 +452,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     op->inplace = NULL;
                     result = op->v1->obj->calc2(op);
                     if (am1 == A_NONE) return result;
-                    return Obj(new_address(result, am1));
+                    return new_address(result, am1);
                 }
             default:
                 break;
@@ -511,7 +498,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         ok:
             op->v1 = v1->val;
             op->inplace = NULL;
-            return Obj(new_address(op->v1->obj->calc2(op), am));
+            return new_address(op->v1->obj->calc2(op), am);
         }
         break;
     default:
@@ -558,7 +545,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         ok:
             op->v2 = v2->val;
             op->inplace = NULL;
-            return Obj(new_address(t1->calc2(op), am));
+            return new_address(t1->calc2(op), am);
         }
         break;
     case T_CODE:
