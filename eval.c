@@ -333,7 +333,7 @@ MUST_CHECK Obj *get_star_value(address_t addr, Obj *val) {
     case T_FLOAT: return new_float(addr + (Float(val)->real - trunc(Float(val)->real)));
     case T_STR: return bytes_from_uval(addr, all_mem_bits >> 3);
     case T_BYTES: return bytes_from_uval(addr, bytescalc(addr, Bytes(val)));
-    case T_ADDRESS: return Obj(new_address(get_star_value(addr, Address(val)->val), Address(val)->type));
+    case T_ADDRESS: return new_address(get_star_value(addr, Address(val)->val), Address(val)->type);
     }
 }
 
@@ -621,9 +621,9 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 case O_COMMAY:
                 case O_TUPLE:
                     {
-                        Address *old = Address(v1->val);
-                        Address *val2 = new_address(val_reference(old->val), (old->type << 4) | ((op == O_TUPLE) ? A_I : (op == O_COMMAX) ? A_XR : A_YR));
-                        val_destroy(v1->val); v1->val = Obj(val2);
+                        const Address *old = Address(v1->val);
+                        Obj *val2 = new_address(val_reference(old->val), (old->type << 4) | ((op == O_TUPLE) ? A_I : (op == O_COMMAX) ? A_XR : A_YR));
+                        val_destroy(v1->val); v1->val = val2;
                         v1->epoint = o_out->epoint;
                         continue;
                     }
@@ -648,12 +648,9 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_HASH:
                     case O_COMMAX:
                     case O_COMMAY:
-                        {
-                            Address *val2 = new_address(v1->val, (op == O_HASH) ? A_IMMEDIATE : (op == O_COMMAX) ? A_XR : A_YR);
-                            v1->val = Obj(val2);
-                            v1->epoint = o_out->epoint;
-                            continue;
-                        }
+                        v1->val = new_address(v1->val, (op == O_HASH) ? A_IMMEDIATE : (op == O_COMMAX) ? A_XR : A_YR);
+                        v1->epoint = o_out->epoint;
+                        continue;
                     case O_HIGHER:
                         val1 >>= 8;
                         /* fall through */
@@ -661,12 +658,9 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                         val1 = (uint8_t)val1;
                         break;
                     case O_TUPLE:
-                        {
-                            Address *val2 = new_address(v1->val, A_I);
-                            v1->val = Obj(val2);
-                            v1->epoint = o_out->epoint;
-                            continue;
-                        }
+                        v1->val = new_address(v1->val, A_I);
+                        v1->epoint = o_out->epoint;
+                        continue;
                     default: break;
                     }
                     val_destroy(v1->val);
@@ -788,9 +782,9 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
             v1->type = am | (v1->type << 4);
             return val_reference(o1);
         }
-        return Obj(new_address(val_reference(v1->val), am | (v1->type << 4)));
+        return new_address(val_reference(v1->val), am | (v1->type << 4));
     }
-    return Obj(new_address(val_reference(o1), am));
+    return new_address(val_reference(o1), am);
 }
 
 static bool get_val2(struct eval_context_s *ev) {
@@ -1082,7 +1076,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_HASH: am = A_IMMEDIATE;                          /* #  */
         addr:
             if (v1->val->obj != ADDRESS_OBJ && !v1->val->obj->iterable) {
-                v1->val = Obj(new_address(v1->val, am));
+                v1->val = new_address(v1->val, am);
             } else {
                 val = apply_addressing(v1->val, am, true);
                 val_destroy(v1->val); v1->val = val;
