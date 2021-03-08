@@ -24,14 +24,11 @@
 struct Type;
 struct Obj;
 
-struct iter_s;
-typedef FAST_CALL MUST_CHECK struct Obj *(*iter_next_t)(struct iter_s *);
-
 struct iter_s {
     struct Obj *data;
     struct Obj *iter;
     size_t val;
-    iter_next_t next;
+    struct Obj *(*next)(struct iter_s *) FAST_CALL MUST_CHECK;
     size_t len;
 };
 
