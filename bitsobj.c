@@ -724,6 +724,18 @@ static MUST_CHECK Obj *bits_from_int(const Int *v1, linepos_t epoint) {
     return normalize(v, sz, inv);
 }
 
+MUST_CHECK Obj *bits_calc1(Oper_types op, unsigned int val) {
+    switch (op) {
+    case O_BANK: val >>= 8; /* fall through */
+    case O_HIGHER: val >>= 8; /* fall through */
+    case O_LOWER: 
+    default: return return_bits(val, 8, false);
+    case O_HWORD: val >>= 8; /* fall through */
+    case O_WORD: return return_bits(val, 16, false);
+    case O_BSWORD: return return_bits(((uint16_t)val >> 8) | (val << 8), 16, false);
+    }
+}
+
 static ssize_t icmp(oper_t op) {
     const Bits *vv1 = Bits(op->v1), *vv2 = Bits(op->v2);
     ssize_t i;
@@ -759,7 +771,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, ldigit(v1));
+        return bits_calc1(op->op->op, ldigit(v1));
     case O_INV:
         if (op->inplace != Obj(v1)) return invert(v1, op->epoint3);
         v1->len = ~v1->len;

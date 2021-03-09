@@ -25,7 +25,6 @@
 
 #include "floatobj.h"
 #include "strobj.h"
-#include "bytesobj.h"
 #include "bitsobj.h"
 #include "intobj.h"
 #include "operobj.h"
@@ -134,7 +133,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, v1 ? 1U : 0U);
+        return bits_calc1(op->op->op, v1 ? 1U : 0U);
     case O_INV: return ibits_from_bool(v1);
     case O_NEG: return v1 ? ibits_from_bool(false) : val_reference(bits_value[0]);
     case O_POS: return val_reference(bits_value[v1 ? 1 : 0]);

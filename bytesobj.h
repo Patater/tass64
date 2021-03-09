@@ -19,7 +19,6 @@
 #ifndef BYTESOBJ_H
 #define BYTESOBJ_H
 #include "obj.h"
-#include "oper_e.h"
 
 extern struct Type *const BYTES_OBJ;
 
@@ -60,7 +59,6 @@ extern MALLOC Bytes *new_bytes(size_t);
 struct Str;
 struct Bits;
 
-extern MUST_CHECK Obj *bytes_calc1(enum Oper_types, unsigned int);
 extern MUST_CHECK Obj *bytes_from_uval(uval_t, unsigned int);
 extern MUST_CHECK Obj *bytes_from_str(const struct Str *, linepos_t, Textconv_types);
 extern MUST_CHECK Obj *bytes_from_bits(const struct Bits *, linepos_t);

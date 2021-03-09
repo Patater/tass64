@@ -385,7 +385,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bytes_calc1(op->op->op, ldigit(v1));
+        return bits_calc1(op->op->op, ldigit(v1));
     case O_INV:
         v = new_int();
         if (v1->len < 0) isub(v1, Int(int_value[1]), v);
