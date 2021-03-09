@@ -1056,26 +1056,15 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     unsigned int u;
     switch (op->op->op) {
     case O_BANK:
-        u = (v1->len > 2 || v1->len < ~2) ? v1->data[2] : 0;
-        return bytes_from_u8((v1->len < 0) ? ~u : u);
     case O_HIGHER:
-        u = (v1->len > 1 || v1->len < ~1) ? v1->data[1] : 0;
-        return bytes_from_u8((v1->len < 0) ? ~u : u);
     case O_LOWER:
-        u = (v1->len > 0 || v1->len < ~0) ? v1->data[0] : 0;
-        return bytes_from_u8((v1->len < 0) ? ~u : u);
     case O_HWORD:
-        u = (v1->len > 1 || v1->len < ~1) ? v1->data[1] : 0;
-        if (v1->len > 2 || v1->len < ~2) u |= (unsigned int)v1->data[2] << 8;
-        return bytes_from_u16((v1->len < 0) ? ~u : u);
     case O_WORD:
+    case O_BSWORD:
         u = (v1->len > 0 || v1->len < ~0) ? v1->data[0] : 0;
         if (v1->len > 1 || v1->len < ~1) u |= (unsigned int)v1->data[1] << 8;
-        return bytes_from_u16((v1->len < 0) ? ~u : u);
-    case O_BSWORD:
-        u = (v1->len > 1 || v1->len < ~1) ? v1->data[1] : 0;
-        if (v1->len > 0 || v1->len < ~0) u |= (unsigned int)v1->data[0] << 8;
-        return bytes_from_u16((v1->len < 0) ? ~u : u);
+        if (v1->len > 2 || v1->len < ~2) u |= (unsigned int)v1->data[2] << 8;
+        return bytes_calc1(op->op->op, (v1->len < 0) ? ~u : u);
     case O_POS: return val_reference(Obj(v1));
     case O_INV:
         if (op->inplace != Obj(v1)) return invert(v1, op->epoint3);
