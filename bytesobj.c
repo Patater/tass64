@@ -1040,24 +1040,21 @@ failed:
     return new_error_mem(op->epoint3);
 }
 
-static inline int icmp2(const uint8_t *a, const uint8_t *b, uint8_t ia, uint8_t ib, size_t ln) {
-    size_t i;
-    if (ia == 0 && ib == 0) {
-        return memcmp(a, b, ln);
-    }
-    for (i = 0; i < ln; i++) {
-        uint8_t aa = a[i] ^ ia;
-        uint8_t bb = b[i] ^ ib;
-        if (aa != bb) return aa - bb;
-    }
-    return 0;
-}
-
 static int icmp(oper_t op) {
     const Bytes *v1 = Bytes(op->v1), *v2 = Bytes(op->v2);
     size_t len1 = byteslen(v1), len2 = byteslen(v2);
-    int h = icmp2(v1->data, v2->data, (v1->len < 0) ? 0xff : 0, (v2->len < 0) ? 0xff : 0, (len1 < len2) ? len1 : len2);
-    if (h != 0) return h;
+    size_t i, ln = (len1 < len2) ? len1 : len2;
+    int h;
+    if ((v1->len >= 0) == (v2->len >= 0)) {
+        h = memcmp(v1->data, v2->data, ln);
+    } else {
+        h = 0;
+        for (i = 0; i < ln; i++) {
+            h = v1->data[i] - (uint8_t)~v2->data[i];
+            if (h != 0) break;
+        }
+    }
+    if (h != 0) return (v1->len >= 0) ? h : -h;
     if (len1 < len2) return -1;
     return (len1 > len2) ? 1 : 0;
 }
