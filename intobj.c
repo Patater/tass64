@@ -799,7 +799,7 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
             d = d2 << bit;
         }
         v2[0] = d;
-    } else if (len1 != 0) memcpy(v2, v1, len1 * sizeof *v2);
+    } else if (len1 != 0) memmove(v2, v1, len1 * sizeof *v2);
     if (word != 0) memset(v, 0, word * sizeof *v);
 
     return normalize(vv, sz, vv1->len < 0);
