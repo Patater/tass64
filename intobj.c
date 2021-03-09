@@ -416,20 +416,18 @@ static void iadd(const Int *vv1, const Int *vv2, Int *vv) {
     size_t i, len1, len2;
     digit_t *v1, *v2, *v;
     digit_t d;
-    bool c;
+    digit_t c;
     len1 = intlen(vv1);
     len2 = intlen(vv2);
     if (len1 <= 1 && len2 <= 1) {
-        d = vv1->val[0] + vv2->val[0];
-        v = vv->val;
-        vv->data = v;
-        if (d < vv1->val[0]) {
-            v[0] = d;
+        v = vv->data = vv->val;
+        d = vv1->val[0];
+        v[0] = d + vv2->val[0];
+        if (v[0] < d) {
             v[1] = 1;
             vv->len = 2;
             return;
         }
-        v[0] = d;
         vv->len = (v[0] != 0) ? 1 : 0;
         return;
     }
@@ -440,19 +438,16 @@ static void iadd(const Int *vv1, const Int *vv2, Int *vv) {
     if (len1 + 1 < 1) err_msg_out_of_memory(); /* overflow */
     v = inew(vv, len1 + 1);
     v1 = vv1->data; v2 = vv2->data;
-    for (c = false, i = 0; i < len2; i++) {
+    for (c = 0, i = 0; i < len2; i++) {
         d = v1[i];
-        if (c) {
-            c = ((v[i] = d + v2[i] + 1) <= d);
-            continue;
-        }
-        c = ((v[i] = d + v2[i]) < d);
+        v[i] = d + v2[i] + c;
+        c = ((c != 0) ? (v[i] <= d) : (v[i] < d)) ? 1 : 0;
     }
-    for (;c && i < len1; i++) {
-        c = ((v[i] = v1[i] + 1) < 1);
+    for (;i < len1; i++) {
+        v[i] = v1[i] + c;
+        c = (v[i] < c) ? 1 : 0;
     }
-    for (;i < len1; i++) v[i] = v1[i];
-    if (c) v[i++] = 1;
+    if (c != 0) v[i++] = 1;
     while (i != 0 && v[i - 1] == 0) i--;
     if (v != vv->val && i <= lenof(vv->val)) {
         memcpy(vv->val, v, i * sizeof *v);
