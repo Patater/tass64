@@ -20,6 +20,7 @@
 #define BITSOBJ_H
 #include "obj.h"
 #include "stdbool.h"
+#include "oper_e.h"
 
 extern struct Type *const BITS_OBJ;
 
@@ -48,6 +49,7 @@ extern void bitsobj_destroy(void);
 struct Str;
 struct Bytes;
 
+extern MUST_CHECK Obj *bits_calc1(Oper_types, unsigned int);
 extern MUST_CHECK Obj *bits_from_hexstr(const uint8_t *, size_t *, linepos_t);
 extern MUST_CHECK Obj *bits_from_binstr(const uint8_t *, size_t *, linepos_t);
 extern MUST_CHECK Obj *bits_from_str(const struct Str *, linepos_t);

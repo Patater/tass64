@@ -198,7 +198,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
             if (neg) real = -real;
             if (real >= 4294967296.0) real = fmod(real, 4294967296.0);
             r = (uint32_t)real;
-            return bytes_calc1(op->op->op, neg ? ~r + 1U : r);
+            return bits_calc1(op->op->op, neg ? ~r + 1U : r);
         }
     case O_INV: 
         return float_from_double_inplace(-0.5 / ((double)((uint32_t)1 << (8 * sizeof(uint32_t) - 1))) - real, op);
