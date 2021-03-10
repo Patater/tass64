@@ -1191,24 +1191,24 @@ Operators
 The following operators are available. Not all are defined for all types of
 arguments and their meaning might slightly vary depending on the type.
 
-            Unary operators
-- negative             + positive
-! not                  ~ invert
-* convert to arguments ^ decimal string
+                                Unary operators
+-     negative                          +     positive
+!     not                               ~     invert
+*     convert to arguments              ^     decimal string
 
 The `^' decimal string operator will be changed to mean the bank byte soon.
 Please update your sources to use format("%d", xxx) instead! This is done to be
 in line with it's use in most other assemblers.
 
-        Binary operators
-+  add         -  subtract
-*  multiply    /  divide
-%  modulo      ** raise to power
-|  binary or   ^  binary xor
-&  binary and  << shift left
->> shift right .  member
-.. concat      x  repeat
-in contains
+                               Binary operators
++     add                               -     subtract
+*     multiply                          /     divide
+%     modulo                            **    raise to power
+|     binary or                         ^     binary xor
+&     binary and                        <<    shift left
+>>    shift right                       .     member
+..    concat                            x     repeat
+in    contains
 
 Spacing must be used for the `x' and `in' operators or else they won't be
 recognized as such. For example the expression `[1,2]x2' should be written as
@@ -1225,21 +1225,21 @@ Traditional comparison operators give false or true depending on the result.
 
 The compare operator (<=>) gives -1 for less, 0 for equal and 1 for more.
 
-        Comparison operators
-<=> compare   === identical
-==  equals    !=  not equal
-<   less than >=  more than or equals
->   more than <=  less than or equals
+                             Comparison operators
+<=>   compare                           ===   identical
+==    equals                            !=    not equal
+<     less than                         >=    more than or equals
+>     more than                         <=    less than or equals
 
 Bit string extraction operators
 
 These unary operators extract 8 or 16 bits. Usually they are used to get parts
 of a memory address.
 
-     Bit string extraction operators
-<  lower byte              >  higher byte
-<> lower word              >` higher word
->< lower byte swapped word `  bank byte
+                        Bit string extraction operators
+<     lower byte                        >     higher byte
+<>    lower word                        >`    higher word
+><    lower byte swapped word           `     bank byte
 
         lda #<label     ; low byte of address
         ldy #>label     ; high byte of address
@@ -1309,16 +1309,16 @@ These assignment operators are short hands for updating variables.
 The variables on the left must be defined beforehand by `:=' or `.var'.
 Constants can't be changed of course.
 
-       Compound assignments
-+=  add         -=  subtract
-*=  multiply    /=  divide
-%=  modulo      **= raise to power
-|=  binary or   ^=  binary xor
-&=  binary and  ||= logical or
-&&= logical and <<= shift left
->>= shift right ..= concat
-<?= smaller     >?= greater
-x=  repeat      .=  member
+                             Compound assignments
++=    add                               -=    subtract
+*=    multiply                          /=    divide
+%=    modulo                            **=   raise to power
+|=    binary or                         ^=    binary xor
+&=    binary and                        ||=   logical or
+&&=   logical and                       <<=   shift left
+>>=   shift right                       ..=   concat
+<?=   smaller                           >?=   greater
+x=    repeat                            .=    member
 
 v       += 1            ; same as 'v .var v + 1'
 
