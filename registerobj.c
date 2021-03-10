@@ -22,9 +22,7 @@
 #include "variables.h"
 #include "values.h"
 
-#include "boolobj.h"
 #include "strobj.h"
-#include "intobj.h"
 #include "operobj.h"
 #include "typeobj.h"
 #include "errorobj.h"
