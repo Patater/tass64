@@ -25,9 +25,6 @@
 #include "strobj.h"
 #include "operobj.h"
 #include "intobj.h"
-#include "boolobj.h"
-#include "listobj.h"
-#include "noneobj.h"
 #include "errorobj.h"
 #include "functionobj.h"
 
@@ -110,7 +107,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (args != 1) {
                 return new_error_argnum(args, 1, 1, op->epoint2);
             }
-            if (v1 == LIST_OBJ || v1 == TUPLE_OBJ || v1 == TYPE_OBJ) return v1->create(v2->val[0].val, &v2->val[0].epoint);
+            if (v1->iterable || v1 == TYPE_OBJ) return v1->create(v2->val[0].val, &v2->val[0].epoint);
             return apply_convert(op);
         }
         break;
