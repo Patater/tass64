@@ -118,8 +118,8 @@ functionobj.o: functionobj.c functionobj.h obj.h attributes.h inttypes.h \
  oper_e.h typeobj.h noneobj.h errorobj.h bytesobj.h dictobj.h \
  addressobj.h
 gapobj.o: gapobj.c gapobj.h obj.h attributes.h inttypes.h eval.h \
- stdbool.h variables.h values.h strobj.h operobj.h oper_e.h intobj.h \
- boolobj.h typeobj.h errorobj.h errors_e.h
+ stdbool.h variables.h values.h strobj.h operobj.h oper_e.h boolobj.h \
+ typeobj.h errorobj.h errors_e.h
 instruction.o: instruction.c instruction.h attributes.h stdbool.h \
  inttypes.h opcodes.h 64tass.h wait_e.h section.h avl.h str.h file.h \
  listing.h error.h errors_e.h longjump.h arguments.h optimizer.h \
@@ -188,8 +188,8 @@ optimizer.o: optimizer.c optimizer.h inttypes.h stdbool.h error.h \
  attributes.h errors_e.h section.h avl.h str.h opcodes.h opt_bit.h \
  macro.h wait_e.h 64tass.h
 registerobj.o: registerobj.c registerobj.h obj.h attributes.h inttypes.h \
- stdbool.h eval.h variables.h values.h boolobj.h strobj.h intobj.h \
- operobj.h oper_e.h typeobj.h errorobj.h errors_e.h
+ stdbool.h eval.h variables.h values.h strobj.h operobj.h oper_e.h \
+ typeobj.h errorobj.h errors_e.h
 section.o: section.c section.h avl.h attributes.h stdbool.h str.h \
  inttypes.h unicode.h error.h errors_e.h 64tass.h wait_e.h values.h \
  intobj.h obj.h longjump.h optimizer.h eval.h mem.h memblocksobj.h
@@ -206,7 +206,7 @@ ternary.o: ternary.c ternary.h stdbool.h inttypes.h unicode.h \
  attributes.h error.h errors_e.h
 typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
  variables.h eval.h error.h errors_e.h strobj.h operobj.h oper_e.h \
- intobj.h errorobj.h functionobj.h str.h
+ errorobj.h functionobj.h str.h
 unicodedata.o: unicodedata.c unicodedata.h attributes.h inttypes.h
 unicode.o: unicode.c unicode.h attributes.h inttypes.h stdbool.h wchar.h \
  wctype.h error.h errors_e.h unicodedata.h str.h console.h

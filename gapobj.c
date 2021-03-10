@@ -24,7 +24,6 @@
 
 #include "strobj.h"
 #include "operobj.h"
-#include "intobj.h"
 #include "boolobj.h"
 #include "typeobj.h"
 #include "errorobj.h"
