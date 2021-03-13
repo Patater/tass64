@@ -2457,10 +2457,8 @@ MUST_CHECK Obj *compile(void)
                             if (prm == CMD_FUNCTION) {
                                 if (!failed && here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
                                 waitfor->skip = 0;
-                                goto breakerr;
                             } 
-                            if (skip_exp()) get_exp(0, 0, 0, &epoint);
-                            goto finish;
+                            goto breakerr;
                         }
                     case CMD_STRUCT:
                     case CMD_UNION:
@@ -3924,10 +3922,7 @@ MUST_CHECK Obj *compile(void)
                                 err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
                             }
                         }
-                        if (tobool(get_val(), &writeit) || !writeit) {
-                            if (skip_exp()) get_exp(0, 0, 0, &epoint);
-                            goto breakerr;
-                        }
+                        if (tobool(get_val(), &writeit) || !writeit) goto breakerr;
                     }
                     if (!get_exp(0, 0, 0, &epoint)) goto breakerr;
                     len = get_val_remaining();
