@@ -729,10 +729,10 @@ MUST_CHECK Obj *bits_calc1(Oper_types op, unsigned int val) {
     case O_BANK: val >>= 8; /* fall through */
     case O_HIGHER: val >>= 8; /* fall through */
     case O_LOWER: 
-    default: return return_bits(val & 0xff, 8, false);
+    default: return return_bits((uint8_t)val, 8, false);
+    case O_BSWORD: val = (uint16_t)val | (val << 16); /* fall through */
     case O_HWORD: val >>= 8; /* fall through */
-    case O_WORD: return return_bits(val, 16, false);
-    case O_BSWORD: return return_bits((uint16_t)(((uint16_t)val >> 8) | (val << 8)), 16, false);
+    case O_WORD: return return_bits((uint16_t)val, 16, false);
     }
 }
 
