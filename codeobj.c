@@ -420,23 +420,20 @@ MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
 
 static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     Obj **vals;
-    address_t ln;
-    size_t offs1;
     Code *v1 = Code(op->v1);
     Obj *o2 = op->v2;
     Obj *err;
     Funcargs *args = Funcargs(o2);
-    linepos_t epoint2;
     struct code_item_s ci;
+    struct indexoffs_s io;
 
     if (args->len < 1 || args->len - 1 > indx) {
         return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
+    io.len = code_item_prepare(&ci, v1);
+    io.epoint = &args->val[indx].epoint;
+
     o2 = args->val[indx].val;
-    epoint2 = &args->val[indx].epoint;
-
-    ln = code_item_prepare(&ci, v1);
-
     if (o2->obj->iterable) {
         struct iter_s iter;
         Tuple *v;
@@ -449,13 +446,13 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         }
         v = new_tuple(iter.len);
         vals = v->data;
-        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
-            err = indexoffs(o2, ln, &offs1, epoint2);
+        for (i = 0; i < iter.len && (io.v1 = iter.next(&iter)) != NULL; i++) {
+            err = indexoffs(&io);
             if (err != NULL) {
                 vals[i] = err;
                 continue;
             }
-            ci.offs2 = (address_t)offs1;
+            ci.offs2 = (address_t)io.offs;
             vals[i] = code_item(&ci);
         }
         iter_destroy(&iter);
@@ -467,7 +464,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         Tuple *v;
         size_t i;
 
-        err = sliceparams(Colonlist(o2), ln, &s, epoint2);
+        err = sliceparams(Colonlist(o2), io.len, &s, io.epoint);
         if (err != NULL) return err;
 
         if (s.length == 0) {
@@ -483,10 +480,11 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         }
         return Obj(v);
     }
-    err = indexoffs(o2, ln, &offs1, epoint2);
+    io.v1 = o2;
+    err = indexoffs(&io);
     if (err != NULL) return err;
 
-    ci.offs2 = (address_t)offs1;
+    ci.offs2 = (address_t)io.offs;
     return code_item(&ci);
 }
 

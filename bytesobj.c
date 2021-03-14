@@ -1197,23 +1197,21 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
 
 static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     uint8_t *p2;
-    size_t offs2, len1;
     size_t i;
     Bytes *v, *v1 = Bytes(op->v1);
     Obj *o2 = op->v2;
     Obj *err;
     uint8_t inv = (v1->len < 0) ? (uint8_t)~0 : 0;
     Funcargs *args = Funcargs(o2);
-    linepos_t epoint2;
+    struct indexoffs_s io;
 
     if (args->len < 1 || args->len - 1 > indx) {
         return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
+    io.len = byteslen(v1);
+    io.epoint = &args->val[indx].epoint;
+
     o2 = args->val[indx].val;
-    epoint2 = &args->val[indx].epoint;
-
-    len1 = byteslen(v1);
-
     if (o2->obj->iterable) {
         struct iter_s iter;
         iter.data = o2; o2->obj->getiter(&iter);
@@ -1228,14 +1226,14 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
             goto failed;
         }
         p2 = v->data;
-        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
-            err = indexoffs(o2, len1, &offs2, epoint2);
+        for (i = 0; i < iter.len && (io.v1 = iter.next(&iter)) != NULL; i++) {
+            err = indexoffs(&io);
             if (err != NULL) {
                 val_destroy(Obj(v));
                 iter_destroy(&iter);
                 return err;
             }
-            p2[i] = v1->data[offs2] ^ inv;
+            p2[i] = v1->data[io.offs] ^ inv;
         }
         iter_destroy(&iter);
         if (i > SSIZE_MAX) goto failed2; /* overflow */
@@ -1245,7 +1243,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     if (o2->obj == COLONLIST_OBJ) {
         struct sliceparam_s s;
 
-        err = sliceparams(Colonlist(o2), len1, &s, epoint2);
+        err = sliceparams(Colonlist(o2), io.len, &s, io.epoint);
         if (err != NULL) return err;
 
         switch (s.length) {
@@ -1300,9 +1298,10 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         v->len = (ssize_t)s.length;
         return Obj(v);
     }
-    err = indexoffs(o2, len1, &offs2, epoint2);
+    io.v1 = o2;
+    err = indexoffs(&io);
     if (err != NULL) return err;
-    return bytes_from_u8(v1->data[offs2] ^ inv);
+    return bytes_from_u8(v1->data[io.offs] ^ inv);
 failed2:
     val_destroy(Obj(v));
 failed:
