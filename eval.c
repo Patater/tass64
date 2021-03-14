@@ -385,16 +385,6 @@ static MUST_CHECK Obj *resolv_anonlabel(ssize_t as, linecpos_t pos) {
     return Obj(err);
 }
 
-struct opr_s {
-    Oper *val;
-    linecpos_t pos;
-};
-
-struct opr_list_s {
-    struct opr_s *data;
-    size_t p, size;
-};
-
 struct out_s {
     Obj *val;
     linecpos_t pos;
@@ -402,7 +392,7 @@ struct out_s {
 
 struct out_list_s {
     struct out_s *data;
-    size_t p, size;
+    unsigned int p, size;
 };
 
 static size_t evxnum, evx_p;
@@ -414,26 +404,20 @@ static struct eval_context_s {
     size_t outp2;
     int gstop;
     struct out_list_s out;
-    struct opr_list_s opr;
+    struct out_list_s opr;
 } **evx;
 
 static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
     out->size += 64;
-    if (/*out->size < 64 ||*/ out->size > SIZE_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
+    if (out->size < 64 || out->size > SIZE_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
     out->data = (struct out_s *)reallocx(out->data, out->size * sizeof *out->data);
 }
 
 static inline void clean_out(struct eval_context_s *ev) {
     struct out_s *o, *o2 = &ev->out.data[ev->out.p];
     for (o = &ev->out.data[ev->outp2]; o < o2; o++) val_destroy(o->val);
-}
-
-static NO_INLINE void extend_opr(struct opr_list_s *opr) {
-    opr->size += 16;
-    if (/*opr->size < 16 ||*/ opr->size > SIZE_MAX / sizeof *opr->data) err_msg_out_of_memory(); /* overflow */
-    opr->data = (struct opr_s *)reallocx(opr->data, opr->size * sizeof *opr->data);
 }
 
 static bool get_exp_compat(int stop) {/* length in bytes, defined */
@@ -447,12 +431,12 @@ static bool get_exp_compat(int stop) {/* length in bytes, defined */
     str_t symbol;
     Label *l;
     struct out_list_s out = eval->out;
-    struct opr_list_s opr;
+    struct out_list_s opr;
 
     opr.data = eval->opr.data;
     opr.size = eval->opr.size;
     opr.p = 0;
-    opr.data[0].val = &o_COMMA;
+    opr.data[0].val = &o_COMMA.v;
 rest:
     ignore();
     conv = NULL;
@@ -522,10 +506,8 @@ rest:
         if (stop != 2) ignore();
         ch = here(); epoint.pos = lpoint.pos;
 
-        while (opr.p != 0 && opr.data[opr.p - 1].val != &o_PARENT) {
-            opr.p--;
-            out.data[out.p].val = Obj(opr.data[opr.p].val);
-            out.data[out.p++].pos = opr.data[opr.p].pos;
+        while (opr.p != 0 && opr.data[opr.p - 1].val != &o_PARENT.v) {
+            out.data[out.p++] = opr.data[--opr.p];
             if (out.p >= out.size) extend_out(&out);
         }
         switch (ch) {
@@ -536,12 +518,14 @@ rest:
             if (llen == 1) {
                 switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
                 case 'x':
-                    opr.data[opr.p].pos = epoint.pos; opr.data[opr.p++].val = &o_COMMAX;
-                    if (opr.p >= opr.size) extend_opr(&opr);
+                    opr.data[opr.p].val = &o_COMMAX.v;
+                    opr.data[opr.p++].pos = epoint.pos; 
+                    if (opr.p >= opr.size) extend_out(&opr);
                     goto other;
                 case 'y':
-                    opr.data[opr.p].pos = epoint.pos; opr.data[opr.p++].val = &o_COMMAY;
-                    if (opr.p >= opr.size) extend_opr(&opr);
+                    opr.data[opr.p].val = &o_COMMAY.v;
+                    opr.data[opr.p++].pos = epoint.pos; 
+                    if (opr.p >= opr.size) extend_out(&opr);
                     goto other;
                 default: break;
                 }
@@ -570,16 +554,20 @@ rest:
         case '/': op = &o_DIV; goto add;
         case '+': op = &o_ADD; goto add;
         case '-': op = &o_SUB;
-              add: opr.data[opr.p].pos = epoint.pos; opr.data[opr.p++].val = op; lpoint.pos++;
-                  if (opr.p >= opr.size) extend_opr(&opr);
-                  continue;
+        add: 
+            lpoint.pos++;
+            opr.data[opr.p].val = Obj(op);
+            opr.data[opr.p++].pos = epoint.pos; 
+            if (opr.p >= opr.size) extend_out(&opr);
+            continue;
         case ')':
             if (opr.p == 0) {err_msg2(ERROR______EXPECTED, "')' not", &lpoint); goto error;}
             lpoint.pos++;
             opr.p--;
             if (opr.p == 0 && first) {
-                opr.data[opr.p++].val = &o_TUPLE;
-                if (opr.p >= opr.size) extend_opr(&opr);
+                opr.data[opr.p].val = &o_TUPLE.v;
+                opr.data[opr.p++].pos = epoint.pos;
+                if (opr.p >= opr.size) extend_out(&opr);
                 first = false;
             }
             goto other;
@@ -1325,7 +1313,7 @@ static bool get_exp2(int stop) {
     size_t symbollist;
     Obj *val;
     struct out_list_s out;
-    struct opr_list_s opr;
+    struct out_list_s opr;
 
     clean_out(eval);
     eval->gstop = stop;
@@ -1347,7 +1335,7 @@ static bool get_exp2(int stop) {
     opr.data = eval->opr.data;
     opr.size = eval->opr.size;
     opr.p = 0;
-    opr.data[0].val = &o_COMMA;
+    opr.data[0].val = &o_COMMA.v;
     for (;;) {
         ignore(); ch = here(); epoint.pos = lpoint.pos;
         switch (ch) {
@@ -1362,52 +1350,55 @@ static bool get_exp2(int stop) {
             continue;
         case ')':
             if (opr.p != 0) {
-                Oper_types o = opr.data[opr.p - 1].val->op;
+                Oper_types o = Oper(opr.data[opr.p - 1].val)->op;
                 if (o == O_COMMA) {opr.p--;val = &o_TUPLE.v;goto tphack;}
                 else if (o == O_PARENT || o == O_FUNC) goto other;
             }
             goto tryanon;
         case ']':
             if (opr.p != 0) {
-                Oper_types o = opr.data[opr.p - 1].val->op;
+                Oper_types o = Oper(opr.data[opr.p - 1].val)->op;
                 if (o == O_COMMA) {opr.p--;val = &o_LIST.v;goto lshack;}
                 else if (o == O_BRACKET || o == O_INDEX) goto other;
             }
             goto tryanon;
         case '}':
             if (opr.p != 0) {
-                Oper_types o = opr.data[opr.p - 1].val->op;
+                Oper_types o = Oper(opr.data[opr.p - 1].val)->op;
                 if (o == O_COMMA) {opr.p--;val = &o_DICT.v;goto brhack;}
                 else if (o == O_BRACE) goto other;
             }
             goto tryanon;
         case ':':
             if (opr.p != 0) {
-                Oper_types o = opr.data[opr.p - 1].val->op;
+                Oper_types o = Oper(opr.data[opr.p - 1].val)->op;
                 if (o != O_PARENT && o != O_BRACKET && o != O_BRACE && o != O_FUNC && o != O_INDEX && o != O_COMMA) goto tryanon;
             }
             val = ref_default();
             goto push_other;
         case '(':
-            if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) symbollist++;
+            if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) symbollist++;
         tphack2:
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = &o_PARENT; lpoint.pos++;
-            if (opr.p >= opr.size) extend_opr(&opr);
+            lpoint.pos++;
+            opr.data[opr.p].val = &o_PARENT.v;
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             val = &o_PARENT.v;
             goto push_continue;
         case '[':
-            if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) symbollist++;
+            if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) symbollist++;
         lshack2:
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = &o_BRACKET; lpoint.pos++;
-            if (opr.p >= opr.size) extend_opr(&opr);
+            lpoint.pos++;
+            opr.data[opr.p].val = &o_BRACKET.v;
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             val = &o_BRACKET.v;
             goto push_continue;
         case '{':
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = &o_BRACE; lpoint.pos++;
-            if (opr.p >= opr.size) extend_opr(&opr);
+            lpoint.pos++;
+            opr.data[opr.p].val = &o_BRACE.v;
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             val = &o_BRACE.v;
             goto push_continue;
         case '+': op = &o_POS; break;
@@ -1430,7 +1421,7 @@ static bool get_exp2(int stop) {
         case '\'': val = get_string(&epoint); goto push_other;
         case '?':
             if (opr.p != 0) {
-                Oper_types o = opr.data[opr.p - 1].val->op;
+                Oper_types o = Oper(opr.data[opr.p - 1].val)->op;
                 if (o == O_SPLAT || o == O_POS || o == O_NEG) goto tryanon;
             }
             lpoint.pos++; val = ref_gap(); goto push_other;
@@ -1510,7 +1501,7 @@ static bool get_exp2(int stop) {
                 }
                 symbol.data = pline + epoint.pos;
                 symbol.len = lpoint.pos - epoint.pos;
-                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
+                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
                     val = Obj(new_symbol(&symbol, &epoint));
                 } else {
                     down = (symbol.data[0] != '_');
@@ -1533,10 +1524,10 @@ static bool get_exp2(int stop) {
             }
         tryanon:
             db = opr.p;
-            while (opr.p != 0 && opr.data[opr.p - 1].val == &o_POS) opr.p--;
+            while (opr.p != 0 && opr.data[opr.p - 1].val == &o_POS.v) opr.p--;
             if (db != opr.p) {
                 ssize_t as = (ssize_t)(db - opr.p) - 1;
-                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
+                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
                     val = Obj(new_anonsymbol(as));
                 } else {
                     val = resolv_anonlabel(as, opr.data[opr.p].pos);
@@ -1544,10 +1535,10 @@ static bool get_exp2(int stop) {
                 epoint.pos = opr.data[opr.p].pos;
                 goto push_other;
             }
-            while (opr.p != 0 && opr.data[opr.p - 1].val == &o_NEG) opr.p--;
+            while (opr.p != 0 && opr.data[opr.p - 1].val == &o_NEG.v) opr.p--;
             if (db != opr.p) {
                 ssize_t as = -(ssize_t)(db - opr.p);
-                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
+                if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
                     val = Obj(new_anonsymbol(as));
                 } else {
                     val = resolv_anonlabel(as, opr.data[opr.p].pos);
@@ -1556,13 +1547,13 @@ static bool get_exp2(int stop) {
                 goto push_other;
             }
             if (opr.p != 0) {
-                if (opr.data[opr.p - 1].val == &o_COLON) {
+                if (opr.data[opr.p - 1].val == &o_COLON.v) {
                     val = ref_default();
                     goto push_other;
                 }
-                if (opr.data[opr.p - 1].val == &o_SPLAT) {
+                if (opr.data[opr.p - 1].val == &o_SPLAT.v) {
                     opr.p--;
-                    if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
+                    if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
                         val = new_starsymbol(opr.data[opr.p].pos);
                     } else {
                         val = get_star();
@@ -1575,10 +1566,10 @@ static bool get_exp2(int stop) {
             err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
             goto error;
         }
-        if (opr.p != 0 && opr.data[opr.p - 1].val == &o_SPLAT) {
+        if (opr.p != 0 && opr.data[opr.p - 1].val == &o_SPLAT.v) {
             opr.p--;
             lpoint.pos = epoint.pos;
-            if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
+            if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
                 val = new_starsymbol(opr.data[opr.p].pos);
             } else {
                 val = get_star();
@@ -1588,9 +1579,9 @@ static bool get_exp2(int stop) {
         }
         lpoint.pos++;
     rtl:
-        opr.data[opr.p].pos = epoint.pos;
-        opr.data[opr.p++].val = op;
-        if (opr.p >= opr.size) extend_opr(&opr);
+        opr.data[opr.p].val = Obj(op);
+        opr.data[opr.p++].pos = epoint.pos;
+        if (opr.p >= opr.size) extend_out(&opr);
         continue;
     push_other:
         out.data[out.p].val = val;
@@ -1619,24 +1610,20 @@ static bool get_exp2(int stop) {
                     }
                     if (op != NULL) {
                         prec = o_HASH.prio;
-                        while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio && opr.data[opr.p - 1].val != &o_COLON2 && opr.data[opr.p - 1].val != &o_COND && opr.data[opr.p - 1].val != &o_DCOND) {
-                            opr.p--;
-                            out.data[out.p].val = Obj(opr.data[opr.p].val);
-                            out.data[out.p++].pos = opr.data[opr.p].pos;
+                        while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio && opr.data[opr.p - 1].val != &o_COLON2.v && opr.data[opr.p - 1].val != &o_COND.v && opr.data[opr.p - 1].val != &o_DCOND.v) {
+                            out.data[out.p++] = opr.data[--opr.p];
                             if (out.p >= out.size) extend_out(&out);
                         }
-                        opr.data[opr.p].pos = epoint.pos;
-                        opr.data[opr.p++].val = op;
-                        if (opr.p >= opr.size) extend_opr(&opr);
+                        opr.data[opr.p].val = Obj(op);
+                        opr.data[opr.p++].pos = epoint.pos;
+                        if (opr.p >= opr.size) extend_out(&opr);
                         goto other;
                     } 
                 }
             } else llen = 0;
             prec = o_COMMA.prio;
-            while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
-                opr.p--;
-                out.data[out.p].val = Obj(opr.data[opr.p].val);
-                out.data[out.p++].pos = opr.data[opr.p].pos;
+            while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio) {
+                out.data[out.p++] = opr.data[--opr.p];
                 if (out.p >= out.size) extend_out(&out);
             }
             if (opr.p == 0) {
@@ -1645,39 +1632,37 @@ static bool get_exp2(int stop) {
             out.data[out.p].val = &o_COMMA.v;
             out.data[out.p++].pos = epoint.pos;
             if (out.p >= out.size) extend_out(&out);
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = &o_COMMA;
-            if (opr.p >= opr.size) extend_opr(&opr);
+            opr.data[opr.p].val = &o_COMMA.v;
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             if (llen != 0) {
                 epoint.pos++;
                 goto as_symbol;
             }
             continue;
         case '(':
+            lpoint.pos++;
             prec = o_MEMBER.prio;
-            while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
-                opr.p--;
-                out.data[out.p].val = Obj(opr.data[opr.p].val);
-                out.data[out.p++].pos = opr.data[opr.p].pos;
+            while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio) {
+                out.data[out.p++] = opr.data[--opr.p];
                 if (out.p >= out.size) extend_out(&out);
             }
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = &o_FUNC; lpoint.pos++;
-            if (opr.p >= opr.size) extend_opr(&opr);
+            opr.data[opr.p].val = &o_FUNC.v;
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             if (symbollist != 0) symbollist++;
             val = &o_PARENT.v;
             goto push_continue;
         case '[':
+            lpoint.pos++;
             prec = o_MEMBER.prio;
-            while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
-                opr.p--;
-                out.data[out.p].val = Obj(opr.data[opr.p].val);
-                out.data[out.p++].pos = opr.data[opr.p].pos;
+            while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio) {
+                out.data[out.p++] = opr.data[--opr.p];
                 if (out.p >= out.size) extend_out(&out);
             }
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = &o_INDEX; lpoint.pos++;
-            if (opr.p >= opr.size) extend_opr(&opr);
+            opr.data[opr.p].val = &o_INDEX.v;
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             if (symbollist != 0) symbollist++;
             val = &o_BRACKET.v;
             goto push_continue;
@@ -1693,22 +1678,20 @@ static bool get_exp2(int stop) {
         case '?': op = (pline[lpoint.pos + 1] == '?') ? &o_DQUEST : &o_QUEST; lpoint.pos += op->len; prec = o_COND.prio + 1; goto push3;
         case ':': if (pline[lpoint.pos + 1] == '=') {op = &o_COLON_ASSIGN;goto push2;}
             if (pline[lpoint.pos + 1] == '?' && pline[lpoint.pos + 2] == '=') {op = &o_COND_ASSIGN;goto push2;}
+            lpoint.pos++;
             op = &o_COLON;
             prec = op->prio + 1;
-            while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
-                opr.p--;
-                out.data[out.p].val = Obj(opr.data[opr.p].val);
-                out.data[out.p++].pos = opr.data[opr.p].pos;
+            while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio) {
+                out.data[out.p++] = opr.data[--opr.p];
                 if (out.p >= out.size) extend_out(&out);
             }
             if (opr.p != 0) {
-                if (opr.data[opr.p - 1].val == &o_QUEST) { opr.data[opr.p - 1].val = &o_COND; op = &o_COLON2;}
-                else if (opr.data[opr.p - 1].val == &o_DQUEST) { opr.data[opr.p - 1].val = &o_DCOND; op = &o_COLON2;}
+                if (opr.data[opr.p - 1].val == &o_QUEST.v) { opr.data[opr.p - 1].val = &o_COND.v; op = &o_COLON2;}
+                else if (opr.data[opr.p - 1].val == &o_DQUEST.v) { opr.data[opr.p - 1].val = &o_DCOND.v; op = &o_COLON2;}
             }
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = op;
-            if (opr.p >= opr.size) extend_opr(&opr);
-            lpoint.pos++;
+            opr.data[opr.p].val = Obj(op);
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             continue;
         case '=':
             if (pline[lpoint.pos + 1] != '=') {
@@ -1723,15 +1706,13 @@ static bool get_exp2(int stop) {
         push2a:
             prec = op->prio;
         push3:
-            while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
-                opr.p--;
-                out.data[out.p].val = Obj(opr.data[opr.p].val);
-                out.data[out.p++].pos = opr.data[opr.p].pos;
+            while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio) {
+                out.data[out.p++] = opr.data[--opr.p];
                 if (out.p >= out.size) extend_out(&out);
             }
-            opr.data[opr.p].pos = epoint.pos;
-            opr.data[opr.p++].val = op;
-            if (opr.p >= opr.size) extend_opr(&opr);
+            opr.data[opr.p].val = Obj(op);
+            opr.data[opr.p++].pos = epoint.pos;
+            if (opr.p >= opr.size) extend_out(&opr);
             continue;
         case '<':
             switch (pline[lpoint.pos + 1]) {
@@ -1762,7 +1743,7 @@ static bool get_exp2(int stop) {
             do {
                 const char *mis;
                 if (opr.p != 0) {
-                    Oper *o = opr.data[opr.p - 1].val;
+                    Oper *o = Oper(opr.data[opr.p - 1].val);
                     switch (o->op) {
                     case O_FUNC:
                         val = Obj(o);
@@ -1791,7 +1772,7 @@ static bool get_exp2(int stop) {
             do {
                 const char *mis;
                 if (opr.p != 0) {
-                    Oper *o = opr.data[opr.p - 1].val;
+                    Oper *o = Oper(opr.data[opr.p - 1].val);
                     switch (o->op) {
                     case O_INDEX:
                         val = Obj(o);
@@ -1819,7 +1800,7 @@ static bool get_exp2(int stop) {
             do {
                 const char *mis;
                 if (opr.p != 0) {
-                    Oper *o = opr.data[opr.p - 1].val;
+                    Oper *o = Oper(opr.data[opr.p - 1].val);
                     switch (o->op) {
                     case O_BRACE:
                         lpoint.pos++;
@@ -1856,7 +1837,7 @@ static bool get_exp2(int stop) {
         }
         while (opr.p != 0) {
             const char *mis;
-            Oper *o = opr.data[opr.p - 1].val;
+            Oper *o = Oper(opr.data[opr.p - 1].val);
             switch (o->op) {
             case O_PARENT:
             case O_FUNC: mis = "')'"; break;
@@ -1983,7 +1964,7 @@ void eval_enter(void) {
         eval->out.data = (struct out_s *)mallocx(16 * sizeof *eval->out.data);
         eval->out.p = 0;
         eval->opr.size = 16;
-        eval->opr.data = (struct opr_s *)mallocx(16 * sizeof *eval->opr.data);
+        eval->opr.data = (struct out_s *)mallocx(16 * sizeof *eval->opr.data);
         eval->opr.p = 0;
         eval->outp2 = 0;
         evx[evx_p] = eval;
