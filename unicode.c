@@ -26,8 +26,7 @@
 #include "str.h"
 #include "console.h"
 
-#define U_CASEFOLD 1
-#define U_COMPAT 2
+enum { U_CASEFOLD = 1, U_COMPAT = 2 };
 
 FAST_CALL unsigned int utf8in(const uint8_t *c, uchar_t *out) { /* only for internal use with validated utf-8! */
     unsigned int i, j;

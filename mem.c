@@ -319,16 +319,18 @@ static void hexput(struct hexput_s *h, unsigned int b) {
     h->sum += b;
 }
 
+enum { IHEX_LENGTH = 32U };
+
 struct ihex_s {
     FILE *file;
     address_t address, segment;
-    uint8_t data[32];
+    uint8_t data[IHEX_LENGTH];
     unsigned int length;
 };
 
 static void output_mem_ihex_line(struct ihex_s *ihex, unsigned int length, address_t address, unsigned int type, const uint8_t *data) {
     unsigned int i;
-    char line[1+(1+2+1+32+1)*2+1];
+    char line[1+(1+2+1+IHEX_LENGTH+1)*2+1];
     struct hexput_s h = { line + 1, 0 };
     line[0] = ':';
     hexput(&h, length);
@@ -383,7 +385,7 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
             ihex.address = addr;
         }
         while (blen != 0) {
-            address_t left = (sizeof ihex.data) - ihex.length;
+            unsigned int left = IHEX_LENGTH - ihex.length;
             address_t copy = blen > left ? left : blen;
             memcpy(ihex.data + ihex.length, d, copy);
             ihex.length += copy;
@@ -398,17 +400,19 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
     output_mem_ihex_line(&ihex, 0, 0, 1, NULL);
 }
 
+enum { SRECORD_LENGTH = 32U };
+
 struct srecord_s {
     FILE *file;
     unsigned int type;
     address_t address;
-    uint8_t data[32];
+    uint8_t data[SRECORD_LENGTH];
     unsigned int length;
 };
 
 static void output_mem_srec_line(struct srecord_s *srec) {
     unsigned int i;
-    char line[1+1+(1+4+32+1)*2+1];
+    char line[1+1+(1+4+SRECORD_LENGTH+1)*2+1];
     struct hexput_s h = { line + 2, 0 };
     line[0] = 'S';
     line[1] = (char)(srec->length != 0 ? ('1' + srec->type) : ('9' - srec->type));
@@ -454,7 +458,7 @@ static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
             srec.address = addr;
         }
         while (blen != 0) {
-            address_t left = (sizeof srec.data) - srec.length;
+            unsigned int left = SRECORD_LENGTH - srec.length;
             address_t copy = blen > left ? left : blen;
             memcpy(srec.data + srec.length, d, copy);
             srec.length += copy;

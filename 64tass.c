@@ -1238,7 +1238,7 @@ static MUST_CHECK Obj *tuple_scope_light(Obj **o, linepos_t epoint) {
 
 static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
     Obj *nf;
-    size_t size;
+    address_t size;
     Code *code;
     address_t oaddr;
     size_t newmembp;
