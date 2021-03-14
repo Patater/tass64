@@ -1610,7 +1610,9 @@ static bool get_exp2(int stop) {
                     }
                     if (op != NULL) {
                         prec = o_HASH.prio;
-                        while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio && opr.data[opr.p - 1].val != &o_COLON2.v && opr.data[opr.p - 1].val != &o_COND.v && opr.data[opr.p - 1].val != &o_DCOND.v) {
+                        while (opr.p != 0 && prec <= Oper(opr.data[opr.p - 1].val)->prio) {
+                            Oper_types o = Oper(opr.data[opr.p - 1].val)->op;
+                            if (o == O_COLON2 || o == O_COND || o == O_DCOND) break;
                             out.data[out.p++] = opr.data[--opr.p];
                             if (out.p >= out.size) extend_out(&out);
                         }
