@@ -575,7 +575,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
 
 bool get_func_params(Mfunc *v, bool single) {
     struct mfunc_param_s *param;
-    size_t len = v->argc, i = 0, j;
+    argcount_t len = v->argc, i = 0, j;
     str_t label;
     bool stard = false, ret = false;
 
@@ -589,7 +589,7 @@ bool get_func_params(Mfunc *v, bool single) {
             }
             if (i >= len) {
                 len += 16;
-                if (/*len < 16 ||*/ len > SIZE_MAX / sizeof *param) err_msg_out_of_memory(); /* overflow */
+                if (len < 16 || len > ARGCOUNT_MAX / sizeof *param) err_msg_out_of_memory(); /* overflow */
                 param = (struct mfunc_param_s *)reallocx(param, len * sizeof *param);
             }
             param[i].epoint = lpoint;
