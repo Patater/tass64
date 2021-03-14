@@ -372,7 +372,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     return obj_oper_error(op);
 }
 
-static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     Obj *val = Address(op->v1)->val;
     if (val == none_value || val->obj == ERROR_OBJ) {
         return val_reference(val);
