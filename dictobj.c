@@ -333,7 +333,7 @@ static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t epoint) {
         if (err != NULL) return err;
         h += (unsigned int)h2;
     }
-    h ^= i;
+    h ^= (unsigned int)i;
     h &= ((~0U) >> 1);
     if (vals != v1->u.val) v1->u.s.hash = (int)h;
     *hs = (int)h;

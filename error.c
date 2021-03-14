@@ -1165,12 +1165,11 @@ static const char * const order_suffix[4] = {
     "st", "nd", "rd", "th"
 };
 
-void err_msg_missing_argument(linepos_t epoint, size_t n) {
+void err_msg_missing_argument(linepos_t epoint, argcount_t n) {
     char msg2[4];
-    unsigned int i = n % 10;
     bool more = new_error_msg(SV_ERROR, &((const struct file_listnode_s *)current_file_list)->parent->flist, &current_file_list->epoint);
     msg2[0] = (char)(n + '1');
-    memcpy(msg2 + 1, order_suffix[i < 4 ? i : 3], 3);
+    memcpy(msg2 + 1, order_suffix[n < 4 ? n : 3], 3);
     adderror(msg2);
     adderror(" argument is missing");
     if (more) new_error_msg_more();

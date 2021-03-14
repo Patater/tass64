@@ -148,7 +148,7 @@ bool mtranslate(void) {
     if (changed) return false;
     mline = &macro_parameters.current->pline;
 
-    q = p = p2 = 0; n = 0; last = last2 = 0; fault = false;
+    q = 0; p = 0; p2 = 0; n = 0; last = 0; last2 = 0; fault = false;
     while (pline[p2] != 0) {
         str_t param;
         switch (pline[p2]) {
