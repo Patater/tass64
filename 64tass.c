@@ -557,7 +557,7 @@ static void const_assign(Label *label, Obj *val) {
 
 struct textrecursion_s {
     ssize_t len;
-    size_t sum, max;
+    address_t sum, max;
     int prm;
     Error_types error;
     uint8_t buff[16];
@@ -565,7 +565,8 @@ struct textrecursion_s {
 };
 
 static void textrecursion_flush(struct textrecursion_s *trec) {
-    memcpy(pokealloc((size_t)trec->len, trec->epoint), trec->buff, (size_t)trec->len);
+    address_t len = (address_t)trec->len;
+    memcpy(pokealloc(len, trec->epoint), trec->buff, len);
     trec->len = 0;
 }
 
@@ -734,7 +735,8 @@ struct byterecursion_s {
 };
 
 static void byterecursion_flush(struct byterecursion_s *brec) {
-    memcpy(pokealloc((size_t)brec->len, brec->epoint), brec->buff, (size_t)brec->len); 
+    address_t len = (address_t)brec->len;
+    memcpy(pokealloc(len, brec->epoint), brec->buff, len); 
     brec->len = 0;
 }
 
@@ -3436,7 +3438,7 @@ MUST_CHECK Obj *compile(void)
                             trec.len = 0; 
                             trec.len = 0;
                         }
-                        trec.max = SIZE_MAX;
+                        trec.max = ~(address_t)0;
                         trec.prm = prm;
                         trec.error = ERROR__USER_DEFINED;
                         trec.epoint = &epoint;
@@ -3444,7 +3446,7 @@ MUST_CHECK Obj *compile(void)
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             if (trec.len != 0) {
                                 if (trec.len > 0) textrecursion_flush(&trec);
-                                else if (trec.len < 0) { memskip((size_t)-trec.len, trec.epoint); trec.len = 0; }
+                                else { memskip((size_t)-trec.len, trec.epoint); trec.len = 0; }
                             }
                             trec.epoint = &vs->epoint;
                             textrecursion(&trec, vs->val);
@@ -3467,7 +3469,10 @@ MUST_CHECK Obj *compile(void)
                         }
                         if (trec.len > 0) textrecursion_flush(&trec);
                         if (prm == CMD_PTEXT) {
-                            if (trec.sum > 0x100) err_msg2(ERROR____PTEXT_LONG, &trec.sum, &epoint);
+                            if (trec.sum > 0x100) {
+                                size_t ln2 = trec.sum;
+                                err_msg2(ERROR____PTEXT_LONG, &ln2, &epoint);
+                            }
                             write_mark_mem(&mm, current_address->mem, (trec.sum-1) ^ outputeor);
                         }
                         if (nolisting == 0) list_mem(&mm, current_address->mem);
