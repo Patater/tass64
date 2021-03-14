@@ -780,7 +780,7 @@ static bool clean_namespace(Namespace *v1) {
 Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
     struct values_s *vals = v2->val;
     argcount_t args = v2->len;
-    size_t i;
+    argcount_t i;
     Label *label;
     Obj *val;
     Tuple *tuple;
@@ -829,7 +829,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         bool labelexists;
         if (param->init == default_value) {
             if (i < args) {
-                size_t j = i;
+                argcount_t j = i;
                 tuple = new_tuple(args - i);
                 none_value->refcount += args - i;
                 while (j < args) {
@@ -883,6 +883,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         bool starexists;
         struct star_s *s = new_star(vline, &starexists);
         struct star_s *stree_old = star_tree;
+        size_t j;
 
         if (starexists && s->addr != star) {
             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &lpoint);
@@ -895,8 +896,8 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
 
         lpoint.line = mfunc->epoint.line;
         oldbottom = context_get_bottom();
-        for (i = 0; i < mfunc->nslen; i++) {
-            push_context(mfunc->namespaces[i]);
+        for (j = 0; j < mfunc->nslen; j++) {
+            push_context(mfunc->namespaces[j]);
         }
         push_context(context);
         temporary_label_branch++;
@@ -943,7 +944,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         functionrecursion--;
         context_set_bottom(oldbottom);
         pop_context();
-        for (i = 0; i < mfunc->nslen; i++) {
+        for (j = 0; j < mfunc->nslen; j++) {
             pop_context();
         }
         temporary_label_branch--;

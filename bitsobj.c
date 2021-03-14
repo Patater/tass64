@@ -324,7 +324,7 @@ static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
             h += v1->data[l];
         }
     }
-    h ^= v1->bits;
+    h ^= (unsigned int)v1->bits;
     h &= ((~0U) >> 1);
     if (v1->data != v1->u.val) v1->u.hash = (int)h;
     *hs = (int)h;
@@ -483,7 +483,7 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     v->bits = i * 4;
     d = v->data;
 
-    uv = j = 0; bits = 0;
+    uv = 0; j = 0; bits = 0;
     while ((k--) != 0) {
         uint8_t c = s[k] ^ 0x30;
         if (c < 10) uv |= (bdigit_t)c << bits;
@@ -538,7 +538,7 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     v->bits = i;
     d = v->data;
 
-    uv = j = 0; bits = 0;
+    uv = 0; j = 0; bits = 0;
     while ((k--) != 0) {
         uint8_t c = s[k];
         if (c == 0x31) uv |= 1U << bits;
@@ -583,7 +583,7 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
     if (v == NULL) goto failed;
     d = v->data;
 
-    uv = bits = j = 0;
+    uv = 0; bits = 0; j = 0;
     encoder = encode_string_init(v1, epoint);
     while ((ch = encode_string(encoder)) != EOF) {
         uv |= (bdigit_t)(ch & 0xff) << bits;
@@ -674,7 +674,7 @@ MUST_CHECK Obj *bits_from_bytes(const Bytes *v1, linepos_t epoint) {
     v->bits = len1 * 8;
     d = v->data;
 
-    uv = j = i = 0; bits = 0;
+    uv = 0; j = 0; i = 0; bits = 0;
     while (len1 > i) {
         uv |= (bdigit_t)v1->data[i++] << bits;
         if (bits == SHIFT - 8) {
