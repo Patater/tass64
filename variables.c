@@ -399,12 +399,13 @@ Label *find_anonlabel2(ssize_t count, Namespace *context) {
     if (count < 0) {
         if (context->backr < (size_t)-count) return NULL;
         count2 = context->backr - (uint32_t)-count;
+        anonsymbol.dir = '-';
     } else {
         count2 = context->forwr + (uint32_t)count;
         if (count2 < (size_t)count) return NULL;
+        anonsymbol.dir = '+';
     }
 
-    anonsymbol.dir = (count >= 0) ? '+' : '-';
     anonsymbol.pad = 0;
 
     label.cfname.data = (const uint8_t *)&anonsymbol;
