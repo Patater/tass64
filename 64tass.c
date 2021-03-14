@@ -569,6 +569,11 @@ static void textrecursion_flush(struct textrecursion_s *trec) {
     trec->p = 0;
 }
 
+static void textrecursion_gaps(struct textrecursion_s *trec) {
+    memskip(trec->gaps, trec->epoint); 
+    trec->gaps = 0;
+}
+
 static void textdump(struct textrecursion_s *trec, unsigned int uval) {
     switch (trec->prm) {
     case CMD_SHIFT:
@@ -703,7 +708,7 @@ retry:
                     len3 = trec->max - trec->sum;
                     if (len2 > len3) len2 = len3;
                     trec->sum += len2;
-                    if (trec->gaps > 0) { memskip(trec->gaps, trec->epoint); trec->gaps = 0; }
+                    if (trec->gaps > 0) textrecursion_gaps(trec);
                     for (i = 0; i < len2; i++) {
                         textdump(trec, bytes->data[i] ^ inv);
                     }
@@ -715,7 +720,7 @@ retry:
         doit:
             if (touval(val2, &uval, 8, trec->epoint)) uval = 256 + '?';
             trec->sum++;
-            if (trec->gaps > 0) { memskip(trec->gaps, trec->epoint); trec->gaps = 0; }
+            if (trec->gaps > 0) textrecursion_gaps(trec);
             textdump(trec, uval);
             if (iter.data == NULL) return;
             break;
@@ -726,7 +731,7 @@ retry:
 }
 
 struct byterecursion_s {
-    ssize_t len;
+    address_t gaps, p;
     uint8_t buff[16];
     bool warn;
     linepos_t epoint;
@@ -734,9 +739,13 @@ struct byterecursion_s {
 };
 
 static void byterecursion_flush(struct byterecursion_s *brec) {
-    address_t len = (address_t)brec->len;
-    memcpy(pokealloc(len, brec->epoint), brec->buff, len); 
-    brec->len = 0;
+    memcpy(pokealloc(brec->p, brec->epoint), brec->buff, brec->p); 
+    brec->p = 0;
+}
+
+static void byterecursion_gaps(struct byterecursion_s *brec) {
+    memskip(brec->gaps, brec->epoint);
+    brec->gaps = 0;
 }
 
 static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int bits) {
@@ -749,8 +758,8 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
 
     if (!type->iterable) {
         if (type == GAP_OBJ) {
-            if (brec->len > 0) byterecursion_flush(brec);
-            brec->len -= abs(bits) / 8;
+            if (brec->p > 0) byterecursion_flush(brec);
+            brec->gaps += (unsigned int)abs(bits) / 8;
             return;
         }
         iter.data = NULL;
@@ -766,8 +775,8 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
         }
         switch (val2->obj->type) {
         case T_GAP:
-            if (brec->len > 0) byterecursion_flush(brec);
-            brec->len -= abs(bits) / 8;
+            if (brec->p > 0) byterecursion_flush(brec);
+            brec->gaps += (unsigned int)abs(bits) / 8;
             continue;
         default:
         doit:
@@ -825,15 +834,15 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
             brec->warn = true;
             ch2 = 0;
         }
-        if (brec->len < 0) { memskip((size_t)-brec->len, brec->epoint);brec->len = 0; }
-        else if (brec->len >= (ssize_t)(sizeof brec->buff) - 4) byterecursion_flush(brec);
+        if (brec->gaps > 0) byterecursion_gaps(brec);
+        else if (brec->p >= (sizeof brec->buff) - 4) byterecursion_flush(brec);
         ch2 ^= outputeor;
-        brec->buff[brec->len++] = (uint8_t)ch2;
+        brec->buff[brec->p++] = (uint8_t)ch2;
         if (prm >= CMD_RTA) {
-            brec->buff[brec->len++] = (uint8_t)(ch2 >> 8);
+            brec->buff[brec->p++] = (uint8_t)(ch2 >> 8);
             if (prm >= CMD_LINT) {
-                brec->buff[brec->len++] = (uint8_t)(ch2 >> 16);
-                if (prm >= CMD_DINT) brec->buff[brec->len++] = (uint8_t)(ch2 >> 24);
+                brec->buff[brec->p++] = (uint8_t)(ch2 >> 16);
+                if (prm >= CMD_DINT) brec->buff[brec->p++] = (uint8_t)(ch2 >> 24);
             }
         }
         if (iter.data == NULL) return;
@@ -3447,12 +3456,12 @@ MUST_CHECK Obj *compile(void)
                         mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
                             if (trec.p > 0) textrecursion_flush(&trec);
-                            else if (trec.gaps > 0) { memskip(trec.gaps, trec.epoint); trec.gaps = 0; }
+                            else if (trec.gaps > 0) textrecursion_gaps(&trec);
                             trec.epoint = &vs->epoint;
                             textrecursion(&trec, vs->val);
                             if (trec.error != ERROR__USER_DEFINED) { err_msg2(trec.error, NULL, trec.epoint); trec.error = ERROR__USER_DEFINED;}
                         }
-                        if (trec.gaps > 0) { memskip(trec.gaps, trec.epoint); trec.gaps = 0; }
+                        if (trec.gaps > 0) textrecursion_gaps(&trec);
                         switch (prm) {
                         case CMD_SHIFTL:
                         case CMD_SHIFT:
@@ -3510,7 +3519,8 @@ MUST_CHECK Obj *compile(void)
                         case CMD_DWORD: bits = 32; break;
                         }
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                        brec.len = 0;
+                        brec.p = 0;
+                        brec.gaps = 0;
                         brec.warn = false;
                         brec.epoint2 = &epoint;
                         mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
@@ -3518,9 +3528,8 @@ MUST_CHECK Obj *compile(void)
                             brec.epoint = &vs->epoint;
                             byterecursion(vs->val, prm, &brec, bits);
                             if (brec.warn) { err_msg_still_none(NULL, brec.epoint); brec.warn = false; }
-                            if (brec.len == 0) continue;
-                            if (brec.len > 0) byterecursion_flush(&brec);
-                            else { memskip((size_t)-brec.len, brec.epoint); brec.len = 0; }
+                            if (brec.p > 0) byterecursion_flush(&brec);
+                            else if (brec.gaps > 0) byterecursion_gaps(&brec);
                         }
                         if (nolisting == 0) list_mem(&mm, current_address->mem);
                     } else if (prm==CMD_BINARY) { /* .binary */
@@ -3858,7 +3867,7 @@ MUST_CHECK Obj *compile(void)
                                         if (trec.p > 0) textrecursion_flush(&trec);
                                         trec.gaps++;
                                     } else {
-                                        if (trec.gaps > 0) { memskip(trec.gaps, trec.epoint); trec.gaps = 0; }
+                                        if (trec.gaps > 0) textrecursion_gaps(&trec);
                                         else if (trec.p >= sizeof trec.buff) textrecursion_flush(&trec);
                                         trec.buff[trec.p++] = (uint8_t)ch;
                                     }
@@ -3868,7 +3877,7 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                         if (trec.p > 0) textrecursion_flush(&trec);
-                        else if (trec.gaps > 0) memskip(trec.gaps, trec.epoint);
+                        else if (trec.gaps > 0) textrecursion_gaps(&trec);
                     } else if (db != 0) {
                         memskip(db, &epoint);
                     }
