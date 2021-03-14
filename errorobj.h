@@ -59,10 +59,11 @@ typedef struct Error {
             uint32_t cod;
         } reg;
         struct {
-            size_t num, cod;
+            size_t num;
+            uint32_t cod;
         } opers;
         struct {
-            size_t cod;
+            uint32_t cod;
         } addresssize;
         struct {
             size_t v1;
