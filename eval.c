@@ -1306,7 +1306,7 @@ static bool get_exp2(int stop) {
     uint8_t ch;
 
     Oper *op;
-    size_t db;
+    argcount_t db;
     unsigned int prec;
     struct linepos_s epoint;
     size_t llen;
