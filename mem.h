@@ -28,7 +28,7 @@ struct output_s;
 
 struct mem_mark_s {
     size_t omemp;
-    size_t ptextaddr;
+    address_t ptextaddr;
     address_t oaddr, oaddr2, olastaddr;
 };
 
@@ -39,7 +39,7 @@ extern void memjmp(struct Memblocks *, address_t);
 extern void memref(struct Memblocks *, struct Memblocks *);
 extern void memprint(struct Memblocks *, FILE *);
 extern void output_mem(struct Memblocks *, const struct output_s *);
-extern FAST_CALL uint8_t *alloc_mem(struct Memblocks *, size_t);
-extern int read_mem(const struct Memblocks *, address_t, size_t, size_t);
+extern FAST_CALL uint8_t *alloc_mem(struct Memblocks *, address_t);
+extern int read_mem(const struct Memblocks *, address_t, size_t, address_t);
 extern size_t get_mem(const struct Memblocks *);
 #endif

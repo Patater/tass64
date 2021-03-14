@@ -91,7 +91,7 @@ static void memcomp(Memblocks *memblocks, bool nomerge) {
             for (i = j + 1; i < memblocks->p; i++) if (memblocks->data[i].len != 0) {
                 struct memblock_s *bi = &memblocks->data[i];
                 if (bj->addr <= bi->addr && (bj->addr + bj->len) > bi->addr) {
-                    size_t overlap = (bj->addr + bj->len) - bi->addr;
+                    address_t overlap = (bj->addr + bj->len) - bi->addr;
                     if (overlap > bi->len) overlap = bi->len;
                     memcpy(memblocks->mem.data + bj->p + (bi->addr - bj->addr), memblocks->mem.data + bi->p, overlap);
                     bi->len -= overlap;
@@ -100,7 +100,7 @@ static void memcomp(Memblocks *memblocks, bool nomerge) {
                     continue;
                 }
                 if (bi->addr <= bj->addr && (bi->addr + bi->len) > bj->addr) {
-                    size_t overlap = bi->addr + bi->len - bj->addr;
+                    address_t overlap = bi->addr + bi->len - bj->addr;
                     if (overlap > bj->len) overlap = bj->len;
                     bj->addr += overlap;
                     bj->p += overlap;
@@ -130,7 +130,7 @@ void memjmp(Memblocks *memblocks, address_t adr) {
         memblocks->data = (struct memblock_s *)reallocx(memblocks->data, memblocks->len * sizeof *memblocks->data);
     }
     block = &memblocks->data[memblocks->p++];
-    block->len = (address_t)(memblocks->mem.p - memblocks->lastp);
+    block->len = memblocks->mem.p - memblocks->lastp;
     block->p = memblocks->lastp;
     block->ref = NULL;
     block->addr = memblocks->lastaddr;
@@ -169,12 +169,12 @@ void memprint(Memblocks *memblocks, FILE *f) {
             size += b->len;
         }
         sprintf(temp, "$%04" PRIaddress, start);
-        sprintf(temp2, "$%04" PRIaddress, (address_t)(start + size - 1));
+        sprintf(temp2, "$%04" PRIaddress, start + size - 1U);
         fprintf(f, "Memory range: %10s-%-7s $%04" PRIaddress "\n", temp, temp2, size);
     }
 }
 
-static void padding(size_t size, FILE *f) {
+static void padding(address_t size, FILE *f) {
     unsigned char nuls[256];
     while (size >= 0x80000000) {
         if (fseek(f, 0x40000000, SEEK_CUR) != 0) goto err;
@@ -186,7 +186,7 @@ static void padding(size_t size, FILE *f) {
 err:
     nuls[0] = 1;
     while (size != 0) {
-        size_t db = size < sizeof nuls ? size : sizeof nuls;
+        address_t db = size < sizeof nuls ? size : sizeof nuls;
         size -= db;
         if (nuls[0] != 0) memset(nuls, 0, db);
         if (fwrite(nuls, db, 1, f) == 0) return;
@@ -377,14 +377,14 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
         const struct memblock_s *b = &memblocks->data[i];
         const uint8_t *d = memblocks->mem.data + b->p;
         address_t addr = b->addr;
-        size_t blen = b->len;
+        address_t blen = b->len;
         if (blen != 0 && ihex.address + ihex.length != addr) {
             if (ihex.length != 0) output_mem_ihex_data(&ihex);
             ihex.address = addr;
         }
         while (blen != 0) {
-            size_t left = (sizeof ihex.data) - ihex.length;
-            size_t copy = blen > left ? left : blen;
+            address_t left = (sizeof ihex.data) - ihex.length;
+            address_t copy = blen > left ? left : blen;
             memcpy(ihex.data + ihex.length, d, copy);
             ihex.length += copy;
             d += copy;
@@ -437,7 +437,7 @@ static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
     srec.length = 0;
     for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *b = &memblocks->data[i];
-        size_t end = b->addr + b->len - 1;
+        address_t end = b->addr + b->len - 1;
         if (end >= 0x10000 && srec.type < 1) srec.type = 1;
         if (end >= 0x1000000 && srec.type < 2) {
             srec.type = 2;
@@ -448,14 +448,14 @@ static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
         const struct memblock_s *b = &memblocks->data[i];
         const uint8_t *d = memblocks->mem.data + b->p;
         address_t addr = b->addr;
-        size_t blen = b->len;
+        address_t blen = b->len;
         if (blen != 0 && srec.address + srec.length != addr) {
             if (srec.length != 0) output_mem_srec_line(&srec);
             srec.address = addr;
         }
         while (blen != 0) {
-            size_t left = (sizeof srec.data) - srec.length;
-            size_t copy = blen > left ? left : blen;
+            address_t left = (sizeof srec.data) - srec.length;
+            address_t copy = blen > left ? left : blen;
             memcpy(srec.data + srec.length, d, copy);
             srec.length += copy;
             d += copy;
@@ -515,8 +515,8 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 #endif
 }
 
-FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, size_t len) {
-    size_t p = memblocks->mem.p + len;
+FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, address_t len) {
+    address_t p = memblocks->mem.p + len;
     uint8_t *d;
     if (p < len) err_msg_out_of_memory(); /* overflow */
     if (p > memblocks->mem.len) {
@@ -526,7 +526,7 @@ FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, size_t len) {
     }
     d = memblocks->mem.data + memblocks->mem.p;
     do {
-        size_t left = all_mem2 - (memblocks->lastaddr + memblocks->mem.p - memblocks->lastp);
+        address_t left = all_mem2 - (memblocks->lastaddr + memblocks->mem.p - memblocks->lastp);
         if (len <= left) break;
         memblocks->mem.p += left + 1;
         len -= left + 1;
@@ -548,9 +548,9 @@ size_t get_mem(const Memblocks *memblocks) {
     return memblocks->p;
 }
 
-int read_mem(const Memblocks *memblocks, address_t raddr, size_t membp, size_t offs) {
+int read_mem(const Memblocks *memblocks, address_t raddr, size_t membp, address_t offs) {
     address_t addr, diff;
-    size_t len;
+    address_t len;
     if (membp < memblocks->p) {
         addr = memblocks->data[membp].addr;
     } else {
@@ -589,7 +589,7 @@ void list_mem(const struct mem_mark_s *mm, const Memblocks *memblocks) {
     address_t addr2 = mm->oaddr;
 
     for (; o <= memblocks->p; o++) {
-        size_t p;
+        address_t p;
         address_t addr, len;
 
         if (o < memblocks->p) {
