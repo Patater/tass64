@@ -572,7 +572,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
 
 MUST_CHECK Obj *indexoffs(struct indexoffs_s *io) {
     ival_t ival;
-    Obj *err = Obj(io->v1->obj->ival(io->v1, &ival, 8 * sizeof ival, io->epoint));
+    Obj *err = Obj(io->val->obj->ival(io->val, &ival, 8 * sizeof ival, io->epoint));
     if (err != NULL) return err;
 
     if (ival >= 0) {
@@ -587,32 +587,33 @@ MUST_CHECK Obj *indexoffs(struct indexoffs_s *io) {
             return NULL;
         }
     }
-    return new_error_obj(ERROR___INDEX_RANGE, io->v1, io->epoint);
+    return new_error_obj(ERROR___INDEX_RANGE, io->val, io->epoint);
 }
 
-MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_s *s, linepos_t epoint) {
+MUST_CHECK Obj *sliceparams(struct sliceparam_s *s, const struct indexoffs_s *io) {
+    const Colonlist *v2 = Colonlist(io->val);
     Obj *err;
     ival_t len, offs, end, step = 1;
 
-    if (len2 >= (1U << (8 * sizeof(ival_t) - 1))) return new_error_mem(epoint); /* overflow */
-    len = (ival_t)len2;
+    if (io->len >= (1U << (8 * sizeof(ival_t) - 1))) return new_error_mem(io->epoint); /* overflow */
+    len = (ival_t)io->len;
     if (v2->len > 3 || v2->len < 1) {
-        return new_error_argnum(v2->len, 1, 3, epoint);
+        return new_error_argnum(v2->len, 1, 3, io->epoint);
     }
     end = len;
     if (v2->len > 2) {
         if (v2->data[2] != default_value) {
-            err = Obj(v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, epoint));
+            err = Obj(v2->data[2]->obj->ival(v2->data[2], &step, 8 * sizeof step, io->epoint));
             if (err != NULL) return err;
             if (step == 0) {
-                return Obj(new_error(ERROR_NO_ZERO_VALUE, epoint));
+                return Obj(new_error(ERROR_NO_ZERO_VALUE, io->epoint));
             }
         }
     }
     if (v2->len > 1) {
         if (v2->data[1] == default_value) end = (step > 0) ? len : -1;
         else {
-            err = Obj(v2->data[1]->obj->ival(v2->data[1], &end, 8 * sizeof end, epoint));
+            err = Obj(v2->data[1]->obj->ival(v2->data[1], &end, 8 * sizeof end, io->epoint));
             if (err != NULL) return err;
             if (end >= 0) {
                 if (end > len) end = len;
@@ -625,7 +626,7 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
     if (v2->data[0] == default_value) offs = (step > 0) ? 0 : len - 1;
     else {
         ival_t minus;
-        err = Obj(v2->data[0]->obj->ival(v2->data[0], &offs, 8 * sizeof offs, epoint));
+        err = Obj(v2->data[0]->obj->ival(v2->data[0], &offs, 8 * sizeof offs, io->epoint));
         if (err != NULL) return err;
         minus = (step < 0) ? -1 : 0;
         if (offs >= 0) {
@@ -652,9 +653,8 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
 
 static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     Obj **vals;
-    Obj *o2 = op->v2;
     List *v, *v1 = List(op->v1);
-    Funcargs *args = Funcargs(o2);
+    Funcargs *args = Funcargs(op->v2);
     size_t i;
     Obj *err;
     bool more;
@@ -666,11 +666,11 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     more = args->len - 1 > indx;
     io.len = v1->len;
     io.epoint = &args->val[indx].epoint;
+    io.val = args->val[indx].val;
 
-    o2 = args->val[indx].val;
-    if (o2->obj->iterable) {
+    if (io.val->obj->iterable) {
         struct iter_s iter;
-        iter.data = o2; o2->obj->getiter(&iter);
+        iter.data = io.val; io.val->obj->getiter(&iter);
 
         if (iter.len == 0) {
             iter_destroy(&iter);
@@ -682,7 +682,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
             iter_destroy(&iter);
             goto failed;
         }
-        for (i = 0; i < iter.len && (io.v1 = iter.next(&iter)) != NULL; i++) {
+        for (i = 0; i < iter.len && (io.val = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(&io);
             if (err != NULL) {
                 vals[i] = err;
@@ -699,10 +699,10 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         iter_destroy(&iter);
         return Obj(v);
     }
-    if (o2->obj == COLONLIST_OBJ) {
+    if (io.val->obj == COLONLIST_OBJ) {
         struct sliceparam_s s;
 
-        err = sliceparams(Colonlist(o2), io.len, &s, io.epoint);
+        err = sliceparams(&s, &io);
         if (err != NULL) return err;
 
         if (s.length == 0) {
@@ -726,7 +726,6 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         }
         return Obj(v);
     }
-    io.v1 = o2;
     err = indexoffs(&io);
     if (err != NULL) return err;
     if (more) {

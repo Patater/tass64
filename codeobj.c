@@ -421,9 +421,8 @@ MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
 static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     Obj **vals;
     Code *v1 = Code(op->v1);
-    Obj *o2 = op->v2;
     Obj *err;
-    Funcargs *args = Funcargs(o2);
+    Funcargs *args = Funcargs(op->v2);
     struct code_item_s ci;
     struct indexoffs_s io;
 
@@ -432,13 +431,13 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     }
     io.len = code_item_prepare(&ci, v1);
     io.epoint = &args->val[indx].epoint;
-
-    o2 = args->val[indx].val;
-    if (o2->obj->iterable) {
+    io.val = args->val[indx].val;
+  
+    if (io.val->obj->iterable) {
         struct iter_s iter;
         Tuple *v;
         size_t i;
-        iter.data = o2; o2->obj->getiter(&iter);
+        iter.data = io.val; io.val->obj->getiter(&iter);
 
         if (iter.len == 0) {
             iter_destroy(&iter);
@@ -446,7 +445,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         }
         v = new_tuple(iter.len);
         vals = v->data;
-        for (i = 0; i < iter.len && (io.v1 = iter.next(&iter)) != NULL; i++) {
+        for (i = 0; i < iter.len && (io.val = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(&io);
             if (err != NULL) {
                 vals[i] = err;
@@ -459,12 +458,12 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         v->len = i;
         return Obj(v);
     }
-    if (o2->obj == COLONLIST_OBJ) {
+    if (io.val->obj == COLONLIST_OBJ) {
         struct sliceparam_s s;
         Tuple *v;
         size_t i;
 
-        err = sliceparams(Colonlist(o2), io.len, &s, io.epoint);
+        err = sliceparams(&s, &io);
         if (err != NULL) return err;
 
         if (s.length == 0) {
@@ -480,7 +479,6 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         }
         return Obj(v);
     }
-    io.v1 = o2;
     err = indexoffs(&io);
     if (err != NULL) return err;
 

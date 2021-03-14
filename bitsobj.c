@@ -1247,13 +1247,12 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     size_t sz;
     size_t i, o;
     Bits *vv, *vv1 = Bits(op->v1);
-    Obj *o2 = op->v2;
     bdigit_t *v;
     bdigit_t uv;
     bdigit_t inv = (vv1->len < 0) ? ~(bdigit_t)0 : 0;
     int bits;
     Obj *err;
-    Funcargs *args = Funcargs(o2);
+    Funcargs *args = Funcargs(op->v2);
     struct indexoffs_s io;
 
     if (args->len < 1 || args->len - 1 > indx) {
@@ -1261,11 +1260,11 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     }
     io.len = vv1->bits;
     io.epoint = &args->val[indx].epoint;
+    io.val = args->val[indx].val;
 
-    o2 = args->val[indx].val;
-    if (o2->obj->iterable) {
+    if (io.val->obj->iterable) {
         struct iter_s iter;
-        iter.data = o2; o2->obj->getiter(&iter);
+        iter.data = io.val; io.val->obj->getiter(&iter);
 
         if (iter.len == 0) {
             iter_destroy(&iter);
@@ -1282,7 +1281,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
 
         uv = inv;
         bits = 0; sz = 0;
-        for (i = 0; i < iter.len && (io.v1 = iter.next(&iter)) != NULL; i++) {
+        for (i = 0; i < iter.len && (io.val = iter.next(&iter)) != NULL; i++) {
             err = indexoffs(&io);
             if (err != NULL) {
                 val_destroy(Obj(vv));
@@ -1306,12 +1305,12 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         vv->bits = i;
         return normalize(vv, sz, false);
     }
-    if (o2->obj == COLONLIST_OBJ) {
+    if (io.val->obj == COLONLIST_OBJ) {
         struct sliceparam_s s;
         size_t bo, wo, bl, wl, wl2, l;
         bdigit_t *v1;
 
-        err = sliceparams(Colonlist(o2), io.len, &s, io.epoint);
+        err = sliceparams(&s, &io);
         if (err != NULL) return err;
 
         if (s.length == 0) {
@@ -1379,7 +1378,6 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         vv->bits = s.length;
         return normalize(vv, sz, false);
     }
-    io.v1 = o2;
     err = indexoffs(&io);
     if (err != NULL) return err;
 

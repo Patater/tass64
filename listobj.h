@@ -72,14 +72,14 @@ struct sliceparam_s {
 };
 
 struct indexoffs_s {
-    Obj *v1;
+    Obj *val;
     size_t len;
     size_t offs; 
     linepos_t epoint;
 };
 
 extern MUST_CHECK Obj *indexoffs(struct indexoffs_s *);
-extern MUST_CHECK Obj *sliceparams(const Colonlist *, size_t, struct sliceparam_s *, linepos_t);
+extern MUST_CHECK Obj *sliceparams(struct sliceparam_s *, const struct indexoffs_s *);
 extern MUST_CHECK Tuple *new_tuple(size_t);
 extern Obj **list_create_elements(List *, size_t);
 extern MUST_CHECK bool list_extend(List *);
