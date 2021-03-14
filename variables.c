@@ -356,7 +356,7 @@ Label *find_label3(const str_t *name, Namespace *context, uint8_t strength) {
     return namespace_lookup3(context, &label);
 }
 
-Label *find_anonlabel(int32_t count) {
+Label *find_anonlabel(ssize_t count) {
     size_t p = context_stack.p;
     Namespace *context;
     Label label, *c;
@@ -370,7 +370,13 @@ Label *find_anonlabel(int32_t count) {
     while (context_stack.bottom < p) {
         uint32_t count2;
         context = context_stack.stack[--p].normal;
-        count2 = (uint32_t)((int32_t)((count >= 0) ? context->forwr : context->backr) + count);
+        if (count < 0) {
+            if (context->backr < (size_t)-count) continue;
+            count2 = context->backr - (uint32_t)-count;
+        } else {
+            count2 = context->forwr + (uint32_t)count;
+            if (count2 < (size_t)count) continue;
+        }
         label.cfname.len = 2;
         while (count2 != 0) {
             anonsymbol.count[label.cfname.len - 2] = (uint8_t)count2;
@@ -385,10 +391,18 @@ Label *find_anonlabel(int32_t count) {
     return NULL;
 }
 
-Label *find_anonlabel2(int32_t count, Namespace *context) {
+Label *find_anonlabel2(ssize_t count, Namespace *context) {
     Label label;
-    uint32_t count2 = (uint32_t)((int32_t)((count >= 0) ? 0 : context->backr) + count);
+    uint32_t count2;
     struct anonsymbol_s anonsymbol;
+
+    if (count < 0) {
+        if (context->backr < (size_t)-count) return NULL;
+        count2 = context->backr - (uint32_t)-count;
+    } else {
+        count2 = context->forwr + (uint32_t)count;
+        if (count2 < (size_t)count) return NULL;
+    }
 
     anonsymbol.dir = (count >= 0) ? '+' : '-';
     anonsymbol.pad = 0;

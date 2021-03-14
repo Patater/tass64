@@ -53,7 +53,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 
 static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     Anonsymbol *v1 = Anonsymbol(o1);
-    unsigned int h = v1->count < 0 ? 1U + ~(size_t)-v1->count : (size_t)v1->count;
+    unsigned int h = v1->count < 0 ? 1U + ~(unsigned int)-v1->count : (unsigned int)v1->count;
     *hs = h & ((~0U) >> 1);
     return NULL;
 }
