@@ -875,8 +875,8 @@ static bool err_msg_still_none2(const Error *err) {
     return more;
 }
 
-static void err_msg_argnum2(size_t num, size_t min, size_t max) {
-    size_t n;
+static void err_msg_argnum2(argcount_t num, argcount_t min, argcount_t max) {
+    argcount_t n;
     char line[1024];
     adderror("expected ");
     n = min;
@@ -886,10 +886,10 @@ static void err_msg_argnum2(size_t num, size_t min, size_t max) {
     switch (n) {
     case 0: adderror("no arguments"); break;
     case 1: adderror("one argument"); break;
-    default: sprintf(line, "%" PRIuSIZE " arguments", n); adderror(line); break;
+    default: sprintf(line, "%" PRIuargcount " arguments", n); adderror(line); break;
     }
     if (num != 0) {
-        sprintf(line, ", got %" PRIuSIZE, num);
+        sprintf(line, ", got %" PRIuargcount, num);
         adderror(line);
     }
 }
@@ -1222,7 +1222,7 @@ void err_msg_invalid_oper(const Oper *op, Obj *v1, Obj *v2, linepos_t epoint) {
     val_destroy(Obj(err));
 }
 
-void err_msg_argnum(size_t num, size_t min, size_t max, linepos_t epoint) {
+void err_msg_argnum(argcount_t num, argcount_t min, argcount_t max, linepos_t epoint) {
     bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     err_msg_argnum2(num, min, max);
     if (more) new_error_msg_more();

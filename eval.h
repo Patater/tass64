@@ -37,10 +37,10 @@ struct oper_s {
 };
 typedef struct oper_s *oper_t;
 
-extern bool get_exp(int, unsigned int, unsigned int, linepos_t);
+extern bool get_exp(int, argcount_t, argcount_t, linepos_t);
 extern struct values_s *get_val(void);
 extern struct Obj *pull_val(struct linepos_s *);
-extern size_t get_val_remaining(void);
+extern argcount_t get_val_remaining(void);
 extern void destroy_eval(void);
 extern void init_eval(void);
 extern void eval_enter(void);

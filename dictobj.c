@@ -574,17 +574,17 @@ static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, stru
     return NULL;
 }
 
-static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     Obj *o2 = op->v2, *vv;
     Dict *v1 = Dict(op->v1);
     Funcargs *args = Funcargs(o2);
-    bool more = args->len > indx + 1;
+    bool more;
     linepos_t epoint2;
 
     if (args->len < 1) {
         return new_error_argnum(args->len, 1, 0, op->epoint2);
     }
-
+    more =  args->len - 1> indx;
     o2 = args->val[indx].val;
     epoint2 = &args->val[indx].epoint;
 

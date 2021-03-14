@@ -22,8 +22,7 @@
 #include "wait_e.h"
 #include "stdbool.h"
 
-struct values_s;
-
+struct Funcargs;
 struct Namespace;
 struct Mfunc;
 struct Obj;
@@ -33,7 +32,7 @@ extern bool in_macro;
 extern bool mtranslate(void);
 extern struct Obj *macro_recurse(Wait_types, struct Obj *, struct Namespace *, linepos_t);
 extern struct Obj *mfunc_recurse(struct Mfunc *, struct Namespace *, uint8_t, linepos_t);
-extern struct Obj *mfunc2_recurse(struct Mfunc *, struct values_s *, size_t, linepos_t);
+extern struct Obj *mfunc2_recurse(struct Mfunc *, struct Funcargs *, linepos_t);
 extern void init_macro(void);
 extern void free_macro(void);
 extern void get_macro_params(struct Obj *);

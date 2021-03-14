@@ -142,7 +142,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Mfunc *v1 = Mfunc(op->v1);
             Funcargs *v2 = Funcargs(op->v2);
             Obj *val;
-            size_t i, max = 0, args = v2->len;
+            argcount_t i, max = 0, args = v2->len;
             for (i = args; i < v1->argc; i++) {
                 if (v1->param[i].init == NULL) {
                     max = i + 1;
@@ -150,7 +150,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             }
             if (max != 0) err_msg_argnum(args, max, v1->argc, op->epoint2);
             eval_enter();
-            val = mfunc2_recurse(v1, v2->val, args, op->epoint);
+            val = mfunc2_recurse(v1, v2, op->epoint);
             eval_leave();
             return (val != NULL) ? val : val_reference(null_tuple);
         }

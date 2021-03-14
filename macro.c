@@ -467,11 +467,11 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
 }
 
 Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t epoint) {
-    size_t i;
+    argcount_t i;
     Label *label;
     Obj *val;
     Tuple *tuple = NULL;
-    size_t max = 0, args = get_val_remaining();
+    argcount_t max = 0, args = get_val_remaining();
 
     if (mfunc->recursion_pass == pass) return NULL;
     if (functionrecursion>100) {
@@ -483,7 +483,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
         const struct mfunc_param_s *param = &mfunc->param[i];
         bool labelexists;
         if (param->init == default_value) {
-            size_t j, len = get_val_remaining();
+            argcount_t j, len = get_val_remaining();
             tuple = new_tuple(len);
             for (j = 0; j < len; j++) {
                 tuple->data[j] = pull_val(NULL);
@@ -773,7 +773,9 @@ static bool clean_namespace(Namespace *v1) {
     return true;
 }
 
-Obj *mfunc2_recurse(Mfunc *mfunc, struct values_s *vals, size_t args, linepos_t epoint) {
+Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
+    struct values_s *vals = v2->val;
+    argcount_t args = v2->len;
     size_t i;
     Label *label;
     Obj *val;

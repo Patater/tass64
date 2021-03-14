@@ -102,7 +102,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (op->op->op == O_FUNC) {
             Type *v1 = Type(op->v1);
             Funcargs *v2 = Funcargs(o2);
-            size_t args = v2->len;
+            argcount_t args = v2->len;
             if (args != 1) {
                 return new_error_argnum(args, 1, 1, op->epoint2);
             }

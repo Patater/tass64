@@ -650,7 +650,7 @@ MUST_CHECK Obj *sliceparams(const Colonlist *v2, size_t len2, struct sliceparam_
     return NULL;
 }
 
-static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     Obj **vals;
     Obj *o2 = op->v2;
     size_t offs2;
@@ -658,13 +658,13 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Funcargs *args = Funcargs(o2);
     size_t i, ln;
     Obj *err;
-    bool more = args->len > indx + 1;
+    bool more;
     linepos_t epoint2;
 
     if (args->len < 1) {
         return new_error_argnum(args->len, 1, 0, op->epoint2);
     }
-
+    more = args->len - 1 > indx;
     o2 = args->val[indx].val;
     epoint2 = &args->val[indx].epoint;
 

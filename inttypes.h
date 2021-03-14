@@ -80,6 +80,8 @@ typedef SSIZE_T ssize_t;
 #endif
 #endif
 
+typedef uint32_t argcount_t;
+#define PRIuargcount PRIu32
 typedef uint32_t uchar_t;
 typedef uint32_t line_t;
 #define PRIuline PRIu32
@@ -97,8 +99,8 @@ typedef uint32_t uval_t;
 #define PRIuval PRIu32
 #define PRIXval PRIX32
 
-#ifndef UINT_MAX
-#define UINT_MAX (~(unsigned int)0)
+#ifndef UINT32_MAX
+#define UINT32_MAX (~(uint32_t)0)
 #endif
 
 #ifndef SIZE_MAX

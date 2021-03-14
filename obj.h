@@ -43,7 +43,7 @@ typedef struct Lbl {
 
 typedef struct Funcargs {
     Obj v;
-    size_t len;
+    argcount_t len;
     struct values_s *val;
 } Funcargs;
 

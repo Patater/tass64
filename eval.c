@@ -392,16 +392,16 @@ struct out_s {
 
 struct out_list_s {
     struct out_s *data;
-    unsigned int p, size;
+    argcount_t p, size;
 };
 
 static size_t evxnum, evx_p;
 static struct eval_context_s {
     struct values_s *values;
-    size_t values_len;
-    size_t values_p;
-    size_t values_size;
-    unsigned int outp2;
+    argcount_t values_len;
+    argcount_t values_p;
+    argcount_t values_size;
+    argcount_t outp2;
     int gstop;
     struct out_list_s out;
     struct out_list_s opr;
@@ -411,7 +411,7 @@ static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
     out->size += 64;
-    if (out->size < 64 || out->size > UINT_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
+    if (out->size < 64 || out->size > UINT32_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
     out->data = (struct out_s *)reallocx(out->data, out->size * sizeof *out->data);
 }
 
@@ -606,20 +606,20 @@ rest:
 }
 
 static struct values_s *extend_values(struct eval_context_s *ev, size_t by) {
-    size_t j = ev->values_size;
+    argcount_t j = ev->values_size;
     struct values_s *values;
     ev->values_size += by;
-    if (ev->values_size < by || ev->values_size > SIZE_MAX / sizeof *values) err_msg_out_of_memory(); /* overflow */
+    if (ev->values_size < by || ev->values_size > UINT32_MAX / sizeof *values) err_msg_out_of_memory(); /* overflow */
     ev->values = values = (struct values_s *)reallocx(ev->values, ev->values_size * sizeof *values);
     for (; j < ev->values_size; j++) values[j].val = NULL;
     return values;
 }
 
 static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defined */
-    size_t vsp = 0;
+    argcount_t vsp = 0;
     Oper_types op;
     Oper *op2;
-    unsigned int i;
+    argcount_t i;
     Obj *val;
     struct values_s *v1, *v2;
     struct out_s *out;
@@ -834,8 +834,8 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
 }
 
 static bool get_val2(struct eval_context_s *ev) {
-    size_t vsp = 0;
-    unsigned int i;
+    argcount_t vsp = 0;
+    argcount_t i;
     Oper_types op;
     struct values_s *v1, *v2;
     bool stop = (ev->gstop == 3 || ev->gstop == 4);
@@ -872,7 +872,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_FUNC:
         case O_INDEX:
             {
-                size_t args = 0;
+                argcount_t args = 0;
                 Funcargs tmp;
                 op = (op == O_FUNC) ? O_PARENT : O_BRACKET;
                 while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != op) {
@@ -913,7 +913,7 @@ static bool get_val2(struct eval_context_s *ev) {
             {
                 List *list;
                 bool tup = (op == O_RPARENT), expc = (op == O_TUPLE || op == O_LIST);
-                size_t args = 0;
+                argcount_t args = 0;
                 op = (op == O_RBRACKET || op == O_LIST) ? O_BRACKET : O_PARENT;
                 while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != op) {
                     args++;
@@ -970,7 +970,7 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_RBRACE:
         case O_DICT:
             {
-                size_t args = 0;
+                argcount_t args = 0;
                 while (v1->val != &o_BRACE.v) {
                     args++;
                     if (vsp <= args) goto syntaxe;
@@ -1292,7 +1292,7 @@ Obj *pull_val(struct linepos_s *epoint) {
     return val;
 }
 
-size_t get_val_remaining(void) {
+argcount_t get_val_remaining(void) {
     return eval->values_len - eval->values_p;
 }
 
@@ -1857,7 +1857,7 @@ static bool get_exp2(int stop) {
     return false;
 }
 
-bool get_exp(int stop, unsigned int min, unsigned int max, linepos_t epoint) {/* length in bytes, defined */
+bool get_exp(int stop, argcount_t min, argcount_t max, linepos_t epoint) {/* length in bytes, defined */
     if (!get_exp2(stop)) {
         return false;
     }
@@ -1870,7 +1870,7 @@ bool get_exp(int stop, unsigned int min, unsigned int max, linepos_t epoint) {/*
 
 
 Obj *get_vals_tuple(void) {
-    size_t i, len = get_val_remaining();
+    argcount_t i, len = get_val_remaining();
     Tuple *list;
 
     switch (len) {
@@ -1889,7 +1889,7 @@ Obj *get_vals_tuple(void) {
 }
 
 Obj *get_vals_addrlist(struct linepos_s *epoints) {
-    size_t i, j, len = get_val_remaining();
+    argcount_t i, j, len = get_val_remaining();
     Addrlist *list;
     Obj *val;
 

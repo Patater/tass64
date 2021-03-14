@@ -580,7 +580,7 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
     return new_error_mem(op->epoint3);
 }
 
-static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     uint8_t *p, *p2;
     size_t offs2;
     size_t len1, len2;
@@ -590,7 +590,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Obj *err;
     linepos_t epoint2;
 
-    if (args->len < 1 || args->len > indx + 1) {
+    if (args->len < 1 || args->len - 1 > indx) {
         return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
 
