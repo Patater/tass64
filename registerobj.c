@@ -90,7 +90,7 @@ static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     }
     h = (unsigned int)*s2 << 7;
     while ((l--) != 0) h = (1000003 * h) ^ *s2++;
-    h ^= v1->len;
+    h ^= (unsigned int)v1->len;
     *hs = h & ((~0U) >> 1);
     return NULL;
 }

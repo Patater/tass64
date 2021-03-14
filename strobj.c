@@ -216,7 +216,7 @@ static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     }
     h = (unsigned int)*s2 << 7;
     while ((l--) != 0) h = (1000003 * h) ^ *s2++;
-    h ^= v1->len;
+    h ^= (unsigned int)v1->len;
     h &= ((~0U) >> 1);
     if (v1->data != v1->u.val) v1->u.s.hash = (int)h;
     *hs = (int)h;
