@@ -200,7 +200,7 @@ MALLOC Obj *new_error_conv(Obj *v1, Type *t, linepos_t epoint) {
     return Obj(v);
 }
 
-MALLOC Obj *new_error_argnum(argcount_t num, size_t min, size_t max, linepos_t epoint) {
+MALLOC Obj *new_error_argnum(argcount_t num, argcount_t min, argcount_t max, linepos_t epoint) {
     Error *v = new_error(ERROR__WRONG_ARGNUM, epoint);
     v->u.argnum.num = num;
     v->u.argnum.min = min;
