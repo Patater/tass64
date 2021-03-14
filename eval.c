@@ -401,7 +401,7 @@ static struct eval_context_s {
     size_t values_len;
     size_t values_p;
     size_t values_size;
-    size_t outp2;
+    unsigned int outp2;
     int gstop;
     struct out_list_s out;
     struct out_list_s opr;
@@ -619,7 +619,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
     size_t vsp = 0;
     Oper_types op;
     Oper *op2;
-    size_t i;
+    unsigned int i;
     Obj *val;
     struct values_s *v1, *v2;
     struct out_s *out;
@@ -835,7 +835,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
 
 static bool get_val2(struct eval_context_s *ev) {
     size_t vsp = 0;
-    size_t i;
+    unsigned int i;
     Oper_types op;
     struct values_s *v1, *v2;
     bool stop = (ev->gstop == 3 || ev->gstop == 4);
