@@ -404,7 +404,7 @@ MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {
     return Obj(v);
 }
 
-static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     Obj **vals;
     size_t i;
     address_t ln, ln2;
@@ -416,7 +416,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Funcargs *args = Funcargs(o2);
     linepos_t epoint2;
 
-    if (args->len < 1 || args->len > indx + 1) {
+    if (args->len < 1 || args->len - 1 > indx) {
         return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
     o2 = args->val[indx].val;

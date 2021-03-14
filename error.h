@@ -76,7 +76,7 @@ extern void err_msg_address_mismatch(unsigned int, unsigned int, linepos_t);
 extern void err_msg_file(Error_types, const char *, linepos_t);
 extern void err_msg_output(const struct Error *);
 extern void err_msg_output_and_destroy(struct Error *);
-extern void err_msg_argnum(size_t, size_t, size_t, linepos_t);
+extern void err_msg_argnum(argcount_t, argcount_t, argcount_t, linepos_t);
 extern void err_msg_bool(Error_types, struct Obj *, linepos_t);
 extern void err_msg_bool_oper(struct oper_s *);
 extern void err_msg_implied_reg(linepos_t, uint32_t);

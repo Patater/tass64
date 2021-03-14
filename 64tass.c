@@ -3420,7 +3420,7 @@ MUST_CHECK Obj *compile(void)
                     if (diagnostics.optimize) cpu_opt_invalidate();
 
                     if (prm<CMD_BYTE) {    /* .text .ptext .shift .shiftl .null */
-                        size_t ln;
+                        argcount_t ln;
                         struct values_s *vs;
                         struct textrecursion_s trec;
                         if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
@@ -3473,7 +3473,7 @@ MUST_CHECK Obj *compile(void)
                         if (nolisting == 0) list_mem(&mm, current_address->mem);
                     } else if (prm<=CMD_DWORD) { /* .byte .word .int .rta .long */
                         int bits;
-                        size_t ln;
+                        argcount_t ln;
                         struct values_s *vs;
                         struct byterecursion_s brec;
                         if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
@@ -3907,7 +3907,8 @@ MUST_CHECK Obj *compile(void)
             case CMD_ERROR:
             case CMD_CERROR: if ((waitfor->skip & 1) != 0)
                 { /* .warn .cwarn .error .cerror */
-                    size_t i, len, len2, chars;
+                    argcount_t i, len;
+                    size_t len2, chars;
                     Obj **vals;
                     uint8_t *s;
                     Tuple *tmp;
@@ -3987,7 +3988,7 @@ MUST_CHECK Obj *compile(void)
                     struct character_range_s tmp;
                     struct encoding_s *old = actual_encoding;
                     bool rc;
-                    size_t len;
+                    argcount_t len;
                     listing_line(listing, epoint.pos);
                     actual_encoding = NULL;
                     rc = get_exp(0, 2, 0, &epoint);
@@ -4066,7 +4067,7 @@ MUST_CHECK Obj *compile(void)
                 { /* .edef */
                     struct encoding_s *old = actual_encoding;
                     bool rc;
-                    size_t len;
+                    argcount_t len;
                     listing_line(listing, epoint.pos);
                     actual_encoding = NULL;
                     rc = get_exp(0, 2, 0, &epoint);

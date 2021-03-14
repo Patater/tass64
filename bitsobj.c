@@ -1243,7 +1243,7 @@ failed:
     return new_error_mem(op->epoint3);
 }
 
-static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
+static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     size_t offs2, ln, sz;
     size_t i, o;
     Bits *vv, *vv1 = Bits(op->v1);
@@ -1256,7 +1256,7 @@ static MUST_CHECK Obj *slice(oper_t op, size_t indx) {
     Funcargs *args = Funcargs(o2);
     linepos_t epoint2;
 
-    if (args->len < 1 || args->len > indx + 1) {
+    if (args->len < 1 || args->len - 1 > indx) {
         return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
 
