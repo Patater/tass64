@@ -266,10 +266,10 @@ static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool lo
 }
 
 static void output_mem_flat(FILE *fout, const Memblocks *memblocks) {
-    address_t pos;
+    address_t pos = 0;
     size_t i;
 
-    for (pos = i = 0; i < memblocks->p; i++) {
+    for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *block = &memblocks->data[i];
         padding(block->addr - pos, fout);
         if (fwrite(memblocks->mem.data + block->p, block->len, 1, fout) == 0) return;

@@ -1900,7 +1900,7 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
         val = pull_val(&epoints[0]);
         if (val->obj == ADDRLIST_OBJ) {
             list = Addrlist(val);
-            i = list->len < 3 ? list->len : 3;
+            i = list->len < 3 ? (argcount_t)list->len : 3;
             for (j = 1; j < i; j++) epoints[j] = epoints[0];
         }
         return val;

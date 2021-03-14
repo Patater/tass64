@@ -364,7 +364,8 @@ static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
     if (offs2 < 0) return ref_gap();
     offs = (size_t)offs2 * ln2;
     r = -1;
-    for (val = i2 = 0; i2 < ln2; i2++, offs++) {
+    val = 0;
+    for (i2 = 0; i2 < ln2; i2++, offs++) {
         r = read_mem(v1->memblocks, v1->memaddr, v1->membp, offs);
         if (r < 0) return ref_gap();
         val |= (uval_t)r << (i2 * 8);

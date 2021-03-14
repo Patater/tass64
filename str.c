@@ -30,7 +30,7 @@ int str_hash(const str_t *s) {
     if (l == 0) return 0;
     h = (unsigned int)*s2 << 7;
     while ((l--) != 0) h = (1000003 * h) ^ *s2++;
-    h ^= s->len;
+    h ^= (unsigned int)s->len;
     return h & ((~0U) >> 1);
 }
 
