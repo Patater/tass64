@@ -99,8 +99,8 @@ typedef uint32_t uval_t;
 #define PRIuval PRIu32
 #define PRIXval PRIX32
 
-#ifndef UINT32_MAX
-#define UINT32_MAX (~(uint32_t)0)
+#ifndef ARGCOUNT_MAX
+#define ARGCOUNT_MAX (~(argcount_t)0)
 #endif
 
 #ifndef SIZE_MAX

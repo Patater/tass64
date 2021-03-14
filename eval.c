@@ -411,7 +411,7 @@ static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
     out->size += 64;
-    if (out->size < 64 || out->size > UINT32_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
+    if (out->size < 64 || out->size > ARGCOUNT_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
     out->data = (struct out_s *)reallocx(out->data, out->size * sizeof *out->data);
 }
 
@@ -609,7 +609,7 @@ static struct values_s *extend_values(struct eval_context_s *ev, size_t by) {
     argcount_t j = ev->values_size;
     struct values_s *values;
     ev->values_size += by;
-    if (ev->values_size < by || ev->values_size > UINT32_MAX / sizeof *values) err_msg_out_of_memory(); /* overflow */
+    if (ev->values_size < by || ev->values_size > ARGCOUNT_MAX / sizeof *values) err_msg_out_of_memory(); /* overflow */
     ev->values = values = (struct values_s *)reallocx(ev->values, ev->values_size * sizeof *values);
     for (; j < ev->values_size; j++) values[j].val = NULL;
     return values;

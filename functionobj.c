@@ -125,7 +125,7 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
                 if (args <= lenof(elements3)) {
                     elements = elements3; 
                 } else {
-                    if (args > UINT32_MAX / sizeof *elements) goto failed; /* overflow */
+                    if (args > ARGCOUNT_MAX / sizeof *elements) goto failed; /* overflow */
                     elements = (struct elements_s *)malloc(args * sizeof *elements);
                     if (elements == NULL) goto failed;
                 }
