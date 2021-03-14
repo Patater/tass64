@@ -487,15 +487,15 @@ rest:
 
         switch (ch) {
         case '(': op = &o_PARENT;goto add;
-        case '$': push_oper(get_hex_compat(&epoint), epoint.pos);goto other;
-        case '%': push_oper(get_bin_compat(&epoint), epoint.pos);goto other;
-        case '"': push_oper(get_string(&epoint), epoint.pos);goto other;
-        case '*': lpoint.pos++;push_oper(get_star(), epoint.pos);goto other;
+        case '$': val = get_hex_compat(&epoint); goto push_other;
+        case '%': val = get_bin_compat(&epoint); goto push_other;
+        case '"': val = get_string(&epoint); goto push_other;
+        case '*': lpoint.pos++;val = get_star(); goto push_other;
         case '0':
             if (diagnostics.leading_zeros && pline[lpoint.pos + 1] >= '0' && pline[lpoint.pos + 1] <= '9') err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
             /* fall through */
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            push_oper(get_dec(&epoint), epoint.pos);goto other;
+            val = get_dec(&epoint); goto push_other;
         default:
             ln = get_label(pline + lpoint.pos);
             if (ln == 0) {
@@ -523,6 +523,7 @@ rest:
             err->u.notdef.down = true;
             val = Obj(err);
         }
+    push_other:
         push_oper(val, epoint.pos);
     other:
         if (stop != 2) ignore();
@@ -1311,6 +1312,7 @@ static bool get_exp2(int stop) {
     struct linepos_s epoint;
     size_t llen;
     size_t symbollist;
+    Obj *val;
 
     clean_o_out(eval);
     eval->gstop = stop;
@@ -1338,26 +1340,29 @@ static bool get_exp2(int stop) {
         switch (ch) {
         case ',':
             if (stop != 4 || opr.p != 0) goto tryanon;
-            lpoint.pos++;push_oper(ref_default(), epoint.pos);
+            lpoint.pos++;
+            val = ref_default();
+        push_continue:
+            push_oper(val, epoint.pos);
             continue;
         case ')':
             if (opr.p != 0) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
-                if (o == O_COMMA) {opr.p--;op = &o_TUPLE;goto tphack;}
+                if (o == O_COMMA) {opr.p--;val = &o_TUPLE.v;goto tphack;}
                 else if (o == O_PARENT || o == O_FUNC) goto other;
             }
             goto tryanon;
         case ']':
             if (opr.p != 0) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
-                if (o == O_COMMA) {opr.p--;op = &o_LIST;goto lshack;}
+                if (o == O_COMMA) {opr.p--;val = &o_LIST.v;goto lshack;}
                 else if (o == O_BRACKET || o == O_INDEX) goto other;
             }
             goto tryanon;
         case '}':
             if (opr.p != 0) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
-                if (o == O_COMMA) {opr.p--;op = &o_DICT;goto brhack;}
+                if (o == O_COMMA) {opr.p--;val = &o_DICT.v;goto brhack;}
                 else if (o == O_BRACE) goto other;
             }
             goto tryanon;
@@ -1366,30 +1371,30 @@ static bool get_exp2(int stop) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
                 if (o != O_PARENT && o != O_BRACKET && o != O_BRACE && o != O_FUNC && o != O_INDEX && o != O_COMMA) goto tryanon;
             }
-            push_oper(ref_default(), epoint.pos);
-            goto other;
+            val = ref_default();
+            goto push_other;
         case '(':
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) symbollist++;
         tphack2:
             opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_PARENT; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
-            push_oper(&o_PARENT.v, epoint.pos);
-            continue;
+            val = &o_PARENT.v;
+            goto push_continue;
         case '[':
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) symbollist++;
         lshack2:
             opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_BRACKET; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
-            push_oper(&o_BRACKET.v, epoint.pos);
-            continue;
+            val = &o_BRACKET.v;
+            goto push_continue;
         case '{':
             opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_BRACE; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
-            push_oper(&o_BRACE.v, epoint.pos);
-            continue;
+            val = &o_BRACE.v;
+            goto push_continue;
         case '+': op = &o_POS; break;
         case '-': op = &o_NEG; break;
         case '*': op = &o_SPLAT; break;
@@ -1400,55 +1405,58 @@ static bool get_exp2(int stop) {
         case '#': op = (pline[lpoint.pos + 1] == '+' || pline[lpoint.pos + 1] == '-') ? &o_HASH_SIGNED : &o_HASH; break;
         case '`': op = &o_BANK; break;
         case '^': op = &o_STRING; if (diagnostics.deprecated) err_msg2(ERROR____OLD_STRING, NULL, &lpoint); break;
-        case '$': push_oper(get_hex(&epoint), epoint.pos);goto other;
-        case '%': if ((pline[lpoint.pos + 1] & 0xfe) == 0x30 || (pline[lpoint.pos + 1] == '.' && (pline[lpoint.pos + 2] & 0xfe) == 0x30)) { push_oper(get_bin(&epoint), epoint.pos);goto other; }
-                  goto tryanon;
+        case '$': val = get_hex(&epoint); goto push_other;
+        case '%': 
+            if ((pline[lpoint.pos + 1] & 0xfe) == 0x30 || (pline[lpoint.pos + 1] == '.' && (pline[lpoint.pos + 2] & 0xfe) == 0x30)) { 
+                val = get_bin(&epoint); goto push_other; 
+            }
+            goto tryanon;
         case '"':
-        case '\'': push_oper(get_string(&epoint), epoint.pos);goto other;
+        case '\'': val = get_string(&epoint); goto push_other;
         case '?':
             if (opr.p != 0) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
                 if (o == O_SPLAT || o == O_POS || o == O_NEG) goto tryanon;
             }
-            lpoint.pos++;push_oper(ref_gap(), epoint.pos);goto other;
+            lpoint.pos++; val = ref_gap(); goto push_other;
         case '.':
             if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) {
                 str_t symbol;
                 if (pline[lpoint.pos + 1] == '.' && pline[lpoint.pos + 2] == '.') {
-                    lpoint.pos += 3;push_oper(ref_fold(), epoint.pos);goto other;
+                    lpoint.pos += 3; val = ref_fold(); goto push_other;
                 }
                 symbol.data = pline + lpoint.pos + 1;
                 symbol.len = get_label(symbol.data);
                 if (symbol.len != 0) {
                     lpoint.pos += symbol.len + 1;
                     if (symbol.len > 1 && symbol.data[0] == '_' && symbol.data[1] == '_') err_msg2(ERROR_RESERVED_LABL, &symbol, &epoint);
-                    push_oper(Obj(new_symbol(&symbol, &epoint)), epoint.pos);
-                    goto other;
+                    val = Obj(new_symbol(&symbol, &epoint));
+                    goto push_other;
                 }
                 if (symbol.data[0] == '+' || symbol.data[0] == '-') {
                     while (symbol.data[0] == symbol.data[++symbol.len]);
                     lpoint.pos += symbol.len + 1;
-                    push_oper(Obj(new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len)), epoint.pos);
-                    goto other;
+                    val = Obj(new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len));
+                    goto push_other;
                 }
                 if (symbol.data[0] == '*') {
                     lpoint.pos += 2;
                     symbol.len = 1;
-                    push_oper(Obj(new_symbol(&symbol, &epoint)), epoint.pos);
-                    goto other;
+                    val = Obj(new_symbol(&symbol, &epoint));
+                    goto push_other;
                 }
                 if (symbol.data[0] == '(') { lpoint.pos++; symbollist++; goto tphack2; }
                 if (symbol.data[0] == '[') { lpoint.pos++; symbollist++; goto lshack2; }
                 goto tryanon;
             }
-            push_oper(get_float(&epoint), epoint.pos);
-            goto other;
+            val = get_float(&epoint);
+            goto push_other;
         case '0':
             if (diagnostics.leading_zeros && (pline[lpoint.pos + 1] ^ 0x30) < 10) err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
             /* fall through */
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            push_oper(get_float(&epoint), epoint.pos);
-            goto other;
+            val = get_float(&epoint);
+            goto push_other;
         case 0:
         case ';':
             goto tryanon;
@@ -1457,7 +1465,6 @@ static bool get_exp2(int stop) {
             if (llen != 0) {
                 bool down;
                 Label *l;
-                Obj *val;
                 str_t symbol;
                 lpoint.pos += llen;
             as_symbol:
@@ -1469,8 +1476,8 @@ static bool get_exp2(int stop) {
                     case 'p': mode = BYTES_MODE_PTEXT; break;
                     case 'l': mode = BYTES_MODE_SHIFTL; break;
                     case 'b': mode = BYTES_MODE_TEXT; break;
-                    case 'x': push_oper(get_bytes(&epoint, false), epoint.pos); goto other;
-                    case 'z': push_oper(get_bytes(&epoint, true), epoint.pos); goto other;
+                    case 'x': val = get_bytes(&epoint, false); goto push_other;
+                    case 'z': val = get_bytes(&epoint, true); goto push_other;
                     default: mode = BYTES_MODE_NULL_CHECK; break;
                     }
                     if (mode != BYTES_MODE_NULL_CHECK) {
@@ -1479,10 +1486,11 @@ static bool get_exp2(int stop) {
                             epoint.pos++;
                             val = bytes_from_str(Str(str), &epoint, mode);
                             epoint.pos--;
-                            push_oper(val, epoint.pos);
                             val_destroy(str);
-                        } else push_oper(str, epoint.pos);
-                        goto other;
+                        } else {
+                            val = str;
+                        }
+                        goto push_other;
                     }
                 }
                 symbol.data = pline + epoint.pos;
@@ -1506,50 +1514,46 @@ static bool get_exp2(int stop) {
                         val = Obj(err);
                     }
                 }
-                push_oper(val, epoint.pos);
-                goto other;
+                goto push_other;
             }
         tryanon:
             db = opr.p;
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_POS) opr.p--;
             if (db != opr.p) {
                 ssize_t as = (ssize_t)(db - opr.p) - 1;
-                Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
                     val = Obj(new_anonsymbol(as));
                 } else {
                     val = resolv_anonlabel(as, opr.data[opr.p].pos);
                 }
-                push_oper(val, opr.data[opr.p].pos);
-                goto other;
+                epoint.pos = opr.data[opr.p].pos;
+                goto push_other;
             }
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_NEG) opr.p--;
             if (db != opr.p) {
                 ssize_t as = -(ssize_t)(db - opr.p);
-                Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
                     val = Obj(new_anonsymbol(as));
                 } else {
                     val = resolv_anonlabel(as, opr.data[opr.p].pos);
                 }
-                push_oper(val, opr.data[opr.p].pos);
-                goto other;
+                epoint.pos = opr.data[opr.p].pos;
+                goto push_other;
             }
             if (opr.p != 0) {
                 if (opr.data[opr.p - 1].val == &o_COLON) {
-                    push_oper(ref_default(), epoint.pos);
-                    goto other;
+                    val = ref_default();
+                    goto push_other;
                 }
                 if (opr.data[opr.p - 1].val == &o_SPLAT) {
-                    Obj *val;
                     opr.p--;
                     if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
                         val = new_starsymbol(opr.data[opr.p].pos);
                     } else {
                         val = get_star();
                     }
-                    push_oper(val, opr.data[opr.p].pos);
-                    goto other;
+                    epoint.pos = opr.data[opr.p].pos;
+                    goto push_other;
                 }
                 epoint.pos = opr.data[opr.p - 1].pos;
             }
@@ -1557,7 +1561,6 @@ static bool get_exp2(int stop) {
             goto error;
         }
         if (opr.p != 0 && opr.data[opr.p - 1].val == &o_SPLAT) {
-            Obj *val;
             opr.p--;
             lpoint.pos = epoint.pos;
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
@@ -1565,8 +1568,8 @@ static bool get_exp2(int stop) {
             } else {
                 val = get_star();
             }
-            push_oper(val, opr.data[opr.p].pos);
-            goto other;
+            epoint.pos = opr.data[opr.p].pos;
+            goto push_other;
         }
         lpoint.pos++;
     rtl:
@@ -1574,6 +1577,8 @@ static bool get_exp2(int stop) {
         opr.data[opr.p++].val = op;
         if (opr.p >= opr.l) extend_opr(&opr);
         continue;
+    push_other:
+        push_oper(val, epoint.pos);
     other:
         if (stop != 2) ignore();
         ch = here();epoint.pos = lpoint.pos;
@@ -1631,24 +1636,24 @@ static bool get_exp2(int stop) {
                 opr.p--;
                 push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
             }
-            push_oper(&o_PARENT.v, epoint.pos);
             opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_FUNC; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
             if (symbollist != 0) symbollist++;
-            continue;
+            val = &o_PARENT.v;
+            goto push_continue;
         case '[':
             prec = o_MEMBER.prio;
             while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
                 opr.p--;
                 push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
             }
-            push_oper(&o_BRACKET.v, epoint.pos);
             opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_INDEX; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
             if (symbollist != 0) symbollist++;
-            continue;
+            val = &o_BRACKET.v;
+            goto push_continue;
         case '&': op = pline[lpoint.pos + 1] == '&' ? (pline[lpoint.pos + 2] == '=' ? &o_LAND_ASSIGN : &o_LAND) : (pline[lpoint.pos + 1] == '=' ? &o_AND_ASSIGN : &o_AND); goto push2;
         case '|': op = pline[lpoint.pos + 1] == '|' ? (pline[lpoint.pos + 2] == '=' ? &o_LOR_ASSIGN : &o_LOR) : (pline[lpoint.pos + 1] == '=' ? &o_OR_ASSIGN : &o_OR); goto push2;
         case '^': op = pline[lpoint.pos + 1] == '^' ? &o_LXOR : (pline[lpoint.pos + 1] == '=' ? &o_XOR_ASSIGN : &o_XOR); goto push2;
@@ -1720,7 +1725,7 @@ static bool get_exp2(int stop) {
             err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
             goto error;
         case ')':
-            op = &o_RPARENT;
+            val = &o_RPARENT.v;
         tphack:
             if (symbollist != 0) symbollist--;
             do {
@@ -1728,11 +1733,13 @@ static bool get_exp2(int stop) {
                 if (opr.p != 0) {
                     Oper *o = opr.data[opr.p - 1].val;
                     switch (o->op) {
-                    case O_PARENT:
                     case O_FUNC:
+                        val = Obj(o);
+                        /* fall through */
+                    case O_PARENT:
                         lpoint.pos++;
-                        push_oper(Obj((o == &o_PARENT) ? op : o), opr.data[--opr.p].pos);
-                        goto other;
+                        epoint.pos = opr.data[--opr.p].pos;
+                        goto push_other;
                     case O_BRACKET:
                     case O_INDEX: mis = "']'"; break;
                     case O_BRACE: mis = "'}'"; break;
@@ -1742,7 +1749,7 @@ static bool get_exp2(int stop) {
                 err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
             } while (true);
         case ']':
-            op = &o_RBRACKET;
+            val = &o_RBRACKET.v;
         lshack:
             if (symbollist != 0) symbollist--;
             do {
@@ -1750,11 +1757,13 @@ static bool get_exp2(int stop) {
                 if (opr.p != 0) {
                     Oper *o = opr.data[opr.p - 1].val;
                     switch (o->op) {
-                    case O_BRACKET:
                     case O_INDEX:
+                        val = Obj(o);
+                        /* fall through */
+                    case O_BRACKET:
                         lpoint.pos++;
-                        push_oper(Obj((o == &o_BRACKET) ? op : o), opr.data[--opr.p].pos);
-                        goto other;
+                        epoint.pos = opr.data[--opr.p].pos;
+                        goto push_other;
                     case O_PARENT:
                     case O_FUNC: mis = "')'"; break;
                     case O_BRACE: mis = "'}'"; break;
@@ -1764,7 +1773,7 @@ static bool get_exp2(int stop) {
                 err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
             } while (true);
         case '}':
-            op = &o_RBRACE;
+            val = &o_RBRACE.v;
         brhack:
             do {
                 const char *mis;
@@ -1773,8 +1782,8 @@ static bool get_exp2(int stop) {
                     switch (o->op) {
                     case O_BRACE:
                         lpoint.pos++;
-                        push_oper(Obj((o == &o_BRACE) ? op : o), opr.data[--opr.p].pos);
-                        goto other;
+                        epoint.pos = opr.data[--opr.p].pos;
+                        goto push_other;
                     case O_PARENT:
                     case O_FUNC: mis = "')'"; break;
                     case O_BRACKET:
