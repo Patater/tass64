@@ -922,7 +922,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 }
                 if (args == 1) {
                     if (stop && !expc) {
-                        size_t j = i + 1;
+                        argcount_t j = i + 1;
                         vsp--;
                         if (tup && j < ev->out.p) {
                             Obj *obj = ev->out.data[j].val;
@@ -1154,7 +1154,7 @@ static bool get_val2(struct eval_context_s *ev) {
             if (v1->val->obj->iterable || v1->val->obj == ADDRLIST_OBJ) {
                 struct iter_s iter;
                 size_t k, len;
-                size_t len2;
+                argcount_t len2;
                 Obj *tmp, *def;
                 iter.data = v1->val; v1->val->obj->getiter(&iter);
                 len = iter.len;
@@ -1973,7 +1973,7 @@ void eval_leave(void) {
 
 void init_eval(void) {
     evxnum = 0;
-    evx_p = (size_t)-1;
+    evx_p = ~(size_t)0;
     eval_enter();
 }
 
