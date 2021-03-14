@@ -762,7 +762,7 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     val_destroy(Obj(err));
 }
 
-void err_msg_not_defined2a(int32_t count, Namespace *l, bool down, linepos_t epoint) {
+void err_msg_not_defined2a(ssize_t count, Namespace *l, bool down, linepos_t epoint) {
     Error *err = new_error(ERROR___NOT_DEFINED, epoint);
     err->u.notdef.down = down;
     err->u.notdef.names = ref_namespace(l);
