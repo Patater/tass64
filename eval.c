@@ -357,6 +357,39 @@ MUST_CHECK Obj *get_star(void) {
     return Obj(code);
 }
 
+static MUST_CHECK Obj *new_starsymbol(linecpos_t pos) {
+    static const str_t symbol = { (const uint8_t *)"*", 1 };
+    struct linepos_s epoint;
+    epoint.line = lpoint.line;
+    epoint.pos = pos;
+    return Obj(new_symbol(&symbol, &epoint));
+}
+
+static MUST_CHECK Obj *resolv_anonlabel(ssize_t as, linecpos_t pos) {
+    Error *err;
+    struct linepos_s epoint;
+    Label *l = find_anonlabel(as);
+    if (l != NULL) {
+        touch_label(l);
+        return val_reference(l->value);
+    } 
+    if (constcreated && pass < max_pass) {
+        return ref_none();
+    } 
+    epoint.line = lpoint.line;
+    epoint.pos = pos;
+    err = new_error(ERROR___NOT_DEFINED, &epoint);
+    err->u.notdef.symbol = Obj(new_anonsymbol(as));
+    err->u.notdef.names = ref_namespace(current_context);
+    err->u.notdef.down = true;
+    return Obj(err);
+}
+
+struct o_out_s {
+    Obj *val;
+    linecpos_t pos;
+};
+
 static size_t evxnum, evx_p;
 static struct eval_context_s {
     struct values_s *values;
@@ -365,7 +398,7 @@ static struct eval_context_s {
     size_t values_size;
     size_t outp, outp2;
     int gstop;
-    struct values_s *o_out;
+    struct o_out_s *o_out;
     size_t out_size;
 } **evx;
 
@@ -374,27 +407,27 @@ static struct eval_context_s *eval;
 static void extend_o_out(void) {
     eval->out_size += 64;
     if (/*eval->out_size < 64 ||*/ eval->out_size > SIZE_MAX / sizeof *eval->o_out) err_msg_out_of_memory(); /* overflow */
-    eval->o_out = (struct values_s *)reallocx(eval->o_out, eval->out_size * sizeof *eval->o_out);
+    eval->o_out = (struct o_out_s *)reallocx(eval->o_out, eval->out_size * sizeof *eval->o_out);
 }
 
 static inline void clean_o_out(struct eval_context_s *ev) {
-    struct values_s *o, *o2 = &ev->o_out[eval->outp];
+    struct o_out_s *o, *o2 = &ev->o_out[eval->outp];
     for (o = &ev->o_out[eval->outp2]; o < o2; o++) val_destroy(o->val);
 }
 
-static inline void push_oper(Obj *val, linepos_t epoint) {
-    struct values_s *o;
+static inline void push_oper(Obj *val, linecpos_t pos) {
+    struct o_out_s *o;
     if (eval->outp >= eval->out_size) extend_o_out();
     o = &eval->o_out[eval->outp++];
     o->val = val;
-    o->epoint = *epoint;
+    o->pos = pos;
 }
 
 #define OPR_LEN 16
 
 struct opr_data_s {
     Oper *val;
-    struct linepos_s epoint;
+    linecpos_t pos;
 };
 
 struct opr_s {
@@ -445,27 +478,28 @@ rest:
     case '<': conv = &o_LOWER.v; cpoint = lpoint; lpoint.pos++;break;
     case '>': conv = &o_HIGHER.v;cpoint = lpoint; lpoint.pos++;break;
     }
+    epoint.line = lpoint.line;
     for (;;) {
         Oper *op;
         Obj *val;
         size_t ln;
-        ignore();ch = here(); epoint = lpoint;
+        ignore();ch = here(); epoint.pos = lpoint.pos;
 
         switch (ch) {
         case '(': op = &o_PARENT;goto add;
-        case '$': push_oper(get_hex_compat(&epoint), &epoint);goto other;
-        case '%': push_oper(get_bin_compat(&epoint), &epoint);goto other;
-        case '"': push_oper(get_string(&epoint), &epoint);goto other;
-        case '*': lpoint.pos++;push_oper(get_star(), &epoint);goto other;
+        case '$': push_oper(get_hex_compat(&epoint), epoint.pos);goto other;
+        case '%': push_oper(get_bin_compat(&epoint), epoint.pos);goto other;
+        case '"': push_oper(get_string(&epoint), epoint.pos);goto other;
+        case '*': lpoint.pos++;push_oper(get_star(), epoint.pos);goto other;
         case '0':
             if (diagnostics.leading_zeros && pline[lpoint.pos + 1] >= '0' && pline[lpoint.pos + 1] <= '9') err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
             /* fall through */
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            push_oper(get_dec(&epoint), &epoint);goto other;
+            push_oper(get_dec(&epoint), epoint.pos);goto other;
         default:
             ln = get_label(pline + lpoint.pos);
             if (ln == 0) {
-                if (opr.p != 0) epoint = opr.data[opr.p - 1].epoint;
+                if (opr.p != 0) epoint.pos = opr.data[opr.p - 1].pos;
                 err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
                 goto error;
             }
@@ -489,14 +523,14 @@ rest:
             err->u.notdef.down = true;
             val = Obj(err);
         }
-        push_oper(val, &epoint);
+        push_oper(val, epoint.pos);
     other:
         if (stop != 2) ignore();
-        ch = here(); epoint = lpoint;
+        ch = here(); epoint.pos = lpoint.pos;
 
         while (opr.p != 0 && opr.data[opr.p - 1].val != &o_PARENT) {
             opr.p--;
-                push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
+            push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
         }
         switch (ch) {
         case ',':
@@ -506,19 +540,19 @@ rest:
             if (llen == 1) {
                 switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
                 case 'x':
-                    opr.data[opr.p].epoint = epoint; opr.data[opr.p++].val = &o_COMMAX;
+                    opr.data[opr.p].pos = epoint.pos; opr.data[opr.p++].val = &o_COMMAX;
                     if (opr.p >= opr.l) extend_opr(&opr);
                     goto other;
                 case 'y':
-                    opr.data[opr.p].epoint = epoint; opr.data[opr.p++].val = &o_COMMAY;
+                    opr.data[opr.p].pos = epoint.pos; opr.data[opr.p++].val = &o_COMMAY;
                     if (opr.p >= opr.l) extend_opr(&opr);
                     goto other;
                 default: break;
                 }
             }
-            if (conv != NULL) push_oper(conv, &cpoint);
-            if (conv2 != NULL) push_oper(conv2, &cpoint);
-            if (stop == 1) {lpoint = epoint;break;}
+            if (conv != NULL) push_oper(conv, cpoint.pos);
+            if (conv2 != NULL) push_oper(conv2, cpoint.pos);
+            if (stop == 1) {lpoint.pos = epoint.pos;break;}
             if (llen != 0) {
                 epoint.pos++;
                 goto as_symbol;
@@ -532,7 +566,7 @@ rest:
         case '/': op = &o_DIV; goto add;
         case '+': op = &o_ADD; goto add;
         case '-': op = &o_SUB;
-              add: opr.data[opr.p].epoint = epoint; opr.data[opr.p++].val = op; lpoint.pos++;
+              add: opr.data[opr.p].pos = epoint.pos; opr.data[opr.p++].val = op; lpoint.pos++;
                   if (opr.p >= opr.l) extend_opr(&opr);
                   continue;
         case ')':
@@ -549,8 +583,8 @@ rest:
         case ';':
         case '\t':
         case ' ':
-            if (conv != NULL) push_oper(conv, &cpoint);
-            if (conv2 != NULL) push_oper(conv2, &cpoint);
+            if (conv != NULL) push_oper(conv, cpoint.pos);
+            if (conv2 != NULL) push_oper(conv2, cpoint.pos);
             break;
         default:
             err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
@@ -560,7 +594,8 @@ rest:
             if (opr.l != lenof(oprdata)) free(opr.data);
             return true;
         }
-        err_msg2(ERROR______EXPECTED, "')'", &opr.data[opr.p - 1].epoint);
+        epoint.pos = opr.data[opr.p - 1].pos;
+        err_msg2(ERROR______EXPECTED, "')'", &epoint);
     error:
         break;
     }
@@ -585,12 +620,14 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
     size_t i;
     Obj *val;
     struct values_s *v1, *v2;
-    struct values_s *o_out;
+    struct o_out_s *o_out;
     struct values_s *values;
+    struct linepos_s epoint;
 
     ev->values_p = 0;
     values = ev->values;
 
+    epoint.line = lpoint.line;
     for (i = ev->outp2; i < ev->outp; i++) {
         o_out = &ev->o_out[i];
         val = o_out->val;
@@ -598,7 +635,9 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
             if (vsp >= ev->values_size) values = extend_values(ev, 16);
             val = values[vsp].val;
             if (val != NULL) val_destroy(val);
-            values[vsp++] = *o_out;
+            values[vsp].val = o_out->val;
+            values[vsp].epoint.pos = o_out->pos;
+            values[vsp++].epoint.line = epoint.line;
             continue;
         }
 
@@ -624,12 +663,13 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                         const Address *old = Address(v1->val);
                         Obj *val2 = new_address(val_reference(old->val), (old->type << 4) | ((op == O_TUPLE) ? A_I : (op == O_COMMAX) ? A_XR : A_YR));
                         val_destroy(v1->val); v1->val = val2;
-                        v1->epoint = o_out->epoint;
+                        v1->epoint.pos = o_out->pos;
                         continue;
                     }
                 default:break;
                 }
-                err_msg_invalid_oper(op2, v1->val, NULL, &o_out->epoint);
+                epoint.pos = o_out->pos;
+                err_msg_invalid_oper(op2, v1->val, NULL, &epoint);
                 val_replace(&v1->val, none_value);
                 break;
             default:
@@ -649,7 +689,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_COMMAX:
                     case O_COMMAY:
                         v1->val = new_address(v1->val, (op == O_HASH) ? A_IMMEDIATE : (op == O_COMMAX) ? A_XR : A_YR);
-                        v1->epoint = o_out->epoint;
+                        v1->epoint.pos = o_out->pos;
                         continue;
                     case O_HIGHER:
                         val1 >>= 8;
@@ -659,7 +699,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                         break;
                     case O_TUPLE:
                         v1->val = new_address(v1->val, A_I);
-                        v1->epoint = o_out->epoint;
+                        v1->epoint.pos = o_out->pos;
                         continue;
                     default: break;
                     }
@@ -670,7 +710,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
             case T_ERROR:
             case T_NONE:break;
             }
-            v1->epoint = o_out->epoint;
+            v1->epoint.pos = o_out->pos;
             continue;
         default:break;
         }
@@ -716,7 +756,8 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_MUL: val1 = (uint16_t)(val1 * val2); break;
                     case O_DIV:
                         if (val2 == 0) {
-                            err = new_error_obj(ERROR_DIVISION_BY_Z, v2->val, &o_out->epoint);
+                            epoint.pos = o_out->pos;
+                            err = new_error_obj(ERROR_DIVISION_BY_Z, v2->val, &epoint);
                             val_destroy(v1->val); v1->val = err;
                             continue;
                         }
@@ -732,7 +773,9 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     v1->val = int_from_uval(val1);
                     continue;
                 }
-            default: err_msg_invalid_oper(op2, v1->val, v2->val, &o_out->epoint); break;
+            default: 
+                epoint.pos = o_out->pos;
+                err_msg_invalid_oper(op2, v1->val, v2->val, &epoint); break;
             case T_ERROR:
             case T_NONE:
                 val_replace(&v1->val, v2->val);
@@ -740,7 +783,8 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
             }
             break;
         default:
-            err_msg_invalid_oper(op2, v1->val, v2->val, &o_out->epoint); break;
+            epoint.pos = o_out->pos;
+            err_msg_invalid_oper(op2, v1->val, v2->val, &epoint); break;
         case T_ERROR:
         case T_NONE: continue;
         }
@@ -793,15 +837,17 @@ static bool get_val2(struct eval_context_s *ev) {
     Oper_types op;
     struct values_s *v1, *v2;
     bool stop = (ev->gstop == 3 || ev->gstop == 4);
-    struct values_s *o_out;
+    struct o_out_s *o_out;
     Obj *val;
     struct values_s *values;
     struct oper_s oper;
     Address_types am;
+    struct linepos_s epoint;
 
     ev->values_p = 0;
     values = ev->values;
 
+    epoint.line = lpoint.line;
     for (i = ev->outp2; i < ev->outp; i++) {
         o_out = &ev->o_out[i];
         val = o_out->val;
@@ -809,7 +855,9 @@ static bool get_val2(struct eval_context_s *ev) {
             if (vsp >= ev->values_size) values = extend_values(ev, 16);
             val = values[vsp].val;
             if (val != NULL) val_destroy(val);
-            values[vsp++] = *o_out;
+            values[vsp].val = o_out->val;
+            values[vsp].epoint.pos = o_out->pos;
+            values[vsp++].epoint.line = epoint.line;
             continue;
         }
 
@@ -837,11 +885,12 @@ static bool get_val2(struct eval_context_s *ev) {
                 tmp.v.obj = FUNCARGS_OBJ;
                 v1--;
 
+                epoint.pos = o_out->pos;
                 oper.v1 = v1[1].val = v1->val;
                 oper.v2 = &tmp.v;
                 oper.epoint = &v1->epoint;
-                oper.epoint2 = (args != 0) ? &tmp.val->epoint : &o_out->epoint;
-                oper.epoint3 = &o_out->epoint;
+                oper.epoint2 = (args != 0) ? &tmp.val->epoint : &epoint;
+                oper.epoint3 = &epoint;
                 if (op == O_BRACKET) {
                     oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
                     v1->val = oper.v1->obj->slice(&oper, 0);
@@ -973,11 +1022,12 @@ static bool get_val2(struct eval_context_s *ev) {
                 tmp.len = 3; /* assumes no referencing */
                 tmp.v.obj = FUNCARGS_OBJ;
 
+                epoint.pos = o_out->pos;
                 oper.v1 = none_value; 
                 oper.v2 = &tmp.v;
-                oper.epoint = &o_out->epoint;
+                oper.epoint = &epoint;
                 oper.epoint2 = &v1->epoint;
-                oper.epoint3 = &o_out->epoint;
+                oper.epoint3 = &epoint;
                 val = apply_condition(&oper);
                 val_destroy(v1->val); v1->val = val;
                 val_destroy(v1[1].val);
@@ -991,7 +1041,8 @@ static bool get_val2(struct eval_context_s *ev) {
             vsp--;
             if (vsp == 0) goto syntaxe;
             v1 = &values[vsp - 1];
-            err_msg2(ERROR______EXPECTED,"':'", &o_out->epoint);
+            epoint.pos = o_out->pos;
+            err_msg2(ERROR______EXPECTED,"':'", &epoint);
             val_replace(&v1->val, none_value);
             continue;
         case O_COLON:
@@ -1055,14 +1106,15 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_NEG:     /* -  */
         case O_POS:     /* +  */
         case O_LNOT:    /* !  */
+            epoint.pos = o_out->pos;
             oper.v1 = v1->val;
             oper.v2 = none_value;
             oper.epoint = &v1->epoint;
-            oper.epoint3 = &o_out->epoint;
+            oper.epoint3 = &epoint;
             oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
             val = oper.v1->obj->calc1(&oper);
             val_destroy(v1->val); v1->val = val;
-            v1->epoint = o_out->epoint;
+            v1->epoint.pos = o_out->pos;
             continue;
         case O_COMMAS: am = A_SR; goto addr;                    /* ,s */
         case O_COMMAR: am = A_RR; goto addr;                    /* ,r */
@@ -1081,17 +1133,18 @@ static bool get_val2(struct eval_context_s *ev) {
                 val = apply_addressing(v1->val, am, true);
                 val_destroy(v1->val); v1->val = val;
             }
-            if (op == O_HASH || op == O_HASH_SIGNED) v1->epoint = o_out->epoint;
+            if (op == O_HASH || op == O_HASH_SIGNED) v1->epoint.pos = o_out->pos;
             continue;
         case O_SPLAT:   /* *  */
             if (i + 1 < ev->outp) {
                 Obj *o = ev->o_out[i + 1].val;
                 if (o != &o_RPARENT.v && o != &o_RBRACKET.v && o != &o_RBRACE.v && o != &o_FUNC.v && o != &o_INDEX.v && o != &o_COMMA.v) {
                     if (o == &o_MEMBER.v) {
-                        v1->epoint = o_out->epoint;
+                        v1->epoint.pos = o_out->pos;
                         continue;
                     }
-                    err_msg2(ERROR_EXPRES_SYNTAX, NULL, &o_out->epoint);
+                    epoint.pos = o_out->pos;
+                    err_msg2(ERROR_EXPRES_SYNTAX, NULL, &epoint);
                     val_replace(&v1->val, none_value);
                     continue;
                 }
@@ -1122,13 +1175,15 @@ static bool get_val2(struct eval_context_s *ev) {
                 for (k = 0; k < len && (tmp = iter.next(&iter)) != NULL; k++) {
                     if (values[vsp].val != NULL) val_destroy(values[vsp].val);
                     values[vsp].val = val_reference(tmp);
-                    values[vsp++].epoint = o_out->epoint;
+                    values[vsp].epoint.pos = o_out->pos;
+                    values[vsp++].epoint.line = epoint.line;
                 }
                 iter_destroy(&iter);
                 if (def != NULL) {
                     if (values[vsp].val != NULL) val_destroy(values[vsp].val);
                     values[vsp].val = def;
-                    values[vsp++].epoint = o_out->epoint;
+                    values[vsp].epoint.pos = o_out->pos;
+                    values[vsp++].epoint.line = epoint.line;
                 }
                 continue;
             }
@@ -1177,11 +1232,12 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_MAX: /* >? */
             v2 = v1; v1 = &values[--vsp - 1];
             if (vsp == 0) goto syntaxe;
+            epoint.pos = o_out->pos;
             oper.v1 = v1->val;
             oper.v2 = v2->val;
             oper.epoint = &v1->epoint;
             oper.epoint2 = &v2->epoint;
-            oper.epoint3 = &o_out->epoint;
+            oper.epoint3 = &epoint;
             oper.inplace = NULL;
             val = oper.v1->obj->calc2(&oper);
             if (val->obj != BOOL_OBJ) {
@@ -1205,11 +1261,12 @@ static bool get_val2(struct eval_context_s *ev) {
             return false;
         }
 
+        epoint.pos = o_out->pos;
         oper.v1 = v1->val;
         oper.v2 = v2->val;
         oper.epoint = &v1->epoint;
         oper.epoint2 = &v2->epoint;
-        oper.epoint3 = &o_out->epoint;
+        oper.epoint3 = &epoint;
         oper.inplace = (oper.v1->refcount == 1) ? v1->val : NULL;
         val = oper.v1->obj->calc2(&oper);
         val_destroy(v1->val); v1->val = val;
@@ -1253,7 +1310,7 @@ static bool get_exp2(int stop) {
     unsigned int prec;
     struct linepos_s epoint;
     size_t llen;
-    size_t openclose, symbollist;
+    size_t symbollist;
 
     clean_o_out(eval);
     eval->gstop = stop;
@@ -1270,17 +1327,18 @@ static bool get_exp2(int stop) {
     opr.data = oprdata;
     oprdata[0].val = &o_COMMA;
 
-    openclose = symbollist = 0;
+    symbollist = 0;
 
     ignore();
     ch = here();
     if (ch == 0 || ch == ';') return true;
+    epoint.line = lpoint.line;
     for (;;) {
-        ignore(); ch = here(); epoint = lpoint;
+        ignore(); ch = here(); epoint.pos = lpoint.pos;
         switch (ch) {
         case ',':
             if (stop != 4 || opr.p != 0) goto tryanon;
-            lpoint.pos++;push_oper(ref_default(), &epoint);
+            lpoint.pos++;push_oper(ref_default(), epoint.pos);
             continue;
         case ')':
             if (opr.p != 0) {
@@ -1308,32 +1366,29 @@ static bool get_exp2(int stop) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
                 if (o != O_PARENT && o != O_BRACKET && o != O_BRACE && o != O_FUNC && o != O_INDEX && o != O_COMMA) goto tryanon;
             }
-            push_oper(ref_default(), &epoint);
+            push_oper(ref_default(), epoint.pos);
             goto other;
         case '(':
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) symbollist++;
         tphack2:
-            opr.data[opr.p].epoint = epoint;
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_PARENT; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
-            push_oper(&o_PARENT.v, &epoint);
-            openclose++;
+            push_oper(&o_PARENT.v, epoint.pos);
             continue;
         case '[':
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) symbollist++;
         lshack2:
-            opr.data[opr.p].epoint = epoint;
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_BRACKET; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
-            push_oper(&o_BRACKET.v, &epoint);
-            openclose++;
+            push_oper(&o_BRACKET.v, epoint.pos);
             continue;
         case '{':
-            opr.data[opr.p].epoint = epoint;
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_BRACE; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
-            push_oper(&o_BRACE.v, &epoint);
-            openclose++;
+            push_oper(&o_BRACE.v, epoint.pos);
             continue;
         case '+': op = &o_POS; break;
         case '-': op = &o_NEG; break;
@@ -1345,54 +1400,54 @@ static bool get_exp2(int stop) {
         case '#': op = (pline[lpoint.pos + 1] == '+' || pline[lpoint.pos + 1] == '-') ? &o_HASH_SIGNED : &o_HASH; break;
         case '`': op = &o_BANK; break;
         case '^': op = &o_STRING; if (diagnostics.deprecated) err_msg2(ERROR____OLD_STRING, NULL, &lpoint); break;
-        case '$': push_oper(get_hex(&epoint), &epoint);goto other;
-        case '%': if ((pline[lpoint.pos + 1] & 0xfe) == 0x30 || (pline[lpoint.pos + 1] == '.' && (pline[lpoint.pos + 2] & 0xfe) == 0x30)) { push_oper(get_bin(&epoint), &epoint);goto other; }
+        case '$': push_oper(get_hex(&epoint), epoint.pos);goto other;
+        case '%': if ((pline[lpoint.pos + 1] & 0xfe) == 0x30 || (pline[lpoint.pos + 1] == '.' && (pline[lpoint.pos + 2] & 0xfe) == 0x30)) { push_oper(get_bin(&epoint), epoint.pos);goto other; }
                   goto tryanon;
         case '"':
-        case '\'': push_oper(get_string(&epoint), &epoint);goto other;
+        case '\'': push_oper(get_string(&epoint), epoint.pos);goto other;
         case '?':
             if (opr.p != 0) {
                 Oper_types o = opr.data[opr.p - 1].val->op;
                 if (o == O_SPLAT || o == O_POS || o == O_NEG) goto tryanon;
             }
-            lpoint.pos++;push_oper(ref_gap(), &epoint);goto other;
+            lpoint.pos++;push_oper(ref_gap(), epoint.pos);goto other;
         case '.':
             if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) {
                 str_t symbol;
                 if (pline[lpoint.pos + 1] == '.' && pline[lpoint.pos + 2] == '.') {
-                    lpoint.pos += 3;push_oper(ref_fold(), &epoint);goto other;
+                    lpoint.pos += 3;push_oper(ref_fold(), epoint.pos);goto other;
                 }
                 symbol.data = pline + lpoint.pos + 1;
                 symbol.len = get_label(symbol.data);
                 if (symbol.len != 0) {
                     lpoint.pos += symbol.len + 1;
                     if (symbol.len > 1 && symbol.data[0] == '_' && symbol.data[1] == '_') err_msg2(ERROR_RESERVED_LABL, &symbol, &epoint);
-                    push_oper(Obj(new_symbol(&symbol, &epoint)), &epoint);
+                    push_oper(Obj(new_symbol(&symbol, &epoint)), epoint.pos);
                     goto other;
                 }
                 if (symbol.data[0] == '+' || symbol.data[0] == '-') {
                     while (symbol.data[0] == symbol.data[++symbol.len]);
                     lpoint.pos += symbol.len + 1;
-                    push_oper(Obj(new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len)), &epoint);
+                    push_oper(Obj(new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len)), epoint.pos);
                     goto other;
                 }
                 if (symbol.data[0] == '*') {
                     lpoint.pos += 2;
                     symbol.len = 1;
-                    push_oper(Obj(new_symbol(&symbol, &epoint)), &epoint);
+                    push_oper(Obj(new_symbol(&symbol, &epoint)), epoint.pos);
                     goto other;
                 }
                 if (symbol.data[0] == '(') { lpoint.pos++; symbollist++; goto tphack2; }
                 if (symbol.data[0] == '[') { lpoint.pos++; symbollist++; goto lshack2; }
                 goto tryanon;
             }
-            push_oper(get_float(&epoint), &epoint);
+            push_oper(get_float(&epoint), epoint.pos);
             goto other;
         case '0':
             if (diagnostics.leading_zeros && (pline[lpoint.pos + 1] ^ 0x30) < 10) err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
             /* fall through */
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-            push_oper(get_float(&epoint), &epoint);
+            push_oper(get_float(&epoint), epoint.pos);
             goto other;
         case 0:
         case ';':
@@ -1414,8 +1469,8 @@ static bool get_exp2(int stop) {
                     case 'p': mode = BYTES_MODE_PTEXT; break;
                     case 'l': mode = BYTES_MODE_SHIFTL; break;
                     case 'b': mode = BYTES_MODE_TEXT; break;
-                    case 'x': push_oper(get_bytes(&epoint, false), &epoint); goto other;
-                    case 'z': push_oper(get_bytes(&epoint, true), &epoint); goto other;
+                    case 'x': push_oper(get_bytes(&epoint, false), epoint.pos); goto other;
+                    case 'z': push_oper(get_bytes(&epoint, true), epoint.pos); goto other;
                     default: mode = BYTES_MODE_NULL_CHECK; break;
                     }
                     if (mode != BYTES_MODE_NULL_CHECK) {
@@ -1424,34 +1479,34 @@ static bool get_exp2(int stop) {
                             epoint.pos++;
                             val = bytes_from_str(Str(str), &epoint, mode);
                             epoint.pos--;
-                            push_oper(val, &epoint);
+                            push_oper(val, epoint.pos);
                             val_destroy(str);
-                        } else push_oper(str, &epoint);
+                        } else push_oper(str, epoint.pos);
                         goto other;
                     }
                 }
                 symbol.data = pline + epoint.pos;
                 symbol.len = lpoint.pos - epoint.pos;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                    push_oper(Obj(new_symbol(&symbol, &epoint)), &epoint);
-                    goto other;
-                }
-                down = (symbol.data[0] != '_');
-                l = down ? find_label(&symbol, NULL) : find_label2(&symbol, cheap_context);
-                if (l != NULL) {
-                    if (diagnostics.case_symbol && str_cmp(&symbol, &l->name) != 0) err_msg_symbol_case(&symbol, l, &epoint);
-                    touch_label(l);
-                    val = val_reference(l->value);
-                } else if (constcreated && pass < max_pass) {
-                    val = ref_none();
+                    val = Obj(new_symbol(&symbol, &epoint));
                 } else {
-                    Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
-                    err->u.notdef.symbol = Obj(new_symbol(&symbol, &epoint));
-                    err->u.notdef.names = ref_namespace(down ? current_context : cheap_context);
-                    err->u.notdef.down = down;
-                    val = Obj(err);
+                    down = (symbol.data[0] != '_');
+                    l = down ? find_label(&symbol, NULL) : find_label2(&symbol, cheap_context);
+                    if (l != NULL) {
+                        if (diagnostics.case_symbol && str_cmp(&symbol, &l->name) != 0) err_msg_symbol_case(&symbol, l, &epoint);
+                        touch_label(l);
+                        val = val_reference(l->value);
+                    } else if (constcreated && pass < max_pass) {
+                        val = ref_none();
+                    } else {
+                        Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
+                        err->u.notdef.symbol = Obj(new_symbol(&symbol, &epoint));
+                        err->u.notdef.names = ref_namespace(down ? current_context : cheap_context);
+                        err->u.notdef.down = down;
+                        val = Obj(err);
+                    }
                 }
-                push_oper(val, &epoint);
+                push_oper(val, epoint.pos);
                 goto other;
             }
         tryanon:
@@ -1459,93 +1514,69 @@ static bool get_exp2(int stop) {
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_POS) opr.p--;
             if (db != opr.p) {
                 ssize_t as = (ssize_t)(db - opr.p) - 1;
-                Label *l;
                 Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                    push_oper(Obj(new_anonsymbol(as)), &opr.data[opr.p].epoint);
-                    goto other;
-                }
-                l = find_anonlabel(as);
-                if (l != NULL) {
-                    touch_label(l);
-                    val = val_reference(l->value);
-                } else if (constcreated && pass < max_pass) {
-                    val = ref_none();
+                    val = Obj(new_anonsymbol(as));
                 } else {
-                    Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                    err->u.notdef.symbol = Obj(new_anonsymbol(as));
-                    err->u.notdef.names = ref_namespace(current_context);
-                    err->u.notdef.down = true;
-                    val = Obj(err);
+                    val = resolv_anonlabel(as, opr.data[opr.p].pos);
                 }
-                push_oper(val, &opr.data[opr.p].epoint);
+                push_oper(val, opr.data[opr.p].pos);
                 goto other;
             }
             while (opr.p != 0 && opr.data[opr.p - 1].val == &o_NEG) opr.p--;
             if (db != opr.p) {
                 ssize_t as = -(ssize_t)(db - opr.p);
-                Label *l;
                 Obj *val;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                    push_oper(Obj(new_anonsymbol(as)), &opr.data[opr.p].epoint);
-                    goto other;
-                }
-                l = find_anonlabel(as);
-                if (l != NULL) {
-                    touch_label(l);
-                    val = val_reference(l->value);
-                } else if (constcreated && pass < max_pass) {
-                    val = ref_none();
+                    val = Obj(new_anonsymbol(as));
                 } else {
-                    Error *err = new_error(ERROR___NOT_DEFINED, &opr.data[opr.p].epoint);
-                    err->u.notdef.symbol = Obj(new_anonsymbol(as));
-                    err->u.notdef.names = ref_namespace(current_context);
-                    err->u.notdef.down = true;
-                    val = Obj(err);
+                    val = resolv_anonlabel(as, opr.data[opr.p].pos);
                 }
-                push_oper(val, &opr.data[opr.p].epoint);
+                push_oper(val, opr.data[opr.p].pos);
                 goto other;
             }
             if (opr.p != 0) {
                 if (opr.data[opr.p - 1].val == &o_COLON) {
-                    push_oper(ref_default(), &epoint);
+                    push_oper(ref_default(), epoint.pos);
                     goto other;
                 }
                 if (opr.data[opr.p - 1].val == &o_SPLAT) {
+                    Obj *val;
                     opr.p--;
                     if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                        static const str_t symbol = { (const uint8_t *)"*", 1 };
-                        push_oper(Obj(new_symbol(&symbol, &opr.data[opr.p].epoint)), &opr.data[opr.p].epoint);
-                        goto other;
+                        val = new_starsymbol(opr.data[opr.p].pos);
+                    } else {
+                        val = get_star();
                     }
-                    push_oper(get_star(), &opr.data[opr.p].epoint);
+                    push_oper(val, opr.data[opr.p].pos);
                     goto other;
                 }
-                epoint = opr.data[opr.p - 1].epoint;
+                epoint.pos = opr.data[opr.p - 1].pos;
             }
             err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
             goto error;
         }
         if (opr.p != 0 && opr.data[opr.p - 1].val == &o_SPLAT) {
+            Obj *val;
             opr.p--;
             lpoint.pos = epoint.pos;
             if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER) || symbollist != 0) {
-                static const str_t symbol = { (const uint8_t *)"*", 1 };
-                push_oper(Obj(new_symbol(&symbol, &opr.data[opr.p].epoint)), &opr.data[opr.p].epoint);
-                goto other;
+                val = new_starsymbol(opr.data[opr.p].pos);
+            } else {
+                val = get_star();
             }
-            push_oper(get_star(), &opr.data[opr.p].epoint);
+            push_oper(val, opr.data[opr.p].pos);
             goto other;
         }
         lpoint.pos++;
     rtl:
-        opr.data[opr.p].epoint = epoint;
+        opr.data[opr.p].pos = epoint.pos;
         opr.data[opr.p++].val = op;
         if (opr.p >= opr.l) extend_opr(&opr);
         continue;
     other:
-        if (stop != 2 || openclose != 0) ignore();
-        ch = here();epoint = lpoint;
+        if (stop != 2) ignore();
+        ch = here();epoint.pos = lpoint.pos;
         switch (ch) {
         case ',':
             lpoint.pos++;
@@ -1568,9 +1599,9 @@ static bool get_exp2(int stop) {
                         prec = o_HASH.prio;
                         while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio && opr.data[opr.p - 1].val != &o_COLON2 && opr.data[opr.p - 1].val != &o_COND && opr.data[opr.p - 1].val != &o_DCOND) {
                             opr.p--;
-                            push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
+                            push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
                         }
-                        opr.data[opr.p].epoint = epoint;
+                        opr.data[opr.p].pos = epoint.pos;
                         opr.data[opr.p++].val = op;
                         if (opr.p >= opr.l) extend_opr(&opr);
                         goto other;
@@ -1580,13 +1611,13 @@ static bool get_exp2(int stop) {
             prec = o_COMMA.prio;
             while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
                 opr.p--;
-                push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
+                push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
             }
             if (opr.p == 0) {
-                if (stop == 1) {lpoint = epoint;break;}
+                if (stop == 1) {lpoint.pos = epoint.pos;break;}
             }
-            push_oper(&o_COMMA.v, &epoint);
-            opr.data[opr.p].epoint = epoint;
+            push_oper(&o_COMMA.v, epoint.pos);
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_COMMA;
             if (opr.p >= opr.l) extend_opr(&opr);
             if (llen != 0) {
@@ -1598,27 +1629,25 @@ static bool get_exp2(int stop) {
             prec = o_MEMBER.prio;
             while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
                 opr.p--;
-                push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
+                push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
             }
-            push_oper(&o_PARENT.v, &epoint);
-            opr.data[opr.p].epoint = epoint;
+            push_oper(&o_PARENT.v, epoint.pos);
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_FUNC; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
             if (symbollist != 0) symbollist++;
-            openclose++;
             continue;
         case '[':
             prec = o_MEMBER.prio;
             while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
                 opr.p--;
-                push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
+                push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
             }
-            push_oper(&o_BRACKET.v, &epoint);
-            opr.data[opr.p].epoint = epoint;
+            push_oper(&o_BRACKET.v, epoint.pos);
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = &o_INDEX; lpoint.pos++;
             if (opr.p >= opr.l) extend_opr(&opr);
             if (symbollist != 0) symbollist++;
-            openclose++;
             continue;
         case '&': op = pline[lpoint.pos + 1] == '&' ? (pline[lpoint.pos + 2] == '=' ? &o_LAND_ASSIGN : &o_LAND) : (pline[lpoint.pos + 1] == '=' ? &o_AND_ASSIGN : &o_AND); goto push2;
         case '|': op = pline[lpoint.pos + 1] == '|' ? (pline[lpoint.pos + 2] == '=' ? &o_LOR_ASSIGN : &o_LOR) : (pline[lpoint.pos + 1] == '=' ? &o_OR_ASSIGN : &o_OR); goto push2;
@@ -1636,13 +1665,13 @@ static bool get_exp2(int stop) {
             prec = op->prio + 1;
             while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
                 opr.p--;
-                push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
+                push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
             }
             if (opr.p != 0) {
                 if (opr.data[opr.p - 1].val == &o_QUEST) { opr.data[opr.p - 1].val = &o_COND; op = &o_COLON2;}
                 else if (opr.data[opr.p - 1].val == &o_DQUEST) { opr.data[opr.p - 1].val = &o_DCOND; op = &o_COLON2;}
             }
-            opr.data[opr.p].epoint = epoint;
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = op;
             if (opr.p >= opr.l) extend_opr(&opr);
             lpoint.pos++;
@@ -1662,9 +1691,9 @@ static bool get_exp2(int stop) {
         push3:
             while (opr.p != 0 && prec <= opr.data[opr.p - 1].val->prio) {
                 opr.p--;
-                push_oper(Obj(opr.data[opr.p].val), &opr.data[opr.p].epoint);
+                push_oper(Obj(opr.data[opr.p].val), opr.data[opr.p].pos);
             }
-            opr.data[opr.p].epoint = epoint;
+            opr.data[opr.p].pos = epoint.pos;
             opr.data[opr.p++].val = op;
             if (opr.p >= opr.l) extend_opr(&opr);
             continue;
@@ -1693,7 +1722,6 @@ static bool get_exp2(int stop) {
         case ')':
             op = &o_RPARENT;
         tphack:
-            openclose--;
             if (symbollist != 0) symbollist--;
             do {
                 const char *mis;
@@ -1703,12 +1731,12 @@ static bool get_exp2(int stop) {
                     case O_PARENT:
                     case O_FUNC:
                         lpoint.pos++;
-                        push_oper(Obj((o == &o_PARENT) ? op : o), &opr.data[--opr.p].epoint);
+                        push_oper(Obj((o == &o_PARENT) ? op : o), opr.data[--opr.p].pos);
                         goto other;
                     case O_BRACKET:
                     case O_INDEX: mis = "']'"; break;
                     case O_BRACE: mis = "'}'"; break;
-                    default: push_oper(Obj(o), &opr.data[--opr.p].epoint); continue;
+                    default: push_oper(Obj(o), opr.data[--opr.p].pos); continue;
                     }
                 } else mis = "')' not";
                 err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
@@ -1716,7 +1744,6 @@ static bool get_exp2(int stop) {
         case ']':
             op = &o_RBRACKET;
         lshack:
-            openclose--;
             if (symbollist != 0) symbollist--;
             do {
                 const char *mis;
@@ -1726,12 +1753,12 @@ static bool get_exp2(int stop) {
                     case O_BRACKET:
                     case O_INDEX:
                         lpoint.pos++;
-                        push_oper(Obj((o == &o_BRACKET) ? op : o), &opr.data[--opr.p].epoint);
+                        push_oper(Obj((o == &o_BRACKET) ? op : o), opr.data[--opr.p].pos);
                         goto other;
                     case O_PARENT:
                     case O_FUNC: mis = "')'"; break;
                     case O_BRACE: mis = "'}'"; break;
-                    default: push_oper(Obj(o), &opr.data[--opr.p].epoint); continue;
+                    default: push_oper(Obj(o), opr.data[--opr.p].pos); continue;
                     }
                 } else mis = "']' not";
                 err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
@@ -1739,7 +1766,6 @@ static bool get_exp2(int stop) {
         case '}':
             op = &o_RBRACE;
         brhack:
-            openclose--;
             do {
                 const char *mis;
                 if (opr.p != 0) {
@@ -1747,13 +1773,13 @@ static bool get_exp2(int stop) {
                     switch (o->op) {
                     case O_BRACE:
                         lpoint.pos++;
-                        push_oper(Obj((o == &o_BRACE) ? op : o), &opr.data[--opr.p].epoint);
+                        push_oper(Obj((o == &o_BRACE) ? op : o), opr.data[--opr.p].pos);
                         goto other;
                     case O_PARENT:
                     case O_FUNC: mis = "')'"; break;
                     case O_BRACKET:
                     case O_INDEX: mis = "']'"; break;
-                    default: push_oper(Obj(o), &opr.data[--opr.p].epoint); continue;
+                    default: push_oper(Obj(o), opr.data[--opr.p].pos); continue;
                     }
                 } else mis = "'}' not";
                 err_msg2(ERROR______EXPECTED, mis, &lpoint); goto error;
@@ -1782,7 +1808,7 @@ static bool get_exp2(int stop) {
             case O_BRACKET:
             case O_INDEX: mis = "']'"; break;
             case O_BRACE: mis = "'}'"; break;
-            default: push_oper(Obj(o), &opr.data[--opr.p].epoint); continue;
+            default: push_oper(Obj(o), opr.data[--opr.p].pos); continue;
             }
             err_msg2(ERROR______EXPECTED, mis, &epoint); goto error;
         }
