@@ -1244,7 +1244,7 @@ failed:
 }
 
 static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
-    size_t offs2, ln, sz;
+    size_t sz;
     size_t i, o;
     Bits *vv, *vv1 = Bits(op->v1);
     Obj *o2 = op->v2;
@@ -1254,17 +1254,15 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     int bits;
     Obj *err;
     Funcargs *args = Funcargs(o2);
-    linepos_t epoint2;
+    struct indexoffs_s io;
 
     if (args->len < 1 || args->len - 1 > indx) {
         return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
+    io.len = vv1->bits;
+    io.epoint = &args->val[indx].epoint;
 
     o2 = args->val[indx].val;
-    epoint2 = &args->val[indx].epoint;
-
-    ln = vv1->bits;
-
     if (o2->obj->iterable) {
         struct iter_s iter;
         iter.data = o2; o2->obj->getiter(&iter);
@@ -1284,15 +1282,15 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
 
         uv = inv;
         bits = 0; sz = 0;
-        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
-            err = indexoffs(o2, ln, &offs2, epoint2);
+        for (i = 0; i < iter.len && (io.v1 = iter.next(&iter)) != NULL; i++) {
+            err = indexoffs(&io);
             if (err != NULL) {
                 val_destroy(Obj(vv));
                 iter_destroy(&iter);
                 return err;
             }
-            o = offs2 / SHIFT;
-            if (o < bitslen(vv1) && ((vv1->data[o] >> (offs2 % SHIFT)) & 1) != 0) {
+            o = io.offs / SHIFT;
+            if (o < bitslen(vv1) && ((vv1->data[o] >> (io.offs % SHIFT)) & 1) != 0) {
                 uv ^= 1U << bits;
             }
             bits++;
@@ -1313,7 +1311,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         size_t bo, wo, bl, wl, wl2, l;
         bdigit_t *v1;
 
-        err = sliceparams(Colonlist(o2), ln, &s, epoint2);
+        err = sliceparams(Colonlist(o2), io.len, &s, io.epoint);
         if (err != NULL) return err;
 
         if (s.length == 0) {
@@ -1381,12 +1379,13 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         vv->bits = s.length;
         return normalize(vv, sz, false);
     }
-    err = indexoffs(o2, ln, &offs2, epoint2);
+    io.v1 = o2;
+    err = indexoffs(&io);
     if (err != NULL) return err;
 
     uv = inv;
-    o = offs2 / SHIFT;
-    if (o < bitslen(vv1) && ((vv1->data[o] >> (offs2 % SHIFT)) & 1) != 0) {
+    o = io.offs / SHIFT;
+    if (o < bitslen(vv1) && ((vv1->data[o] >> (io.offs % SHIFT)) & 1) != 0) {
         uv ^= 1;
     }
     return val_reference(bits_value[uv & 1]);
