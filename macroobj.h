@@ -34,10 +34,10 @@ struct macro_param_s {
 
 typedef struct Macro {
     Obj v;
-    size_t argc;
+    argcount_t argc;
+    line_t line;
     struct macro_param_s *param;
     const struct file_list_s *file_list;
-    line_t line;
     bool retval;
     uint8_t recursion_pass;
 } Macro;
@@ -48,10 +48,10 @@ typedef struct Macro Segment;
 
 typedef struct Struct {
     Obj v;
-    size_t argc;
+    argcount_t argc;
+    line_t line;
     struct macro_param_s *param;
     const struct file_list_s *file_list;
-    line_t line;
     bool retval;
     uint8_t recursion_pass;
     address_t size; /* first part same as macro! */

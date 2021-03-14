@@ -41,7 +41,8 @@
 static int functionrecursion;
 
 struct macro_rpos_s {
-    size_t opos, olen, pos, len, param;
+    size_t opos, olen, pos, len;
+    argcount_t param;
 };
 
 struct macro_pline_s {
@@ -59,7 +60,7 @@ struct macro_value_s {
 };
 
 struct macro_params_s {
-    size_t len, size;
+    argcount_t len, size;
     struct macro_value_s *param, all;
     struct macro_pline_s pline;
     bool used;
@@ -72,6 +73,8 @@ static struct {
 } macro_parameters = {0, 0, NULL, NULL};
 
 bool in_macro;
+
+#define ALL_MACRO_PARAMS (~(argcount_t)0)
 
 const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t pos) {
     const struct file_list_s *ret = NULL;
@@ -86,12 +89,12 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
             for (i = 0; i < mline->rp; i++) {
                 size_t c = pos - mline->rpositions[i].pos;
                 if (c < mline->rpositions[i].len) {
-                    size_t param = mline->rpositions[i].param;
+                    argcount_t param = mline->rpositions[i].param;
                     if (param < macro_parameters.params[p].len) {
                         if (macro_parameters.params[p].param[param].init) return ret;
                         pos = macro_parameters.params[p].param[param].pos;
                     } else {
-                        if (param != SIZE_MAX) return ret;
+                        if (param != ALL_MACRO_PARAMS) return ret;
                         pos = macro_parameters.params[p].all.pos;
                     }
                     opoint->pos = pos + c;
@@ -177,7 +180,7 @@ bool mtranslate(void) {
                 break;
             }
             if (j == ('@' - '1')) { /* \@ gives complete parameter list */
-                j = SIZE_MAX;
+                j = ALL_MACRO_PARAMS;
                 p += p2 - last2;
                 op = p2;
                 p2 += 2;
@@ -237,7 +240,7 @@ bool mtranslate(void) {
         if (j < macro_parameters.current->len) {
             param.data = macro_parameters.current->param[j].data;
             param.len = macro_parameters.current->param[j].len;
-        } else if (j == SIZE_MAX) {
+        } else if (j == ALL_MACRO_PARAMS) {
             param.data = macro_parameters.current->all.data;
             param.len = macro_parameters.current->all.len;
         } else {
@@ -382,7 +385,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
     in_macro = true;
     {
         struct linepos_s opoint, npoint;
-        size_t p = 0;
+        argcount_t p = 0;
 
         ignore(); opoint = lpoint;
         for (;;) {
@@ -392,9 +395,9 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
                 if (macro_parameters.current->size < macro->argc) macro_parameters.current->size = macro->argc;
                 else {
                     macro_parameters.current->size += 4;
-                    /*if (macro_parameters.current->size < 4) err_msg_out_of_memory();*/ /* overflow */
+                    if (macro_parameters.current->size < 4) err_msg_out_of_memory(); /* overflow */
                 }
-                if (macro_parameters.current->size > SIZE_MAX / sizeof *params) err_msg_out_of_memory();
+                if (macro_parameters.current->size > ARGCOUNT_MAX / sizeof *params) err_msg_out_of_memory();
                 params = (struct macro_value_s *)reallocx(params, macro_parameters.current->size * sizeof *params);
                 macro_parameters.current->param = params;
             }
@@ -678,7 +681,7 @@ bool get_func_params(Mfunc *v, bool single) {
 void get_macro_params(Obj *v) {
     Macro *macro = Macro(v);
     struct macro_param_s *param;
-    size_t len = macro->argc, i, j;
+    argcount_t len = macro->argc, i, j;
     str_t label;
     struct linepos_s *epoints;
     struct linepos_s vepoints[4];
@@ -690,7 +693,7 @@ void get_macro_params(Obj *v) {
         ignore();if (here() == 0 || here() == ';') break;
         if (i >= len) {
             len += 16;
-            if (/*len < 16 ||*/ len > SIZE_MAX / (sizeof *param > sizeof *epoints ? sizeof *param : sizeof *epoints)) err_msg_out_of_memory(); /* overflow */
+            if (len < 16 || len > ARGCOUNT_MAX / (sizeof *param > sizeof *epoints ? sizeof *param : sizeof *epoints)) err_msg_out_of_memory(); /* overflow */
             param = (struct macro_param_s *)reallocx(param, len * sizeof *param);
             if (epoints == vepoints) {
                 epoints = (struct linepos_s *)mallocx(len * sizeof *epoints);
