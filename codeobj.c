@@ -357,9 +357,10 @@ MUST_CHECK Obj *bytes_from_code(const Code *v1, linepos_t epoint) {
     return result;
 }
 
-static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, size_t ln2) {
+static MUST_CHECK Obj *code_item(const Code *v1, ssize_t offs2, address_t ln2) {
     int r;
-    size_t i2, offs;
+    address_t i2;
+    address_t offs;
     uval_t val;
     if (offs2 < 0) return ref_gap();
     offs = (size_t)offs2 * ln2;

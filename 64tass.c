@@ -1022,7 +1022,8 @@ static bool section_start(linepos_t epoint) {
     lpoint.pos += sectionname.len;
     tmp = find_new_section(&sectionname);
     if (tmp->usepass == 0 || tmp->defpass < pass - 1) {
-        size_t ln = tmp->address.mem->mem.p, ln2 = tmp->address.mem->p;
+        address_t ln = tmp->address.mem->mem.p;
+        size_t ln2 = tmp->address.mem->p;
         tmp->address.end = tmp->address.start = tmp->restart = tmp->address.address = current_address->address;
         tmp->size = 0; tmp->l_restart = tmp->address.l_address = current_address->l_address;
         if (tmp->usepass != 0 && tmp->usepass >= pass - 1) err_msg_not_defined(&sectionname, &opoint);
@@ -1036,7 +1037,8 @@ static bool section_start(linepos_t epoint) {
         tmp->address.mem->lastaddr = tmp->address.address;
         if (diagnostics.optimize) cpu_opt_invalidate();
     } else if (tmp->usepass != pass) {
-        size_t ln = tmp->address.mem->mem.p, ln2 = tmp->address.mem->p;
+        address_t ln = tmp->address.mem->mem.p;
+        size_t ln2 = tmp->address.mem->p;
         if (!tmp->address.moved) {
             if (tmp->address.end < tmp->address.address) tmp->address.end = tmp->address.address;
             tmp->address.moved = true;
@@ -3847,7 +3849,7 @@ MUST_CHECK Obj *compile(void)
                                 if (trec.sum == 0) err_msg2(ERROR__BYTES_NEEDED, NULL, trec.epoint);
                                 trec.len -= (ssize_t)db; /* gap shortcut */
                             } else {
-                                size_t offs = 0;
+                                address_t offs = 0;
                                 if (trec.len > 0) textrecursion_flush(&trec);
                                 while (db != 0) { /* pattern repeat */
                                     int ch;
@@ -4495,7 +4497,8 @@ MUST_CHECK Obj *compile(void)
                     } else {
                         address_t t;
                         if (tmp3->usepass == 0 || tmp3->defpass < pass - 1) {
-                            size_t ln = tmp3->address.mem->mem.p, ln2 = tmp3->address.mem->p;
+                            address_t ln = tmp3->address.mem->mem.p;
+                            size_t ln2 = tmp3->address.mem->p;
                             tmp3->address.wrapwarn = tmp3->address.moved = false;
                             tmp3->address.bankwarn = false;
                             tmp3->address.end = tmp3->address.start = tmp3->restart = tmp3->address.address = current_address->address;
@@ -4538,7 +4541,8 @@ MUST_CHECK Obj *compile(void)
                                 fixeddig = false;
                             }
                         } else {
-                            size_t ln = tmp3->address.mem->mem.p, ln2 = tmp3->address.mem->p;
+                            address_t ln = tmp3->address.mem->mem.p;
+                            size_t ln2 = tmp3->address.mem->p;
                             if (!tmp3->address.moved) {
                                 if (tmp3->address.end < tmp3->address.address) tmp3->address.end = tmp3->address.address;
                                 tmp3->address.moved = true;
@@ -4753,7 +4757,8 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
     struct file_s *cfile;
     Obj *val;
     int i;
-    size_t ln = root_section.address.mem->mem.p, ln2 = root_section.address.mem->p;
+    address_t ln = root_section.address.mem->mem.p;
+    size_t ln2 = root_section.address.mem->p;
 
     fixeddig = true;constcreated = false; fwcount = 0; efwcount = 0; error_reset();random_reseed(int_value[0], NULL);
     val_destroy(Obj(root_section.address.mem));
