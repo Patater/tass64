@@ -411,7 +411,7 @@ static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
     out->size += 64;
-    if (out->size < 64 || out->size > SIZE_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
+    if (out->size < 64 || out->size > UINT_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
     out->data = (struct out_s *)reallocx(out->data, out->size * sizeof *out->data);
 }
 

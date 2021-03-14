@@ -97,12 +97,16 @@ typedef uint32_t uval_t;
 #define PRIuval PRIu32
 #define PRIXval PRIX32
 
+#ifndef UINT_MAX
+#define UINT_MAX (~(unsigned int)0)
+#endif
+
 #ifndef SIZE_MAX
-# define SIZE_MAX ((size_t)-1)
+#define SIZE_MAX (~(size_t)0)
 #endif
 
 #ifndef SSIZE_MAX
-# define SSIZE_MAX ((ssize_t)(SIZE_MAX / 2))
+#define SSIZE_MAX ((ssize_t)(SIZE_MAX / 2))
 #endif
 
 #define SIZE_MSB ((size_t)1 << (sizeof(size_t) * 8 - 1))
