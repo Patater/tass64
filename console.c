@@ -56,7 +56,7 @@ static BOOL utf8_console;
 static UINT old_consoleoutputcp;
 static UINT old_consolecp;
 static HANDLE console_handle;
-static WORD old_attributes, current_attributes;
+static int old_attributes, current_attributes;
 
 void console_init(void) {
     utf8_console = IsValidCodePage(CP_UTF8);
@@ -130,7 +130,7 @@ void console_attribute(int c, FILE *f) {
     case 7: current_attributes = FOREGROUND_RED | FOREGROUND_BLUE | (current_attributes & ~FOREGROUND_GREEN); break;
     default: break;
     }
-    SetConsoleTextAttribute(console_handle, current_attributes);
+    SetConsoleTextAttribute(console_handle, (WORD)current_attributes);
 }
 #else
 void console_use(FILE *f) {
