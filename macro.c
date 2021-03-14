@@ -49,7 +49,7 @@ struct macro_pline_s {
     uint8_t *data;
     size_t len;
     struct macro_rpos_s *rpositions;
-    size_t rp, rlen;
+    argcount_t rp, rlen;
 };
 
 struct macro_value_s {
@@ -83,7 +83,7 @@ const struct file_list_s *macro_error_translate(struct linepos_s *opoint, size_t
         size_t p = macro_parameters.p;
         while (p != 0) {
             const struct macro_pline_s *mline;
-            size_t i;
+            argcount_t i;
             p--;
             mline = &macro_parameters.params[p].pline;
             for (i = 0; i < mline->rp; i++) {
@@ -115,7 +115,8 @@ size_t macro_error_translate2(size_t pos) {
     if (macro_parameters.p != 0) {
         const struct macro_pline_s *mline = &macro_parameters.current->pline;
         if (pline == mline->data) {
-            size_t i, pos2 = pos;
+            size_t pos2 = pos;
+            argcount_t i;
             for (i = 0; i < mline->rp; i++) {
                 const struct macro_rpos_s *rpositions = &mline->rpositions[i];
                 if (rpositions->pos > pos2) break;
@@ -133,8 +134,8 @@ size_t macro_error_translate2(size_t pos) {
 /* ------------------------------------------------------------------------------ */
 bool mtranslate(void) {
     unsigned int q;
-    size_t j, n, op;
-    size_t p, p2;
+    argcount_t j, n;
+    size_t p, p2, op;
     size_t last, last2;
     struct macro_pline_s *mline;
     bool changed, fault;
@@ -147,7 +148,7 @@ bool mtranslate(void) {
     if (changed) return false;
     mline = &macro_parameters.current->pline;
 
-    q = p = p2 = n = 0; last = last2 = 0; fault = false;
+    q = p = p2 = 0; n = 0; last = last2 = 0; fault = false;
     while (pline[p2] != 0) {
         str_t param;
         switch (pline[p2]) {
@@ -267,7 +268,7 @@ bool mtranslate(void) {
         }
         if (n >= mline->rlen) {
             mline->rlen += 8;
-            if (mline->rlen < 8) err_msg_out_of_memory(); /* overflow */
+            if (mline->rlen < 8 || mline->rlen > ARGCOUNT_MAX / sizeof *mline->rpositions) err_msg_out_of_memory(); /* overflow */
             mline->rpositions = (struct macro_rpos_s *)reallocx(mline->rpositions, mline->rlen * sizeof *mline->rpositions);
         }
         mline->rpositions[n].opos = op;
