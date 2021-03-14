@@ -1756,9 +1756,7 @@ static bool get_exp2(int stop) {
                     case O_INDEX: mis = "']'"; break;
                     case O_BRACE: mis = "'}'"; break;
                     default:
-                        opr.p--;
-                        out.data[out.p].val = Obj(o);
-                        out.data[out.p++].pos = opr.data[opr.p].pos;
+                        out.data[out.p++] = opr.data[--opr.p];
                         if (out.p >= out.size) extend_out(&out);
                         continue;
                     }
@@ -1785,9 +1783,7 @@ static bool get_exp2(int stop) {
                     case O_FUNC: mis = "')'"; break;
                     case O_BRACE: mis = "'}'"; break;
                     default:
-                        opr.p--;
-                        out.data[out.p].val = Obj(o);
-                        out.data[out.p++].pos = opr.data[opr.p].pos;
+                        out.data[out.p++] = opr.data[--opr.p];
                         if (out.p >= out.size) extend_out(&out);
                         continue;
                     }
@@ -1811,9 +1807,7 @@ static bool get_exp2(int stop) {
                     case O_BRACKET:
                     case O_INDEX: mis = "']'"; break;
                     default:
-                        opr.p--;
-                        out.data[out.p].val = Obj(o);
-                        out.data[out.p++].pos = opr.data[opr.p].pos;
+                        out.data[out.p++] = opr.data[--opr.p];
                         if (out.p >= out.size) extend_out(&out);
                         continue;
                     }
@@ -1837,17 +1831,14 @@ static bool get_exp2(int stop) {
         }
         while (opr.p != 0) {
             const char *mis;
-            Oper *o = Oper(opr.data[opr.p - 1].val);
-            switch (o->op) {
+            switch (Oper(opr.data[opr.p - 1].val)->op) {
             case O_PARENT:
             case O_FUNC: mis = "')'"; break;
             case O_BRACKET:
             case O_INDEX: mis = "']'"; break;
             case O_BRACE: mis = "'}'"; break;
             default:
-                opr.p--;
-                out.data[out.p].val = Obj(o);
-                out.data[out.p++].pos = opr.data[opr.p].pos;
+                out.data[out.p++] = opr.data[--opr.p];
                 if (out.p >= out.size) extend_out(&out);
                 continue;
             }
