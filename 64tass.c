@@ -556,7 +556,7 @@ static void const_assign(Label *label, Obj *val) {
 }
 
 struct textrecursion_s {
-    ssize_t len;
+    address_t gaps, p;
     address_t sum, max;
     int prm;
     Error_types error;
@@ -565,9 +565,8 @@ struct textrecursion_s {
 };
 
 static void textrecursion_flush(struct textrecursion_s *trec) {
-    address_t len = (address_t)trec->len;
-    memcpy(pokealloc(len, trec->epoint), trec->buff, len);
-    trec->len = 0;
+    memcpy(pokealloc(trec->p, trec->epoint), trec->buff, trec->p);
+    trec->p = 0;
 }
 
 static void textdump(struct textrecursion_s *trec, unsigned int uval) {
@@ -586,8 +585,8 @@ static void textdump(struct textrecursion_s *trec, unsigned int uval) {
     default:
         break;
     }
-    if (trec->len >= (ssize_t)sizeof trec->buff) textrecursion_flush(trec);
-    trec->buff[trec->len++] = (uint8_t)(uval ^ outputeor);
+    if (trec->p >= sizeof trec->buff) textrecursion_flush(trec);
+    trec->buff[trec->p++] = (uint8_t)(uval ^ outputeor);
 }
 
 static void textrecursion(struct textrecursion_s *trec, Obj *val) {
@@ -681,8 +680,8 @@ retry:
             break;
         case T_GAP:
         dogap:
-            if (trec->len > 0) textrecursion_flush(trec);
-            trec->len--;
+            if (trec->p > 0) textrecursion_flush(trec);
+            trec->gaps++;
             trec->sum++;
             if (iter.data == NULL) return;
             break;
@@ -704,7 +703,7 @@ retry:
                     len3 = trec->max - trec->sum;
                     if (len2 > len3) len2 = len3;
                     trec->sum += len2;
-                    if (trec->len < 0) { memskip((size_t)-trec->len, trec->epoint); trec->len = 0; }
+                    if (trec->gaps > 0) { memskip(trec->gaps, trec->epoint); trec->gaps = 0; }
                     for (i = 0; i < len2; i++) {
                         textdump(trec, bytes->data[i] ^ inv);
                     }
@@ -716,7 +715,7 @@ retry:
         doit:
             if (touval(val2, &uval, 8, trec->epoint)) uval = 256 + '?';
             trec->sum++;
-            if (trec->len < 0) { memskip((size_t)-trec->len, trec->epoint); trec->len = 0; }
+            if (trec->gaps > 0) { memskip(trec->gaps, trec->epoint); trec->gaps = 0; }
             textdump(trec, uval);
             if (iter.data == NULL) return;
             break;
@@ -3435,41 +3434,40 @@ MUST_CHECK Obj *compile(void)
                         if (prm == CMD_PTEXT) {
                             trec.buff[0] = (uint8_t)outputeor;
                             trec.sum = 1; 
-                            trec.len = 1;
+                            trec.p = 1;
                         } else {
-                            trec.len = 0; 
-                            trec.len = 0;
+                            trec.sum = 0; 
+                            trec.p = 0;
                         }
+                        trec.gaps = 0;
                         trec.max = ~(address_t)0;
                         trec.prm = prm;
                         trec.error = ERROR__USER_DEFINED;
                         trec.epoint = &epoint;
                         mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
-                            if (trec.len != 0) {
-                                if (trec.len > 0) textrecursion_flush(&trec);
-                                else { memskip((size_t)-trec.len, trec.epoint); trec.len = 0; }
-                            }
+                            if (trec.p > 0) textrecursion_flush(&trec);
+                            else if (trec.gaps > 0) { memskip(trec.gaps, trec.epoint); trec.gaps = 0; }
                             trec.epoint = &vs->epoint;
                             textrecursion(&trec, vs->val);
                             if (trec.error != ERROR__USER_DEFINED) { err_msg2(trec.error, NULL, trec.epoint); trec.error = ERROR__USER_DEFINED;}
                         }
-                        if (trec.len < 0) { memskip((size_t)-trec.len, trec.epoint); trec.len = 0; }
+                        if (trec.gaps > 0) { memskip(trec.gaps, trec.epoint); trec.gaps = 0; }
                         switch (prm) {
                         case CMD_SHIFTL:
                         case CMD_SHIFT:
-                            if (trec.len > 0) {
+                            if (trec.p > 0) {
                                 uint8_t inv = (prm == CMD_SHIFT) ? 0x80 : 0x01;
-                                trec.buff[trec.len - 1] ^= inv;
+                                trec.buff[trec.p - 1] ^= inv;
                             } else if (trec.sum != 0) err_msg2(ERROR___NO_LAST_GAP, NULL, trec.epoint);
                             else err_msg2(ERROR__BYTES_NEEDED, NULL, &epoint);
                             break;
                         case CMD_NULL:
-                            if (trec.len >= (ssize_t)sizeof trec.buff) textrecursion_flush(&trec);
-                            trec.buff[trec.len++] = (uint8_t)outputeor; break;
+                            if (trec.p >= sizeof trec.buff) textrecursion_flush(&trec);
+                            trec.buff[trec.p++] = (uint8_t)outputeor; break;
                         default: break;
                         }
-                        if (trec.len > 0) textrecursion_flush(&trec);
+                        if (trec.p > 0) textrecursion_flush(&trec);
                         if (prm == CMD_PTEXT) {
                             if (trec.sum > 0x100) {
                                 size_t ln2 = trec.sum;
@@ -3831,7 +3829,8 @@ MUST_CHECK Obj *compile(void)
                         size_t membp = get_mem(current_address->mem);
                         oaddr = current_address->address;
 
-                        trec.len = 0;
+                        trec.p = 0;
+                        trec.gaps = 0;
                         trec.sum = 0;
                         trec.max = db;
                         trec.prm = CMD_TEXT;
@@ -3842,34 +3841,34 @@ MUST_CHECK Obj *compile(void)
 
                         db -= trec.sum;
                         if (db != 0) {
-                            if (trec.sum == 1 && trec.len == 1) {
+                            if (trec.sum == 1 && trec.p == 1) {
                                 memset(pokealloc(db + 1, trec.epoint), trec.buff[0], db + 1); /* single byte shortcut */
-                                trec.len = 0;
-                            } else if (trec.sum == (size_t)-trec.len) {
+                                trec.p = 0;
+                            } else if (trec.sum == trec.gaps) {
                                 if (trec.sum == 0) err_msg2(ERROR__BYTES_NEEDED, NULL, trec.epoint);
-                                trec.len -= (ssize_t)db; /* gap shortcut */
+                                trec.gaps += db; /* gap shortcut */
                             } else {
                                 address_t offs = 0;
-                                if (trec.len > 0) textrecursion_flush(&trec);
+                                if (trec.p > 0) textrecursion_flush(&trec);
                                 while (db != 0) { /* pattern repeat */
                                     int ch;
                                     db--;
                                     ch = read_mem(current_address->mem, oaddr, membp, offs);
                                     if (ch < 0) {
-                                        if (trec.len > 0) textrecursion_flush(&trec);
-                                        trec.len--;
+                                        if (trec.p > 0) textrecursion_flush(&trec);
+                                        trec.gaps++;
                                     } else {
-                                        if (trec.len < 0) { memskip((size_t)-trec.len, trec.epoint); trec.len = 0; }
-                                        else if (trec.len >= (ssize_t)sizeof trec.buff) textrecursion_flush(&trec);
-                                        trec.buff[trec.len++] = (uint8_t)ch;
+                                        if (trec.gaps > 0) { memskip(trec.gaps, trec.epoint); trec.gaps = 0; }
+                                        else if (trec.p >= sizeof trec.buff) textrecursion_flush(&trec);
+                                        trec.buff[trec.p++] = (uint8_t)ch;
                                     }
                                     offs++;
                                     if (offs >= trec.sum) offs = 0;
                                 }
                             }
                         }
-                        if (trec.len > 0) textrecursion_flush(&trec);
-                        else if (trec.len < 0) memskip((size_t)-trec.len, trec.epoint);
+                        if (trec.p > 0) textrecursion_flush(&trec);
+                        else if (trec.gaps > 0) memskip(trec.gaps, trec.epoint);
                     } else if (db != 0) {
                         memskip(db, &epoint);
                     }
