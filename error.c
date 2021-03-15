@@ -270,7 +270,7 @@ static struct file_lists_s {
 } *file_lists = NULL;
 
 const struct file_list_s *parent_file_list(const struct file_list_s *cflist) {
-    return &((struct file_listnode_s *)cflist)->parent->flist;
+    return &((const struct file_listnode_s *)cflist)->parent->flist;
 }
 
 static struct file_listnode_s *lastfl;
@@ -582,7 +582,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR__NO_WORD_ADDR:
         case ERROR__NO_LONG_ADDR: 
             adderror(terr_error[no - 0x40]); 
-            err_opcode(*(uint32_t *)prm); 
+            err_opcode(*(const uint32_t *)prm); 
             break;
         default:
             adderror(terr_error[no - 0x40]);
@@ -1376,12 +1376,12 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
 
     if (cflist != &file_list.flist) {
         if (cflist != &included_from->flist) {
-            included_from = (struct file_listnode_s *)cflist;
+            included_from = (const struct file_listnode_s *)cflist;
             while (included_from->parent != &file_list) {
                 if (included_from->flist.file->entercount != 1) break;
                 included_from = included_from->parent;
             }
-            if (included_from->parent != &file_list) included_from = (struct file_listnode_s *)cflist;
+            if (included_from->parent != &file_list) included_from = (const struct file_listnode_s *)cflist;
             while (included_from->parent != &file_list) {
                 fputs((&included_from->flist == cflist) ? "In file included from " : "                      ", f);
                 if (console_use_color) console_bold(f);
@@ -1391,7 +1391,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
                 if (console_use_color) console_default(f);
                 fputs((included_from->parent != &file_list) ? ",\n" : ":\n", f);
             }
-            included_from = (struct file_listnode_s *)cflist;
+            included_from = (const struct file_listnode_s *)cflist;
         }
         if (console_use_color) console_bold(f);
         printable_print((const uint8_t *)cflist->file->realname, f);
