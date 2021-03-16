@@ -31,10 +31,18 @@
 #include <locale.h>
 #include "wchar.h"
 #include <string.h>
+#ifndef _MSC_VER
+#include <unistd.h>
+#if _POSIX_VERSION >= 200112L
+#include <sys/resource.h>
+#endif
+#endif
 
 #include "error.h"
 #include "unicode.h"
 #include "console.h"
+
+
 
 #ifdef _WIN32
 static const wchar_t *prgname(const wchar_t *name) {
@@ -120,6 +128,15 @@ static const char *prgname(const char *name) {
 int main(int argc, char *argv[]) {
     int i, r;
     char **uargv;
+
+#if _POSIX_VERSION >= 200112L
+    struct rlimit rlim;
+    if (getrlimit(RLIMIT_DATA, &rlim) == 0) {
+        if (rlim.rlim_cur > 2147483647) rlim.rlim_cur = 2147483647;
+        if (rlim.rlim_max > 2147483647) rlim.rlim_max = 2147483647;
+        setrlimit(RLIMIT_DATA, &rlim);
+    }
+#endif
 
     setlocale(LC_CTYPE, "");
 
