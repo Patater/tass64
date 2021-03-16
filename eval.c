@@ -608,7 +608,7 @@ rest:
 static struct values_s *extend_values(struct eval_context_s *ev, size_t by) {
     argcount_t j = ev->values_size;
     struct values_s *values;
-    ev->values_size += by;
+    ev->values_size += (argcount_t)by;
     if (ev->values_size < by || ev->values_size > ARGCOUNT_MAX / sizeof *values) err_msg_out_of_memory(); /* overflow */
     ev->values = values = (struct values_s *)reallocx(ev->values, ev->values_size * sizeof *values);
     for (; j < ev->values_size; j++) values[j].val = NULL;
@@ -1170,7 +1170,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     if (len < 1) err_msg_out_of_memory(); /* overflow */
                 } else def = NULL;
 
-                len2 = vsp + len;
+                len2 = vsp + (argcount_t)len;
                 if (len2 < len) err_msg_out_of_memory(); /* overflow */
                 vsp--;
                 if (len2 >= ev->values_size) values = extend_values(ev, len);
