@@ -881,7 +881,7 @@ static void err_msg_argnum2(argcount_t num, argcount_t min, argcount_t max) {
     char line[1024];
     adderror("expected ");
     n = min;
-    if (min == max) adderror("exactly ");
+    if (min == max) { if (min != 0) adderror("exactly "); } 
     else if (num < min) adderror("at least ");
     else {n = max; adderror("at most "); }
     switch (n) {
