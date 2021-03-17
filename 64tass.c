@@ -86,6 +86,7 @@ static uint8_t strength = 0;
 bool fixeddig, constcreated;
 uint32_t outputeor = 0; /* EOR value for final output (usually 0, unless changed by .eor) */
 bool referenceit = true;
+bool signal_received = false;
 const struct cpu_s *current_cpu;
 
 static size_t waitfor_p, waitfor_len;
@@ -4849,6 +4850,7 @@ int main2(int *argc2, char **argv2[]) {
         if (pass++>max_pass) {err_msg(ERROR_TOO_MANY_PASS, NULL);break;}
         listing_pccolumn = false;
         one_pass(argc, argv, opts, fin);
+        if (signal_received) break;
     } while (!fixeddig || constcreated);
 
     if (arguments.list.name == NULL) {

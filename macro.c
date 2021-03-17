@@ -141,6 +141,10 @@ bool mtranslate(void) {
     bool changed, fault;
     struct file_s *cfile = current_file_list->file;
 
+    if (signal_received) {
+        err_msg_signal();
+        return true;
+    }
     if (lpoint.line >= cfile->lines) return true;
     llist = pline = &cfile->data[cfile->line[lpoint.line]];
     changed = !in_macro || (cfile->nomacro != NULL && (cfile->nomacro[lpoint.line / 8] & (1 << (lpoint.line & 7))) != 0);
