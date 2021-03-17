@@ -141,15 +141,11 @@ bool mtranslate(void) {
     bool changed, fault;
     struct file_s *cfile = current_file_list->file;
 
-    if (signal_received) {
-        err_msg_signal();
-        return true;
-    }
     if (lpoint.line >= cfile->lines) return true;
     llist = pline = &cfile->data[cfile->line[lpoint.line]];
     changed = !in_macro || (cfile->nomacro != NULL && (cfile->nomacro[lpoint.line / 8] & (1 << (lpoint.line & 7))) != 0);
     lpoint.pos = 0; lpoint.line++; vline++;
-    if (changed) return false;
+    if (changed) return signal_received;
     mline = &macro_parameters.current->pline;
 
     q = 0; p = 0; p2 = 0; n = 0; last = 0; last2 = 0; fault = false;
@@ -320,7 +316,7 @@ bool mtranslate(void) {
         cfile->nomacro[lnum / 8] |= (uint8_t)(1U << (lnum & 7));
     }
     lpoint.pos = 0;
-    return false;
+    return signal_received;
 }
 
 static size_t macro_param_find(void) {
@@ -907,12 +903,17 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         temporary_label_branch++;
         functionrecursion++;
         if (mfunc->single) {
-            mtranslate();
-            lpoint.pos = mfunc->epoint.pos;
-            if (!get_exp(0, 0, 0, &mfunc->epoint)) {
+            if (mtranslate()) {
+                lpoint.pos = mfunc->epoint.pos;
+                if (signal_received) err_msg_signal();
                 retval = NULL;
             } else {
-                retval = get_vals_tuple();
+                lpoint.pos = mfunc->epoint.pos;
+                if (!get_exp(0, 0, 0, &mfunc->epoint)) {
+                    retval = NULL;
+                } else {
+                    retval = get_vals_tuple();
+                }
             }
         } else {
             if (diagnostics.optimize) cpu_opt_invalidate();
