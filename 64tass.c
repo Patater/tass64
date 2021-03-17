@@ -1861,7 +1861,10 @@ MUST_CHECK Obj *compile(void)
     struct linepos_s epoint;
 
     while (nobreak) {
-        if (mtranslate()) break; /* expand macro parameters, if any */
+        if (mtranslate()) {
+            if (signal_received) err_msg_signal();
+            break;
+        }
         newlabel = NULL;
         labelname.len = 0;ignore();epoint = lpoint; mycontext = current_context;
         if (current_address->unionmode) {
@@ -4850,7 +4853,7 @@ int main2(int *argc2, char **argv2[]) {
         if (pass++>max_pass) {err_msg(ERROR_TOO_MANY_PASS, NULL);break;}
         listing_pccolumn = false;
         one_pass(argc, argv, opts, fin);
-        if (signal_received) break;
+        if (signal_received) { err_msg_signal(); break; }
     } while (!fixeddig || constcreated);
 
     if (arguments.list.name == NULL) {
