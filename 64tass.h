@@ -48,6 +48,7 @@ extern address_t star;
 extern const uint8_t *pline;
 extern uint8_t pass, max_pass;
 extern bool referenceit;
+extern bool signal_received;
 extern const struct cpu_s *current_cpu;
 extern void new_waitfor(Wait_types, linepos_t);
 extern bool close_waitfor(Wait_types);

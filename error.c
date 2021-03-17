@@ -65,6 +65,7 @@ struct errorbuffer_s {
     size_t max;
     size_t len;
     size_t header_pos;
+    size_t header_stop;
     uint8_t *data;
     struct avltree members;
 };
@@ -1458,7 +1459,7 @@ static void walkfilelist(struct avltree_node *aa) {
 
 void error_print(const struct error_output_s *output) {
     const struct errorentry_s *err, *err2, *err3;
-    size_t pos;
+    size_t pos, end;
     bool noneerr = false, anyerr = false, usenote;
     FILE *ferr;
     struct linepos_s nopoint = {0, 0};
@@ -1482,7 +1483,8 @@ void error_print(const struct error_output_s *output) {
     warnings = errors = 0;
     close_error();
 
-    for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
+    end = (error_list.header_stop != SIZE_MAX) ? error_list.header_stop : error_list.header_pos;
+    for (pos = 0; pos < end; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (const struct errorentry_s *)&error_list.data[pos];
         switch (err->severity) {
         case SV_NONEERROR: anyerr = true; break;
@@ -1495,7 +1497,7 @@ void error_print(const struct error_output_s *output) {
 
     err2 = err3 = NULL;
     usenote = false;
-    for (pos = 0; pos < error_list.header_pos; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
+    for (pos = 0; pos < end; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (const struct errorentry_s *)&error_list.data[pos];
         switch (err->severity) {
         case SV_NOTE:
@@ -1546,6 +1548,7 @@ void error_print(const struct error_output_s *output) {
 
 void error_reset(void) {
     error_list.len = error_list.header_pos = 0;
+    error_list.header_stop = SIZE_MAX;
     avltree_init(&error_list.members);
     current_file_list = &file_list.flist;
     included_from = &file_list;
@@ -1615,6 +1618,16 @@ NO_RETURN void err_msg_out_of_memory(void)
 {
     error_print(&arguments.error);
     err_msg_out_of_memory2();
+}
+
+void err_msg_signal(void)
+{
+    if (error_list.header_stop == SIZE_MAX) {
+        bool more = new_error_msg(SV_FATAL, current_file_list, &lpoint);
+        adderror("compilation was interrupted");
+        if (more) new_error_msg_more();
+        error_list.header_stop = error_list.header_pos + 1;
+    }
 }
 
 void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
