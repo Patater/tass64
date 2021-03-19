@@ -1428,9 +1428,6 @@ static bool get_exp2(int stop) {
         case '.':
             if ((pline[lpoint.pos + 1] ^ 0x30) >= 10) {
                 str_t symbol;
-                if (pline[lpoint.pos + 1] == '.' && pline[lpoint.pos + 2] == '.') {
-                    lpoint.pos += 3; val = ref_fold(); goto push_other;
-                }
                 symbol.data = pline + lpoint.pos + 1;
                 symbol.len = get_label(symbol.data);
                 if (symbol.len != 0) {
@@ -1459,6 +1456,13 @@ static bool get_exp2(int stop) {
                     lpoint.pos++; 
                     symbollist++; 
                     goto lshack2;
+                case '.':
+                    if (symbol.data[1] == '.') {
+                        lpoint.pos += 3; 
+                        val = ref_fold(); 
+                        goto push_other;
+                    }
+                    /* fall through */
                 default:
                     goto tryanon;
                 }
