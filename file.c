@@ -423,7 +423,7 @@ static filesize_t fsize(FILE *f) {
     struct stat st;
     if (fstat(fileno(f), &st) == 0) {
         if (S_ISREG(st.st_mode) && st.st_size > 0) {
-            return (filesize_t)st.st_size;
+            return (st.st_size & ~(off_t)~(filesize_t)0) == 0 ? (filesize_t)st.st_size : ~(filesize_t)0;
         }
     }
 #else
@@ -431,7 +431,7 @@ static filesize_t fsize(FILE *f) {
         long len = ftell(f);
         rewind(f);
         if (len > 0) {
-            return (filesize_t)len;
+            return (unsigned long)len < ~(filesize_t)0 ? (filesize_t)len : ~(filesize_t)0;
         }
     }
 #endif
