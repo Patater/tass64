@@ -411,7 +411,8 @@ static MUST_CHECK char *read_one(FILE *f) {
     size_t i, ln, n, j, len;
     int c;
     mbstate_t ps;
-    uint8_t *p, *data;
+    size_t p;
+    uint8_t *data;
 
     do {
         c = getc(f);
@@ -450,17 +451,15 @@ static MUST_CHECK char *read_one(FILE *f) {
     if (data == NULL || len < 64) err_msg_out_of_memory2();
 
     memset(&ps, 0, sizeof ps);
-    p = data;
+    p = 0;
     for (;;) {
         ssize_t l;
         wchar_t w;
         uchar_t ch;
-        if (p + 6*6 + 1 > data + len) {
-            size_t o = (size_t)(p - data);
+        if (p + 6*6 + 1 > len) {
             len += 1024;
             data = (uint8_t*)realloc(data, len);
             if (data == NULL) err_msg_out_of_memory2();
-            p = data + o;
         }
         l = (ssize_t)mbrtowc(&w, line + j, n - j,  &ps);
         if (l < 1) {
@@ -470,9 +469,9 @@ static MUST_CHECK char *read_one(FILE *f) {
         }
         j += (size_t)l;
         ch = (uchar_t)w;
-        if (ch != 0 && ch < 0x80) *p++ = (uint8_t)ch; else p = utf8out(ch, p);
+        if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
     }
-    *p++ = 0;
+    data[p] = 0;
     free(line);
     return (char *)data;
 }

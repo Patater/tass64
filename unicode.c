@@ -53,41 +53,41 @@ FAST_CALL unsigned int utf8in(const uint8_t *c, uchar_t *out) { /* only for inte
     return i;
 }
 
-FAST_CALL uint8_t *utf8out(uchar_t i, uint8_t *c) {
+FAST_CALL unsigned int utf8out(uchar_t i, uint8_t *c) {
     if (i < 0x800) {
-        *c++ = (uint8_t)(0xc0 | (i >> 6));
-        *c++ = (uint8_t)(0x80 | (i & 0x3f));
-        return c;
+        c[0] = (uint8_t)(0xc0 | (i >> 6));
+        c[1] = (uint8_t)(0x80 | (i & 0x3f));
+        return 2;
     }
     if (i < 0x10000) {
-        *c++ = (uint8_t)(0xe0 | (i >> 12));
-        *c++ = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
-        *c++ = (uint8_t)(0x80 | (i & 0x3f));
-        return c;
+        c[0] = (uint8_t)(0xe0 | (i >> 12));
+        c[1] = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
+        c[2] = (uint8_t)(0x80 | (i & 0x3f));
+        return 3;
     }
     if (i < 0x200000) {
-        *c++ = (uint8_t)(0xf0 | (i >> 18));
-        *c++ = (uint8_t)(0x80 | ((i >> 12) & 0x3f));
-        *c++ = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
-        *c++ = (uint8_t)(0x80 | (i & 0x3f));
-        return c;
+        c[0] = (uint8_t)(0xf0 | (i >> 18));
+        c[1] = (uint8_t)(0x80 | ((i >> 12) & 0x3f));
+        c[2] = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
+        c[3] = (uint8_t)(0x80 | (i & 0x3f));
+        return 4;
     }
     if (i < 0x4000000) {
-        *c++ = (uint8_t)(0xf8 | (i >> 24));
-        *c++ = (uint8_t)(0x80 | ((i >> 18) & 0x3f));
-        *c++ = (uint8_t)(0x80 | ((i >> 12) & 0x3f));
-        *c++ = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
-        *c++ = (uint8_t)(0x80 | (i & 0x3f));
-        return c;
+        c[0] = (uint8_t)(0xf8 | (i >> 24));
+        c[1] = (uint8_t)(0x80 | ((i >> 18) & 0x3f));
+        c[2] = (uint8_t)(0x80 | ((i >> 12) & 0x3f));
+        c[3] = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
+        c[4] = (uint8_t)(0x80 | (i & 0x3f));
+        return 5;
     }
-    if ((i & ~(uchar_t)0x7fffffff) != 0) return c;
-    *c++ = (uint8_t)(0xfc | (i >> 30));
-    *c++ = (uint8_t)(0x80 | ((i >> 24) & 0x3f));
-    *c++ = (uint8_t)(0x80 | ((i >> 18) & 0x3f));
-    *c++ = (uint8_t)(0x80 | ((i >> 12) & 0x3f));
-    *c++ = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
-    *c++ = (uint8_t)(0x80 | (i & 0x3f));
-    return c;
+    if ((i & ~(uchar_t)0x7fffffff) != 0) return 0;
+    c[0] = (uint8_t)(0xfc | (i >> 30));
+    c[1] = (uint8_t)(0x80 | ((i >> 24) & 0x3f));
+    c[2] = (uint8_t)(0x80 | ((i >> 18) & 0x3f));
+    c[3] = (uint8_t)(0x80 | ((i >> 12) & 0x3f));
+    c[4] = (uint8_t)(0x80 | ((i >> 6) & 0x3f));
+    c[5] = (uint8_t)(0x80 | (i & 0x3f));
+    return 6;
 }
 
 static inline unsigned int utf8outlen(uchar_t i) {
@@ -307,7 +307,7 @@ MUST_CHECK bool unfkc(str_t *s1, const str_t *s2, int mode) {
             *s++ = (uint8_t)ch;
             continue;
         }
-        s = utf8out(ch, s);
+        s += utf8out(ch, s);
     }
     return false;
 }
