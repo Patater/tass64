@@ -554,7 +554,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case NO_CARET_DIAG:arguments.error.caret = CARET_NEVER;break;
             case 'D':
                 {
-                    size_t len = strlen(my_optarg) + 1;
+                    size_t len;
 
                     if (fin->lines >= max_lines) {
                         max_lines += 1024;
@@ -564,15 +564,16 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                     }
                     fin->line[fin->lines++] = fp;
 
-                    if (len < 1 || fp + len < len) err_msg_out_of_memory2();
-                    if (fp + len > fin->len) {
-                        fin->len = fp + len + 1024;
+                    len = strlen(my_optarg) + 1;
+                    fp += len;
+                    if (fp < len) err_msg_out_of_memory2();
+                    if (fp > fin->len) {
+                        fin->len = fp + 1024;
                         if (fin->len < 1024) err_msg_out_of_memory2();
                         fin->data = (uint8_t*)realloc(fin->data, fin->len);
                         if (fin->data == NULL) err_msg_out_of_memory2();
                     }
-                    memcpy(fin->data + fp, my_optarg, len);
-                    fp += len;
+                    memcpy(fin->data + fp - len, my_optarg, len);
                 }
                 break;
             case 'B': arguments.longbranch = true;break;

@@ -464,7 +464,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
         if (offset < ln) ln -= offset; else ln = 0;
         if (length < ln) ln = length;
         if (ln == 0) return val_reference(null_bytes);
-        if (ln > SSIZE_MAX) return new_error_mem(op->epoint);
+        if (((size_t)ln & ~(size_t)SSIZE_MAX) != 0) return new_error_mem(op->epoint);
         b = new_bytes(ln);
         b->len = (ssize_t)ln;
         memcpy(b->data, cfile2->data + offset, ln);
