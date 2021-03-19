@@ -1353,7 +1353,7 @@ void err_msg_unknown_char(uchar_t ch, const str_t *name, linepos_t epoint) {
     uint8_t line[256], *s = line;
     bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("can't encode character '");
-    if (ch != 0 && ch < 0x80) *s++ = (uint8_t)ch; else s = utf8out(ch, s);
+    if (ch != 0 && ch < 0x80) *s++ = (uint8_t)ch; else s += utf8out(ch, s);
     sprintf((char *)s, "' ($%02" PRIx32 ") in encoding '", ch); adderror((char *)line);
     adderror2(name->data, name->len);
     adderror("'");
@@ -1660,7 +1660,7 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
             if (w == 0 || l == 0) break;
             l = 1;
         }
-        s2[utf8out((uchar_t)w, s2) - s2] = 0;
+        s2[utf8out((uchar_t)w, s2)] = 0;
         adderror((char *)s2);
         i += (size_t)l;
     }

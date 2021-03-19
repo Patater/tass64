@@ -381,19 +381,17 @@ static bool extendfile(struct file_s *tmp) {
     return false;
 }
 
-static uint8_t *flush_ubuff(struct ubuff_s *ubuff, uint8_t *p, struct file_s *tmp) {
+static bool flush_ubuff(struct ubuff_s *ubuff, filesize_t *p2, struct file_s *tmp) {
     size_t i;
+    filesize_t p = *p2;
     for (i = 0; i < ubuff->p; i++) {
-        size_t o = (size_t)(p - tmp->data);
         uchar_t ch;
-        if (o + 6*6 + 1 > tmp->len) {
-            if (extendfile(tmp)) return NULL;
-            p = tmp->data + o;
-        }
+        if (p + 6*6 + 1 > tmp->len && extendfile(tmp)) return true;
         ch = ubuff->data[i];
-        if (ch != 0 && ch < 0x80) *p++ = (uint8_t)ch; else p = utf8out(ch, p);
+        if (ch != 0 && ch < 0x80) tmp->data[p++] = (uint8_t)ch; else p += utf8out(ch, tmp->data + p);
     }
-    return p;
+    *p2 = p;
+    return false;
 }
 
 static uchar_t fromiso2(uchar_t c) {
@@ -563,8 +561,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
 #endif
                 ubuff.p = 0;
                 do {
-                    size_t k;
-                    uint8_t *p;
+                    filesize_t p;
                     uchar_t lastchar;
                     bool qc = true;
                     uint8_t cclass = 0;
@@ -580,15 +577,11 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                     }
                     if ((line_t)(lines + 1) < 1) goto failed; /* overflow */
                     tmp->line[lines++] = fp;
-                    p = tmp->data + fp;
+                    p = fp;
                     for (;;) {
                         unsigned int i, j;
-                        size_t o = (size_t)(p - tmp->data);
                         uint8_t ch2;
-                        if (o + 6*6 + 1 > tmp->len) {
-                            if (extendfile(tmp)) goto failed;
-                            p = tmp->data + o;
-                        }
+                        if (p + 6*6 + 1 > tmp->len && extendfile(tmp)) goto failed;
                         if (bp / (BUFSIZ / 2) == qr) {
                             if (qr == 1) {
                                 qr = 3;
@@ -609,7 +602,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                             if (c == 13) {
                                 break;
                             }
-                            if (c != 0 && c < 0x80) *p++ = (uint8_t)c; else p = utf8out(c, p);
+                            if (c != 0 && c < 0x80) tmp->data[p++] = (uint8_t)c; else p += utf8out(c, tmp->data + p);
                             continue;
                         }
                         switch (encoding) {
@@ -727,10 +720,9 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                                 qc = true;
                             }
                             if (ubuff.p == 1) {
-                                if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) *p++ = (uint8_t)ubuff.data[0]; else p = utf8out(ubuff.data[0], p);
+                                if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
                             } else {
-                                p = flush_ubuff(&ubuff, p, tmp);
-                                if (p == NULL) goto failed;
+                                if (flush_ubuff(&ubuff, &p, tmp)) goto failed;
                                 ubuff.p = 1;
                             }
                             ubuff.data[0] = c;
@@ -747,10 +739,9 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                                     qc = true;
                                 }
                                 if (ubuff.p == 1) {
-                                    if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) *p++ = (uint8_t)ubuff.data[0]; else p = utf8out(ubuff.data[0], p);
+                                    if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
                                 } else {
-                                    p = flush_ubuff(&ubuff, p, tmp);
-                                    if (p == NULL) goto failed;
+                                    if (flush_ubuff(&ubuff, &p, tmp)) goto failed;
                                     ubuff.p = 1;
                                 }
                                 ubuff.data[0] = c;
@@ -760,15 +751,12 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                     }
                 eof:
                     if (!qc && unfc(&ubuff)) goto failed;
-                    p = flush_ubuff(&ubuff, p, tmp);
-                    if (p == NULL) goto failed;
+                    if (flush_ubuff(&ubuff, &p, tmp)) goto failed;
                     ubuff.p = 0;
-                    k = (size_t)(p - tmp->data) - fp;
-                    p = tmp->data + fp;
-                    while (k != 0 && (p[k-1]==' ' || p[k-1]=='\t')) k--;
-                    if (fp == 0 && k > 1 && p[0] == '#' && p[1] == '!') k = 0;
-                    p[k++] = 0;
-                    fp += k;
+                    while (p > fp && (tmp->data[p - 1] == ' ' || tmp->data[p - 1] == '\t')) p--;
+                    if (fp == 0 && p > 1 && tmp->data[0] == '#' && tmp->data[1] == '!') p = 0;
+                    tmp->data[p++] = 0;
+                    fp = p;
                 } while (bp != bl);
                 err = 0;
             failed:

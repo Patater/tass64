@@ -126,8 +126,7 @@ static void put_char(uchar_t c) {
         p[return_value.len++] = (uint8_t)c;
         return;
     }
-    p = utf8out(c, p + return_value.len);
-    return_value.len = (size_t)(p - return_value.data);
+    return_value.len += utf8out(c, p + return_value.len);
 }
 
 /* pad right */
