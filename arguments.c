@@ -565,7 +565,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                     fin->line[fin->lines++] = fp;
 
                     len = strlen(my_optarg) + 1;
-                    fp += len;
+                    fp += (filesize_t)len;
                     if (fp < len) err_msg_out_of_memory2();
                     if (fp > fin->len) {
                         fin->len = fp + 1024;
