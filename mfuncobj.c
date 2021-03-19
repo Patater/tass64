@@ -17,6 +17,7 @@
 
 */
 #include "mfuncobj.h"
+#include <string.h>
 #include "values.h"
 #include "eval.h"
 #include "error.h"
@@ -137,6 +138,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
         if (v1->namespaces[k] != v2->namespaces[k] && !v1->namespaces[k]->v.obj->same(Obj(v1->namespaces[k]), Obj(v2->namespaces[k]))) return false;
     }
     if (v1->names != v2->names && !v1->names->v.obj->same(Obj(v1->names), Obj(v2->names))) return false;
+    if (v1->line != v2->line && (v1->line == NULL || v2->line == NULL || strcmp((const char *)v1->line, (const char *)v2->line) != 0)) return false;
     return true;
 }
 
