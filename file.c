@@ -771,14 +771,14 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                     if (lines == 0 || d != NULL) tmp->line = d;
                 }
             }
-            tmp->len = fp;
             if (fp == 0) {
                 free(tmp->data);
                 tmp->data = NULL;
-            } else {
+            } else if (tmp->len != fp) {
                 uint8_t *d = (uint8_t *)realloc(tmp->data, fp);
                 if (d != NULL) tmp->data = d;
             }
+            tmp->len = fp;
             if (err != 0) errno = ENOMEM;
             err |= ferror(f);
             if (f != stdin) err |= fclose(f);
