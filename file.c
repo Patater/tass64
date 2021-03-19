@@ -539,9 +539,10 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
             } else {
                 struct ubuff_s ubuff = last_ubuff;
                 size_t max_lines = 0;
-                line_t lines = 0;
+                linenum_t lines = 0;
                 uint8_t buffer[BUFSIZ * 2];
-                size_t bp = 0, bl, qr = 1;
+                size_t bp = 0, bl;
+                unsigned int qr = 1;
                 filesize_t fs = fsize(f);
                 if (fs > 0) {
                     filesize_t len2 = fs + 4096;
@@ -575,7 +576,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                         tmp->line = d;
                         max_lines = len2;
                     }
-                    if ((line_t)(lines + 1) < 1) goto failed; /* overflow */
+                    if ((linenum_t)(lines + 1) < 1) goto failed; /* overflow */
                     tmp->line[lines++] = fp;
                     p = fp;
                     for (;;) {
@@ -836,8 +837,8 @@ struct starnode_s {
 
 static FAST_CALL int star_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
-    line_t a = cavltree_container_of(aa, struct starnode_s, node)->star.line;
-    line_t b = cavltree_container_of(bb, struct starnode_s, node)->star.line;
+    linenum_t a = cavltree_container_of(aa, struct starnode_s, node)->star.line;
+    linenum_t b = cavltree_container_of(bb, struct starnode_s, node)->star.line;
     return (a > b) - (a < b);
 }
 
@@ -848,7 +849,7 @@ static struct stars_s {
 
 static struct starnode_s *lastst;
 static int starsp;
-struct star_s *new_star(line_t line, bool *exists) {
+struct star_s *new_star(linenum_t line, bool *exists) {
     struct avltree_node *b;
     struct starnode_s *tmp;
     lastst->star.line = line;
@@ -879,7 +880,7 @@ struct star_s *new_star(line_t line, bool *exists) {
 
 static struct starnode_s star_root;
 
-struct star_s *init_star(line_t i) {
+struct star_s *init_star(linenum_t i) {
     bool starexists;
     struct star_s *s;
     star_tree = &star_root.star;

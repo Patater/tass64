@@ -307,7 +307,7 @@ bool mtranslate(void) {
         mline->data[p] = 0;
         llist = pline = fault ? (const uint8_t *)"" : mline->data;
     } else {
-        line_t lnum;
+        linenum_t lnum;
         if (cfile->nomacro == NULL) {
             cfile->nomacro = (uint8_t *)calloc((cfile->lines + 7) / 8, sizeof *cfile->nomacro);
             if (cfile->nomacro == NULL) err_msg_out_of_memory();
@@ -439,7 +439,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
         val = compile();
         if (context != NULL) pop_context();
     } else {
-        line_t lin = lpoint.line;
+        linenum_t lin = lpoint.line;
         bool starexists;
         struct star_s *s = new_star(vline, &starexists);
         struct star_s *stree_old = star_tree;
@@ -532,7 +532,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
     else if (i < args) err_msg_argnum(args, i, i, epoint);
     if (max != 0) err_msg_argnum(args, max, mfunc->argc, epoint);
     {
-        line_t lin = lpoint.line;
+        linenum_t lin = lpoint.line;
         bool starexists;
         struct star_s *s = new_star(vline, &starexists);
         struct star_s *stree_old = star_tree;

@@ -35,7 +35,7 @@ struct macro_param_s {
 typedef struct Macro {
     Obj v;
     argcount_t argc;
-    line_t line;
+    linenum_t line;
     struct macro_param_s *param;
     const struct file_list_s *file_list;
     bool retval;
@@ -49,7 +49,7 @@ typedef struct Macro Segment;
 typedef struct Struct {
     Obj v;
     argcount_t argc;
-    line_t line;
+    linenum_t line;
     struct macro_param_s *param;
     const struct file_list_s *file_list;
     bool retval;

@@ -622,7 +622,7 @@ static void labelprint2(Namespace *names, FILE *flab, Symbollist_types labelmode
     names->len = ln;
 }
 
-static inline const uint8_t *get_line(const struct file_s *file, line_t line) {
+static inline const uint8_t *get_line(const struct file_s *file, linenum_t line) {
     return &file->data[file->line[line - 1]];
 }
 

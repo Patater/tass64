@@ -37,7 +37,7 @@ struct file_s {
     int hash;
     uint8_t *nomacro;
     filesize_t *line;
-    line_t lines;
+    linenum_t lines;
     uint8_t *data;    /* data */
     filesize_t len;   /* length */
     uint16_t open;    /* open/not open */
@@ -54,7 +54,7 @@ struct file_s {
 #define not_in_file(a, b) ((size_t)((a) - (1 ? (b) : (struct file_s *)(b))->data) >= (b)->len)
 
 struct star_s {
-    line_t line, vline;
+    linenum_t line, vline;
     address_t addr;
     uint8_t pass;
 };
@@ -65,8 +65,8 @@ static inline bool dash_name(const char *name) {
 
 extern struct file_s *openfile(const char *, const char *, unsigned int, const struct str_t *, linepos_t);
 extern void closefile(struct file_s*);
-extern struct star_s *new_star(line_t, bool *);
-extern struct star_s *init_star(line_t);
+extern struct star_s *new_star(linenum_t, bool *);
+extern struct star_s *init_star(linenum_t);
 extern void destroy_file(void);
 extern void init_file(void);
 extern FILE *file_open(const char *, const char *);
