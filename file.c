@@ -372,7 +372,7 @@ static void file_free(struct file_s *a)
 
 static bool extendfile(struct file_s *tmp) {
     uint8_t *d;
-    size_t len2 = tmp->len + 4096;
+    filesize_t len2 = tmp->len + 4096;
     if (len2 < 4096) return true; /* overflow */
     d = (uint8_t *)realloc(tmp->data, len2);
     if (d == NULL) return true;
@@ -418,12 +418,12 @@ static inline uchar_t fromiso(uchar_t c) {
     return conv[c];
 }
 
-static size_t fsize(FILE *f) {
+static filesize_t fsize(FILE *f) {
 #if defined _POSIX_C_SOURCE || defined __unix__ || defined __MINGW32__
     struct stat st;
     if (fstat(fileno(f), &st) == 0) {
         if (S_ISREG(st.st_mode) && st.st_size > 0) {
-            return (size_t)st.st_size;
+            return (filesize_t)st.st_size;
         }
     }
 #else
@@ -431,7 +431,7 @@ static size_t fsize(FILE *f) {
         long len = ftell(f);
         rewind(f);
         if (len > 0) {
-            return (size_t)len;
+            return (filesize_t)len;
         }
     }
 #endif
@@ -466,7 +466,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
         Encoding_types encoding = E_UNKNOWN;
         FILE *f;
         uchar_t c = 0;
-        size_t fp = 0;
+        filesize_t fp = 0;
 
         lastfi->nomacro = NULL;
         lastfi->line = NULL;
@@ -510,7 +510,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
             tmp->read_error = true;
             if (ftype == 1) {
                 bool check;
-                size_t fs = fsize(f);
+                filesize_t fs = fsize(f);
                 if (fs > 0) {
                     tmp->data = (uint8_t *)malloc(fs);
                     if (tmp->data != NULL) tmp->len = fs;
@@ -519,7 +519,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 clearerr(f); errno = 0;
                 if (tmp->len != 0 || !extendfile(tmp)) {
                     for (;;) {
-                        fp += fread(tmp->data + fp, 1, tmp->len - fp, f);
+                        fp += (filesize_t)fread(tmp->data + fp, 1, tmp->len - fp, f);
                         if (feof(f) == 0 && fp >= tmp->len) {
                             if (check) {
                                 int c2 = getc(f);
@@ -544,15 +544,15 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 line_t lines = 0;
                 uint8_t buffer[BUFSIZ * 2];
                 size_t bp = 0, bl, qr = 1;
-                size_t fs = fsize(f);
+                filesize_t fs = fsize(f);
                 if (fs > 0) {
-                    size_t len2 = fs + 4096;
-                    if (len2 < 4096) len2 = SIZE_MAX; /* overflow */
+                    filesize_t len2 = fs + 4096;
+                    if (len2 < 4096) len2 = ~(filesize_t)0; /* overflow */
                     tmp->data = (uint8_t *)malloc(len2);
                     if (tmp->data != NULL) tmp->len = len2;
                     max_lines = (len2 / 20 + 1024) & ~(size_t)1023;
                     if (max_lines > SIZE_MAX / sizeof *tmp->line) max_lines = SIZE_MAX / sizeof *tmp->line; /* overflow */
-                    tmp->line = (size_t *)malloc(max_lines * sizeof *tmp->line);
+                    tmp->line = (filesize_t *)malloc(max_lines * sizeof *tmp->line);
                     if (tmp->line == NULL) max_lines = 0;
                 }
                 clearerr(f); errno = 0;
@@ -570,9 +570,10 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                     uint8_t cclass = 0;
 
                     if (lines >= max_lines) {
-                        size_t *d, len2 = max_lines + 1024;
+                        filesize_t *d;
+                        size_t len2 = max_lines + 1024;
                         if (/*len2 < 1024 ||*/ len2 > SIZE_MAX / sizeof *tmp->line) goto failed; /* overflow */
-                        d = (size_t *)realloc(tmp->line, len2 * sizeof *tmp->line);
+                        d = (filesize_t *)realloc(tmp->line, len2 * sizeof *tmp->line);
                         if (d == NULL) goto failed;
                         tmp->line = d;
                         max_lines = len2;
@@ -777,7 +778,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 last_ubuff = ubuff;
                 tmp->lines = lines;
                 if (lines != max_lines) {
-                    size_t *d = (size_t *)realloc(tmp->line, lines * sizeof *tmp->line);
+                    filesize_t *d = (filesize_t *)realloc(tmp->line, lines * sizeof *tmp->line);
                     if (lines == 0 || d != NULL) tmp->line = d;
                 }
             }

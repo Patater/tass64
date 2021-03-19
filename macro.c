@@ -612,8 +612,8 @@ bool get_func_params(Mfunc *v, bool single) {
                     ret = true;
                     break;
                 }
-                if ((size_t)(label.data - v->file_list->file->data) < v->file_list->file->len) param->name = label;
-                else str_cpy(&param->name, &label);
+                if (not_in_file(label.data, v->file_list->file)) str_cpy(&param->name, &label);
+                else param->name = label;
                 str_cfcpy(&param->cfname, &label);
                 if (param->cfname.data != label.data) str_cfcpy(&param->cfname, NULL);
                 else param->cfname = param->name;
@@ -716,8 +716,8 @@ void get_macro_params(Obj *v) {
             if (label.len > 1 && label.data[0] == '_' && label.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &label, &epoints[i]);param->cfname.len = 0; param->cfname.data = NULL;}
             str_cfcpy(&cf, &label);
             if (cf.data == label.data) {
-                if ((size_t)(label.data - cfile->data) < cfile->len) param->cfname = label;
-                else str_cpy(&param->cfname, &label);
+                if (not_in_file(label.data, cfile)) str_cpy(&param->cfname, &label);
+                else param->cfname = label;
             } else {str_cfcpy(&cf, NULL); param->cfname = cf;}
             for (j = 0; j < i; j++) if (params[j].cfname.data != NULL) {
                 if (str_cmp(&params[j].cfname, &cf) == 0) break;
@@ -732,8 +732,8 @@ void get_macro_params(Obj *v) {
             lpoint.pos++;
             label.data = pline + lpoint.pos;
             label.len = macro_param_find();
-            if ((size_t)(label.data - cfile->data) < cfile->len) param->init = label;
-            else str_cpy(&param->init, &label);
+            if (not_in_file(label.data, cfile)) str_cpy(&param->init, &label);
+            else param->init = label;
         } else {param->init.len = 0; param->init.data = NULL;}
         ignore();
         if (here() == 0 || here() == ';') {

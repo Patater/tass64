@@ -1511,7 +1511,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         const uint8_t *oldpline = pline, *oldpline2 = pline;
         uint8_t skip = 0;
         expr2 = (uint8_t *)oldpline2;
-        if ((size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+        if (not_in_file(pline, current_file_list->file)) {
             size_t lentmp = strlen((const char *)pline) + 1;
             expr = (uint8_t *)mallocx(lentmp);
             memcpy(expr, pline, lentmp);
@@ -1532,7 +1532,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 ignore();if (here() != ',') {err_msg(ERROR______EXPECTED, "','"); waitfor->skip = skip; break;}
                 lpoint.pos++;ignore();
                 oldpline2 = pline;
-                if (pline != expr && (size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+                if (pline != expr && not_in_file(pline, current_file_list->file)) {
                     size_t lentmp = strlen((const char *)pline) + 1;
                     expr2 = (uint8_t *)mallocx(lentmp);
                     memcpy(expr2, pline, lentmp);
@@ -1748,7 +1748,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     apoint = lpoint;
     xlin = lpoint.line;
     oldpline = pline;
-    if ((size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+    if (not_in_file(pline, current_file_list->file)) {
         size_t lentmp = strlen((const char *)pline) + 1;
         expr = (uint8_t *)mallocx(lentmp);
         memcpy(expr, pline, lentmp);
@@ -2413,7 +2413,7 @@ MUST_CHECK Obj *compile(void)
                             mfunc->nslen = 0;
                             mfunc->namespaces = NULL;
                             mfunc->ipoint = 0;
-                            if (prm == CMD_SFUNCTION && (size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+                            if (prm == CMD_SFUNCTION && not_in_file(pline, current_file_list->file)) {
                                 size_t ln = strlen((const char *)pline) + 1;
                                 uint8_t *l = (uint8_t *)malloc(ln);
                                 if (l != NULL) memcpy(l, pline, ln);
@@ -3544,7 +3544,7 @@ MUST_CHECK Obj *compile(void)
                     } else if (prm==CMD_BINARY) { /* .binary */
                         struct file_s *cfile2 = NULL;
                         ival_t foffs = 0;
-                        size_t fsize = SIZE_MAX;
+                        filesize_t fsize = ~(filesize_t)0;
                         struct values_s *vs;
                         str_t filename;
 
@@ -3570,12 +3570,12 @@ MUST_CHECK Obj *compile(void)
                         }
 
                         if (cfile2 != NULL) {
-                            size_t foffset;
+                            filesize_t foffset;
                             mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
                             if (foffs < 0) foffset = (uval_t)-foffs < cfile2->len ? (cfile2->len - (uval_t)-foffs) : 0;
                             else foffset = (uval_t)foffs;
                             for (; fsize != 0 && foffset < cfile2->len;) {
-                                size_t i, ln = cfile2->len - foffset;
+                                filesize_t i, ln = cfile2->len - foffset;
                                 uint8_t *d, *s = cfile2->data + foffset;
                                 if (ln > fsize) ln = fsize;
                                 d = pokealloc(ln, &epoint);

@@ -28,16 +28,18 @@ typedef enum Encoding_types {
     E_UNKNOWN, E_UTF8, E_UTF16LE, E_UTF16BE, E_ISO
 } Encoding_types;
 
+typedef size_t filesize_t;
+
 struct file_s {
     const char *name;
     const char *realname;
     str_t base;
     int hash;
     uint8_t *nomacro;
-    size_t *line;
+    filesize_t *line;
     line_t lines;
     uint8_t *data;    /* data */
-    size_t len;       /* length */
+    filesize_t len;   /* length */
     uint16_t open;    /* open/not open */
     uint16_t uid;     /* uid */
     unsigned int type;
@@ -48,6 +50,8 @@ struct file_s {
     uint8_t entercount;
     Encoding_types encoding;
 };
+
+#define not_in_file(a, b) ((size_t)((a) - (1 ? (b) : (struct file_s *)(b))->data) >= (b)->len)
 
 struct star_s {
     line_t line, vline;
