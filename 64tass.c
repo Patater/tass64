@@ -1929,9 +1929,9 @@ MUST_CHECK Obj *compile(void)
                             if (tmp2->value == none_value) err_msg_still_none(NULL, &epoint);
                             else if (tmp2->value->obj == ERROR_OBJ) err_msg_output(Error(tmp2->value));
                             else {
-                                Symbol *symbol = new_symbol(&labelname, &epoint);
-                                err_msg_invalid_oper(&o_MEMBER, tmp2->value, Obj(symbol), &epoint);
-                                val_destroy(Obj(symbol));
+                                Obj *symbol = new_symbol(&labelname, &epoint);
+                                err_msg_invalid_oper(&o_MEMBER, tmp2->value, symbol, &epoint);
+                                val_destroy(symbol);
                             }
                             error = true;
                         } else mycontext = context;

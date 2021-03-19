@@ -39,7 +39,7 @@ typedef struct Symbol {
 
 extern void symbolobj_init(void);
 
-extern Symbol *new_symbol(const str_t *name, linepos_t);
+extern Obj *new_symbol(const str_t *name, linepos_t);
 
 extern bool symbol_cfsame(Symbol *, Symbol *);
 static inline Symbol *ref_symbol(Symbol *v1) {
