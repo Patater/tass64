@@ -83,13 +83,13 @@ typedef SSIZE_T ssize_t;
 typedef uint32_t argcount_t;
 #define PRIuargcount PRIu32
 typedef uint32_t uchar_t;
-typedef uint32_t line_t;
+typedef uint32_t linenum_t;
 #define PRIuline PRIu32
 #define PRIxline PRIx32
 typedef uint32_t address_t;
 #define PRIaddress PRIx32
 typedef uint32_t linecpos_t;
-struct linepos_s {line_t line;linecpos_t pos;};
+struct linepos_s {linenum_t line;linecpos_t pos;};
 #define PRIlinepos PRIu32
 typedef const struct linepos_s *linepos_t;
 typedef int32_t ival_t;

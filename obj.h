@@ -33,7 +33,7 @@ typedef struct Obj {
 
 typedef struct Lbl {
     Obj v;
-    line_t sline;
+    linenum_t sline;
     size_t waitforp;
     const struct file_list_s *file_list;
     struct Namespace *parent;

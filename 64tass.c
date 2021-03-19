@@ -75,7 +75,7 @@
 
 struct Listing *listing = NULL;
 int temporary_label_branch; /* function declaration in function context, not good */
-line_t vline;      /* current line */
+linenum_t vline;      /* current line */
 address_t all_mem, all_mem2;
 unsigned int all_mem_bits;
 uint8_t pass = 0, max_pass = MAX_PASS;         /* pass */
@@ -1331,7 +1331,7 @@ static MUST_CHECK bool list_extend2(List *lst) {
 
 static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     int wht;
-    line_t lin;
+    linenum_t lin;
     int nopos = -1;
     struct linepos_s epoint2, epoint3;
     uint8_t *expr, *expr2;
@@ -1506,7 +1506,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         expr = expr2 = NULL;
     } else {
         struct linepos_s apoint = lpoint, bpoint = {0, 0};
-        line_t xlin = lpoint.line;
+        linenum_t xlin = lpoint.line;
         struct oper_s tmp;
         const uint8_t *oldpline = pline, *oldpline2 = pline;
         uint8_t skip = 0;
@@ -1683,7 +1683,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (cnt == 0) {
         new_waitfor(W_NEXT, epoint); waitfor->skip = 0;
     } else {
-        line_t lin = lpoint.line;
+        linenum_t lin = lpoint.line;
         bool starexists;
         struct star_s *s = new_star(vline, &starexists);
         struct star_s *stree_old = star_tree;
@@ -1729,7 +1729,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     bool starexists;
     size_t i = 0;
     struct linepos_s apoint;
-    line_t xlin;
+    linenum_t xlin;
     const uint8_t *oldpline;
     uint8_t skip = 0;
 
@@ -1795,7 +1795,7 @@ static Namespace *anonlabel(Namespace *mycontext, uint8_t type, linepos_t epoint
     struct {
         uint8_t type;
         uint8_t padding[3];
-        line_t vline;
+        linenum_t vline;
         struct star_s *star_tree;
     } anonsymbol;
     Label *label;
@@ -1855,7 +1855,7 @@ MUST_CHECK Obj *compile(void)
     struct {
         uint8_t type;
         uint8_t padding[3];
-        line_t vline;
+        linenum_t vline;
         struct star_s *star_tree;
     } anonsymbol2;
     struct linepos_s epoint;
@@ -4204,7 +4204,7 @@ MUST_CHECK Obj *compile(void)
                         bool starexists;
                         struct star_s *s = new_star(vline, &starexists);
                         struct star_s *stree_old = star_tree;
-                        line_t lin = lpoint.line;
+                        linenum_t lin = lpoint.line;
 
                         if (starexists && s->addr != star) {
                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
@@ -4791,7 +4791,7 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
         current_address = &root_section.address;
         reset_section(current_section);
         init_macro();
-        star_tree = init_star((line_t)i);
+        star_tree = init_star((linenum_t)i);
 
         if (i == opts - 1) {
             if (fin->lines != 0) {

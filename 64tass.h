@@ -40,7 +40,7 @@ extern address_t all_mem, all_mem2;
 extern unsigned int all_mem_bits;
 extern uint32_t outputeor;
 extern int temporary_label_branch;
-extern line_t vline;
+extern linenum_t vline;
 extern struct linepos_s lpoint;
 extern struct star_s *star_tree;
 extern bool fixeddig, constcreated;
