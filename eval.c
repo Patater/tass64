@@ -362,7 +362,7 @@ static MUST_CHECK Obj *new_starsymbol(linecpos_t pos) {
     struct linepos_s epoint;
     epoint.line = lpoint.line;
     epoint.pos = pos;
-    return Obj(new_symbol(&symbol, &epoint));
+    return new_symbol(&symbol, &epoint);
 }
 
 static MUST_CHECK Obj *resolv_anonlabel(ssize_t as, linecpos_t pos) {
@@ -379,7 +379,7 @@ static MUST_CHECK Obj *resolv_anonlabel(ssize_t as, linecpos_t pos) {
     epoint.line = lpoint.line;
     epoint.pos = pos;
     err = new_error(ERROR___NOT_DEFINED, &epoint);
-    err->u.notdef.symbol = Obj(new_anonsymbol(as));
+    err->u.notdef.symbol = new_anonsymbol(as);
     err->u.notdef.names = ref_namespace(current_context);
     err->u.notdef.down = true;
     return Obj(err);
@@ -493,7 +493,7 @@ rest:
             val = ref_none();
         } else {
             Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
-            err->u.notdef.symbol = Obj(new_symbol(&symbol, &epoint));
+            err->u.notdef.symbol = new_symbol(&symbol, &epoint);
             err->u.notdef.names = ref_namespace(current_context);
             err->u.notdef.down = true;
             val = Obj(err);
@@ -1433,7 +1433,7 @@ static bool get_exp2(int stop) {
                 if (symbol.len != 0) {
                     lpoint.pos += symbol.len + 1;
                     if (symbol.len > 1 && symbol.data[0] == '_' && symbol.data[1] == '_') err_msg2(ERROR_RESERVED_LABL, &symbol, &epoint);
-                    val = Obj(new_symbol(&symbol, &epoint));
+                    val = new_symbol(&symbol, &epoint);
                     goto push_other;
                 }
                 switch (symbol.data[0]) {
@@ -1441,12 +1441,12 @@ static bool get_exp2(int stop) {
                 case '-':
                     while (symbol.data[0] == symbol.data[++symbol.len]);
                     lpoint.pos += symbol.len + 1;
-                    val = Obj(new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len));
+                    val = new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len);
                     goto push_other;
                 case '*':
                     lpoint.pos += 2;
                     symbol.len = 1;
-                    val = Obj(new_symbol(&symbol, &epoint));
+                    val = new_symbol(&symbol, &epoint);
                     goto push_other;
                 case '(':
                     lpoint.pos++; 
@@ -1514,7 +1514,7 @@ static bool get_exp2(int stop) {
                 symbol.data = pline + epoint.pos;
                 symbol.len = lpoint.pos - epoint.pos;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
-                    val = Obj(new_symbol(&symbol, &epoint));
+                    val = new_symbol(&symbol, &epoint);
                 } else {
                     down = (symbol.data[0] != '_');
                     l = down ? find_label(&symbol, NULL) : find_label2(&symbol, cheap_context);
@@ -1526,7 +1526,7 @@ static bool get_exp2(int stop) {
                         val = ref_none();
                     } else {
                         Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
-                        err->u.notdef.symbol = Obj(new_symbol(&symbol, &epoint));
+                        err->u.notdef.symbol = new_symbol(&symbol, &epoint);
                         err->u.notdef.names = ref_namespace(down ? current_context : cheap_context);
                         err->u.notdef.down = down;
                         val = Obj(err);
@@ -1540,7 +1540,7 @@ static bool get_exp2(int stop) {
             if (db != opr.p) {
                 ssize_t as = (ssize_t)(db - opr.p) - 1;
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
-                    val = Obj(new_anonsymbol(as));
+                    val = new_anonsymbol(as);
                 } else {
                     val = resolv_anonlabel(as, opr.data[opr.p].pos);
                 }
@@ -1551,7 +1551,7 @@ static bool get_exp2(int stop) {
             if (db != opr.p) {
                 ssize_t as = -(ssize_t)(db - opr.p);
                 if ((opr.p != 0 && opr.data[opr.p - 1].val == &o_MEMBER.v) || symbollist != 0) {
-                    val = Obj(new_anonsymbol(as));
+                    val = new_anonsymbol(as);
                 } else {
                     val = resolv_anonlabel(as, opr.data[opr.p].pos);
                 }

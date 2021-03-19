@@ -758,7 +758,7 @@ void err_msg_not_defined2(const str_t *name, Namespace *l, bool down, linepos_t 
     Error *err = new_error(ERROR___NOT_DEFINED, epoint);
     err->u.notdef.down = down;
     err->u.notdef.names = ref_namespace(l);
-    err->u.notdef.symbol = Obj(new_symbol(name, epoint));
+    err->u.notdef.symbol = new_symbol(name, epoint);
     err_msg_not_defined3(err);
     val_destroy(Obj(err));
 }
@@ -767,7 +767,7 @@ void err_msg_not_defined2a(ssize_t count, Namespace *l, bool down, linepos_t epo
     Error *err = new_error(ERROR___NOT_DEFINED, epoint);
     err->u.notdef.down = down;
     err->u.notdef.names = ref_namespace(l);
-    err->u.notdef.symbol = Obj(new_anonsymbol(count));
+    err->u.notdef.symbol = new_anonsymbol(count);
     err_msg_not_defined3(err);
     val_destroy(Obj(err));
 }
