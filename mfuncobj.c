@@ -53,6 +53,7 @@ static FAST_CALL void destroy(Obj *o1) {
     val_destroy(Obj(v1->names));
     val_destroy(Obj(v1->inamespaces));
     free(v1->param);
+    if (v1->line != NULL) free((uint8_t *)v1->line);
 }
 
 static FAST_CALL void garbage(Obj *o1, int j) {
@@ -86,6 +87,7 @@ static FAST_CALL void garbage(Obj *o1, int j) {
         }
         free(v1->param);
         free(v1->namespaces);
+        if (v1->line != NULL) free((uint8_t *)v1->line);
         return;
     case 1:
         while ((i--) != 0) {
@@ -124,7 +126,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     argcount_t i;
     size_t k;
     if (o1->obj != o2->obj || v1->file_list != v2->file_list || v1->epoint.line != v2->epoint.line || v1->epoint.pos != v2->epoint.pos) return false;
-    if (v1->argc != v2->argc || v1->nslen != v2->nslen || v1->single != v2->single) return false;
+    if (v1->argc != v2->argc || v1->nslen != v2->nslen) return false;
     for (i = 0; i < v1->argc; i++) {
         if (str_cmp(&v1->param[i].name, &v2->param[i].name) != 0) return false;
         if ((v1->param[i].name.data != v1->param[i].cfname.data || v2->param[i].name.data != v2->param[i].cfname.data) && str_cmp(&v1->param[i].cfname, &v2->param[i].cfname) != 0) return false;

@@ -38,12 +38,13 @@ typedef struct Mfunc {
     struct mfunc_param_s *param;
     const struct file_list_s *file_list;
     struct linepos_s epoint;
-    bool retval, single;
+    bool retval;
     uint8_t recursion_pass;
     size_t nslen;
     struct Namespace **namespaces, *names;
     size_t ipoint;
     struct List *inamespaces;
+    const uint8_t *line;
 } Mfunc;
 typedef struct Mfunc Sfunc;
 

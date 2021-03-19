@@ -2413,7 +2413,12 @@ MUST_CHECK Obj *compile(void)
                             mfunc->nslen = 0;
                             mfunc->namespaces = NULL;
                             mfunc->ipoint = 0;
-                            mfunc->single = (prm == CMD_SFUNCTION);
+                            if (prm == CMD_SFUNCTION && (size_t)(pline - current_file_list->file->data) >= current_file_list->file->len) {
+                                size_t ln = strlen((const char *)pline) + 1;
+                                uint8_t *l = (uint8_t *)malloc(ln);
+                                if (l != NULL) memcpy(l, pline, ln);
+                                mfunc->line = l;
+                            } else mfunc->line = NULL;
                             if (labelexists) {
                                 mfunc->retval = (label->value->obj == obj) && Mfunc(label->value)->retval;
                                 if (label->defpass == pass) {
