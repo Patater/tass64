@@ -28,7 +28,7 @@ typedef enum Encoding_types {
     E_UNKNOWN, E_UTF8, E_UTF16LE, E_UTF16BE, E_ISO
 } Encoding_types;
 
-typedef size_t filesize_t;
+typedef uint32_t filesize_t;
 
 struct file_s {
     const char *name;
