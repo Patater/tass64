@@ -457,7 +457,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
     }
     
     if (cfile2 != NULL) {
-        size_t offset, ln = cfile2->len;
+        filesize_t offset, ln = cfile2->len;
         Bytes *b;
         if (offs < 0) offset = ((uval_t)-offs < ln) ? (ln - (uval_t)-offs) : 0;
         else offset = (uval_t)offs;

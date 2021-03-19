@@ -504,7 +504,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
     int argc = *argc2;
     char **argv = *argv2;
     int opt;
-    size_t max_lines = 0, fp = 0;
+    size_t max_lines = 0;
+    filesize_t fp = 0;
     int max = 10;
     bool again;
     struct symbol_output_s symbol_output = { NULL, LABEL_64TASS, NULL };
@@ -559,7 +560,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                     if (fin->lines >= max_lines) {
                         max_lines += 1024;
                         if (/*max_lines < 1024 ||*/ max_lines > SIZE_MAX / sizeof *fin->line) err_msg_out_of_memory2(); /* overflow */
-                        fin->line = (size_t *)realloc(fin->line, max_lines * sizeof *fin->line);
+                        fin->line = (filesize_t *)realloc(fin->line, max_lines * sizeof *fin->line);
                         if (fin->line == NULL) err_msg_out_of_memory2();
                     }
                     fin->line[fin->lines++] = fp;
@@ -824,7 +825,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
         diagnostics.case_symbol = false;
     }
     if (fin->lines != max_lines) {
-        size_t *d = (size_t *)realloc(fin->line, fin->lines * sizeof *fin->line);
+        filesize_t *d = (filesize_t *)realloc(fin->line, fin->lines * sizeof *fin->line);
         if (fin->lines == 0 || d != NULL) fin->line = d;
     }
     closefile(fin);

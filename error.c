@@ -220,7 +220,7 @@ static bool new_error_msg(Severity_types severity, const struct file_list_s *fli
     }
     switch (severity) {
     case SV_NOTE: line_len = 0; break;
-    default: line_len = ((epoint->line == lpoint.line) && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
+    default: line_len = ((epoint->line == lpoint.line) && not_in_file(pline, flist->file)) ? (strlen((const char *)pline) + 1) : 0; break;
     }
     new_error_msg_common(severity, flist, epoint, line_len, macro_error_translate2(epoint->pos));
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], pline, line_len);
@@ -666,7 +666,7 @@ static void new_error_msg_more(void) {
     size_t line_len;
     switch (new_error_msg_more_param.severity) {
     case SV_NOTE: line_len = 0; break;
-    default: line_len = ((epoint->line == lpoint.line) && (size_t)(pline - flist->file->data) >= flist->file->len) ? (strlen((const char *)pline) + 1) : 0; break;
+    default: line_len = ((epoint->line == lpoint.line) && not_in_file(pline, flist->file)) ? (strlen((const char *)pline) + 1) : 0; break;
     }
     new_error_msg_common(SV_NOTE, flist, epoint, line_len, macro_error_translate2(epoint->pos));
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof(struct errorentry_s)], pline, line_len);
@@ -1566,7 +1566,7 @@ void err_init(const char *name) {
     file_list_file.name = "";
     file_list_file.realname = file_list_file.name;
     file_list_file.data = (uint8_t *)0;
-    file_list_file.len = SIZE_MAX;
+    file_list_file.len = ~(filesize_t)0;
     file_list.flist.file = &file_list_file;
     avltree_init(&file_list.members);
     error_list.len = error_list.max = error_list.header_pos = 0;

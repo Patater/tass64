@@ -46,8 +46,8 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
 
 Obj *new_symbol(const str_t *name, linepos_t epoint) {
     Symbol *symbol = Symbol(val_alloc(SYMBOL_OBJ));
-    if ((size_t)(name->data - current_file_list->file->data) < current_file_list->file->len) symbol->name = *name;
-    else str_cpy(&symbol->name, name);
+    if (not_in_file(name->data, current_file_list->file)) str_cpy(&symbol->name, name);
+    else symbol->name = *name;
     symbol->cfname.data = NULL;
     symbol->cfname.len = 0;
     symbol->hash = -1;
@@ -77,7 +77,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 static FAST_CALL void destroy(Obj *o1) {
     Symbol *v1 = Symbol(o1);
     const struct file_s *cfile = v1->file_list->file;
-    if ((size_t)(v1->name.data - cfile->data) >= cfile->len) symbol_destroy(v1);
+    if (not_in_file(v1->name.data, cfile)) symbol_destroy(v1);
     if (v1->cfname.data != NULL && v1->name.data != v1->cfname.data) free((uint8_t *)v1->cfname.data);
 }
 
