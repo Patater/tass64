@@ -905,13 +905,15 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         push_context(context);
         temporary_label_branch++;
         functionrecursion++;
-        if (mfunc->single) {
+        if (mfunc->v.obj == SFUNC_OBJ) {
             if (mtranslate()) {
                 lpoint.pos = mfunc->epoint.pos;
+                if (mfunc->line != NULL) pline = mfunc->line;
                 if (signal_received) err_msg_signal();
                 retval = NULL;
             } else {
                 lpoint.pos = mfunc->epoint.pos;
+                if (mfunc->line != NULL) pline = mfunc->line;
                 if (!get_exp(0, 0, 0, &mfunc->epoint)) {
                     retval = NULL;
                 } else {
