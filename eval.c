@@ -1439,21 +1439,29 @@ static bool get_exp2(int stop) {
                     val = Obj(new_symbol(&symbol, &epoint));
                     goto push_other;
                 }
-                if (symbol.data[0] == '+' || symbol.data[0] == '-') {
+                switch (symbol.data[0]) {
+                case '+':
+                case '-':
                     while (symbol.data[0] == symbol.data[++symbol.len]);
                     lpoint.pos += symbol.len + 1;
                     val = Obj(new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len));
                     goto push_other;
-                }
-                if (symbol.data[0] == '*') {
+                case '*':
                     lpoint.pos += 2;
                     symbol.len = 1;
                     val = Obj(new_symbol(&symbol, &epoint));
                     goto push_other;
+                case '(':
+                    lpoint.pos++; 
+                    symbollist++; 
+                    goto tphack2;
+                case '[':
+                    lpoint.pos++; 
+                    symbollist++; 
+                    goto lshack2;
+                default:
+                    goto tryanon;
                 }
-                if (symbol.data[0] == '(') { lpoint.pos++; symbollist++; goto tphack2; }
-                if (symbol.data[0] == '[') { lpoint.pos++; symbollist++; goto lshack2; }
-                goto tryanon;
             }
             val = get_float(&epoint);
             goto push_other;
