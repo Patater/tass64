@@ -382,7 +382,7 @@ static bool extendfile(struct file_s *tmp) {
 }
 
 static bool flush_ubuff(struct ubuff_s *ubuff, filesize_t *p2, struct file_s *tmp) {
-    size_t i;
+    uint32_t i;
     filesize_t p = *p2;
     for (i = 0; i < ubuff->p; i++) {
         uchar_t ch;
