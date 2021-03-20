@@ -121,20 +121,25 @@ failed2:
     return new_error_mem(epoint);
 }
 
-static MUST_CHECK Obj *normalize(Int *v, size_t sz, bool neg) {
+static FAST_CALL NO_INLINE Obj *normalize2(Int *v, size_t sz) {
+    if (sz != 0) {
+        while (--sz) v->val[sz] = v->data[sz];
+    } else {
+        v->val[0] = 0;
+    }
+    free(v->data);
+    v->data = v->val;
+    return Obj(v);
+}
+
+static FAST_CALL MUST_CHECK Obj *normalize(Int *v, size_t sz, bool neg) {
     digit_t *d = v->data;
     while (sz != 0 && d[sz - 1] == 0) sz--;
-    if (v->val != d && sz <= (ssize_t)lenof(v->val)) {
-        if (sz != 0) {
-            memcpy(v->val, d, sz * sizeof *d);
-        } else {
-            v->val[0] = 0;
-        }
-        free(d);
-        v->data = v->val;
-    }
     /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
     v->len = neg ? -(ssize_t)sz : (ssize_t)sz;
+    if (v->val != d && sz <= lenof(v->val)) {
+        return normalize2(v, sz);
+    }
     return Obj(v);
 }
 

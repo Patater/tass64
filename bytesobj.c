@@ -698,6 +698,8 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
     }
 
     while (sz != 0 && d[sz - 1] == 0) sz--;
+    if (sz > SSIZE_MAX) goto failed2; /* overflow */
+    v->len = inv ? (ssize_t)~sz : (ssize_t)sz;
     if (v->u.val != d) {
         if (sz <= sizeof v->u.val) {
             if (sz != 0) memcpy(v->u.val, d, sz);
@@ -709,9 +711,6 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
             v->u.s.max = sz;
         }
     }
-    if (sz > SSIZE_MAX) goto failed2; /* overflow */
-    v->len = inv ? (ssize_t)~sz : (ssize_t)sz;
-
     return Obj(v);
 failed2:
     val_destroy(Obj(v));
