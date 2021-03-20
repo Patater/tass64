@@ -723,7 +723,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                             if (ubuff.p == 1) {
                                 if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
                             } else {
-                                if (flush_ubuff(&ubuff, &p, tmp)) goto failed;
+                                if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
                                 ubuff.p = 1;
                             }
                             ubuff.data[0] = c;
@@ -742,7 +742,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                                 if (ubuff.p == 1) {
                                     if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
                                 } else {
-                                    if (flush_ubuff(&ubuff, &p, tmp)) goto failed;
+                                    if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
                                     ubuff.p = 1;
                                 }
                                 ubuff.data[0] = c;
@@ -752,7 +752,11 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                     }
                 eof:
                     if (!qc && unfc(&ubuff)) goto failed;
-                    if (flush_ubuff(&ubuff, &p, tmp)) goto failed;
+                    if (ubuff.p == 1) {
+                        if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
+                    } else {
+                        if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
+                    }
                     ubuff.p = 0;
                     while (p > fp && (tmp->data[p - 1] == ' ' || tmp->data[p - 1] == '\t')) p--;
                     if (fp == 0 && p > 1 && tmp->data[0] == '#' && tmp->data[1] == '!') p = 0;
