@@ -25,7 +25,7 @@
 
 struct ubuff_s {
     uchar_t *data;
-    size_t len, p;
+    uint32_t len, p;
 };
 
 struct str_t;
