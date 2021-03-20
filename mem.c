@@ -44,7 +44,7 @@ static int memblockcomp(const void *a, const void *b) {
 }
 
 static void memcomp(Memblocks *memblocks, bool nomerge) {
-    unsigned int i, j, k;
+    size_t i, j, k;
     if (!memblocks->flattened) {
         memblocks->flattened = true;
         memjmp(memblocks, 0);
@@ -194,7 +194,7 @@ err:
 
 static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     address_t pos, end;
-    unsigned int i;
+    size_t i;
     unsigned char header[4];
 
     if (memblocks->p == 0) return;
