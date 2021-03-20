@@ -37,11 +37,10 @@
 #include "memblocksobj.h"
 
 static int memblockcomp(const void *a, const void *b) {
-    const struct memblock_s *aa = (const struct memblock_s *)a;
-    const struct memblock_s *bb = (const struct memblock_s *)b;
-    address_t ad = aa->addr, bd = bb->addr;
-    if (ad < bd) return -1;
-    return (ad > bd) ? 1 : 0;
+    address_t aa = ((const struct memblock_s *)a)->addr;
+    address_t bb = ((const struct memblock_s *)b)->addr;
+    if (aa < bb) return -1;
+    return (aa > bb) ? 1 : 0;
 }
 
 static void memcomp(Memblocks *memblocks, bool nomerge) {
