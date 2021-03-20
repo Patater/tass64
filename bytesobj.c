@@ -850,7 +850,8 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
     Bytes *vv1 = Bytes(op->v1), *vv2 = Bytes(op->v2);
     size_t i, len1, len2, sz;
     bool neg1, neg2, neg;
-    uint8_t *v1, *v2, *v;
+    const uint8_t *v1, *v2;
+    uint8_t *v;
     Oper_types o;
     Bytes *vv;
     len1 = byteslen(vv1); len2 = byteslen(vv2);
@@ -887,6 +888,8 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
         vv = new_bytes2(sz);
         if (vv == NULL) return new_error_mem(op->epoint3);
     }
+    /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
+    vv->len = neg ? (ssize_t)~sz : (ssize_t)sz;
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
 
@@ -907,7 +910,7 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
                 for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
             }
         }
-        break;
+        return Obj(vv);
     case O_OR:
         if (neg1) {
             if (neg2) {
@@ -924,16 +927,12 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
                 for (; i < len1; i++) v[i] = v1[i];
             }
         }
-        break;
+        return Obj(vv);
     default:
         for (i = 0; i < len2; i++) v[i] = v1[i] ^ v2[i];
         for (; i < len1; i++) v[i] = v1[i];
-        break;
+        return Obj(vv);
     }
-    /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    vv->len = neg ? (ssize_t)~sz : (ssize_t)sz;
-    vv->data = v;
-    return Obj(vv);
 }
 
 static MUST_CHECK Obj *concat(oper_t op) {
