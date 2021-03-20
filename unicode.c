@@ -101,7 +101,7 @@ static inline unsigned int utf8outlen(uchar_t i) {
 MUST_CHECK bool extend_ubuff(struct ubuff_s *d) {
     uint32_t len = d->len + 16;
     uchar_t *data;
-    if (d->len < 16 || len > SIZE_MAX / sizeof *data) return true;
+    if (len < 16 || ((size_t)len + 0) > SIZE_MAX / sizeof *data) return true;
     data = (uchar_t *)realloc(d->data, len * sizeof *data);
     if (data == NULL) return true;
     d->data = data;
