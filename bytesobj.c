@@ -846,11 +846,12 @@ static void getriter(struct iter_s *v) {
     v->len = byteslen(Bytes(v->data));
 }
 
-static inline MUST_CHECK Obj *and_(oper_t op) {
+static inline MUST_CHECK Obj *binary(oper_t op) {
     Bytes *vv1 = Bytes(op->v1), *vv2 = Bytes(op->v2);
     size_t i, len1, len2, sz;
-    bool neg1, neg2;
+    bool neg1, neg2, neg;
     uint8_t *v1, *v2, *v;
+    Oper_types o;
     Bytes *vv;
     len1 = byteslen(vv1); len2 = byteslen(vv2);
 
@@ -860,8 +861,22 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     }
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
-    sz = neg2 ? len1 : len2;
-    if (sz == 0) return val_reference((neg1 && neg2) ? inv_bytes : null_bytes);
+    o = op->op->op;
+    switch (o) {
+    case O_AND:
+        neg = neg1 && neg2;
+        sz = neg2 ? len1 : len2;
+        break;
+    case O_OR:
+        neg = neg1 || neg2;
+        sz = neg2 ? len2 : len1;
+        break;
+    default:
+        neg = neg1 != neg2;
+        sz = len1;
+        break;
+    }
+    if (sz == 0) return val_reference(neg ? inv_bytes : null_bytes);
     if (op->inplace == Obj(vv1)) {
         vv = ref_bytes(vv1);
         if (vv->data != vv->u.val) vv->u.s.hash = -1;
@@ -875,112 +890,48 @@ static inline MUST_CHECK Obj *and_(oper_t op) {
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
 
-    if (neg1) {
-        if (neg2) {
-            for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
-            for (; i < len1; i++) v[i] = v1[i];
+    switch (o) {
+    case O_AND:
+        if (neg1) {
+            if (neg2) {
+                for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
+                for (; i < len1; i++) v[i] = v1[i];
+            } else {
+                for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
+            }
         } else {
-            for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
+            if (neg2) {
+                for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
+                for (; i < len1; i++) v[i] = v1[i];
+            } else {
+                for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
+            }
         }
-    } else {
-        if (neg2) {
-            for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
-            for (; i < len1; i++) v[i] = v1[i];
+        break;
+    case O_OR:
+        if (neg1) {
+            if (neg2) {
+                for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
+            } else {
+                for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
+                for (; i < len1; i++) v[i] = v1[i];
+            }
         } else {
-            for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
+            if (neg2) {
+                for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
+            } else {
+                for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
+                for (; i < len1; i++) v[i] = v1[i];
+            }
         }
+        break;
+    default:
+        for (i = 0; i < len2; i++) v[i] = v1[i] ^ v2[i];
+        for (; i < len1; i++) v[i] = v1[i];
+        break;
     }
     /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    vv->len = (neg1 && neg2) ? (ssize_t)~sz : (ssize_t)sz;
-    vv->data = v;
-    return Obj(vv);
-}
-
-static inline MUST_CHECK Obj *or_(oper_t op) {
-    Bytes *vv1 = Bytes(op->v1), *vv2 = Bytes(op->v2);
-    size_t i, len1, len2, sz;
-    bool neg1, neg2;
-    uint8_t *v1, *v2, *v;
-    Bytes *vv;
-    len1 = byteslen(vv1); len2 = byteslen(vv2);
-
-    if (len1 < len2) {
-        Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
-        i = len1; len1 = len2; len2 = i;
-    }
-    neg1 = vv1->len < 0; neg2 = vv2->len < 0;
-
-    sz = neg2 ? len2 : len1;
-    if (sz == 0) return val_reference((neg1 || neg2) ? inv_bytes : null_bytes);
-    if (op->inplace == Obj(vv1)) {
-        vv = ref_bytes(vv1);
-        if (vv->data != vv->u.val) vv->u.s.hash = -1;
-    } else if (op->inplace == Obj(vv2) && sz <= len2) {
-        vv = ref_bytes(vv2);
-        if (vv->data != vv->u.val) vv->u.s.hash = -1;
-    } else {
-        vv = new_bytes2(sz);
-        if (vv == NULL) return new_error_mem(op->epoint3);
-    }
-    v = vv->data;
-    v1 = vv1->data; v2 = vv2->data;
-
-    if (neg1) {
-        if (neg2) {
-            for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
-        } else {
-            for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
-            for (; i < len1; i++) v[i] = v1[i];
-        }
-    } else {
-        if (neg2) {
-            for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
-        } else {
-            for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
-            for (; i < len1; i++) v[i] = v1[i];
-        }
-    }
-
-    /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    vv->len = (neg1 || neg2) ? (ssize_t)~sz : (ssize_t)sz;
-    vv->data = v;
-    return Obj(vv);
-}
-
-static inline MUST_CHECK Obj *xor_(oper_t op) {
-    Bytes *vv1 = Bytes(op->v1), *vv2 = Bytes(op->v2);
-    size_t i, len1, len2, sz;
-    bool neg1, neg2;
-    uint8_t *v1, *v2, *v;
-    Bytes *vv;
-    len1 = byteslen(vv1); len2 = byteslen(vv2);
-
-    if (len1 < len2) {
-        Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
-        i = len1; len1 = len2; len2 = i;
-    }
-    neg1 = vv1->len < 0; neg2 = vv2->len < 0;
-
-    sz = len1;
-    if (sz == 0) return val_reference((neg1 != neg2) ? inv_bytes : null_bytes);
-    if (op->inplace == Obj(vv1)) {
-        vv = ref_bytes(vv1);
-        if (vv->data != vv->u.val) vv->u.s.hash = -1;
-    } else if (op->inplace == Obj(vv2) && sz <= len2) {
-        vv = ref_bytes(vv2);
-        if (vv->data != vv->u.val) vv->u.s.hash = -1;
-    } else {
-        vv = new_bytes2(sz);
-        if (vv == NULL) return new_error_mem(op->epoint3);
-    }
-    v = vv->data;
-    v1 = vv1->data; v2 = vv2->data;
-
-    for (i = 0; i < len2; i++) v[i] = v1[i] ^ v2[i];
-    for (; i < len1; i++) v[i] = v1[i];
-
-    /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    vv->len = (neg1 != neg2) ? (ssize_t)~sz : (ssize_t)sz;
+    vv->len = neg ? (ssize_t)~sz : (ssize_t)sz;
     vv->data = v;
     return Obj(vv);
 }
@@ -1106,9 +1057,9 @@ static MUST_CHECK Obj *calc2_bytes(oper_t op) {
             val_destroy(tmp);
             return result;
         }
-    case O_AND: return and_(op);
-    case O_OR: return or_(op);
-    case O_XOR: return xor_(op);
+    case O_AND:
+    case O_OR:
+    case O_XOR: return binary(op);
     case O_LSHIFT:
     case O_RSHIFT:
         {
