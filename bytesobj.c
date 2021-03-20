@@ -858,7 +858,7 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
 
     if (len1 < len2) {
         Bytes *tmp = vv1; vv1 = vv2; vv2 = tmp;
-        i = len1; len1 = len2; len2 = i;
+        sz = len1; len1 = len2; len2 = sz;
     }
     neg1 = vv1->len < 0; neg2 = vv2->len < 0;
 
@@ -888,51 +888,49 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
         vv = new_bytes2(sz);
         if (vv == NULL) return new_error_mem(op->epoint3);
     }
-    /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    vv->len = neg ? (ssize_t)~sz : (ssize_t)sz;
     v = vv->data;
     v1 = vv1->data; v2 = vv2->data;
 
+    i = 0;
     switch (o) {
     case O_AND:
         if (neg1) {
             if (neg2) {
-                for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
-                for (; i < len1; i++) v[i] = v1[i];
+                for (; i < len2; i++) v[i] = v1[i] | v2[i];
             } else {
-                for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
+                for (; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
             }
         } else {
             if (neg2) {
-                for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
-                for (; i < len1; i++) v[i] = v1[i];
+                for (; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
             } else {
-                for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
+                for (; i < len2; i++) v[i] = v1[i] & v2[i];
             }
         }
-        return Obj(vv);
+        break;
     case O_OR:
         if (neg1) {
             if (neg2) {
-                for (i = 0; i < len2; i++) v[i] = v1[i] & v2[i];
+                for (; i < len2; i++) v[i] = v1[i] & v2[i];
             } else {
-                for (i = 0; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
-                for (; i < len1; i++) v[i] = v1[i];
+                for (; i < len2; i++) v[i] = (uint8_t)(v1[i] & ~v2[i]);
             }
         } else {
             if (neg2) {
-                for (i = 0; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
+                for (; i < len2; i++) v[i] = (uint8_t)(~v1[i] & v2[i]);
             } else {
-                for (i = 0; i < len2; i++) v[i] = v1[i] | v2[i];
-                for (; i < len1; i++) v[i] = v1[i];
+                for (; i < len2; i++) v[i] = v1[i] | v2[i];
             }
         }
-        return Obj(vv);
+        break;
     default:
-        for (i = 0; i < len2; i++) v[i] = v1[i] ^ v2[i];
-        for (; i < len1; i++) v[i] = v1[i];
-        return Obj(vv);
+        for (; i < len2; i++) v[i] = v1[i] ^ v2[i];
+        break;
     }
+    for (; i < sz; i++) v[i] = v1[i];
+    /*if (i > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
+    vv->len = neg ? (ssize_t)~i : (ssize_t)i;
+    return Obj(vv);
 }
 
 static MUST_CHECK Obj *concat(oper_t op) {
