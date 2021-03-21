@@ -49,10 +49,13 @@ static Bits null_bitsval = { { &obj, 1 }, 0, 0, null_bitsval.u.val, {} };
 static Bits inv_bitsval = { { &obj, 1 }, ~0, 0, inv_bitsval.u.val, {} };
 static Bits zero_bitsval = { { &obj, 1 }, 0, 1, zero_bitsval.u.val, {} };
 static Bits one_bitsval = { { &obj, 1 }, 1, 1, one_bitsval.u.val, { {1, 0} } };
+static Bits zero_ibitsval = { { &obj, 1 }, ~0, 1, zero_ibitsval.u.val, {} };
+static Bits one_ibitsval = { { &obj, 1 }, ~1, 1, one_ibitsval.u.val, { {1, 0} } };
 
 Obj *const null_bits = &null_bitsval.v;
 Obj *const inv_bits = &inv_bitsval.v;
 Obj *const bits_value[2] = { &zero_bitsval.v, &one_bitsval.v };
+Obj *const ibits_value[2] = { &zero_ibitsval.v, &one_ibitsval.v };
 
 static inline Bits *ref_bits(Bits *v1) {
     v1->v.refcount++; return v1;
@@ -200,14 +203,11 @@ failed:
     return new_error_mem(epoint);
 }
 
-static MALLOC Obj *return_bits(bdigit_t c, size_t blen, bool neg) {
-    ssize_t l;
-    bdigit_t *v;
+static MALLOC Obj *return_bits(bdigit_t c, unsigned int blen) {
     Bits *vv = Bits(val_alloc(BITS_OBJ));
-    vv->data = v = vv->u.val;
-    v[0] = c;
-    l = (c != 0) ? 1 : 0;
-    vv->len = neg ? ~l : l;
+    vv->data = vv->u.val;
+    vv->u.val[0] = c;
+    vv->len = (c != 0) ? 1 : 0;
     vv->bits = blen;
     return Obj(vv);
 }
@@ -428,24 +428,12 @@ static MUST_CHECK Obj *len(oper_t op) {
     return int_from_size(v1->bits);
 }
 
-MUST_CHECK Obj *ibits_from_bool(bool i) {
-    return return_bits(i ? 1 : 0, 1, true);
-}
-
-MUST_CHECK Obj *bits_from_bools(bool i, bool j) {
-    return return_bits((i ? 2U : 0U) | (j ? 1U : 0U), 2, false);
-}
-
-static MUST_CHECK Obj *bits_from_u24(uint32_t i) {
-    return return_bits(i & 0xffffff, 24, false);
-}
-
 MUST_CHECK Obj *bits_from_uval(uval_t i, unsigned int bits) {
-    return return_bits(i, bits, false);
+    return return_bits(i, bits);
 }
 
-MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint) {
-    size_t i, j, k, sz;
+MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln) {
+    size_t i, j, k;
     int bits;
     bdigit_t *d, uv;
     Bits *v;
@@ -454,14 +442,14 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     if (s[0] != '_') {
         uv = 0;
         for (;;k++) {
-            uint8_t c2, c = s[k] ^ 0x30;
+            bdigit_t c2, c = s[k] ^ 0x30;
             if (c < 10) {
-                uv = (uv << 4) | c;
+                uv = (uv << 4) + c;
                 continue;
             }
-            c2 = (uint8_t)((c | 0x20) - 0x71);
+            c2 = (c | 0x20) - 0x71;
             if (c2 < 6) {
-                uv = (uv << 4) | (c2 + 10U);
+                uv = (uv << 4) + c2 + 10;
                 continue;
             }
             if (c != ('_' ^ 0x30)) break;
@@ -476,39 +464,35 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     i = k - i;
 
     if (i <= 2 * sizeof *d) {
-        return (i == 0) ? val_reference(null_bits) : return_bits(uv, i * 4, false);
+        return (i == 0) ? val_reference(null_bits) : return_bits(uv, i * 4);
     }
 
-    if (i > SIZE_MAX / 4) goto failed; /* overflow */
+    if (i > SIZE_MAX / 4) return NULL; /* overflow */
 
-    sz = i / (2 * sizeof *d);
-    if ((i % (2 * sizeof *d)) != 0) sz++;
-    v = new_bits2(sz);
-    if (v == NULL) goto failed;
+    v = new_bits2(i / (2 * sizeof *d) + ((i % (2 * sizeof *d)) != 0 ? 1 :0));
+    if (v == NULL) return NULL;
     v->bits = i * 4;
     d = v->data;
 
     uv = 0; j = 0; bits = 0;
     while ((k--) != 0) {
-        uint8_t c = s[k] ^ 0x30;
-        if (c < 10) uv |= (bdigit_t)c << bits;
+        bdigit_t c = s[k] ^ 0x30;
+        if (c < 10) uv += c << bits;
         else if (c == ('_' ^ 0x30)) continue;
-        else uv |= (((bdigit_t)c & 7) + 9) << bits;
+        else uv += ((c & 7) + 9) << bits;
         if (bits == SHIFT - 4) {
             d[j++] = uv;
             bits = 0; uv = 0;
         } else bits += 4;
     }
-    if (bits != 0) d[j] = uv;
+    if (uv != 0) d[j++] = uv;
 
-    return normalize(v, sz, false);
-failed:
-    return new_error_mem(epoint);
+    return normalize(v, j, false);
 }
 
-MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint) {
-    size_t i, j, k, sz;
-    int bits;
+MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln) {
+    size_t i, j, k;
+    bdigit_t bits;
     bdigit_t *d, uv;
     Bits *v;
 
@@ -516,9 +500,9 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     if (s[0] != '_') {
         uv = 0;
         for (;;k++) {
-            uint8_t c = s[k] ^ 0x30;
+            bdigit_t c = s[k] ^ 0x30;
             if (c < 2) {
-                uv = (uv << 1) | c;
+                uv = (uv << 1) + c;
                 continue;
             }
             if (c != ('_' ^ 0x30)) break;
@@ -533,29 +517,28 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln, linepos_t epoint)
     i = k - i;
 
     if (i <= 8 * sizeof *d) {
-        return (i == 0) ? val_reference(null_bits) : return_bits(uv, i, false);
+        return (i == 0) ? val_reference(null_bits) : return_bits(uv, i);
     }
 
-    sz = i / SHIFT;
-    if ((i % SHIFT) != 0) sz++;
-    v = new_bits2(sz);
-    if (v == NULL) return new_error_mem(epoint);
+    v = new_bits2(i / SHIFT + ((i % SHIFT) != 0 ? 1 : 0));
+    if (v == NULL) return NULL;
     v->bits = i;
     d = v->data;
 
-    uv = 0; j = 0; bits = 0;
+    uv = 0; j = 0; bits = 1;
     while ((k--) != 0) {
-        uint8_t c = s[k];
-        if (c == 0x31) uv |= 1U << bits;
-        else if (c == '_') continue;
-        if (bits == SHIFT - 1) {
+        if (s[k] == 0x31) uv += bits;
+        else if (s[k] == '_') continue;
+        bits <<= 1;
+        if (bits == 0) {
             d[j++] = uv;
-            bits = 0; uv = 0;
-        } else bits++;
+            uv = 0;
+            bits = 1;
+        }
     }
-    if (bits != 0) d[j] = uv;
+    if (uv != 0) d[j++] = uv;
 
-    return normalize(v, sz, false);
+    return normalize(v, j, false);
 }
 
 MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
@@ -570,7 +553,7 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
         if (v1->chars == 1) {
             uchar_t ch2 = v1->data[0];
             if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
-            return bits_from_u24(ch2);
+            return return_bits(ch2 & 0xffffff, 24);
         }
         return Obj(new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint));
     }
@@ -734,10 +717,10 @@ MUST_CHECK Obj *bits_calc1(Oper_types op, unsigned int val) {
     case O_BANK: val >>= 8; /* fall through */
     case O_HIGHER: val >>= 8; /* fall through */
     case O_LOWER: 
-    default: return return_bits((uint8_t)val, 8, false);
+    default: return return_bits((uint8_t)val, 8);
     case O_BSWORD: val = (uint16_t)val | (val << 16); /* fall through */
     case O_HWORD: val >>= 8; /* fall through */
-    case O_WORD: return return_bits((uint16_t)val, 16, false);
+    case O_WORD: return return_bits((uint16_t)val, 16);
     }
 }
 
@@ -1402,5 +1385,7 @@ void bitsobj_destroy(void) {
     if (inv_bits->refcount != 1) fprintf(stderr, "invbits %" PRIuSIZE "\n", inv_bits->refcount - 1);
     if (bits_value[0]->refcount != 1) fprintf(stderr, "bit0 %" PRIuSIZE "\n", bits_value[0]->refcount - 1);
     if (bits_value[1]->refcount != 1) fprintf(stderr, "bit1 %" PRIuSIZE "\n", bits_value[1]->refcount - 1);
+    if (ibits_value[0]->refcount != 1) fprintf(stderr, "bit0 %" PRIuSIZE "\n", ibits_value[0]->refcount - 1);
+    if (ibits_value[1]->refcount != 1) fprintf(stderr, "bit1 %" PRIuSIZE "\n", ibits_value[1]->refcount - 1);
 #endif
 }

@@ -1504,7 +1504,7 @@ failed2:
     return new_error_mem(epoint);
 }
 
-MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linepos_t epoint) {
+MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
     const uint8_t *end;
     size_t i, j, k, sz;
     digit_t *d, *end2, val;
@@ -1595,7 +1595,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2, linep
     return normalize(v, sz, false);
 failed2:
     val_destroy(Obj(v));
-    return new_error_mem(epoint);
+    return NULL;
 }
 
 static MUST_CHECK Obj *calc2_int(oper_t op) {
