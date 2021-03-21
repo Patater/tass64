@@ -93,12 +93,10 @@ FAST_CALL size_t get_label(const uint8_t *s) {
 }
 
 static MUST_CHECK Obj *get_dec(linepos_t epoint) {
-    Obj *v;
     size_t len, len2;
-
-    v = int_from_decstr(pline + lpoint.pos, &len, &len2, epoint);
+    Obj *v = int_from_decstr(pline + lpoint.pos, &len, &len2);
     lpoint.pos += len;
-    return v;
+    return (v != NULL) ? v : new_error_mem(epoint);
 }
 
 static double ldexp10(double d, unsigned int expo, bool neg) {
@@ -124,9 +122,13 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
             size_t len1, len2;
             lpoint.pos++;
 
-            v = int_from_decstr(pline + lpoint.pos, &len1, &len2, epoint);
-            err = v->obj->uval(v, &expo, 8 * (sizeof expo < sizeof(int) ? sizeof expo : sizeof(int)) - 1, &lpoint);
-            val_destroy(v);
+            v = int_from_decstr(pline + lpoint.pos, &len1, &len2);
+            if (v == NULL) {
+                err = Error(new_error_mem(epoint));
+            } else {
+                err = v->obj->uval(v, &expo, 8 * (sizeof expo < sizeof(int) ? sizeof expo : sizeof(int)) - 1, &lpoint);
+                val_destroy(v);
+            }
             lpoint.pos += len1;
             if (err != NULL) {
                 if (v2 != NULL) val_destroy(v2);
@@ -186,41 +188,33 @@ static MUST_CHECK Obj *get_exponent2(Obj *v, linepos_t epoint) {
 
 static MUST_CHECK Obj *get_hex(linepos_t epoint) {
     size_t len;
-    Obj *v, *v2;
-
-    v = bits_from_hexstr(pline + lpoint.pos + 1, &len, epoint);
+    Obj *v = bits_from_hexstr(pline + lpoint.pos + 1, &len);
+    if (v == NULL) v = new_error_mem(epoint);
     lpoint.pos += len + 1;
     if (here() == '.' && pline[lpoint.pos + 1] != '.') {
-        lpoint.pos++;
-
-        v2 = bits_from_hexstr(pline + lpoint.pos, &len, epoint);
-        lpoint.pos += len;
-        return get_exponent(v, v2, 0, epoint);
+        Obj *v2 = bits_from_hexstr(pline + lpoint.pos + 1, &len);
+        lpoint.pos += len + 1;
+        return get_exponent(v, (v2 != NULL) ? v2 : new_error_mem(epoint), 0, epoint);
     }
     return (here() | 0x20) == 'p' ? get_exponent2(v, epoint) : v;
 }
 
 static MUST_CHECK Obj *get_hex_compat(linepos_t epoint) {
     size_t len;
-    Obj *v;
-
-    v = bits_from_hexstr(pline + lpoint.pos + 1, &len, epoint);
+    Obj *v = bits_from_hexstr(pline + lpoint.pos + 1, &len);
     lpoint.pos += len + 1;
-    return v;
+    return (v != NULL) ? v : new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *get_bin(linepos_t epoint) {
     size_t len;
-    Obj *v, *v2;
-
-    v = bits_from_binstr(pline + lpoint.pos + 1, &len, epoint);
+    Obj *v = bits_from_binstr(pline + lpoint.pos + 1, &len);
+    if (v == NULL) v = new_error_mem(epoint);
     lpoint.pos += len + 1;
     if (here() == '.' && pline[lpoint.pos + 1] != '.') {
-        lpoint.pos++;
-
-        v2 = bits_from_binstr(pline + lpoint.pos, &len, epoint);
-        lpoint.pos += len;
-        return get_exponent(v, v2, 0, epoint);
+        Obj *v2 = bits_from_binstr(pline + lpoint.pos + 1, &len);
+        lpoint.pos += len + 1;
+        return get_exponent(v, (v2 != NULL) ? v2 : new_error_mem(epoint), 0, epoint);
     }
     switch (here() | 0x20) {
     case 'e':
@@ -233,26 +227,20 @@ static MUST_CHECK Obj *get_bin(linepos_t epoint) {
 
 static MUST_CHECK Obj *get_bin_compat(linepos_t epoint) {
     size_t len;
-    Obj *v;
-
-    v = bits_from_binstr(pline + lpoint.pos + 1, &len, epoint);
+    Obj *v = bits_from_binstr(pline + lpoint.pos + 1, &len);
     lpoint.pos += len + 1;
-    return v;
+    return (v != NULL) ? v : new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *get_float(linepos_t epoint) {
     size_t len, len2;
-    Obj *v, *v2;
-
-    v = int_from_decstr(pline + lpoint.pos, &len, &len2, epoint);
+    Obj *v = int_from_decstr(pline + lpoint.pos, &len, &len2);
+    if (v == NULL) v = new_error_mem(epoint);
     lpoint.pos += len;
     if (here() == '.' && pline[lpoint.pos + 1] != '.') {
-        lpoint.pos++;
-
-        v2 = int_from_decstr(pline + lpoint.pos, &len, &len2, epoint);
-        lpoint.pos += len;
-
-        return get_exponent(v, v2, len2, epoint);
+        Obj *v2 = int_from_decstr(pline + lpoint.pos + 1, &len, &len2);
+        lpoint.pos += len + 1;
+        return get_exponent(v, (v2 != NULL) ? v2 : new_error_mem(epoint), len2, epoint);
     }
     switch (here() | 0x20) {
     case 'e':
