@@ -131,7 +131,10 @@ static MUST_CHECK Obj *invert(const Bits *v1, linepos_t epoint) {
 
 static FAST_CALL NO_INLINE Obj *normalize2(Bits *v, size_t sz) {
     if (sz != 0) {
-        while (--sz) v->u.val[sz] = v->data[sz];
+        do {
+            sz--;
+            v->u.val[sz] = v->data[sz];
+        } while (sz != 0);
     } else {
         v->u.val[0] = 0;
     }
@@ -442,12 +445,12 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln) {
     if (s[0] != '_') {
         uv = 0;
         for (;;k++) {
-            bdigit_t c2, c = s[k] ^ 0x30;
+            uint8_t c2, c = s[k] ^ 0x30;
             if (c < 10) {
                 uv = (uv << 4) + c;
                 continue;
             }
-            c2 = (c | 0x20) - 0x71;
+            c2 = (uint8_t)((c | 0x20) - 0x71);
             if (c2 < 6) {
                 uv = (uv << 4) + c2 + 10;
                 continue;
@@ -500,7 +503,7 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln) {
     if (s[0] != '_') {
         uv = 0;
         for (;;k++) {
-            bdigit_t c = s[k] ^ 0x30;
+            uint8_t c = s[k] ^ 0x30;
             if (c < 2) {
                 uv = (uv << 1) + c;
                 continue;

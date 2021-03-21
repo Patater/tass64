@@ -123,7 +123,10 @@ failed2:
 
 static FAST_CALL NO_INLINE Obj *normalize2(Int *v, size_t sz) {
     if (sz != 0) {
-        while (--sz) v->val[sz] = v->data[sz];
+        do {
+            sz--;
+            v->val[sz] = v->data[sz];
+        } while (sz != 0);
     } else {
         v->val[0] = 0;
     }
@@ -1515,7 +1518,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
         for (;;k++) {
             uint8_t c = s[k] ^ 0x30;
             if (c < 10) {
-                val = (val <= ((~(digit_t)0)-9)/10) ? val * 10 + c : ~(digit_t)0;
+                if (val <= ((~(digit_t)0)-9)/10) val = val * 10 + c;
                 continue;
             }
             if (c != ('_' ^ 0x30)) break;
@@ -1529,7 +1532,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
     *ln = k;
     i = k - i;
     *ln2 = i;
-    if (~val != 0) {
+    if (val <= ((~(digit_t)0)-9)/10) {
         if (val >= lenof(int_value)) {
             v = new_int();
             v->data = v->val;
@@ -1548,12 +1551,11 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
     end = s + k;
     end2 = d;
     while (s < end) {
-        digit_t *d2 = d;
-        twodigits_t mul, a;
-        for (a = j = 0; j < 9 && s < end; s++) {
+        digit_t *d2, mul;
+        for (val = j = 0; j < 9 && s < end; s++) {
             uint8_t c = *s ^ 0x30;
             if (c < 10) {
-                a = a * 10 + c;
+                val = val * 10 + c;
                 j++;
                 continue;
             }
@@ -1563,13 +1565,13 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
             mul = 10;
             while ((--j) != 0) mul *= 10;
         }
+        d2 = d;
         while (d2 < end2) {
-            twodigits_t m = *d2 * mul;
-            a += m;
+            twodigits_t a = (twodigits_t)*d2 * mul + val;
             *d2++ = (digit_t)a;
-            a >>= SHIFT;
+            val = (digit_t)(a >> SHIFT);
         }
-        if (a != 0) {
+        if (val != 0) {
             if (end2 >= &d[sz]) {
                 sz++;
                 if (sz > lenof(v->val)) {
@@ -1587,7 +1589,7 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
                 }
                 end2 = d + sz - 1;
             }
-            *end2++ = (digit_t)a;
+            *end2++ = val;
         }
     }
 
