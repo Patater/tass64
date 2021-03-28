@@ -1912,18 +1912,7 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
     for (i = j = 0; j < len; j++) {
         Obj *val2 = pull_val((i < 3) ? &epoints[i] : NULL);
         if (val2->obj == REGISTER_OBJ && Register(val2)->len == 1 && i != 0) {
-            Address_types am;
-            switch (Register(val2)->data[0]) {
-            case 's': am = A_SR; break;
-            case 'r': am = A_RR; break;
-            case 'z': am = A_ZR; break;
-            case 'y': am = A_YR; break;
-            case 'x': am = A_XR; break;
-            case 'd': am = A_DR; break;
-            case 'b': am = A_BR; break;
-            case 'k': am = A_KR; break;
-            default: am = A_NONE; break;
-            }
+            Address_types am = register_to_indexing(Register(val2)->data[0]);
             if (am != A_NONE) {
                 val_destroy(val2);
                 val2 = apply_addressing(list->data[i - 1], am, true);
