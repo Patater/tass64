@@ -33,6 +33,7 @@
 #include "floatobj.h"
 #include "bitsobj.h"
 #include "bytesobj.h"
+#include "registerobj.h"
 
 static Type obj;
 
@@ -237,6 +238,20 @@ static inline bool check_addr2(atype_t type) {
     return false;
 }
 
+Address_types register_to_indexing(char c) {
+    switch (c) {
+    case 's': return A_SR;
+    case 'r': return A_RR;
+    case 'z': return A_ZR;
+    case 'y': return A_YR;
+    case 'x': return A_XR;
+    case 'd': return A_DR;
+    case 'b': return A_BR;
+    case 'k': return A_KR;
+    default: return A_NONE;
+    }
+}
+
 static FAST_CALL uint32_t address(const Obj *o1) {
     const Address *v1 = Address(o1);
     Obj *v = v1->val;
@@ -432,7 +447,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 {
                     atype_t am1 = A_NONE;
                     for (; (am & MAX_ADDRESS_MASK) != 0; am <<= 4) {
-                        atype_t amc = (am >> 8) & 0xf;
+                        atype_t amc = (am >> 12) & 0xf;
                         atype_t am3, am4;
                         if (amc == A_NONE) continue;
                         am3 = A_NONE; am4 = am2;
@@ -501,6 +516,51 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             return new_address(op->v1->obj->calc2(op), am);
         }
         break;
+    case T_REGISTER:
+        if (Register(op->v2)->len == 1) {
+            Address_types am2 = register_to_indexing(Register(op->v2)->data[0]);
+            if (am2 == A_NONE) break;
+            if (op->op->op == O_ADD) {
+                return new_address(val_reference(v1->val), v1->type << 4 | am2);
+            } 
+            if (op->op->op == O_SUB) {
+                atype_t am1 = A_NONE;
+                for (am = v1->type; ; am >>= 4) {
+                    atype_t amc = am & 0xf;
+                    switch (amc) {
+                    case A_I:
+                    case A_LI:
+                    case A_IMMEDIATE:
+                    case A_IMMEDIATE_SIGNED: 
+                        if (am2 == A_NONE) {
+                            am1 = (am1 >> 4) | (amc << 12);
+                            continue;
+                        }
+                        break;
+                    case A_KR:
+                    case A_DR:
+                    case A_BR:
+                    case A_XR:
+                    case A_YR:
+                    case A_ZR:
+                    case A_RR:
+                    case A_SR:
+                        if (amc == am2) {
+                            am2 = A_NONE;
+                            continue;
+                        }
+                        am1 = (am1 >> 4) | (amc << 12);
+                        continue;
+                    default: break;
+                    }
+                    break;
+                }
+                if (am2 != A_NONE) break;
+                if (am1 != A_NONE) while ((am1 & 0xf) == A_NONE) am1 >>= 4;
+                return new_address(val_reference(v1->val), am1);
+            }
+        }
+        break;
     default:
         if (op->op != &o_MEMBER && op->op != &o_X) {
             return o2->obj->rcalc2(op);
@@ -551,6 +611,23 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_CODE:
         if (op->op != &o_IN) {
             return t1->calc2(op);
+        }
+        break;
+    case T_REGISTER:
+        if (Register(op->v1)->len == 1) {
+            am = register_to_indexing(Register(op->v1)->data[0]);
+            if (am == A_NONE) break;
+            if (op->op->op == O_ADD) {
+                return new_address(val_reference(v2->val), v2->type << 4 | am);
+            }
+            if (op->op->op == O_SUB) {
+                if (am == v2->type) {
+                    op->v1 = int_value[0];
+                    op->v2 = v2->val;
+                    op->inplace = NULL;
+                    return INT_OBJ->calc2(op);
+                }
+            }
         }
         break;
     default: break;
