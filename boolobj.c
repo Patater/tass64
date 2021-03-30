@@ -214,17 +214,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     return obj_oper_error(op);
 }
 
-static MUST_CHECK Obj *rcalc2(oper_t op) {
-    Obj *o1 = op->v1;
-    if (o1->obj == BOOL_OBJ) {
-        return calc2_bool(op);
-    }
-    if (op->op != &o_IN) {
-        return o1->obj->calc2(op);
-    }
-    return obj_oper_error(op);
-}
-
 void boolobj_init(void) {
     new_type(&obj, T_BOOL, "bool", sizeof(Bool));
     obj.create = create;
@@ -241,7 +230,6 @@ void boolobj_init(void) {
     obj.function = function;
     obj.calc1 = calc1;
     obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
 }
 
 void boolobj_names(void) {
