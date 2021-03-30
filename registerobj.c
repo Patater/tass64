@@ -161,6 +161,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_FLOAT:
     case T_BYTES:
     case T_STR:
+    case T_CODE:
         if (Register(op->v1)->len == 1) {
             Address_types am = register_to_indexing(Register(op->v1)->data[0]);
             if (am == A_NONE) break;

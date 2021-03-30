@@ -1285,6 +1285,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_FLOAT:
     case T_CODE:
     case T_ADDRESS:
+    case T_REGISTER:
         {
             Obj *result;
             switch (op->op->op) {
