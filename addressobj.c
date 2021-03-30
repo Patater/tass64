@@ -469,6 +469,16 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     if (am1 == A_NONE) return result;
                     return new_address(result, am1);
                 }
+            case O_XOR:
+                if (check_addr(am)) break;
+                if (check_addr(am2)) break;
+                if (am == am2) {
+                    op->v1 = v1->val;
+                    op->v2 = v2->val;
+                    op->inplace = NULL;
+                    return op->v1->obj->calc2(op);
+                }
+                break;
             default:
                 break;
             }
