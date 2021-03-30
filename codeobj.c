@@ -593,6 +593,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_STR:
     case T_BYTES:
     case T_ADDRESS:
+    case T_REGISTER:
         {
             Obj *tmp, *result;
             switch (op->op->op) {
@@ -602,7 +603,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     bool inplace;
                     ival_t iv;
                     Error *err = o2->obj->ival(o2, &iv, 30, op->epoint2);
-                    if (err != NULL) return Obj(err);
+                    if (err != NULL) { val_destroy(Obj(err)); break; }
                     if (iv == 0) return val_reference(Obj(v1));
                     inplace = (op->inplace == Obj(v1));
                     if (inplace) {
@@ -678,7 +679,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             if (op->op == &o_ADD) {
                 ival_t iv;
                 Error *err = o1->obj->ival(o1, &iv, 30, op->epoint);
-                if (err != NULL) return Obj(err);
+                if (err != NULL) { val_destroy(Obj(err)); break; }
                 v = new_code();
                 memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v2) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
                 v->memblocks = ref_memblocks(v2->memblocks);
