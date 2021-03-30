@@ -590,7 +590,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BITS:
     case T_FLOAT:
     case T_BYTES:
-    case T_STR:
     case T_GAP:
         am = v2->type;
         switch (op->op->op) {

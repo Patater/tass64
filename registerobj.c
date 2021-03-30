@@ -196,7 +196,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BITS:
     case T_FLOAT:
     case T_BYTES:
-    case T_STR:
         if (Register(op->v2)->len == 1) {
             if (op->op->op == O_ADD) {
                 Address_types am = register_to_indexing(Register(op->v2)->data[0]);

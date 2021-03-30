@@ -1352,7 +1352,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             break;
         }
         /* fall through */
-    case T_STR:
     case T_NONE:
     case T_ERROR:
         if (op->op != &o_IN) {
