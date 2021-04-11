@@ -62,7 +62,7 @@ static inline size_t byteslen(const Bytes *v1) {
 static MUST_CHECK Obj *bytes_from_int(const Int *, linepos_t);
 static MUST_CHECK Obj *bytes_from_u8(unsigned int i);
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+MUST_CHECK Obj *bytes_from_obj(Obj *v1, linepos_t epoint) {
     Obj *err, *ret;
     switch (v1->obj->type) {
     case T_NONE:
@@ -83,6 +83,10 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     default: break;
     }
     return new_error_conv(v1, BYTES_OBJ, epoint);
+}
+
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    return bytes_from_obj(v1, epoint);
 }
 
 static FAST_CALL NO_INLINE void bytes_destroy(Bytes *v1) {

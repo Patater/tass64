@@ -221,7 +221,7 @@ static inline void decimal(Data *p)
         if (p->precision < 1) p->precision = 1;
     } else {
         Obj *val = v->val;
-        Obj *err = INT_OBJ->create(val, &v->epoint);
+        Obj *err = int_from_obj(val, &v->epoint);
         if (err->obj != INT_OBJ) {
             note_failure(err);
             minus = false;
@@ -254,7 +254,7 @@ static MUST_CHECK Obj *get_int(Data *p) {
 
     if (v != NULL) {
         Obj *val = v->val;
-        Obj *err = INT_OBJ->create(val, &v->epoint);
+        Obj *err = int_from_obj(val, &v->epoint);
         if (err->obj == INT_OBJ) return err;
         note_failure(err);
     }
@@ -372,7 +372,7 @@ static inline void strings(Data *p)
             err = val->obj->repr(val, &v->epoint, SIZE_MAX);
             if (err == NULL) err = new_error_mem(&v->epoint);
         } else {
-            err = STR_OBJ->create(v->val, &v->epoint);
+            err = str_from_obj(v->val, &v->epoint);
         }
         if (err->obj != STR_OBJ) {
             note_failure(err);
@@ -411,7 +411,7 @@ static inline void floating(Data *p)
     if (v == NULL) {
         d = 0.0;
     } else {
-        Obj *err = FLOAT_OBJ->create(v->val, &v->epoint);
+        Obj *err = float_from_obj(v->val, &v->epoint);
         if (err->obj != FLOAT_OBJ) {
             note_failure(err);
             d = 0.0;

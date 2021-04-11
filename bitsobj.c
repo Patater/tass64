@@ -63,7 +63,7 @@ static inline Bits *ref_bits(Bits *v1) {
 
 static MUST_CHECK Obj *bits_from_int(const Int *, linepos_t);
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+MUST_CHECK Obj *bits_from_obj(Obj *v1, linepos_t epoint) {
     Obj *err, *ret;
     switch (v1->obj->type) {
     case T_NONE:
@@ -84,6 +84,10 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     default: break;
     }
     return new_error_conv(v1, BITS_OBJ, epoint);
+}
+
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    return bits_from_obj(v1, epoint);
 }
 
 static inline size_t bitslen(const Bits *v1) {

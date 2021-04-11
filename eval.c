@@ -144,7 +144,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
         if (bits) {
             len = Bits(v2)->bits;
         }
-        v = FLOAT_OBJ->create(v2, epoint);
+        v = float_from_obj(v2, epoint);
         val_destroy(v2);
         if (v->obj != FLOAT_OBJ) {
             val_destroy(v1);
@@ -154,7 +154,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
         if (len != 0 && real != 0.0) real = bits ? ldexp(real, -(int)len) : ldexp10(real, len, true);
         val_destroy(v);
     }
-    v = FLOAT_OBJ->create(v1, epoint);
+    v = float_from_obj(v1, epoint);
     val_destroy(v1);
     if (v->obj != FLOAT_OBJ) {
         return v;
