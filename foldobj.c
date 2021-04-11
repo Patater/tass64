@@ -36,16 +36,6 @@ static Fold foldval = { { &obj, 1 }, NULL };
 
 Obj *const fold_value = &foldval.v;
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    switch (v1->obj->type) {
-    case T_NONE:
-    case T_ERROR:
-    case T_FOLD: return val_reference(v1);
-    default: break;
-    }
-    return new_error_conv(v1, FOLD_OBJ, epoint);
-}
-
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return o1 == o2;
 }
@@ -147,7 +137,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void foldobj_init(void) {
     new_type(&obj, T_FOLD, "fold", sizeof(Fold));
-    obj.create = create;
     obj.same = same;
     obj.hash = hash;
     obj.repr = repr;

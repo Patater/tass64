@@ -57,8 +57,12 @@ static MUST_CHECK Obj *address_from_obj(Obj *v1, linepos_t epoint) {
     return new_error_conv(v1, ADDRESS_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    return address_from_obj(v1, epoint);
+static MUST_CHECK Obj *create(oper_t op) {
+    Funcargs *v2 = Funcargs(op->v2);
+    if (v2->len != 1) {
+        return new_error_argnum(v2->len, 1, 1, op->epoint2);
+    }
+    return address_from_obj(v2->val->val, &v2->val->epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {

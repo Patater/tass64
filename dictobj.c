@@ -65,16 +65,6 @@ static Dict *new_dict(size_t ln) {
     return v;
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    switch (v1->obj->type) {
-    case T_NONE:
-    case T_ERROR:
-    case T_DICT: return val_reference(v1);
-    default: break;
-    }
-    return new_error_conv(v1, DICT_OBJ, epoint);
-}
-
 static FAST_CALL void destroy(Obj *o1) {
     Dict *v1 = Dict(o1);
     size_t i;
@@ -840,7 +830,6 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
 void dictobj_init(void) {
     new_type(&obj, T_DICT, "dict", sizeof(Dict));
     obj.iterable = true;
-    obj.create = create;
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;
