@@ -31,6 +31,16 @@ static Type obj;
 
 Type *const LABEL_OBJ = &obj;
 
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    switch (v1->obj->type) {
+    case T_NONE:
+    case T_ERROR:
+    case T_LABEL: return val_reference(v1);
+    default: break;
+    }
+    return new_error_conv(v1, LABEL_OBJ, epoint);
+}
+
 static FAST_CALL void destroy(Obj *o1) {
     Label *v1 = Label(o1);
     const struct file_s *cfile = v1->file_list->file;
@@ -122,6 +132,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxlen) {
 
 void labelobj_init(void) {
     new_type(&obj, T_LABEL, "label", sizeof(Label));
+    obj.create = create;
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;
