@@ -34,6 +34,16 @@ static Type obj;
 
 Type *const SYMBOL_OBJ = &obj;
 
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    switch (v1->obj->type) {
+    case T_NONE:
+    case T_ERROR:
+    case T_SYMBOL: return val_reference(v1);
+    default: break;
+    }
+    return new_error_conv(v1, SYMBOL_OBJ, epoint);
+}
+
 Obj *new_symbol(const str_t *name, linepos_t epoint) {
     Symbol *symbol = Symbol(val_alloc(SYMBOL_OBJ));
     if (not_in_file(name->data, current_file_list->file)) str_cpy(&symbol->name, name);
@@ -189,6 +199,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void symbolobj_init(void) {
     new_type(&obj, T_SYMBOL, "symbol", sizeof(Symbol));
+    obj.create = create;
     obj.destroy = destroy;
     obj.same = same;
     obj.hash = hash;

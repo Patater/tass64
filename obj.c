@@ -107,14 +107,7 @@ MUST_CHECK Obj *obj_oper_compare(oper_t op, int val) {
     return truth_reference(result);
 }
 
-static MUST_CHECK Obj *invalid_create(oper_t op) {
-    Funcargs *v2 = Funcargs(op->v2);
-    Obj *v1;
-    if (v2->len != 1) {
-        return new_error_argnum(v2->len, 1, 1, op->epoint2);
-    }
-    v1 = v2->val->val;
-    if (v1->obj == Type(op->v1)) return val_reference(v1);
+static MUST_CHECK Obj *invalid_create(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR: return val_reference(v1);
@@ -123,7 +116,8 @@ static MUST_CHECK Obj *invalid_create(oper_t op) {
         break;
     default: break;
     }
-    return new_error_conv(v1, Type(op->v1), op->epoint2);
+    err_msg_wrong_type(v1, NULL, epoint);
+    return ref_none();
 }
 
 static FAST_CALL bool invalid_same(const Obj *o1, const Obj *o2) {

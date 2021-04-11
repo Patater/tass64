@@ -54,12 +54,8 @@ static MUST_CHECK Obj *type_from_obj(Obj *v1, linepos_t UNUSED(epoint)) {
     return val_reference((Obj *)Obj(v1->obj));
 }
 
-static MUST_CHECK Obj *create(oper_t op) {
-    Funcargs *v2 = Funcargs(op->v2);
-    if (v2->len != 1) {
-        return new_error_argnum(v2->len, 1, 1, op->epoint2);
-    }
-    return type_from_obj(v2->val->val, &v2->val->epoint);
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    return type_from_obj(v1, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
@@ -108,8 +104,13 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         return obj_oper_compare(op, icmp(op));
     case T_FUNCARGS:
         if (op->op->op == O_FUNC) {
-            const Type *v1 = Type(op->v1);
-            if (v1->iterable || v1 == TYPE_OBJ) return v1->create(op);
+            Type *v1 = Type(op->v1);
+            Funcargs *v2 = Funcargs(o2);
+            argcount_t args = v2->len;
+            if (args != 1) {
+                return new_error_argnum(args, 1, 1, op->epoint2);
+            }
+            if (v1->iterable || v1 == TYPE_OBJ) return v1->create(v2->val[0].val, &v2->val[0].epoint);
             return apply_convert(op);
         }
         break;
