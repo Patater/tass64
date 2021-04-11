@@ -60,8 +60,12 @@ MUST_CHECK Obj *str_from_obj(Obj *v1, linepos_t epoint) {
     }
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    return str_from_obj(v1, epoint);
+static MUST_CHECK Obj *create(oper_t op) {
+    Funcargs *v2 = Funcargs(op->v2);
+    if (v2->len != 1) {
+        return new_error_argnum(v2->len, 1, 1, op->epoint2);
+    }
+    return str_from_obj(v2->val->val, &v2->val->epoint);
 }
 
 static FAST_CALL NO_INLINE void str_destroy(Str *v1) {

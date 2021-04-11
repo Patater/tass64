@@ -44,7 +44,7 @@ Obj *const true_value = &trueval.v;
 Obj *const false_value = &falseval.v;
 Obj *const bool_value[2] = { &falseval.v, &trueval.v };
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+static MUST_CHECK Obj *bool_from_obj(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR:
@@ -56,6 +56,14 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
         break;
     }
     return new_error_conv(v1, BOOL_OBJ, epoint);
+}
+
+static MUST_CHECK Obj *create(oper_t op) {
+    Funcargs *v2 = Funcargs(op->v2);
+    if (v2->len != 1) {
+        return new_error_argnum(v2->len, 1, 1, op->epoint2);
+    }
+    return bool_from_obj(v2->val->val, &v2->val->epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
