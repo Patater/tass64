@@ -251,7 +251,7 @@ MUST_CHECK Obj *float_from_code(const Code *v1, linepos_t epoint) {
     v = access_check(v1, epoint);
     if (v != NULL) return v;
     v = get_code_address(v1, epoint);
-    result = FLOAT_OBJ->create(v, epoint);
+    result = float_from_obj(v, epoint);
     val_destroy(v);
     return result;
 }
@@ -284,7 +284,7 @@ MUST_CHECK Obj *int_from_code(const Code *v1, linepos_t epoint) {
     v = access_check(v1, epoint);
     if (v != NULL) return v;
     v = get_code_address(v1, epoint);
-    result = INT_OBJ->create(v, epoint);
+    result = int_from_obj(v, epoint);
     val_destroy(v);
     return result;
 }
@@ -333,7 +333,7 @@ MUST_CHECK Obj *bits_from_code(const Code *v1, linepos_t epoint) {
     v = access_check(v1, epoint);
     if (v != NULL) return v;
     v = get_code_address(v1, epoint);
-    result = BITS_OBJ->create(v, epoint);
+    result = bits_from_obj(v, epoint);
     val_destroy(v);
     return result;
 }
@@ -343,7 +343,7 @@ MUST_CHECK Obj *bytes_from_code(const Code *v1, linepos_t epoint) {
     v = access_check(v1, epoint);
     if (v != NULL) return v;
     v = get_code_address(v1, epoint);
-    result = BYTES_OBJ->create(v, epoint);
+    result = bytes_from_obj(v, epoint);
     val_destroy(v);
     return result;
 }

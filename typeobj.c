@@ -45,13 +45,17 @@ void new_type(Type *t, Type_types type, const char *name, size_t length) {
     obj_init(t);
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t UNUSED(epoint)) {
+static MUST_CHECK Obj *type_from_obj(Obj *v1, linepos_t UNUSED(epoint)) {
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR: return val_reference(v1);
     default: break;
     }
     return val_reference((Obj *)Obj(v1->obj));
+}
+
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    return type_from_obj(v1, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {

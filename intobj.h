@@ -54,6 +54,7 @@ extern MUST_CHECK Obj *int_from_bytes(const struct Bytes *, linepos_t);
 extern MUST_CHECK Obj *int_from_bits(const struct Bits *, linepos_t);
 extern MUST_CHECK Obj *int_from_decstr(const uint8_t *, size_t *, size_t *);
 extern MUST_CHECK Obj *int_from_float(const struct Float *, linepos_t);
+extern MUST_CHECK Obj *int_from_obj(Obj *, linepos_t);
 extern MUST_CHECK Obj *float_from_int(const Int *, linepos_t);
 
 #endif

@@ -3956,7 +3956,7 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val();
                     len2 = 0; chars = 0;
                     for (i = 0; i < len; i++, vs++) {
-                        val = STR_OBJ->create(vs->val, &vs->epoint);
+                        val = str_from_obj(vs->val, &vs->epoint);
                         if (val->obj != STR_OBJ) {
                             if (val == none_value) err_msg_still_none(NULL, &vs->epoint);
                             else if (val->obj == ERROR_OBJ) { err_msg_output_and_destroy(Error(val)); break; }

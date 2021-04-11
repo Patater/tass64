@@ -245,7 +245,7 @@ static uint64_t random64(void) {
 }
 
 void random_reseed(Obj *o1, linepos_t epoint) {
-    Obj *v = INT_OBJ->create(o1, epoint);
+    Obj *v = int_from_obj(o1, epoint);
     if (v->obj != INT_OBJ) {
         if (v == none_value) err_msg_still_none(NULL, epoint);
         else if (v->obj == ERROR_OBJ) err_msg_output(Error(v));
@@ -575,7 +575,7 @@ static MUST_CHECK Obj *apply_func(oper_t op) {
     default: break;
     }
     if (typ != FLOAT_OBJ) {
-        o2 = FLOAT_OBJ->create(o2, op->epoint2);
+        o2 = float_from_obj(o2, op->epoint2);
         if (o2->obj != FLOAT_OBJ) return o2;
         inplace = o2->refcount == 1;
     }
@@ -640,7 +640,7 @@ static MUST_CHECK Obj *to_real(struct values_s *v, double *r) {
     if (v->val->obj == FLOAT_OBJ) {
         *r = Float(v->val)->real;
     } else {
-        Obj *val = FLOAT_OBJ->create(v->val, &v->epoint);
+        Obj *val = float_from_obj(v->val, &v->epoint);
         if (val->obj != FLOAT_OBJ) return val;
         *r = Float(val)->real;
         val_destroy(val);

@@ -46,7 +46,7 @@ static inline MALLOC Register *new_register(void) {
     return Register(val_alloc(REGISTER_OBJ));
 }
 
-static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
+static MUST_CHECK Obj *register_from_obj(Obj *o1, linepos_t epoint) {
     uint8_t *s;
     switch (o1->obj->type) {
     case T_NONE:
@@ -72,6 +72,10 @@ static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
     default: break;
     }
     return new_error_conv(o1, REGISTER_OBJ, epoint);
+}
+
+static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
+    return register_from_obj(o1, epoint);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {

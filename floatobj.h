@@ -42,5 +42,6 @@ static inline MUST_CHECK Obj *new_float(double d) {
 struct oper_s;
 
 extern MUST_CHECK Obj *float_from_double(double, linepos_t);
+extern MUST_CHECK Obj *float_from_obj(Obj *, linepos_t);
 
 #endif

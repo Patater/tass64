@@ -47,7 +47,7 @@ static inline Str *ref_str(Str *v1) {
     v1->v.refcount++; return v1;
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+MUST_CHECK Obj *str_from_obj(Obj *v1, linepos_t epoint) {
     Obj *v;
     switch (v1->obj->type) {
     case T_NONE:
@@ -58,6 +58,10 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
         v = v1->obj->str(v1, epoint, SIZE_MAX);
         return v != NULL ? v : new_error_mem(epoint);
     }
+}
+
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    return str_from_obj(v1, epoint);
 }
 
 static FAST_CALL NO_INLINE void str_destroy(Str *v1) {

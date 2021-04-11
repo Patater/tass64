@@ -41,7 +41,7 @@ static Type obj;
 
 Type *const NAMESPACE_OBJ = &obj;
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+static MUST_CHECK Obj *namespace_from_obj(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
     case T_NONE:
     case T_ERROR:
@@ -56,6 +56,10 @@ static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
     default: break;
     }
     return new_error_conv(v1, NAMESPACE_OBJ, epoint);
+}
+
+static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
+    return namespace_from_obj(v1, epoint);
 }
 
 static FAST_CALL void destroy(Obj *o1) {
