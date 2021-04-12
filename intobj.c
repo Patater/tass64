@@ -80,8 +80,8 @@ MUST_CHECK Obj *int_from_obj(Obj *v1, linepos_t epoint) {
     return new_error_conv(v1, INT_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    return int_from_obj(v1, epoint);
+static MUST_CHECK Obj *create(oper_t op) {
+    return int_from_obj(op->v2, op->epoint2);
 }
 
 static FAST_CALL NO_INLINE void int_destroy(Int *v1) {

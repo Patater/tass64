@@ -47,16 +47,6 @@ static Type obj;
 
 Type *const CODE_OBJ = &obj;
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    switch (v1->obj->type) {
-    case T_NONE:
-    case T_ERROR:
-    case T_CODE: return val_reference(v1);
-    default: break;
-    }
-    return new_error_conv(v1, CODE_OBJ, epoint);
-}
-
 static FAST_CALL void destroy(Obj *o1) {
     Code *v1 = Code(o1);
     val_destroy(v1->typ);
@@ -706,7 +696,6 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void codeobj_init(void) {
     new_type(&obj, T_CODE, "code", sizeof(Code));
-    obj.create = create;
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;

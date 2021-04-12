@@ -58,8 +58,8 @@ static MUST_CHECK Obj *namespace_from_obj(Obj *v1, linepos_t epoint) {
     return new_error_conv(v1, NAMESPACE_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    return namespace_from_obj(v1, epoint);
+static MUST_CHECK Obj *create(oper_t op) {
+    return namespace_from_obj(op->v2, op->epoint2);
 }
 
 static FAST_CALL void destroy(Obj *o1) {
