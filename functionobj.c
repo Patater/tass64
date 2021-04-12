@@ -862,70 +862,70 @@ void functionobj_init(void) {
     obj.calc2 = calc2;
 }
 
-struct builtin_functions_s {
-    const char *name;
-    Function_types func;
-};
-
-static struct builtin_functions_s builtin_functions[] = {
-    {"abs", F_ABS},
-    {"acos", F_ACOS},
-    {"addr", F_ADDR},
-    {"all", F_ALL},
-    {"any", F_ANY},
-    {"asin", F_ASIN},
-    {"atan", F_ATAN},
-    {"atan2", F_ATAN2},
-    {"binary", F_BINARY},
-    {"byte", F_BYTE},
-    {"cbrt", F_CBRT},
-    {"ceil", F_CEIL},
-    {"char", F_CHAR},
-    {"cos", F_COS},
-    {"cosh", F_COSH},
-    {"deg", F_DEG},
-    {"dint", F_DINT},
-    {"dword", F_DWORD},
-    {"exp", F_EXP},
-    {"floor", F_FLOOR},
-    {"format", F_FORMAT},
-    {"frac", F_FRAC},
-    {"hypot", F_HYPOT},
-    {"len", F_LEN},
-    {"lint", F_LINT},
-    {"log", F_LOG},
-    {"log10", F_LOG10},
-    {"long", F_LONG},
-    {"pow", F_POW},
-    {"rad", F_RAD},
-    {"random", F_RANDOM},
-    {"range", F_RANGE},
-    {"repr", F_REPR},
-    {"round", F_ROUND},
-    {"rta", F_RTA},
-    {"sign", F_SIGN},
-    {"sin", F_SIN},
-    {"sinh", F_SINH},
-    {"sint", F_SINT},
-    {"size", F_SIZE},
-    {"sort", F_SORT},
-    {"sqrt", F_SQRT},
-    {"tan", F_TAN},
-    {"tanh", F_TANH},
-    {"trunc", F_TRUNC},
-    {"word", F_WORD},
-    {NULL, F_NONE}
+static Function builtin_functions[] = {
+    { {NULL, 2}, { (const uint8_t *)"abs", 3 }, -1, F_ABS},
+    { {NULL, 2}, { (const uint8_t *)"acos", 4 }, -1, F_ACOS},
+    { {NULL, 2}, { (const uint8_t *)"addr", 4 }, -1, F_ADDR},
+    { {NULL, 2}, { (const uint8_t *)"all", 3 }, -1, F_ALL},
+    { {NULL, 2}, { (const uint8_t *)"any", 3 }, -1, F_ANY},
+    { {NULL, 2}, { (const uint8_t *)"asin", 4 }, -1, F_ASIN},
+    { {NULL, 2}, { (const uint8_t *)"atan", 4 }, -1, F_ATAN},
+    { {NULL, 2}, { (const uint8_t *)"atan2", 5 }, -1, F_ATAN2},
+    { {NULL, 2}, { (const uint8_t *)"binary", 6}, -1, F_BINARY},
+    { {NULL, 2}, { (const uint8_t *)"byte", 4 }, -1, F_BYTE},
+    { {NULL, 2}, { (const uint8_t *)"cbrt", 4 }, -1, F_CBRT},
+    { {NULL, 2}, { (const uint8_t *)"ceil", 4 }, -1, F_CEIL},
+    { {NULL, 2}, { (const uint8_t *)"char", 4 }, -1, F_CHAR},
+    { {NULL, 2}, { (const uint8_t *)"cos", 3 }, -1, F_COS},
+    { {NULL, 2}, { (const uint8_t *)"cosh", 4 }, -1, F_COSH},
+    { {NULL, 2}, { (const uint8_t *)"deg", 3 }, -1, F_DEG},
+    { {NULL, 2}, { (const uint8_t *)"dint", 4 }, -1, F_DINT},
+    { {NULL, 2}, { (const uint8_t *)"dword", 5 }, -1, F_DWORD},
+    { {NULL, 2}, { (const uint8_t *)"exp", 3 }, -1, F_EXP},
+    { {NULL, 2}, { (const uint8_t *)"floor", 5 }, -1, F_FLOOR},
+    { {NULL, 2}, { (const uint8_t *)"format", 6}, -1, F_FORMAT},
+    { {NULL, 2}, { (const uint8_t *)"frac", 4 }, -1, F_FRAC},
+    { {NULL, 2}, { (const uint8_t *)"hypot", 5 }, -1, F_HYPOT},
+    { {NULL, 2}, { (const uint8_t *)"len", 3 }, -1, F_LEN},
+    { {NULL, 2}, { (const uint8_t *)"lint", 4 }, -1, F_LINT},
+    { {NULL, 2}, { (const uint8_t *)"log", 3 }, -1, F_LOG},
+    { {NULL, 2}, { (const uint8_t *)"log10", 5 }, -1, F_LOG10},
+    { {NULL, 2}, { (const uint8_t *)"long", 4 }, -1, F_LONG},
+    { {NULL, 2}, { (const uint8_t *)"pow", 3 }, -1, F_POW},
+    { {NULL, 2}, { (const uint8_t *)"rad", 3 }, -1, F_RAD},
+    { {NULL, 2}, { (const uint8_t *)"random", 6}, -1, F_RANDOM},
+    { {NULL, 2}, { (const uint8_t *)"range", 5 }, -1, F_RANGE},
+    { {NULL, 2}, { (const uint8_t *)"repr", 4 }, -1, F_REPR},
+    { {NULL, 2}, { (const uint8_t *)"round", 5 }, -1, F_ROUND},
+    { {NULL, 2}, { (const uint8_t *)"rta", 3 }, -1, F_RTA},
+    { {NULL, 2}, { (const uint8_t *)"sign", 4 }, -1, F_SIGN},
+    { {NULL, 2}, { (const uint8_t *)"sin", 3 }, -1, F_SIN},
+    { {NULL, 2}, { (const uint8_t *)"sinh", 4 }, -1, F_SINH},
+    { {NULL, 2}, { (const uint8_t *)"sint", 4 }, -1, F_SINT},
+    { {NULL, 2}, { (const uint8_t *)"size", 4 }, -1, F_SIZE},
+    { {NULL, 2}, { (const uint8_t *)"sort", 4 }, -1, F_SORT},
+    { {NULL, 2}, { (const uint8_t *)"sqrt", 4 }, -1, F_SQRT},
+    { {NULL, 2}, { (const uint8_t *)"tan", 3 }, -1, F_TAN},
+    { {NULL, 2}, { (const uint8_t *)"tanh", 4 }, -1, F_TANH},
+    { {NULL, 2}, { (const uint8_t *)"trunc", 5 }, -1, F_TRUNC},
+    { {NULL, 2}, { (const uint8_t *)"word", 4 }, -1, F_WORD},
 };
 
 void functionobj_names(void) {
-    int i;
-
-    for (i = 0; builtin_functions[i].name != NULL; i++) {
-        Function *func = Function(val_alloc(FUNCTION_OBJ));
-        func->name.data = (const uint8_t *)builtin_functions[i].name;
-        func->name.len = strlen(builtin_functions[i].name);
-        func->func = builtin_functions[i].func;
-        func->name_hash = -1;
-        new_builtin(builtin_functions[i].name, Obj(func));
+    unsigned int i;
+    for (i = 0; i < lenof(builtin_functions); i++) {
+        builtin_functions[i].v.obj = &obj;
+        new_builtin((const char *)builtin_functions[i].name.data, Obj(builtin_functions + i));
     }
+}
+
+void functionobj_destroy(void) {
+#ifdef DEBUG
+    unsigned int i;
+    for (i = 0; i < lenof(builtin_functions); i++) {
+        if (builtin_functions[i].v.refcount != 1) {
+            fprintf(stderr, "%s %" PRIuSIZE "\n", (const char *)builtin_functions[i].name.data, builtin_functions[i].v.refcount - 1);
+        }
+    }
+#endif
 }
