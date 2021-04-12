@@ -32,6 +32,7 @@ typedef struct Float {
 
 extern void floatobj_init(void);
 extern void floatobj_names(void);
+extern void floatobj_destroy(void);
 
 static inline MUST_CHECK Obj *new_float(double d) {
     Float *v = Float(val_alloc(FLOAT_OBJ));

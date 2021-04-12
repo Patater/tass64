@@ -356,6 +356,7 @@ void objects_destroy(void) {
     noneobj_destroy();
     foldobj_destroy();
     functionobj_destroy();
+    floatobj_destroy();
 
 #ifdef DEBUG
     if (default_value->refcount != 1) fprintf(stderr, "default %" PRIuSIZE "\n", default_value->refcount - 1);

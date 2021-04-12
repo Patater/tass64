@@ -450,7 +450,15 @@ void floatobj_init(void) {
     obj.rcalc2 = rcalc2;
 }
 
+static Float pi_value = { { &obj, 2 }, M_PI };
+
 void floatobj_names(void) {
     new_builtin("float", val_reference(Obj(FLOAT_OBJ)));
-    new_builtin("pi", new_float(M_PI));
+    new_builtin("pi", &pi_value.v);
+}
+
+void floatobj_destroy(void) {
+#ifdef DEBUG
+    if (pi_value.v.refcount != 1) fprintf(stderr, "pi %" PRIuSIZE "\n", pi_value.v.refcount - 1);
+#endif
 }
