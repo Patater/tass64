@@ -47,6 +47,7 @@ extern MUST_CHECK Obj *apply_convert(struct oper_s *);
 extern MUST_CHECK Obj *apply_condition(struct oper_s *);
 extern void functionobj_init(void);
 extern void functionobj_names(void);
+extern void functionobj_destroy(void);
 extern void random_reseed(Obj *, linepos_t);
 
 #endif
