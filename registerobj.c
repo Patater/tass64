@@ -74,8 +74,8 @@ static MUST_CHECK Obj *register_from_obj(Obj *o1, linepos_t epoint) {
     return new_error_conv(o1, REGISTER_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(Obj *o1, linepos_t epoint) {
-    return register_from_obj(o1, epoint);
+static MUST_CHECK Obj *create(oper_t op) {
+    return register_from_obj(op->v2, op->epoint2);
 }
 
 static FAST_CALL bool same(const Obj *o1, const Obj *o2) {

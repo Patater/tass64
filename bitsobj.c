@@ -86,8 +86,8 @@ MUST_CHECK Obj *bits_from_obj(Obj *v1, linepos_t epoint) {
     return new_error_conv(v1, BITS_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(Obj *v1, linepos_t epoint) {
-    return bits_from_obj(v1, epoint);
+static MUST_CHECK Obj *create(oper_t op) {
+    return bits_from_obj(op->v2, op->epoint2);
 }
 
 static inline size_t bitslen(const Bits *v1) {
