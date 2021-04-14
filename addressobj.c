@@ -243,7 +243,7 @@ static inline bool check_addr2(atype_t type) {
     return false;
 }
 
-Address_types register_to_indexing(char c) {
+Address_types register_to_indexing(unsigned int c) {
     switch (c) {
     case 's': return A_SR;
     case 'r': return A_RR;
