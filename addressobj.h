@@ -66,5 +66,5 @@ extern MUST_CHECK Obj *float_from_address(Address *, linepos_t);
 extern MUST_CHECK Obj *bits_from_address(Address *, linepos_t);
 extern MUST_CHECK Obj *bytes_from_address(Address *, linepos_t);
 extern bool check_addr(atype_t);
-extern Address_types register_to_indexing(char);
+extern Address_types register_to_indexing(unsigned int);
 #endif
