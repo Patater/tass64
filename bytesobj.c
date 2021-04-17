@@ -132,26 +132,82 @@ static uint8_t *extend_bytes(Bytes *v, size_t ln) {
         return v->u.val;
     }
     if (v->u.val != v->data) {
-        size_t ln2;
-        if (ln <= v->u.s.max) return v->data;
-        ln2 = ln + (ln < 1024 ? ln : 1024);
-        if (ln2 > ln) ln = ln2;
-        tmp = (uint8_t *)realloc(v->data, ln);
-        if (tmp != NULL) {
-            v->data = tmp;
-            v->u.s.max = ln;
+        if (ln <= v->u.s.max) {
             v->u.s.hash = -1;
+            return v->data;
         }
-        return tmp;
-    }
-    tmp = (uint8_t *)malloc(ln);
-    if (tmp != NULL) {
+        tmp = (uint8_t *)realloc(v->data, ln);
+        if (tmp == NULL) return tmp;
+    } else {
+        tmp = (uint8_t *)malloc(ln);
+        if (tmp == NULL) return tmp;
         memcpy(tmp, v->u.val, byteslen(v));
-        v->data = tmp;
-        v->u.s.max = ln;
-        v->u.s.hash = -1;
     }
+    v->data = tmp;
+    v->u.s.max = ln;
+    v->u.s.hash = -1;
     return tmp;
+}
+
+static MUST_CHECK Obj *convert2(oper_t op) {
+    Funcargs *v2 = Funcargs(op->v2);
+    argcount_t args = v2->len;
+    Error *err;
+    ival_t ival;
+    uval_t len2;
+    size_t blen;
+    Obj *v;
+    Bytes *bytes, *bytes2;
+    bool inplace, bits;
+    if (args != 2) {
+        return new_error_argnum(args, 1, 2, op->epoint2);
+    }
+    v = v2->val[1].val;
+    err = v->obj->ival(v, &ival, 8 * sizeof ival - 3, &v2->val[1].epoint);
+    if (err != 0) return Obj(err);
+    v = v2->val[0].val;
+    inplace = (v->obj == BYTES_OBJ);
+    bits = (v->obj == BITS_OBJ);
+    if (!inplace) {
+        v = bytes_from_obj(v, op->epoint2);
+        if (v->obj != BYTES_OBJ) return v;
+    }
+    bytes = Bytes(v);
+    if (ival >= 0) {
+        len2 = (uval_t)ival;
+        if (!inplace && !bits && bytes->len < 0) {
+            err = new_error(ERROR______NOT_UVAL, &v2->val[0].epoint);
+            err->u.intconv.val = val_reference(v2->val[0].val);
+            return Obj(err);
+        }
+    } else {
+        len2 = (uval_t)-ival;
+    }
+    blen = byteslen(bytes);
+    if (blen > len2 || (ival < 0 && blen == len2 && bytes->data[len2 - 1] >= 0x80)) {
+        err = new_error(ival < 0 ? ERROR_____CANT_IVAL : ERROR_____CANT_UVAL, &v2->val[0].epoint);
+        err->u.intconv.bits = len2 * 8;
+        err->u.intconv.val = val_reference(v2->val[0].val);
+        return Obj(err);
+    }
+    if (blen == len2) {
+        return Obj(inplace ? ref_bytes(bytes) : bytes);
+    }
+    if (bytes->v.refcount == 1) {
+        if (extend_bytes(bytes, len2) == NULL) {
+            if (!inplace) val_destroy(Obj(bytes));
+            return new_error_mem(op->epoint3);
+        }
+        bytes2 = inplace ? ref_bytes(bytes) : bytes;
+        inplace = true;
+    } else { 
+        bytes2 = new_bytes(len2);
+        if (blen != 0) memcpy(bytes2->data, bytes->data, blen);
+    }
+    memset(bytes2->data + blen, 0, len2 - blen);
+    bytes2->len = bytes->len < 0 ? ~len2 : len2;
+    if (!inplace) val_destroy(Obj(bytes));
+    return Obj(bytes2);
 }
 
 static MUST_CHECK Obj *invert(const Bytes *v1, linepos_t epoint) {
@@ -952,10 +1008,14 @@ static MUST_CHECK Obj *concat(oper_t op) {
     ln = len1 + len2;
     if (ln < len2 || ln > SSIZE_MAX) goto failed; /* overflow */
     if (op->inplace == Obj(v1)) {
-        s = extend_bytes(v1, ln);
+        size_t ln2;
+        if (ln > sizeof v1->u.val && v1->u.val != v1->data && ln > v1->u.s.max) {
+            ln2 = ln + (ln < 1024 ? ln : 1024);
+            if (ln2 < ln) ln2 = ln;
+        } else ln2 = ln;
+        s = extend_bytes(v1, ln2);
         if (s == NULL) goto failed;
         v = ref_bytes(v1);
-        if (v->data != v->u.val) v->u.s.hash = -1;
     } else {
         v = new_bytes2(ln);
         if (v == NULL) goto failed;
@@ -1370,6 +1430,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 void bytesobj_init(void) {
     new_type(&obj, T_BYTES, "bytes", sizeof(Bytes));
     obj.convert = convert;
+    obj.convert2 = convert2;
     obj.destroy = destroy;
     obj.same = same;
     obj.truth = truth;
