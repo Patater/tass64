@@ -85,7 +85,7 @@ MUST_CHECK Obj *bytes_from_obj(Obj *v1, linepos_t epoint) {
     return new_error_conv(v1, BYTES_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(oper_t op) {
+static MUST_CHECK Obj *convert(oper_t op) {
     return bytes_from_obj(op->v2, op->epoint2);
 }
 
@@ -1369,7 +1369,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void bytesobj_init(void) {
     new_type(&obj, T_BYTES, "bytes", sizeof(Bytes));
-    obj.create = create;
+    obj.convert = convert;
     obj.destroy = destroy;
     obj.same = same;
     obj.truth = truth;

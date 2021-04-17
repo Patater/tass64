@@ -846,7 +846,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 }
 
 MUST_CHECK Obj *apply_convert(oper_t op) {
-    return apply_func(op, Type(op->v1)->create);
+    return apply_func(op, Type(op->v1)->convert);
 }
 
 MUST_CHECK Obj *apply_condition(oper_t op) {

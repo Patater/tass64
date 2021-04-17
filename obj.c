@@ -107,7 +107,7 @@ MUST_CHECK Obj *obj_oper_compare(oper_t op, int val) {
     return truth_reference(result);
 }
 
-static MUST_CHECK Obj *invalid_create(oper_t op) {
+static MUST_CHECK Obj *invalid_convert(oper_t op) {
     Obj *v1 = op->v2;
     if (v1->obj == Type(op->v1)) return val_reference(v1);
     switch (v1->obj->type) {
@@ -284,7 +284,7 @@ static FAST_CALL bool funcargs_same(const Obj *o1, const Obj *o2) {
 
 void obj_init(Type *obj) {
     obj->iterable = false;
-    obj->create = invalid_create;
+    obj->convert = invalid_convert;
     obj->destroy = NULL;
     obj->garbage = NULL;
     obj->same = invalid_same;

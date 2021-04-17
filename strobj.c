@@ -60,7 +60,7 @@ MUST_CHECK Obj *str_from_obj(Obj *v1, linepos_t epoint) {
     }
 }
 
-static MUST_CHECK Obj *create(oper_t op) {
+static MUST_CHECK Obj *convert(oper_t op) {
     return str_from_obj(op->v2, op->epoint2);
 }
 
@@ -1004,7 +1004,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void strobj_init(void) {
     new_type(&obj, T_STR, "str", sizeof(Str));
-    obj.create = create;
+    obj.convert = convert;
     obj.destroy = destroy;
     obj.same = same;
     obj.truth = truth;

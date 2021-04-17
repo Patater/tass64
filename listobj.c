@@ -205,11 +205,11 @@ static MUST_CHECK Obj *list_from_obj(Obj *o1, Type *typ, linepos_t epoint) {
     return new_error_conv(o1, typ, epoint);
 }
 
-static MUST_CHECK Obj *list_create(oper_t op) {
+static MUST_CHECK Obj *list_convert(oper_t op) {
     return list_from_obj(op->v2, LIST_OBJ, op->epoint2);
 }
 
-static MUST_CHECK Obj *tuple_create(oper_t op) {
+static MUST_CHECK Obj *tuple_convert(oper_t op) {
     return list_from_obj(op->v2, TUPLE_OBJ, op->epoint2);
 }
 
@@ -897,10 +897,10 @@ static void init(Type *obj) {
 void listobj_init(void) {
     new_type(&list_obj, T_LIST, "list", sizeof(List));
     init(&list_obj);
-    list_obj.create = list_create;
+    list_obj.convert = list_convert;
     new_type(&tuple_obj, T_TUPLE, "tuple", sizeof(Tuple));
     init(&tuple_obj);
-    tuple_obj.create = tuple_create;
+    tuple_obj.convert = tuple_convert;
     new_type(&addrlist_obj, T_ADDRLIST, "addresslist", sizeof(Addrlist));
     addrlist_obj.destroy = destroy;
     addrlist_obj.garbage = garbage;

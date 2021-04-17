@@ -58,7 +58,7 @@ static MUST_CHECK Obj *namespace_from_obj(Obj *v1, linepos_t epoint) {
     return new_error_conv(v1, NAMESPACE_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(oper_t op) {
+static MUST_CHECK Obj *convert(oper_t op) {
     return namespace_from_obj(op->v2, op->epoint2);
 }
 
@@ -293,7 +293,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
 void namespaceobj_init(void) {
     new_type(&obj, T_NAMESPACE, "namespace", sizeof(Namespace));
-    obj.create = create;
+    obj.convert = convert;
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;
