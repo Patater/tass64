@@ -1513,7 +1513,7 @@ failed2:
 
 MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
     const uint8_t *end;
-    size_t i, j, k, sz;
+    size_t i, k, sz;
     digit_t *d, *end2, val;
     Int *v;
 
@@ -1556,7 +1556,9 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
     end2 = d;
     while (s < end) {
         digit_t *d2, mul;
-        for (val = j = 0; j < 9 && s < end; s++) {
+        int j;
+        val = 0;
+        for (j = 0; j < 9 && s < end; s++) {
             uint8_t c = *s ^ 0x30;
             if (c < 10) {
                 val = val * 10 + c;

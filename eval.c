@@ -151,7 +151,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
             return v;
         }
         real = Float(v)->real;
-        if (len != 0 && real != 0.0) real = bits ? ldexp(real, -(int)len) : ldexp10(real, len, true);
+        if (len != 0 && real != 0.0) real = bits ? ldexp(real, -(int)len) : ldexp10(real, len <= ~(unsigned int)0 ? (unsigned int)len : ~(unsigned int)0, true);
         val_destroy(v);
     }
     v = float_from_obj(v1, epoint);

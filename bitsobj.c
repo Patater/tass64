@@ -471,7 +471,7 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, size_t *ln) {
     i = k - i;
 
     if (i <= 2 * sizeof *d) {
-        return (i == 0) ? val_reference(null_bits) : return_bits(uv, i * 4);
+        return (i == 0) ? val_reference(null_bits) : return_bits(uv, (unsigned int)i * 4);
     }
 
     if (i > SIZE_MAX / 4) return NULL; /* overflow */
@@ -524,7 +524,7 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, size_t *ln) {
     i = k - i;
 
     if (i <= 8 * sizeof *d) {
-        return (i == 0) ? val_reference(null_bits) : return_bits(uv, i);
+        return (i == 0) ? val_reference(null_bits) : return_bits(uv, (unsigned int)i);
     }
 
     v = new_bits2(i / SHIFT + ((i % SHIFT) != 0 ? 1 : 0));
