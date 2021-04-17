@@ -108,7 +108,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Funcargs *v2 = Funcargs(o2);
             argcount_t args = v2->len;
             if (args != 1) {
-                return new_error_argnum(args, 1, 1, op->epoint2);
+                return apply_convert2(op);
             }
             op->v2 = v2->val->val;
             op->inplace = op->v2->refcount == 1 ? op->v2 : NULL;

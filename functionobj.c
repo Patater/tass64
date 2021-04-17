@@ -849,6 +849,10 @@ MUST_CHECK Obj *apply_convert(oper_t op) {
     return apply_func(op, Type(op->v1)->convert);
 }
 
+MUST_CHECK Obj *apply_convert2(oper_t op) {
+    return gen_broadcast(op, Type(op->v1)->convert2);
+}
+
 MUST_CHECK Obj *apply_condition(oper_t op) {
     return gen_broadcast(op, function_condition);
 }
