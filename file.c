@@ -576,8 +576,8 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                         tmp->line = d;
                         max_lines = len2;
                     }
-                    if ((linenum_t)(lines + 1) < 1) goto failed; /* overflow */
                     tmp->line[lines++] = fp;
+                    if (lines == 0) { lines = ~(linenum_t)0; goto failed; } /* overflow */
                     p = fp;
                     for (;;) {
                         unsigned int i, j;

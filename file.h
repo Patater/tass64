@@ -51,7 +51,7 @@ struct file_s {
     Encoding_types encoding;
 };
 
-#define not_in_file(a, b) ((size_t)((a) - (1 ? (b) : (struct file_s *)(b))->data) >= (b)->len)
+#define not_in_file(a, b) ((size_t)((a) - (1 ? (b) : (struct file_s *)(void *)(b))->data) >= (b)->len)
 
 struct star_s {
     linenum_t line, vline;
