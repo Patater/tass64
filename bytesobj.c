@@ -56,7 +56,7 @@ static inline Bytes *ref_bytes(Bytes *v1) {
 
 static inline size_t byteslen(const Bytes *v1) {
     ssize_t len = v1->len;
-    return (len < 0) ? (size_t)~len : (size_t)len;
+    return (size_t)(len < 0 ? ~len : len);
 }
 
 static MUST_CHECK Obj *bytes_from_int(const Int *, linepos_t);
@@ -675,10 +675,10 @@ MUST_CHECK Obj *bytes_from_bits(const Bits *v1, linepos_t epoint) {
     if (sz > SSIZE_MAX) goto failed; /* overflow */
     v = new_bytes2(sz);
     if (v == NULL) goto failed;
-    v->len = inv ? (ssize_t)~sz : (ssize_t)sz;
+    v->len = (ssize_t)(inv ? ~sz : sz);
     d = v->data;
 
-    len1 = inv ? (size_t)~v1->len : (size_t)v1->len;
+    len1 = (size_t)(inv ? ~v1->len : v1->len);
     i = 0;
     if (len1 != 0) {
         bdigit_t b = v1->data[0];
@@ -721,7 +721,7 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
     }
 
     inv = (v1->len < 0);
-    sz = inv ? (size_t)-v1->len : (size_t)v1->len;
+    sz = (size_t)(inv ? -v1->len : v1->len);
     if (sz > SSIZE_MAX / sizeof *b) goto failed; /* overflow */
     sz *= sizeof *b;
     v = new_bytes2(sz);

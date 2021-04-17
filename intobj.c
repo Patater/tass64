@@ -60,7 +60,7 @@ static inline Int *ref_int(Int *v1) {
 
 static inline size_t intlen(const Int *v1) {
     ssize_t len = v1->len;
-    return (len < 0) ? (size_t)-len : (size_t)len;
+    return (size_t)(len < 0 ? -len : len);
 }
 
 MUST_CHECK Obj *int_from_obj(Obj *v1, linepos_t epoint) {
@@ -143,7 +143,7 @@ static FAST_CALL MUST_CHECK Obj *normalize(Int *v, size_t sz, bool neg) {
     digit_t *d = v->data;
     while (sz != 0 && d[sz - 1] == 0) sz--;
     /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    v->len = neg ? -(ssize_t)sz : (ssize_t)sz;
+    v->len = (ssize_t)(neg ? -sz : sz);
     if (v->val != d && sz <= lenof(v->val)) {
         return normalize2(v, sz);
     }
@@ -539,7 +539,7 @@ static void isub(const Int *vv1, const Int *vv2, Int *vv) {
     }
     if (vv == vv1 || vv == vv2) destroy(Obj(vv));
     vv->data = v;
-    vv->len = neg ? -(ssize_t)i : (ssize_t)i;
+    vv->len = (ssize_t)(neg ? -i : i);
 }
 
 static void imul(const Int *vv1, const Int *vv2, Int *vv) {
@@ -1307,7 +1307,7 @@ MUST_CHECK Obj *int_from_float(const Float *v1, linepos_t epoint) {
     v = new_int();
     v->data = d = inew2(v, sz);
     if (d == NULL) goto failed2;
-    v->len = neg ? -(ssize_t)sz : (ssize_t)sz;
+    v->len = (ssize_t)(neg ? -sz : sz);
 
     frac = ldexp(frac, (int)((expo - 1) % SHIFT + 1));
 
@@ -1337,7 +1337,7 @@ MUST_CHECK Obj *int_from_bytes(const Bytes *v1, linepos_t epoint) {
     }
 
     inv = v1->len < 0;
-    len1 = inv ? (size_t)-v1->len : (size_t)v1->len; /* it's - for the additional length  */
+    len1 = (size_t)(inv ? -v1->len : v1->len); /* it's - for the additional length  */
     sz = len1 / sizeof *d;
     if ((len1 % sizeof *d) != 0) sz++;
 
@@ -1396,7 +1396,7 @@ MUST_CHECK Obj *int_from_bits(const Bits *v1, linepos_t epoint) {
     }
 
     inv = v1->len < 0;
-    sz = inv ? (size_t)-v1->len : (size_t)v1->len; /* it's - for the additional length  */
+    sz = (size_t)(inv ? -v1->len : v1->len); /* it's - for the additional length  */
     if (sz == 0 && inv) goto failed; /* overflow */
     v = new_int();
     v->data = d = inew2(v, sz);
