@@ -3104,7 +3104,7 @@ MUST_CHECK Obj *compile(void)
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
                     if (waitfor->what==W_SWITCH) {err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr;}
                     if (waitfor->what!=W_SWITCH2) {err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr;}
-                    waitfor->skip = waitfor->skip >> 1;
+                    waitfor->skip = (uint8_t)(waitfor->skip >> 1);
                     waitfor->what = W_SWITCH;waitfor->epoint = epoint;
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 }
@@ -3114,7 +3114,7 @@ MUST_CHECK Obj *compile(void)
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
                     if (waitfor->what==W_FI) { err_msg2(ERROR______EXPECTED, "'.fi'", &epoint); goto breakerr; }
                     if (waitfor->what!=W_FI2) { err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr; }
-                    waitfor->skip = waitfor->skip >> 1;
+                    waitfor->skip = (uint8_t)(waitfor->skip >> 1);
                     waitfor->what = W_FI;waitfor->epoint = epoint;
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 }
@@ -3232,7 +3232,7 @@ MUST_CHECK Obj *compile(void)
                             val_destroy(result2);
                         }
                     }
-                    waitfor->skip = truth ? (skwait >> 1) : (skwait & 2);
+                    waitfor->skip = truth ? (uint8_t)(skwait >> 1) : (skwait & 2);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
                 }
                 break;

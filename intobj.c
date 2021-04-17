@@ -39,7 +39,7 @@
 #include "addressobj.h"
 #include "functionobj.h"
 
-#define SHIFT (8 * sizeof(digit_t))
+#define SHIFT (8 * (unsigned int)sizeof(digit_t))
 #define MASK (~(digit_t)0)
 #define DSHIFT 9
 #define DMUL ((digit_t)1000000000)
