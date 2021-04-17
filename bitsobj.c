@@ -129,7 +129,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
     Obj *v;
     Bits *bits, *bits2;
     unsigned int m;
-    bool inplace;
+    bool inplace, bytes;
     if (args != 2) {
         return new_error_argnum(args, 1, 2, op->epoint2);
     }
@@ -138,6 +138,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
     if (err != 0) return Obj(err);
     v = v2->val[0].val;
     inplace = (v->obj == BITS_OBJ);
+    bytes = (v->obj == BYTES_OBJ || v->obj == STR_OBJ);
     if (!inplace) {
         v = bits_from_obj(v, op->epoint2);
         if (v->obj != BITS_OBJ) return v;
@@ -145,7 +146,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
     bits = Bits(v);
     if (ival >= 0) {
         len2 = (uval_t)ival;
-        if (bits->len < 0) {
+        if (!inplace && !bytes && bits->len < 0) {
             err = new_error(ERROR______NOT_UVAL, &v2->val[0].epoint);
             err->u.intconv.val = val_reference(v2->val[0].val);
             return Obj(err);
@@ -157,7 +158,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
     m = len2 % SHIFT;
     if (ival < 0) len2++;
     blen = bitslen(bits);
-    if (blen > blen2 || (blen == blen2 && (bits->data[blen2 - 1] >> m) != 0)) {
+    if (((inplace || bytes) && bits->bits > len2) || blen > blen2 || (blen == blen2 && (bits->data[blen2 - 1] >> m) != 0)) {
         err = new_error(ival < 0 ? ERROR_____CANT_IVAL : ERROR_____CANT_UVAL, &v2->val[0].epoint);
         err->u.intconv.bits = len2;
         err->u.intconv.val = val_reference(v2->val[0].val);
