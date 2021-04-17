@@ -57,7 +57,7 @@ static MUST_CHECK Obj *address_from_obj(Obj *v1, linepos_t epoint) {
     return new_error_conv(v1, ADDRESS_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(oper_t op) {
+static MUST_CHECK Obj *convert(oper_t op) {
     return address_from_obj(op->v2, op->epoint2);
 }
 
@@ -648,7 +648,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void addressobj_init(void) {
     new_type(&obj, T_ADDRESS, "address", sizeof(Address));
-    obj.create = create;
+    obj.convert = convert;
     obj.destroy = destroy;
     obj.garbage = garbage;
     obj.same = same;

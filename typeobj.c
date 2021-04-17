@@ -54,7 +54,7 @@ static MUST_CHECK Obj *type_from_obj(Obj *v1, linepos_t UNUSED(epoint)) {
     return val_reference((Obj *)Obj(v1->obj));
 }
 
-static MUST_CHECK Obj *create(oper_t op) {
+static MUST_CHECK Obj *convert(oper_t op) {
     return type_from_obj(op->v2, op->epoint2);
 }
 
@@ -113,7 +113,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             op->v2 = v2->val->val;
             op->inplace = op->v2->refcount == 1 ? op->v2 : NULL;
             if (v1->iterable || v1 == TYPE_OBJ) {
-                return v1->create(op);
+                return v1->convert(op);
             }
             return apply_convert(op);
         }
@@ -133,7 +133,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
 void typeobj_init(void) {
     new_type(&obj, T_TYPE, "type", sizeof(Type));
-    obj.create = create;
+    obj.convert = convert;
     obj.same = same;
     obj.hash = hash;
     obj.repr = repr;

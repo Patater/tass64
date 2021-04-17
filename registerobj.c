@@ -74,7 +74,7 @@ static MUST_CHECK Obj *register_from_obj(Obj *o1, linepos_t epoint) {
     return new_error_conv(o1, REGISTER_OBJ, epoint);
 }
 
-static MUST_CHECK Obj *create(oper_t op) {
+static MUST_CHECK Obj *convert(oper_t op) {
     return register_from_obj(op->v2, op->epoint2);
 }
 
@@ -227,7 +227,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 
 void registerobj_init(void) {
     new_type(&obj, T_REGISTER, "register", sizeof(Register));
-    obj.create = create;
+    obj.convert = convert;
     obj.destroy = destroy;
     obj.same = same;
     obj.hash = hash;
