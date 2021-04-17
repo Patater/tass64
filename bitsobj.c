@@ -92,7 +92,7 @@ static MUST_CHECK Obj *convert(oper_t op) {
 
 static inline size_t bitslen(const Bits *v1) {
     ssize_t len = v1->len;
-    return (len < 0) ? (size_t)~len : (size_t)len;
+    return (size_t)(len < 0 ? ~len : len);
 }
 
 static FAST_CALL NO_INLINE void bits_destroy(Bits *v1) {
@@ -211,7 +211,7 @@ static FAST_CALL MUST_CHECK Obj *normalize(Bits *v, size_t sz, bool neg) {
     bdigit_t *d = v->data;
     while (sz != 0 && d[sz - 1] == 0) sz--;
     /*if (sz >= SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    v->len = neg ? (ssize_t)~sz : (ssize_t)sz;
+    v->len = (ssize_t)(neg ? ~sz : sz);
     if (v->u.val != d && sz <= lenof(v->u.val)) {
         return normalize2(v, sz);
     }
@@ -715,7 +715,7 @@ MUST_CHECK Obj *bits_from_bytes(const Bytes *v1, linepos_t epoint) {
     Bits *v;
     bool inv = (v1->len < 0);
 
-    len1 = inv ? (size_t)~v1->len : (size_t)v1->len;
+    len1 = (size_t)(inv ? ~v1->len : v1->len);
     if (len1 == 0) {
         return val_reference(inv ? inv_bits : null_bits);
     }
@@ -755,7 +755,7 @@ static MUST_CHECK Obj *bits_from_int(const Int *v1, linepos_t epoint) {
     if (v1->len == -1 && v1->data[0] == 1) return val_reference(inv_bits);
 
     inv = (v1->len < 0);
-    sz = inv ? (size_t)-v1->len : (size_t)v1->len;
+    sz = (size_t)(inv ? -v1->len : v1->len);
     v = new_bits2(sz);
     if (v == NULL) return new_error_mem(epoint);
     d = v->data;
