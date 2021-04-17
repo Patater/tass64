@@ -45,6 +45,7 @@ typedef struct Type {
     struct Slot **slot;
     size_t length;
     Obj *(*convert)(struct oper_s *) MUST_CHECK;
+    Obj *(*convert2)(struct oper_s *) MUST_CHECK;
     void (*destroy)(Obj *) FAST_CALL;
     void (*garbage)(Obj *, int) FAST_CALL;
     bool (*same)(const Obj *, const Obj *) FAST_CALL;

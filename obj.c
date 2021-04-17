@@ -121,6 +121,10 @@ static MUST_CHECK Obj *invalid_convert(oper_t op) {
     return new_error_conv(v1, Type(op->v1), op->epoint2);
 }
 
+static MUST_CHECK Obj *invalid_convert2(oper_t op) {
+    return new_error_argnum(Funcargs(op->v2)->len, 1, 1, op->epoint2);
+}
+
 static FAST_CALL bool invalid_same(const Obj *o1, const Obj *o2) {
     return o1->obj == o2->obj;
 }
@@ -285,6 +289,7 @@ static FAST_CALL bool funcargs_same(const Obj *o1, const Obj *o2) {
 void obj_init(Type *obj) {
     obj->iterable = false;
     obj->convert = invalid_convert;
+    obj->convert2 = invalid_convert2;
     obj->destroy = NULL;
     obj->garbage = NULL;
     obj->same = invalid_same;

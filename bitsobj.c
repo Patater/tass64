@@ -119,6 +119,65 @@ static MALLOC Bits *new_bits2(size_t len) {
     return v;
 }
 
+static MUST_CHECK Obj *convert2(oper_t op) {
+    Funcargs *v2 = Funcargs(op->v2);
+    argcount_t args = v2->len;
+    Error *err;
+    ival_t ival;
+    uval_t len2, blen2;
+    size_t blen;
+    Obj *v;
+    Bits *bits, *bits2;
+    unsigned int m;
+    bool inplace;
+    if (args != 2) {
+        return new_error_argnum(args, 1, 2, op->epoint2);
+    }
+    v = v2->val[1].val;
+    err = v->obj->ival(v, &ival, 8 * sizeof ival, &v2->val[1].epoint);
+    if (err != 0) return Obj(err);
+    v = v2->val[0].val;
+    inplace = (v->obj == BITS_OBJ);
+    if (!inplace) {
+        v = bits_from_obj(v, op->epoint2);
+        if (v->obj != BITS_OBJ) return v;
+    }
+    bits = Bits(v);
+    if (ival >= 0) {
+        len2 = (uval_t)ival;
+        if (bits->len < 0) {
+            err = new_error(ERROR______NOT_UVAL, &v2->val[0].epoint);
+            err->u.intconv.val = val_reference(v2->val[0].val);
+            return Obj(err);
+        }
+    } else {
+        len2 = (uval_t)-(1 + ival);
+    }
+    blen2 = len2 / SHIFT + 1;
+    m = len2 % SHIFT;
+    if (ival < 0) len2++;
+    blen = bitslen(bits);
+    if (blen > blen2 || (blen == blen2 && (bits->data[blen2 - 1] >> m) != 0)) {
+        err = new_error(ival < 0 ? ERROR_____CANT_IVAL : ERROR_____CANT_UVAL, &v2->val[0].epoint);
+        err->u.intconv.bits = len2;
+        err->u.intconv.val = val_reference(v2->val[0].val);
+        return Obj(err);
+    }
+    if (bits->bits == len2) {
+        return inplace ? val_reference(Obj(bits)) : Obj(bits);
+    }
+    if (bits->v.refcount == 1) {
+        bits->bits = len2;
+        return inplace ? val_reference(Obj(bits)) : Obj(bits);
+    } 
+    bits2 = new_bits2(blen);
+    bits2->len = bits->len;
+    bits2->bits = len2;
+    if (blen != 0) memcpy(bits2->data, bits->data, blen * sizeof *bits2->data); else bits2->u.val[0] = 0;
+    if (!inplace) val_destroy(Obj(bits));
+    return Obj(bits2);
+}
+
 static MUST_CHECK Obj *invert(const Bits *v1, linepos_t epoint) {
     size_t sz = bitslen(v1);
     Bits *v = new_bits2(sz);
@@ -1363,6 +1422,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 void bitsobj_init(void) {
     new_type(&obj, T_BITS, "bits", sizeof(Bits));
     obj.convert = convert;
+    obj.convert2 = convert2;
     obj.destroy = destroy;
     obj.same = same;
     obj.truth = truth;
