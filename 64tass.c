@@ -697,7 +697,8 @@ retry:
                 Bytes *bytes = Bytes(val2);
                 ssize_t len = bytes->len;
                 if (len != 0) {
-                    size_t i, len2, len3;
+                    size_t i, len2;
+                    address_t len3;
                     unsigned int inv;
                     if (len < 0) {
                         inv = ~0U;
@@ -707,8 +708,9 @@ retry:
                         len2 = (size_t)len;
                     }
                     len3 = trec->max - trec->sum;
-                    if (len2 > len3) len2 = len3;
-                    trec->sum += len2;
+                    if (len2 <= len3) len3 = (address_t)len2;
+                    else len2 = len3;
+                    trec->sum += len3;
                     if (trec->gaps > 0) textrecursion_gaps(trec);
                     for (i = 0; i < len2; i++) {
                         textdump(trec, bytes->data[i] ^ inv);

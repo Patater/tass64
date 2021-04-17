@@ -510,8 +510,11 @@ static MUST_CHECK Obj *indexof(const Dict *v1, Obj *o2, ival_t *r, linepos_t epo
         if (err != NULL) return err;
         p = dict_lookup(v1, &pair);
         if (p != NULL) {
-            *r = p - v1->data;
-            return NULL;
+            size_t i = (size_t)(p - v1->data);
+            if (i <= ~(uval_t)0 >> 1) {
+                *r = (ival_t)i;
+                return NULL;
+            }
         }
     }
     return new_error_obj(ERROR_____KEY_ERROR, o2, epoint);
@@ -525,7 +528,7 @@ static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, stru
     if (v1->len >= (1U << (8 * sizeof(ival_t) - 1))) return new_error_mem(epoint); /* overflow */
     len = (ival_t)v1->len;
     if (v2->len > 3 || v2->len < 1) {
-        return new_error_argnum(v2->len, 1, 3, epoint);
+        return new_error_argnum(v2->len <= ~(argcount_t)0 ? (argcount_t)v2->len : ~(argcount_t)0, 1, 3, epoint);
     }
     end = len;
     if (v2->len > 2) {

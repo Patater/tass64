@@ -629,7 +629,7 @@ MUST_CHECK Obj *sliceparams(struct sliceparam_s *s, const struct indexoffs_s *io
     if (io->len >= (1U << (8 * sizeof(ival_t) - 1))) return new_error_mem(io->epoint); /* overflow */
     len = (ival_t)io->len;
     if (v2->len > 3 || v2->len < 1) {
-        return new_error_argnum(v2->len, 1, 3, io->epoint);
+        return new_error_argnum(v2->len <= ~(argcount_t)0 ? (argcount_t)v2->len : ~(argcount_t)0, 1, 3, io->epoint);
     }
     end = len;
     if (v2->len > 2) {
