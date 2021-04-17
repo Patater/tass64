@@ -39,7 +39,7 @@
 #include "errorobj.h"
 #include "addressobj.h"
 
-#define SHIFT (8 * sizeof(bdigit_t))
+#define SHIFT (8 * (unsigned int)sizeof(bdigit_t))
 
 static Type obj;
 

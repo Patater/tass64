@@ -682,8 +682,8 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                         v1->epoint.pos = out->pos;
                         continue;
                     case O_HIGHER:
-                        val1 >>= 8;
-                        /* fall through */
+                        val1 = (uint8_t)(val1 >> 8);
+                        break;
                     case O_LOWER:
                         val1 = (uint8_t)val1;
                         break;
