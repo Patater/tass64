@@ -209,6 +209,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x1c" "endc",
     "\x1c" "endcomment",
     "\x52" "endf",
+    "\x6c" "endfor",
     "\x52" "endfunction",
     "\x16" "endif",
     "\x20" "endlogical",
@@ -219,6 +220,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x1e" "endp",
     "\x1e" "endpage",
     "\x27" "endproc",
+    "\x6d" "endrept",
     "\x46" "ends",
     "\x4d" "endsection",
     "\x6b" "endsegment",
@@ -229,6 +231,7 @@ static const char * const command[] = { /* must be sorted, first char is the ID 
     "\x61" "endv",
     "\x61" "endvirtual",
     "\x58" "endweak",
+    "\x6e" "endwhile",
     "\x69" "endwith",
     "\x40" "eor",
     "\x25" "error",
@@ -305,7 +308,8 @@ typedef enum Command_types {
     CMD_ENDSWITCH, CMD_WEAK, CMD_ENDWEAK, CMD_CONTINUE, CMD_BREAK, CMD_AUTSIZ,
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
     CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF,
-    CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT
+    CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT, CMD_ENDFOR,
+    CMD_ENDREPT, CMD_ENDWHILE
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -1001,7 +1005,7 @@ static const char *check_waitfor(void) {
     case W_ENDP2:
         if (waitfor->u.cmd_page.label != NULL) {set_size(waitfor->u.cmd_page.label, current_address->address - waitfor->u.cmd_page.addr, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);val_destroy(Obj(waitfor->u.cmd_page.label));}
         /* fall through */
-    case W_ENDP: return ".endp";
+    case W_ENDP: return ".endpage";
     case W_ENDSEGMENT:
         if (waitfor->u.cmd_macro.val != NULL) val_destroy(waitfor->u.cmd_macro.val);
         return ".endsegment";
@@ -1010,58 +1014,68 @@ static const char *check_waitfor(void) {
         return ".endmacro";
     case W_ENDF: 
         if (waitfor->u.cmd_function.val != NULL) val_destroy(waitfor->u.cmd_function.val);
-        return ".endf";
-    case W_NEXT3:
+        return ".endfunction";
+    case W_ENDFOR3:
         pop_context();
         /* fall through */
-    case W_NEXT: return ".next";
+    case W_ENDFOR: return ".endfor";
+    case W_ENDREPT3:
+        pop_context();
+        /* fall through */
+    case W_ENDREPT: return ".endrept";
+    case W_ENDWHILE3:
+        pop_context();
+        /* fall through */
+    case W_ENDWHILE: return ".endwhile";
     case W_PEND:
         pop_context();
         if (waitfor->u.cmd_proc.label != NULL) {set_size(waitfor->u.cmd_proc.label, current_address->address - waitfor->u.cmd_proc.addr, current_address->mem, waitfor->u.cmd_proc.addr, waitfor->u.cmd_proc.membp);val_destroy(Obj(waitfor->u.cmd_proc.label));}
-        return ".pend";
+        return ".endproc";
     case W_BEND2:
         if (waitfor->u.cmd_block.label != NULL) {set_size(waitfor->u.cmd_block.label, current_address->address - waitfor->u.cmd_block.addr, current_address->mem, waitfor->u.cmd_block.addr, waitfor->u.cmd_block.membp);val_destroy(Obj(waitfor->u.cmd_block.label));}
         /* fall through */
     case W_BEND:
         pop_context();
-        return ".bend";
+        return ".endblock";
     case W_ENDN2:
     case W_ENDN:
         pop_context();
-        return ".endn";
+        return ".endnamespace";
     case W_ENDWITH2:
         pop_context2();
         /* fall through */
     case W_ENDWITH:
         if (waitfor->u.cmd_with.label != NULL) {set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(Obj(waitfor->u.cmd_with.label));}
         return ".endwith";
-    case W_ENDC: return ".endc";
+    case W_ENDC: return ".endcomment";
     case W_ENDS:
         if ((waitfor->skip & 1) != 0) current_address->unionmode = waitfor->u.cmd_struct.unionmode;
         /* fall through */
-    case W_ENDS2: return ".ends";
+    case W_ENDS2: return ".endstruct";
     case W_SEND2:
         section_close(NULL);
         /* fall through */
-    case W_SEND: return ".send";
+    case W_SEND: return ".endsection";
     case W_ENDU:
         if ((waitfor->skip & 1) != 0) union_close(&lpoint);
         /* fall through */
-    case W_ENDU2: return ".endu";
+    case W_ENDU2: return ".endunion";
     case W_HERE2:
         logical_close(NULL);
         /* fall through */
-    case W_HERE: return ".here";
+    case W_HERE: return ".endlogical";
     case W_ENDV2:
         virtual_close(NULL);
         /* fall through */
-    case W_ENDV: return ".endv";
+    case W_ENDV: return ".endvirtual";
     case W_ENDU3:
     case W_ENDS3:
     case W_ENDSEGMENT2:
     case W_ENDMACRO2:
     case W_ENDF3:
-    case W_NEXT2:
+    case W_ENDFOR2:
+    case W_ENDREPT2:
+    case W_ENDWHILE2:
     case W_NONE:
         break;
     }
@@ -1499,7 +1513,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         if (here() != ',') {err_msg(ERROR______EXPECTED, "','");
         error:
             if (labels.p != 0 && labels.data != labels.val) free(labels.data);
-            new_waitfor(W_NEXT, epoint); waitfor->skip = 0;
+            new_waitfor(W_ENDFOR, epoint); waitfor->skip = 0;
             return i;
         }
         lpoint.pos++;ignore();
@@ -1514,7 +1528,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     star_tree->vline = vline; star_tree = s; vline = s->vline;
     lin = lpoint.line;
 
-    new_waitfor(W_NEXT2, epoint);
+    new_waitfor(W_ENDFOR2, epoint);
     if (foreach) {
         waitfor->u.cmd_rept.breakout = false;
         if (iter.data != NULL) {
@@ -1706,9 +1720,9 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (nf != NULL) {
         if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
         else listing_line_cut2(listing, waitfor->epoint.pos);
-        close_waitfor(W_NEXT2);
+        close_waitfor(W_ENDFOR2);
     } else {
-        waitfor->what = W_NEXT; waitfor->skip = 0;
+        waitfor->what = W_ENDFOR; waitfor->skip = 0;
     }
     free(expr);
     free(expr2);
@@ -1729,7 +1743,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
         if (touval2(get_val(), &cnt, 8 * sizeof cnt)) cnt = 0;
     }
     if (cnt == 0) {
-        new_waitfor(W_NEXT, epoint); waitfor->skip = 0;
+        new_waitfor(W_ENDREPT, epoint); waitfor->skip = 0;
     } else {
         linenum_t lin = lpoint.line;
         bool starexists;
@@ -1742,7 +1756,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
         }
         s->addr = star;
         star_tree->vline = vline; star_tree = s; vline = s->vline;
-        new_waitfor(W_NEXT2, epoint);
+        new_waitfor(W_ENDREPT2, epoint);
         waitfor->u.cmd_rept.breakout = false;
         for (;;) {
             lpoint.line = lin;
@@ -1761,9 +1775,9 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
         if (nf != NULL) {
             if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
             else listing_line_cut2(listing, waitfor->epoint.pos);
-            close_waitfor(W_NEXT2);
+            close_waitfor(W_ENDREPT2);
         } else {
-            waitfor->what = W_NEXT; waitfor->skip = 0;
+            waitfor->what = W_ENDREPT; waitfor->skip = 0;
         }
         s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - lin;
     }
@@ -1802,7 +1816,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
         memcpy(expr, pline, lentmp);
         pline = expr;
     } else expr = (uint8_t *)oldpline;
-    new_waitfor(W_NEXT2, epoint);
+    new_waitfor(W_ENDWHILE2, epoint);
     waitfor->u.cmd_rept.breakout = false;
     for (;;) {
         bool truth;
@@ -1830,9 +1844,9 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (nf != NULL) {
         if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
         else listing_line_cut2(listing, waitfor->epoint.pos);
-        close_waitfor(W_NEXT2);
+        close_waitfor(W_ENDWHILE2);
     } else {
-        waitfor->what = W_NEXT; waitfor->skip = 0;
+        waitfor->what = W_ENDWHILE; waitfor->skip = 0;
     }
     if (expr != oldpline) free(expr);
     s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - apoint.line;
@@ -3317,15 +3331,58 @@ MUST_CHECK Obj *compile(void)
                 } else err_msg2(ERROR__MISSING_OPEN, ".function", &epoint);
                 goto breakerr;
             case CMD_NEXT: /* .next */
+                switch (waitfor->what) {
+                case W_ENDFOR:
+                case W_ENDFOR2:
+                case W_ENDFOR3:
+                    goto cmd_endfor;
+                case W_ENDREPT:
+                case W_ENDREPT2:
+                case W_ENDREPT3:
+                    goto cmd_endrept;
+                case W_ENDWHILE:
+                case W_ENDWHILE2:
+                case W_ENDWHILE3:
+                    goto cmd_endwhile;
+                default:
+                    err_msg2(ERROR__MISSING_OPEN, ".for', '.rept' or '.while", &epoint);
+                    goto breakerr;
+                }
+            case CMD_ENDFOR: /* .endfor */
+            cmd_endfor:
                 waitfor->epoint = epoint;
-                if (close_waitfor(W_NEXT)) {
+                if (close_waitfor(W_ENDFOR)) {
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
-                } else if (waitfor->what == W_NEXT2) {
+                } else if (waitfor->what == W_ENDFOR2) {
                     retval = true_value; /* anything non-null */
                     nobreak = false;
-                } else if (close_waitfor(W_NEXT3)) {
+                } else if (close_waitfor(W_ENDFOR3)) {
                     pop_context();
-                } else {err_msg2(ERROR__MISSING_OPEN, ".for', '.rept' or '.while", &epoint); goto breakerr;}
+                } else {err_msg2(ERROR__MISSING_OPEN, ".for", &epoint); goto breakerr;}
+                break;
+            case CMD_ENDREPT: /* .endrept */
+            cmd_endrept:
+                waitfor->epoint = epoint;
+                if (close_waitfor(W_ENDREPT)) {
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                } else if (waitfor->what == W_ENDREPT2) {
+                    retval = true_value; /* anything non-null */
+                    nobreak = false;
+                } else if (close_waitfor(W_ENDREPT3)) {
+                    pop_context();
+                } else {err_msg2(ERROR__MISSING_OPEN, ".rept", &epoint); goto breakerr;}
+                break;
+            case CMD_ENDWHILE: /* .endwhile */
+            cmd_endwhile:
+                waitfor->epoint = epoint;
+                if (close_waitfor(W_ENDWHILE)) {
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                } else if (waitfor->what == W_ENDWHILE2) {
+                    retval = true_value; /* anything non-null */
+                    nobreak = false;
+                } else if (close_waitfor(W_ENDWHILE3)) {
+                    pop_context();
+                } else {err_msg2(ERROR__MISSING_OPEN, ".while", &epoint); goto breakerr;}
                 break;
             case CMD_PEND: /* .pend */
                 if (waitfor->what==W_PEND) {
@@ -4319,25 +4376,25 @@ MUST_CHECK Obj *compile(void)
                     if (lst->len > i) list_shrink(lst, i);
                     const_assign(label, Obj(lst));
                     goto breakerr;
-                } else {push_dummy_context(); new_waitfor(W_NEXT3, &epoint);}
+                } else {push_dummy_context(); new_waitfor(prm == CMD_FOR ? W_ENDFOR3 : prm == CMD_REPT ? W_ENDREPT3 : W_ENDWHILE3, &epoint);}
                 break;
             case CMD_FOR: if ((waitfor->skip & 1) != 0)
                 { /* .for */
                     for_command(NULL, NULL, &epoint);
                     goto breakerr;
-                } else new_waitfor(W_NEXT, &epoint);
+                } else new_waitfor(W_ENDFOR, &epoint);
                 break;
             case CMD_REPT: if ((waitfor->skip & 1) != 0)
                 { /* .rept */
                     rept_command(NULL, NULL, &epoint);
                     goto breakerr;
-                } else new_waitfor(W_NEXT, &epoint);
+                } else new_waitfor(W_ENDREPT, &epoint);
                 break;
             case CMD_WHILE: if ((waitfor->skip & 1) != 0)
                 { /* .while */
                     while_command(NULL, NULL, &epoint);
                     goto breakerr;
-                } else new_waitfor(W_NEXT, &epoint);
+                } else new_waitfor(W_ENDWHILE, &epoint);
                 break;
             case CMD_CONTINUEIF:
             case CMD_BREAKIF:
@@ -4359,14 +4416,20 @@ MUST_CHECK Obj *compile(void)
                         }
                     }
                     while ((wp--) != 0) {
-                        if (waitfors[wp].what == W_NEXT2) {
-                            if (doit) {
-                                if (wp != 0 && (prm == CMD_BREAK || prm == CMD_BREAKIF)) waitfors[wp].u.cmd_rept.breakout = true;
-                                for (;wp <= waitfor_p; wp++) waitfors[wp].skip = 0;
-                            }
-                            nok = false;
+                        switch (waitfors[wp].what) {
+                        case W_ENDFOR2:
+                        case W_ENDREPT2:
+                        case W_ENDWHILE2:
                             break;
+                        default:
+                            continue;
                         }
+                        if (doit) {
+                            if (wp != 0 && (prm == CMD_BREAK || prm == CMD_BREAKIF)) waitfors[wp].u.cmd_rept.breakout = true;
+                            for (;wp <= waitfor_p; wp++) waitfors[wp].skip = 0;
+                        }
+                        nok = false;
+                        break;
                     }
                     if (nok) err_msg2(ERROR__MISSING_LOOP, NULL, &epoint);
                 }

@@ -145,6 +145,7 @@ context default lightgray
     keyword whole .endc brightcyan
     keyword whole .endcomment brightcyan
     keyword whole .endf brightcyan
+    keyword whole .endfor brightcyan
     keyword whole .endfunction brightcyan
     keyword whole .endif brightcyan
     keyword whole .endlogical brightcyan
@@ -155,6 +156,7 @@ context default lightgray
     keyword whole .endp brightcyan
     keyword whole .endpage brightcyan
     keyword whole .endproc brightcyan
+    keyword whole .endrept brightcyan
     keyword whole .ends brightcyan
     keyword whole .endsection brightcyan
     keyword whole .endsegment brightcyan
@@ -165,6 +167,7 @@ context default lightgray
     keyword whole .endv brightcyan
     keyword whole .endvirtual brightcyan
     keyword whole .endweak brightcyan
+    keyword whole .endwhile brightcyan
     keyword whole .endwith brightcyan
     keyword whole .eor brightcyan
     keyword whole .error brightcyan
