@@ -23,7 +23,6 @@
 #include "values.h"
 
 #include "strobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "errorobj.h"
 #include "addressobj.h"
@@ -169,10 +168,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (Register(op->v1)->len == 1) {
             Address_types am = register_to_indexing(Register(op->v1)->data[0]);
             if (am == A_NONE) break;
-            if (op->op->op == O_ADD) {
+            if (op->op == O_ADD) {
                 return new_address(val_reference(op->v2), am);
             }
-            if (op->op->op == O_SUB) {
+            if (op->op == O_SUB) {
                 op->v1 = int_value[0];
                 op->inplace = NULL;
                 return new_address(INT_OBJ->calc2(op), am);
@@ -185,7 +184,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_ERROR:
         return val_reference(op->v2);
     default:
-        if (t2->iterable && op->op != &o_MEMBER && op->op != &o_X) {
+        if (t2->iterable && op->op != O_MEMBER && op->op != O_X) {
             return t2->rcalc2(op);
         }
         break;
@@ -202,7 +201,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_FLOAT:
     case T_BYTES:
         if (Register(op->v2)->len == 1) {
-            if (op->op->op == O_ADD) {
+            if (op->op == O_ADD) {
                 Address_types am = register_to_indexing(Register(op->v2)->data[0]);
                 if (am != A_NONE) {
                     return new_address(val_reference(op->v1), am);
@@ -217,7 +216,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         /* fall through */
     case T_NONE:
     case T_ERROR:
-        if (op->op != &o_IN) {
+        if (op->op != O_IN) {
             return t1->calc2(op);
         }
         break;

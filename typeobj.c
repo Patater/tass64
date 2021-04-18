@@ -23,7 +23,6 @@
 #include "error.h"
 
 #include "strobj.h"
-#include "operobj.h"
 #include "errorobj.h"
 #include "functionobj.h"
 
@@ -103,7 +102,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_TYPE:
         return obj_oper_compare(op, icmp(op));
     case T_FUNCARGS:
-        if (op->op->op == O_FUNC) {
+        if (op->op == O_FUNC) {
             const Type *v1 = Type(op->v1);
             Funcargs *v2 = Funcargs(o2);
             argcount_t args = v2->len;
@@ -122,7 +121,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_ERROR:
         return val_reference(o2);
     default:
-        if (o2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
+        if (o2->obj->iterable && op->op != O_MEMBER && op->op != O_X) {
             return o2->obj->rcalc2(op);
         }
         break;

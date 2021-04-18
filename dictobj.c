@@ -26,7 +26,6 @@
 #include "listobj.h"
 #include "strobj.h"
 #include "boolobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -738,13 +737,13 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 
     switch (o2->obj->type) {
     case T_DICT:
-        if (op->op->op == O_CONCAT) {
+        if (op->op == O_CONCAT) {
             return concat(op);
         }
         break;
     case T_ANONSYMBOL:
     case T_SYMBOL:
-        if (op->op == &o_MEMBER) {
+        if (op->op == O_MEMBER) {
             return findit(Dict(op->v1), o2, op->epoint2);
         }
         break;
@@ -752,7 +751,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_ERROR:
         return val_reference(o2);
     default: 
-        if (o2->obj->iterable && op->op != &o_X) {
+        if (o2->obj->iterable && op->op != O_X) {
             return o2->obj->rcalc2(op);
         }
         break;
@@ -763,7 +762,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 static MUST_CHECK Obj *rcalc2(oper_t op) {
     Dict *v2 = Dict(op->v2);
     Obj *o1 = op->v1;
-    if (op->op == &o_IN) {
+    if (op->op == O_IN) {
         struct pair_s p;
         Obj *err;
 

@@ -26,7 +26,6 @@
 
 #include "listobj.h"
 #include "strobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "labelobj.h"
@@ -284,7 +283,7 @@ MALLOC Namespace *new_namespace(const struct file_list_s *file_list, linepos_t e
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
-    if (op->op == &o_MEMBER) {
+    if (op->op == O_MEMBER) {
         return namespace_member(op, Namespace(op->v1));
     }
     if (op->v2 == none_value || op->v2->obj == ERROR_OBJ) return val_reference(op->v2);

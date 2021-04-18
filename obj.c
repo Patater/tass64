@@ -63,7 +63,7 @@ Obj *const default_value = &defaultval.v;
 MUST_CHECK Obj *obj_oper_error(oper_t op) {
     Obj *v1, *v2;
     Error *err;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_EQ: return truth_reference(op->v1 == op->v2 || op->v1->obj->same(op->v1, op->v2));
     case O_NE: return truth_reference(op->v1 != op->v2 && !op->v1->obj->same(op->v1, op->v2));
     case O_WORD:
@@ -92,7 +92,7 @@ MUST_CHECK Obj *obj_oper_error(oper_t op) {
 
 MUST_CHECK Obj *obj_oper_compare(oper_t op, int val) {
     bool result;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_CMP: return val_reference(val < 0 ? minus1_value : int_value[(val > 0) ? 1 : 0]);
     case O_EQ: result = (val == 0); break;
     case O_NE: result = (val != 0); break;

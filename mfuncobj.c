@@ -26,7 +26,6 @@
 
 #include "typeobj.h"
 #include "namespaceobj.h"
-#include "operobj.h"
 #include "listobj.h"
 
 static Type mfunc_obj;
@@ -145,7 +144,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 static MUST_CHECK Obj *calc2(oper_t op) {
     switch (op->v2->obj->type) {
     case T_FUNCARGS:
-        if (op->op->op == O_FUNC) {
+        if (op->op == O_FUNC) {
             Mfunc *v1 = Mfunc(op->v1);
             Funcargs *v2 = Funcargs(op->v2);
             Obj *val;
@@ -166,7 +165,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_ERROR:
         return val_reference(op->v2);
     default: 
-        if (op->op == &o_MEMBER) {
+        if (op->op == O_MEMBER) {
             return namespace_member(op, Mfunc(op->v1)->names);
         }
         break;

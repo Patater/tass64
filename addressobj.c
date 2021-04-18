@@ -27,7 +27,6 @@
 #include "boolobj.h"
 #include "strobj.h"
 #include "intobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -364,7 +363,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     Obj *result;
     Address *v1 = Address(op->v1);
     atype_t am = v1->type;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_LNOT:
     case O_STRING:
         if (am != A_NONE) break;
@@ -404,11 +403,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2, *result;
     Address *v1 = Address(op->v1);
     atype_t am;
-    if (op->op == &o_LAND || op->op == &o_LOR) {
+    if (op->op == O_LAND || op->op == O_LOR) {
         bool i;
         result = truth(Obj(v1), TRUTH_BOOL, op->epoint);
         if (result->obj != BOOL_OBJ) return result;
-        i = (result == true_value) != (op->op == &o_LOR);
+        i = (result == true_value) != (op->op == O_LOR);
         val_destroy(result);
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference(i ? o2 : Obj(v1));
@@ -419,7 +418,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Address *v2 = Address(o2);
             atype_t am2 = v2->type;
             am = v1->type;
-            switch (op->op->op) {
+            switch (op->op) {
             case O_CMP:
             case O_EQ:
             case O_NE:
@@ -496,7 +495,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BYTES:
     case T_STR:
         am = v1->type;
-        switch (op->op->op) {
+        switch (op->op) {
         case O_CMP:
         case O_EQ:
         case O_NE:
@@ -533,10 +532,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (Register(op->v2)->len == 1) {
             Address_types am2 = register_to_indexing(Register(op->v2)->data[0]);
             if (am2 == A_NONE) break;
-            if (op->op->op == O_ADD) {
+            if (op->op == O_ADD) {
                 return new_address(val_reference(v1->val), v1->type << 4 | am2);
             } 
-            if (op->op->op == O_SUB) {
+            if (op->op == O_SUB) {
                 atype_t am1 = A_NONE;
                 for (am = v1->type; ; am >>= 4) {
                     atype_t amc = am & 0xf;
@@ -575,7 +574,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         }
         break;
     default:
-        if (op->op != &o_MEMBER && op->op != &o_X) {
+        if (op->op != O_MEMBER && op->op != O_X) {
             return o2->obj->rcalc2(op);
         }
         if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
@@ -596,7 +595,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BYTES:
     case T_GAP:
         am = v2->type;
-        switch (op->op->op) {
+        switch (op->op) {
         default:
             if (am == A_NONE) {
                 op->v2 = v2->val;
@@ -619,7 +618,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         }
         break;
     case T_CODE:
-        if (op->op != &o_IN) {
+        if (op->op != O_IN) {
             return t1->calc2(op);
         }
         break;
@@ -627,10 +626,10 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         if (Register(op->v1)->len == 1) {
             am = register_to_indexing(Register(op->v1)->data[0]);
             if (am == A_NONE) break;
-            if (op->op->op == O_ADD) {
+            if (op->op == O_ADD) {
                 return new_address(val_reference(v2->val), v2->type << 4 | am);
             }
-            if (op->op->op == O_SUB) {
+            if (op->op == O_SUB) {
                 if (am == v2->type) {
                     op->v1 = int_value[0];
                     op->v2 = v2->val;

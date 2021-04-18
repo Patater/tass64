@@ -33,7 +33,6 @@
 #include "bytesobj.h"
 #include "intobj.h"
 #include "listobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -818,14 +817,14 @@ static inline unsigned int ldigit(const Bits *v1) {
 static MUST_CHECK Obj *calc1(oper_t op) {
     Bits *v1 = Bits(op->v1);
     Obj *tmp, *v;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_BANK:
     case O_HIGHER:
     case O_LOWER:
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bits_calc1(op->op->op, ldigit(v1));
+        return bits_calc1(op->op, ldigit(v1));
     case O_INV:
         if (op->inplace != Obj(v1)) return invert(v1, op->epoint3);
         v1->len = ~v1->len;
@@ -858,7 +857,6 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
     bool neg;
     const bdigit_t *v1, *v2;
     bdigit_t *v;
-    Oper_types o;
     Bits *vv;
     len1 = bitslen(vv1);
     len2 = bitslen(vv2);
@@ -868,8 +866,7 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
         sz = len1; len1 = len2; len2 = sz;
     }
 
-    o = op->op->op;
-    switch (o) {
+    switch (op->op) {
     case O_AND:
         sz = vv2->len < 0 ? len1 : len2;
         break;
@@ -895,7 +892,7 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
     v1 = vv1->data; v2 = vv2->data;
 
     i = 0;
-    switch (o) {
+    switch (op->op) {
     case O_AND:
         if (vv1->bits < vv2->bits) {
             vv->bits = (vv1->len < 0) ? vv2->bits : vv1->bits;
@@ -1091,7 +1088,7 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
 
 static MUST_CHECK Obj *calc2_bits(oper_t op) {
     ssize_t val;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_CMP:
         val = icmp(op);
         return val_reference(val < 0 ? minus1_value : int_value[(val > 0) ? 1 : 0]);
@@ -1335,15 +1332,15 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Error *err;
     ival_t shift;
 
-    if (op->op == &o_X) {
+    if (op->op == O_X) {
         if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
         return repeat(op);
     }
-    if (op->op == &o_LAND) {
+    if (op->op == O_LAND) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference((v1->len != 0) ? o2 : Obj(v1));
     }
-    if (op->op == &o_LOR) {
+    if (op->op == O_LOR) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference((v1->len != 0) ? Obj(v1) : o2);
     }
@@ -1360,7 +1357,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (result != NULL) return result;
         /* fall through */
     case T_INT:
-        switch (op->op->op) {
+        switch (op->op) {
         case O_LSHIFT:
             err = o2->obj->ival(o2, &shift, 8 * sizeof shift, op->epoint2);
             if (err != NULL) return Obj(err);
@@ -1381,7 +1378,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         val_destroy(tmp);
         return result;
     default:
-        if (op->op != &o_MEMBER) {
+        if (op->op != O_MEMBER) {
             return o2->obj->rcalc2(op);
         }
         if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);

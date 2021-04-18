@@ -21,13 +21,14 @@
 #include "attributes.h"
 #include "inttypes.h"
 #include "stdbool.h"
+#include "oper_e.h"
 
 struct Label;
 struct Oper;
 struct Obj;
 
 struct oper_s {
-    struct Oper *op;
+    Oper_types op;
     struct Obj *v1;
     struct Obj *v2;
     linepos_t epoint;

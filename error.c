@@ -836,8 +836,8 @@ static bool err_msg_cant_broadcast(const Error *err) {
     return more;
 }
 
-static void err_msg_invalid_oper2(const Oper *op, Obj *v1, Obj *v2) {
-    adderror(op->name);
+static void err_msg_invalid_oper2(Oper_types op, Obj *v1, Obj *v2) {
+    adderror(operators[op].name);
     adderror("' of ");
     err_msg_variable(v1);
     if (v2 != NULL) {
@@ -1213,7 +1213,7 @@ void err_msg_unused_variable(Label *l) {
     adderror(" [-Wunused-variable]");
 }
 
-void err_msg_invalid_oper(const Oper *op, Obj *v1, Obj *v2, linepos_t epoint) {
+void err_msg_invalid_oper(int op, Obj *v1, Obj *v2, linepos_t epoint) {
     Error *err = new_error(ERROR__INVALID_OPER, epoint);
     err->u.invoper.op = op;
     err->u.invoper.v1 = (v1 != NULL) ? ((v1->refcount != 0) ? val_reference(v1) : v1) : NULL;
@@ -1238,7 +1238,7 @@ void err_msg_bool(Error_types no, Obj *o, linepos_t epoint) {
 void err_msg_bool_oper(oper_t op) {
     Obj *v2;
     new_error_msg2(diagnostic_errors.strict_bool, op->epoint3);
-    switch (op->op->op) {
+    switch (op->op) {
     case O_WORD:
     case O_HWORD:
     case O_BSWORD:

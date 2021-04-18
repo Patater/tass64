@@ -30,7 +30,6 @@
 #include "intobj.h"
 #include "bitsobj.h"
 #include "listobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -402,7 +401,7 @@ static int icmp(oper_t op) {
 static MUST_CHECK Obj *calc1(oper_t op) {
     Str *v1 = Str(op->v1);
     Obj *v, *tmp;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_LNOT:
     case O_BANK:
     case O_HIGHER:
@@ -426,7 +425,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
 static MUST_CHECK Obj *calc2_str(oper_t op) {
     Str *v1 = Str(op->v1), *v2 = Str(op->v2), *v;
     int val;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_ADD:
     case O_SUB:
     case O_MUL:
@@ -876,21 +875,21 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *v2 = op->v2;
     Obj *tmp;
 
-    if (op->op == &o_X) {
+    if (op->op == O_X) {
         if (v2 == none_value || v2->obj == ERROR_OBJ) return val_reference(v2);
         return repeat(op);
     }
-    if (op->op == &o_LAND || op->op == &o_LOR) {
+    if (op->op == O_LAND || op->op == O_LOR) {
         Obj *result = truth(Obj(v1), TRUTH_BOOL, op->epoint);
         bool i;
         if (result->obj != BOOL_OBJ) return result;
-        i = (result == true_value) != (op->op == &o_LOR);
+        i = (result == true_value) != (op->op == O_LOR);
         val_destroy(result);
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference(i ? v2 : Obj(v1));
     }
     if (v2->obj->iterable) {
-        if (op->op != &o_MEMBER) {
+        if (op->op != O_MEMBER) {
             return v2->obj->rcalc2(op);
         }
     }
@@ -907,7 +906,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_REGISTER:
         {
             Obj *result;
-            switch (op->op->op) {
+            switch (op->op) {
             case O_CONCAT:
             case O_AND:
             case O_OR:
@@ -935,7 +934,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             return result;
         }
     case T_GAP:
-        if (op->op != &o_MEMBER) {
+        if (op->op != O_MEMBER) {
             return v2->obj->rcalc2(op);
         }
         break;
@@ -962,7 +961,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_ADDRESS:
         {
             Obj *result;
-            switch (op->op->op) {
+            switch (op->op) {
             case O_CONCAT:
             case O_AND:
             case O_OR:
@@ -994,7 +993,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         /* fall through */
     case T_NONE:
     case T_ERROR:
-        if (op->op != &o_IN) {
+        if (op->op != O_IN) {
             return t1->calc2(op);
         }
         break;
