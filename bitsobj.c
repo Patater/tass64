@@ -164,13 +164,12 @@ static MUST_CHECK Obj *convert2(oper_t op) {
         err->u.intconv.val = val_reference(v2->val[0].val);
         return Obj(err);
     }
+    if (bits->v.refcount == 1) {
+        bits->bits = len2;
+    } 
     if (bits->bits == len2) {
         return inplace ? val_reference(Obj(bits)) : Obj(bits);
     }
-    if (bits->v.refcount == 1) {
-        bits->bits = len2;
-        return inplace ? val_reference(Obj(bits)) : Obj(bits);
-    } 
     bits2 = new_bits2(blen);
     bits2->len = bits->len;
     bits2->bits = len2;
