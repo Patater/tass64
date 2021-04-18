@@ -750,6 +750,10 @@ key but the value can be anything.
         <b class="d">.text</b> {<span>1</span>:<span class="s">"one"</span>, <span>2</span>:<span class="s">"two"</span>}[<span>2</span>]<i>; "two"</i>
 <i>; 16 element "fader" table 1-&gt;15-&gt;12-&gt;11-&gt;0</i>
         <b class="d">.byte</b> {<span>1</span>:<span>15</span>, <span>15</span>:<span>12</span>, <span>12</span>:<span>11</span>, :<span>0</span>}[<span class="k">range</span>(<span>16</span>)]
+<i>; Symbol accessible values. May be useful as a function return value too.</i>
+coords  <b>=</b> {.<u>x</u>: <span>24</span>, .<u>y</u>: <span>50</span>}
+        <b>ldx</b> #<u>coords</u>.<u>x</u>
+        <b>ldy</b> #<u>coords</u>.<u>y</u>
 </pre>
 
 <h3>Code<a name="code" href="#code"></a></h3>
@@ -985,6 +989,17 @@ used for conversions or type checks.
 <tr><td><code><a name="t_tuple"><u>tuple</u></a></code><td>Tuple type
 <tr><td><code><a name="t_type"><u>type</u></a></code><td>Type type
 </table></div>
+
+<p>Bit and byte string conversions can take a second parameter to specify and
+exact size. Values which can fit in shorter space will be padded but longer ones
+give an error.
+
+<dl class="dir">
+<dt><code><b>bits(</b>&lt;expression&gt;, &lt;bits count expression&gt;<b>)</b></code>
+<dd>Convert to the specific number of bits. If the number of bits is negative then it's a signed.
+<dt><code><b>bytes(</b>&lt;expression&gt;, &lt;byte count expression&gt;<b>)</b></code>
+<dd>Convert to the specific number of bytes. If the number of bits is negative then it's a signed.
+</dl>
 
 <pre width="80">
         <b class="k">.cerror</b> <span class="k">type</span>(<u>var</u>) != <span class="k">str</span>, <span class="s">"Not a string!"</span>
@@ -2473,7 +2488,7 @@ better to use comparison operators instead.
         <b>bit</b> <span>$eaea</span>
         <b class="k">.else</b>           <i>;else 5 cycles</i>
         <b>inc</b> <span>$2</span>
-        <b class="k">.fi</b>
+        <b class="k">.endif</b>
 </pre>
 
 <dt><code><b class="k">.fi</b></code><a name="d_fi" href="#d_fi"></a>
@@ -2483,7 +2498,7 @@ better to use comparison operators instead.
 
 <h4>Switch, case, default<a name="conditional-switch" href="#conditional-switch"></a></h4>
 
-<p>Similar to the <a href="#d_if"><code>.if</code></a>/<a href="#d_elsif"><code>.elsif</code></a>/<a href="#d_else"><code>.else</code></a>/<a href="#d_fi"><code>.fi</code></a>
+<p>Similar to the <a href="#d_if"><code>.if</code></a>, <a href="#d_elsif"><code>.elsif</code></a>, <a href="#d_else"><code>.else</code></a>, <a href="#d_endif"><code>.endif</code></a>
 construct, but the compared value needs to be written only once in the switch
 statement.
 
@@ -2615,7 +2630,7 @@ variables in the condition might not be in the same scope as the loop body.</p>
 <dt><code><b class="k">.breakif</b> &lt;condition&gt;</code><a name="d_breakif" href="#d_breakif"></a>
 <dd>Exit current repetition loop immediately if the condition holds.
 
-<p>It's a shorthand for a <code>.if .break .fi</code> sequence.</p>
+<p>It's a shorthand for a <a href="#d_if"><code>.if</code></a>, <a href="#d_break"><code>.break</code></a>, <a href="#d_endif"><code>.endif</code></a> sequence.</p>
 
 <dt><code><b class="k">.continue</b></code><a name="d_continue" href="#d_continue"></a>
 <dd>Continue current repetition loop's next iteration.
@@ -2623,7 +2638,7 @@ variables in the condition might not be in the same scope as the loop body.</p>
 <dt><code><b class="k">.continueif</b> &lt;condition&gt;</code><a name="d_continueif" href="#d_continueif"></a>
 <dd>Continue current repetition loop's next iteration if the condition holds.
 
-<p>It's a shorthand for a <code>.if .continue .fi</code> sequence.</p>
+<p>It's a shorthand for a <a href="#d_if"><code>.if</code></a>, <a href="#d_continue"><code>.continue</code></a>, <a href="#d_endif"><code>.endif</code></a> sequence.</p>
 
 <dt><code><b class="k">.next</b></code><a name="d_next" href="#d_next"></a>
 <dd>Closing directive of <a href="#d_for"><code>.for</code></a>,
@@ -2645,7 +2660,7 @@ loop    <b class="k">.lbl</b>
 i       <b class="k">.var</b> <u>i</u> - <span>1</span>
         <b class="k">.ifne</b> <u>i</u>
         <b class="k">.goto</b> <u>loop</u>       <i>;generates 100 nops</i>
-        <b class="k">.fi</b>              <i>;the hard way ;)</i>
+        <b class="k">.endif</b>           <i>;the hard way ;)</i>
 </pre>
 
 </dl>
@@ -4543,6 +4558,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 </dl>
 
 <h3>Errors<a name="messages-errors" href="#messages-errors"></a></h3>
+
 <dl class="errorlist">
 <dt>'?' expected<dd>something is missing
 <dt>? argument is missing<dd>not enough arguments supplied
@@ -4622,6 +4638,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 </dl>
 
 <h3>Fatal errors<a name="messages-fatal" href="#messages-fatal"></a></h3>
+
 <dl class="errorlist">
 <dt>can't open file<dd>cannot open file
 <dt>can't write error file<dd>cannot write the error file

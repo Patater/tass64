@@ -992,7 +992,7 @@ static void union_close(linepos_t epoint) {
 static const char *check_waitfor(void) {
     switch (waitfor->what) {
     case W_FI2:
-    case W_FI: return ".fi";
+    case W_FI: return ".endif";
     case W_SWITCH2:
     case W_SWITCH:
         if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
@@ -3172,7 +3172,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_ELSE: /* .else */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
-                    if (waitfor->what==W_FI) { err_msg2(ERROR______EXPECTED, "'.fi'", &epoint); goto breakerr; }
+                    if (waitfor->what==W_FI) { err_msg2(ERROR______EXPECTED, "'.endif'", &epoint); goto breakerr; }
                     if (waitfor->what!=W_FI2) { err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr; }
                     waitfor->skip = (uint8_t)(waitfor->skip >> 1);
                     waitfor->what = W_FI;waitfor->epoint = epoint;
@@ -3236,7 +3236,7 @@ MUST_CHECK Obj *compile(void)
                 {
                     bool truth;
                     if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
-                    if (waitfor->what == W_FI) {err_msg2(ERROR______EXPECTED, "'.fi'", &epoint); goto breakerr; }
+                    if (waitfor->what == W_FI) {err_msg2(ERROR______EXPECTED, "'.endif'", &epoint); goto breakerr; }
                     if (waitfor->what != W_FI2) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     waitfor->epoint = epoint;
                     if (waitfor->skip != 2) { waitfor->skip = 0; break; }

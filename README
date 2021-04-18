@@ -571,6 +571,10 @@ y in x is a key             1 in {1:2} is true
         .text {1:"one", 2:"two"}[2]; "two"
 ; 16 element "fader" table 1->15->12->11->0
         .byte {1:15, 15:12, 12:11, :0}[range(16)]
+; Symbol accessible values. May be useful as a function return value too.
+coords  = {.x: 24, .y: 50}
+        ldx #coords.x
+        ldy #coords.y
 
 Code
 
@@ -779,6 +783,17 @@ list    List type
 str     Character string type
 tuple   Tuple type
 type    Type type
+
+Bit and byte string conversions can take a second parameter to specify and
+exact size. Values which can fit in shorter space will padded but longer ones
+give an error.
+
+bits(<expression>, <bits count expression>)
+    Convert to the specific number of bits. If the number of bits is negative
+    then it's a signed.
+bytes(<expression>, <byte count expression>)
+    Convert to the specific number of bytes. If the number of bits is negative
+    then it's a signed.
 
         .cerror type(var) != str, "Not a string!"
         .text str(year)   ; convert to string
@@ -2052,7 +2067,7 @@ If, else if, else
             bit $eaea
             .else           ;else 5 cycles
             inc $2
-            .fi
+            .endif
 
 .fi
 .endif
@@ -2060,8 +2075,8 @@ If, else if, else
 
 Switch, case, default
 
-Similar to the .if/.elsif/.else/.fi construct, but the compared value needs to
-be written only once in the switch statement.
+Similar to the .if, .elsif, .else, .endif construct, but the compared value
+needs to be written only once in the switch statement.
 
 .switch <expression>
     Evaluate expression and remember it
@@ -2179,14 +2194,14 @@ within.
 .breakif <condition>
     Exit current repetition loop immediately if the condition holds.
 
-    It's a shorthand for a .if .break .fi sequence.
+    It's a shorthand for a .if, .break, .endif sequence.
 
 .continue
     Continue current repetition loop's next iteration.
 .continueif <condition>
     Continue current repetition loop's next iteration if the condition holds.
 
-    It's a shorthand for a .if .continue .fi sequence.
+    It's a shorthand for a .if, .continue, .endif sequence.
 
 .next
     Closing directive of .for, .bfor, .rept, .brept, .while and .bwhile loop
@@ -2204,7 +2219,7 @@ within.
     i       .var i - 1
             .ifne i
             .goto loop       ;generates 100 nops
-            .fi              ;the hard way ;)
+            .endif           ;the hard way ;)
 
 Including files
 
