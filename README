@@ -2032,9 +2032,6 @@ If, else if, else
     Compile if previous conditions were not met and the condition is true
 .else
     Compile if previous conditions were not met
-.fi
-.endif
-    End of conditional compilation.
 .ifne <value>
     Compile if value is not zero
 .ifeq <value>
@@ -2044,18 +2041,22 @@ If, else if, else
 .ifmi <value>
     Compile if value is less than zero
 
-The .ifne, .ifeq, .ifpl and .ifmi directives exists for compatibility only, in
-practice it's better to use comparison operators instead.
+    The .ifne, .ifeq, .ifpl and .ifmi directives exists for compatibility only,
+    in practice it's better to use comparison operators instead.
 
-        .if wait==2     ;2 cycles
-        nop
-        .elsif wait==3  ;3 cycles
-        bit $ea
-        .elsif wait==4  ;4 cycles
-        bit $eaea
-        .else           ;else 5 cycles
-        inc $2
-        .fi
+            .if wait==2     ;2 cycles
+            nop
+            .elsif wait==3  ;3 cycles
+            bit $ea
+            .elsif wait==4  ;4 cycles
+            bit $eaea
+            .else           ;else 5 cycles
+            inc $2
+            .fi
+
+.fi
+.endif
+    End of conditional compilation.
 
 Switch, case, default
 
@@ -2069,32 +2070,34 @@ be written only once in the switch statement.
     equals
 .default
     Compile if the previous conditions were all skipped
-.endswitch
-    End of conditional compilation.
 
-        .switch wait
-        .case 2         ;2 cycles
-        nop
-        .case 3         ;3 cycles
-        bit $ea
-        .case 4         ;4 cycles
-        bit $eaea
-        .default        ;else 5 cycles
-        inc $2
-        .endswitch
+            .switch wait
+            .case 2         ;2 cycles
+            nop
+            .case 3         ;3 cycles
+            bit $ea
+            .case 4         ;4 cycles
+            bit $eaea
+            .default        ;else 5 cycles
+            inc $2
+            .endswitch
+
+.endswitch
+    End of .switch conditional compilation block.
 
 Comment
 
 .comment
     Never compile.
+
+            .comment
+            lda #1          ;this won't be compiled
+            sta $d020
+            .endcomment
+
 .endc
 .endcomment
-    End of conditional compilation.
-
-        .comment
-        lda #1          ;this won't be compiled
-        sta $d020
-        .endcomment
+    End of .comment block.
 
 Repetitions
 
@@ -2113,7 +2116,6 @@ within.
 
 .for [<assignment>], [<condition>], [<assignment>]
 .bfor [<assignment>], [<condition>], [<assignment>]
-.endfor
     Assign initial value, loop while the condition is true and modify value.
 
     First a variable is set, usually this is used for counting. This is
@@ -2136,7 +2138,6 @@ within.
 
 .for <variable>[, <variable>, ...] in <expression>
 .bfor <variable>[, <variable>, ...] in <expression>
-.endfor
     Assign variable(s) to values in sequence one-by-one in order.
 
     The expression is usually the range function or some sort of list.
@@ -2146,9 +2147,10 @@ within.
             sta $d020
             .endfor
 
+.endfor
+    End of a .for or .bfor loop block
 .rept <expression>
 .brept <expression>
-.endrept
     Repeat enclosed lines the specified number of times.
 
             .rept 100
@@ -2161,14 +2163,17 @@ within.
             .endrept
             jmp lst[5].label ;use label of 6th iteration
 
+.endrept
+    End of a .rept or .brept block
 .while <condition>
 .bwhile <condition>
-.endwhile
     Repeat enclosed lines until the condition holds.
 
     Works as expected however the scoped variant might be tricky to use as
     variables in the condition might not be in the same scope as the loop body.
 
+.endwhile
+    End of a .while or .bwhile loop block
 .break
     Exit current repetition loop immediately.
 .breakif <condition>
@@ -2272,7 +2277,7 @@ ctable  .byte colors.(red, green, blue)
     ize     .proc
             nop
     cucc    nop
-            .pend
+            .endproc
 
             jsr ize
             jmp ize.cucc
@@ -2346,7 +2351,7 @@ ctable  .byte colors.(red, green, blue)
     Other use of weak symbols might be in included libraries to change default
     values or replace stub functions and data structures.
 
-    If these stubs are defined using .proc/.pend then their default
+    If these stubs are defined using .proc/.endproc then their default
     implementations will not even exists in the output at all when a stronger
     symbol overrides them.
 
@@ -3639,7 +3644,7 @@ Symbol listing
 
     The difference to normal symbol listing is that 64tass assumes these
     symbols will be used in another source. In practice this means that any
-    .proc/.pend blocks appearing in the symbol file will always be compiled
+    .proc/.endproc blocks appearing in the symbol file will always be compiled
     even if unused otherwise.
 
 --vice-labels
