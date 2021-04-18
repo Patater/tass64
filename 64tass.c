@@ -521,8 +521,8 @@ static int get_command(void) {
                     if ((uint8_t)(label[l] - 'a') <= ('z' - 'a')) break;
                     if ((label[l] & 0x80) != 0) {
                         if (arguments.to_ascii) {
-                            uint32_t ch;
-                            utf8in(label + l, &ch);
+                            uchar_t ch;
+                            utf8in(pline + lpoint.pos + l, &ch);
                             if ((uget_property(ch)->property & (id_Continue | id_Start)) != 0) return lenof(command);
                         }
                     } else if (label[l] <= '9' || (uint8_t)(label[l] - 'A') <= ('Z' - 'A') || label[l] == '_') return lenof(command);
