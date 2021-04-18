@@ -404,8 +404,8 @@ static bool tobool(const struct values_s *v1, bool *truth) {
     return error;
 }
 
-static MUST_CHECK bool touval2(Obj *v1, uval_t *uv, unsigned int bits, linepos_t epoint) {
-    Error *err = v1->obj->uval2(v1, uv, bits, epoint);
+static MUST_CHECK bool touval2(struct values_s *vals, uval_t *uv, unsigned int bits) {
+    Error *err = vals->val->obj->uval2(vals->val, uv, bits, &vals->epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
     return true;
@@ -1724,7 +1724,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (!get_exp(0, 1, 1, epoint)) cnt = 0;
     else {
         struct values_s *vs = get_val();
-        if (touval2(vs->val, &cnt, 8 * sizeof cnt, &vs->epoint)) cnt = 0;
+        if (touval2(vs, &cnt, 8 * sizeof cnt)) cnt = 0;
     }
     if (cnt == 0) {
         new_waitfor(W_NEXT, epoint); waitfor->skip = 0;
@@ -3610,7 +3610,7 @@ MUST_CHECK Obj *compile(void)
                             else foffs = ival;
                             if ((vs = get_val()) != NULL) {
                                 uval_t uval;
-                                if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
+                                if (touval2(vs, &uval, 8 * sizeof uval)) {}
                                 else fsize = uval;
                             }
                         }
@@ -3872,7 +3872,7 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val();
                     if (prm == CMD_ALIGN) {
                         address_t max = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? all_mem2 : all_mem;
-                        if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
+                        if (touval2(vs, &uval, 8 * sizeof uval)) {}
                         else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
                         else if (uval > 1) {
                             address_t itt = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? current_address->address : ((current_address->l_address - current_address->l_start) & all_mem);
@@ -3884,7 +3884,7 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                     } else {
-                        if (touval2(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
+                        if (touval2(vs, &uval, 8 * sizeof uval)) {}
                         else db = uval;
                     }
                     mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
@@ -4094,8 +4094,8 @@ MUST_CHECK Obj *compile(void)
                                 }
                             }
                         } else {
-                            if (touval2(val, &uval, 24, &vs->epoint)) tryit = false;
-                            tmp.start = uval;
+                            if (touval2(vs, &uval, 24)) tryit = false;
+                            tmp.start = uval & 0xffffff;
                         }
                         if (!endok) {
                             vs = get_val();
@@ -4112,7 +4112,7 @@ MUST_CHECK Obj *compile(void)
                                     if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, NULL, &vs->epoint); tryit = false;}
                                 }
                             } else {
-                                if (touval2(val, &uval, 24, &vs->epoint)) tryit = false;
+                                if (touval2(vs, &uval, 24)) tryit = false;
                                 tmp.end = uval & 0xffffff;
                             }
                         }
