@@ -404,8 +404,11 @@ static bool tobool(const struct values_s *v1, bool *truth) {
     return error;
 }
 
-static MUST_CHECK bool touval2(struct values_s *vals, uval_t *uv, unsigned int bits) {
-    Error *err = vals->val->obj->uval2(vals->val, uv, bits, &vals->epoint);
+static MUST_CHECK bool touval2(const struct values_s *vals, uval_t *uv, unsigned int bits) {
+    Error *err;
+    Obj *val = vals->val;
+    if (val == none_value && (constcreated || !fixeddig) && pass < max_pass) return true;
+    err = val->obj->uval2(val, uv, bits, &vals->epoint);
     if (err == NULL) return false;
     err_msg_output_and_destroy(err);
     return true;
@@ -1723,8 +1726,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     else listing_line(listing, epoint->pos);
     if (!get_exp(0, 1, 1, epoint)) cnt = 0;
     else {
-        struct values_s *vs = get_val();
-        if (touval2(vs, &cnt, 8 * sizeof cnt)) cnt = 0;
+        if (touval2(get_val(), &cnt, 8 * sizeof cnt)) cnt = 0;
     }
     if (cnt == 0) {
         new_waitfor(W_NEXT, epoint); waitfor->skip = 0;
@@ -3837,16 +3839,16 @@ MUST_CHECK Obj *compile(void)
                     switch (prm) {
                     case CMD_DATABANK:
                         if (vs->val == gap_value) databank = 256;
-                        else if (touval(vs->val, &uval, 8, &vs->epoint)) {}
+                        else if (touval2(vs, &uval, 8)) {}
                         else databank = uval & 0xff;
                         break;
                     case CMD_DPAGE:
                         if (vs->val == gap_value) dpage = 65536;
-                        else if (touval(vs->val, &uval, 16, &vs->epoint)) {}
+                        else if (touval2(vs, &uval, 16)) {}
                         else dpage = uval & 0xffff;
                         break;
                     case CMD_EOR:
-                        if (touval(vs->val, &uval, 8, &vs->epoint)) {}
+                        if (touval2(vs, &uval, 8)) {}
                         else outputeor = (uval & 0xff) * 0x01010101;
                         break;
                     case CMD_SEED:
@@ -3948,13 +3950,11 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, epoint.pos);
                     if (!get_exp(0, 3, 3, &epoint)) goto breakerr;
                     vs = get_val();
-                    if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) current_section->provides = ~(uval_t)0;
+                    if (touval2(vs, &uval, 8 * sizeof uval)) current_section->provides = ~(uval_t)0;
                     else current_section->provides = uval;
-                    vs++;
-                    if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) current_section->requires = 0;
+                    if (touval2(vs + 1, &uval, 8 * sizeof uval)) current_section->requires = 0;
                     else current_section->requires = uval;
-                    vs++;
-                    if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) current_section->conflicts = 0;
+                    if (touval2(vs + 2, &uval, 8 * sizeof uval)) current_section->conflicts = 0;
                     else current_section->conflicts = uval;
                 }
                 break;
@@ -3965,10 +3965,9 @@ MUST_CHECK Obj *compile(void)
                     listing_line(listing, epoint.pos);
                     if (!get_exp(0, 2, 2, &epoint)) goto breakerr;
                     vs = get_val();
-                    if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
+                    if (touval2(vs, &uval, 8 * sizeof uval)) {}
                     else if ((uval & current_section->provides) != uval) err_msg2(ERROR_REQUIREMENTS_, NULL, &epoint);
-                    vs++;
-                    if (touval(vs->val, &uval, 8 * sizeof uval, &vs->epoint)) {}
+                    if (touval2(vs + 1, &uval, 8 * sizeof uval)) {}
                     else if ((uval & current_section->provides) != 0) err_msg2(ERROR______CONFLICT, NULL, &epoint);
                 }
                 break;
@@ -4118,7 +4117,7 @@ MUST_CHECK Obj *compile(void)
                         }
                         vs = get_val();
                         if (vs == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr;}
-                        if (touval(vs->val, &uval, 8, &vs->epoint)) {}
+                        if (touval2(vs, &uval, 8)) {}
                         else if (tryit) {
                             tmp.offset = uval & 0xff;
                             if (tmp.start > tmp.end) {
