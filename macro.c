@@ -435,9 +435,11 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
         macro_parameters.current->all.len = npoint.pos - opoint.pos;
     }
     if (t == W_ENDS) {
+        enterfile(macro->file_list->file, epoint);
         if (context != NULL) push_context(context);
         val = compile();
         if (context != NULL) pop_context();
+        exitfile();
     } else {
         linenum_t lin = lpoint.line;
         bool starexists;
