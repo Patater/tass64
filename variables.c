@@ -682,7 +682,7 @@ static Namespace *find_space(const char *here, bool use) {
     do {
         labelname.data = pline + lpoint.pos; labelname.len = get_label(labelname.data);
         if (labelname.len == 0) return NULL;
-        lpoint.pos += labelname.len;
+        lpoint.pos += (linecpos_t)labelname.len;
         l = find_label2(&labelname, space);
         if (l == NULL) return NULL;
         space = get_namespace(l->value);

@@ -62,8 +62,8 @@ struct Bits;
 extern MUST_CHECK Obj *bytes_from_uval(uval_t, unsigned int);
 extern MUST_CHECK Obj *bytes_from_str(const struct Str *, linepos_t, Textconv_types);
 extern MUST_CHECK Obj *bytes_from_bits(const struct Bits *, linepos_t);
-extern MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *, size_t *, linepos_t);
-extern MUST_CHECK Obj *bytes_from_z85str(const uint8_t *, size_t *, linepos_t);
+extern MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *, linecpos_t *, linepos_t);
+extern MUST_CHECK Obj *bytes_from_z85str(const uint8_t *, linecpos_t *, linepos_t);
 extern MUST_CHECK Obj *bytes_from_obj(Obj *, linepos_t);
 extern MUST_CHECK Obj *float_from_bytes(const Bytes *, linepos_t);
 #endif

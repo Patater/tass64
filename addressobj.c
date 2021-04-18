@@ -374,12 +374,10 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        goto ok;
     case O_INV:
     case O_NEG:
     case O_POS:
         if (check_addr2(am)) break;
-    ok:
         op->v1 = v1->val;
         op->inplace = NULL;
         result = op->v1->obj->calc1(op);

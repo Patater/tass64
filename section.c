@@ -134,7 +134,7 @@ struct section_s *find_this_section(const char *here) {
     do {
         labelname.data = pline + lpoint.pos; labelname.len = get_label(labelname.data);
         if (labelname.len == 0) return NULL;
-        lpoint.pos += labelname.len;
+        lpoint.pos += (linecpos_t)labelname.len;
         space = find_section(&labelname, space);
         if (space == NULL) return NULL;
         lpoint.pos++;
