@@ -205,7 +205,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
         if (blen != 0) memcpy(bytes2->data, bytes->data, blen);
     }
     memset(bytes2->data + blen, 0, len2 - blen);
-    bytes2->len = bytes->len < 0 ? ~len2 : len2;
+    bytes2->len = (ssize_t)(bytes->len < 0 ? ~(size_t)len2 : len2);
     if (!inplace) val_destroy(Obj(bytes));
     return Obj(bytes2);
 }
@@ -759,7 +759,7 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
 
     while (sz != 0 && d[sz - 1] == 0) sz--;
     if (sz > SSIZE_MAX) goto failed2; /* overflow */
-    v->len = inv ? (ssize_t)~sz : (ssize_t)sz;
+    v->len = (ssize_t)(inv ? ~sz : sz);
     if (v->u.val != d) {
         if (sz <= sizeof v->u.val) {
             if (sz != 0) memcpy(v->u.val, d, sz);
@@ -988,7 +988,7 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
     }
     for (; i < sz; i++) v[i] = v1[i];
     /*if (i > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
-    vv->len = neg ? (ssize_t)~i : (ssize_t)i;
+    vv->len = (ssize_t)(neg ? ~i : i);
     return Obj(vv);
 }
 
@@ -1025,7 +1025,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
     if ((v2->len ^ v1->len) < 0) {
         for (i = 0; i < len2; i++) s[i + len1] = (uint8_t)~v2->data[i];
     } else memcpy(s + len1, v2->data, len2);
-    v->len = (v1->len < 0) ? (ssize_t)~ln : (ssize_t)ln;
+    v->len = (ssize_t)(v1->len < 0 ? ~ln : ln);
     return Obj(v);
 failed:
     return new_error_mem(op->epoint3);
