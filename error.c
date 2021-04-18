@@ -861,7 +861,7 @@ static void err_msg_invalid_oper3(const Error *err) {
     }
 
     more = new_error_msg_err(err);
-    err_msg_invalid_oper2(err->u.invoper.op, v1, v2);
+    err_msg_invalid_oper2((Oper_types)err->u.invoper.op, v1, v2);
     if (more) new_error_msg_err_more(err);
 }
 
