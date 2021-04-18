@@ -176,7 +176,7 @@ static void error_extend(void) {
     if (error_list.members.root != NULL) error_list.members.root = (struct avltree_node *)((dir ? ((uint8_t *)error_list.members.root + diff) : ((uint8_t *)error_list.members.root - diff)));
 }
 
-static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len, size_t pos) {
+static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len, linecpos_t pos) {
     struct errorentry_s *err;
     close_error();
     error_list.len = error_list.header_pos + sizeof *err;
@@ -861,7 +861,7 @@ static void err_msg_invalid_oper3(const Error *err) {
     }
 
     more = new_error_msg_err(err);
-    err_msg_invalid_oper2((Oper_types)err->u.invoper.op, v1, v2);
+    err_msg_invalid_oper2(err->u.invoper.op, v1, v2);
     if (more) new_error_msg_err_more(err);
 }
 
@@ -1211,15 +1211,6 @@ void err_msg_unused_const(Label *l) {
 void err_msg_unused_variable(Label *l) {
     err_msg_unused("unused variable", diagnostic_errors.unused.variable, l);
     adderror(" [-Wunused-variable]");
-}
-
-void err_msg_invalid_oper(int op, Obj *v1, Obj *v2, linepos_t epoint) {
-    Error *err = new_error(ERROR__INVALID_OPER, epoint);
-    err->u.invoper.op = op;
-    err->u.invoper.v1 = (v1 != NULL) ? ((v1->refcount != 0) ? val_reference(v1) : v1) : NULL;
-    err->u.invoper.v2 = (v2 != NULL) ? ((v2->refcount != 0) ? val_reference(v2) : v2) : NULL;
-    err_msg_invalid_oper3(err);
-    val_destroy(Obj(err));
 }
 
 void err_msg_argnum(argcount_t num, argcount_t min, argcount_t max, linepos_t epoint) {

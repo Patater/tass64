@@ -1510,9 +1510,10 @@ failed2:
     return new_error_mem(epoint);
 }
 
-MUST_CHECK Obj *int_from_decstr(const uint8_t *s, size_t *ln, size_t *ln2) {
+MUST_CHECK Obj *int_from_decstr(const uint8_t *s, linecpos_t *ln, linecpos_t *ln2) {
     const uint8_t *end;
-    size_t i, k, sz;
+    linecpos_t i, k;
+    size_t sz;
     digit_t *d, *end2, val;
     Int *v;
 

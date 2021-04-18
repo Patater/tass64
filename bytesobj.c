@@ -436,9 +436,9 @@ static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t UNUSED(epoint)) {
     return NULL;
 }
 
-MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint) {
+MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, linecpos_t *ln, linepos_t epoint) {
     Bytes *v;
-    size_t i, j, spc;
+    linecpos_t i, j, spc;
     uint8_t ch2, ch = s[0];
 
     i = 1; j = (s[1] == 0x20) ? 2 : 0; spc = 0;
@@ -492,9 +492,9 @@ MUST_CHECK Obj *bytes_from_hexstr(const uint8_t *s, size_t *ln, linepos_t epoint
     return Obj(v);
 }
 
-MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, size_t *ln, linepos_t epoint) {
+MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, linecpos_t *ln, linepos_t epoint) {
     Bytes *v;
-    size_t i, j, sz;
+    linecpos_t i, j, sz;
     uint8_t ch2, ch = s[0];
 
     i = 1; j = 0;

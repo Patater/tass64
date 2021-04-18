@@ -330,11 +330,11 @@ static void getriter(struct iter_s *v) {
     v->len = Str(v->data)->chars;
 }
 
-MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
+MUST_CHECK Obj *str_from_str(const uint8_t *s, linecpos_t *ln, linepos_t epoint) {
     Str *v;
-    size_t i2 = 0;
-    size_t i, j;
-    size_t r = 0;
+    linecpos_t i2 = 0;
+    linecpos_t i, j;
+    linecpos_t r = 0;
     uint8_t ch2, ch = s[0];
 
     i = 1;
@@ -362,7 +362,7 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, size_t *ln, linepos_t epoint) {
         while (j != 0) {
             p2 = (const uint8_t *)memchr(p, ch, j);
             if (p2 != NULL) {
-                size_t l = (size_t)(p2 - p);
+                linecpos_t l = (linecpos_t)(p2 - p);
                 memcpy(d, p, l + 1);
                 j -= l + 2;
                 d += l + 1; p = p2 + 2;

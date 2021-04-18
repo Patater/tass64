@@ -20,6 +20,7 @@
 #define ERROROBJ_H
 #include "obj.h"
 #include "errors_e.h"
+#include "oper_e.h"
 #include "stdbool.h"
 
 extern struct Type *const ERROR_OBJ;
@@ -33,7 +34,7 @@ typedef struct Error {
     const uint8_t *line;
     union {
         struct {
-            int op;
+            Oper_types op;
             Obj *v1;
             Obj *v2;
         } invoper;

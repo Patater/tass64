@@ -93,7 +93,7 @@ FAST_CALL size_t get_label(const uint8_t *s) {
 }
 
 static MUST_CHECK Obj *get_dec(linepos_t epoint) {
-    size_t len, len2;
+    linecpos_t len, len2;
     Obj *v = int_from_decstr(pline + lpoint.pos, &len, &len2);
     lpoint.pos += len;
     return (v != NULL) ? v : new_error_mem(epoint);
@@ -119,7 +119,7 @@ static MUST_CHECK Obj *get_exponent(Obj *v1, Obj *v2, size_t len, linepos_t epoi
         }
         if ((pline[lpoint.pos + 1] ^ 0x30) < 10) {
             Error *err;
-            size_t len1, len2;
+            linecpos_t len1, len2;
             lpoint.pos++;
 
             v = int_from_decstr(pline + lpoint.pos, &len1, &len2);
@@ -187,7 +187,7 @@ static MUST_CHECK Obj *get_exponent2(Obj *v, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *get_hex(linepos_t epoint) {
-    size_t len;
+    linecpos_t len;
     Obj *v = bits_from_hexstr(pline + lpoint.pos + 1, &len);
     if (v == NULL) v = new_error_mem(epoint);
     lpoint.pos += len + 1;
@@ -200,14 +200,14 @@ static MUST_CHECK Obj *get_hex(linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *get_hex_compat(linepos_t epoint) {
-    size_t len;
+    linecpos_t len;
     Obj *v = bits_from_hexstr(pline + lpoint.pos + 1, &len);
     lpoint.pos += len + 1;
     return (v != NULL) ? v : new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *get_bin(linepos_t epoint) {
-    size_t len;
+    linecpos_t len;
     Obj *v = bits_from_binstr(pline + lpoint.pos + 1, &len);
     if (v == NULL) v = new_error_mem(epoint);
     lpoint.pos += len + 1;
@@ -226,14 +226,14 @@ static MUST_CHECK Obj *get_bin(linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *get_bin_compat(linepos_t epoint) {
-    size_t len;
+    linecpos_t len;
     Obj *v = bits_from_binstr(pline + lpoint.pos + 1, &len);
     lpoint.pos += len + 1;
     return (v != NULL) ? v : new_error_mem(epoint);
 }
 
 static MUST_CHECK Obj *get_float(linepos_t epoint) {
-    size_t len, len2;
+    linecpos_t len, len2;
     Obj *v = int_from_decstr(pline + lpoint.pos, &len, &len2);
     if (v == NULL) v = new_error_mem(epoint);
     lpoint.pos += len;
@@ -253,7 +253,7 @@ static MUST_CHECK Obj *get_float(linepos_t epoint) {
 
 static MUST_CHECK Obj *get_bytes(linepos_t epoint, bool z85) {
     char txt[4];
-    size_t len;
+    linecpos_t len;
     Obj *v;
     if (z85) {
         v = bytes_from_z85str(pline + lpoint.pos, &len, epoint);
@@ -274,7 +274,7 @@ static MUST_CHECK Obj *get_bytes(linepos_t epoint, bool z85) {
 
 static MUST_CHECK Obj *get_string(linepos_t epoint) {
     char txt[4];
-    size_t len;
+    linecpos_t len;
     Obj *v = str_from_str(pline + lpoint.pos, &len, epoint);
     if (v->obj == STR_OBJ) {
         lpoint.pos += len;
@@ -430,7 +430,7 @@ static bool get_exp_compat(int stop) {/* length in bytes, defined */
     Oper_types conv;
     struct linepos_s epoint;
     linecpos_t cpoint = 0, cpoint2 = 0;
-    size_t llen;
+    linecpos_t llen;
     bool first;
     str_t symbol;
     Label *l;
@@ -461,7 +461,6 @@ rest:
     for (;;) {
         Oper_types op;
         Obj *val;
-        size_t ln;
         ignore();ch = here(); epoint.pos = lpoint.pos;
 
         switch (ch) {
@@ -476,13 +475,13 @@ rest:
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             val = get_dec(&epoint); goto push_other;
         default:
-            ln = get_label(pline + lpoint.pos);
-            if (ln == 0) {
+            llen = (linecpos_t)get_label(pline + lpoint.pos);
+            if (llen == 0) {
                 if (opr.p != 0) epoint.pos = opr.data[opr.p - 1].pos;
                 err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
                 goto error;
             }
-            lpoint.pos += ln;
+            lpoint.pos += llen;
             break;
         }
     as_symbol:
@@ -521,7 +520,7 @@ rest:
         switch (ch) {
         case ',':
             lpoint.pos++;
-            llen = get_label(pline + lpoint.pos);
+            llen = (linecpos_t)get_label(pline + lpoint.pos);
             lpoint.pos += llen;
             if (llen == 1) {
                 switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
@@ -628,6 +627,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
     Oper_types op;
     argcount_t i;
     Obj *val;
+    Error *err;
     struct values_s *v1, *v2;
     struct out_s *out;
     struct values_s *values;
@@ -677,14 +677,17 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 default:break;
                 }
                 epoint.pos = out->pos;
-                err_msg_invalid_oper(op, v1->val, NULL, &epoint);
-                val_replace(&v1->val, none_value);
+                err = new_error(ERROR__INVALID_OPER, &epoint);
+                err->u.invoper.op = op;
+                err->u.invoper.v1 = v1->val;
+                err->u.invoper.v2 = NULL;
+                v1->val = Obj(err);
                 break;
             default:
                 {
                     uint16_t val1;
                     uval_t uval;
-                    Error *err = v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint);
+                    err = v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint);
                     if (err != NULL) {
                         val_destroy(v1->val);
                         v1->val = Obj(err);
@@ -745,17 +748,17 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 {
                     uint16_t val1, val2;
                     uval_t uval;
-                    Obj *err = Obj(v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint));
+                    err = v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint);
                     if (err != NULL) {
                         val_destroy(v1->val);
-                        v1->val = err;
+                        v1->val = Obj(err);
                         continue;
                     }
                     val1 = (uint16_t)uval;
-                    err = Obj(v2->val->obj->uval(v2->val, &uval, 8 * sizeof uval, &v2->epoint));
+                    err = v2->val->obj->uval(v2->val, &uval, 8 * sizeof uval, &v2->epoint);
                     if (err != NULL) {
                         val_destroy(v1->val);
-                        v1->val = err;
+                        v1->val = Obj(err);
                         continue;
                     }
                     val2 = (uint16_t)uval;
@@ -765,8 +768,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_DIV:
                         if (val2 == 0) {
                             epoint.pos = out->pos;
-                            err = new_error_obj(ERROR_DIVISION_BY_Z, v2->val, &epoint);
-                            val_destroy(v1->val); v1->val = err;
+                            val_destroy(v1->val); v1->val = new_error_obj(ERROR_DIVISION_BY_Z, v2->val, &epoint);
                             continue;
                         }
                         val1 /= val2; break;
@@ -783,7 +785,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 }
             default: 
                 epoint.pos = out->pos;
-                err_msg_invalid_oper(op, v1->val, v2->val, &epoint); break;
+                break;
             case T_ERROR:
             case T_NONE:
                 val_replace(&v1->val, v2->val);
@@ -792,11 +794,15 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
             break;
         default:
             epoint.pos = out->pos;
-            err_msg_invalid_oper(op, v1->val, v2->val, &epoint); break;
+            break;
         case T_ERROR:
         case T_NONE: continue;
         }
-        val_replace(&v1->val, none_value);
+        err = new_error(ERROR__INVALID_OPER, &epoint);
+        err->u.invoper.op = op;
+        err->u.invoper.v1 = v1->val;
+        err->u.invoper.v2 = val_reference(v2->val);
+        v1->val = Obj(err);
     }
     ev->outp2 = i;
     ev->values_len = vsp;
@@ -1313,7 +1319,7 @@ static bool get_exp2(int stop) {
     argcount_t db;
     unsigned int prec;
     struct linepos_s epoint;
-    size_t llen;
+    linecpos_t llen;
     size_t symbollist;
     Obj *val;
     struct out_list_s out;
@@ -1435,7 +1441,7 @@ static bool get_exp2(int stop) {
                 symbol.data = pline + lpoint.pos + 1;
                 symbol.len = get_label(symbol.data);
                 if (symbol.len != 0) {
-                    lpoint.pos += symbol.len + 1;
+                    lpoint.pos += (linecpos_t)symbol.len + 1;
                     if (symbol.len > 1 && symbol.data[0] == '_' && symbol.data[1] == '_') err_msg2(ERROR_RESERVED_LABL, &symbol, &epoint);
                     val = new_symbol(&symbol, &epoint);
                     goto push_other;
@@ -1444,7 +1450,7 @@ static bool get_exp2(int stop) {
                 case '+':
                 case '-':
                     while (symbol.data[0] == symbol.data[++symbol.len]);
-                    lpoint.pos += symbol.len + 1;
+                    lpoint.pos += (linecpos_t)symbol.len + 1;
                     val = new_anonsymbol((symbol.data[0] == '+') ? ((ssize_t)symbol.len - 1) : -(ssize_t)symbol.len);
                     goto push_other;
                 case '*':
@@ -1483,7 +1489,7 @@ static bool get_exp2(int stop) {
         case ';':
             goto tryanon;
         default:
-            llen = get_label(pline + lpoint.pos);
+            llen = (linecpos_t)get_label(pline + lpoint.pos);
             if (llen != 0) {
                 bool down;
                 Label *l;
@@ -1610,7 +1616,7 @@ static bool get_exp2(int stop) {
         case ',':
             lpoint.pos++;
             if (pline[lpoint.pos] >= 'A') {
-                llen = get_label(pline + lpoint.pos);
+                llen = (linecpos_t)get_label(pline + lpoint.pos);
                 lpoint.pos += llen;
                 if (llen == 1 && pline[epoint.pos + 2] != '"' && pline[epoint.pos + 2] != '\'') {
                     switch (pline[epoint.pos + 1] | arguments.caseinsensitive) {
@@ -1854,7 +1860,7 @@ static bool get_exp2(int stop) {
         case '\t':
         case ' ': break;
         default:
-            llen = get_label(pline + lpoint.pos);
+            llen = (linecpos_t)get_label(pline + lpoint.pos);
             lpoint.pos += llen;
             switch (llen) {
             case 1: if ((pline[epoint.pos] | arguments.caseinsensitive) == 'x') {if (pline[lpoint.pos] == '=') {lpoint.pos++; op = O_X_ASSIGN;} else op = O_X;goto push2a;} break;
