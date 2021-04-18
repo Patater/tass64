@@ -578,8 +578,10 @@ static void textrecursion_gaps(struct textrecursion_s *trec) {
 static void textdump(struct textrecursion_s *trec, unsigned int uval) {
     switch (trec->prm) {
     case CMD_SHIFT:
-        if ((uval & 0x80) != 0) trec->error = ERROR___NO_HIGH_BIT;
-        uval &= 0x7f;
+        if ((uval & 0x80) != 0) {
+            uval ^= 0x80;
+            trec->error = ERROR___NO_HIGH_BIT;
+        }
         break;
     case CMD_SHIFTL:
         if ((uval & 0x80) != 0) trec->error = ERROR___NO_HIGH_BIT;
@@ -587,12 +589,77 @@ static void textdump(struct textrecursion_s *trec, unsigned int uval) {
         break;
     case CMD_NULL:
         if (uval == 0) trec->error = ERROR_NO_ZERO_VALUE;
-        /* fall through */
+        break;
     default:
         break;
     }
     if (trec->p >= sizeof trec->buff) textrecursion_flush(trec);
     trec->buff[trec->p++] = (uint8_t)(uval ^ outputeor);
+}
+
+static void textdump_bytes(struct textrecursion_s *trec, const Bytes *bytes) {
+    size_t i, len2;
+    address_t len3;
+    unsigned int inv;
+    if (bytes->len > 0) {
+        len2 = (size_t)bytes->len;
+        inv = 0;
+    } else if (bytes->len == 0) {
+        return;
+    } else {
+        inv = 0xff;
+        len2 = (size_t)~bytes->len;
+    }
+    len3 = trec->max - trec->sum;
+    if (len2 <= len3) len3 = (address_t)len2;
+    else len2 = len3;
+    trec->sum += len3;
+    if (trec->gaps > 0) textrecursion_gaps(trec);
+    if (len2 > sizeof trec->buff) {
+        uint8_t *d;
+        if (trec->p > 0) textrecursion_flush(trec);
+        d = pokealloc(len2, trec->epoint);
+        switch (trec->prm) {
+        case CMD_SHIFT:
+            for (i = 0; i < len2; i++) {
+                unsigned int uval = bytes->data[i] ^ inv;
+                if ((uval & 0x80) != 0) {
+                    uval ^= 0x80;
+                    trec->error = ERROR___NO_HIGH_BIT;
+                }
+                d[i] = (uint8_t)(uval ^ outputeor);
+            }
+            return;
+        case CMD_SHIFTL:
+            for (i = 0; i < len2; i++) {
+                unsigned int uval = bytes->data[i] ^ inv;
+                if ((uval & 0x80) != 0) trec->error = ERROR___NO_HIGH_BIT;
+                uval <<= 1;
+                d[i] = (uint8_t)(uval ^ outputeor);
+            }
+            return;
+        case CMD_NULL:
+            for (i = 0; i < len2; i++) {
+                unsigned int uval = bytes->data[i] ^ inv;
+                if (uval == 0) trec->error = ERROR_NO_ZERO_VALUE;
+                d[i] = (uint8_t)(uval ^ outputeor);
+            }
+            return;
+        default:
+            if (inv == 0 && outputeor == 0) {
+                memcpy(d, bytes->data, len2);
+                return;
+            }
+            for (i = 0; i < len2; i++) {
+                unsigned int uval = bytes->data[i] ^ inv;
+                d[i] = (uint8_t)(uval ^ outputeor);
+            }
+            return;
+        }
+    } 
+    for (i = 0; i < len2; i++) {
+        textdump(trec, bytes->data[i] ^ inv);
+    }
 }
 
 static void textrecursion(struct textrecursion_s *trec, Obj *val) {
@@ -693,35 +760,12 @@ retry:
             break;
         case T_BYTES:
         dobytes:
-            {
-                Bytes *bytes = Bytes(val2);
-                ssize_t len = bytes->len;
-                if (len != 0) {
-                    size_t i, len2;
-                    address_t len3;
-                    unsigned int inv;
-                    if (len < 0) {
-                        inv = ~0U;
-                        len2 = (size_t)~len;
-                    } else {
-                        inv = 0;
-                        len2 = (size_t)len;
-                    }
-                    len3 = trec->max - trec->sum;
-                    if (len2 <= len3) len3 = (address_t)len2;
-                    else len2 = len3;
-                    trec->sum += len3;
-                    if (trec->gaps > 0) textrecursion_gaps(trec);
-                    for (i = 0; i < len2; i++) {
-                        textdump(trec, bytes->data[i] ^ inv);
-                    }
-                }
-            }
+            textdump_bytes(trec, Bytes(val2));
             if (iter.data == NULL) return;
             break;
         default:
         doit:
-            if (touval(val2, &uval, 8, trec->epoint)) uval = 256 + '?';
+            if (touval(val2, &uval, 8, trec->epoint)) uval = 256 + '?'; else uval &= 0xff;
             trec->sum++;
             if (trec->gaps > 0) textrecursion_gaps(trec);
             textdump(trec, uval);
