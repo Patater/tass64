@@ -1247,48 +1247,48 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
     val_destroy(val);
 }
 
-static MUST_CHECK Oper *oper_from_token(int wht) {
+static Oper_types oper_from_token(int wht) {
     switch (wht) {
     case 'X':
         if (arguments.caseinsensitive == 0) {
-            return NULL;
+            return O_NONE;
         }
         /* fall through */
-    case 'x': return &o_X;
-    case '*': return &o_MUL;
-    case '+': return &o_ADD;
-    case '-': return &o_SUB;
-    case '/': return &o_DIV;
-    case '%': return &o_MOD;
-    case '|': return &o_OR;
-    case '&': return &o_AND;
-    case '^': return &o_XOR;
-    case '.': return &o_MEMBER;
-    default: return NULL;
+    case 'x': return O_X;
+    case '*': return O_MUL;
+    case '+': return O_ADD;
+    case '-': return O_SUB;
+    case '/': return O_DIV;
+    case '%': return O_MOD;
+    case '|': return O_OR;
+    case '&': return O_AND;
+    case '^': return O_XOR;
+    case '.': return O_MEMBER;
+    default: return O_NONE;
     }
 }
 
-static MUST_CHECK Oper *oper_from_token2(int wht, int wht2) {
+static Oper_types oper_from_token2(int wht, int wht2) {
     if (wht == wht2) {
         switch (wht) {
-        case '&': return &o_LAND;
-        case '|': return &o_LOR;
-        case '>': return &o_RSHIFT;
-        case '<': return &o_LSHIFT;
-        case '.': return &o_CONCAT;
-        case '*': return &o_EXP;
-        default: return NULL;
+        case '&': return O_LAND;
+        case '|': return O_LOR;
+        case '>': return O_RSHIFT;
+        case '<': return O_LSHIFT;
+        case '.': return O_CONCAT;
+        case '*': return O_EXP;
+        default: return O_NONE;
         }
     }
     if (wht2 == '?') {
         switch (wht) {
-        case '<': return &o_MIN;
-        case '>': return &o_MAX;
-        case ':': return &o_COND;
-        default: return NULL;
+        case '<': return O_MIN;
+        case '>': return O_MAX;
+        case ':': return O_COND;
+        default: return O_NONE;
         }
     }
-    return NULL;
+    return O_NONE;
 }
 
 static MUST_CHECK Obj *tuple_scope_light(Obj **o, linepos_t epoint) {
@@ -1582,7 +1582,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         } else expr = (uint8_t *)oldpline;
         label = NULL;
         waitfor->u.cmd_rept.breakout = false;
-        tmp.op = NULL;
+        tmp.op = O_NONE;
         for (;;) {
             if (here() != ',' && here() != 0) {
                 bool truth;
@@ -1628,19 +1628,23 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 while (wht != 0 && !arguments.tasmcomp) {
                     int wht2 = pline[lpoint.pos + 1];
                     if (wht2 == '=') {
+                        Oper_types op;
                         if (wht == ':') {
                             wht = '=';
                             lpoint.pos++;
                             break;
                         }
-                        tmp.op = oper_from_token(wht);
-                        if (tmp.op == NULL) break;
+                        op = oper_from_token(wht);
+                        if (op == O_NONE) break;
+                        tmp.op = op;
                         epoint3 = lpoint;
                         lpoint.pos += 2;
                     } else if (wht2 != 0 && pline[lpoint.pos + 2] == '=') {
+                        Oper_types op;
                         if (wht == '?') break;
-                        tmp.op = oper_from_token2(wht, wht2);
-                        if (tmp.op == NULL) break;
+                        op = oper_from_token2(wht, wht2);
+                        if (op == O_NONE) break;
+                        tmp.op = op;
                         epoint3 = lpoint;
                         lpoint.pos += 3;
                     } else break;
@@ -1653,7 +1657,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                     break;
                 }
                 context = (varname.data[0] == '_') ? cheap_context : current_context;
-                if (tmp.op == NULL) {
+                if (tmp.op == O_NONE) {
                     if (wht != '=') {err_msg(ERROR______EXPECTED, "':='"); break;}
                     lpoint.pos++;ignore();
                     label = new_label(&varname, context, strength, &labelexists, current_file_list);
@@ -1691,8 +1695,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 lpoint = bpoint;
                 if (!get_exp(0, 0, 0, &bpoint)) break;
                 val = get_vals_addrlist(epoints);
-                if (tmp.op != NULL) {
-                    bool minmax = (tmp.op == &o_MIN) || (tmp.op == &o_MAX);
+                if (tmp.op != O_NONE) {
+                    bool minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
                     Obj *result2, *val1 = label->value;
                     tmp.v1 = val1;
                     tmp.v2 = val;
@@ -1992,7 +1996,7 @@ MUST_CHECK Obj *compile(void)
                             else if (tmp2->value->obj == ERROR_OBJ) err_msg_output(Error(tmp2->value));
                             else {
                                 Obj *symbol = new_symbol(&labelname, &epoint);
-                                err_msg_invalid_oper(&o_MEMBER, tmp2->value, symbol, &epoint);
+                                err_msg_invalid_oper(O_MEMBER, tmp2->value, symbol, &epoint);
                                 val_destroy(symbol);
                             }
                             error = true;
@@ -2021,6 +2025,7 @@ MUST_CHECK Obj *compile(void)
                     int wht2 = pline[lpoint.pos + 1];
 
                     if (wht2 == '=') {
+                        Oper_types op;
                         if (wht == ':') {
                             if (labelname.data[0] == '*') {
                                 lpoint.pos++;
@@ -2030,13 +2035,15 @@ MUST_CHECK Obj *compile(void)
                             ignore();
                             goto itsvar;
                         }
-                        tmp.op = oper_from_token(wht);
-                        if (tmp.op == NULL) break;
+                        op = oper_from_token(wht);
+                        if (op == O_NONE) break;
+                        tmp.op = op;
                         epoint3 = lpoint;
                         lpoint.pos += 2;
                     } else if (wht2 != 0 && pline[lpoint.pos + 2] == '=') {
-                        tmp.op = oper_from_token2(wht, wht2);
-                        if (tmp.op == NULL) break;
+                        Oper_types op = oper_from_token2(wht, wht2);
+                        if (op == O_NONE) break;
+                        tmp.op = op;
                         epoint3 = lpoint;
                         lpoint.pos += 3;
                     } else break;
@@ -2057,12 +2064,12 @@ MUST_CHECK Obj *compile(void)
                         label = NULL;
                         if (diagnostics.optimize) cpu_opt_invalidate();
                         val = get_star();
-                    } else if (tmp.op == &o_COND) {
+                    } else if (tmp.op == O_COND) {
                         label = NULL; val = NULL;
                     } else {
                         label = find_label3(&labelname, mycontext, strength);
                         if (label == NULL) {
-                            if (tmp.op == &o_MUL) {
+                            if (tmp.op == O_MUL) {
                                 if (diagnostics.star_assign) {
                                     err_msg_star_assign(&epoint3);
                                     if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
@@ -2079,7 +2086,7 @@ MUST_CHECK Obj *compile(void)
                             goto breakerr;
                         }
                         if (label->constant) {
-                            if (tmp.op == &o_MUL) {
+                            if (tmp.op == O_MUL) {
                                 if (diagnostics.star_assign) {
                                     err_msg_star_assign(&epoint3);
                                     if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
@@ -2139,7 +2146,7 @@ MUST_CHECK Obj *compile(void)
                         }
                         goto finish;
                     }
-                    minmax = (tmp.op == &o_MIN) || (tmp.op == &o_MAX);
+                    minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
                     tmp.v1 = val;
                     tmp.v2 = val2;
                     tmp.epoint = &epoint;
@@ -3277,7 +3284,7 @@ MUST_CHECK Obj *compile(void)
                         struct oper_s tmp;
                         waitfor->skip = 1;
                         if (!get_exp(0, 1, 0, &epoint)) { waitfor->skip = 0; goto breakerr; }
-                        tmp.op = &o_EQ;
+                        tmp.op = O_EQ;
                         tmp.epoint = tmp.epoint3 = &epoint;
                         while (!truth && (vs = get_val()) != NULL) {
                             val = vs->val;

@@ -33,7 +33,7 @@ typedef struct Error {
     const uint8_t *line;
     union {
         struct {
-            const struct Oper *op;
+            int op;
             Obj *v1;
             Obj *v2;
         } invoper;

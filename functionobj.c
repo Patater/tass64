@@ -34,7 +34,6 @@
 #include "listobj.h"
 #include "intobj.h"
 #include "boolobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -393,7 +392,7 @@ static MUST_CHECK Obj *function_sort(Obj *o1, linepos_t epoint) {
             for (i = 0; i < ln; i++) sort_index[i] = i;
             sort_val = o1;
             sort_error = NULL;
-            sort_tmp.op = &o_CMP;
+            sort_tmp.op = O_CMP;
             sort_tmp.epoint = sort_tmp.epoint2 = sort_tmp.epoint3 = epoint;
             qsort(sort_index, ln, sizeof *sort_index, (o1->obj == DICT_OBJ) ? dict_sortcomp : list_sortcomp);
             if (sort_error != NULL) {
@@ -763,7 +762,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Funcargs *v2 = Funcargs(o2);
             argcount_t args = v2->len;
             struct values_s *v = v2->val;
-            switch (op->op->op) {
+            switch (op->op) {
             case O_FUNC:
                 func = v1->func;
                 switch (func) {
@@ -837,7 +836,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_ERROR:
         return val_reference(o2);
     default:
-        if (o2->obj->iterable && op->op != &o_MEMBER && op->op != &o_X) {
+        if (o2->obj->iterable && op->op != O_MEMBER && op->op != O_X) {
             return o2->obj->rcalc2(op);
         }
         break;

@@ -785,8 +785,8 @@ tuple   Tuple type
 type    Type type
 
 Bit and byte string conversions can take a second parameter to specify and
-exact size. Values which can fit in shorter space will padded but longer ones
-give an error.
+exact size. Values which can fit in shorter space will be padded but longer
+ones give an error.
 
 bits(<expression>, <bits count expression>)
     Convert to the specific number of bits. If the number of bits is negative

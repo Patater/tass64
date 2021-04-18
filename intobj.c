@@ -32,7 +32,6 @@
 #include "strobj.h"
 #include "bytesobj.h"
 #include "bitsobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -390,14 +389,14 @@ static inline unsigned int ldigit(const Int *v1) {
 
 static MUST_CHECK Obj *calc1(oper_t op) {
     Int *v1 = Int(op->v1), *v;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_BANK:
     case O_HIGHER:
     case O_LOWER:
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bits_calc1(op->op->op, ldigit(v1));
+        return bits_calc1(op->op, ldigit(v1));
     case O_INV:
         v = new_int();
         if (v1->len < 0) isub(v1, Int(int_value[1]), v);
@@ -1612,7 +1611,7 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
     Obj *val;
     ival_t shift;
     ssize_t cmp;
-    switch (op->op->op) {
+    switch (op->op) {
     case O_CMP:
         cmp = icmp(op);
         return val_reference(cmp < 0 ? minus1_value : int_value[(cmp > 0) ? 1 : 0]);
@@ -1717,11 +1716,11 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *tmp, *ret, *v2 = op->v2;
 
-    if (op->op == &o_LAND) {
+    if (op->op == O_LAND) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference((Int(op->v1)->len != 0) ? v2 : op->v1);
     }
-    if (op->op == &o_LOR) {
+    if (op->op == O_LOR) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference((Int(op->v1)->len != 0) ? op->v1 : v2);
     }
@@ -1750,7 +1749,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         val_destroy(tmp);
         return ret;
     default:
-        if (op->op != &o_MEMBER && op->op != &o_X) {
+        if (op->op != O_MEMBER && op->op != O_X) {
             return v2->obj->rcalc2(op);
         }
         if (v2 == none_value || v2->obj == ERROR_OBJ) return val_reference(v2);
@@ -1762,7 +1761,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     Obj *tmp, *v1 = op->v1;
     if (v1->obj == BOOL_OBJ) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        switch (op->op->op) {
+        switch (op->op) {
         case O_LSHIFT:
         case O_RSHIFT: tmp = bits_value[v1 == true_value ? 1 : 0]; break;
         default: tmp = int_value[v1 == true_value ? 1 : 0]; break;

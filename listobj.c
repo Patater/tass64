@@ -27,7 +27,6 @@
 #include "codeobj.h"
 #include "strobj.h"
 #include "intobj.h"
-#include "operobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -444,7 +443,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
     size_t i;
     Error *err;
 
-    switch (op->op->op) {
+    switch (op->op) {
     case O_CMP:
     case O_EQ:
     case O_NE:
@@ -472,7 +471,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
             if (v1->len == v2->len) {
                 if (v1->len != 0) {
                     Obj **vals;
-                    bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX);
+                    bool minmax = (op->op == O_MIN) || (op->op == O_MAX);
                     List *v, *inplace;
                     if (op->inplace == Obj(v1)) {
                         v = ref_list(v1);
@@ -774,11 +773,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     size_t i;
     Obj **vals;
 
-    if (op->op == &o_X) {
+    if (op->op == O_X) {
         if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
         return repeat(op);
     }
-    if (op->op == &o_IN || o2 == fold_value) {
+    if (op->op == O_IN || o2 == fold_value) {
         return o2->obj->rcalc2(op);
     }
     if (o2->obj == TUPLE_OBJ || o2->obj == LIST_OBJ) {
@@ -788,7 +787,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         return val_reference(o2);
     }
     if (v1->len != 0) {
-        bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o1);
+        bool minmax = (op->op == O_MIN) || (op->op == O_MAX), inplace = (op->inplace == o1);
         List *list;
         if (inplace) {
             list = ref_list(List(o1));
@@ -824,8 +823,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     size_t i;
     Obj **vals;
 
-    if (op->op == &o_IN) {
-        op->op = &o_EQ;
+    if (op->op == O_IN) {
+        op->op = O_EQ;
         for (i = 0; i < v2->len; i++) {
             Obj *result;
             op->v1 = o1;
@@ -833,12 +832,12 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
             op->inplace = NULL;
             result = o1->obj->calc2(op);
             if (result == true_value) {
-                op->op = &o_IN;
+                op->op = O_IN;
                 return result;
             }
             val_destroy(result);
         }
-        op->op = &o_IN;
+        op->op = O_IN;
         return ref_false();
     }
     if (o1->obj == TUPLE_OBJ || o1->obj == LIST_OBJ) {
@@ -848,7 +847,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         return o1->obj->calc2(op);
     }
     if (v2->len != 0) {
-        bool minmax = (op->op == &o_MIN) || (op->op == &o_MAX), inplace = (op->inplace == o2);
+        bool minmax = (op->op == O_MIN) || (op->op == O_MAX), inplace = (op->inplace == o2);
         List *v;
         if (inplace) {
             v = ref_list(List(o2));
