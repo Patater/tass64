@@ -42,8 +42,8 @@ static Type obj;
 
 Type *const BYTES_OBJ = &obj;
 
-static Bytes null_bytesval = { { &obj, 1 }, 0, null_bytesval.u.val, {} };
-static Bytes inv_bytesval = { { &obj, 1 }, ~0, inv_bytesval.u.val, {} };
+static Bytes null_bytesval = { { &obj, 1 }, 0, null_bytesval.u.val, { { 0 } } };
+static Bytes inv_bytesval = { { &obj, 1 }, ~0, inv_bytesval.u.val, { { 0 } } };
 
 Obj *const null_bytes = &null_bytesval.v;
 Obj *const inv_bytes = &inv_bytesval.v;

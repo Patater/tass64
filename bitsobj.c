@@ -44,11 +44,11 @@ static Type obj;
 
 Type *const BITS_OBJ = &obj;
 
-static Bits null_bitsval = { { &obj, 1 }, 0, 0, null_bitsval.u.val, {} };
-static Bits inv_bitsval = { { &obj, 1 }, ~0, 0, inv_bitsval.u.val, {} };
-static Bits zero_bitsval = { { &obj, 1 }, 0, 1, zero_bitsval.u.val, {} };
+static Bits null_bitsval = { { &obj, 1 }, 0, 0, null_bitsval.u.val, { {0, 0} } };
+static Bits inv_bitsval = { { &obj, 1 }, ~0, 0, inv_bitsval.u.val, { {0, 0} } };
+static Bits zero_bitsval = { { &obj, 1 }, 0, 1, zero_bitsval.u.val, { {0, 0} } };
 static Bits one_bitsval = { { &obj, 1 }, 1, 1, one_bitsval.u.val, { {1, 0} } };
-static Bits zero_ibitsval = { { &obj, 1 }, ~0, 1, zero_ibitsval.u.val, {} };
+static Bits zero_ibitsval = { { &obj, 1 }, ~0, 1, zero_ibitsval.u.val, { {0, 0} } };
 static Bits one_ibitsval = { { &obj, 1 }, ~1, 1, one_ibitsval.u.val, { {1, 0} } };
 
 Obj *const null_bits = &null_bitsval.v;
