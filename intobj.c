@@ -124,15 +124,16 @@ failed2:
     return new_error_mem(epoint);
 }
 
+static FAST_CALL NO_INLINE Obj *zeroint(Int *v) {
+    val_destroy(Obj(v));
+    return val_reference(int_value[0]);
+}
+
 static FAST_CALL NO_INLINE Obj *normalize2(Int *v, size_t sz) {
-    if (sz != 0) {
-        do {
-            sz--;
-            v->val[sz] = v->data[sz];
-        } while (sz != 0);
-    } else {
-        v->val[0] = 0;
-    }
+    do {
+        sz--;
+        v->val[sz] = v->data[sz];
+    } while (sz != 0);
     free(v->data);
     v->data = v->val;
     return Obj(v);
@@ -141,6 +142,7 @@ static FAST_CALL NO_INLINE Obj *normalize2(Int *v, size_t sz) {
 static FAST_CALL MUST_CHECK Obj *normalize(Int *v, size_t sz, bool neg) {
     digit_t *d = v->data;
     while (sz != 0 && d[sz - 1] == 0) sz--;
+    if (sz == 0) return zeroint(v);
     /*if (sz > SSIZE_MAX) err_msg_out_of_memory();*/ /* overflow */
     v->len = (ssize_t)(neg ? -sz : sz);
     if (v->val != d && sz <= lenof(v->val)) {
@@ -1270,15 +1272,17 @@ MUST_CHECK Obj *int_from_uval(uval_t i) {
 }
 
 MUST_CHECK Obj *int_from_ival(ival_t i) {
-    Int *v = new_int();
+    Int *v;
+    if (i == 0) return val_reference(int_value[0]);
+    v = new_int();
     v->data = v->val;
-    if (i < 0) {
+    if (i > 0) {
+        v->val[0] = (uval_t)i;
+        v->len = 1;
+    } else {
         v->val[0] = (uval_t)-i;
         v->len = -1;
-        return Obj(v);
     }
-    v->val[0] = (uval_t)i;
-    v->len = (i != 0) ? 1 : 0;
     return Obj(v);
 }
 
@@ -1441,7 +1445,7 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
     sz = i / sizeof *d;
     if ((i % sizeof *d) != 0) sz++;
     v = new_int();
-    v-> data = d = inew2(v, sz);
+    v->data = d = inew2(v, sz);
     if (d == NULL) goto failed2;
 
     uv = 0; bits = 0; j = 0;
@@ -1488,17 +1492,15 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
     } else osz = j;
 
     while (osz != 0 && d[osz - 1] == 0) osz--;
+    if (osz == 0) return zeroint(v);
+    v->len = (ssize_t)osz;
     if (v->val != d) {
-        if (osz <= lenof(v->val)) {
-            if (osz != 0) memcpy(v->val, d, osz * sizeof *d); else v->val[0] = 0;
-            free(d);
-            v->data = v->val;
-        } else if (osz < sz) {
+        if (osz <= lenof(v->val)) return normalize2(v, osz);
+        if (osz < sz) {
             digit_t *d2 = (digit_t *)realloc(d, osz * sizeof *d);
             v->data = (d2 != NULL) ? d2 : d;
         }
     }
-    v->len = (ssize_t)osz;
     return Obj(v);
 failed2:
     val_destroy(Obj(v));
