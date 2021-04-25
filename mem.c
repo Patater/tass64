@@ -419,10 +419,12 @@ enum { SRECORD_LENGTH = 32U };
 
 struct srecord_s {
     FILE *file;
-    unsigned int type;
+    unsigned int count;
+    char rectype;
+    unsigned int addrtype;
+    unsigned int length;
     address_t address;
     uint8_t data[SRECORD_LENGTH];
-    unsigned int length;
 };
 
 static MUST_CHECK bool output_mem_srec_line(struct srecord_s *srec) {
@@ -432,10 +434,10 @@ static MUST_CHECK bool output_mem_srec_line(struct srecord_s *srec) {
     h.line = line + 2;
     h.sum = 0;
     line[0] = 'S';
-    line[1] = (char)(srec->length != 0 ? ('1' + srec->type) : ('9' - srec->type));
-    hexput(&h, srec->length + srec->type + 3);
-    if (srec->type > 1) hexput(&h, srec->address >> 24);
-    if (srec->type > 0) hexput(&h, srec->address >> 16);
+    line[1] = srec->rectype;
+    hexput(&h, srec->length + srec->addrtype + 3);
+    if (srec->addrtype > 1) hexput(&h, srec->address >> 24);
+    if (srec->addrtype > 0) hexput(&h, srec->address >> 16);
     hexput(&h, srec->address >> 8);
     hexput(&h, srec->address);
     for (i = 0; i < srec->length; i++) {
@@ -445,26 +447,37 @@ static MUST_CHECK bool output_mem_srec_line(struct srecord_s *srec) {
     *h.line++ = '\n';
     srec->address += srec->length;
     srec->length = 0;
+    srec->count++;
     return fwrite(line, (size_t)(h.line - line), 1, srec->file) == 0;
 }
 
 static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
     struct srecord_s srec;
     size_t i;
+    unsigned int addrtype;
 
     srec.file = fout;
-    srec.type = 0;
+    srec.count = 0;
+    srec.addrtype = 0;
     srec.address = 0;
-    srec.length = 0;
+    srec.length = 3;
+    srec.rectype = '0';
+    srec.data[0] = 'H';
+    srec.data[1] = 'D';
+    srec.data[2] = 'R';
+    if (output_mem_srec_line(&srec)) return;
+    addrtype = 0;
     for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *b = &memblocks->data[i];
         address_t end = b->addr + b->len - 1;
-        if (end >= 0x10000 && srec.type < 1) srec.type = 1;
-        if (end >= 0x1000000 && srec.type < 2) {
-            srec.type = 2;
+        if (end >= 0x10000 && addrtype < 1) addrtype = 1;
+        if (end >= 0x1000000 && addrtype < 2) {
+            addrtype = 2;
             break;
         }
     }
+    srec.addrtype = addrtype;
+    srec.rectype = (char)('1' + addrtype);
     for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *b = &memblocks->data[i];
         const uint8_t *d = memblocks->mem.data + b->p;
@@ -491,7 +504,20 @@ static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
     if (srec.length != 0) {
         if (output_mem_srec_line(&srec)) return;
     }
-    srec.address = memblocks->data[0].addr;
+    if (srec.count <= 0x1000000) {
+        if (srec.count <= 0x10000) {
+            srec.addrtype = 0;
+            srec.rectype = '5';
+        } else {
+            srec.addrtype = 1;
+            srec.rectype = '6';
+        }
+        srec.address = srec.count - 1;
+        if (output_mem_srec_line(&srec)) return;
+    }
+    srec.addrtype = addrtype;
+    srec.rectype = (char)('9' - addrtype);
+    srec.address = (memblocks->p == 0) ? 0 : memblocks->data[0].addr;
     if (output_mem_srec_line(&srec)) return;
 }
 
