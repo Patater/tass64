@@ -230,7 +230,7 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
 }
 
 static FAST_CALL uint32_t address(const Obj *o1) {
-    Code *v1 = Code(o1);
+    const Code *v1 = Code(o1);
     Obj *v = v1->typ;
     return v->obj->address(v);
 }
