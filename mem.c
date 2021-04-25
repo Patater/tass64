@@ -314,9 +314,9 @@ struct hexput_s {
 
 static void hexput(struct hexput_s *h, unsigned int b) {
     const char *hex = "0123456789ABCDEF";
-    *h->line++ = hex[b >> 4];
-    *h->line++ = hex[b & 0xf];
     h->sum += b;
+    *h->line++ = hex[(b >> 4) & 0xf];
+    *h->line++ = hex[b & 0xf];
 }
 
 enum { IHEX_LENGTH = 32U };
@@ -331,16 +331,18 @@ struct ihex_s {
 static MUST_CHECK bool output_mem_ihex_line(struct ihex_s *ihex, unsigned int length, address_t address, unsigned int type, const uint8_t *data) {
     unsigned int i;
     char line[1+(1+2+1+IHEX_LENGTH+1)*2+1];
-    struct hexput_s h = { line + 1, 0 };
+    struct hexput_s h;
+    h.line = line + 1;
+    h.sum =  0;
     line[0] = ':';
     hexput(&h, length);
-    hexput(&h, (address >> 8) & 0xff);
-    hexput(&h, address & 0xff);
+    hexput(&h, address >> 8);
+    hexput(&h, address);
     hexput(&h, type);
     for (i = 0; i < length; i++) {
         hexput(&h, data[i]);
     }
-    hexput(&h, (-h.sum) & 0xff);
+    hexput(&h, -h.sum);
     *h.line++ = '\n';
     return fwrite(line, (size_t)(h.line - line), 1, ihex->file) == 0;
 }
@@ -418,18 +420,20 @@ struct srecord_s {
 static MUST_CHECK bool output_mem_srec_line(struct srecord_s *srec) {
     unsigned int i;
     char line[1+1+(1+4+SRECORD_LENGTH+1)*2+1];
-    struct hexput_s h = { line + 2, 0 };
+    struct hexput_s h;
+    h.line = line + 2;
+    h.sum = 0;
     line[0] = 'S';
     line[1] = (char)(srec->length != 0 ? ('1' + srec->type) : ('9' - srec->type));
     hexput(&h, srec->length + srec->type + 3);
-    if (srec->type > 1) hexput(&h, (srec->address >> 24) & 0xff);
-    if (srec->type > 0) hexput(&h, (srec->address >> 16) & 0xff);
-    hexput(&h, (srec->address >> 8) & 0xff);
-    hexput(&h, srec->address & 0xff);
+    if (srec->type > 1) hexput(&h, srec->address >> 24);
+    if (srec->type > 0) hexput(&h, srec->address >> 16);
+    hexput(&h, srec->address >> 8);
+    hexput(&h, srec->address);
     for (i = 0; i < srec->length; i++) {
         hexput(&h, srec->data[i]);
     }
-    hexput(&h, (~h.sum) & 0xff);
+    hexput(&h, ~h.sum);
     *h.line++ = '\n';
     srec->address += srec->length;
     srec->length = 0;
