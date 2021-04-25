@@ -749,20 +749,15 @@ static MUST_CHECK Obj *idivrem(oper_t op, bool divrem) {
     }
 }
 
-static MUST_CHECK Int *int_gen(ssize_t i) {
-    Int *v = new_int();
-    v->data = v->val;
-    v->val[0] = (i != 0) ? 1 : 0;
-    v->len = i;
-    return v;
-}
-
 static inline MUST_CHECK Obj *power(oper_t op) {
     const Int *vv1 = Int(op->v1), *vv2 = Int(op->v2);
     int j;
     bool neg = false;
     size_t i;
-    Int *v = int_gen(1);
+    Int *v = new_int();
+    v->data = v->val;
+    v->val[0] = 1;
+    v->len = 1;
 
     for (i = (size_t)vv2->len; (i--) != 0;) {
         digit_t d = vv2->data[i];
