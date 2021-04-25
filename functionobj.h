@@ -19,7 +19,6 @@
 #ifndef FUNCTIONOBJ_H
 #define FUNCTIONOBJ_H
 #include "obj.h"
-#include "str.h"
 
 extern struct Type *const FUNCTION_OBJ;
 
@@ -34,9 +33,10 @@ typedef enum Function_types {
 
 typedef struct Function {
     Obj v;
-    str_t name;
+    const char name[7];
+    const uint8_t name_len;
     int name_hash;
-    Function_types func;
+    const Function_types func;
 } Function;
 
 #define Function(a) ((Function *)(1 ? (a) : (Obj *)(Function *)(a)))
