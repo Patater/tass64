@@ -4970,6 +4970,7 @@ int main2(int *argc2, char **argv2[]) {
         puts("64tass Turbo Assembler Macro V" VERSION "\n"
              "64TASS comes with ABSOLUTELY NO WARRANTY; This is free software, and you\n"
              "are welcome to redistribute it under certain conditions; See LICENSE!\n");
+        fflush(stdout);
     }
 
     /* assemble the input file(s) */
@@ -5030,6 +5031,7 @@ int main2(int *argc2, char **argv2[]) {
         error_status();
         printf("Passes: %12u\n",pass);
         if (!failed) sectionprint(stdout);
+        fflush(stdout);
     }
     tfree();
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
