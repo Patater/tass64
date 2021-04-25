@@ -503,6 +503,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 fputs((ftype == 1) ? "Reading file:      " : "Assembling file:   ", stdout);
                 argv_print(path, stdout);
                 putchar('\n');
+                fflush(stdout);
             }
             if (f == NULL) goto openerr;
             tmp->read_error = true;
