@@ -380,6 +380,14 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
     ihex.length = 0;
     for (i = 0; i < memblocks->p; i++) {
         const struct memblock_s *b = &memblocks->data[i];
+        address_t end = b->addr + b->len - 1;
+        if (end >= 0x10000) {
+            ihex.segment = ~memblocks->data[0].addr;
+            break;
+        }
+    }
+    for (i = 0; i < memblocks->p; i++) {
+        const struct memblock_s *b = &memblocks->data[i];
         const uint8_t *d = memblocks->mem.data + b->p;
         address_t addr = b->addr;
         address_t blen = b->len;
