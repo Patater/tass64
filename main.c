@@ -30,6 +30,13 @@
 #include "64tass.h"
 #include <string.h>
 #include <signal.h>
+#if defined _MSC_VER || defined __VBCC__ || defined __WATCOMC__
+#define alarm(a)
+#elif defined __MINGW32__
+extern unsigned int alarm(unsigned int);
+#else
+#include <unistd.h>
+#endif
 
 #include "wchar.h"
 #include "error.h"
@@ -37,16 +44,42 @@
 #include "console.h"
 
 static void signal_handler(int signum) {
+#if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
+    struct sigaction sa;
+    sa.sa_handler = SIG_DFL;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    sigaction(signum, &sa, NULL);
+#else
     signal(signum, SIG_DFL);
+#endif
     signal_received = true;
+    alarm(1);
 }
 
 static inline void install_signal_handler(void) {
+#if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
+    struct sigaction sa, osa;
+    sa.sa_handler = signal_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIGINT, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
+        sigaction(SIGINT, &sa, NULL);
+    }
+    if (sigaction(SIGTERM, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
+        sigaction(SIGTERM, &sa, NULL);
+    }
+    if (sigaction(SIGPIPE, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
+        sa.sa_handler = SIG_IGN;
+        sigaction(SIGPIPE, &sa, NULL);
+    }
+#else
+    if (signal(SIGINT, signal_handler) == SIG_IGN) signal(SIGINT, SIG_IGN);
+    if (signal(SIGTERM, signal_handler) == SIG_IGN) signal(SIGTERM, SIG_IGN);
 #ifdef SIGPIPE
     signal(SIGPIPE, SIG_IGN);
 #endif
-    if (signal(SIGINT, signal_handler) == SIG_IGN) signal(SIGINT, SIG_IGN);
-    if (signal(SIGTERM, signal_handler) == SIG_IGN) signal(SIGTERM, SIG_IGN);
+#endif
 }
 
 #ifdef _WIN32
