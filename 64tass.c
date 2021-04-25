@@ -4162,7 +4162,7 @@ MUST_CHECK Obj *compile(void)
                             }
                         } else {
                             if (touval2(vs, &uval, 24)) tryit = false;
-                            tmp.start = uval & 0xffffff;
+                            else tmp.start = uval & 0xffffff;
                         }
                         if (!endok) {
                             vs = get_val();
@@ -4180,7 +4180,7 @@ MUST_CHECK Obj *compile(void)
                                 }
                             } else {
                                 if (touval2(vs, &uval, 24)) tryit = false;
-                                tmp.end = uval & 0xffffff;
+                                else tmp.end = uval & 0xffffff;
                             }
                         }
                         vs = get_val();
