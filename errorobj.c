@@ -38,7 +38,7 @@ static FAST_CALL void destroy(Obj *o1) {
     if (v1->line != NULL) free((uint8_t *)v1->line);
     switch (v1->num) {
     case ERROR__INVALID_OPER:
-        if (v1->u.invoper.v1 != NULL) val_destroy(v1->u.invoper.v1);
+        val_destroy(v1->u.invoper.v1);
         if (v1->u.invoper.v2 != NULL) val_destroy(v1->u.invoper.v2);
         return;
     case ERROR___NO_REGISTER:
