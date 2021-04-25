@@ -23,7 +23,7 @@
 #endif
 #include "stdbool.h"
 
-#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE || _POSIX_VERSION || _POSIX2_VERSION || defined _WIN32
+#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE || _POSIX_VERSION || _POSIX2_VERSION || defined _WIN32 || defined __WATCOMC__
 #include <stdio.h>
 
 #define COLOR_OUTPUT
