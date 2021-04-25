@@ -54,8 +54,9 @@ struct error_output_s {
 
 struct symbol_output_s {
     const char *name;
-    Symbollist_types mode;
     const char *space;
+    Symbollist_types mode;
+    bool append;
 };
 
 struct list_output_s {
