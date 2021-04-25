@@ -505,9 +505,8 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, linecpos_t *ln) {
     bdigit_t *d, uv;
     Bits *v;
 
-    i = k = 0;
+    i = k = 0; uv = 0;
     if (s[0] != '_') {
-        uv = 0;
         for (;;k++) {
             uint8_t c2, c = s[k] ^ 0x30;
             if (c < 10) {
@@ -533,6 +532,8 @@ MUST_CHECK Obj *bits_from_hexstr(const uint8_t *s, linecpos_t *ln) {
     if (i <= 2 * sizeof *d) {
         return (i == 0) ? val_reference(null_bits) : return_bits(uv, (unsigned int)i * 4);
     }
+
+    if ((size_t)i + 0 > SIZE_MAX / 4) return NULL; /* overflow */
 
     v = new_bits2(i / (2 * sizeof *d) + ((i % (2 * sizeof *d)) != 0 ? 1 :0));
     if (v == NULL) return NULL;
@@ -561,9 +562,8 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, linecpos_t *ln) {
     bdigit_t *d, uv;
     Bits *v;
 
-    i = k = 0;
+    i = k = 0; uv = 0;
     if (s[0] != '_') {
-        uv = 0;
         for (;;k++) {
             uint8_t c = s[k] ^ 0x30;
             if (c < 2) {
