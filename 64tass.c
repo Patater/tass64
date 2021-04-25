@@ -2099,7 +2099,7 @@ MUST_CHECK Obj *compile(void)
                                 wht = '*';
                                 break;
                             }
-                            err_msg_not_variable(label, &labelname, &epoint); goto breakerr;
+                            err_msg_not_variable(label, &labelname, &epoint);
                             goto breakerr;
                         }
                         if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
