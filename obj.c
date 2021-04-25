@@ -85,7 +85,7 @@ MUST_CHECK Obj *obj_oper_error(oper_t op) {
     v1 = op->v1;
     err = new_error(ERROR__INVALID_OPER, op->epoint3);
     err->u.invoper.op = op->op;
-    err->u.invoper.v1 = (v1 != NULL) ? ((v1->refcount != 0) ? val_reference(v1) : v1) : NULL;
+    err->u.invoper.v1 = (v1->refcount != 0) ? val_reference(v1) : v1;
     err->u.invoper.v2 = (v2 != NULL) ? ((v2->refcount != 0) ? val_reference(v2) : v2) : NULL;
     return Obj(err);
 }
