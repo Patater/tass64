@@ -38,7 +38,7 @@ static Type obj;
 
 Type *const STR_OBJ = &obj;
 
-static Str null_strval = { { &obj, 1 }, 0, 0, null_strval.u.val, {} };
+static Str null_strval = { { &obj, 1 }, 0, 0, null_strval.u.val, { { 0 } } };
 
 Obj *const null_str = &null_strval.v;
 
