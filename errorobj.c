@@ -81,23 +81,19 @@ static FAST_CALL void destroy(Obj *o1) {
 static FAST_CALL void garbage(Obj *o1, int i) {
     Error *v1 = Error(o1);
     Obj *v;
+    if (i == 0) {
+        if (v1->line != NULL) free((uint8_t *)v1->line);
+        return;
+    }
     switch (v1->num) {
     case ERROR__INVALID_OPER:
         v = v1->u.invoper.v1;
-        if (v != NULL && v1->u.invoper.v2 != NULL) {
-            switch (i) {
-            case -1:
-                v->refcount--;
-                break;
-            case 0:
-                break;
-            case 1:
-                if ((v->refcount & SIZE_MSB) != 0) {
-                    v->refcount -= SIZE_MSB - 1;
-                    v->obj->garbage(v, 1);
-                } else v->refcount++;
-                break;
-            }
+        if (v1->u.invoper.v2 != NULL) {
+            if (i < 0) v->refcount--;
+            else if ((v->refcount & SIZE_MSB) != 0) {
+                v->refcount -= SIZE_MSB - 1;
+                v->obj->garbage(v, 1);
+            } else v->refcount++;
             v = v1->u.invoper.v2;
         }
         break;
@@ -111,19 +107,11 @@ static FAST_CALL void garbage(Obj *o1, int i) {
         break;
     case ERROR___NOT_DEFINED:
         v = v1->u.notdef.symbol;
-        switch (i) {
-        case -1:
-            v->refcount--;
-            break;
-        case 0:
-            break;
-        case 1:
-            if ((v->refcount & SIZE_MSB) != 0) {
-                v->refcount -= SIZE_MSB - 1;
-                v->obj->garbage(v, 1);
-            } else v->refcount++;
-            break;
-        }
+        if (i < 0) v->refcount--;
+        else if ((v->refcount & SIZE_MSB) != 0) {
+            v->refcount -= SIZE_MSB - 1;
+            v->obj->garbage(v, 1);
+        } else v->refcount++;
         v = Obj(v1->u.notdef.names);
         break;
     case ERROR__NOT_KEYVALUE:
@@ -148,23 +136,13 @@ static FAST_CALL void garbage(Obj *o1, int i) {
         v = v1->u.conv.val;
         break;
     default:
-        if (i == 0) break;
         return;
     }
-    switch (i) {
-    case -1:
-        v->refcount--;
-        return;
-    case 0:
-        if (v1->line != NULL) free((uint8_t *)v1->line);
-        return;
-    case 1:
-        if ((v->refcount & SIZE_MSB) != 0) {
-            v->refcount -= SIZE_MSB - 1;
-            v->obj->garbage(v, 1);
-        } else v->refcount++;
-        return;
-    }
+    if (i < 0) v->refcount--;
+    else if ((v->refcount & SIZE_MSB) != 0) {
+        v->refcount -= SIZE_MSB - 1;
+        v->obj->garbage(v, 1);
+    } else v->refcount++;
 }
 
 MALLOC Error *new_error(Error_types num, linepos_t epoint) {
