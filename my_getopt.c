@@ -207,15 +207,19 @@ static int my_getopt_internal(int argc, char *argv[], const char *shortopts,
         (argv[my_optind][charind] != '\0') &&
           (argv[my_optind][charind] != '=');
         charind++);
-    for (ind = 0; longopts[ind].name != NULL && hits == 0; ind++)
+    for (ind = 0; longopts[ind].name != NULL && hits == 0; ind++) {
       if ((strlen(longopts[ind].name) == charind - offset) &&
          (strncmp(longopts[ind].name,
-                  argv[my_optind] + offset, charind - offset) == 0))
-        found = ind, hits++;
-    if (hits == 0) for (ind = 0; longopts[ind].name != NULL; ind++)
+                  argv[my_optind] + offset, charind - offset) == 0)) {
+        found = ind; hits++;
+      }
+    }
+    if (hits == 0) for (ind = 0; longopts[ind].name != NULL; ind++) {
       if (strncmp(longopts[ind].name,
-                 argv[my_optind] + offset, charind - offset) == 0)
-        found = ind, hits++;
+                 argv[my_optind] + offset, charind - offset) == 0) {
+        found = ind; hits++;
+      }
+    }
     if (hits == 1) {
       opt = 0;
 

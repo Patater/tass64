@@ -409,7 +409,7 @@ static const struct my_option long_options[] = {
 static MUST_CHECK char *read_one(FILE *f) {
     bool q, q2, q3;
     char *line;
-    size_t i, ln, n, j, len;
+    size_t i, ln, j, len;
     int c;
     mbstate_t ps;
     size_t p;
@@ -446,13 +446,12 @@ static MUST_CHECK char *read_one(FILE *f) {
     }
     line[i] = 0;
 
-    n = i, j = 0;
-    len = n + 64;
+    len = i + 64;
     data = (uint8_t *)malloc(len);
     if (data == NULL || len < 64) err_msg_out_of_memory2();
 
     memset(&ps, 0, sizeof ps);
-    p = 0;
+    p = 0; j = 0;
     for (;;) {
         ssize_t l;
         wchar_t w;
@@ -462,7 +461,7 @@ static MUST_CHECK char *read_one(FILE *f) {
             data = (uint8_t*)realloc(data, len);
             if (data == NULL) err_msg_out_of_memory2();
         }
-        l = (ssize_t)mbrtowc(&w, line + j, n - j,  &ps);
+        l = (ssize_t)mbrtowc(&w, line + j, i - j,  &ps);
         if (l < 1) {
             w = (uint8_t)line[j];
             if (w == 0 || l == 0) break;
