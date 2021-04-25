@@ -333,7 +333,7 @@ enum {
     OUTPUT_SECTION, M4510, MW65C02, MR65C02, M65CE02, M65XX, NO_LONG_BRANCH,
     NO_CASE_SENSITIVE, NO_TASM_COMPATIBLE, NO_ASCII, CBM_PRG, S_RECORD,
     INTEL_HEX, APPLE_II, ATARI_XEX, NO_LONG_ADDRESS, NO_QUIET, WARN,
-    OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR
+    OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND
 };
 
 static const struct my_option long_options[] = {
@@ -370,6 +370,7 @@ static const struct my_option long_options[] = {
     {"mw65c02"          , my_no_argument      , NULL,  MW65C02},
     {"m4510"            , my_no_argument      , NULL,  M4510},
     {"labels"           , my_required_argument, NULL, 'l'},
+    {"labels-append"    , my_required_argument, NULL,  LABELS_APPEND},
     {"output"           , my_required_argument, NULL, 'o'},
     {"no-output"        , my_no_argument      , NULL,  NO_OUTPUT},
     {"output-append"    , my_required_argument, NULL,  OUTPUT_APPEND},
@@ -507,7 +508,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
     filesize_t fp = 0;
     int max = 10;
     bool again;
-    struct symbol_output_s symbol_output = { NULL, LABEL_64TASS, NULL };
+    struct symbol_output_s symbol_output = { NULL, NULL, LABEL_64TASS, false };
     struct output_s output = { "a.out", NULL, OUTPUT_CBM, false, false };
 
     do {
@@ -588,7 +589,9 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case MR65C02: arguments.cpumode = &r65c02;break;
             case MW65C02: arguments.cpumode = &w65c02;break;
             case M4510: arguments.cpumode = &c4510;break;
+            case LABELS_APPEND:
             case 'l': symbol_output.name = my_optarg;
+                      symbol_output.append = (opt == LABELS_APPEND);
                       arguments.symbol_output_len++;
                       arguments.symbol_output = (struct symbol_output_s *)realloc(arguments.symbol_output, arguments.symbol_output_len * sizeof *arguments.symbol_output);
                       if (arguments.symbol_output == NULL) err_msg_out_of_memory2();
@@ -735,6 +738,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "\n"
                " Source listing and labels:\n"
                "  -l, --labels=<file>    List labels into <file>\n"
+               "      --labels-append=<f> Append labels to <file>\n"
                "      --normal-labels    Labels in native format\n"
                "      --export-labels    Export for other source\n"
                "      --vice-labels      Labels in VICE format\n"
