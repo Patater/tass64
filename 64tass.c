@@ -4220,8 +4220,8 @@ MUST_CHECK Obj *compile(void)
                         if (vs == NULL) break;
                         tryit = !tostr(vs, &escape);
 
-                        if (tryit && escape.len == 0) {
-                            err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint);
+                        if (tryit && (escape.len == 0 || escape.len > 1024)) {
+                            err_msg2(escape.len == 0 ? ERROR__EMPTY_STRING : ERROR_OUT_OF_MEMORY, NULL, &vs->epoint);
                             tryit = false;
                         }
                         vs2 = get_val();
