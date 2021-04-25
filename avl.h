@@ -64,8 +64,8 @@ static inline void avltree_init(struct avltree *tree)
         tree->root = NULL;
 }
 
-FAST_CALL struct avltree_node *avltree_lookup(const struct avltree_node *, const struct avltree *, avltree_cmp_fn_t);
-struct avltree_node *avltree_insert(struct avltree_node *, struct avltree *, avltree_cmp_fn_t);
-void avltree_destroy(struct avltree *, avltree_free_fn_t);
+extern FAST_CALL struct avltree_node *avltree_lookup(const struct avltree_node *, const struct avltree *, avltree_cmp_fn_t);
+extern struct avltree_node *avltree_insert(struct avltree_node *, struct avltree *, avltree_cmp_fn_t);
+extern void avltree_destroy(struct avltree *, avltree_free_fn_t);
 
 #endif
