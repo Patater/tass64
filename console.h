@@ -18,7 +18,9 @@
 */
 #ifndef CONSOLE_H
 #define CONSOLE_H
+#ifndef _MSC_VER
 #include "unistd.h"
+#endif
 #include "stdbool.h"
 
 #if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE || _POSIX_VERSION || _POSIX2_VERSION || defined _WIN32
