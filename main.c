@@ -31,7 +31,7 @@
 #include <string.h>
 #include <signal.h>
 #if defined _MSC_VER || defined __VBCC__ || defined __WATCOMC__
-#define alarm(a)
+static inline unsigned int alarm(unsigned int UNUSED(a)) { return 0; }
 #elif defined __MINGW32__
 extern unsigned int alarm(unsigned int);
 #else
@@ -45,11 +45,16 @@ extern unsigned int alarm(unsigned int);
 
 static void signal_handler(int signum) {
 #if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
+#ifdef SA_RESETHAND
+    (void)signum;
+#else
     struct sigaction sa;
     sa.sa_handler = SIG_DFL;
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
     sigaction(signum, &sa, NULL);
+#define SA_RESETHAND 0
+#endif
 #else
     signal(signum, SIG_DFL);
 #endif
@@ -61,7 +66,7 @@ static inline void install_signal_handler(void) {
 #if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
     struct sigaction sa, osa;
     sa.sa_handler = signal_handler;
-    sa.sa_flags = 0;
+    sa.sa_flags = SA_RESETHAND;
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIGINT, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
         sigaction(SIGINT, &sa, NULL);
