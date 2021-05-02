@@ -101,7 +101,16 @@ static MUST_CHECK Obj *get_dec(linepos_t epoint) {
 
 static double ldexp10(double d, unsigned int expo, bool neg) {
     static const double nums[10] = {1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9};
-    double scal = expo < 10 ? nums[expo] : pow(10.0, (double)expo);
+    double scal;
+    if (expo < lenof(nums)) {
+        scal = nums[expo];
+    } else {
+#ifdef __APPLE__
+        scal = pow(10.0+d*0.0, (double)expo);
+#else
+        scal = pow(10.0, (double)expo);
+#endif
+    }
     return neg ? d / scal : d * scal;
 }
 
