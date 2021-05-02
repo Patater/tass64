@@ -79,7 +79,7 @@ typedef struct Data {
     const uint8_t *pfend;
     /* FLAGS */
     int width, precision;
-    uchar_t pad;
+    unichar_t pad;
     bool left, square, space, plus, star_w, star_p, dot;
 } Data;
 
@@ -112,7 +112,7 @@ static const struct values_s *next_arg(void) {
     return ret;
 }
 
-static void put_char(uchar_t c) {
+static void put_char(unichar_t c) {
     uint8_t *p;
     return_value.chars++;
     p = return_value.data;
@@ -360,7 +360,7 @@ static inline void strings(Data *p)
     const struct values_s *v = next_arg();
     size_t i;
     const uint8_t *tmp;
-    uchar_t ch;
+    unichar_t ch;
     Str *str;
     Obj *err = NULL;
 
@@ -479,7 +479,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
 
     for (; data.pf < data.pfend; data.pf++) {
         const uint8_t *pf = data.pf;
-        uchar_t c = *data.pf;
+        unichar_t c = *data.pf;
         if (c != '%') {
             if ((c & 0x80) != 0) data.pf += utf8in(data.pf, &c) - 1;
             put_char(c);  /* add the char the string */

@@ -82,7 +82,7 @@ typedef SSIZE_T ssize_t;
 
 typedef uint32_t argcount_t;
 #define PRIuargcount PRIu32
-typedef uint32_t uchar_t;
+typedef uint32_t unichar_t;
 typedef uint32_t linenum_t;
 #define PRIuline PRIu32
 #define PRIxline PRIx32

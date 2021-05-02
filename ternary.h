@@ -30,7 +30,7 @@ typedef struct ternary_node_def *ternary_tree;
 
 typedef struct ternary_node_def
 {
-  uchar_t splitchar;
+  unichar_t splitchar;
   ternary_tree lokid;
   ternary_tree eqkid;
   ternary_tree hikid;

@@ -554,7 +554,7 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
         int ch;
         if (actual_encoding == NULL) {
             if (v1->chars == 1) {
-                uchar_t ch2 = v1->data[0];
+                unichar_t ch2 = v1->data[0];
                 if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
                 return bytes_from_uval(ch2, 3);
             }

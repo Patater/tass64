@@ -1340,7 +1340,7 @@ void err_msg_alias(uint32_t a, uint32_t b, linepos_t epoint) {
     adderror("' [-Walias]");
 }
 
-void err_msg_unknown_char(uchar_t ch, const str_t *name, linepos_t epoint) {
+void err_msg_unknown_char(unichar_t ch, const str_t *name, linepos_t epoint) {
     uint8_t line[256], *s = line;
     bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("can't encode character '");
@@ -1651,7 +1651,7 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
             if (w == 0 || l == 0) break;
             l = 1;
         }
-        s2[utf8out((uchar_t)w, s2)] = 0;
+        s2[utf8out((unichar_t)w, s2)] = 0;
         adderror((char *)s2);
         i += (size_t)l;
     }

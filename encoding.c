@@ -325,7 +325,7 @@ void encode_error(struct encoder_s *encoder, Error_types no) {
 
 int encode_string(struct encoder_s *encoder) {
     struct encoding_s *encoding;
-    uchar_t ch;
+    unichar_t ch;
     unsigned int ln;
     struct avltree_node *c;
     struct trans_s tmp;
