@@ -521,7 +521,7 @@ static int get_command(void) {
                     if ((uint8_t)(label[l] - 'a') <= ('z' - 'a')) break;
                     if ((label[l] & 0x80) != 0) {
                         if (arguments.to_ascii) {
-                            uchar_t ch;
+                            unichar_t ch;
                             utf8in(pline + lpoint.pos + l, &ch);
                             if ((uget_property(ch)->property & (id_Continue | id_Start)) != 0) return lenof(command);
                         }
@@ -4149,7 +4149,7 @@ MUST_CHECK Obj *compile(void)
                             Str *str = Str(val);
                             if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
                             else {
-                                uchar_t ch = str->data[0];
+                                unichar_t ch = str->data[0];
                                 if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
                                 tmp.start = ch;
                                 if (str->len > i) {
@@ -4173,7 +4173,7 @@ MUST_CHECK Obj *compile(void)
                                 Str *str = Str(val);
                                 if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
                                 else {
-                                    uchar_t ch = str->data[0];
+                                    unichar_t ch = str->data[0];
                                     if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
                                     tmp.end = ch & 0xffffff;
                                     if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, NULL, &vs->epoint); tryit = false;}
@@ -4189,7 +4189,7 @@ MUST_CHECK Obj *compile(void)
                         else if (tryit) {
                             tmp.offset = uval & 0xff;
                             if (tmp.start > tmp.end) {
-                                uchar_t tmpe = tmp.start;
+                                unichar_t tmpe = tmp.start;
                                 tmp.start = tmp.end;
                                 tmp.end = tmpe & 0xffffff;
                             }

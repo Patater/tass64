@@ -156,7 +156,7 @@ char *get_path(const str_t *v, const char *base) {
 #ifdef _WIN32
 static MUST_CHECK wchar_t *convert_name(const char *name, size_t max) {
     wchar_t *wname;
-    uchar_t ch;
+    unichar_t ch;
     size_t i = 0, j = 0, len = ((max != SIZE_MAX) ? max : strlen(name)) + 2;
     if (len > SIZE_MAX / sizeof *wname) return NULL;
     wname = (wchar_t *)malloc(len * sizeof *wname);
@@ -323,7 +323,7 @@ FILE *file_open(const char *name, const char *mode) {
     size_t len = 0, max = strlen(name) + 1;
     char *newname = (char *)malloc(max);
     const uint8_t *c = (const uint8_t *)name;
-    uchar_t ch;
+    unichar_t ch;
     mbstate_t ps;
     errno = ENOMEM;
     f = NULL;
@@ -385,7 +385,7 @@ static bool flush_ubuff(struct ubuff_s *ubuff, filesize_t *p2, struct file_s *tm
     uint32_t i;
     filesize_t p = *p2;
     for (i = 0; i < ubuff->p; i++) {
-        uchar_t ch;
+        unichar_t ch;
         if (p + 6*6 + 1 > tmp->len && extendfile(tmp)) return true;
         ch = ubuff->data[i];
         if (ch != 0 && ch < 0x80) tmp->data[p++] = (uint8_t)ch; else p += utf8out(ch, tmp->data + p);
@@ -394,7 +394,7 @@ static bool flush_ubuff(struct ubuff_s *ubuff, filesize_t *p2, struct file_s *tm
     return false;
 }
 
-static uchar_t fromiso2(uchar_t c) {
+static unichar_t fromiso2(unichar_t c) {
     mbstate_t ps;
     wchar_t w;
     int olderrno;
@@ -406,11 +406,11 @@ static uchar_t fromiso2(uchar_t c) {
     l = (ssize_t)mbrtowc(&w, (char *)&c2, 1,  &ps);
     errno = olderrno;
     if (l < 0) return c2;
-    return (uchar_t)w;
+    return (unichar_t)w;
 }
 
-static inline uchar_t fromiso(uchar_t c) {
-    static uchar_t conv[128];
+static inline unichar_t fromiso(unichar_t c) {
+    static unichar_t conv[128];
     c &= 0x7f;
     if (conv[c] == 0) conv[c] = fromiso2(c);
     return conv[c];
@@ -463,7 +463,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
     if (tmp == NULL) { /* new file */
         Encoding_types encoding = E_UNKNOWN;
         FILE *f;
-        uchar_t c = 0;
+        unichar_t c = 0;
         filesize_t fp = 0;
 
         lastfi->nomacro = NULL;
@@ -564,7 +564,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 ubuff.p = 0;
                 do {
                     filesize_t p;
-                    uchar_t lastchar;
+                    unichar_t lastchar;
                     bool qc = true;
                     uint8_t cclass = 0;
 
@@ -675,7 +675,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                             break;
                         case E_UTF16LE:
                             if (bp == bl) goto invalid;
-                            c |= (uchar_t)buffer[bp] << 8; bp = (bp + 1) % (BUFSIZ * 2);
+                            c |= (unichar_t)buffer[bp] << 8; bp = (bp + 1) % (BUFSIZ * 2);
                             if (c == 0xfffe) {
                                 encoding = E_UTF16BE;
                                 continue;
@@ -932,7 +932,7 @@ void init_file(void) {
     stars->next = NULL;
     starsp = 0;
     lastst = &stars->stars[starsp];
-    last_ubuff.data = (uchar_t *)mallocx(16 * sizeof *last_ubuff.data);
+    last_ubuff.data = (unichar_t *)mallocx(16 * sizeof *last_ubuff.data);
     last_ubuff.len = 16;
     avltree_init(&star_root.tree);
 }

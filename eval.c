@@ -58,7 +58,7 @@
 
 static FAST_CALL NO_INLINE unsigned int get_label_start(const uint8_t *s) {
     unsigned int l;
-    uchar_t ch;
+    unichar_t ch;
     if (!arguments.to_ascii) return 0;
     l = utf8in(s, &ch);
     return ((uget_property(ch)->property & id_Start) != 0) ? l : 0;
@@ -66,7 +66,7 @@ static FAST_CALL NO_INLINE unsigned int get_label_start(const uint8_t *s) {
 
 static FAST_CALL NO_INLINE unsigned int get_label_continue(const uint8_t *s) {
     unsigned int l;
-    uchar_t ch;
+    unichar_t ch;
     if (!arguments.to_ascii) return 0;
     l = utf8in(s, &ch);
     return ((uget_property(ch)->property & (id_Continue | id_Start)) != 0) ? l : 0;

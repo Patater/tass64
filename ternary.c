@@ -69,7 +69,7 @@ static MALLOC ternary_node *tern_alloc(void) {
 
 ternary_tree *ternary_insert(ternary_tree *pcurr, const uint8_t *s, const uint8_t *end)
 {
-    uchar_t spchar;
+    unichar_t spchar;
     ternary_tree curr;
   
     spchar = *s;
@@ -85,7 +85,7 @@ ternary_tree *ternary_insert(ternary_tree *pcurr, const uint8_t *s, const uint8_
             {
                 return &curr->eqkid;
             }
-            if (s == end) spchar = ~(uchar_t)0;
+            if (s == end) spchar = ~(unichar_t)0;
             else {
                 spchar = *s;
                 if ((spchar & 0x80) != 0) s += utf8in(s, &spchar); else s++;
@@ -110,7 +110,7 @@ ternary_tree *ternary_insert(ternary_tree *pcurr, const uint8_t *s, const uint8_
         if ((~spchar) == 0) {
             return pcurr;
         }
-        if (s == end) spchar = ~(uchar_t)0;
+        if (s == end) spchar = ~(unichar_t)0;
         else {
             spchar = *s;
             if ((spchar & 0x80) != 0) s += utf8in(s, &spchar); else s++;
@@ -132,7 +132,7 @@ void ternary_cleanup(ternary_tree p, ternary_free_fn_t f)
 /* Non-recursive find of a string in the ternary tree */
 void *ternary_search(const ternary_node *curr, const uint8_t *s, size_t *len)
 {
-    uchar_t spchar;
+    unichar_t spchar;
     const ternary_node *last = NULL;
     const uint8_t *start = s, *end = s + *len, *prev = s;
 
@@ -142,7 +142,7 @@ void *ternary_search(const ternary_node *curr, const uint8_t *s, size_t *len)
     do {
         if (spchar == curr->splitchar) {
             if ((~spchar) == 0) return (void *)curr->eqkid;
-            if (s == end) spchar = ~(uchar_t)0;
+            if (s == end) spchar = ~(unichar_t)0;
             else {
                 prev = s;
                 spchar = *s;

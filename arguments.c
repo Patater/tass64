@@ -455,7 +455,7 @@ static MUST_CHECK char *read_one(FILE *f) {
     for (;;) {
         ssize_t l;
         wchar_t w;
-        uchar_t ch;
+        unichar_t ch;
         if (p + 6*6 + 1 > len) {
             len += 1024;
             data = (uint8_t*)realloc(data, len);
@@ -468,7 +468,7 @@ static MUST_CHECK char *read_one(FILE *f) {
             l = 1;
         }
         j += (size_t)l;
-        ch = (uchar_t)w;
+        ch = (unichar_t)w;
         if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
     }
     data[p] = 0;

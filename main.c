@@ -107,7 +107,7 @@ int wmain(int argc, wchar_t *argv2[]) {
     argv = (char **)malloc((argc < 1 ? 1 : (unsigned int)argc) * sizeof *argv);
     if (argv == NULL) err_msg_out_of_memory2();
     for (i = 0; i < argc; i++) {
-        uchar_t c = 0, lastchar;
+        unichar_t c = 0, lastchar;
         const wchar_t *s = (i == 0) ? prgname(*argv2) : argv2[i];
         const wchar_t *p = s;
         uint8_t *c2;
@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
         for (;;) {
             ssize_t l;
             wchar_t w;
-            uchar_t ch;
+            unichar_t ch;
             if (p + 6*6 + 1 > len) {
                 len += 1024;
                 data = (uint8_t*)realloc(data, len);
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
                 l = 1;
             }
             j += (size_t)l;
-            ch = (uchar_t)w;
+            ch = (unichar_t)w;
             if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
         }
         data[p] = 0;
