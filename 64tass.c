@@ -49,6 +49,7 @@
 #include "longjump.h"
 #include "mem.h"
 #include "unicodedata.h"
+#include "version.h"
 
 #include "listobj.h"
 #include "codeobj.h"
