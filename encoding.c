@@ -165,6 +165,7 @@ bool new_trans(struct encoding_s *enc, const struct character_range_s *range, li
         lasttr = &transs->transs[transs_i++];
     }
     lasttr->range = *range;
+retry:
     b = avltree_insert(&lasttr->node, &enc->ranges, trans_compare);
     if (b == NULL) { /* new encoding */
         tmp = lasttr;
@@ -177,7 +178,12 @@ bool new_trans(struct encoding_s *enc, const struct character_range_s *range, li
     }
     tmp = avltree_container_of(b, struct trans_s, node);
     if (tmp->range.start != range->start || tmp->range.end != range->end) {
-        return true;
+        if (tmp->pass >= pass) {
+            return true;
+        }
+        if (tmp->fwpass == pass) efwcount--;
+        avltree_remove(b, &enc->ranges);
+        goto retry;
     }
     if (tmp->pass >= pass) {
         return (tmp->range.offset != range->offset);
