@@ -519,7 +519,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 if (tmp->len != 0 || !extendfile(tmp)) {
                     for (;;) {
                         fp += (filesize_t)fread(tmp->data + fp, 1, tmp->len - fp, f);
-                        if (feof(f) == 0 && fp >= tmp->len) {
+                        if (feof(f) == 0 && fp >= tmp->len && !signal_received) {
                             if (check) {
                                 int c2 = getc(f);
                                 check = false;
@@ -592,6 +592,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                                 qr = 1;
                                 if (feof(f) == 0) bl = fread(buffer, 1, BUFSIZ, f);
                             }
+                            if (signal_received) bl = bp;
                         }
                         if (bp == bl) break;
                         lastchar = c;
@@ -788,6 +789,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
             err |= ferror(f);
             if (f != stdin) err |= fclose(f);
         openerr:
+            if (signal_received) err = errno = EINTR;
             if (err != 0 && errno != 0) {
                 tmp->err_no = errno;
                 free(tmp->data);
