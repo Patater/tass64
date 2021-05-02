@@ -27,6 +27,7 @@
 #include "error.h"
 #include "unicode.h"
 #include "wchar.h"
+#include "version.h"
 
 struct arguments_s arguments = {
     true,        /* quiet */

@@ -22,11 +22,7 @@
 #include "stdbool.h"
 #include "inttypes.h"
 #include "wait_e.h"
-#ifndef REVISION
-#define REVISION "2625?"
-#endif
-#undef VERSION
-#define VERSION "1.56." REVISION
+
 #define MAX_PASS 20
 
 #define ignore() while(pline[lpoint.pos]==0x20 || pline[lpoint.pos]==0x09) lpoint.pos++

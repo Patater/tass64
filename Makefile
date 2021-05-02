@@ -8,13 +8,15 @@ OBJS = 64tass.o opcodes.o str.o avl.o my_getopt.o eval.o error.o section.o \
  foldobj.o main.o console.o encodings.o
 LDLIBS = -lm
 LANG = C
-SVNVERSION != svnversion
-REVISION != echo $(SVNVERSION) | grep -q "^[1-9]" && echo $(SVNVERSION) || echo "2625?"
-CFLAGS = -g -O2 -W -Wall -Wextra -Wwrite-strings -Wshadow -fstrict-aliasing -DREVISION="\"$(REVISION)\"" -Wstrict-aliasing=2 -Werror=missing-prototypes
+VERSION = 1.56
+CFLAGS = -O2
+CFLAGS += -g -W -Wall -Wextra -Wwrite-strings -Wshadow -fstrict-aliasing -Wstrict-aliasing=2 -Werror=missing-prototypes
 LDFLAGS =
 TARGET = 64tass
-RM ?= rm -f
-INSTALL = /usr/bin/install -c
+SVNVERSION = svnversion
+RM = rm -f
+RMDIR = rmdir
+INSTALL = install -c
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL) -m 644
 prefix = /usr/local
@@ -33,16 +35,19 @@ $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $@
 
 README: README.html
-	-command -v w3m >/dev/null 2>/dev/null && sed -e 's/&larr;/<-/g;s/&hellip;/.../g;s/&lowast;/*/g;s/&minus;/-/g;s/&ndash;/-/g;' README.html | w3m -T text/html -dump -no-graph | sed -e 's/\s\+$$//' >README
+	-command -v w3m >/dev/null 2>/dev/null && sed -e 's/&larr;/<-/g;s/&hellip;/.../g;s/&lowast;/*/g;s/&minus;/-/g;s/&ndash;/-/g;' README.html | w3m -T text/html -dump -no-graph | sed -e 's/\s\+$$//' >$@
+
+version.h:
+	echo "#define VERSION \"$(VERSION).$(SVNVERSION:sh)$(shell $(SVNVERSION))\"" >$@
 
 64tass.o: 64tass.c 64tass.h attributes.h stdbool.h inttypes.h wait_e.h \
  error.h errors_e.h opcodes.h eval.h oper_e.h values.h section.h avl.h \
  str.h encoding.h file.h variables.h macro.h instruction.h unicode.h \
  listing.h optimizer.h arguments.h ternary.h opt_bit.h longjump.h mem.h \
- unicodedata.h listobj.h obj.h codeobj.h strobj.h addressobj.h boolobj.h \
- bytesobj.h intobj.h bitsobj.h functionobj.h namespaceobj.h operobj.h \
- gapobj.h typeobj.h noneobj.h registerobj.h labelobj.h errorobj.h \
- macroobj.h mfuncobj.h memblocksobj.h symbolobj.h dictobj.h
+ unicodedata.h version.h listobj.h obj.h codeobj.h strobj.h addressobj.h \
+ boolobj.h bytesobj.h intobj.h bitsobj.h functionobj.h namespaceobj.h \
+ operobj.h gapobj.h typeobj.h noneobj.h registerobj.h labelobj.h \
+ errorobj.h macroobj.h mfuncobj.h memblocksobj.h symbolobj.h dictobj.h
 addressobj.o: addressobj.c addressobj.h obj.h attributes.h inttypes.h \
  values.h stdbool.h error.h errors_e.h eval.h oper_e.h variables.h \
  arguments.h instruction.h boolobj.h strobj.h intobj.h typeobj.h \
@@ -52,7 +57,7 @@ anonsymbolobj.o: anonsymbolobj.c anonsymbolobj.h obj.h attributes.h \
  errorobj.h errors_e.h
 arguments.o: arguments.c arguments.h stdbool.h inttypes.h 64tass.h \
  attributes.h wait_e.h opcodes.h my_getopt.h file.h str.h error.h \
- errors_e.h unicode.h wchar.h
+ errors_e.h unicode.h wchar.h version.h
 avl.o: avl.c avl.h attributes.h stdbool.h
 bitsobj.o: bitsobj.c bitsobj.h obj.h attributes.h inttypes.h oper_e.h \
  math.h eval.h stdbool.h variables.h unicode.h encoding.h errors_e.h \
@@ -136,7 +141,7 @@ labelobj.o: labelobj.c labelobj.h obj.h attributes.h inttypes.h str.h \
  typeobj.h errorobj.h oper_e.h
 listing.o: listing.c listing.h attributes.h inttypes.h stdbool.h file.h \
  str.h error.h errors_e.h 64tass.h wait_e.h opcodes.h unicode.h section.h \
- avl.h instruction.h obj.h values.h arguments.h
+ avl.h instruction.h obj.h values.h arguments.h version.h
 listobj.o: listobj.c listobj.h obj.h attributes.h inttypes.h values.h \
  stdbool.h eval.h oper_e.h variables.h error.h errors_e.h arguments.h \
  boolobj.h codeobj.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h \
@@ -235,7 +240,7 @@ install-man:
 
 install-doc:
 	-$(INSTALL) -d $(DESTDIR)$(docdir)
-	-$(INSTALL_DATA) LICENSE-GPL-2.0 LICENSE-LGPL-2.0 LICENSE-LGPL-2.1 LICENSE-my_getopt README.html $(DESTDIR)$(docdir)
+	-$(INSTALL_DATA) LICENSE-GPL-2.0 LICENSE-LGPL-2.0 LICENSE-LGPL-2.1 LICENSE-my_getopt README.html NEWS $(DESTDIR)$(docdir)
 
 install: $(TARGET) install-man install-doc
 	-$(INSTALL) -d $(DESTDIR)$(bindir)
@@ -254,3 +259,5 @@ uninstall:
 	-$(RM) $(DESTDIR)$(docdir)/LICENSE-LGPL-2.1
 	-$(RM) $(DESTDIR)$(docdir)/LICENSE-my_getopt
 	-$(RM) $(DESTDIR)$(docdir)/README.html
+	-$(RM) $(DESTDIR)$(docdir)/NEWS
+	-$(RMDIR) $(DESTDIR)$(docdir)

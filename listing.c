@@ -31,6 +31,7 @@
 #include "obj.h"
 #include "values.h"
 #include "arguments.h"
+#include "version.h"
 
 #define LINE_WIDTH 8
 #define ADDR_WIDTH 8
