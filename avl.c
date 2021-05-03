@@ -308,22 +308,22 @@ void avltree_remove(struct avltree_node *node, struct avltree *tree)
             is_left = parent != NULL && parent->left == node;
 
             node->balance++;
-            if (node->balance == 0)	/* case 1 */
+            if (node->balance == 0)     /* case 1 */
                 continue;
-            if (node->balance == 1)	/* case 2 */
+            if (node->balance == 1)     /* case 2 */
                 return;
-            right = node->right;	/* case 3 */
+            right = node->right;        /* case 3 */
             switch (right->balance) {
-            case 0:			/* case 3.1 */
+            case 0:                     /* case 3.1 */
                 node->balance = 1;
                 right->balance = -1;
                 rotate_left(node, tree);
                 return;
-            case 1:			/* case 3.2 */
+            case 1:                     /* case 3.2 */
                 node->balance = 0;
                 right->balance = 0;
                 break;
-            case -1:			/* case 3.3 */
+            case -1:                    /* case 3.3 */
                 switch (right->left->balance) {
                 case 1:
                     node->balance = -1;
