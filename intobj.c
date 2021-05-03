@@ -1553,20 +1553,13 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, linecpos_t *ln, linecpos_t *ln
     end2 = d;
     while (s < end) {
         digit_t *d2, mul;
-        int j;
         val = 0;
-        for (j = 0; j < 9 && s < end; s++) {
+        for (mul = 1; mul < 1000000000 && s < end; s++) {
             uint8_t c = *s ^ 0x30;
             if (c < 10) {
                 val = val * 10 + c;
-                j++;
-                continue;
+                mul *= 10;
             }
-        }
-        if (j == 9) mul = 1000000000;
-        else {
-            mul = 10;
-            while ((--j) != 0) mul *= 10;
         }
         d2 = d;
         while (d2 < end2) {
