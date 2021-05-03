@@ -73,6 +73,7 @@
 #include "memblocksobj.h"
 #include "symbolobj.h"
 #include "dictobj.h"
+#include "encobj.h"
 
 struct Listing *listing = NULL;
 int temporary_label_branch; /* function declaration in function context, not good */
@@ -322,6 +323,7 @@ static void tfree(void) {
     destroy_longjump();
     destroy_encoding();
     destroy_values();
+    destroy_transs();
     err_destroy();
     destroy_file();
     destroy_ternary();
@@ -4118,13 +4120,14 @@ MUST_CHECK Obj *compile(void)
                         if (tostr(vs, &encname)) break;
                         if (encname.len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); break;}
                     }
-                    actual_encoding = new_encoding(&encname, &epoint);
+                    val_destroy(Obj(actual_encoding));
+                    actual_encoding = ref_enc(new_encoding(&encname, &epoint));
                 }
                 break;
             case CMD_CDEF: if ((waitfor->skip & 1) != 0)
                 { /* .cdef */
                     struct character_range_s tmp;
-                    struct encoding_s *old = actual_encoding;
+                    Enc *old = actual_encoding;
                     bool rc;
                     argcount_t len;
                     listing_line(listing, epoint.pos);
@@ -4194,7 +4197,7 @@ MUST_CHECK Obj *compile(void)
                                 tmp.start = tmp.end;
                                 tmp.end = tmpe & 0xffffff;
                             }
-                            if (new_trans(actual_encoding, &tmp, &epoint)) {
+                            if (enc_trans_add(actual_encoding, &tmp, &epoint)) {
                                 err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); goto breakerr;
                             }
                         }
@@ -4203,7 +4206,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_EDEF: if ((waitfor->skip & 1) != 0)
                 { /* .edef */
-                    struct encoding_s *old = actual_encoding;
+                    Enc *old = actual_encoding;
                     bool rc;
                     argcount_t len;
                     listing_line(listing, epoint.pos);
@@ -4229,7 +4232,7 @@ MUST_CHECK Obj *compile(void)
                         if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr; }
                         val = vs2->val;
                         if (val == none_value) err_msg_still_none(NULL, &vs2->epoint);
-                        else if (tryit && new_escape(actual_encoding, &escape, val, &vs2->epoint)) {
+                        else if (tryit && enc_escape_add(actual_encoding, &escape, val, &vs2->epoint)) {
                             err_msg2(ERROR_DOUBLE_ESCAPE, NULL, &vs->epoint); goto breakerr;
                         }
                     }
@@ -4903,7 +4906,9 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
     if (diagnostics.optimize) cpu_opt_invalidate();
     for (i = opts - 1; i < argc; i++) {
         set_cpumode(arguments.cpumode); if (pass == 1 && i == opts - 1) constcreated = false;
-        star = databank = dpage = strength = 0;longaccu = longindex = autosize = false;actual_encoding = new_encoding(&none_enc, &nopoint);
+        star = databank = dpage = strength = 0;longaccu = longindex = autosize = false;
+        val_destroy(Obj(actual_encoding));
+        actual_encoding = ref_enc(new_encoding(&none_enc, &nopoint));
         allowslowbranch = true; longbranchasjmp = false; temporary_label_branch = 0;
         reset_waitfor();lpoint.line = vline = 0;outputeor = 0; pline = (const uint8_t *)"";
         reset_context();

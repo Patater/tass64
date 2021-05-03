@@ -22,7 +22,6 @@
 #include "eval.h"
 #include "variables.h"
 #include "unicode.h"
-#include "encoding.h"
 #include "error.h"
 #include "arguments.h"
 
@@ -37,6 +36,7 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "addressobj.h"
+#include "encobj.h"
 
 #define SHIFT (8 * (unsigned int)sizeof(bdigit_t))
 
@@ -637,8 +637,8 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
     d = v->data;
 
     uv = 0; bits = 0; j = 0;
-    encoder = encode_string_init(v1, epoint);
-    while ((ch = encode_string(encoder)) != EOF) {
+    encoder = enc_string_init(actual_encoding, v1, epoint);
+    while ((ch = enc_string(encoder)) != EOF) {
         uv |= (bdigit_t)(ch & 0xff) << bits;
         if (bits == SHIFT - 8) {
             if (j >= sz) {

@@ -21,7 +21,6 @@
 #include "math.h"
 #include "eval.h"
 #include "unicode.h"
-#include "encoding.h"
 #include "variables.h"
 #include "arguments.h"
 #include "error.h"
@@ -37,6 +36,7 @@
 #include "noneobj.h"
 #include "errorobj.h"
 #include "addressobj.h"
+#include "encobj.h"
 
 static Type obj;
 
@@ -567,8 +567,8 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
         v = new_bytes2(len);
         if (v == NULL) goto failed;
         s = v->data;
-        encoder = encode_string_init(v1, epoint);
-        while ((ch = encode_string(encoder)) != EOF) {
+        encoder = enc_string_init(actual_encoding, v1, epoint);
+        while ((ch = enc_string(encoder)) != EOF) {
             if (len2 >= len) {
                 if (v->u.val == s) {
                     len = 32;
@@ -588,10 +588,10 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
             }
             switch (mode) {
             case BYTES_MODE_SHIFT_CHECK:
-            case BYTES_MODE_SHIFT: if ((ch & 0x80) != 0) encode_error(encoder, ERROR___NO_HIGH_BIT); s[len2] = ch & 0x7f; break;
-            case BYTES_MODE_SHIFTL: if ((ch & 0x80) != 0) encode_error(encoder, ERROR___NO_HIGH_BIT); s[len2] = (uint8_t)(ch << 1); break;
-            case BYTES_MODE_NULL_CHECK:if (ch == 0) {encode_error(encoder, ERROR_NO_ZERO_VALUE); ch = 0xff;} s[len2] = (uint8_t)ch; break;
-            case BYTES_MODE_NULL: if (ch == 0) encode_error(encoder, ERROR_NO_ZERO_VALUE); s[len2 - 1] = (uint8_t)ch; break;
+            case BYTES_MODE_SHIFT: if ((ch & 0x80) != 0) enc_error(encoder, ERROR___NO_HIGH_BIT); s[len2] = ch & 0x7f; break;
+            case BYTES_MODE_SHIFTL: if ((ch & 0x80) != 0) enc_error(encoder, ERROR___NO_HIGH_BIT); s[len2] = (uint8_t)(ch << 1); break;
+            case BYTES_MODE_NULL_CHECK:if (ch == 0) {enc_error(encoder, ERROR_NO_ZERO_VALUE); ch = 0xff;} s[len2] = (uint8_t)ch; break;
+            case BYTES_MODE_NULL: if (ch == 0) enc_error(encoder, ERROR_NO_ZERO_VALUE); s[len2 - 1] = (uint8_t)ch; break;
             case BYTES_MODE_PTEXT:
             case BYTES_MODE_TEXT: s[len2] = (uint8_t)ch; break;
             }

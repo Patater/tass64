@@ -47,6 +47,7 @@
 #include "anonsymbolobj.h"
 #include "memblocksobj.h"
 #include "foldobj.h"
+#include "encobj.h"
 
 static Type lbl_obj;
 static Type default_obj;
@@ -341,6 +342,7 @@ void objects_init(void) {
     symbolobj_init();
     anonsymbolobj_init();
     foldobj_init();
+    encobj_init();
 
     new_type(&lbl_obj, T_LBL, "lbl", sizeof(Lbl));
     lbl_obj.same = lbl_same;
@@ -362,6 +364,7 @@ void objects_destroy(void) {
     foldobj_destroy();
     functionobj_destroy();
     floatobj_destroy();
+    encobj_destroy();
 
 #ifdef DEBUG
     if (default_value->refcount != 1) fprintf(stderr, "default %" PRIuSIZE "\n", default_value->refcount - 1);
