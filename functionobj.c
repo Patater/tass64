@@ -935,7 +935,7 @@ void functionobj_destroy(void) {
     unsigned int i;
     for (i = 0; i < lenof(builtin_functions); i++) {
         if (builtin_functions[i].v.refcount != 1) {
-            fprintf(stderr, "%s %" PRIuSIZE "\n", (const char *)builtin_functions[i].name.data, builtin_functions[i].v.refcount - 1);
+            fprintf(stderr, "%s %" PRIuSIZE "\n", builtin_functions[i].name, builtin_functions[i].v.refcount - 1);
         }
     }
 #endif
