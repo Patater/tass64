@@ -388,7 +388,6 @@ static const char * const terr_error[] = {
     "not a bank 0 address ",
     "out of memory",
     "addressing mode too complex",
-    "empty encoding, add something or correct name",
     "closing directive '",
     "opening directive '",
     "must be used within a loop",
@@ -1031,6 +1030,11 @@ static void err_msg_double_note(const struct file_list_s *cflist, linepos_t epoi
     adderror(" was here");
 }
 
+void err_msg_encode_definition_note(const struct file_list_s *cflist, linepos_t epoint) {
+    new_error_msg(SV_NOTE, cflist, epoint);
+    adderror("definition of encoding was here");
+}
+
 void err_msg_star_assign(linepos_t epoint) {
     new_error_msg2(diagnostic_errors.star_assign, epoint);
     adderror("label defined instead of variable multiplication for compatibility [-Wstar-assign]");
@@ -1340,14 +1344,13 @@ void err_msg_alias(uint32_t a, uint32_t b, linepos_t epoint) {
     adderror("' [-Walias]");
 }
 
-void err_msg_unknown_char(unichar_t ch, const str_t *name, linepos_t epoint) {
+void err_msg_unknown_char(unichar_t ch, linepos_t epoint) {
     uint8_t line[256], *s = line;
     bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
     adderror("can't encode character '");
     if (ch != 0 && ch < 0x80) *s++ = (uint8_t)ch; else s += utf8out(ch, s);
-    sprintf((char *)s, "' ($%02" PRIx32 ") in encoding '", ch); adderror((char *)line);
-    adderror2(name->data, name->len);
-    adderror("'");
+    sprintf((char *)s, "' ($%02" PRIx32 ")", ch); 
+    adderror((char *)line);
     if (more) new_error_msg_more();
 }
 
