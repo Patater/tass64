@@ -294,7 +294,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     }
 }
 
-static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
+static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t UNUSED(epoint)) {
     const Bits *v1 = Bits(o1);
     size_t i, sz, sz2;
     bdigit_t b, inv;
@@ -318,7 +318,6 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     default:
         return truth_reference(v1->len != 0);
     }
-    return DEFAULT_OBJ->truth(o1, type, epoint);
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {

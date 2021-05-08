@@ -280,7 +280,7 @@ static bool to_bool(const Bytes *v1) {
     return false;
 }
 
-static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
+static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t UNUSED(epoint)) {
     const Bytes *v1 = Bytes(o1);
     size_t i, sz;
     uint8_t inv;
@@ -298,7 +298,6 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t epoint) {
     default:
         return truth_reference(to_bool(v1));
     }
-    return DEFAULT_OBJ->truth(o1, type, epoint);
 }
 
 static uint8_t *z85_encode(uint8_t *dest, const uint8_t *src, size_t len) {
