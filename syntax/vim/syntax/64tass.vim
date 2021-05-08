@@ -233,7 +233,7 @@ syn match tass64Oper1   /\v[)\]}]/ skipwhite contained nextgroup=@tass64Expressi
 syn match tass64Oper1   /\v\.[-+(\*[:lower:][:upper:]_]@=/ contained nextgroup=@tass64Expression
 
 syn match tass64Oper2   /\v[<>&^|*.]{2}|[>=<!]\=|[><?]\?|[-+/*%^|&,.?:<>=[(]|%(in|x)>/ skipwhite contained nextgroup=@tass64Expression
-syn match tass64Oper2   /\v[<>&|*.<>]{2}\=|[><]\?\=|[-+/*%^|&:x]\=/ skipwhite contained nextgroup=@tass64Expression
+syn match tass64Oper2   /\v[<>&|*.<>]{2}\=|\=\=\=|[><]\?\=|[-+/*%^|&:x]\=/ skipwhite contained nextgroup=@tass64Expression
 syn match tass64Oper2   /\v,[xyzrsdbk]>|[\])}]/ skipwhite contained nextgroup=@tass64Expression2
 
 " Functions
