@@ -623,7 +623,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     default:
         return o2->obj->rcalc2(op);
     }
-    return obj_oper_error(op);
 }
 
 static MUST_CHECK Obj *rcalc2(oper_t op) {
