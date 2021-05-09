@@ -35,7 +35,7 @@ typedef struct Bits {
     } u;
 } Bits;
 
-#define Bits(a) ((Bits *)(1 ? (a) : (Obj *)(Bits *)(a)))
+#define Bits(a) OBJ_CAST(Bits, a)
 
 extern Obj *const null_bits;
 extern Obj *const inv_bits;

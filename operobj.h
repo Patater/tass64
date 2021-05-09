@@ -31,7 +31,7 @@ typedef struct Oper {
     const unsigned int len;
 } Oper;
 
-#define Oper(a) ((Oper *)(1 ? (a) : (Obj *)(Oper *)(a)))
+#define Oper(a) OBJ_CAST(Oper, a)
 
 extern void operobj_init(void);
 

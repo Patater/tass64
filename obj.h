@@ -30,6 +30,7 @@ typedef struct Obj {
 } Obj;
 
 #define Obj(a) ((0 ? &(a)->v : (Obj *)(a)))
+#define OBJ_CAST(b, a) ((b *)(1 ? (a) : (Obj *)(b *)(a)))
 
 typedef struct Lbl {
     Obj v;
@@ -39,7 +40,7 @@ typedef struct Lbl {
     struct Namespace *parent;
 } Lbl;
 
-#define Lbl(a) ((Lbl *)(1 ? (a) : (Obj *)(Lbl *)(a)))
+#define Lbl(a) OBJ_CAST(Lbl, a)
 
 typedef struct Funcargs {
     Obj v;
@@ -47,13 +48,13 @@ typedef struct Funcargs {
     struct values_s *val;
 } Funcargs;
 
-#define Funcargs(a) ((Funcargs *)(1 ? (a) : (Obj *)(Funcargs *)(a)))
+#define Funcargs(a) OBJ_CAST(Funcargs, a)
 
 typedef struct Default {
     Obj v;
 } Default;
 
-#define Default(a) ((Default *)(1 ? (a) : (Obj *)(Default *)(a)))
+#define Default(a) OBJ_CAST(Default, a)
 
 static inline Obj *val_reference(Obj *v1) {
     v1->refcount++; return v1;

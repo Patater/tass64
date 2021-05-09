@@ -76,7 +76,7 @@ typedef struct Error {
     } u;
 } Error;
 
-#define Error(a) ((Error *)(1 ? (a) : (Obj *)(Error *)(a)))
+#define Error(a) OBJ_CAST(Error, a)
 
 extern void errorobj_init(void);
 

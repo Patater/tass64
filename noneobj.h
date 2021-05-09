@@ -26,7 +26,7 @@ typedef struct None {
     Obj v;
 } None;
 
-#define None(a) ((None *)(1 ? (a) : (Obj *)(None *)(a)))
+#define None(a) OBJ_CAST(None, a)
 
 extern Obj *const none_value;
 

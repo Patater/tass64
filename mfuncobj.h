@@ -48,8 +48,8 @@ typedef struct Mfunc {
 } Mfunc;
 typedef struct Mfunc Sfunc;
 
-#define Mfunc(a) ((Mfunc *)(1 ? (a) : (Obj *)(Mfunc *)(a)))
-#define Sfunc(a) ((Sfunc *)(1 ? (a) : (Obj *)(Sfunc *)(a)))
+#define Mfunc(a) OBJ_CAST(Mfunc, a)
+#define Sfunc(a) OBJ_CAST(Sfunc, a)
 
 extern void mfuncobj_init(void);
 #endif
