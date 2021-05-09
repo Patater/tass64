@@ -763,7 +763,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                "Report bugs to <soci" "\x40" "c64.rulez.org>.");
                return 0;
             }
-                /* fall through */
+                FALL_THROUGH; /* fall through */
             default:
             exit:
                 fputs("Try '64tass --help' or '64tass --usage' for more information.\n", stderr);

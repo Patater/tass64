@@ -367,7 +367,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_LNOT:
     case O_STRING:
         if (am != A_NONE) break;
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case O_BANK:
     case O_HIGHER:
     case O_LOWER:

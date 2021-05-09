@@ -756,7 +756,7 @@ retry:
                 if (bits == 0) break;
                 if (bits <= 8) goto doit;
             }
-            /* fall through */
+            FALL_THROUGH; /* fall through */
         case T_STR:
         case T_CODE:
         case T_ADDRESS:
@@ -1005,11 +1005,11 @@ static const char *check_waitfor(void) {
     case W_WEAK2:
         if (waitfor->u.cmd_weak.label != NULL) {set_size(waitfor->u.cmd_weak.label, current_address->address - waitfor->u.cmd_weak.addr, current_address->mem, waitfor->u.cmd_weak.addr, waitfor->u.cmd_weak.membp);val_destroy(Obj(waitfor->u.cmd_weak.label));}
         strength--;
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_WEAK: return ".endweak";
     case W_ENDP2:
         if (waitfor->u.cmd_page.label != NULL) {set_size(waitfor->u.cmd_page.label, current_address->address - waitfor->u.cmd_page.addr, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);val_destroy(Obj(waitfor->u.cmd_page.label));}
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDP: return ".endpage";
     case W_ENDSEGMENT:
         if (waitfor->u.cmd_macro.val != NULL) val_destroy(waitfor->u.cmd_macro.val);
@@ -1022,15 +1022,15 @@ static const char *check_waitfor(void) {
         return ".endfunction";
     case W_ENDFOR3:
         pop_context();
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDFOR: return ".endfor";
     case W_ENDREPT3:
         pop_context();
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDREPT: return ".endrept";
     case W_ENDWHILE3:
         pop_context();
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDWHILE: return ".endwhile";
     case W_PEND:
         pop_context();
@@ -1038,7 +1038,7 @@ static const char *check_waitfor(void) {
         return ".endproc";
     case W_BEND2:
         if (waitfor->u.cmd_block.label != NULL) {set_size(waitfor->u.cmd_block.label, current_address->address - waitfor->u.cmd_block.addr, current_address->mem, waitfor->u.cmd_block.addr, waitfor->u.cmd_block.membp);val_destroy(Obj(waitfor->u.cmd_block.label));}
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_BEND:
         pop_context();
         return ".endblock";
@@ -1048,30 +1048,30 @@ static const char *check_waitfor(void) {
         return ".endnamespace";
     case W_ENDWITH2:
         pop_context2();
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDWITH:
         if (waitfor->u.cmd_with.label != NULL) {set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(Obj(waitfor->u.cmd_with.label));}
         return ".endwith";
     case W_ENDC: return ".endcomment";
     case W_ENDS:
         if ((waitfor->skip & 1) != 0) current_address->unionmode = waitfor->u.cmd_struct.unionmode;
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDS2: return ".endstruct";
     case W_SEND2:
         section_close(NULL);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_SEND: return ".endsection";
     case W_ENDU:
         if ((waitfor->skip & 1) != 0) union_close(&lpoint);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDU2: return ".endunion";
     case W_HERE2:
         logical_close(NULL);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_HERE: return ".endlogical";
     case W_ENDV2:
         virtual_close(NULL);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case W_ENDV: return ".endvirtual";
     case W_ENDU3:
     case W_ENDS3:
@@ -1258,7 +1258,7 @@ static Oper_types oper_from_token(int wht) {
         if (arguments.caseinsensitive == 0) {
             return O_NONE;
         }
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case 'x': return O_X;
     case '*': return O_MUL;
     case '+': return O_ADD;
@@ -3119,7 +3119,7 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 }
             }
-            /* fall through */
+            FALL_THROUGH; /* fall through */
         case '+':
         case '-':
         case '/':
@@ -3132,7 +3132,7 @@ MUST_CHECK Obj *compile(void)
                     goto breakerr;
                 }
             }
-            /* fall through */
+            FALL_THROUGH; /* fall through */
         case '=':
             if ((waitfor->skip & 1) != 0) {if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
             break;

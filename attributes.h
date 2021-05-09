@@ -19,44 +19,61 @@
 #ifndef ATTRIBUTES_H
 #define ATTRIBUTES_H
 
+#ifndef __has_attribute
+#define __has_attribute(a) __has_attribute##a
+#define __has_attribute__unused__ (defined __GNUC__ && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)))
+#define __has_attribute__warn_unused_result__ (defined __GNUC__ && __GNUC__ >= 4)
+#define __has_attribute__malloc__ (defined __GNUC__ && __GNUC__ >= 3)
+#define __has_attribute__noreturn__ (defined __GNUC__ && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)))
+#define __has_attribute__regparm__ (defined __GNUC__ && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)))
+#define __has_attribute__noinline__ (defined __GNUC__ && __GNUC__ >= 3)
+#define __has_attribute__fallthrough__ (defined __GNUC__ && __GNUC__ >= 7)
+#endif
+
 #ifdef UNUSED
-#elif defined(__GNUC__)
-# define UNUSED(x) UNUSED_ ## x __attribute__((unused))
+#elif __has_attribute(__warn_unused_result__)
+# define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
 #else
 # define UNUSED(x) x
 #endif
 
 #ifdef MUST_CHECK
-#elif __GNUC__ >= 3
-# define MUST_CHECK __attribute__ ((warn_unused_result))
+#elif __has_attribute(__warn_unused_result__)
+# define MUST_CHECK __attribute__((__warn_unused_result__))
 #else
 # define MUST_CHECK
 #endif
 
 #ifdef MALLOC
-#elif __GNUC__ >= 3
-# define MALLOC __attribute__ ((malloc,warn_unused_result))
+#elif __has_attribute(__malloc__)
+# if __has_attribute(__warn_unused_result__)
+#  define MALLOC __attribute__((__malloc__,__warn_unused_result__))
+# else
+#  define MALLOC __attribute__((__malloc__))
+# endif
+#elif __has_attribute(__warn_unused_result__)
+#  define MALLOC __attribute__((__warn_unused_result__))
 #else
 # define MALLOC
 #endif
 
 #ifdef NO_RETURN
-#elif defined(__GNUC__)
-# define NO_RETURN  __attribute__((noreturn))
+#elif __has_attribute(__noreturn__)
+# define NO_RETURN  __attribute__((__noreturn__))
 #else
 # define NO_RETURN
 #endif
 
 #ifdef FAST_CALL
-#elif defined(__GNUC__) && defined(__i386__)
-# define FAST_CALL  __attribute__((regparm(3)))
+#elif __has_attribute(__regparm__) && defined __i386__
+# define FAST_CALL  __attribute__((__regparm__(3)))
 #else
 # define FAST_CALL
 #endif
 
 #ifdef NO_INLINE
-#elif __GNUC__ >= 3
-# define NO_INLINE  __attribute__((noinline))
+#elif __has_attribute(__noinline__)
+# define NO_INLINE  __attribute__((__noinline__))
 #else
 # define NO_INLINE
 #endif
@@ -70,6 +87,13 @@
 #else
 # define inline
 #endif
+#endif
+
+#ifdef FALL_THROUGH
+#elif __has_attribute(__fallthrough__)
+# define FALL_THROUGH __attribute__((__fallthrough__))
+#else
+# define FALL_THROUGH do {} while (false)
 #endif
 
 #endif

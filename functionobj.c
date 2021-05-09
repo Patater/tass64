@@ -199,7 +199,7 @@ static MUST_CHECK Obj *function_range(oper_t op) {
     case 3:
         err = v[2].val->obj->ival(v[2].val, &step, 8 * sizeof step, &v[2].epoint);
         if (err != NULL) return Obj(err);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case 2:
         err = v[0].val->obj->ival(v[0].val, &start, 8 * sizeof start, &v[0].epoint);
         if (err != NULL) return Obj(err);
@@ -254,10 +254,10 @@ void random_reseed(Obj *o1, linepos_t epoint) {
         state[1] = (((uint64_t)0xc03bbc75) << 32) | (uint64_t)0x3f671f6f;
 
         switch (v1->len) {
-        case 4: state[1] ^= ((uint64_t)v1->data[3] << (8 * sizeof *v1->data)); /* fall through */
-        case 3: state[1] ^= v1->data[2]; /* fall through */
-        case 2: state[0] ^= ((uint64_t)v1->data[1] << (8 * sizeof *v1->data)); /* fall through */
-        case 1: state[0] ^= v1->data[0]; /* fall through */
+        case 4: state[1] ^= ((uint64_t)v1->data[3] << (8 * sizeof *v1->data)); FALL_THROUGH; /* fall through */
+        case 3: state[1] ^= v1->data[2]; FALL_THROUGH; /* fall through */
+        case 2: state[0] ^= ((uint64_t)v1->data[1] << (8 * sizeof *v1->data)); FALL_THROUGH; /* fall through */
+        case 1: state[0] ^= v1->data[0]; FALL_THROUGH; /* fall through */
         case 0: break;
         default:
             err = new_error(v1->len < 0 ? ERROR______NOT_UVAL : ERROR_____CANT_UVAL, epoint);
@@ -286,7 +286,7 @@ static MUST_CHECK Obj *function_random(oper_t op) {
     case 3:
         err = v[2].val->obj->ival(v[2].val, &step, 8 * sizeof step, &v[2].epoint);
         if (err != NULL) return Obj(err);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case 2:
         err = v[0].val->obj->ival(v[0].val, &start, 8 * sizeof start, &v[0].epoint);
         if (err != NULL) return Obj(err);
@@ -444,11 +444,11 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
     case 3:
         err = v[2].val->obj->uval(v[2].val, &length, 8 * sizeof length, &v[2].epoint);
         if (err != NULL) return Obj(err);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case 2:
         err = v[1].val->obj->ival(v[1].val, &offs, 8 * sizeof offs, &v[1].epoint);
         if (err != NULL) return Obj(err);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     default:
         break;
     }

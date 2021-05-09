@@ -379,7 +379,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_FLOAT: return calc2_double(op);
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
     case T_BITS:
     case T_STR:
@@ -415,7 +415,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     switch (v1->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
     case T_BITS:
         err = float_from_obj(v1, op->epoint);

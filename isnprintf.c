@@ -458,7 +458,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
     case T_STR: break;
     case T_ADDRESS:
         if (Address(val)->val == none_value || Address(val)->val->obj == ERROR_OBJ) return val_reference(Address(val)->val);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     default:
         err_msg_wrong_type(val, STR_OBJ, &v[0].epoint);
         return ref_none();
@@ -564,7 +564,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
                     data.pad = '0';
                     continue;
                 }
-                /* fall through */
+                FALL_THROUGH; /* fall through */
             case '1':
             case '2': case '3': case '4': case '5':
             case '6': case '7': case '8': case '9':
@@ -578,7 +578,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
                     data.width = ((data.width == NOT_FOUND) ? 0 : data.width * 10) + (int)c;
                     if (data.width < 100000) continue;
                 }
-                /* fall through */
+                FALL_THROUGH; /* fall through */
             default:
             error:
                 data.pf += err_msg_unknown_formatchar(Str(val), (size_t)(data.pf - Str(val)->data), &v[0].epoint);

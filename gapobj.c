@@ -168,7 +168,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         if (!v1->obj->iterable) {
             break;
         }
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_NONE:
     case T_ERROR:
         if (op->op != O_IN) {
