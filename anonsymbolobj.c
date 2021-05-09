@@ -23,7 +23,6 @@
 
 #include "typeobj.h"
 #include "strobj.h"
-#include "errorobj.h"
 
 static Type obj;
 

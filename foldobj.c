@@ -20,7 +20,6 @@
 #include <string.h>
 #include "values.h"
 #include "eval.h"
-#include "error.h"
 
 #include "typeobj.h"
 #include "strobj.h"

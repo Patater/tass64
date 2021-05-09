@@ -51,7 +51,6 @@
 #include "unicode.h"
 #include "eval.h"
 #include "error.h"
-#include "str.h"
 
 #include "floatobj.h"
 #include "strobj.h"

@@ -25,7 +25,6 @@
 #include "strobj.h"
 #include "boolobj.h"
 #include "typeobj.h"
-#include "errorobj.h"
 
 static Type obj;
 

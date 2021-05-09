@@ -19,7 +19,6 @@
 #include "obj.h"
 #include <string.h>
 #include "eval.h"
-#include "error.h"
 #include "values.h"
 
 #include "boolobj.h"
