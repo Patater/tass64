@@ -31,7 +31,7 @@
 #endif
 
 #ifdef UNUSED
-#elif __has_attribute(__warn_unused_result__)
+#elif __has_attribute(__unused__)
 # define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
 #else
 # define UNUSED(x) x
