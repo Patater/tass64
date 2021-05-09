@@ -30,11 +30,7 @@
 #include "64tass.h"
 #include <string.h>
 #include <signal.h>
-#if defined _MSC_VER || defined __VBCC__ || defined __WATCOMC__
-static inline unsigned int alarm(unsigned int UNUSED(a)) { return 0; }
-#elif defined __MINGW32__
-extern unsigned int alarm(unsigned int);
-#else
+#ifdef SIGALRM
 #include <unistd.h>
 #endif
 
@@ -43,7 +39,7 @@ extern unsigned int alarm(unsigned int);
 #include "unicode.h"
 #include "console.h"
 
-static void signal_handler(int signum) {
+static void signal_reset(int signum) {
 #if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
 #ifdef SA_RESETHAND
     (void)signum;
@@ -58,32 +54,43 @@ static void signal_handler(int signum) {
 #else
     signal(signum, SIG_DFL);
 #endif
-    signal_received = true;
+}
+
+static void signal_set(int signum, void (*handler)(int)) {
+#if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
+    struct sigaction sa, osa;
+    sa.sa_handler = handler;
+    sa.sa_flags = (int)SA_RESETHAND;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(signum, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
+        sigaction(signum, &sa, NULL);
+    }
+#else
+    if (signal(signum, handler) == SIG_IGN) signal(signum, SIG_IGN);
+#endif
+}
+
+static void signal_handler(int signum) {
+#ifdef SIGALRM
+    static int signal_number;
+    signal_reset(signum);
+    if (signum == SIGALRM) {
+        if (raise(signal_number) != 0) abort();
+    }
+    signal_set(SIGALRM, signal_handler);
+    signal_number = signum;
     alarm(1);
+#else
+    signal_reset(signum);
+#endif
+    signal_received = true;
 }
 
 static inline void install_signal_handler(void) {
-#if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
-    struct sigaction sa, osa;
-    sa.sa_handler = signal_handler;
-    sa.sa_flags = (int)SA_RESETHAND;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIGINT, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
-        sigaction(SIGINT, &sa, NULL);
-    }
-    if (sigaction(SIGTERM, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
-        sigaction(SIGTERM, &sa, NULL);
-    }
-    if (sigaction(SIGPIPE, NULL, &osa) == 0 && osa.sa_handler != SIG_IGN) {
-        sa.sa_handler = SIG_IGN;
-        sigaction(SIGPIPE, &sa, NULL);
-    }
-#else
-    if (signal(SIGINT, signal_handler) == SIG_IGN) signal(SIGINT, SIG_IGN);
-    if (signal(SIGTERM, signal_handler) == SIG_IGN) signal(SIGTERM, SIG_IGN);
+    signal_set(SIGINT, signal_handler);
+    signal_set(SIGTERM, signal_handler);
 #ifdef SIGPIPE
-    signal(SIGPIPE, SIG_IGN);
-#endif
+    signal_set(SIGPIPE, SIG_IGN);
 #endif
 }
 
