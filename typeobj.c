@@ -20,10 +20,8 @@
 #include <string.h>
 #include "variables.h"
 #include "eval.h"
-#include "error.h"
 
 #include "strobj.h"
-#include "errorobj.h"
 #include "functionobj.h"
 
 static Type obj;

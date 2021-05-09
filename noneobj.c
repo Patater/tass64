@@ -18,7 +18,6 @@
 */
 #include "noneobj.h"
 #include "eval.h"
-#include "values.h"
 
 #include "typeobj.h"
 #include "errorobj.h"

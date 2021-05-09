@@ -21,7 +21,6 @@
 #include "wctype.h"
 #include <ctype.h>
 #include <string.h>
-#include "error.h"
 #include "unicodedata.h"
 #include "str.h"
 #include "console.h"

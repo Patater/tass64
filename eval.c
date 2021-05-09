@@ -21,11 +21,9 @@
 #include <string.h>
 #include "math.h"
 #include "section.h"
-#include "macro.h"
 #include "variables.h"
 #include "64tass.h"
 #include "unicode.h"
-#include "listing.h"
 #include "error.h"
 #include "values.h"
 #include "arguments.h"
