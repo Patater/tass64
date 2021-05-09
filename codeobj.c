@@ -496,7 +496,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         return result;
     case O_BANK:
         if (all_mem < 0xffffff) return bits_calc1(op->op, ldigit(v1, op->epoint));
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case O_HIGHER:
     case O_LOWER:
     case O_HWORD:

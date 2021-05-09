@@ -831,7 +831,7 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
             digit_t d = vv1->val[0] >> s;
             return op->inplace == Obj(vv1) ? return_int_inplace(vv1, d, false) : return_int(d, false);
         }
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case 0: 
         return val_reference(int_value[0]);
     default: break;

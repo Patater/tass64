@@ -480,7 +480,7 @@ rest:
         case '*': lpoint.pos++;val = get_star(); goto push_other;
         case '0':
             if (diagnostics.leading_zeros && pline[lpoint.pos + 1] >= '0' && pline[lpoint.pos + 1] <= '9') err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
-            /* fall through */
+            FALL_THROUGH; /* fall through */
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             val = get_dec(&epoint); goto push_other;
         default:
@@ -1481,7 +1481,7 @@ static bool get_exp2(int stop) {
                         val = ref_fold(); 
                         goto push_other;
                     }
-                    /* fall through */
+                    FALL_THROUGH; /* fall through */
                 default:
                     goto tryanon;
                 }
@@ -1490,7 +1490,7 @@ static bool get_exp2(int stop) {
             goto push_other;
         case '0':
             if (diagnostics.leading_zeros && (pline[lpoint.pos + 1] ^ 0x30) < 10) err_msg2(ERROR_LEADING_ZEROS, NULL, &lpoint);
-            /* fall through */
+            FALL_THROUGH; /* fall through */
         case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
             val = get_float(&epoint);
             goto push_other;
@@ -1796,7 +1796,7 @@ static bool get_exp2(int stop) {
                     switch (opr.data[opr.p - 1].op) {
                     case O_FUNC:
                         val = &operators[O_FUNC].v;
-                        /* fall through */
+                        FALL_THROUGH; /* fall through */
                     case O_PARENT:
                         lpoint.pos++;
                         epoint.pos = opr.data[--opr.p].pos;
@@ -1823,7 +1823,7 @@ static bool get_exp2(int stop) {
                     switch (opr.data[opr.p - 1].op) {
                     case O_INDEX:
                         val = &operators[O_INDEX].v;
-                        /* fall through */
+                        FALL_THROUGH; /* fall through */
                     case O_BRACKET:
                         lpoint.pos++;
                         epoint.pos = opr.data[--opr.p].pos;

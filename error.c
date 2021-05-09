@@ -1523,7 +1523,7 @@ void error_print(const struct error_output_s *output) {
                 usenote = false;
                 continue;
             }
-            /* fall through */
+            FALL_THROUGH; /* fall through */
         default:
             errors++;
             break;

@@ -509,7 +509,7 @@ size_t makefile_print(const char *line, FILE *f) {
             break;
         case '$':
             len++; putc('$', f);
-            /* fall through */
+            FALL_THROUGH; /* fall through */
         default:
             bl = 0;
             break;

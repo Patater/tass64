@@ -314,7 +314,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t UNUSED(epoint)
         return truth_reference(b == 0);
     case TRUTH_ANY:
         if (v1->bits == 0) return ref_false();
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     default:
         return truth_reference(v1->len != 0);
     }
@@ -778,12 +778,12 @@ static MUST_CHECK Obj *bits_from_int(const Int *v1, linepos_t epoint) {
 
 MUST_CHECK Obj *bits_calc1(Oper_types op, unsigned int val) {
     switch (op) {
-    case O_BANK: val >>= 8; /* fall through */
-    case O_HIGHER: val >>= 8; /* fall through */
+    case O_BANK: val >>= 8; FALL_THROUGH; /* fall through */
+    case O_HIGHER: val >>= 8; FALL_THROUGH; /* fall through */
     case O_LOWER: 
     default: return return_bits((uint8_t)val, 8);
-    case O_BSWORD: val = (uint16_t)val | (val << 16); /* fall through */
-    case O_HWORD: val >>= 8; /* fall through */
+    case O_BSWORD: val = (uint16_t)val | (val << 16); FALL_THROUGH; /* fall through */
+    case O_HWORD: val >>= 8; FALL_THROUGH; /* fall through */
     case O_WORD: return return_bits((uint16_t)val, 16);
     }
 }
@@ -833,7 +833,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_NEG:
         v = negate(v1, op->epoint3);
         if (v != NULL) return v;
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case O_STRING:
         tmp = int_from_bits(v1, op->epoint);
         op->v1 = tmp;
@@ -1354,7 +1354,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BITS:
         result = calc2_bits(op);
         if (result != NULL) return result;
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
         switch (op->op) {
         case O_LSHIFT:
@@ -1401,7 +1401,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BITS:
         result = calc2_bits(op);
         if (result != NULL) return result;
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
         tmp = int_from_bits(v2, op->epoint2);
         op->v2 = tmp;

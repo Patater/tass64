@@ -897,7 +897,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_STR: return calc2_str(op);
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
     case T_BITS:
     case T_FLOAT:
@@ -953,7 +953,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     switch (t1->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
     case T_BITS:
     case T_FLOAT:
@@ -990,7 +990,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         if (!t1->iterable) {
             break;
         }
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_NONE:
     case T_ERROR:
         if (op->op != O_IN) {

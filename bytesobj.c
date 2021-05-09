@@ -294,7 +294,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t UNUSED(epoint)
         return ref_true();
     case TRUTH_ANY:
         if (v1->len == 0 || v1->len == ~0) return ref_false();
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     default:
         return truth_reference(to_bool(v1));
     }
@@ -647,10 +647,10 @@ MUST_CHECK Obj *bytes_from_uval(uval_t i, unsigned int bytes) {
     Bytes *v = new_bytes(bytes);
     v->len = (ssize_t)bytes;
     switch (bytes) {
-    default: v->data[3] = (uint8_t)(i >> 24); /* fall through */
-    case 3: v->data[2] = (uint8_t)(i >> 16); /* fall through */
-    case 2: v->data[1] = (uint8_t)(i >> 8); /* fall through */
-    case 1: v->data[0] = (uint8_t)i; /* fall through */
+    default: v->data[3] = (uint8_t)(i >> 24); FALL_THROUGH; /* fall through */
+    case 3: v->data[2] = (uint8_t)(i >> 16); FALL_THROUGH; /* fall through */
+    case 2: v->data[1] = (uint8_t)(i >> 8); FALL_THROUGH; /* fall through */
+    case 1: v->data[0] = (uint8_t)i; FALL_THROUGH; /* fall through */
     case 0: break;
     }
     return Obj(v);
@@ -1059,7 +1059,7 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_NEG:
         v = negate(v1, op->epoint3);
         if (v != NULL) return v;
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case O_STRING:
         tmp = int_from_bytes(v1, op->epoint);
         op->v1 = tmp;
@@ -1327,7 +1327,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BYTES: return calc2_bytes(op);
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
     case T_BITS:
     case T_FLOAT:
@@ -1374,7 +1374,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     switch (o1->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_INT:
     case T_BITS:
     case T_FLOAT:
@@ -1400,7 +1400,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         if (!o1->obj->iterable) {
             break;
         }
-        /* fall through */
+        FALL_THROUGH; /* fall through */
     case T_NONE:
     case T_ERROR:
         if (op->op != O_IN) {
