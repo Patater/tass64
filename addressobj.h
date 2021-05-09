@@ -49,7 +49,7 @@ typedef struct Address {
     Obj *val;
 } Address;
 
-#define Address(a) ((Address *)(1 ? (a) : (Obj *)(Address *)(a)))
+#define Address(a) OBJ_CAST(Address, a)
 
 extern void addressobj_init(void);
 extern void addressobj_names(void);

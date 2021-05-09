@@ -113,6 +113,6 @@ typedef uint32_t uval_t;
 
 #define SIZE_MSB ((size_t)1 << (sizeof(size_t) * 8 - 1))
 
-#define lenof(a) (sizeof(a) / sizeof (a)[0])
+#define lenof(a) (sizeof(a) / sizeof((a)[0]))
 
 #endif

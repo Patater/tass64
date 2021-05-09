@@ -33,7 +33,7 @@ typedef struct Namespace {
     uint32_t backr, forwr;
 } Namespace;
 
-#define Namespace(a) ((Namespace *)(1 ? (a) : (Obj *)(Namespace *)(a)))
+#define Namespace(a) OBJ_CAST(Namespace, a)
 
 extern void namespaceobj_init(void);
 extern void namespaceobj_names(void);

@@ -30,7 +30,7 @@ typedef struct Bool {
     struct Str *repr;
 } Bool;
 
-#define Bool(a) ((Bool *)(1 ? (a) : (Obj *)(Bool *)(a)))
+#define Bool(a) OBJ_CAST(Bool, a)
 
 extern Obj *const true_value;
 extern Obj *const false_value;

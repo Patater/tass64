@@ -39,7 +39,7 @@ typedef struct Function {
     const Function_types func;
 } Function;
 
-#define Function(a) ((Function *)(1 ? (a) : (Obj *)(Function *)(a)))
+#define Function(a) OBJ_CAST(Function, a)
 
 struct oper_s;
 

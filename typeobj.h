@@ -71,7 +71,7 @@ typedef struct Type {
     void (*getriter)(struct iter_s *);
 } Type;
 
-#define Type(a) ((Type *)(1 ? (a) : (Obj *)(Type *)(a)))
+#define Type(a) OBJ_CAST(Type, a)
 
 extern void typeobj_init(void);
 extern void typeobj_names(void);

@@ -55,7 +55,7 @@ typedef struct Enc {
     struct linepos_s epoint;
 } Enc;
 
-#define Enc(a) ((Enc *)(1 ? (a) : (Obj *)(Enc *)a))
+#define Enc(a) OBJ_CAST(Enc, a)
 
 extern void encobj_init(void);
 extern void encobj_destroy(void);

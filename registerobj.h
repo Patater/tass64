@@ -31,7 +31,7 @@ typedef struct Register {
     uint8_t val[4];
 } Register;
 
-#define Register(a) ((Register *)(1 ? (a) : (Obj *)(Register *)(a)))
+#define Register(a) OBJ_CAST(Register, a)
 
 extern void registerobj_init(void);
 extern void registerobj_names(void);

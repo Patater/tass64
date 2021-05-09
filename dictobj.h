@@ -43,7 +43,7 @@ typedef struct Dict {
     Obj *def;
 } Dict;
 
-#define Dict(a) ((Dict *)(1 ? (a) : (Obj *)(Dict *)(a)))
+#define Dict(a) OBJ_CAST(Dict, a)
 
 extern void dictobj_init(void);
 extern void dictobj_names(void);

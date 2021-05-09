@@ -28,7 +28,7 @@ typedef struct Float {
     double real;
 } Float;
 
-#define Float(a) ((Float *)(1 ? (a) : (Obj *)(Float *)(a)))
+#define Float(a) OBJ_CAST(Float, a)
 
 extern void floatobj_init(void);
 extern void floatobj_names(void);
