@@ -33,22 +33,19 @@
 #define __has_attribute(a) (0)
 #endif
 
-#ifdef UNUSED
-#elif __has_attribute(__unused__)
+#if __has_attribute(__unused__)
 # define UNUSED(x) UNUSED_ ## x __attribute__((__unused__))
 #else
 # define UNUSED(x) x
 #endif
 
-#ifdef MUST_CHECK
-#elif __has_attribute(__warn_unused_result__)
+#if __has_attribute(__warn_unused_result__)
 # define MUST_CHECK __attribute__((__warn_unused_result__))
 #else
 # define MUST_CHECK
 #endif
 
-#ifdef MALLOC
-#elif __has_attribute(__malloc__)
+#if __has_attribute(__malloc__)
 # if __has_attribute(__warn_unused_result__)
 #  define MALLOC __attribute__((__malloc__,__warn_unused_result__))
 # else
@@ -60,36 +57,32 @@
 # define MALLOC
 #endif
 
-#ifdef NO_RETURN
-#elif __has_attribute(__noreturn__)
+#if __has_attribute(__noreturn__)
 # define NO_RETURN __attribute__((__noreturn__))
 #else
 # define NO_RETURN
 #endif
 
-#ifdef FAST_CALL
-#elif __has_attribute(__regparm__) && defined __i386__
+#if __has_attribute(__regparm__) && defined __i386__
 # define FAST_CALL __attribute__((__regparm__(3)))
 #else
 # define FAST_CALL
 #endif
 
-#ifdef NO_INLINE
-#elif __has_attribute(__noinline__)
+#if __has_attribute(__noinline__)
 # define NO_INLINE __attribute__((__noinline__))
 #else
 # define NO_INLINE
 #endif
 
-#if defined inline || defined __cplusplus || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L)
+#if defined __cplusplus || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L)
 #elif defined __GNUC__ || (defined _MSC_VER && _MSC_VER >= 900)
 # define inline __inline
 #else
 # define inline
 #endif
 
-#ifdef FALL_THROUGH
-#elif __has_attribute(__fallthrough__)
+#if __has_attribute(__fallthrough__)
 # define FALL_THROUGH __attribute__((__fallthrough__))
 #else
 # define FALL_THROUGH do {} while (false)
