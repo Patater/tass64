@@ -20,7 +20,7 @@
 #define ATTRIBUTES_H
 
 #ifndef __has_attribute
-#define __has_attribute(a) __has_attribute##a
+#define __has_attribute(a) __has_attribute ## a
 #define __has_attribute__unused__ (defined __GNUC__ && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)))
 #define __has_attribute__warn_unused_result__ (defined __GNUC__ && __GNUC__ >= 4)
 #define __has_attribute__malloc__ (defined __GNUC__ && __GNUC__ >= 3)
@@ -59,34 +59,30 @@
 
 #ifdef NO_RETURN
 #elif __has_attribute(__noreturn__)
-# define NO_RETURN  __attribute__((__noreturn__))
+# define NO_RETURN __attribute__((__noreturn__))
 #else
 # define NO_RETURN
 #endif
 
 #ifdef FAST_CALL
 #elif __has_attribute(__regparm__) && defined __i386__
-# define FAST_CALL  __attribute__((__regparm__(3)))
+# define FAST_CALL __attribute__((__regparm__(3)))
 #else
 # define FAST_CALL
 #endif
 
 #ifdef NO_INLINE
 #elif __has_attribute(__noinline__)
-# define NO_INLINE  __attribute__((__noinline__))
+# define NO_INLINE __attribute__((__noinline__))
 #else
 # define NO_INLINE
 #endif
 
-#ifndef __cplusplus
-#if __STDC_VERSION__ >= 199901L
-#elif defined(__GNUC__)
-# define inline __inline
-#elif _MSC_VER >= 900
+#if defined inline || defined __cplusplus || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L)
+#elif defined __GNUC__ || (defined _MSC_VER && _MSC_VER >= 900)
 # define inline __inline
 #else
 # define inline
-#endif
 #endif
 
 #ifdef FALL_THROUGH
