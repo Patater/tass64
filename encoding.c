@@ -528,11 +528,6 @@ static const struct translate_table_s no_screen_trans[] = {
     {0x00FF,   0, 0x5E},
 };
 
-struct map_s {
-    uint8_t value;
-    uint8_t pass;
-};
-
 struct encoding_s {
     str_t name;
     str_t cfname;
