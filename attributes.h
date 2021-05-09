@@ -19,15 +19,18 @@
 #ifndef ATTRIBUTES_H
 #define ATTRIBUTES_H
 
-#ifndef __has_attribute
+#ifdef __has_attribute
+#elif defined __GNUC__
 #define __has_attribute(a) __has_attribute ## a
-#define __has_attribute__unused__ (defined __GNUC__ && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)))
-#define __has_attribute__warn_unused_result__ (defined __GNUC__ && __GNUC__ >= 4)
-#define __has_attribute__malloc__ (defined __GNUC__ && __GNUC__ >= 3)
-#define __has_attribute__noreturn__ (defined __GNUC__ && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)))
-#define __has_attribute__regparm__ (defined __GNUC__ && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)))
-#define __has_attribute__noinline__ (defined __GNUC__ && __GNUC__ >= 3)
-#define __has_attribute__fallthrough__ (defined __GNUC__ && __GNUC__ >= 7)
+#define __has_attribute__unused__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7))
+#define __has_attribute__warn_unused_result__ (__GNUC__ >= 4)
+#define __has_attribute__malloc__ (__GNUC__ >= 3)
+#define __has_attribute__noreturn__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+#define __has_attribute__regparm__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+#define __has_attribute__noinline__ (__GNUC__ >= 3)
+#define __has_attribute__fallthrough__ (__GNUC__ >= 7)
+#else
+#define __has_attribute(a) (0)
 #endif
 
 #ifdef UNUSED
