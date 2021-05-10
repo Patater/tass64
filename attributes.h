@@ -82,7 +82,7 @@
 # define inline
 #endif
 
-#if __has_attribute(__fallthrough__)
+#if __has_attribute(__fallthrough__) && (!defined __clang__ || __clang_major__ >= 5)
 # define FALL_THROUGH __attribute__((__fallthrough__))
 #else
 # define FALL_THROUGH do {} while (false)
