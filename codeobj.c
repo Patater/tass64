@@ -290,8 +290,7 @@ static MUST_CHECK Obj *len(oper_t op) {
         s = v1->size - (uval_t)v1->offs;
         if (s > v1->size) return Obj(new_error(ERROR_NEGATIVE_SIZE, op->epoint2));
     } else {
-        s = v1->size + (uval_t)-v1->offs;
-        if (s < v1->size) err_msg_out_of_memory(); /* overflow */
+        if (add_overflow((uval_t)-v1->offs, v1->size, &s)) err_msg_out_of_memory();
         if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
     ln = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
@@ -310,8 +309,7 @@ static MUST_CHECK Obj *size(oper_t op) {
         s = v1->size - (uval_t)v1->offs;
         if (s > v1->size) return Obj(new_error(ERROR_NEGATIVE_SIZE, op->epoint2));
     } else {
-        s = v1->size + (uval_t)-v1->offs;
-        if (s < v1->size) err_msg_out_of_memory(); /* overflow */
+        if (add_overflow((uval_t)-v1->offs, v1->size, &s)) err_msg_out_of_memory();
         if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
     return int_from_size(s);

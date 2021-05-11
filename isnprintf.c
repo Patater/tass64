@@ -116,8 +116,7 @@ static void put_char(unichar_t c) {
     return_value.chars++;
     p = return_value.data;
     if (return_value.len + 6 >= returnsize) {
-        returnsize += 256;
-        if (returnsize < 256) err_msg_out_of_memory(); /* overflow */
+        if (inc_overflow(&returnsize, 256)) err_msg_out_of_memory();
         p = (uint8_t *)reallocx(p, returnsize);
         return_value.data = p;
     }

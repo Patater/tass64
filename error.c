@@ -179,13 +179,10 @@ static void error_extend(void) {
 static void new_error_msg_common(Severity_types severity, const struct file_list_s *flist, linepos_t epoint, size_t line_len, linecpos_t pos) {
     struct errorentry_s *err;
     close_error();
-    error_list.len = error_list.header_pos + sizeof *err;
-    if (error_list.len < sizeof *err) err_msg_out_of_memory2(); /* overflow */
-    error_list.len += line_len;
-    if (error_list.len < line_len) err_msg_out_of_memory2(); /* overflow */
+    if (add_overflow(error_list.header_pos, sizeof *err, &error_list.len)) err_msg_out_of_memory2();
+    if (inc_overflow(&error_list.len, line_len)) err_msg_out_of_memory2();
     if (error_list.len > error_list.max) {
-        error_list.max = error_list.len + 0x200;
-        if (error_list.max < 0x200) err_msg_out_of_memory2(); /* overflow */
+        if (add_overflow(error_list.len, 0x200, &error_list.max)) err_msg_out_of_memory2();
         error_extend();
     }
     err = (struct errorentry_s *)&error_list.data[error_list.header_pos];

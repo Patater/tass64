@@ -21,16 +21,16 @@
 
 #ifdef __has_attribute
 #elif defined __GNUC__
-#define __has_attribute(a) __has_attribute ## a
-#define __has_attribute__unused__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7))
-#define __has_attribute__warn_unused_result__ (__GNUC__ >= 4)
-#define __has_attribute__malloc__ (__GNUC__ >= 3)
-#define __has_attribute__noreturn__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-#define __has_attribute__regparm__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
-#define __has_attribute__noinline__ (__GNUC__ >= 3)
-#define __has_attribute__fallthrough__ (__GNUC__ >= 7)
+# define __has_attribute(a) __has_attribute ## a
+# define __has_attribute__unused__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7))
+# define __has_attribute__warn_unused_result__ (__GNUC__ >= 4)
+# define __has_attribute__malloc__ (__GNUC__ >= 3)
+# define __has_attribute__noreturn__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+# define __has_attribute__regparm__ (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+# define __has_attribute__noinline__ (__GNUC__ >= 3)
+# define __has_attribute__fallthrough__ (__GNUC__ >= 7)
 #else
-#define __has_attribute(a) (0)
+# define __has_attribute(a) (0)
 #endif
 
 #if __has_attribute(__unused__)
@@ -86,6 +86,22 @@
 # define FALL_THROUGH __attribute__((__fallthrough__))
 #else
 # define FALL_THROUGH do {} while (false)
+#endif
+
+#ifdef __has_builtin
+#elif defined __GNUC__
+# define __has_builtin(a) __has_builtin ## a
+# define __has_builtin__builtin_add_overflow (__GNUC__ > 5)
+#else
+# define __has_builtin(a) (0)
+#endif
+
+#if __has_builtin(__builtin_add_overflow)
+# define add_overflow(a, b, c) __builtin_add_overflow(a, b, c)
+# define inc_overflow(a, b) __builtin_add_overflow(*a, b, a)
+#else
+# define add_overflow(a, b, c) ((*(c) = (a) + (b)) < (b))
+# define inc_overflow(a, b) ((*(a) = *(a) + (b)) < (b))
 #endif
 
 #endif

@@ -299,8 +299,7 @@ bool mtranslate(void) {
         p += p2 - last2;
         if (p + 1 < p) err_msg_out_of_memory(); /* overflow */
         if (p + 1 > mline->len) {
-            mline->len = p + 1024;
-            if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
+            if (add_overflow(p, 1024, &mline->len)) err_msg_out_of_memory();
             mline->data = (uint8_t *)reallocx(mline->data, mline->len);
         }
         if (p != last) memcpy(mline->data + last, pline + last2, p - last);

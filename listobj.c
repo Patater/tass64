@@ -257,8 +257,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
     size_t llen = v1->len;
     if (llen != 0) {
         i = (llen != 1 || o1->obj != TUPLE_OBJ) ? (llen - 1) : llen;
-        len += i;
-        if (len < i) return NULL; /* overflow */
+        if (inc_overflow(&len, i)) return NULL;
         chars = len;
         if (chars > maxsize) return NULL;
         list = Tuple(val_alloc(TUPLE_OBJ));
@@ -273,8 +272,7 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
                 if (val == NULL || val->obj != STR_OBJ) goto error;
             }
             v = Str(val);
-            len += v->len;
-            if (len < v->len) goto error2; /* overflow */
+            if (inc_overflow(&len, v->len)) goto error2;
             chars += v->chars;
             if (chars > maxsize) {
             error2:
@@ -532,8 +530,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
             if (v2->len == 0) {
                 return val_reference(o1);
             }
-            ln = v1->len + v2->len;
-            if (ln < v2->len) goto failed; /* overflow */
+            if (add_overflow(v1->len, v2->len, &ln)) goto failed;
             if (op->inplace == Obj(v1)) {
                 vals = lextend(v1, ln);
                 if (vals == NULL) goto failed;

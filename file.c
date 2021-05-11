@@ -372,8 +372,8 @@ static void file_free(struct file_s *a)
 
 static bool extendfile(struct file_s *tmp) {
     uint8_t *d;
-    filesize_t len2 = tmp->len + 4096;
-    if (len2 < 4096) return true; /* overflow */
+    filesize_t len2;
+    if (add_overflow(tmp->len, 4096, &len2)) return true;
     d = (uint8_t *)realloc(tmp->data, len2);
     if (d == NULL) return true;
     tmp->data = d;
@@ -546,8 +546,8 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 unsigned int qr = 1;
                 filesize_t fs = fsize(f);
                 if (fs > 0) {
-                    filesize_t len2 = fs + 4096;
-                    if (len2 < 4096) len2 = ~(filesize_t)0; /* overflow */
+                    filesize_t len2;
+                    if (add_overflow(fs, 4096, &len2)) len2 = ~(filesize_t)0;
                     tmp->data = (uint8_t *)malloc(len2);
                     if (tmp->data != NULL) tmp->len = len2;
                     max_lines = (len2 / 20 + 1024) & ~(size_t)1023;

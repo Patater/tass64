@@ -415,14 +415,12 @@ static struct eval_context_s {
 static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
-    out->size += 64;
-    if (out->size < 64 || out->size > ARGCOUNT_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
+    if (inc_overflow(&out->size, 64) || out->size > ARGCOUNT_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
     out->data = (struct out_s *)reallocx(out->data, out->size * sizeof *out->data);
 }
 
 static NO_INLINE void extend_opr(struct opr_list_s *opr) {
-    opr->size += 64;
-    if (opr->size < 64 || opr->size > ARGCOUNT_MAX / sizeof *opr->data) err_msg_out_of_memory(); /* overflow */
+    if (inc_overflow(&opr->size, 64) || opr->size > ARGCOUNT_MAX / sizeof *opr->data) err_msg_out_of_memory(); /* overflow */
     opr->data = (struct opr_s *)reallocx(opr->data, opr->size * sizeof *opr->data);
 }
 
@@ -1072,8 +1070,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 Colonlist *list = new_colonlist();
                 if (v2->val->obj == COLONLIST_OBJ && v2->val->refcount == 1) {
                     Colonlist *l2 = Colonlist(v2->val);
-                    list->len = l1->len + l2->len;
-                    if (list->len < l2->len) err_msg_out_of_memory(); /* overflow */
+                    if (add_overflow(l1->len, l2->len, &list->len)) err_msg_out_of_memory();
                     list->data = list_create_elements(list, list->len);
                     memcpy(list->data, l1->data, l1->len * sizeof *list->data);
                     memcpy(list->data + l1->len, l2->data, l2->len * sizeof *list->data);
@@ -1082,8 +1079,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     val_destroy(v1->val); v1->val = Obj(list);
                     continue;
                 }
-                list->len = l1->len + 1;
-                if (list->len < 1) err_msg_out_of_memory(); /* overflow */
+                if (add_overflow(l1->len, 1, &list->len)) err_msg_out_of_memory();
                 list->data = list_create_elements(list, list->len);
                 memcpy(list->data, l1->data, l1->len * sizeof *list->data);
                 list->data[l1->len] = v2->val;
@@ -1095,8 +1091,7 @@ static bool get_val2(struct eval_context_s *ev) {
             if (v2->val->obj == COLONLIST_OBJ && v2->val->refcount == 1) {
                 Colonlist *l2 = Colonlist(v2->val);
                 Colonlist *list = new_colonlist();
-                list->len = l2->len + 1;
-                if (list->len < 1) err_msg_out_of_memory(); /* overflow */
+                if (add_overflow(l2->len, 1, &list->len)) err_msg_out_of_memory();
                 list->data = list_create_elements(list, list->len);
                 list->data[0] = v1->val;
                 memcpy(&list->data[1], l2->data, l2->len * sizeof *list->data);
@@ -1183,8 +1178,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     list->data[0] = ref_default();
                     list->data[1] = val_reference(Dict(v1->val)->def);
                     def = Obj(list);
-                    len++;
-                    if (len < 1) err_msg_out_of_memory(); /* overflow */
+                    if (inc_overflow(&len, 1)) err_msg_out_of_memory();
                 } else def = NULL;
 
                 len2 = vsp + (argcount_t)len;
