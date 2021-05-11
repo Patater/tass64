@@ -163,8 +163,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     tmp = v1->val->obj->repr(v1->val, epoint, maxsize - chars);
     if (tmp == NULL || tmp->obj != STR_OBJ) return tmp;
     str = Str(tmp);
-    len = chars + str->len;
-    if (len < chars) goto error; /* overflow */
+    if (add_overflow(str->len, chars, &len)) goto error;
     chars += str->chars;
     if (chars > maxsize) {
     error:

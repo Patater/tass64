@@ -549,8 +549,7 @@ static void imul(const Int *vv1, const Int *vv2, Int *vv) {
     Int tmp;
     len1 = intlen(vv1);
     len2 = intlen(vv2);
-    sz = len1 + len2;
-    if (sz < len2) err_msg_out_of_memory(); /* overflow */
+    if (add_overflow(len1, len2, &sz)) err_msg_out_of_memory();
     if (sz <= 2) {
         twodigits_t c = (twodigits_t)vv1->val[0] * vv2->val[0];
         v = vv->val;
@@ -787,8 +786,7 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
     bit = s % SHIFT;
     if (bit != 0) sz++;
     len1 = intlen(vv1);
-    sz += len1;
-    if (sz < len1) goto failed; /* overflow */
+    if (inc_overflow(&sz, len1)) goto failed;
     if (op->inplace == Obj(vv1) && sz <= lenof(vv->val)) {
         vv = ref_int(vv1);
         v = vv->data;

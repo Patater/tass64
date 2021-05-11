@@ -4080,8 +4080,7 @@ MUST_CHECK Obj *compile(void)
                             val = val_reference(null_str);
                         } else {
                             Str *str = Str(val);
-                            len2 += str->len;
-                            if (len2 < str->len) err_msg_out_of_memory(); /* overflow */
+                            if (inc_overflow(&len2, str->len)) err_msg_out_of_memory();
                             chars += str->chars;
                         }
                         vals[i] = val;

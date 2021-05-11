@@ -360,8 +360,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     sz = byteslen(v1);
     len2 = sz * 2;
     len = (v1->len < 0) ? 4 : 3;
-    len += len2;
-    if (len < len2 || sz > SIZE_MAX / 2) return NULL; /* overflow */
+    if (inc_overflow(&len, len2) || sz > SIZE_MAX / 2) return NULL; /* overflow */
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
@@ -390,8 +389,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     len2 = sz / 4 * 5;
     if ((sz & 3) != 0) len2 += (sz & 3) + 1;
     len = (v1->len < 0) ? 4 : 3;
-    len += len2;
-    if (len < len2 || sz > SIZE_MAX / 2) return NULL; /* overflow */
+    if (inc_overflow(&len, len2) || sz > SIZE_MAX / 2) return NULL; /* overflow */
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
@@ -577,8 +575,7 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
                     memcpy(s, v->u.val, len2);
                     v->u.s.hash = -1;
                 } else {
-                    len += 1024;
-                    if (len < 1024) goto failed2; /* overflow */
+                    if (inc_overflow(&len, 1024)) goto failed2;
                     s = (uint8_t *)realloc(s, len);
                     if (s == NULL) goto failed2;
                     v->data = s;
@@ -989,8 +986,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
     }
     len1 = byteslen(v1);
     len2 = byteslen(v2);
-    ln = len1 + len2;
-    if (ln < len2 || ln > SSIZE_MAX) goto failed; /* overflow */
+    if (add_overflow(len1, len2, &ln) || ln > SSIZE_MAX) goto failed; /* overflow */
     if (op->inplace == Obj(v1)) {
         size_t ln2;
         if (ln > sizeof v1->u.val && v1->u.val != v1->data && ln > v1->u.s.max) {

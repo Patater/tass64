@@ -393,12 +393,9 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     uint8_t *s;
     size_t def = (v1->def != NULL) ? 1 : 0;
     if (v1->len != 0 || def != 0) {
-        ln = v1->len * 2;
-        if (ln < v1->len) return NULL; /* overflow */
-        ln += def;
-        if (ln < def) return NULL; /* overflow */
-        chars = ln + 1 + def;
-        if (chars < ln) return NULL; /* overflow */
+        if (add_overflow(v1->len, v1->len, &ln)) return NULL;
+        if (inc_overflow(&ln, def)) return NULL;
+        if (add_overflow(1 + def, ln, &chars)) return NULL;
         if (chars > maxsize) return NULL;
         list = new_tuple(ln);
         vals = list->data;
@@ -410,8 +407,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                 v = p->key->obj->repr(p->key, epoint, maxsize - chars);
                 if (v == NULL || v->obj != STR_OBJ) goto error;
                 str = Str(v);
-                ln += str->len;
-                if (ln < str->len) goto error2; /* overflow */
+                if (inc_overflow(&ln, str->len)) goto error2;
                 chars += str->chars;
                 if (chars > maxsize) goto error2;
                 vals[i++] = v;
@@ -419,8 +415,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
                     v = p->data->obj->repr(p->data, epoint, maxsize - chars);
                     if (v == NULL || v->obj != STR_OBJ) goto error;
                     str = Str(v);
-                    ln += str->len;
-                    if (ln < str->len) goto error2; /* overflow */
+                    if (inc_overflow(&ln, str->len)) goto error2;
                     chars += str->chars;
                     if (chars > maxsize) goto error2;
                 } else {
@@ -435,8 +430,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
             v = v1->def->obj->repr(v1->def, epoint, maxsize - chars);
             if (v == NULL || v->obj != STR_OBJ) goto error;
             str = Str(v);
-            ln += str->len;
-            if (ln < str->len) goto error2; /* overflow */
+            if (inc_overflow(&ln, str->len)) goto error2;
             chars += str->chars;
             if (chars > maxsize) {
             error2:
@@ -690,8 +684,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
     if (v2->len == 0 && v2->def == NULL) return val_reference(Obj(v1));
     if (v1->len == 0 && (v1->def == NULL || v2->def != NULL)) return val_reference(Obj(v2));
 
-    ln = v1->len + v2->len;
-    if (ln < v1->len) goto failed; /* overflow */
+    if (add_overflow(v1->len, v2->len, &ln)) goto failed;
     if (op->inplace == Obj(v1)) {
         if (ln > ((v1->u.val == v1->data) ? lenof(v1->u.val) : v1->u.s.max)) {
             size_t ln2 = ln + (ln < 1024 ? ln : 1024);
@@ -729,7 +722,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
     if (dict == v1) return Obj(dict);
     return normalize(dict);
 failed:
-    return new_error_mem(op->epoint3); /* overflow */
+    return new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {

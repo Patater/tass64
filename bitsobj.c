@@ -332,8 +332,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     inv = (v1->len < 0);
     len = inv ? 2 : 1;
     if ((len2 & 3) != 0) {
-        len += len2;
-        if (len < len2) return NULL; /* overflow */
+        if (inc_overflow(&len, len2)) return NULL;
         if (len > maxsize) return NULL;
         v = new_str2(len);
         if (v == NULL) return NULL;
@@ -349,8 +348,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
         return Obj(v);
     }
     len2 /= 4;
-    len += len2;
-    if (len < len2) return NULL; /* overflow */
+    if (inc_overflow(&len, len2)) return NULL;
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
@@ -962,8 +960,7 @@ static inline MUST_CHECK Obj *concat(oper_t op) {
     if (vv2->bits == 0) {
         return Obj(ref_bits(vv1));
     }
-    blen = vv1->bits + vv2->bits;
-    if (blen < vv2->bits) goto failed; /* overflow */
+    if (add_overflow(vv1->bits, vv2->bits, &blen)) goto failed;
     sz = blen / SHIFT;
     if ((blen % SHIFT) != 0) sz++;
     i = vv2->bits / SHIFT + bitslen(vv1);
@@ -1012,11 +1009,9 @@ static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
     sz = word = s / SHIFT;
     bit = s % SHIFT;
     if (bit != 0) sz++;
-    bits = vv1->bits + s;
-    if (bits < s) goto failed; /* overflow */
+    if (add_overflow(vv1->bits, s, &bits)) goto failed;
     len1 = bitslen(vv1);
-    sz += len1;
-    if (sz < len1) goto failed; /* overflow */
+    if (inc_overflow(&sz, len1)) goto failed;
     if (op->inplace == Obj(vv1) && sz <= lenof(vv->u.val)) {
         vv = ref_bits(vv1);
     } else {
