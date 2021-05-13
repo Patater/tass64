@@ -258,17 +258,19 @@ bool mtranslate(void) {
         } 
         if (p + param.len < p) err_msg_out_of_memory(); /* overflow */
         if (p + param.len > mline->len) {
-            mline->len = p + param.len + 1024;
-            if (mline->len < 1024) err_msg_out_of_memory(); /* overflow */
-            mline->data = (uint8_t *)reallocx(mline->data, mline->len);
+            mline->len = p + param.len;
+            if (inc_overflow(&mline->len, 1024)) err_msg_out_of_memory();
+            mline->data = (uint8_t *)realloc(mline->data, mline->len);
+            if (mline->data == NULL) err_msg_out_of_memory();
         }
         if (last != p) {
             if (p < last) err_msg_out_of_memory(); /* overflow */
             memcpy(mline->data + last, pline + last2, p - last);
         }
         if (n >= mline->rlen) {
-            if (inc_overflow(&mline->rlen, 8) || mline->rlen > ARGCOUNT_MAX / sizeof *mline->rpositions) err_msg_out_of_memory(); /* overflow */
-            mline->rpositions = (struct macro_rpos_s *)reallocx(mline->rpositions, mline->rlen * sizeof *mline->rpositions);
+            if (inc_overflow(&mline->rlen, 8)) err_msg_out_of_memory();
+            mline->rpositions = array_realloc(struct macro_rpos_s, mline->rpositions, mline->rlen);
+            if (mline->rpositions == NULL) err_msg_out_of_memory();
         }
         mline->rpositions[n].opos = op;
         mline->rpositions[n].olen = p2 - op;
@@ -299,7 +301,8 @@ bool mtranslate(void) {
         if (p + 1 < p) err_msg_out_of_memory(); /* overflow */
         if (p + 1 > mline->len) {
             if (add_overflow(p, 1024, &mline->len)) err_msg_out_of_memory();
-            mline->data = (uint8_t *)reallocx(mline->data, mline->len);
+            mline->data = (uint8_t *)realloc(mline->data, mline->len);
+            if (mline->data == NULL) err_msg_out_of_memory();
         }
         if (p != last) memcpy(mline->data + last, pline + last2, p - last);
         mline->data[p] = 0;
@@ -334,9 +337,13 @@ static size_t macro_param_find(void) {
                     pl += 256;
                     if (pl < 256) err_msg_out_of_memory();
                     if (par == pbuf) {
-                        par = (uint8_t *)mallocx(pl);
+                        par = (uint8_t *)malloc(pl);
+                        if (par == NULL) err_msg_out_of_memory();
                         memcpy(par, pbuf, pp);
-                    } else par = (uint8_t *)reallocx(par, pl);
+                    } else {
+                        par = (uint8_t *)realloc(par, pl);
+                        if (par == NULL) err_msg_out_of_memory();
+                    }
                 }
                 par[pp++] = ch;
             } else if (pp != 0 && ((ch == ')' && par[pp-1]=='(') || (ch == ']' && par[pp-1]=='[') || (ch == '}' && par[pp-1]=='{'))) pp--;
@@ -361,9 +368,9 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
     }
     if (macro_parameters.p >= macro_parameters.len) {
         struct macro_params_s *params = macro_parameters.params;
-        macro_parameters.len += 1;
-        if (/*macro_parameters.len < 1 ||*/ macro_parameters.len > SIZE_MAX / sizeof *params) err_msg_out_of_memory();
-        params = (struct macro_params_s *)reallocx(params, macro_parameters.len * sizeof *params);
+        if (inc_overflow(&macro_parameters.len, 1)) err_msg_out_of_memory();
+        params = array_realloc(struct macro_params_s, params, macro_parameters.len);
+        if (params == NULL) err_msg_out_of_memory();
         macro_parameters.params = params;
         macro_parameters.current = &params[macro_parameters.p];
         macro_parameters.current->param = NULL;
@@ -395,8 +402,8 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
                 else {
                     if (inc_overflow(&macro_parameters.current->size, 4)) err_msg_out_of_memory(); /* overflow */
                 }
-                if (macro_parameters.current->size > ARGCOUNT_MAX / sizeof *params) err_msg_out_of_memory();
-                params = (struct macro_value_s *)reallocx(params, macro_parameters.current->size * sizeof *params);
+                params = array_realloc(struct macro_value_s, params, macro_parameters.current->size);
+                if (params == NULL) err_msg_out_of_memory();
                 macro_parameters.current->param = params;
             }
             param = params + p;
@@ -588,8 +595,9 @@ bool get_func_params(Mfunc *v, bool single) {
                 lpoint.pos++;ignore();
             }
             if (i >= len) {
-                if (inc_overflow(&len, 16) || len > ARGCOUNT_MAX / sizeof *params) err_msg_out_of_memory(); /* overflow */
-                params = (struct mfunc_param_s *)reallocx(params, len * sizeof *params);
+                if (inc_overflow(&len, 16)) err_msg_out_of_memory();
+                params = array_realloc(struct mfunc_param_s, params, len);
+                if (params == NULL) err_msg_out_of_memory();
             }
             param = params + i;
             param->epoint = lpoint;
@@ -694,13 +702,16 @@ void get_macro_params(Obj *v) {
         struct macro_param_s *param;
         ignore();if (here() == 0 || here() == ';') break;
         if (i >= len) {
-            if (inc_overflow(&len, 16) || len > ARGCOUNT_MAX / (sizeof *params > sizeof *epoints ? sizeof *params : sizeof *epoints)) err_msg_out_of_memory(); /* overflow */
-            params = (struct macro_param_s *)reallocx(params, len * sizeof *params);
+            if (inc_overflow(&len, 16)) err_msg_out_of_memory();
+            params = array_realloc(struct macro_param_s, params, len);
+            if (params == NULL) err_msg_out_of_memory();
             if (epoints == vepoints) {
-                epoints = (struct linepos_s *)mallocx(len * sizeof *epoints);
+                epoints = array_malloc(struct linepos_s, len);
+                if (epoints == NULL) err_msg_out_of_memory();
                 memcpy(epoints, vepoints, sizeof vepoints);
             } else {
-                epoints = (struct linepos_s *)reallocx(epoints, len * sizeof *epoints);
+                epoints = array_realloc(struct linepos_s, epoints, len);
+                if (epoints == NULL) err_msg_out_of_memory();
             }
         }
         param = params + i;

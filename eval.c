@@ -415,13 +415,15 @@ static struct eval_context_s {
 static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
-    if (inc_overflow(&out->size, 64) || out->size > ARGCOUNT_MAX / sizeof *out->data) err_msg_out_of_memory(); /* overflow */
-    out->data = (struct out_s *)reallocx(out->data, out->size * sizeof *out->data);
+    if (inc_overflow(&out->size, 64)) err_msg_out_of_memory();
+    out->data = array_realloc(struct out_s, out->data, out->size);
+    if (out->data == NULL) err_msg_out_of_memory();
 }
 
 static NO_INLINE void extend_opr(struct opr_list_s *opr) {
-    if (inc_overflow(&opr->size, 64) || opr->size > ARGCOUNT_MAX / sizeof *opr->data) err_msg_out_of_memory(); /* overflow */
-    opr->data = (struct opr_s *)reallocx(opr->data, opr->size * sizeof *opr->data);
+    if (inc_overflow(&opr->size, 64)) err_msg_out_of_memory();
+    opr->data = array_realloc(struct opr_s, opr->data, opr->size);
+    if (opr->data == NULL) err_msg_out_of_memory();
 }
 
 static inline void clean_out(struct eval_context_s *ev) {
@@ -621,8 +623,9 @@ static struct values_s *extend_values(struct eval_context_s *ev, size_t by) {
     argcount_t j = ev->values_size;
     struct values_s *values;
     ev->values_size += (argcount_t)by;
-    if (ev->values_size < by || ev->values_size > ARGCOUNT_MAX / sizeof *values) err_msg_out_of_memory(); /* overflow */
-    ev->values = values = (struct values_s *)reallocx(ev->values, ev->values_size * sizeof *values);
+    if (ev->values_size < by) err_msg_out_of_memory(); /* overflow */
+    ev->values = values = array_realloc(struct values_s, ev->values, ev->values_size);
+    if (values == NULL) err_msg_out_of_memory();
     for (; j < ev->values_size; j++) values[j].val = NULL;
     return values;
 }
@@ -1977,9 +1980,9 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
 void eval_enter(void) {
     evx_p++;
     if (evx_p >= evxnum) {
-        evxnum++;
-        if (/*evxnum < 1 ||*/ evxnum > SIZE_MAX / sizeof *evx) err_msg_out_of_memory(); /* overflow */
-        evx = (struct eval_context_s **)reallocx(evx, evxnum * sizeof *evx);
+        if (inc_overflow(&evxnum, 1)) err_msg_out_of_memory();
+        evx = array_realloc(struct eval_context_s *, evx, evxnum);
+        if (evx == NULL) err_msg_out_of_memory();
         eval = (struct eval_context_s *)mallocx(sizeof *eval);
         eval->values = NULL;
         eval->values_size = 0;
