@@ -158,8 +158,7 @@ static MUST_CHECK wchar_t *convert_name(const char *name, size_t max) {
     wchar_t *wname;
     unichar_t ch;
     size_t i = 0, j = 0, len = ((max != SIZE_MAX) ? max : strlen(name)) + 2;
-    if (len > SIZE_MAX / sizeof *wname) return NULL;
-    wname = (wchar_t *)malloc(len * sizeof *wname);
+    wname = array_malloc(wchar_t, len);
     if (wname == NULL) return NULL;
     while (name[i] != 0 && i < max) {
         ch = (uint8_t)name[i];
@@ -169,9 +168,8 @@ static MUST_CHECK wchar_t *convert_name(const char *name, size_t max) {
         } else i++;
         if (j + 3 > len) {
             wchar_t *d;
-            len += 64;
-            if (len > SIZE_MAX / sizeof *wname) goto failed;
-            d = (wchar_t *)realloc(wname, len * sizeof *wname);
+            if (inc_overflow(&len, 64)) goto failed;
+            d = array_realloc(wchar_t, wname, len);
             if (d == NULL) goto failed;
             wname = d;
         }
@@ -343,8 +341,7 @@ FILE *file_open(const char *name, const char *mode) {
         if (len < (size_t)l) goto failed;
         if (len > max) {
             char *d;
-            max = len + 64;
-            if (max < 64) goto failed;
+            if (add_overflow(len, 64, &max)) goto failed;
             d = (char *)realloc(newname, max);
             if (d == NULL) goto failed;
             newname = d;
@@ -551,8 +548,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                     tmp->data = (uint8_t *)malloc(len2);
                     if (tmp->data != NULL) tmp->len = len2;
                     max_lines = (len2 / 20 + 1024) & ~(size_t)1023;
-                    if (max_lines > SIZE_MAX / sizeof *tmp->line) max_lines = SIZE_MAX / sizeof *tmp->line; /* overflow */
-                    tmp->line = (filesize_t *)malloc(max_lines * sizeof *tmp->line);
+                    tmp->line = array_malloc(filesize_t, max_lines);
                     if (tmp->line == NULL) max_lines = 0;
                 }
                 clearerr(f); errno = 0;
@@ -570,15 +566,15 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
 
                     if (lines >= max_lines) {
                         filesize_t *d;
-                        size_t len2 = max_lines + 1024;
-                        if (/*len2 < 1024 ||*/ len2 > SIZE_MAX / sizeof *tmp->line) goto failed; /* overflow */
-                        d = (filesize_t *)realloc(tmp->line, len2 * sizeof *tmp->line);
+                        size_t len2;
+                        if (add_overflow(max_lines, 1024, &len2)) goto failed;
+                        d = array_realloc(filesize_t, tmp->line, len2);
                         if (d == NULL) goto failed;
                         tmp->line = d;
                         max_lines = len2;
                     }
                     tmp->line[lines] = fp;
-                    if (inc_overflow(&lines, 1)) { lines = ~(linenum_t)0; goto failed; }
+                    if (inc_overflow(&lines, 1)) goto failed;
                     p = fp;
                     for (;;) {
                         unsigned int i, j;
