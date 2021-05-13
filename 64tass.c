@@ -341,9 +341,9 @@ void new_waitfor(Wait_types what, linepos_t epoint) {
     uint8_t skwait = waitfor->skip;
     waitfor_p++;
     if (waitfor_p >= waitfor_len) {
-        waitfor_len += 8;
-        if (/*waitfor_len < 8 ||*/ waitfor_len > SIZE_MAX / sizeof *waitfors) err_msg_out_of_memory(); /* overflow */
-        waitfors = (struct waitfor_s *)reallocx(waitfors, waitfor_len * sizeof *waitfors);
+        if (inc_overflow(&waitfor_len, 8)) err_msg_out_of_memory();
+        waitfors = array_realloc(struct waitfor_s, waitfors, waitfor_len);
+        if (waitfors == NULL) err_msg_out_of_memory();
     }
     waitfor = &waitfors[waitfor_p];
     waitfor->what = what;
@@ -1474,12 +1474,15 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 labels.len = lenof(labels.val);
                 labels.data = labels.val;
             } else if (labels.p >= labels.len) {
-                labels.len += 16;
-                if (/*labels.len < 16 ||*/ labels.len > SIZE_MAX / sizeof *labels.data) err_msg_out_of_memory(); /* overflow */
+                if (inc_overflow(&labels.len, 16)) err_msg_out_of_memory();
                 if (labels.data == labels.val) {
-                    labels.data = (Label **)mallocx(labels.len * sizeof *labels.data);
+                    labels.data = array_malloc(Label *, labels.len);
+                    if (labels.data == NULL) err_msg_out_of_memory();
                     memcpy(labels.data, labels.val, sizeof labels.val);
-                } else labels.data = (Label **)reallocx(labels.data, labels.len * sizeof *labels.data);
+                } else {
+                    labels.data = array_realloc(Label *, labels.data, labels.len);
+                    if (labels.data == NULL) err_msg_out_of_memory();
+                }
             }
             labels.data[labels.p++] = label;
         }

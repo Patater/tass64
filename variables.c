@@ -70,12 +70,14 @@ struct context_stack_s {
 
 static struct context_stack_s context_stack;
 
+static void extend_context_stack(void) {
+    if (inc_overflow(&context_stack.len, 8)) err_msg_out_of_memory();
+    context_stack.stack = array_realloc(struct cstack_s, context_stack.stack, context_stack.len);
+    if (context_stack.stack == NULL) err_msg_out_of_memory();
+}
+
 void push_context(Namespace *name) {
-    if (context_stack.p >= context_stack.len) {
-        context_stack.len += 8;
-        if (/*context_stack.len < 8 ||*/ context_stack.len > SIZE_MAX / sizeof *context_stack.stack) err_msg_out_of_memory(); /* overflow */
-        context_stack.stack = (struct cstack_s *)reallocx(context_stack.stack, context_stack.len * sizeof *context_stack.stack);
-    }
+    if (context_stack.p >= context_stack.len) extend_context_stack();
     context_stack.stack[context_stack.p].normal = ref_namespace(name);
     current_context = name;
     context_stack.stack[context_stack.p].cheap = cheap_context;
@@ -101,11 +103,7 @@ bool pop_context(void) {
 }
 
 void push_context2(Namespace *name) {
-    if (context_stack.p >= context_stack.len) {
-        context_stack.len += 8;
-        if (/*context_stack.len < 8 ||*/ context_stack.len > SIZE_MAX / sizeof *context_stack.stack) err_msg_out_of_memory(); /* overflow */
-        context_stack.stack = (struct cstack_s *)reallocx(context_stack.stack, context_stack.len * sizeof *context_stack.stack);
-    }
+    if (context_stack.p >= context_stack.len) extend_context_stack();
     context_stack.stack[context_stack.p].normal = context_stack.stack[context_stack.p - 1].normal;
     context_stack.stack[context_stack.p - 1].normal = ref_namespace(name);
     context_stack.stack[context_stack.p].cheap = ref_namespace(name);
@@ -145,9 +143,9 @@ static struct label_stack_s label_stack;
 
 static void push_label(Label *name) {
     if (label_stack.p >= label_stack.len) {
-        label_stack.len += 8;
-        if (/*label_stack.len < 8 ||*/ label_stack.len > SIZE_MAX / sizeof(*label_stack.stack)) err_msg_out_of_memory(); /* overflow */
-        label_stack.stack = (Label **)reallocx(label_stack.stack, label_stack.len * sizeof(*label_stack.stack));
+        if (inc_overflow(&label_stack.len, 8)) err_msg_out_of_memory();
+        label_stack.stack = array_realloc(Label *, label_stack.stack, label_stack.len);
+        if (label_stack.stack == NULL) err_msg_out_of_memory();
     }
     label_stack.stack[label_stack.p] = name;
     label_stack.p++;
