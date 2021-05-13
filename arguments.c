@@ -543,8 +543,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case OUTPUT_APPEND:
             case 'o': output.name = (opt == NO_OUTPUT) ? NULL : my_optarg;
                       output.append = (opt == OUTPUT_APPEND);
-                      arguments.output_len++;
-                      arguments.output = (struct output_s *)realloc(arguments.output, arguments.output_len * sizeof *arguments.output);
+                      if (inc_overflow(&arguments.output_len, 1)) err_msg_out_of_memory2();
+                      arguments.output = array_realloc(struct output_s, arguments.output, arguments.output_len);
                       if (arguments.output == NULL) err_msg_out_of_memory2();
                       arguments.output[arguments.output_len - 1] = output;
                       output.section = NULL;
@@ -558,9 +558,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                     size_t len;
 
                     if (fin->lines >= max_lines) {
-                        max_lines += 1024;
-                        if (/*max_lines < 1024 ||*/ max_lines > SIZE_MAX / sizeof *fin->line) err_msg_out_of_memory2(); /* overflow */
-                        fin->line = (filesize_t *)realloc(fin->line, max_lines * sizeof *fin->line);
+                        if (inc_overflow(&max_lines, 1024)) err_msg_out_of_memory2();
+                        fin->line = array_realloc(filesize_t, fin->line, max_lines);
                         if (fin->line == NULL) err_msg_out_of_memory2();
                     }
                     fin->line[fin->lines++] = fp;
@@ -569,8 +568,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                     fp += (filesize_t)len;
                     if (fp < len) err_msg_out_of_memory2();
                     if (fp > fin->len) {
-                        fin->len = fp + 1024;
-                        if (fin->len < 1024) err_msg_out_of_memory2();
+                        if (add_overflow(fp, 1024, &fin->len)) err_msg_out_of_memory2();
                         fin->data = (uint8_t*)realloc(fin->data, fin->len);
                         if (fin->data == NULL) err_msg_out_of_memory2();
                     }
@@ -592,8 +590,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case LABELS_APPEND:
             case 'l': symbol_output.name = my_optarg;
                       symbol_output.append = (opt == LABELS_APPEND);
-                      arguments.symbol_output_len++;
-                      arguments.symbol_output = (struct symbol_output_s *)realloc(arguments.symbol_output, arguments.symbol_output_len * sizeof *arguments.symbol_output);
+                      if (inc_overflow(&arguments.symbol_output_len, 1)) err_msg_out_of_memory2();
+                      arguments.symbol_output = array_realloc(struct symbol_output_s, arguments.symbol_output, arguments.symbol_output_len);
                       if (arguments.symbol_output == NULL) err_msg_out_of_memory2();
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
                       symbol_output.space = NULL;
