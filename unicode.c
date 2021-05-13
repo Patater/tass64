@@ -98,10 +98,10 @@ static inline unsigned int utf8outlen(unichar_t i) {
 }
 
 MUST_CHECK bool extend_ubuff(struct ubuff_s *d) {
-    uint32_t len = d->len + 16;
+    uint32_t len;
     unichar_t *data;
-    if (len < 16 || ((size_t)len + 0) > SIZE_MAX / sizeof *data) return true;
-    data = (unichar_t *)realloc(d->data, len * sizeof *data);
+    if (add_overflow(d->len, 16, &len)) return true;
+    data = array_realloc(unichar_t, d->data, len);
     if (data == NULL) return true;
     d->data = data;
     d->len = len;
