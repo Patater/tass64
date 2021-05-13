@@ -109,8 +109,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Str *v;
     i = str_quoting(v1->data, v1->len, &q);
 
-    i2 = i + 12;
-    if (i2 < 12) return NULL; /* overflow */
+    if (add_overflow(i, 12, &i2)) return NULL;
     chars = i2 - (v1->len - v1->chars);
     if (chars > maxsize) return NULL;
     v = new_str2(i2);

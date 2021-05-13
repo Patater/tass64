@@ -280,8 +280,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
         slen++;
     }
     len2 = sz * DSHIFT;
-    slen += len2;
-    if (slen < len2 || sz > SIZE_MAX / DSHIFT) goto error; /* overflow */
+    if (inc_overflow(&slen, len2) || sz > SIZE_MAX / DSHIFT) goto error; /* overflow */
     if (slen > maxsize) {
     error:
         if (tmp.val != out) free(out);

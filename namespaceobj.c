@@ -161,8 +161,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
     if (v1->len != 0) {
         size_t n;
         ln = v1->len;
-        chars = ln + 12;
-        if (chars < 12) return NULL; /* overflow */
+        if (add_overflow(ln, 12, &chars)) return NULL;
         if (chars > maxsize) return NULL;
         tuple = new_tuple(ln);
         vals = tuple->data;
@@ -179,8 +178,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
             v = p->v.obj->repr(Obj(p), epoint, maxsize - chars);
             if (v == NULL || v->obj != STR_OBJ) goto error;
             str = Str(v);
-            ln += str->len;
-            if (ln < str->len) goto error2; /* overflow */
+            if (inc_overflow(&ln, str->len)) goto error2;
             chars += str->chars;
             if (chars > maxsize) {
             error2:
