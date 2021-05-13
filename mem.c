@@ -70,8 +70,7 @@ static void memcomp(Memblocks *memblocks, bool nomerge) {
                     b2->addr = b->data[k].addr;
                     memblocks->mem.p += b2->len;
                     if (memblocks->mem.p >= memblocks->mem.len) {
-                        memblocks->mem.len = memblocks->mem.p + 0x1000;
-                        if (memblocks->mem.len < 0x1000) err_msg_out_of_memory(); /* overflow */
+                        if (add_overflow(memblocks->mem.p, 0x1000, &memblocks->mem.len)) err_msg_out_of_memory();
                         memblocks->mem.data = (uint8_t *)reallocx(memblocks->mem.data, memblocks->mem.len);
                     }
                     memcpy(&memblocks->mem.data[b2->p], &b->mem.data[b->data[k].p], b2->len);
@@ -570,8 +569,7 @@ FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, address_t len) {
     uint8_t *d;
     if (p < len) err_msg_out_of_memory(); /* overflow */
     if (p > memblocks->mem.len) {
-        memblocks->mem.len = p + 0x1000;
-        if (memblocks->mem.len < 0x1000) err_msg_out_of_memory(); /* overflow */
+        if (add_overflow(p, 0x1000, &memblocks->mem.len)) err_msg_out_of_memory();
         memblocks->mem.data = (uint8_t *)reallocx(memblocks->mem.data, memblocks->mem.len);
     }
     d = memblocks->mem.data + memblocks->mem.p;

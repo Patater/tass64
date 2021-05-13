@@ -369,7 +369,7 @@ static MUST_CHECK Obj *code_item(const struct code_item_s *ci) {
 }
 
 static address_t code_item_prepare(struct code_item_s *ci, const Code *v1) {
-    address_t ln2 = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
+    address_t ln, ln2 = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
     if (ln2 == 0) ln2 = 1;
     ci->ln2 = ln2;
     ci->v1 = v1;
@@ -380,8 +380,8 @@ static address_t code_item_prepare(struct code_item_s *ci, const Code *v1) {
         return (v1->size - (uval_t)v1->offs) / ln2;
     } 
     ci->offs0 = -(ival_t)(((uval_t)-v1->offs + ln2 - 1) / ln2);
-    if (v1->size + (uval_t)-v1->offs < v1->size) err_msg_out_of_memory(); /* overflow */
-    return (v1->size + (uval_t)-v1->offs) / ln2;
+    if (add_overflow((uval_t)-v1->offs, v1->size, &ln)) err_msg_out_of_memory();
+    return ln / ln2;
 }
 
 MUST_CHECK Obj *tuple_from_code(const Code *v1, const Type *typ) {

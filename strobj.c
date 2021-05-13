@@ -102,12 +102,10 @@ size_t str_quoting(const uint8_t *data, size_t ln, uint8_t *q) {
         }
     }
     if (sq < dq) {
-        i += sq;
-        if (i < sq) err_msg_out_of_memory(); /* overflow */
+        if (inc_overflow(&i, sq)) err_msg_out_of_memory();
         *q = '\'';
     } else {
-        i += dq;
-        if (i < dq) err_msg_out_of_memory(); /* overflow */
+        if (inc_overflow(&i, dq)) err_msg_out_of_memory();
         *q = '"';
     }
     return i;
@@ -177,8 +175,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Str *v;
     i = str_quoting(v1->data, v1->len, &q);
 
-    i2 = i + 2;
-    if (i2 < 2) return NULL; /* overflow */
+    if (add_overflow(i, 2, &i2)) return NULL;
     chars = i2 - (v1->len - v1->chars);
     if (chars > maxsize) return NULL;
     v = new_str2(i2);
@@ -505,8 +502,8 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
         }
         do {
             uint8_t *s;
-            size_t ln = v1->len + v2->len;
-            if (ln < v2->len) break; /* overflow */
+            size_t ln;
+            if (add_overflow(v1->len, v2->len, &ln)) break;
 
             if (op->inplace == Obj(v1)) {
                 s = extend_str(v1, ln);
@@ -660,8 +657,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
                 k = utf8len(*p);
                 if ((size_t)(p2 - o) + k > m) {
                     const uint8_t *r = o;
-                    m += 4096;
-                    if (m < 4096) {
+                    if (inc_overflow(&m, 4096)) {
                         iter_destroy(&iter);
                         goto failed2; /* overflow */
                     }

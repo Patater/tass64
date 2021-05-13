@@ -267,8 +267,7 @@ bool mtranslate(void) {
             memcpy(mline->data + last, pline + last2, p - last);
         }
         if (n >= mline->rlen) {
-            mline->rlen += 8;
-            if (mline->rlen < 8 || mline->rlen > ARGCOUNT_MAX / sizeof *mline->rpositions) err_msg_out_of_memory(); /* overflow */
+            if (inc_overflow(&mline->rlen, 8) || mline->rlen > ARGCOUNT_MAX / sizeof *mline->rpositions) err_msg_out_of_memory(); /* overflow */
             mline->rpositions = (struct macro_rpos_s *)reallocx(mline->rpositions, mline->rlen * sizeof *mline->rpositions);
         }
         mline->rpositions[n].opos = op;
@@ -394,8 +393,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
             if (p >= macro_parameters.current->size) {
                 if (macro_parameters.current->size < macro->argc) macro_parameters.current->size = macro->argc;
                 else {
-                    macro_parameters.current->size += 4;
-                    if (macro_parameters.current->size < 4) err_msg_out_of_memory(); /* overflow */
+                    if (inc_overflow(&macro_parameters.current->size, 4)) err_msg_out_of_memory(); /* overflow */
                 }
                 if (macro_parameters.current->size > ARGCOUNT_MAX / sizeof *params) err_msg_out_of_memory();
                 params = (struct macro_value_s *)reallocx(params, macro_parameters.current->size * sizeof *params);
@@ -590,8 +588,7 @@ bool get_func_params(Mfunc *v, bool single) {
                 lpoint.pos++;ignore();
             }
             if (i >= len) {
-                len += 16;
-                if (len < 16 || len > ARGCOUNT_MAX / sizeof *params) err_msg_out_of_memory(); /* overflow */
+                if (inc_overflow(&len, 16) || len > ARGCOUNT_MAX / sizeof *params) err_msg_out_of_memory(); /* overflow */
                 params = (struct mfunc_param_s *)reallocx(params, len * sizeof *params);
             }
             param = params + i;
@@ -697,8 +694,7 @@ void get_macro_params(Obj *v) {
         struct macro_param_s *param;
         ignore();if (here() == 0 || here() == ';') break;
         if (i >= len) {
-            len += 16;
-            if (len < 16 || len > ARGCOUNT_MAX / (sizeof *params > sizeof *epoints ? sizeof *params : sizeof *epoints)) err_msg_out_of_memory(); /* overflow */
+            if (inc_overflow(&len, 16) || len > ARGCOUNT_MAX / (sizeof *params > sizeof *epoints ? sizeof *params : sizeof *epoints)) err_msg_out_of_memory(); /* overflow */
             params = (struct macro_param_s *)reallocx(params, len * sizeof *params);
             if (epoints == vepoints) {
                 epoints = (struct linepos_s *)mallocx(len * sizeof *epoints);

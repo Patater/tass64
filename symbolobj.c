@@ -77,8 +77,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 
     chars = calcpos(v1->name.data, v1->name.len) + 1;
     if (chars < 1 || chars > maxsize) return NULL;/* overflow */
-    len = v1->name.len + 1;
-    if (len < 1) return NULL;/* overflow */
+    if (add_overflow(v1->name.len, 1, &len)) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
     v->chars = chars;
