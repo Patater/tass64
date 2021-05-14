@@ -55,7 +55,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     if (v == NULL) return NULL;
     v->chars = len;
     v->data[0] = '.';
-    memset(v->data + 1, v1->count >= 0 ? '+' : '-', len - 1);
+    memset(v->data + 1, (v1->count >= 0) ? '+' : '-', len - 1);
     return Obj(v);
 }
 
@@ -67,7 +67,7 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     v = new_str2(len);
     if (v == NULL) return NULL;
     v->chars = len;
-    memset(v->data, v1->count >= 0 ? '+' : '-', len);
+    memset(v->data, (v1->count >= 0) ? '+' : '-', len);
     return Obj(v);
 }
 
