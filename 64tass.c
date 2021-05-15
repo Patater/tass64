@@ -342,8 +342,7 @@ void new_waitfor(Wait_types what, linepos_t epoint) {
     waitfor_p++;
     if (waitfor_p >= waitfor_len) {
         if (inc_overflow(&waitfor_len, 8)) err_msg_out_of_memory();
-        waitfors = array_realloc(struct waitfor_s, waitfors, waitfor_len);
-        if (waitfors == NULL) err_msg_out_of_memory();
+        resize_array(&waitfors, waitfor_len);
     }
     waitfor = &waitfors[waitfor_p];
     waitfor->what = what;
@@ -1476,12 +1475,10 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             } else if (labels.p >= labels.len) {
                 if (inc_overflow(&labels.len, 16)) err_msg_out_of_memory();
                 if (labels.data == labels.val) {
-                    labels.data = array_malloc(Label *, labels.len);
-                    if (labels.data == NULL) err_msg_out_of_memory();
+                    new_array(&labels.data, labels.len);
                     memcpy(labels.data, labels.val, sizeof labels.val);
                 } else {
-                    labels.data = array_realloc(Label *, labels.data, labels.len);
-                    if (labels.data == NULL) err_msg_out_of_memory();
+                    resize_array(&labels.data, labels.len);
                 }
             }
             labels.data[labels.p++] = label;
@@ -1584,7 +1581,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         expr2 = (uint8_t *)oldpline2;
         if (not_in_file(pline, current_file_list->file)) {
             size_t lentmp = strlen((const char *)pline) + 1;
-            expr = (uint8_t *)mallocx(lentmp);
+            new_array(&expr, lentmp);
             memcpy(expr, pline, lentmp);
             pline = expr;
         } else expr = (uint8_t *)oldpline;
@@ -1605,7 +1602,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 oldpline2 = pline;
                 if (pline != expr && not_in_file(pline, current_file_list->file)) {
                     size_t lentmp = strlen((const char *)pline) + 1;
-                    expr2 = (uint8_t *)mallocx(lentmp);
+                    new_array(&expr2, lentmp);
                     memcpy(expr2, pline, lentmp);
                     pline = expr2;
                 } else expr2 = (uint8_t *)oldpline2;
@@ -1824,7 +1821,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     oldpline = pline;
     if (not_in_file(pline, current_file_list->file)) {
         size_t lentmp = strlen((const char *)pline) + 1;
-        expr = (uint8_t *)mallocx(lentmp);
+        new_array(&expr, lentmp);
         memcpy(expr, pline, lentmp);
         pline = expr;
     } else expr = (uint8_t *)oldpline;
@@ -3442,7 +3439,8 @@ MUST_CHECK Obj *compile(void)
                         lpoint.pos += (linecpos_t)sectionname.len;
                         str_cfcpy(&cf, &sectionname);
                         if (str_cmp(&cf, &current_section->cfname) != 0) {
-                            char *s = (char *)mallocx(current_section->name.len + 1);
+                            char *s;
+                            new_array(&s, current_section->name.len + 1);
                             memcpy(s, current_section->name.data, current_section->name.len);
                             s[current_section->name.len] = '\0';
                             err_msg2(ERROR______EXPECTED, s, &epoint);

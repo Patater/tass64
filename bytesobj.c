@@ -102,7 +102,7 @@ MALLOC Bytes *new_bytes(size_t ln) {
     if (ln > sizeof v->u.val) {
         v->u.s.max = ln;
         v->u.s.hash = -1;
-        v->data = (uint8_t *)mallocx(ln);
+        new_array(&v->data, ln);
     } else {
         v->data = v->u.val;
     }

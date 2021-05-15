@@ -146,7 +146,7 @@ char *get_path(const str_t *v, const char *base) {
 #endif
     len = i + 1 + v->len;
     if (len <= i) err_msg_out_of_memory(); /* overflow */
-    path = (char *)mallocx(len);
+    new_array(&path, len);
     memcpy(path, base, i);
     memcpy(path + i, v->data, v->len);
     path[i + v->len] = 0;
@@ -158,7 +158,7 @@ static MUST_CHECK wchar_t *convert_name(const char *name, size_t max) {
     wchar_t *wname;
     unichar_t ch;
     size_t i = 0, j = 0, len = ((max != SIZE_MAX) ? max : strlen(name)) + 2;
-    wname = array_malloc(wchar_t, len);
+    wname = allocate_array(wchar_t, len);
     if (wname == NULL) return NULL;
     while (name[i] != 0 && i < max) {
         ch = (uint8_t)name[i];
@@ -169,7 +169,7 @@ static MUST_CHECK wchar_t *convert_name(const char *name, size_t max) {
         if (j + 3 > len) {
             wchar_t *d;
             if (inc_overflow(&len, 64)) goto failed;
-            d = array_realloc(wchar_t, wname, len);
+            d = reallocate_array(wname, len);
             if (d == NULL) goto failed;
             wname = d;
         }
@@ -480,7 +480,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
             int err = 1;
             char *path = NULL;
             size_t namelen = strlen(name) + 1;
-            s = (char *)mallocx(namelen);
+            new_array(&s, namelen);
             memcpy(s, name, namelen); tmp->name = s;
             if (val != NULL) {
                 struct include_list_s *i = include_list.next;
@@ -548,7 +548,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                     tmp->data = (uint8_t *)malloc(len2);
                     if (tmp->data != NULL) tmp->len = len2;
                     max_lines = (len2 / 20 + 1024) & ~(size_t)1023;
-                    tmp->line = array_malloc(filesize_t, max_lines);
+                    tmp->line = allocate_array(filesize_t, max_lines);
                     if (tmp->line == NULL) max_lines = 0;
                 }
                 clearerr(f); errno = 0;
@@ -568,7 +568,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                         filesize_t *d;
                         size_t len2;
                         if (add_overflow(max_lines, 1024, &len2)) goto failed;
-                        d = array_realloc(filesize_t, tmp->line, len2);
+                        d = reallocate_array(tmp->line, len2);
                         if (d == NULL) goto failed;
                         tmp->line = d;
                         max_lines = len2;
@@ -798,9 +798,9 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
         } else {
             const char *cmd_name = "<command line>";
             size_t cmdlen = strlen(cmd_name) + 1;
-            s = (char *)mallocx(1);
+            new_array(&s, 1);
             s[0] = 0; tmp->name = s;
-            s = (char *)mallocx(cmdlen);
+            new_array(&s, cmdlen);
             memcpy(s, cmd_name, cmdlen); tmp->realname = s;
         }
 
@@ -930,7 +930,7 @@ void init_file(void) {
     stars->next = NULL;
     starsp = 0;
     lastst = &stars->stars[starsp];
-    last_ubuff.data = (unichar_t *)mallocx(16 * sizeof *last_ubuff.data);
+    new_array(&last_ubuff.data, 16);
     last_ubuff.len = 16;
     avltree_init(&star_root.tree);
 }

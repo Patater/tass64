@@ -104,8 +104,7 @@ static digit_t *inew(Int *v, size_t len) {
 
 static digit_t *inew2(Int *v, size_t len) {
     if (len <= lenof(v->val))  return v->val;
-    if (len > SIZE_MAX / sizeof *v->data) return NULL; /* overflow */
-    return (digit_t *)malloc(len * sizeof *v->data);
+    return allocate_array(digit_t, len);
 }
 
 static MUST_CHECK Obj *negate(Int *v1, linepos_t epoint) {

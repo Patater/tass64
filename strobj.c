@@ -380,7 +380,7 @@ MALLOC Str *new_str(size_t ln) {
     if (ln > sizeof v->u.val) {
         v->u.s.max = ln;
         v->u.s.hash = -1;
-        v->data = (uint8_t *)mallocx(ln);
+        new_array(&v->data, ln);
         return v;
     }
     v->data = v->u.val;

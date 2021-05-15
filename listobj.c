@@ -398,10 +398,9 @@ MUST_CHECK Tuple *new_tuple(size_t n) {
          v->data = v->u.val;
          return v;
      }
-     if (n > SIZE_MAX / sizeof *v->data) err_msg_out_of_memory(); /* overflow */
      v->u.s.max = n;
      v->u.s.hash = -1;
-     v->data = (Obj **)mallocx(n * sizeof *v->data);
+     new_array(&v->data, n);
      return v;
 }
 

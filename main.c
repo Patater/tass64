@@ -116,8 +116,12 @@ int wmain(int argc, wchar_t *argv2[]) {
     console_init();
     atexit(console_destroy);
 
-    argv = (char **)malloc((argc < 1 ? 1 : (unsigned int)argc) * sizeof *argv);
-    if (argv == NULL) err_msg_out_of_memory2();
+    if (argc < 1) {
+        static wchar_t *argvd[1] = { (wchar_t *)L"64tass" };
+        argv2 = argvd;
+        argc = 1;
+    }
+    new_array(&argv, (unsigned int)argc);
     for (i = 0; i < argc; i++) {
         unichar_t c = 0, lastchar;
         const wchar_t *s = (i == 0) ? prgname(*argv2) : argv2[i];
@@ -126,7 +130,7 @@ int wmain(int argc, wchar_t *argv2[]) {
 
         while (*p != 0) p++;
         c2 = (uint8_t *)malloc((size_t)(p - s) * 4 / (sizeof *p) + 1);
-        if (c2 == NULL) err_msg_out_of_memory2();
+        if (c2 == NULL) err_msg_out_of_memory();
         p = s;
         argv[i] = (char *)c2;
 
@@ -149,13 +153,7 @@ int wmain(int argc, wchar_t *argv2[]) {
         }
         *c2++ = 0;
         argv[i] = (char *)realloc(argv[i], (size_t)((char *)c2 - argv[i]));
-        if (argv[i] == NULL) err_msg_out_of_memory2();
-    }
-    if (argc < 1) {
-        argv[0] = (char *)malloc(7);
-        if (argv[0] == NULL) err_msg_out_of_memory2();
-        memcpy(argv[0], "64tass", 7);
-        argc = 1;
+        if (argv[i] == NULL) err_msg_out_of_memory();
     }
     r = main2(&argc, &argv);
 
@@ -217,16 +215,21 @@ int main(int argc, char *argv[]) {
     install_signal_handler();
     setlocale(LC_CTYPE, "");
 
-    uargv = (char **)malloc((argc < 1 ? 1 : (unsigned int)argc) * sizeof *uargv);
-    if (uargv == NULL) err_msg_out_of_memory2();
+    if (argc < 1) {
+        static char *argvd[1] = { (char *)"64tass" };
+        argv = argvd;
+        argc = 1;
+    }
+    new_array(&uargv, (unsigned int)argc);
     for (i = 0; i < argc; i++) {
         const char *s = (i == 0) ? prgname(*argv) : argv[i];
         mbstate_t ps;
         size_t p;
         size_t n = strlen(s), j = 0;
-        size_t len = n + 64;
-        uint8_t *data = (uint8_t *)malloc(len);
-        if (data == NULL || len < 64) err_msg_out_of_memory2();
+        size_t len;
+        uint8_t *data;
+        if (add_overflow(n, 64, &len)) err_msg_out_of_memory();
+        new_array(&data, len);
 
         memset(&ps, 0, sizeof ps);
         p = 0;
@@ -235,9 +238,8 @@ int main(int argc, char *argv[]) {
             wchar_t w;
             unichar_t ch;
             if (p + 6*6 + 1 > len) {
-                len += 1024;
-                data = (uint8_t*)realloc(data, len);
-                if (data == NULL) err_msg_out_of_memory2();
+                if (add_overflow(n, 1024, &len)) err_msg_out_of_memory();
+                resize_array(&data, len);
             }
             l = (ssize_t)mbrtowc(&w, s + j, n - j,  &ps);
             if (l < 1) {
@@ -251,12 +253,6 @@ int main(int argc, char *argv[]) {
         }
         data[p] = 0;
         uargv[i] = (char *)data;
-    }
-    if (argc < 1) {
-        argv[0] = (char *)malloc(7);
-        if (argv[0] == NULL) err_msg_out_of_memory2();
-        memcpy(argv[0], "64tass", 7);
-        argc = 1;
     }
     r = main2(&argc, &uargv);
 
