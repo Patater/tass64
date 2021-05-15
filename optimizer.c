@@ -1855,7 +1855,7 @@ void cpu_opt_invalidate(void) {
     unsigned int i;
 
     if (cpu == NULL) {
-        cpu = (struct optimizer_s *)mallocx(sizeof *cpu);
+        new_instance(&cpu);
         current_section->optimizer = cpu;
         for (i = 0; i < 8; i++) {
             cpu->a.a[i] = new_bitu();

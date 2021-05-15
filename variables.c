@@ -174,8 +174,9 @@ static Label *namespace_update(Namespace *ns, Label *p) {
     size_t mask, hash, offs;
     if (ns->len * 3 / 2 >= ns->mask) {
         size_t i, max = (ns->data == NULL) ? 8 : (ns->mask + 1) << 1;
-        Label **n = (Label **)calloc(max, sizeof *n);
-        if (n == NULL) err_msg_out_of_memory();
+        Label **n;
+        new_array(&n, max);
+        memset(n, 0, max * sizeof *n);
         mask = max - 1;
         if (ns->data != NULL) {
             for (i = 0; i <= ns->mask; i++) if (ns->data[i] != NULL) {

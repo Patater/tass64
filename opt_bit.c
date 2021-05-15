@@ -34,7 +34,11 @@ static Bit bit1 = { 1, B1, NULL };
 
 #ifdef DEBUG
 #define bit_free(bit) free(bit)
-#define bit_alloc() (Bit *)mallocx(sizeof(Bit))
+static MALLOC Bit *bit_alloc(void) {
+    Bit *r;
+    new_instance(&r);
+    return r;
+}
 #else
 static union bit_u {
     struct Bit bit;
@@ -54,7 +58,7 @@ static void bit_free(union bit_u *bit) {
 static union bit_u *bits_alloc(void) {
     size_t i;
     struct bits_s *old = bits;
-    bits = (struct bits_s *)mallocx(sizeof *bits);
+    new_instance(&bits);
     for (i = 0; i < 254; i++) {
         bits->bits[i].next = &bits->bits[i + 1];
     }

@@ -556,9 +556,9 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 }
 
 FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, address_t len) {
-    address_t p = memblocks->mem.p + len;
+    address_t p;
     uint8_t *d;
-    if (p < len) err_msg_out_of_memory(); /* overflow */
+    if (add_overflow(memblocks->mem.p, len, &p)) err_msg_out_of_memory();
     if (p > memblocks->mem.len) {
         if (add_overflow(p, 0x1000, &memblocks->mem.len)) err_msg_out_of_memory();
         resize_array(&memblocks->mem.data, memblocks->mem.len);

@@ -27,6 +27,7 @@
 #include "errorobj.h"
 #include "addressobj.h"
 #include "intobj.h"
+#include "error.h"
 
 static Type obj;
 
@@ -60,7 +61,7 @@ static MUST_CHECK Obj *register_from_obj(Obj *o1, linepos_t epoint) {
             v->len = v1->len;
             if (v->len != 0) {
                 if (v->len > sizeof v->val) {
-                    s = (uint8_t *)malloc(v->len);
+                    s = allocate_array(uint8_t, v->len);
                     if (s == NULL) return new_error_mem(epoint);
                 } else s = v->val;
                 memcpy(s, v1->data, v->len);

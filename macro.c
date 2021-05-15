@@ -303,8 +303,9 @@ bool mtranslate(void) {
     } else {
         linenum_t lnum;
         if (cfile->nomacro == NULL) {
-            cfile->nomacro = (uint8_t *)calloc((cfile->lines + 7) / 8, sizeof *cfile->nomacro);
-            if (cfile->nomacro == NULL) err_msg_out_of_memory();
+            size_t l = (cfile->lines + 7) / 8;
+            new_array(&cfile->nomacro, l);
+            memset(cfile->nomacro, 0, l * sizeof *cfile->nomacro);
         }
         lnum = lpoint.line - 1;
         cfile->nomacro[lnum / 8] |= (uint8_t)(1U << (lnum & 7));
@@ -327,8 +328,7 @@ static size_t macro_param_find(void) {
         if (q == 0) {
             if (ch == '(' || ch == '[' || ch == '{') {
                 if (pp >= pl) {
-                    pl += 256;
-                    if (pl < 256) err_msg_out_of_memory();
+                    if (inc_overflow(&pl, 256)) err_msg_out_of_memory();
                     if (par == pbuf) {
                         new_array(&par, pl);
                         memcpy(par, pbuf, pp);
@@ -389,7 +389,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
             if (p >= macro_parameters.current->size) {
                 if (macro_parameters.current->size < macro->argc) macro_parameters.current->size = macro->argc;
                 else {
-                    if (inc_overflow(&macro_parameters.current->size, 4)) err_msg_out_of_memory(); /* overflow */
+                    if (inc_overflow(&macro_parameters.current->size, 4)) err_msg_out_of_memory();
                 }
                 resize_array(&params, macro_parameters.current->size);
                 macro_parameters.current->param = params;

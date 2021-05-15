@@ -102,12 +102,12 @@ size_t str_quoting(const uint8_t *data, size_t ln, uint8_t *q) {
         }
     }
     if (sq < dq) {
-        if (inc_overflow(&i, sq)) err_msg_out_of_memory();
         *q = '\'';
     } else {
-        if (inc_overflow(&i, dq)) err_msg_out_of_memory();
+        sq = dq;
         *q = '"';
     }
+    if (inc_overflow(&i, sq)) err_msg_out_of_memory();
     return i;
 }
 

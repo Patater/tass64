@@ -87,9 +87,7 @@ struct section_s *new_section(const str_t *name) {
     struct avltree_node *b;
     struct section_s *tmp;
 
-    if (lastsc == NULL) {
-        lastsc = (struct section_s *)mallocx(sizeof *lastsc);
-    }
+    if (lastsc == NULL) new_instance(&lastsc);
     str_cfcpy(&lastsc->cfname, name);
     lastsc->name_hash = str_hash(&lastsc->cfname);
     b = avltree_insert(&lastsc->node, &current_section->members, section_compare);

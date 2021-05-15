@@ -147,7 +147,7 @@ MUST_CHECK Listing *listing_open(const char *filename, int argc, char *argv[]) {
     }
     clearerr(flist); errno = 0;
 
-    ls = (Listing *)mallocx(sizeof *ls);
+    new_instance(&ls);
 
     memcpy(ls->hex, "0123456789abcdef", 16);
     ls->filename = filename;

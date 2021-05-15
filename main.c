@@ -127,10 +127,11 @@ int wmain(int argc, wchar_t *argv2[]) {
         const wchar_t *s = (i == 0) ? prgname(*argv2) : argv2[i];
         const wchar_t *p = s;
         uint8_t *c2;
+        size_t l;
 
         while (*p != 0) p++;
-        c2 = (uint8_t *)malloc((size_t)(p - s) * 4 / (sizeof *p) + 1);
-        if (c2 == NULL) err_msg_out_of_memory();
+        l = (size_t)(p - s) * 4 / (sizeof *p) + 1;
+        new_array(&c2, l);
         p = s;
         argv[i] = (char *)c2;
 
@@ -152,8 +153,8 @@ int wmain(int argc, wchar_t *argv2[]) {
             if (c != 0 && c < 0x80) *c2++ = (uint8_t)c; else c2 += utf8out(c, c2);
         }
         *c2++ = 0;
-        argv[i] = (char *)realloc(argv[i], (size_t)((char *)c2 - argv[i]));
-        if (argv[i] == NULL) err_msg_out_of_memory();
+        l = (size_t)((char *)c2 - argv[i]);
+        resize_array(&argv[i], l);
     }
     r = main2(&argc, &argv);
 
