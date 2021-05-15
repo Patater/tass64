@@ -259,17 +259,13 @@ bool mtranslate(void) {
         if (p + param.len < p) err_msg_out_of_memory(); /* overflow */
         if (p + param.len > mline->len) {
             mline->len = p + param.len;
-            if (inc_overflow(&mline->len, 1024)) err_msg_out_of_memory();
-            resize_array(&mline->data, mline->len);
+            extend_array(&mline->data, &mline->len, 1024);
         }
         if (last != p) {
             if (p < last) err_msg_out_of_memory(); /* overflow */
             memcpy(mline->data + last, pline + last2, p - last);
         }
-        if (n >= mline->rlen) {
-            if (inc_overflow(&mline->rlen, 8)) err_msg_out_of_memory();
-            resize_array(&mline->rpositions, mline->rlen);
-        }
+        if (n >= mline->rlen) extend_array(&mline->rpositions, &mline->rlen, 8);
         mline->rpositions[n].opos = op;
         mline->rpositions[n].olen = p2 - op;
         mline->rpositions[n].pos = p;
@@ -363,8 +359,7 @@ Obj *macro_recurse(Wait_types t, Obj *tmp2, Namespace *context, linepos_t epoint
     }
     if (macro_parameters.p >= macro_parameters.len) {
         struct macro_params_s *params = macro_parameters.params;
-        if (inc_overflow(&macro_parameters.len, 1)) err_msg_out_of_memory();
-        resize_array(&params, macro_parameters.len);
+        extend_array(&params, &macro_parameters.len, 1);
         macro_parameters.params = params;
         macro_parameters.current = &params[macro_parameters.p];
         macro_parameters.current->param = NULL;
@@ -588,8 +583,7 @@ bool get_func_params(Mfunc *v, bool single) {
                 lpoint.pos++;ignore();
             }
             if (i >= len) {
-                if (inc_overflow(&len, 16)) err_msg_out_of_memory();
-                resize_array(&params, len);
+                extend_array(&params, &len, 16);
             }
             param = params + i;
             param->epoint = lpoint;
@@ -698,8 +692,7 @@ void get_macro_params(Obj *v) {
         struct macro_param_s *param;
         ignore();if (here() == 0 || here() == ';') break;
         if (i >= len) {
-            if (inc_overflow(&len, 16)) err_msg_out_of_memory();
-            resize_array(&params, len);
+            extend_array(&params, &len, 16);
             if (epoints == vepoints) {
                 new_array(&epoints, len);
                 memcpy(epoints, vepoints, sizeof vepoints);

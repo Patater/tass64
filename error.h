@@ -136,6 +136,12 @@ extern linecpos_t interstring_position(linepos_t, const uint8_t *, size_t);
 #define resize_array(old, count) if ((*old = sizeof(**old) != 1 && (count) > SIZE_MAX / sizeof(**old) ? NULL : realloc(*old, sizeof(**old) * (count))) == NULL) err_msg_out_of_memory()
 #endif
 
+#ifdef __cplusplus
+#define extend_array(old, len, count) if (inc_overflow(len, (count)) || (*old = sizeof(**old) != 1 && (*len) > SIZE_MAX / sizeof(**old) ? NULL : (std::remove_pointer<decltype(old)>::type)realloc(*old, sizeof(**old) * (*len))) == NULL) err_msg_out_of_memory()
+#else
+#define extend_array(old, len, count) if (inc_overflow(len, (count)) || (*old = sizeof(**old) != 1 && (*len) > SIZE_MAX / sizeof(**old) ? NULL : realloc(*old, sizeof(**old) * (*len))) == NULL) err_msg_out_of_memory()
+#endif
+
 static inline MALLOC void *mallocx(size_t l) {
     void *m = malloc(l);
     if (m == NULL) err_msg_out_of_memory();

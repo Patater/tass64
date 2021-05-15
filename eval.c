@@ -415,13 +415,11 @@ static struct eval_context_s {
 static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
-    if (inc_overflow(&out->size, 64)) err_msg_out_of_memory();
-    resize_array(&out->data, out->size);
+    extend_array(&out->data, &out->size, 64);
 }
 
 static NO_INLINE void extend_opr(struct opr_list_s *opr) {
-    if (inc_overflow(&opr->size, 64)) err_msg_out_of_memory();
-    resize_array(&opr->data, opr->size);
+    extend_array(&opr->data, &opr->size, 64);
 }
 
 static inline void clean_out(struct eval_context_s *ev) {
@@ -1976,8 +1974,7 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
 void eval_enter(void) {
     evx_p++;
     if (evx_p >= evxnum) {
-        if (inc_overflow(&evxnum, 1)) err_msg_out_of_memory();
-        resize_array(&evx, evxnum);
+        extend_array(&evx, &evxnum, 1);
         eval = (struct eval_context_s *)mallocx(sizeof *eval);
         eval->values = NULL;
         eval->values_size = 0;

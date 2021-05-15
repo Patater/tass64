@@ -340,10 +340,7 @@ static void tfree(void) {
 void new_waitfor(Wait_types what, linepos_t epoint) {
     uint8_t skwait = waitfor->skip;
     waitfor_p++;
-    if (waitfor_p >= waitfor_len) {
-        if (inc_overflow(&waitfor_len, 8)) err_msg_out_of_memory();
-        resize_array(&waitfors, waitfor_len);
-    }
+    if (waitfor_p >= waitfor_len) extend_array(&waitfors, &waitfor_len, 8);
     waitfor = &waitfors[waitfor_p];
     waitfor->what = what;
     waitfor->skip = skwait;
