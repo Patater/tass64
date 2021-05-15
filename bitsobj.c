@@ -641,7 +641,7 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
             if (j >= sz) {
                 if (v->u.val == d) {
                     sz = 16 / sizeof *d;
-                    d = allocate_array(bdigit_t, sz);
+                    d = allocate_array(bdigit_t, 16 / sizeof *d);
                     if (d == NULL) goto failed2;
                     v->data = d;
                     memcpy(d, v->u.val, j * sizeof *d);

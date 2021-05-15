@@ -1453,7 +1453,7 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
             if (j >= sz) {
                 if (v->val == d) {
                     sz = 16 / sizeof *d;
-                    d = allocate_array(digit_t, sz);
+                    d = allocate_array(digit_t, 16 / sizeof *d);
                     if (d == NULL) goto failed2;
                     v->data = d;
                     memcpy(d, v->val, j * sizeof *d);
