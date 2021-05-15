@@ -339,11 +339,12 @@ static void getriter(struct iter_s *v) {
 }
 
 Obj **list_create_elements(List *v, size_t n) {
+    Obj **d;
     if (n <= lenof(v->u.val)) return v->u.val;
-    if (n > SIZE_MAX / sizeof *v->data) err_msg_out_of_memory(); /* overflow */
     v->u.s.max = n;
     v->u.s.hash = -1;
-    return (Obj **)mallocx(n * sizeof *v->data);
+    new_array(&d, n);
+    return d;
 }
 
 MUST_CHECK bool list_extend(List *lst) {

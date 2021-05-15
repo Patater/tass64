@@ -97,9 +97,10 @@ static inline MALLOC Int *new_int(void) {
 }
 
 static digit_t *inew(Int *v, size_t len) {
+    digit_t *d;
     if (len <= lenof(v->val))  return v->val;
-    if (len > SIZE_MAX / sizeof *v->data) err_msg_out_of_memory(); /* overflow */
-    return (digit_t *)mallocx(len * sizeof *v->data);
+    new_array(&d, len);
+    return d;
 }
 
 static digit_t *inew2(Int *v, size_t len) {
