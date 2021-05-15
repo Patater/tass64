@@ -578,7 +578,7 @@ bool get_func_params(Mfunc *v, bool single) {
     str_t label;
     bool stard = false, ret = false;
 
-    params = (len != 0) ? (struct mfunc_param_s *)mallocx(len * sizeof *params) : NULL;
+    if (len == 0) params = NULL; else new_array(&params, len);
     if (here() != 0 && here() != ';') {
         for (;;) {
             struct mfunc_param_s *param;
@@ -688,8 +688,12 @@ void get_macro_params(Obj *v) {
     struct linepos_s vepoints[4];
     const struct file_s *cfile = macro->file_list->file;
 
-    params = (len != 0) ? (struct macro_param_s *)mallocx(len * sizeof *params) : NULL;
-    epoints = (len <= lenof(vepoints)) ? vepoints : (struct linepos_s *)mallocx(len * sizeof *epoints);
+    if (len == 0) params = NULL; else new_array(&params, len);
+    if (len <= lenof(vepoints)) {
+        epoints = vepoints;
+    } else {
+        new_array(&epoints, len);
+    }
     for (;;) {
         struct macro_param_s *param;
         ignore();if (here() == 0 || here() == ';') break;
