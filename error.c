@@ -166,7 +166,7 @@ static NO_RETURN void err_msg_out_of_memory2(void)
 
 static void error_extend(void) {
     struct errorentry_s *err;
-    uint8_t *data = (uint8_t *)realloc(error_list.data, error_list.max);
+    uint8_t *data = reallocate_array(error_list.data, error_list.max);
     size_t diff, pos;
     bool dir;
     if (data == NULL) err_msg_out_of_memory2();

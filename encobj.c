@@ -215,7 +215,11 @@ bool enc_escape_add(Enc *enc, const str_t *v, Obj *val, linepos_t epoint)
         iter.data = val; val->obj->getiter(&iter); 
     }
 
-    d = (iter.len <= lenof(tmp.val)) ? tmp.val : (uint8_t *)mallocx(iter.len * sizeof *d);
+    if (iter.len <= lenof(tmp.val)) {
+        d = tmp.val;
+    } else {
+        new_array(&d, iter.len);
+    }
     for (i = 0; i < iter.len && (val2 = iter.next(&iter)) != NULL; i++) {
         uval_t uval;
         Error *err = val2->obj->uval(val2, &uval, 8, epoint);

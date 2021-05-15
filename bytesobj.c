@@ -114,7 +114,7 @@ static MALLOC Bytes *new_bytes2(size_t ln) {
     if (ln > sizeof v->u.val) {
         v->u.s.max = ln;
         v->u.s.hash = -1;
-        v->data = (uint8_t *)malloc(ln);
+        v->data = allocate_array(uint8_t, ln);
         if (v->data == NULL) {
             val_destroy(Obj(v));
             v = NULL;
@@ -135,10 +135,10 @@ static uint8_t *extend_bytes(Bytes *v, size_t ln) {
             v->u.s.hash = -1;
             return v->data;
         }
-        tmp = (uint8_t *)realloc(v->data, ln);
+        tmp = reallocate_array(v->data, ln);
         if (tmp == NULL) return tmp;
     } else {
-        tmp = (uint8_t *)malloc(ln);
+        tmp = allocate_array(uint8_t, ln);
         if (tmp == NULL) return tmp;
         memcpy(tmp, v->u.val, byteslen(v));
     }
@@ -358,9 +358,9 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     uint8_t *s, b;
     Str *v;
     sz = byteslen(v1);
-    len2 = sz * 2;
+    if (add_overflow(sz, sz, &len2)) return NULL;
     len = (v1->len < 0) ? 4 : 3;
-    if (inc_overflow(&len, len2) || sz > SIZE_MAX / 2) return NULL; /* overflow */
+    if (inc_overflow(&len, len2)) return NULL;
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;
@@ -569,14 +569,14 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
             if (len2 >= len) {
                 if (v->u.val == s) {
                     len = 32;
-                    s = (uint8_t *)malloc(len);
+                    s = allocate_array(uint8_t, 32);
                     if (s == NULL) goto failed2;
                     v->data = s;
                     memcpy(s, v->u.val, len2);
                     v->u.s.hash = -1;
                 } else {
                     if (inc_overflow(&len, 1024)) goto failed2;
-                    s = (uint8_t *)realloc(s, len);
+                    s = reallocate_array(s, len);
                     if (s == NULL) goto failed2;
                     v->data = s;
                 }
@@ -608,7 +608,7 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
                 free(s);
                 v->data = v->u.val;
             } else if (len2 < len) {
-                uint8_t *s2 = (uint8_t *)realloc(s, len2);
+                uint8_t *s2 = reallocate_array(s, len2);
                 v->data = (s2 != NULL) ? s2 : s;
                 v->u.s.max = len2;
             }
@@ -749,7 +749,7 @@ static MUST_CHECK Obj *bytes_from_int(const Int *v1, linepos_t epoint) {
             free(d);
             v->data = v->u.val;
         } else if (sz < i) {
-            uint8_t *d2 = (uint8_t *)realloc(d, sz);
+            uint8_t *d2 = reallocate_array(d, sz);
             v->data = (d2 != NULL) ? d2 : d;
             v->u.s.max = sz;
         }

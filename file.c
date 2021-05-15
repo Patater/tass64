@@ -230,7 +230,7 @@ static wchar_t *get_real_name(const wchar_t *name) {
     static HINSTANCE kernel_handle;
     DWORD ret;
     size_t len = wcslen(name) + 1;
-    wchar_t *real_name = (wchar_t *)malloc(len * sizeof *real_name);
+    wchar_t *real_name = allocate_array(wchar_t, len);
     if (real_name == NULL) return NULL;
     if (get_final_path_by_handle == NULL && kernel_handle == NULL) {
         kernel_handle = LoadLibrary("kernel32.dll");
@@ -241,7 +241,7 @@ static wchar_t *get_real_name(const wchar_t *name) {
         if (handle != INVALID_HANDLE_VALUE) {
             ret = get_final_path_by_handle(handle, real_name, len, 12);
             if (ret > len) {
-                wchar_t *tmp = (wchar_t *)realloc(real_name, ret * sizeof *real_name);
+                wchar_t *tmp = reallocate_array(real_name, ret);
                 if (tmp != NULL) {
                     real_name = tmp;
                     len = ret;
@@ -256,7 +256,7 @@ static wchar_t *get_real_name(const wchar_t *name) {
     }
     ret = GetLongPathNameW(name, real_name, len);
     if (ret > len) {
-        wchar_t *tmp = (wchar_t *)realloc(real_name, ret * sizeof *real_name);
+        wchar_t *tmp = reallocate_array(real_name, ret);
         if (tmp != NULL) {
             real_name = tmp;
             len = ret;
@@ -319,7 +319,7 @@ FILE *file_open(const char *name, const char *mode) {
     free(wname);
 #else
     size_t len = 0, max = strlen(name) + 1;
-    char *newname = (char *)malloc(max);
+    char *newname = allocate_array(char, max);
     const uint8_t *c = (const uint8_t *)name;
     unichar_t ch;
     mbstate_t ps;
@@ -342,7 +342,7 @@ FILE *file_open(const char *name, const char *mode) {
         if (len > max) {
             char *d;
             if (add_overflow(len, 64, &max)) goto failed;
-            d = (char *)realloc(newname, max);
+            d = reallocate_array(newname, max);
             if (d == NULL) goto failed;
             newname = d;
         }
@@ -371,7 +371,7 @@ static bool extendfile(struct file_s *tmp) {
     uint8_t *d;
     filesize_t len2;
     if (add_overflow(tmp->len, 4096, &len2)) return true;
-    d = (uint8_t *)realloc(tmp->data, len2);
+    d = reallocate_array(tmp->data, len2);
     if (d == NULL) return true;
     tmp->data = d;
     tmp->len = len2;
@@ -508,7 +508,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 bool check;
                 filesize_t fs = fsize(f);
                 if (fs > 0) {
-                    tmp->data = (uint8_t *)malloc(fs);
+                    tmp->data = allocate_array(uint8_t, fs);
                     if (tmp->data != NULL) tmp->len = fs;
                 }
                 check = (tmp->data != NULL);
@@ -545,7 +545,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 if (fs > 0) {
                     filesize_t len2;
                     if (add_overflow(fs, 4096, &len2)) len2 = ~(filesize_t)0;
-                    tmp->data = (uint8_t *)malloc(len2);
+                    tmp->data = allocate_array(uint8_t, len2);
                     if (tmp->data != NULL) tmp->len = len2;
                     max_lines = (len2 / 20 + 1024) & ~(size_t)1023;
                     tmp->line = allocate_array(filesize_t, max_lines);
@@ -769,7 +769,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 last_ubuff = ubuff;
                 tmp->lines = lines;
                 if (lines != max_lines) {
-                    filesize_t *d = (filesize_t *)realloc(tmp->line, lines * sizeof *tmp->line);
+                    filesize_t *d = reallocate_array(tmp->line, lines);
                     if (lines == 0 || d != NULL) tmp->line = d;
                 }
             }
@@ -777,7 +777,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
                 free(tmp->data);
                 tmp->data = NULL;
             } else if (tmp->len != fp) {
-                uint8_t *d = (uint8_t *)realloc(tmp->data, fp);
+                uint8_t *d = reallocate_array(tmp->data, fp);
                 if (d != NULL) tmp->data = d;
             }
             tmp->len = fp;

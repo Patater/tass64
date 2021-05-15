@@ -804,8 +804,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
     }
 
     if (arguments.output == NULL) {
-        arguments.output = (struct output_s *)malloc(sizeof *arguments.output);
-        if (arguments.output == NULL) err_msg_out_of_memory();
+        arguments.output = (struct output_s *)mallocx(sizeof *arguments.output);
         arguments.output[0] = output;
         arguments.output_len = 1;
     } else {

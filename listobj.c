@@ -92,19 +92,18 @@ static FAST_CALL void garbage(Obj *o1, int j) {
 }
 
 static Obj **lnew(List *v, size_t len) {
+    Obj **n;
     v->len = len;
     if (len <= lenof(v->u.val)) {
         v->data = v->u.val;
         return v->u.val;
     }
-    if (len <= SIZE_MAX / sizeof *v->data) { /* overflow */
-        Obj **n = (Obj **)malloc(len * sizeof *v->data);
-        if (n != NULL) {
-            v->data = n;
-            v->u.s.max = len;
-            v->u.s.hash = -1;
-            return n;
-        }
+    n = allocate_array(Obj *, len);
+    if (n != NULL) {
+        v->data = n;
+        v->u.s.max = len;
+        v->u.s.hash = -1;
+        return n;
     }
     v->len = 0;
     v->data = v->u.val;
@@ -117,13 +116,12 @@ static Obj **lextend(List *v, size_t len) {
     if (len <= lenof(v->u.val)) {
         return v->u.val;
     }
-    if (len > SIZE_MAX / sizeof *v->data) return NULL; /* overflow */
     if (v->u.val != v->data) {
         size_t len2;
         if (len <= v->u.s.max) return v->data;
         len2 = len + (len < 1024 ? len : 1024);
         if (len2 > len) len = len2;
-        tmp = (Obj **)realloc(v->data, len * sizeof *v->data);
+        tmp = reallocate_array(v->data, len);
         if (tmp != NULL) {
             v->data = tmp;
             v->u.s.max = len;
@@ -131,7 +129,7 @@ static Obj **lextend(List *v, size_t len) {
         }
         return tmp;
     }
-    tmp = (Obj **)malloc(len * sizeof *v->data);
+    tmp = allocate_array(Obj *, len);
     if (tmp != NULL) {
         memcpy(tmp, v->u.val, v->len * sizeof *v->data);
         v->data = tmp;
@@ -353,16 +351,15 @@ MUST_CHECK bool list_extend(List *lst) {
     size_t o = lst->len, n;
     if (lst->data == lst->u.val) {
         n = 16;
-        vals = (Obj **)malloc(n * sizeof *lst->data);
+        vals = allocate_array(Obj *, 16);
         if (vals == NULL) return true;
         memcpy(vals, lst->u.val, o * sizeof *lst->data);
     } else {
         if (o < 256) n = o * 2;
         else {
-            n = o + 256;
-            if (/*n < 256 ||*/ n > SIZE_MAX / sizeof *lst->data) return true; /* overflow */
+            if (add_overflow(o, 256, &n)) return true;
         }
-        vals = (Obj **)realloc(lst->data, n * sizeof *lst->data);
+        vals = reallocate_array(lst->data, n);
         if (vals == NULL) return true;
     }
     lst->data = vals;
@@ -381,7 +378,7 @@ void list_shrink(List *lst, size_t i) {
             free(lst->data);
             lst->data = lst->u.val;
         } else {
-            Obj **v = (Obj **)realloc(lst->data, lst->len * sizeof *lst->data);
+            Obj **v = reallocate_array(lst->data, lst->len);
             if (v != NULL) {
                 lst->data = v;
                 lst->u.s.max = lst->len;
