@@ -680,7 +680,7 @@ static bool err_msg_invalid_conv(const Error *err) {
     bool more;
     Obj *v1 = err->u.conv.val;
     if (v1->obj == ERROR_OBJ) {
-        err_msg_output((const Error *)v1);
+        err_msg_output(Error(v1));
         return false;
     }
     more = new_error_msg_err(err);
@@ -852,12 +852,12 @@ static void err_msg_invalid_oper3(const Error *err) {
     Obj *v1 = err->u.invoper.v1, *v2;
     bool more;
     if (v1->obj == ERROR_OBJ) {
-        err_msg_output((const Error *)v1);
+        err_msg_output(Error(v1));
         return;
     }
     v2 = err->u.invoper.v2;
     if (v2 != NULL && v2->obj == ERROR_OBJ) {
-        err_msg_output((const Error *)v2);
+        err_msg_output(Error(v2));
         return;
     }
 
