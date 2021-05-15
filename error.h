@@ -113,8 +113,24 @@ extern void error_status(void);
 extern bool error_serious(void);
 extern linecpos_t interstring_position(linepos_t, const uint8_t *, size_t);
 
+#if __has_builtin(__builtin_mul_overflow)
+static inline void *malloc_array(size_t size, size_t nmemb) {
+    return __builtin_mul_overflow(size, nmemb, &size) ? NULL : malloc(size);
+}
+static inline void *realloc_array(void *old, size_t size, size_t nmemb) {
+    return __builtin_mul_overflow(size, nmemb, &size) ? NULL : realloc(old, size);
+}
+#else
+static inline void *malloc_array(size_t size, size_t nmemb) {
+    return (size > SIZE_MAX / nmemb) ? NULL : malloc(size * nmemb);
+}
+static inline void *realloc_array(void *old, size_t size, size_t nmemb) {
+    return (size > SIZE_MAX / nmemb) ? NULL : realloc(old, size * nmemb);
+}
+#endif
+
 #define allocate_instance(type) (type *)malloc(sizeof(type))
-#define allocate_array(type, count) (sizeof(type) != 1 && (count) > SIZE_MAX / sizeof(type) ? NULL : (type *)malloc(sizeof(type) * (count)))
+#define allocate_array(type, count) ((type *)malloc_array(sizeof(type), (count)))
 
 #ifdef __cplusplus
 #include <type_traits>
@@ -124,29 +140,29 @@ extern linecpos_t interstring_position(linepos_t, const uint8_t *, size_t);
 #endif
 
 #ifdef __cplusplus
-#define new_array(old, count) if ((*old = sizeof(**old) != 1 && (count) > SIZE_MAX / sizeof(**old) ? NULL : (std::remove_pointer<decltype(old)>::type)malloc(sizeof(**old) * (count))) == NULL) err_msg_out_of_memory()
+#define new_array(old, count) if ((*old = (std::remove_pointer<decltype(old)>::type)malloc_array(sizeof(**old), (count))) == NULL) err_msg_out_of_memory()
 #else
-#define new_array(old, count) if ((*old = sizeof(**old) != 1 && (count) > SIZE_MAX / sizeof(**old) ? NULL : malloc(sizeof(**old) * (count))) == NULL) err_msg_out_of_memory()
+#define new_array(old, count) if ((*old = malloc_array(sizeof(**old), (count))) == NULL) err_msg_out_of_memory()
 #endif
 
 #ifdef __cplusplus
-#define reallocate_array(old, count) (sizeof(*old) != 1 && (count) > SIZE_MAX / sizeof(*old) ? NULL : (decltype(old))realloc(old, sizeof(*old) * (count)))
+#define reallocate_array(old, count) ((decltype(old))realloc_array(old, sizeof(*old), (count)))
 #elif defined __GNUC__
-#define reallocate_array(old, count) (sizeof(*old) != 1 && (count) > SIZE_MAX / sizeof(*old) ? NULL : (typeof(old))realloc(old, sizeof(*old) * (count)))
+#define reallocate_array(old, count) ((__typeof__(old))realloc_array(old, sizeof(*old), (count)))
 #else
-#define reallocate_array(old, count) (sizeof(*old) != 1 && (count) > SIZE_MAX / sizeof(*old) ? NULL : realloc(old, sizeof(*old) * (count)))
+#define reallocate_array(old, count) (realloc_array(old, sizeof(*old), (count)))
 #endif
 
 #ifdef __cplusplus
-#define resize_array(old, count) if ((*old = sizeof(**old) != 1 && (count) > SIZE_MAX / sizeof(**old) ? NULL : (std::remove_pointer<decltype(old)>::type)realloc(*old, sizeof(**old) * (count))) == NULL) err_msg_out_of_memory()
+#define resize_array(old, count) if ((*old = (std::remove_pointer<decltype(old)>::type)realloc_array(*old, sizeof(**old), (count))) == NULL) err_msg_out_of_memory()
 #else
-#define resize_array(old, count) if ((*old = sizeof(**old) != 1 && (count) > SIZE_MAX / sizeof(**old) ? NULL : realloc(*old, sizeof(**old) * (count))) == NULL) err_msg_out_of_memory()
+#define resize_array(old, count) if ((*old = realloc_array(*old, sizeof(**old), (count))) == NULL) err_msg_out_of_memory()
 #endif
 
 #ifdef __cplusplus
-#define extend_array(old, len, count) if (inc_overflow(len, (count)) || (*old = sizeof(**old) != 1 && (*len) > SIZE_MAX / sizeof(**old) ? NULL : (std::remove_pointer<decltype(old)>::type)realloc(*old, sizeof(**old) * (*len))) == NULL) err_msg_out_of_memory()
+#define extend_array(old, len, count) if (inc_overflow(len, (count)) || (*old = (std::remove_pointer<decltype(old)>::type)realloc_array(*old, sizeof(**old), (*len))) == NULL) err_msg_out_of_memory()
 #else
-#define extend_array(old, len, count) if (inc_overflow(len, (count)) || (*old = sizeof(**old) != 1 && (*len) > SIZE_MAX / sizeof(**old) ? NULL : realloc(*old, sizeof(**old) * (*len))) == NULL) err_msg_out_of_memory()
+#define extend_array(old, len, count) if (inc_overflow(len, (count)) || (*old = realloc_array(*old, sizeof(**old), (*len))) == NULL) err_msg_out_of_memory()
 #endif
 
 #endif
