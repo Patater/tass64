@@ -47,8 +47,8 @@ void str_cfcpy(str_t *s1, const str_t *s2) {
     if (s2 == NULL) {
         if (s1 != NULL) {
             if (s1->len != cache.len) {
-                s1->data = reallocate_array((uint8_t *)s1->data, s1->len);
-                if (s1->data == NULL) err_msg_out_of_memory();
+                d = reallocate_array((uint8_t *)s1->data, s1->len);
+                if (d != NULL) s1->data = d;
             }
         } else free((uint8_t *)cache.data);
         memset(&cache, 0, sizeof cache);
@@ -78,8 +78,7 @@ void str_cfcpy(str_t *s1, const str_t *s2) {
             return;
         }
         if (l > cache.len) {
-            cache.data = reallocate_array((uint8_t *)cache.data, l);
-            if (cache.data == NULL) err_msg_out_of_memory();
+            resize_array((uint8_t **)&cache.data, l);
             cache.len = l;
         }
         s = (uint8_t *)cache.data;
