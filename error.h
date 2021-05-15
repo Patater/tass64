@@ -121,8 +121,8 @@ static inline void *realloc_array(void *old, size_t size, size_t nmemb) {
     return __builtin_mul_overflow(size, nmemb, &size) ? NULL : realloc(old, size);
 }
 #else
-#define malloc_array(size, nmemb) ((size) != 1 && (size) > SIZE_MAX / (nmemb) ? NULL : malloc((size) * (nmemb)))
-#define realloc_array(old, size, nmemb) ((size) != 1 && (size) > SIZE_MAX / (nmemb) ? NULL : realloc((old), (size) * (nmemb)))
+#define malloc_array(size, nmemb) ((size) != 1 && (nmemb) > SIZE_MAX / (size) ? NULL : malloc((size) * (nmemb)))
+#define realloc_array(old, size, nmemb) ((size) != 1 && (nmemb) > SIZE_MAX / (size) ? NULL : realloc((old), (size) * (nmemb)))
 #endif
 
 #define allocate_instance(type) ((type *)malloc(sizeof(type)))
