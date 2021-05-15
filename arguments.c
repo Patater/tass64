@@ -431,9 +431,8 @@ static MUST_CHECK char *read_one(FILE *f) {
         else {
             q3 = false;
             if (i >= ln) {
-                ln += 16;
-                line = (char *)realloc(line, ln);
-                if (ln < 16 || line == NULL) err_msg_out_of_memory2();
+                if (inc_overflow(&ln, 16)) err_msg_out_of_memory();
+                resize_array(&line, ln);
             }
             line[i++] = (char)c;
         }
@@ -441,15 +440,13 @@ static MUST_CHECK char *read_one(FILE *f) {
         if (c == EOF || c == 0) break;
     } while (q || q2 || q3 || isspace(c) == 0);
     if (i >= ln) {
-        ln++;
-        line = (char *)realloc(line, ln);
-        if (ln < 1 || line == NULL) err_msg_out_of_memory2();
+        if (inc_overflow(&ln, 1)) err_msg_out_of_memory();
+        resize_array(&line, ln);
     }
     line[i] = 0;
 
-    len = i + 64;
-    data = (uint8_t *)malloc(len);
-    if (data == NULL || len < 64) err_msg_out_of_memory2();
+    if (add_overflow(i, 64, &len)) err_msg_out_of_memory();
+    new_array(&data, len);
 
     memset(&ps, 0, sizeof ps);
     p = 0; j = 0;
@@ -458,9 +455,8 @@ static MUST_CHECK char *read_one(FILE *f) {
         wchar_t w;
         unichar_t ch;
         if (p + 6*6 + 1 > len) {
-            len += 1024;
-            data = (uint8_t*)realloc(data, len);
-            if (data == NULL) err_msg_out_of_memory2();
+            if (inc_overflow(&len, 1024)) err_msg_out_of_memory();
+            resize_array(&data, len);
         }
         l = (ssize_t)mbrtowc(&w, line + j, i - j,  &ps);
         if (l < 1) {
@@ -543,9 +539,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case OUTPUT_APPEND:
             case 'o': output.name = (opt == NO_OUTPUT) ? NULL : my_optarg;
                       output.append = (opt == OUTPUT_APPEND);
-                      if (inc_overflow(&arguments.output_len, 1)) err_msg_out_of_memory2();
-                      arguments.output = array_realloc(struct output_s, arguments.output, arguments.output_len);
-                      if (arguments.output == NULL) err_msg_out_of_memory2();
+                      if (inc_overflow(&arguments.output_len, 1)) err_msg_out_of_memory();
+                      resize_array(&arguments.output, arguments.output_len);
                       arguments.output[arguments.output_len - 1] = output;
                       output.section = NULL;
                       break;
@@ -558,19 +553,16 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                     size_t len;
 
                     if (fin->lines >= max_lines) {
-                        if (inc_overflow(&max_lines, 1024)) err_msg_out_of_memory2();
-                        fin->line = array_realloc(filesize_t, fin->line, max_lines);
-                        if (fin->line == NULL) err_msg_out_of_memory2();
+                        if (inc_overflow(&max_lines, 1024)) err_msg_out_of_memory();
+                        resize_array(&fin->line, max_lines);
                     }
                     fin->line[fin->lines++] = fp;
 
                     len = strlen(my_optarg) + 1;
-                    fp += (filesize_t)len;
-                    if (fp < len) err_msg_out_of_memory2();
+                    if (inc_overflow(&fp, len)) err_msg_out_of_memory();
                     if (fp > fin->len) {
-                        if (add_overflow(fp, 1024, &fin->len)) err_msg_out_of_memory2();
-                        fin->data = (uint8_t*)realloc(fin->data, fin->len);
-                        if (fin->data == NULL) err_msg_out_of_memory2();
+                        if (add_overflow(fp, 1024, &fin->len)) err_msg_out_of_memory();
+                        resize_array(&fin->data, fin->len);
                     }
                     memcpy(fin->data + fp - len, my_optarg, len);
                 }
@@ -590,9 +582,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case LABELS_APPEND:
             case 'l': symbol_output.name = my_optarg;
                       symbol_output.append = (opt == LABELS_APPEND);
-                      if (inc_overflow(&arguments.symbol_output_len, 1)) err_msg_out_of_memory2();
-                      arguments.symbol_output = array_realloc(struct symbol_output_s, arguments.symbol_output, arguments.symbol_output_len);
-                      if (arguments.symbol_output == NULL) err_msg_out_of_memory2();
+                      if (inc_overflow(&arguments.symbol_output_len, 1)) err_msg_out_of_memory();
+                      resize_array(&arguments.symbol_output, arguments.symbol_output_len);
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
                       symbol_output.space = NULL;
                       break;
@@ -779,7 +770,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                     char *onepar = read_one(f);
                     if (onepar == NULL) break;
                     *argv2 = argv = (char **)realloc(argv, ((size_t)argc + 1) * sizeof *argv);
-                    if (argv == NULL) err_msg_out_of_memory2();
+                    if (argv == NULL) err_msg_out_of_memory();
                     if (arg != NULL) {
                         free(arg);
                         arg = NULL;
@@ -813,7 +804,8 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
     }
 
     if (arguments.output == NULL) {
-        arguments.output = (struct output_s *)mallocx(sizeof *arguments.output);
+        arguments.output = (struct output_s *)malloc(sizeof *arguments.output);
+        if (arguments.output == NULL) err_msg_out_of_memory();
         arguments.output[0] = output;
         arguments.output_len = 1;
     } else {
@@ -827,14 +819,14 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
         diagnostics.case_symbol = false;
     }
     if (fin->lines != max_lines) {
-        filesize_t *d = (filesize_t *)realloc(fin->line, fin->lines * sizeof *fin->line);
+        filesize_t *d = reallocate_array(fin->line, fin->lines);
         if (fin->lines == 0 || d != NULL) fin->line = d;
     }
     closefile(fin);
     if (fp != fin->len) {
         fin->len = fp;
         if (fp != 0) {
-            uint8_t *d = (uint8_t *)realloc(fin->data, fp);
+            uint8_t *d = reallocate_array(fin->data, fp);
             if (d != NULL) fin->data = d;
         }
     }

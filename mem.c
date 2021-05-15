@@ -58,8 +58,7 @@ static void memcomp(Memblocks *memblocks, bool nomerge) {
                 memblocks->p += b->p - 1;
                 if (memblocks->p >= memblocks->len) {
                     if (add_overflow(memblocks->p, 64, &memblocks->len)) err_msg_out_of_memory();
-                    memblocks->data = array_realloc(struct memblock_s, memblocks->data, memblocks->len);
-                    if (memblocks->data == NULL) err_msg_out_of_memory();
+                    resize_array(&memblocks->data, memblocks->len);
                 }
                 memmove(&memblocks->data[j + b->p], &memblocks->data[j + 1], rest * sizeof *memblocks->data);
                 for (k = 0; k < b->p; k++) {
@@ -71,8 +70,7 @@ static void memcomp(Memblocks *memblocks, bool nomerge) {
                     memblocks->mem.p += b2->len;
                     if (memblocks->mem.p >= memblocks->mem.len) {
                         if (add_overflow(memblocks->mem.p, 0x1000, &memblocks->mem.len)) err_msg_out_of_memory();
-                        memblocks->mem.data = (uint8_t *)realloc(memblocks->mem.data, memblocks->mem.len);
-                        if (memblocks->mem.data == NULL) err_msg_out_of_memory();
+                        resize_array(&memblocks->mem.data, memblocks->mem.len);
                     }
                     memcpy(&memblocks->mem.data[b2->p], &b->mem.data[b->data[k].p], b2->len);
                 }
@@ -125,8 +123,7 @@ void memjmp(Memblocks *memblocks, address_t adr) {
     }
     if (memblocks->p >= memblocks->len) {
         if (inc_overflow(&memblocks->len, 64)) err_msg_out_of_memory();
-        memblocks->data = array_realloc(struct memblock_s, memblocks->data, memblocks->len);
-        if (memblocks->data == NULL) err_msg_out_of_memory();
+        resize_array(&memblocks->data, memblocks->len);
     }
     block = &memblocks->data[memblocks->p++];
     block->len = memblocks->mem.p - memblocks->lastp;
@@ -141,8 +138,7 @@ void memref(Memblocks *memblocks, Memblocks *ref) {
     struct memblock_s *block;
     if (memblocks->p >= memblocks->len) {
         if (inc_overflow(&memblocks->len, 64)) err_msg_out_of_memory();
-        memblocks->data = array_realloc(struct memblock_s, memblocks->data, memblocks->len);
-        if (memblocks->data == NULL) err_msg_out_of_memory();
+        resize_array(&memblocks->data, memblocks->len);
     }
     block = &memblocks->data[memblocks->p++];
     block->len = 0;
@@ -571,8 +567,7 @@ FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, address_t len) {
     if (p < len) err_msg_out_of_memory(); /* overflow */
     if (p > memblocks->mem.len) {
         if (add_overflow(p, 0x1000, &memblocks->mem.len)) err_msg_out_of_memory();
-        memblocks->mem.data = (uint8_t *)realloc(memblocks->mem.data, memblocks->mem.len);
-        if (memblocks->mem.data == NULL) err_msg_out_of_memory();
+        resize_array(&memblocks->mem.data, memblocks->mem.len);
     }
     d = memblocks->mem.data + memblocks->mem.p;
     do {

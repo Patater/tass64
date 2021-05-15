@@ -416,14 +416,12 @@ static struct eval_context_s *eval;
 
 static NO_INLINE void extend_out(struct out_list_s *out) {
     if (inc_overflow(&out->size, 64)) err_msg_out_of_memory();
-    out->data = array_realloc(struct out_s, out->data, out->size);
-    if (out->data == NULL) err_msg_out_of_memory();
+    resize_array(&out->data, out->size);
 }
 
 static NO_INLINE void extend_opr(struct opr_list_s *opr) {
     if (inc_overflow(&opr->size, 64)) err_msg_out_of_memory();
-    opr->data = array_realloc(struct opr_s, opr->data, opr->size);
-    if (opr->data == NULL) err_msg_out_of_memory();
+    resize_array(&opr->data, opr->size);
 }
 
 static inline void clean_out(struct eval_context_s *ev) {
@@ -621,13 +619,11 @@ rest:
 
 static struct values_s *extend_values(struct eval_context_s *ev, size_t by) {
     argcount_t j = ev->values_size;
-    struct values_s *values;
     ev->values_size += (argcount_t)by;
     if (ev->values_size < by) err_msg_out_of_memory(); /* overflow */
-    ev->values = values = array_realloc(struct values_s, ev->values, ev->values_size);
-    if (values == NULL) err_msg_out_of_memory();
-    for (; j < ev->values_size; j++) values[j].val = NULL;
-    return values;
+    resize_array(&ev->values, ev->values_size);
+    for (; j < ev->values_size; j++) ev->values[j].val = NULL;
+    return ev->values;
 }
 
 static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defined */
@@ -1981,16 +1977,15 @@ void eval_enter(void) {
     evx_p++;
     if (evx_p >= evxnum) {
         if (inc_overflow(&evxnum, 1)) err_msg_out_of_memory();
-        evx = array_realloc(struct eval_context_s *, evx, evxnum);
-        if (evx == NULL) err_msg_out_of_memory();
+        resize_array(&evx, evxnum);
         eval = (struct eval_context_s *)mallocx(sizeof *eval);
         eval->values = NULL;
         eval->values_size = 0;
         eval->out.size = 16;
-        eval->out.data = (struct out_s *)mallocx(16 * sizeof *eval->out.data);
+        new_array(&eval->out.data, 16);
         eval->out.p = 0;
         eval->opr.size = 16;
-        eval->opr.data = (struct opr_s *)mallocx(16 * sizeof *eval->opr.data);
+        new_array(&eval->opr.data, 16);
         eval->opr.p = 0;
         eval->outp2 = 0;
         evx[evx_p] = eval;

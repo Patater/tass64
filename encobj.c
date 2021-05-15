@@ -64,7 +64,7 @@ MALLOC Obj *new_enc(const struct file_list_s *file_list, linepos_t epoint) {
     enc->escape_char = 256;
     enc->epass = 0;
     avltree_init(&enc->ranges);
-    enc->map = (struct transmap_s *)mallocx(128 * sizeof *enc->map);
+    new_array(&enc->map, 128);
     memset(enc->map, 0, 128 * sizeof *enc->map);
     return Obj(enc);
 }

@@ -157,6 +157,13 @@ static void close_error(void) {
     }
 }
 
+static NO_RETURN void err_msg_out_of_memory2(void)
+{
+    fatal_error("out of memory");
+    fatal_error(NULL);
+    exit(EXIT_FAILURE);
+}
+
 static void error_extend(void) {
     struct errorentry_s *err;
     uint8_t *data = (uint8_t *)realloc(error_list.data, error_list.max);
@@ -1596,13 +1603,6 @@ void fatal_error(const char *txt) {
     }
     if (console_use_color) console_default(stderr);
     putc('\n', stderr);
-}
-
-NO_RETURN void err_msg_out_of_memory2(void)
-{
-    fatal_error("out of memory");
-    fatal_error(NULL);
-    exit(EXIT_FAILURE);
 }
 
 NO_RETURN void err_msg_out_of_memory(void)

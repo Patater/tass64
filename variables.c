@@ -72,8 +72,7 @@ static struct context_stack_s context_stack;
 
 static void extend_context_stack(void) {
     if (inc_overflow(&context_stack.len, 8)) err_msg_out_of_memory();
-    context_stack.stack = array_realloc(struct cstack_s, context_stack.stack, context_stack.len);
-    if (context_stack.stack == NULL) err_msg_out_of_memory();
+    resize_array(&context_stack.stack, context_stack.len);
 }
 
 void push_context(Namespace *name) {
@@ -144,8 +143,7 @@ static struct label_stack_s label_stack;
 static void push_label(Label *name) {
     if (label_stack.p >= label_stack.len) {
         if (inc_overflow(&label_stack.len, 8)) err_msg_out_of_memory();
-        label_stack.stack = array_realloc(Label *, label_stack.stack, label_stack.len);
-        if (label_stack.stack == NULL) err_msg_out_of_memory();
+        resize_array(&label_stack.stack, label_stack.len);
     }
     label_stack.stack[label_stack.p] = name;
     label_stack.p++;
@@ -157,9 +155,8 @@ static void pop_label(void) {
 
 void get_namespaces(Mfunc *mfunc) {
     size_t i, len = context_stack.p - context_stack.bottom;
-    if (len > SIZE_MAX / sizeof *mfunc->namespaces) err_msg_out_of_memory(); /* overflow */
     mfunc->nslen = len;
-    mfunc->namespaces = (Namespace **)mallocx(len * sizeof *mfunc->namespaces);
+    new_array(&mfunc->namespaces, len);
     for (i = 0; i < len; i++) {
         mfunc->namespaces[i] = ref_namespace(context_stack.stack[context_stack.bottom + i].normal);
     }

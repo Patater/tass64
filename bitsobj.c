@@ -648,7 +648,7 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
                     v->u.hash = -1;
                 } else {
                     if (inc_overflow(&sz, 1024 / sizeof *d)) goto failed2;
-                    d = array_realloc(bdigit_t, d, sz);
+                    d = reallocate_array(d, sz);
                     if (d == NULL) goto failed2;
                     v->data = d;
                 }
