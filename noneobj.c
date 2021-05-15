@@ -16,6 +16,9 @@
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 */
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 #include "noneobj.h"
 #include "eval.h"
 

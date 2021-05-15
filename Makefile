@@ -192,7 +192,7 @@ optimizer.o: optimizer.c optimizer.h inttypes.h stdbool.h error.h \
  macro.h wait_e.h 64tass.h
 registerobj.o: registerobj.c registerobj.h obj.h attributes.h inttypes.h \
  stdbool.h eval.h oper_e.h variables.h values.h strobj.h typeobj.h \
- errorobj.h errors_e.h addressobj.h intobj.h
+ errorobj.h errors_e.h addressobj.h intobj.h error.h
 section.o: section.c section.h avl.h attributes.h stdbool.h str.h \
  inttypes.h unicode.h error.h errors_e.h 64tass.h wait_e.h values.h \
  intobj.h obj.h longjump.h optimizer.h eval.h oper_e.h mem.h \
@@ -212,7 +212,7 @@ typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
  variables.h eval.h oper_e.h strobj.h functionobj.h
 unicodedata.o: unicodedata.c unicodedata.h inttypes.h
 unicode.o: unicode.c unicode.h attributes.h inttypes.h stdbool.h wchar.h \
- wctype.h unicodedata.h str.h console.h
+ wctype.h unicodedata.h str.h console.h error.h errors_e.h
 values.o: values.c values.h attributes.h obj.h inttypes.h unicode.h \
  stdbool.h error.h errors_e.h strobj.h typeobj.h
 variables.o: variables.c variables.h stdbool.h inttypes.h unicode.h \

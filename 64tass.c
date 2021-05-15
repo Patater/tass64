@@ -1153,7 +1153,7 @@ static bool virtual_start(linepos_t epoint) {
     if (diagnostics.optimize) cpu_opt_invalidate();
     listing_line(listing, epoint->pos);
     new_waitfor(W_ENDV2, epoint); waitfor->u.cmd_virtual.section_address = current_address; waitfor->u.cmd_virtual.label = NULL;
-    section_address = (struct section_address_s *)mallocx(sizeof *section_address);
+    new_instance(&section_address);
     section_address->wrapwarn = section_address->moved = false;
     section_address->bankwarn = false;
 

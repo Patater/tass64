@@ -26,7 +26,11 @@
 
 #ifdef DEBUG
 #define tern_free(tern) free(tern)
-#define tern_alloc() (ternary_node *)mallocx(sizeof(ternary_node))
+static MALLOC ternary_node *tern_alloc(void) {
+    ternary_node *r;
+    new_instance(&r);
+    return r;
+}
 #else
 static union tern_u {
     ternary_node tern;
@@ -46,7 +50,7 @@ static void tern_free(union tern_u *tern) {
 static union tern_u *terns_alloc(void) {
     size_t i;
     struct terns_s *old = terns;
-    terns = (struct terns_s *)mallocx(sizeof *terns);
+    new_instance(&terns);
     for (i = 0; i < 254; i++) {
         terns->terns[i].next = &terns->terns[i + 1];
     }

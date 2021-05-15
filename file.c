@@ -59,8 +59,9 @@ static struct file_s *file_table_update(struct file_s *p) {
     size_t mask, hash, offs;
     if (file_table.len * 3 / 2 >= file_table.mask) {
         size_t i, max = (file_table.data == NULL) ? 8 : (file_table.mask + 1) << 1;
-        struct file_s **n = (struct file_s **)calloc(max, sizeof *n);
-        if (n == NULL) err_msg_out_of_memory();
+        struct file_s **n;
+        new_array(&n, max);
+        memset(n, 0, max * sizeof *n);
         mask = max - 1;
         if (file_table.data != NULL) {
             for (i = 0; i <= file_table.mask; i++) if (file_table.data[i] != NULL) {
@@ -106,9 +107,10 @@ void include_list_add(const char *path)
 #else
     if (path[i - 1] != '/') j++;
 #endif
-    len = j + 1 + sizeof(struct include_list_s);
-    if (len <= sizeof(struct include_list_s)) err_msg_out_of_memory();
-    include_list_last->next = (struct include_list_s *)mallocx(len);
+    len = j + 1;
+    if (inc_overflow(&len, sizeof(struct include_list_s))) err_msg_out_of_memory();
+    include_list_last->next = (struct include_list_s *)allocate_array(uint8_t, len);
+    if (include_list_last->next == NULL) err_msg_out_of_memory();
     include_list_last = include_list_last->next;
     include_list_last->next = NULL;
     memcpy(include_list_last->path, path, i + 1);
@@ -144,8 +146,8 @@ char *get_path(const str_t *v, const char *base) {
 #else
     i = (v->len != 0 && v->data[0] == '/') ? 0 : get_base(base);
 #endif
-    len = i + 1 + v->len;
-    if (len <= i) err_msg_out_of_memory(); /* overflow */
+    len = i + 1;
+    if (inc_overflow(&len, v->len)) err_msg_out_of_memory();
     new_array(&path, len);
     memcpy(path, base, i);
     memcpy(path + i, v->data, v->len);
@@ -440,9 +442,7 @@ static uint16_t curfnum;
 struct file_s *openfile(const char *name, const char *base, unsigned int ftype, const str_t *val, linepos_t epoint) {
     struct file_s *tmp;
     char *s;
-    if (lastfi == NULL) {
-        lastfi = (struct file_s *)mallocx(sizeof *lastfi);
-    }
+    if (lastfi == NULL) new_instance(&lastfi);
     lastfi->base.data = (const uint8_t *)base;
     lastfi->base.len = get_base(base);
     lastfi->type = ftype;
@@ -862,7 +862,7 @@ struct star_s *new_star(linenum_t line, bool *exists) {
         avltree_init(&lastst->tree);
         if (starsp == 254) {
             struct stars_s *old = stars;
-            stars = (struct stars_s *)mallocx(sizeof *stars);
+            new_instance(&stars);
             stars->next = old;
             starsp = 0;
         } else starsp++;
@@ -926,7 +926,7 @@ void init_file(void) {
     file_table.len = 0;
     file_table.mask = 0;
     file_table.data = NULL;
-    stars = (struct stars_s *)mallocx(sizeof *stars);
+    new_instance(&stars);
     stars->next = NULL;
     starsp = 0;
     lastst = &stars->stars[starsp];

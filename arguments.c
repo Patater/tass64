@@ -755,10 +755,12 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                 FILE *f = file_open(arg + 1, "rb");
                 if (f == NULL) continue;
                 while (feof(f) == 0) {
+                    size_t l;
                     char *onepar = read_one(f);
                     if (onepar == NULL) break;
-                    *argv2 = argv = (char **)realloc(argv, ((size_t)argc + 1) * sizeof *argv);
-                    if (argv == NULL) err_msg_out_of_memory();
+                    l = (size_t)argc + 1;
+                    resize_array(&argv, l);
+                    *argv2 = argv;
                     if (arg != NULL) {
                         free(arg);
                         arg = NULL;
@@ -792,7 +794,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
     }
 
     if (arguments.output == NULL) {
-        arguments.output = (struct output_s *)mallocx(sizeof *arguments.output);
+        new_instance(&arguments.output);
         arguments.output[0] = output;
         arguments.output_len = 1;
     } else {

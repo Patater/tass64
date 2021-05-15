@@ -292,7 +292,7 @@ void enterfile(struct file_s *file, linepos_t epoint) {
         cflist = lastfl;
         if (file_listsp == 89) {
             struct file_lists_s *old = file_lists;
-            file_lists = (struct file_lists_s *)mallocx(sizeof *file_lists);
+            new_instance(&file_lists);
             file_lists->next = old;
             file_listsp = 0;
         } else file_listsp++;
@@ -717,9 +717,7 @@ static void err_msg_not_defined3(const Error *err) {
 
     if (constcreated && pass < max_pass) return;
 
-    if (lastnd == NULL) {
-        lastnd = (struct notdefines_s *)mallocx(sizeof *lastnd);
-    }
+    if (lastnd == NULL) new_instance(&lastnd);
 
     if (err->u.notdef.symbol->obj == SYMBOL_OBJ) {
         const str_t *name = &Symbol(err->u.notdef.symbol)->name;
@@ -1557,7 +1555,7 @@ void err_init(const char *name) {
     prgname = name;
     setvbuf(stderr, NULL, _IOLBF, 1024);
     console_use(stderr);
-    file_lists = (struct file_lists_s *)mallocx(sizeof *file_lists);
+    new_instance(&file_lists);
     file_lists->next = NULL;
     file_listsp = 0;
     lastfl = &file_lists->file_lists[file_listsp];

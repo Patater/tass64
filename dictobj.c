@@ -44,7 +44,8 @@ static Dict *new_dict(size_t ln) {
         ln1 = ln * 3 / 2;
         ln2 = 8; while (ln1 > ln2) ln2 <<= 1;
         ln3 = ln2 * ((ln2 <= (1 << (sizeof(uint8_t)*8))) ? sizeof(uint8_t) : sizeof(size_t));
-        p = (struct pair_s *)malloc(ln * sizeof(struct pair_s) + ln3);
+        ln1 = ln * sizeof(struct pair_s) + ln3;
+        p = (struct pair_s *)allocate_array(uint8_t, ln1);
         if (p == NULL) return NULL; /* out of memory */
         memset(&p[ln], 255, ln3);
     } else {
@@ -240,7 +241,8 @@ static bool resize(Dict *dict, size_t ln) {
     while (ln1 > ln2) ln2 <<= 1;
     ln3 = ln2 * ((ln2 <= (1 << (sizeof(uint8_t)*8))) ? sizeof(uint8_t) : sizeof(size_t));
     if (dict->u.val == dict->data) {
-        p = (struct pair_s *)malloc(ln * sizeof *dict->data + ln3);
+        ln1 = ln * sizeof *dict->data + ln3;
+        p = (struct pair_s *)allocate_array(uint8_t, ln1);
         if (p == NULL) return true;
         if (dict->len != 0) p[0] = dict->u.val[0];
         dict->u.s.hash = -1;
@@ -251,7 +253,8 @@ static bool resize(Dict *dict, size_t ln) {
             memmove(&dict->data[ln], &dict->data[dict->u.s.max], ln3);
             dict->u.s.max = ln;
         }
-        p = (struct pair_s *)realloc(dict->data, ln * sizeof *dict->data + ln3);
+        ln1 = ln * sizeof *dict->data + ln3;
+        p = (struct pair_s *)reallocate_array((uint8_t *)dict->data, ln1);
         if (p == NULL) return true;
         if (same) {
             if (dict->u.s.max < ln) {

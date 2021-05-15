@@ -1975,7 +1975,7 @@ void eval_enter(void) {
     evx_p++;
     if (evx_p >= evxnum) {
         extend_array(&evx, &evxnum, 1);
-        eval = (struct eval_context_s *)mallocx(sizeof *eval);
+        new_instance(&eval);
         eval->values = NULL;
         eval->values_size = 0;
         eval->out.size = 16;

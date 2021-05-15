@@ -78,7 +78,11 @@ struct trans_s {
 
 #ifdef DEBUG
 #define trans_free(trans) free(trans)
-#define trans_alloc() (struct trans_s *)mallocx(sizeof(struct trans_s))
+static MALLOC struct trans_s *trans_alloc(void) {
+    struct trans_s *r;
+    new_instance(&r);
+    return r;
+}
 #else
 static union trans_u {
     struct trans_s trans;
@@ -98,7 +102,7 @@ static void trans_free(union trans_u *trans) {
 static union trans_u *transs_alloc(void) {
     size_t i;
     struct transs_s *old = transs;
-    transs = (struct transs_s *)mallocx(sizeof *transs);
+    new_instance(&transs);
     for (i = 0; i < 30; i++) {
         transs->transs[i].next = &transs->transs[i + 1];
     }
@@ -232,7 +236,7 @@ bool enc_escape_add(Enc *enc, const str_t *v, Obj *val, linepos_t epoint)
     iter_destroy(&iter);
 
     if (b == NULL) { /* new escape */
-        b = (struct escape_s *)mallocx(sizeof *b);
+        new_instance(&b);
         if (d == tmp.val) {
             if (i != 0) memcpy(b->val, d, i);
             d = b->val;

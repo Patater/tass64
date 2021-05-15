@@ -564,9 +564,7 @@ Enc *new_encoding(const str_t *name, linepos_t epoint)
     struct avltree_node *b;
     struct encoding_s *tmp;
 
-    if (lasten == NULL) {
-        lasten = (struct encoding_s *)mallocx(sizeof *lasten);
-    }
+    if (lasten == NULL) new_instance(&lasten);
     str_cfcpy(&lasten->cfname, name);
     b = avltree_insert(&lasten->node, &encoding_tree, encoding_compare);
     if (b == NULL) { /* new encoding */

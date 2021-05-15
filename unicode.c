@@ -24,6 +24,7 @@
 #include "unicodedata.h"
 #include "str.h"
 #include "console.h"
+#include "error.h"
 
 enum { U_CASEFOLD = 1, U_COMPAT = 2 };
 
@@ -98,10 +99,10 @@ static inline unsigned int utf8outlen(unichar_t i) {
 }
 
 MUST_CHECK bool extend_ubuff(struct ubuff_s *d) {
-    uint32_t len = d->len + 16;
+    uint32_t len;
     unichar_t *data;
-    if (len < 16 || ((size_t)len + 0) > SIZE_MAX / sizeof *data) return true;
-    data = (unichar_t *)realloc(d->data, len * sizeof *data);
+    if (add_overflow(d->len, 16, &len)) return true;
+    data = reallocate_array(d->data, len);
     if (data == NULL) return true;
     d->data = data;
     d->len = len;
@@ -298,7 +299,7 @@ MUST_CHECK bool unfkc(str_t *s1, const str_t *s2, int mode) {
     }
     s = (uint8_t *)s1->data;
     if (l > s1->len) {
-        s = (uint8_t *)realloc(s, l);
+        s = reallocate_array(s, l);
         if (s == NULL) return true;
         s1->data = s;
     }
