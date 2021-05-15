@@ -92,6 +92,7 @@
 #elif defined __GNUC__
 # define __has_builtin(a) __has_builtin ## a
 # define __has_builtin__builtin_add_overflow (__GNUC__ > 5)
+# define __has_builtin__builtin_mul_overflow (__GNUC__ > 5)
 #else
 # define __has_builtin(a) (0)
 #endif
