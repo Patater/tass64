@@ -131,7 +131,7 @@ MALLOC Str *new_str2(size_t ln) {
     }
     v->u.s.max = ln;
     v->u.s.hash = -1;
-    v->data = (uint8_t *)malloc(ln);
+    v->data = allocate_array(uint8_t, ln);
     if (v->data == NULL) {
         val_destroy(Obj(v));
         v = NULL;
@@ -149,7 +149,7 @@ static uint8_t *extend_str(Str *v, size_t ln) {
         if (ln <= v->u.s.max) return v->data;
         ln2 = ln + (ln < 1024 ? ln : 1024);
         if (ln2 > ln) ln = ln2;
-        tmp = (uint8_t *)realloc(v->data, ln);
+        tmp = reallocate_array(v->data, ln);
         if (tmp != NULL) {
             v->data = tmp;
             v->u.s.max = ln;
@@ -157,7 +157,7 @@ static uint8_t *extend_str(Str *v, size_t ln) {
         }
         return tmp;
     }
-    tmp = (uint8_t *)malloc(ln);
+    tmp = allocate_array(uint8_t, ln);
     if (tmp != NULL) {
         memcpy(tmp, v->u.val, v->len);
         v->data = tmp;
@@ -662,7 +662,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
                         goto failed2; /* overflow */
                     }
                     if (o == v->u.val) {
-                        o = (uint8_t *)malloc(m);
+                        o = allocate_array(uint8_t, m);
                         if (o == NULL) {
                             iter_destroy(&iter);
                             goto failed2;
@@ -671,7 +671,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
                         memcpy(o, v->u.val, m - 4096);
                         v->u.s.hash = -1;
                     } else {
-                        o = (uint8_t *)realloc(o, m);
+                        o = reallocate_array(o, m);
                         if (o == NULL) {
                             iter_destroy(&iter);
                             goto failed2;
@@ -692,7 +692,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
                     free(o);
                     v->data = v->u.val;
                 } else {
-                    uint8_t *oo = (uint8_t *)realloc(o, len2);
+                    uint8_t *oo = reallocate_array(o, len2);
                     v->data = (oo != NULL) ? oo : o;
                     v->u.s.max = len2;
                 }
@@ -814,7 +814,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
                     free(o);
                     v->data = v->u.val;
                 } else {
-                    uint8_t *oo = (uint8_t *)realloc(o, len2);
+                    uint8_t *oo = reallocate_array(o, len2);
                     v->data = (oo != NULL) ? oo : o;
                     v->u.s.max = len2;
                     v->u.s.hash = -1;

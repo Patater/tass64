@@ -107,7 +107,7 @@ static MALLOC Bits *new_bits2(size_t len) {
     Bits *v = Bits(val_alloc(BITS_OBJ));
     if (len > lenof(v->u.val)) {
         v->u.hash = -1;
-        v->data = (len <= SIZE_MAX / sizeof *v->data) ? (bdigit_t *)malloc(len * sizeof *v->data) : NULL;
+        v->data = allocate_array(bdigit_t, len);
         if (v->data == NULL) {
             val_destroy(Obj(v));
             v = NULL;
@@ -641,7 +641,7 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
             if (j >= sz) {
                 if (v->u.val == d) {
                     sz = 16 / sizeof *d;
-                    d = (bdigit_t *)malloc(sz * sizeof *d);
+                    d = allocate_array(bdigit_t, sz);
                     if (d == NULL) goto failed2;
                     v->data = d;
                     memcpy(d, v->u.val, j * sizeof *d);
@@ -661,14 +661,13 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
         if (j >= sz) {
             sz++;
             if (v->u.val == d) {
-                d = (bdigit_t *)malloc(sz * sizeof *d);
+                d = allocate_array(bdigit_t, sz);
                 if (d == NULL) goto failed2;
                 v->data = d;
                 memcpy(d, v->u.val, j * sizeof *d);
                 v->u.hash = -1;
             } else {
-                if (/*sz < 1 ||*/ sz > SIZE_MAX / sizeof *d) goto failed2; /* overflow */
-                d = (bdigit_t *)realloc(d, sz * sizeof *d);
+                d = reallocate_array(d, sz);
                 if (d == NULL) goto failed2;
                 v->data = d;
             }
@@ -688,7 +687,7 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
             free(d);
             v->data = v->u.val;
         } else if (osz < sz) {
-            bdigit_t *d2 = (bdigit_t *)realloc(d, osz * sizeof *d);
+            bdigit_t *d2 = reallocate_array(d, osz);
             v->data = (d2 != NULL) ? d2 : d;
         }
     }

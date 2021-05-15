@@ -667,7 +667,7 @@ bool get_func_params(Mfunc *v, bool single) {
     }
     if (i < len) {
         if (i != 0) {
-            struct mfunc_param_s *p = (struct mfunc_param_s *)realloc(params, i * sizeof *params);
+            struct mfunc_param_s *p = reallocate_array(params, i);
             if (p != NULL) params = p;
         } else {
             free(params);
@@ -744,7 +744,7 @@ void get_macro_params(Obj *v) {
     }
     if (i < len) {
         if (i != 0) {
-            struct macro_param_s *p = (struct macro_param_s *)realloc(params, i * sizeof *params);
+            struct macro_param_s *p = reallocate_array(params, i);
             if (p != NULL) params = p;
         } else {
             free(params);

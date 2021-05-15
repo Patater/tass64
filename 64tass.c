@@ -2491,7 +2491,7 @@ MUST_CHECK Obj *compile(void)
                             mfunc->ipoint = 0;
                             if (prm == CMD_SFUNCTION && not_in_file(pline, current_file_list->file)) {
                                 size_t ln = strlen((const char *)pline) + 1;
-                                uint8_t *l = (uint8_t *)malloc(ln);
+                                uint8_t *l = allocate_array(uint8_t, ln);
                                 if (l != NULL) memcpy(l, pline, ln);
                                 mfunc->line = l;
                             } else mfunc->line = NULL;

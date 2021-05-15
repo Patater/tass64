@@ -121,8 +121,7 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, func_t f) {
                 if (args <= lenof(elements3)) {
                     elements = elements3; 
                 } else {
-                    if (args > ARGCOUNT_MAX / sizeof *elements) goto failed; /* overflow */
-                    elements = (struct elements_s *)malloc(args * sizeof *elements);
+                    elements = allocate_array(struct elements_s, args);
                     if (elements == NULL) goto failed;
                 }
                 k = j;
@@ -393,8 +392,7 @@ static MUST_CHECK Obj *function_sort(Obj *o1, linepos_t epoint) {
             size_t i;
             Obj **vals;
             size_t *sort_index;
-            if (ln > SIZE_MAX / sizeof *sort_index) goto failed; /* overflow */
-            sort_index = (size_t *)malloc(ln * sizeof *sort_index);
+            sort_index = allocate_array(size_t, ln);
             if (sort_index == NULL) goto failed;
             for (i = 0; i < ln; i++) sort_index[i] = i;
             sort_val = o1;

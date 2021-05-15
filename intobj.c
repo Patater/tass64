@@ -1452,14 +1452,13 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
             if (j >= sz) {
                 if (v->val == d) {
                     sz = 16 / sizeof *d;
-                    d = (digit_t *)malloc(sz * sizeof *d);
+                    d = allocate_array(digit_t, sz);
                     if (d == NULL) goto failed2;
                     v->data = d;
                     memcpy(d, v->val, j * sizeof *d);
                 } else {
-                    sz += 1024 / sizeof *d;
-                    if (/*sz < 1024 / sizeof *d ||*/ sz > SIZE_MAX / sizeof *d) goto failed2; /* overflow */
-                    d = (digit_t *)realloc(d, sz * sizeof *d);
+                    if (inc_overflow(&sz, 1024 / sizeof *d)) goto failed2;
+                    d = reallocate_array(d, sz);
                     if (d == NULL) goto failed2;
                     v->data = d;
                 }
@@ -1472,13 +1471,12 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
         if (j >= sz) {
             sz++;
             if (v->val == d) {
-                d = (digit_t *)malloc(sz * sizeof *d);
+                d = allocate_array(digit_t, sz);
                 if (d == NULL) goto failed2;
                 v->data = d;
                 memcpy(d, v->val, j * sizeof *d);
             } else {
-                if (/*sz < 1 ||*/ sz > SIZE_MAX / sizeof *d) goto failed2; /* overflow */
-                d = (digit_t *)realloc(d, sz * sizeof *d);
+                d = reallocate_array(d, sz);
                 if (d == NULL) goto failed2;
                 v->data = d;
             }
@@ -1493,7 +1491,7 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
     if (v->val != d) {
         if (osz <= lenof(v->val)) return normalize2(v, osz);
         if (osz < sz) {
-            digit_t *d2 = (digit_t *)realloc(d, osz * sizeof *d);
+            digit_t *d2 = reallocate_array(d, osz);
             v->data = (d2 != NULL) ? d2 : d;
         }
     }
@@ -1568,13 +1566,12 @@ MUST_CHECK Obj *int_from_decstr(const uint8_t *s, linecpos_t *ln, linecpos_t *ln
                 sz++;
                 if (sz > lenof(v->val)) {
                     if (d == v->val) {
-                        d = (digit_t *)malloc(sz * sizeof *d);
+                        d = allocate_array(digit_t, sz);
                         if (d == NULL) goto failed2;
                         v->data = d;
                         memcpy(d, v->val, sizeof v->val);
                     } else {
-                        if (/*sz < 1 ||*/ sz > SIZE_MAX / sizeof *d) goto failed2; /* overflow */
-                        d = (digit_t *)realloc(d, sz * sizeof *d);
+                        d = reallocate_array(d, sz);
                         if (d == NULL) goto failed2;
                         v->data = d;
                     }
