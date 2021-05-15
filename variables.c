@@ -71,8 +71,7 @@ struct context_stack_s {
 static struct context_stack_s context_stack;
 
 static void extend_context_stack(void) {
-    if (inc_overflow(&context_stack.len, 8)) err_msg_out_of_memory();
-    resize_array(&context_stack.stack, context_stack.len);
+    extend_array(&context_stack.stack, &context_stack.len, 8);
 }
 
 void push_context(Namespace *name) {
@@ -141,10 +140,7 @@ struct label_stack_s {
 static struct label_stack_s label_stack;
 
 static void push_label(Label *name) {
-    if (label_stack.p >= label_stack.len) {
-        if (inc_overflow(&label_stack.len, 8)) err_msg_out_of_memory();
-        resize_array(&label_stack.stack, label_stack.len);
-    }
+    if (label_stack.p >= label_stack.len) extend_array(&label_stack.stack, &label_stack.len, 8);
     label_stack.stack[label_stack.p] = name;
     label_stack.p++;
 }

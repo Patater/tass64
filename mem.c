@@ -121,10 +121,7 @@ void memjmp(Memblocks *memblocks, address_t adr) {
         memblocks->lastaddr = adr;
         return;
     }
-    if (memblocks->p >= memblocks->len) {
-        if (inc_overflow(&memblocks->len, 64)) err_msg_out_of_memory();
-        resize_array(&memblocks->data, memblocks->len);
-    }
+    if (memblocks->p >= memblocks->len) extend_array(&memblocks->data, &memblocks->len, 64);
     block = &memblocks->data[memblocks->p++];
     block->len = memblocks->mem.p - memblocks->lastp;
     block->p = memblocks->lastp;
@@ -136,10 +133,7 @@ void memjmp(Memblocks *memblocks, address_t adr) {
 
 void memref(Memblocks *memblocks, Memblocks *ref) {
     struct memblock_s *block;
-    if (memblocks->p >= memblocks->len) {
-        if (inc_overflow(&memblocks->len, 64)) err_msg_out_of_memory();
-        resize_array(&memblocks->data, memblocks->len);
-    }
+    if (memblocks->p >= memblocks->len) extend_array(&memblocks->data, &memblocks->len, 64);
     block = &memblocks->data[memblocks->p++];
     block->len = 0;
     block->p = memblocks->lastp;

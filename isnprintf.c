@@ -116,8 +116,7 @@ static void put_char(unichar_t c) {
     return_value.chars++;
     p = return_value.data;
     if (return_value.len + 6 >= returnsize) {
-        if (inc_overflow(&returnsize, 256)) err_msg_out_of_memory();
-        resize_array(&p, returnsize);
+        extend_array(&p, &returnsize, 256);
         return_value.data = p;
     }
     if (c != 0 && c < 0x80) {

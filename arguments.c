@@ -430,18 +430,14 @@ static MUST_CHECK char *read_one(FILE *f) {
         else if (!q3 && !q && c == '\'') q2 = !q2;
         else {
             q3 = false;
-            if (i >= ln) {
-                if (inc_overflow(&ln, 16)) err_msg_out_of_memory();
-                resize_array(&line, ln);
-            }
+            if (i >= ln) extend_array(&line, &ln, 16);
             line[i++] = (char)c;
         }
         c = getc(f);
         if (c == EOF || c == 0) break;
     } while (q || q2 || q3 || isspace(c) == 0);
     if (i >= ln) {
-        if (inc_overflow(&ln, 1)) err_msg_out_of_memory();
-        resize_array(&line, ln);
+        extend_array(&line, &ln, 1);
     }
     line[i] = 0;
 
@@ -454,10 +450,7 @@ static MUST_CHECK char *read_one(FILE *f) {
         ssize_t l;
         wchar_t w;
         unichar_t ch;
-        if (p + 6*6 + 1 > len) {
-            if (inc_overflow(&len, 1024)) err_msg_out_of_memory();
-            resize_array(&data, len);
-        }
+        if (p + 6*6 + 1 > len) extend_array(&data, &len, 1024);
         l = (ssize_t)mbrtowc(&w, line + j, i - j,  &ps);
         if (l < 1) {
             w = (uint8_t)line[j];
@@ -539,8 +532,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case OUTPUT_APPEND:
             case 'o': output.name = (opt == NO_OUTPUT) ? NULL : my_optarg;
                       output.append = (opt == OUTPUT_APPEND);
-                      if (inc_overflow(&arguments.output_len, 1)) err_msg_out_of_memory();
-                      resize_array(&arguments.output, arguments.output_len);
+                      extend_array(&arguments.output, &arguments.output_len, 1);
                       arguments.output[arguments.output_len - 1] = output;
                       output.section = NULL;
                       break;
@@ -552,10 +544,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
                 {
                     size_t len;
 
-                    if (fin->lines >= max_lines) {
-                        if (inc_overflow(&max_lines, 1024)) err_msg_out_of_memory();
-                        resize_array(&fin->line, max_lines);
-                    }
+                    if (fin->lines >= max_lines) extend_array(&fin->line, &max_lines, 1024);
                     fin->line[fin->lines++] = fp;
 
                     len = strlen(my_optarg) + 1;
@@ -582,8 +571,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
             case LABELS_APPEND:
             case 'l': symbol_output.name = my_optarg;
                       symbol_output.append = (opt == LABELS_APPEND);
-                      if (inc_overflow(&arguments.symbol_output_len, 1)) err_msg_out_of_memory();
-                      resize_array(&arguments.symbol_output, arguments.symbol_output_len);
+                      extend_array(&arguments.symbol_output, &arguments.symbol_output_len, 1);
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
                       symbol_output.space = NULL;
                       break;
