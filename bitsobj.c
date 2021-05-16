@@ -100,7 +100,7 @@ static FAST_CALL NO_INLINE void bits_destroy(Bits *v1) {
 
 static FAST_CALL void destroy(Obj *o1) {
     Bits *v1 = Bits(o1);
-    if (v1->u.val != v1->data) bits_destroy(v1);
+    if unlikely(v1->u.val != v1->data) bits_destroy(v1);
 }
 
 static MALLOC Bits *new_bits2(size_t len) {

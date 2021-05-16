@@ -93,6 +93,7 @@
 # define __has_builtin(a) __has_builtin ## a
 # define __has_builtin__builtin_add_overflow (__GNUC__ > 5)
 # define __has_builtin__builtin_mul_overflow (__GNUC__ > 5)
+# define __has_builtin__builtin_expect (__GNUC__ > 2)
 #else
 # define __has_builtin(a) (0)
 #endif
@@ -103,6 +104,14 @@
 #else
 # define add_overflow(a, b, c) ((*(c) = (a) + (b)) < (b))
 # define inc_overflow(a, b) ((*(a) = *(a) + (b)) < (b))
+#endif
+
+#if __has_builtin(__builtin_expect)
+# define likely(a)      (__builtin_expect(!!(a), 1))
+# define unlikely(a)    (__builtin_expect(!!(a), 0))
+#else
+# define likely(a)      (a)
+# define unlikely(a)    (a)
 #endif
 
 #endif
