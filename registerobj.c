@@ -39,7 +39,7 @@ static FAST_CALL NO_INLINE void register_destroy(Register *v1) {
 
 static FAST_CALL void destroy(Obj *o1) {
     Register *v1 = Register(o1);
-    if (v1->val != v1->data) register_destroy(v1);
+    if unlikely(v1->val != v1->data) register_destroy(v1);
 }
 
 static inline MALLOC Register *new_register(void) {
