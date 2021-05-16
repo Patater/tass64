@@ -94,7 +94,7 @@ static FAST_CALL NO_INLINE void bytes_destroy(Bytes *v1) {
 
 static FAST_CALL void destroy(Obj *o1) {
     Bytes *v1 = Bytes(o1);
-    if (v1->u.val != v1->data) bytes_destroy(v1);
+    if unlikely(v1->u.val != v1->data) bytes_destroy(v1);
 }
 
 MALLOC Bytes *new_bytes(size_t ln) {
