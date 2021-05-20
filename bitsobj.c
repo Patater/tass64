@@ -68,7 +68,7 @@ MUST_CHECK Obj *bits_from_obj(Obj *v1, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
     case T_BITS: return val_reference(v1);
-    case T_BOOL: return val_reference(bits_value[v1 == true_value ? 1 : 0]);
+    case T_BOOL: return val_reference(bits_value[Bool(v1)->value ? 1 : 0]);
     case T_STR: return bits_from_str(Str(v1), epoint);
     case T_BYTES: return bits_from_bytes(Bytes(v1), epoint);
     case T_INT: return bits_from_int(Int(v1), epoint);
@@ -1339,7 +1339,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     switch (o2->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        op->v2 = tmp = val_reference(bits_value[o2 == true_value ? 1 : 0]);
+        op->v2 = tmp = val_reference(bits_value[Bool(o2)->value ? 1 : 0]);
         if (op->inplace != NULL && op->inplace->refcount != 1) op->inplace = NULL;
         result = calc2(op);
         val_destroy(tmp);
@@ -1386,7 +1386,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     switch (o1->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        op->v1 = tmp = val_reference(bits_value[o1 == true_value ? 1 : 0]);
+        op->v1 = tmp = val_reference(bits_value[Bool(o1)->value ? 1 : 0]);
         op->inplace = NULL;
         result = calc2(op);
         val_destroy(tmp);
