@@ -737,11 +737,11 @@ static MUST_CHECK Obj *function_condition(oper_t op) {
     bool cond;
 
     if (v->val->obj == BOOL_OBJ) {
-        cond = (v->val == true_value);
+        cond = Bool(v->val)->value;
     } else {
         Obj *val = v->val->obj->truth(v->val, TRUTH_BOOL, &v->epoint);
         if (val->obj != BOOL_OBJ) return val;
-        cond = (val == true_value);
+        cond = Bool(val)->value;
         if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, v->val, &v->epoint);
         val_destroy(val);
     } 

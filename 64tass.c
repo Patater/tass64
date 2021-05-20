@@ -390,7 +390,7 @@ static bool tobool(const struct values_s *v1, bool *truth) {
     const Type *obj = val->obj;
     bool error;
     if (obj == BOOL_OBJ) {
-        *truth = val == true_value;
+        *truth = Bool(val)->value;
         return false;
     }
     err = obj->truth(val, TRUTH_BOOL, &v1->epoint);
@@ -400,7 +400,7 @@ static bool tobool(const struct values_s *v1, bool *truth) {
             err_msg_output(Error(err));
         }
     } else {
-        *truth = err == true_value;
+        *truth = Bool(err)->value;
         if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, val, &v1->epoint);
     }
     val_destroy(err);

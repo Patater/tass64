@@ -28,6 +28,7 @@ struct Str;
 typedef struct Bool {
     Obj v;
     struct Str *repr;
+    bool value;
 } Bool;
 
 #define Bool(a) OBJ_CAST(Bool, a)
