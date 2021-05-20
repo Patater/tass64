@@ -120,10 +120,10 @@ static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxlen) {
 }
 
 void labelobj_init(void) {
-    new_type(&obj, T_LABEL, "label", sizeof(Label));
-    obj.destroy = destroy;
-    obj.garbage = garbage;
-    obj.same = same;
-    obj.repr = repr;
-    obj.str = str;
+    Type *type = new_type(&obj, T_LABEL, "label", sizeof(Label));
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->repr = repr;
+    type->str = str;
 }

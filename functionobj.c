@@ -862,12 +862,12 @@ MUST_CHECK Obj *apply_condition(oper_t op) {
 }
 
 void functionobj_init(void) {
-    new_type(&obj, T_FUNCTION, "function", sizeof(Function));
-    obj.hash = hash;
-    obj.same = same;
-    obj.repr = repr;
-    obj.str = str;
-    obj.calc2 = calc2;
+    Type *type = new_type(&obj, T_FUNCTION, "function", sizeof(Function));
+    type->hash = hash;
+    type->same = same;
+    type->repr = repr;
+    type->str = str;
+    type->calc2 = calc2;
 }
 
 static Function builtin_functions[] = { /* maximum name length of 6 chars */

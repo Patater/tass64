@@ -826,19 +826,19 @@ Obj *dictobj_parse(struct values_s *values, size_t args) {
 }
 
 void dictobj_init(void) {
-    new_type(&obj, T_DICT, "dict", sizeof(Dict));
-    obj.iterable = true;
-    obj.destroy = destroy;
-    obj.garbage = garbage;
-    obj.same = same;
-    obj.hash = hash;
-    obj.len = len;
-    obj.getiter = getiter;
-    obj.getriter = getriter;
-    obj.repr = repr;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
-    obj.slice = slice;
+    Type *type = new_type(&obj, T_DICT, "dict", sizeof(Dict));
+    type->iterable = true;
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->hash = hash;
+    type->len = len;
+    type->getiter = getiter;
+    type->getriter = getriter;
+    type->repr = repr;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
+    type->slice = slice;
 }
 
 void dictobj_names(void) {

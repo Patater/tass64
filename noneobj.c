@@ -94,25 +94,25 @@ static MUST_CHECK Obj *size(oper_t op) {
 }
 
 void noneobj_init(void) {
-    new_type(&obj, T_NONE, "none", sizeof(None));
-    obj.same = same;
-    obj.truth = truth;
-    obj.repr = repr;
-    obj.str = str;
-    obj.hash = hash;
-    obj.calc1 = calc1;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
-    obj.slice = slice;
-    obj.ival = ival;
-    obj.uval = uval;
-    obj.uval2 = uval;
-    obj.iaddress = ival;
-    obj.uaddress = uval;
-    obj.sign = sign;
-    obj.function = function;
-    obj.len = len;
-    obj.size = size;
+    Type *type = new_type(&obj, T_NONE, "none", sizeof(None));
+    type->same = same;
+    type->truth = truth;
+    type->repr = repr;
+    type->str = str;
+    type->hash = hash;
+    type->calc1 = calc1;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
+    type->slice = slice;
+    type->ival = ival;
+    type->uval = uval;
+    type->uval2 = uval;
+    type->iaddress = ival;
+    type->uaddress = uval;
+    type->sign = sign;
+    type->function = function;
+    type->len = len;
+    type->size = size;
 }
 
 void noneobj_destroy(void) {

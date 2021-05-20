@@ -225,15 +225,15 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void registerobj_init(void) {
-    new_type(&obj, T_REGISTER, "register", sizeof(Register));
-    obj.convert = convert;
-    obj.destroy = destroy;
-    obj.same = same;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.str = str;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
+    Type *type = new_type(&obj, T_REGISTER, "register", sizeof(Register));
+    type->convert = convert;
+    type->destroy = destroy;
+    type->same = same;
+    type->hash = hash;
+    type->repr = repr;
+    type->str = str;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
 }
 
 void registerobj_names(void) {

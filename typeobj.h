@@ -75,6 +75,6 @@ typedef struct Type {
 
 extern void typeobj_init(void);
 extern void typeobj_names(void);
-extern void new_type(Type *, Type_types, const char *, size_t);
+extern Type *new_type(Type *, Type_types, const char *, size_t);
 
 #endif

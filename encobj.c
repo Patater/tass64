@@ -435,10 +435,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 }
 
 void encobj_init(void) {
-    new_type(&obj, T_ENC, "enc", sizeof(Enc));
-    obj.destroy = destroy;
-    obj.same = same;
-    obj.calc2 = calc2;
+    Type *type = new_type(&obj, T_ENC, "enc", sizeof(Enc));
+    type->destroy = destroy;
+    type->same = same;
+    type->calc2 = calc2;
 
     actual_encoding = Enc(val_alloc(ENC_OBJ));
     actual_encoding->escapes = NULL;

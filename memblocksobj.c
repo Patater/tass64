@@ -95,7 +95,7 @@ MALLOC Memblocks *copy_memblocks(Memblocks *m) {
 }
 
 void memblocksobj_init(void) {
-    new_type(&obj, T_MEMBLOCKS, "memblocks", sizeof(Memblocks));
-    obj.destroy = destroy;
-    obj.same = same;
+    Type *type = new_type(&obj, T_MEMBLOCKS, "memblocks", sizeof(Memblocks));
+    type->destroy = destroy;
+    type->same = same;
 }

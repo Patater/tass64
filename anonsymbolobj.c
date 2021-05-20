@@ -101,11 +101,11 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void anonsymbolobj_init(void) {
-    new_type(&obj, T_ANONSYMBOL, "anonsymbol", sizeof(Anonsymbol));
-    obj.same = same;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.str = str;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
+    Type *type = new_type(&obj, T_ANONSYMBOL, "anonsymbol", sizeof(Anonsymbol));
+    type->same = same;
+    type->hash = hash;
+    type->repr = repr;
+    type->str = str;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
 }

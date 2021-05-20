@@ -643,27 +643,27 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void addressobj_init(void) {
-    new_type(&obj, T_ADDRESS, "address", sizeof(Address));
-    obj.convert = convert;
-    obj.destroy = destroy;
-    obj.garbage = garbage;
-    obj.same = same;
-    obj.truth = truth;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.str = str;
-    obj.address = address;
-    obj.ival = ival;
-    obj.uval = uval;
-    obj.uval2 = uval2;
-    obj.iaddress = iaddress;
-    obj.uaddress = uaddress;
-    obj.sign = sign;
-    obj.function = function;
-    obj.calc1 = calc1;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
-    obj.slice = slice;
+    Type *type = new_type(&obj, T_ADDRESS, "address", sizeof(Address));
+    type->convert = convert;
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->truth = truth;
+    type->hash = hash;
+    type->repr = repr;
+    type->str = str;
+    type->address = address;
+    type->ival = ival;
+    type->uval = uval;
+    type->uval2 = uval2;
+    type->iaddress = iaddress;
+    type->uaddress = uaddress;
+    type->sign = sign;
+    type->function = function;
+    type->calc1 = calc1;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
+    type->slice = slice;
 }
 
 void addressobj_names(void) {

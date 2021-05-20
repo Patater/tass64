@@ -289,13 +289,13 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 }
 
 void namespaceobj_init(void) {
-    new_type(&obj, T_NAMESPACE, "namespace", sizeof(Namespace));
-    obj.convert = convert;
-    obj.destroy = destroy;
-    obj.garbage = garbage;
-    obj.same = same;
-    obj.repr = repr;
-    obj.calc2 = calc2;
+    Type *type = new_type(&obj, T_NAMESPACE, "namespace", sizeof(Namespace));
+    type->convert = convert;
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->repr = repr;
+    type->calc2 = calc2;
 }
 
 void namespaceobj_names(void) {

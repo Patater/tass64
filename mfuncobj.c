@@ -174,15 +174,16 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 }
 
 void mfuncobj_init(void) {
-    new_type(&mfunc_obj, T_MFUNC, "function", sizeof(Mfunc));
-    mfunc_obj.destroy = destroy;
-    mfunc_obj.garbage = garbage;
-    mfunc_obj.same = same;
-    mfunc_obj.calc2 = calc2;
-    new_type(&sfunc_obj, T_SFUNC, "sfunction", sizeof(Sfunc));
-    sfunc_obj.destroy = destroy;
-    sfunc_obj.garbage = garbage;
-    sfunc_obj.same = same;
-    sfunc_obj.calc2 = calc2;
+    Type *type = new_type(&mfunc_obj, T_MFUNC, "function", sizeof(Mfunc));
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->calc2 = calc2;
+
+    type = new_type(&sfunc_obj, T_SFUNC, "sfunction", sizeof(Sfunc));
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->calc2 = calc2;
 }
 
