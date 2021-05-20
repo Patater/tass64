@@ -203,13 +203,13 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t UNUSED(indx)) {
 }
 
 void errorobj_init(void) {
-    new_type(&obj, T_ERROR, "error", sizeof(Error));
-    obj.destroy = destroy;
-    obj.garbage = garbage;
-    obj.calc1 = calc1;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
-    obj.slice = slice;
+    Type *type = new_type(&obj, T_ERROR, "error", sizeof(Error));
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->calc1 = calc1;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
+    type->slice = slice;
 }
 
 void error_obj_update(Error *err, const Obj *v1, Obj *v2) {

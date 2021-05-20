@@ -144,8 +144,8 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
 
 void operobj_init(void) {
     unsigned int i;
-    new_type(&obj, T_OPER, "oper", sizeof(Oper));
-    obj.repr = repr;
+    Type *type = new_type(&obj, T_OPER, "oper", sizeof(Oper));
+    type->repr = repr;
     for (i = 0; i < lenof(operators); i++) {
         operators[i].v.obj = &obj;
     }

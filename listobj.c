@@ -887,22 +887,25 @@ static void init(Type *obj) {
 }
 
 void listobj_init(void) {
-    new_type(&list_obj, T_LIST, "list", sizeof(List));
-    init(&list_obj);
-    list_obj.convert = list_convert;
-    new_type(&tuple_obj, T_TUPLE, "tuple", sizeof(Tuple));
-    init(&tuple_obj);
-    tuple_obj.convert = tuple_convert;
-    new_type(&addrlist_obj, T_ADDRLIST, "addresslist", sizeof(Addrlist));
-    addrlist_obj.destroy = destroy;
-    addrlist_obj.garbage = garbage;
-    addrlist_obj.same = same;
-    addrlist_obj.repr = repr_listtuple;
-    new_type(&colonlist_obj, T_COLONLIST, "colonlist", sizeof(Colonlist));
-    colonlist_obj.destroy = destroy;
-    colonlist_obj.garbage = garbage;
-    colonlist_obj.same = same;
-    colonlist_obj.repr = repr_listtuple;
+    Type *type = new_type(&list_obj, T_LIST, "list", sizeof(List));
+    init(type);
+    type->convert = list_convert;
+
+    type = new_type(&tuple_obj, T_TUPLE, "tuple", sizeof(Tuple));
+    init(type);
+    type->convert = tuple_convert;
+
+    type = new_type(&addrlist_obj, T_ADDRLIST, "addresslist", sizeof(Addrlist));
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->repr = repr_listtuple;
+
+    type = new_type(&colonlist_obj, T_COLONLIST, "colonlist", sizeof(Colonlist));
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->repr = repr_listtuple;
 }
 
 void listobj_names(void) {

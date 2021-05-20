@@ -179,14 +179,14 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void gapobj_init(void) {
-    new_type(&obj, T_GAP, "gap", sizeof(Gap));
-    obj.same = same;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.function = function;
-    obj.calc1 = calc1;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
+    Type *type = new_type(&obj, T_GAP, "gap", sizeof(Gap));
+    type->same = same;
+    type->hash = hash;
+    type->repr = repr;
+    type->function = function;
+    type->calc1 = calc1;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
 }
 
 void gapobj_names(void) {

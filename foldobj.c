@@ -134,12 +134,12 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void foldobj_init(void) {
-    new_type(&obj, T_FOLD, "fold", sizeof(Fold));
-    obj.same = same;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
+    Type *type = new_type(&obj, T_FOLD, "fold", sizeof(Fold));
+    type->same = same;
+    type->hash = hash;
+    type->repr = repr;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
 }
 
 void foldobj_destroy(void) {

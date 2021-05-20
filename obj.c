@@ -316,6 +316,7 @@ void obj_init(Type *obj) {
 }
 
 void objects_init(void) {
+    Type *type;
     boolobj_init();
     floatobj_init();
     addressobj_init();
@@ -343,12 +344,14 @@ void objects_init(void) {
     foldobj_init();
     encobj_init();
 
-    new_type(&lbl_obj, T_LBL, "lbl", sizeof(Lbl));
-    lbl_obj.same = lbl_same;
-    new_type(&default_obj, T_DEFAULT, "default", sizeof(Default));
-    default_obj.same = default_same;
-    new_type(&funcargs_obj, T_FUNCARGS, "funcargs", sizeof(Funcargs));
-    funcargs_obj.same = funcargs_same;
+    type = new_type(&lbl_obj, T_LBL, "lbl", sizeof(Lbl));
+    type->same = lbl_same;
+
+    type = new_type(&default_obj, T_DEFAULT, "default", sizeof(Default));
+    type->same = default_same;
+
+    type = new_type(&funcargs_obj, T_FUNCARGS, "funcargs", sizeof(Funcargs));
+    type->same = funcargs_same;
 }
 
 void objects_destroy(void) {

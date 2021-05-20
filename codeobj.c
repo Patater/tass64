@@ -691,27 +691,27 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void codeobj_init(void) {
-    new_type(&obj, T_CODE, "code", sizeof(Code));
-    obj.destroy = destroy;
-    obj.garbage = garbage;
-    obj.same = same;
-    obj.truth = truth;
-    obj.repr = repr;
-    obj.str = str;
-    obj.ival = ival;
-    obj.uval = uval;
-    obj.uval2 = uval;
-    obj.address = address;
-    obj.iaddress = iaddress;
-    obj.uaddress = uaddress;
-    obj.sign = sign;
-    obj.function = function;
-    obj.len = len;
-    obj.size = size;
-    obj.calc1 = calc1;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
-    obj.slice = slice;
+    Type *type = new_type(&obj, T_CODE, "code", sizeof(Code));
+    type->destroy = destroy;
+    type->garbage = garbage;
+    type->same = same;
+    type->truth = truth;
+    type->repr = repr;
+    type->str = str;
+    type->ival = ival;
+    type->uval = uval;
+    type->uval2 = uval;
+    type->address = address;
+    type->iaddress = iaddress;
+    type->uaddress = uaddress;
+    type->sign = sign;
+    type->function = function;
+    type->len = len;
+    type->size = size;
+    type->calc1 = calc1;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
+    type->slice = slice;
 }
 
 void codeobj_names(void) {

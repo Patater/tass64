@@ -185,12 +185,12 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void symbolobj_init(void) {
-    new_type(&obj, T_SYMBOL, "symbol", sizeof(Symbol));
-    obj.destroy = destroy;
-    obj.same = same;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.str = str;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
+    Type *type = new_type(&obj, T_SYMBOL, "symbol", sizeof(Symbol));
+    type->destroy = destroy;
+    type->same = same;
+    type->hash = hash;
+    type->repr = repr;
+    type->str = str;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
 }

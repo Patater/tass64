@@ -1408,29 +1408,29 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
 }
 
 void bytesobj_init(void) {
-    new_type(&obj, T_BYTES, "bytes", sizeof(Bytes));
-    obj.convert = convert;
-    obj.convert2 = convert2;
-    obj.destroy = destroy;
-    obj.same = same;
-    obj.truth = truth;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.str = str;
-    obj.ival = ival;
-    obj.uval = uval;
-    obj.uval2 = uval2;
-    obj.iaddress = ival;
-    obj.uaddress = uval;
-    obj.sign = sign;
-    obj.function = function;
-    obj.len = len;
-    obj.getiter = getiter;
-    obj.getriter = getriter;
-    obj.calc1 = calc1;
-    obj.calc2 = calc2;
-    obj.rcalc2 = rcalc2;
-    obj.slice = slice;
+    Type *type = new_type(&obj, T_BYTES, "bytes", sizeof(Bytes));
+    type->convert = convert;
+    type->convert2 = convert2;
+    type->destroy = destroy;
+    type->same = same;
+    type->truth = truth;
+    type->hash = hash;
+    type->repr = repr;
+    type->str = str;
+    type->ival = ival;
+    type->uval = uval;
+    type->uval2 = uval2;
+    type->iaddress = ival;
+    type->uaddress = uval;
+    type->sign = sign;
+    type->function = function;
+    type->len = len;
+    type->getiter = getiter;
+    type->getriter = getriter;
+    type->calc1 = calc1;
+    type->calc2 = calc2;
+    type->rcalc2 = rcalc2;
+    type->slice = slice;
 }
 
 void bytesobj_names(void) {

@@ -217,21 +217,21 @@ static MUST_CHECK Obj *calc2(oper_t op) {
 }
 
 void boolobj_init(void) {
-    new_type(&obj, T_BOOL, "bool", sizeof(Bool));
-    obj.convert = convert;
-    obj.same = same;
-    obj.truth = truth;
-    obj.hash = hash;
-    obj.repr = repr;
-    obj.ival = ival;
-    obj.uval = uval;
-    obj.uval2 = uval;
-    obj.iaddress = ival;
-    obj.uaddress = uval;
-    obj.sign = sign;
-    obj.function = function;
-    obj.calc1 = calc1;
-    obj.calc2 = calc2;
+    Type *type = new_type(&obj, T_BOOL, "bool", sizeof(Bool));
+    type->convert = convert;
+    type->same = same;
+    type->truth = truth;
+    type->hash = hash;
+    type->repr = repr;
+    type->ival = ival;
+    type->uval = uval;
+    type->uval2 = uval;
+    type->iaddress = ival;
+    type->uaddress = uval;
+    type->sign = sign;
+    type->function = function;
+    type->calc1 = calc1;
+    type->calc2 = calc2;
 }
 
 void boolobj_names(void) {
