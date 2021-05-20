@@ -1713,7 +1713,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_INT: return calc2_int(op);
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        tmp = int_value[Bool(v2)->value 1 : 0];
+        tmp = int_value[Bool(v2)->value ? 1 : 0];
         op->v2 = tmp;
         ret = calc2_int(op);
         if (ret->obj == ERROR_OBJ) error_obj_update(Error(ret), tmp, v2);
