@@ -569,7 +569,7 @@ void printable_print(const uint8_t *line, FILE *f) {
     size_t i = 0, l = 0;
     for (;;) {
         unichar_t ch = line[i];
-        if ((ch >= 0x20 && ch <= 0x7e) || ch == 0x09) {
+        if likely((ch >= 0x20 && ch <= 0x7e) || ch == 0x09) {
             i++;
             continue;
         }
