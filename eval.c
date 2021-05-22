@@ -79,7 +79,7 @@ FAST_CALL size_t get_label(const uint8_t *s) {
     } else i = 1;
     for (;;) {
         unsigned int l;
-        if (((uint8_t)((s[i] | 0x20) - 'a')) <= 'z' - 'a' || (s[i] ^ 0x30) < 10 || s[i] == '_') {
+        if likely(((uint8_t)((s[i] | 0x20) - 'a')) <= 'z' - 'a' || (s[i] ^ 0x30) < 10 || s[i] == '_') {
             i++;
             continue;
         }
