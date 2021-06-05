@@ -392,13 +392,8 @@ size_t argv_print(const char *line, FILE *f) {
     }
 #else
     size_t i;
-    bool quote = false;
+    bool quote = strchr(line, '!') == NULL && strpbrk(line, " \"$&()*;<>'?[\\]`{|}") != NULL;
 
-    for (i = 0;line[i] != 0;i++) {
-        if (line[i] == '!') break;
-        if (strchr(" \"$&()*;<>'?[\\]`{|}", line[i]) != NULL) quote = true;
-    }
-    if (line[i] != 0) quote = false;
     if (quote) {len++;putc('"', f);}
     else {
         switch (line[0]) {
