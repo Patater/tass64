@@ -2815,7 +2815,7 @@ MUST_CHECK Obj *compile(void)
                                     label->defpass = pass;
                                 } else {
                                     val_destroy(Obj(code));
-                                    code = create_code(&newlabel->epoint);
+                                    code = create_code(&epoint);
                                     label->value = Obj(code);
                                 }
                                 context = code->names;
