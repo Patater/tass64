@@ -2849,7 +2849,6 @@ MUST_CHECK Obj *compile(void)
                 }
                 {
                     bool labelexists = false;
-                    Code *code;
                     if (labelname.data[0] == '*') {
                         err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint);
                         newlabel = NULL;
@@ -2920,15 +2919,13 @@ MUST_CHECK Obj *compile(void)
                             newlabel->update_after = false;
                         } else {
                             if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
-                            code = Code(newlabel->value);
-                            update_code(newlabel, code);
+                            update_code(newlabel, Code(newlabel->value));
                             newmembp = get_mem(current_address->mem);
                             newlabel->defpass = pass;
                         }
                     } else {
                         if (diagnostics.optimize) cpu_opt_invalidate();
-                        code = create_code(&epoint);
-                        newlabel->value = Obj(code);
+                        newlabel->value = Obj(create_code(&epoint));
                         newlabel->constant = true;
                         newlabel->owner = true;
                         newlabel->epoint = epoint;
