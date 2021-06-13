@@ -2920,6 +2920,7 @@ MUST_CHECK Obj *compile(void)
                             newlabel->update_after = false;
                         } else {
                             if (diagnostics.optimize && newlabel->ref) cpu_opt_invalidate();
+                            code = Code(newlabel->value);
                             update_code(newlabel, code);
                             newmembp = get_mem(current_address->mem);
                             newlabel->defpass = pass;
