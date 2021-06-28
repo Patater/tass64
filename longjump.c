@@ -17,7 +17,6 @@
 
 */
 #include "longjump.h"
-#include "section.h"
 #include "error.h"
 
 static FAST_CALL int longjump_compare(const struct avltree_node *aa, const struct avltree_node *bb)
@@ -34,21 +33,19 @@ static void longjump_free(struct avltree_node *aa)
 }
 
 static struct longjump_s *lastlj = NULL;
-struct longjump_s *new_longjump(address_t address, bool *exists) {
+struct longjump_s *new_longjump(struct avltree *t, address_t address) {
     struct avltree_node *b;
     struct longjump_s *tmp;
 
     if (lastlj == NULL) new_instance(&lastlj);
     lastlj->address = address;
-    b = avltree_insert(&lastlj->node, &current_section->longjump, longjump_compare);
+    b = avltree_insert(&lastlj->node, t, longjump_compare);
     if (b == NULL) { /* new longjump */
         lastlj->defpass = 0;
-        *exists = false;
         tmp = lastlj;
         lastlj = NULL;
         return tmp;
     }
-    *exists = true;
     return avltree_container_of(b, struct longjump_s, node);            /* already exists */
 }
 
