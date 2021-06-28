@@ -1419,7 +1419,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     Label *label;
     Obj *val, *nf = NULL;
     struct star_s *s, *stree_old;
-    bool starexists, foreach = false;
+    bool foreach = false;
     struct iter_s iter;
     size_t i = 0;
     labels.p = 0;
@@ -1533,8 +1533,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         lpoint.pos++;ignore();
     }
 
-    s = new_star(vline, &starexists); stree_old = star_tree;
-    if (starexists && s->addr != star) {
+    s = new_star(vline); stree_old = star_tree;
+    if (s->pass != 0 && s->addr != star) {
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
     }
@@ -1764,11 +1764,10 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
         new_waitfor(W_ENDREPT, epoint); waitfor->skip = 0;
     } else {
         linenum_t lin = lpoint.line;
-        bool starexists;
-        struct star_s *s = new_star(vline, &starexists);
+        struct star_s *s = new_star(vline);
         struct star_s *stree_old = star_tree;
 
-        if (starexists && s->addr != star) {
+        if (s->pass != 0 && s->addr != star) {
             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
             fixeddig = false;
         }
@@ -1806,7 +1805,6 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     uint8_t *expr;
     Obj *nf = NULL;
     struct star_s *s, *stree_old;
-    bool starexists;
     size_t i = 0;
     struct linepos_s apoint;
     linenum_t xlin;
@@ -1817,8 +1815,8 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (lst != NULL && newlabel != NULL) listing_equal2(listing, Obj(lst), epoint->pos);
     else listing_line(listing, epoint->pos);
 
-    s = new_star(vline, &starexists); stree_old = star_tree;
-    if (starexists && s->addr != star) {
+    s = new_star(vline); stree_old = star_tree;
+    if (s->pass != 0 && s->addr != star) {
         if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
         fixeddig = false;
     }
@@ -4256,12 +4254,11 @@ MUST_CHECK Obj *compile(void)
                         err_msg2(ERROR_FILERECURSION, NULL, &epoint);
                     } else {
                         Wait_types what;
-                        bool starexists;
-                        struct star_s *s = new_star(vline, &starexists);
+                        struct star_s *s = new_star(vline);
                         struct star_s *stree_old = star_tree;
                         linenum_t lin = lpoint.line;
 
-                        if (starexists && s->addr != star) {
+                        if (s->pass != 0 && s->addr != star) {
                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
                             fixeddig = false;
                         }
