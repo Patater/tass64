@@ -563,9 +563,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                         ln = 2;
                     } else if (arguments.longbranch && (cnmemonic[ADR_ADDR] == ____) && w == 3) { /* fake long branches */
                         if ((cnmemonic[ADR_REL] & 0x1f) == 0x10) {/* bxx branch */
-                            bool exists;
-                            struct longjump_s *lj = new_longjump(uval, &exists);
-                            if (exists && lj->defpass == pass) {
+                            struct longjump_s *lj = new_longjump(&current_section->longjump, uval);
+                            if (lj->defpass == pass) {
                                 if ((current_address->l_address ^ lj->dest) <= 0xffff) {
                                     uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 2);
                                     if (adrk >= 0xFF80 || adrk <= 0x007F) {
@@ -586,13 +585,13 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                             goto branchend;
                         }
                         if (opr == ADR_BIT_ZP_REL) {
-                            bool exists;
-                            struct longjump_s *lj = new_longjump(uval, &exists);
+                            struct longjump_s *lj;
                             if (crossbank) {
                                 err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);
                                 goto branchok;
                             }
-                            if (exists && lj->defpass == pass) {
+                            lj = new_longjump(&current_section->longjump, uval);
+                            if (lj->defpass == pass) {
                                 if ((current_address->l_address ^ lj->dest) <= 0xffff) {
                                     uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 3);
                                     if (adrk >= 0xFF80 || adrk <= 0x007F) {
