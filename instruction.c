@@ -150,8 +150,8 @@ static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)
 }
 
 typedef enum Adrgen { 
-    AG_ZP, AG_B0, AG_PB, AG_PB2, AG_BYTE, AG_SBYTE, AG_CHAR, AG_DB3, AG_DB2,
-    AG_WORD, AG_SWORD, AG_SINT, AG_RELPB, AG_RELL, AG_IMP, AG_NONE 
+    AG_ZP, AG_B0, AG_PB, AG_BYTE, AG_SBYTE, AG_CHAR, AG_DB3, AG_DB2, AG_WORD,
+    AG_SWORD, AG_SINT, AG_RELPB, AG_RELL, AG_IMP, AG_NONE 
 } Adrgen;
 
 static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned int w, Adr_types *opr) {
@@ -708,10 +708,6 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
                 adrgen = AG_RELL; opr = ADR_REL_L; /* brl */
                 break;
             }
-            if (cnmemonic[ADR_LONG] == 0x5C) {
-                adrgen = AG_PB2; opr = ADR_ZP; /* jml */
-                break;
-            }
             if (cnmemonic[ADR_ADDR] == 0x20 || cnmemonic[ADR_ADDR] == 0x4C) {
                 adrgen = AG_PB; opr = ADR_ADDR; /* jsr $ffff, jmp */
                 break;
@@ -1085,33 +1081,6 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Obj *vals, linepos_t epoi
             break;
         }
         err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);
-        break;
-    case AG_PB2:
-        if (w == 3) {/* auto length */
-            if (touaddress(val, &uval, all_mem_bits, epoint2)) w = (cnmemonic[ADR_ADDR] == ____) ? 2 : 1;
-            else {
-                uval &= all_mem;
-                if (cnmemonic[ADR_ADDR] != ____ && (current_address->l_address ^ uval) <= 0xffff) {adr = uval; w = 1;}
-                else {adr = uval; w = 2;}
-            }
-        } else {
-            switch (w) {
-            case 1:
-                if (cnmemonic[opr - 1] == ____) return err_addressize(ERROR__NO_WORD_ADDR, epoint2, prm);
-                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
-                uval &= all_mem;
-                if ((current_address->l_address ^ uval) <= 0xffff) adr = uval;
-                else err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);
-                break;
-            case 2:
-                if (cnmemonic[opr - 2] == ____) return err_addressize(ERROR__NO_LONG_ADDR, epoint2, prm);
-                if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
-                adr = uval & all_mem;
-                break;
-            default: return err_addressize(ERROR__NO_BYTE_ADDR, epoint2, prm);
-            }
-        }
-        opr = (Adr_types)(opr - w); ln = w + 1;
         break;
     case AG_IMP:
         ln = 0;
