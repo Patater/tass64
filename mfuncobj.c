@@ -141,6 +141,23 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
     return true;
 }
 
+static MUST_CHECK Obj *contains(oper_t op) {
+    Obj *o1 = op->v1;
+    Mfunc *v2 = Mfunc(op->v2);
+
+    switch (o1->obj->type) {
+    case T_SYMBOL:
+    case T_ANONSYMBOL:
+        op->v2 = Obj(v2->names);
+        return v2->names->v.obj->contains(op);
+    case T_NONE:
+    case T_ERROR:
+        return val_reference(o1);
+    default:
+        return obj_oper_error(op);
+    }
+}
+
 static MUST_CHECK Obj *calc2(oper_t op) {
     switch (op->v2->obj->type) {
     case T_FUNCARGS:
@@ -179,11 +196,13 @@ void mfuncobj_init(void) {
     type->garbage = garbage;
     type->same = same;
     type->calc2 = calc2;
+    type->contains = contains;
 
     type = new_type(&sfunc_obj, T_SFUNC, "sfunction", sizeof(Sfunc));
     type->destroy = destroy;
     type->garbage = garbage;
     type->same = same;
     type->calc2 = calc2;
+    type->contains = contains;
 }
 

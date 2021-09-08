@@ -482,18 +482,29 @@ static MUST_CHECK Obj *contains(oper_t op) {
     Obj *tmp, *result;
     struct code_item_s ci;
 
+    switch (o1->obj->type) {
+    case T_SYMBOL:
+    case T_ANONSYMBOL:
+        op->v2 = Obj(v2->names);
+        return v2->names->v.obj->contains(op);
+    case T_NONE:
+    case T_ERROR:
+        return val_reference(o1);
+    case T_GAP:
+        o1 = val_reference(o1);
+        break;
+    default:
+        o1 = int_from_obj(o1, op->epoint);
+        if (o1->obj != INT_OBJ) return o1;
+        break;
+    }
     ln = code_item_prepare(&ci, v2);
 
     if (ln == 0) {
+        val_destroy(o1);
         return ref_false();
     }
 
-    if (o1->obj == GAP_OBJ) {
-        o1 = val_reference(o1);
-    } else {
-        o1 = int_from_obj(o1, op->epoint);
-        if (o1->obj != INT_OBJ) return o1;
-    }
     oper.op = O_EQ;
     oper.epoint = op->epoint;
     oper.epoint2 = op->epoint2;

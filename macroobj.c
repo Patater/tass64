@@ -103,6 +103,23 @@ static MUST_CHECK Obj *struct_size(oper_t op) {
     return int_from_size(v1->size);
 }
 
+static MUST_CHECK Obj *struct_contains(oper_t op) {
+    Obj *o1 = op->v1;
+    Struct *v2 = Struct(op->v2);
+
+    switch (o1->obj->type) {
+    case T_SYMBOL:
+    case T_ANONSYMBOL:
+        op->v2 = Obj(v2->names);
+        return v2->names->v.obj->contains(op);
+    case T_NONE:
+    case T_ERROR:
+        return val_reference(o1);
+    default:
+        return obj_oper_error(op);
+    }
+}
+
 static MUST_CHECK Obj *struct_calc2(oper_t op) {
     if (op->op == O_MEMBER) {
         return namespace_member(op, Struct(op->v1)->names);
@@ -126,6 +143,7 @@ void macroobj_init(void) {
     type->same = struct_same;
     type->size = struct_size;
     type->calc2 = struct_calc2;
+    type->contains = struct_contains;
 
     type = new_type(&union_obj, T_UNION, "union", sizeof(Union));
     type->destroy = struct_destroy;
@@ -133,4 +151,5 @@ void macroobj_init(void) {
     type->same = struct_same;
     type->size = struct_size;
     type->calc2 = struct_calc2;
+    type->contains = struct_contains;
 }

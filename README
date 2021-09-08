@@ -587,14 +587,15 @@ Indexing and slicing of code to access the compiled content might be
 implemented differently in future releases. Use this feature at your own risk
 for now, you might need to update your code later.
 
-         Label operators and functions
-a.b    member                  label.locallabel
-a[i]   element from start      label[1]
-a[-i]  element from end        label[-1]
-a[:]   copy as tuple           label[:]
-a[s:]  cut off start, as tuple label[1:]
-a[:-s] cut off end, as tuple   label[:-1]
-a[s]   reverse, as tuple       label[::-1]
+           Label operators and functions
+a.b     b member of a           label.locallabel
+.b in a if a has symbol b       .locallabel in label
+a[i]    element from start      label[1]
+a[-i]   element from end        label[-1]
+a[:]    copy as tuple           label[:]
+a[s:]   cut off start, as tuple label[1:]
+a[:-s]  cut off end, as tuple   label[:-1]
+a[s]    reverse, as tuple       label[::-1]
 
 mydata  .word 1, 4, 3
 mycode  .block
