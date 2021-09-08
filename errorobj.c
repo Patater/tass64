@@ -210,6 +210,7 @@ void errorobj_init(void) {
     type->calc2 = calc2;
     type->rcalc2 = rcalc2;
     type->slice = slice;
+    type->contains = rcalc2;
 }
 
 void error_obj_update(Error *err, const Obj *v1, Obj *v2) {

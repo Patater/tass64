@@ -1260,6 +1260,19 @@ static bool get_val2(struct eval_context_s *ev) {
             }
             val_destroy(val);
             continue;
+        case O_IN:
+            v2 = v1; v1 = &values[--vsp - 1];
+            if (vsp == 0) goto syntaxe;
+            epoint.pos = out->pos;
+            oper.v1 = v1->val;
+            oper.v2 = v2->val;
+            oper.epoint = &v1->epoint;
+            oper.epoint2 = &v2->epoint;
+            oper.epoint3 = &epoint;
+            oper.inplace = (oper.v1->refcount == 1) ? v1->val : NULL;
+            val = oper.v2->obj->contains(&oper);
+            val_destroy(v1->val); v1->val = val;
+            continue;
         default: break;
         }
         v2 = v1; v1 = &values[--vsp - 1];

@@ -1096,7 +1096,6 @@ static MUST_CHECK Obj *calc2_bits(oper_t op) {
     case O_OR:
     case O_XOR: return binary(op);
     case O_CONCAT: return concat(op);
-    case O_IN: return obj_oper_error(op); /* TODO */
     default: return NULL;
     }
 }

@@ -170,10 +170,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         FALL_THROUGH; /* fall through */
     case T_NONE:
     case T_ERROR:
-        if (op->op != O_IN) {
-            return v1->obj->calc2(op);
-        }
-        break;
+        return v1->obj->calc2(op);
     }
     return obj_oper_error(op);
 }
