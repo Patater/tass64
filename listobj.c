@@ -763,24 +763,30 @@ failed:
 static MUST_CHECK Obj *contains(oper_t op) {
     Obj *o1 = op->v1, *o2 = op->v2;
     List *v2 = List(o2);
+    Obj *result2;
     size_t i;
     if (v2->len == 0) return ref_false();
     if (o1 == none_value || o1->obj == ERROR_OBJ) return val_reference(o1);
     op->op = O_EQ;
+    result2 = ref_false();
     for (i = 0; i < v2->len; i++) {
         Obj *result;
         op->v1 = o1;
         op->v2 = v2->data[i];
         op->inplace = NULL;
         result = o1->obj->calc2(op);
-        if (result == true_value) {
-            op->op = O_IN;
-            return result;
+        if (result == false_value) {
+            val_destroy(result);
+            continue;
         }
-        val_destroy(result);
+        val_destroy(result2);
+        result2 = result;
+        if (result == true_value) {
+            break;
+        }
     }
     op->op = O_IN;
-    return ref_false();
+    return result2;
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
