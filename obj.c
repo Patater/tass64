@@ -301,6 +301,7 @@ void obj_init(Type *obj) {
     obj->calc2 = invalid_calc2;
     obj->rcalc2 = invalid_rcalc2;
     obj->slice = invalid_slice;
+    obj->contains = invalid_rcalc2;
     obj->ival = invalid_ival;
     obj->uval = invalid_uval;
     obj->uval2 = invalid_uval2;

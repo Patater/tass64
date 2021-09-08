@@ -615,10 +615,7 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
         }
         break;
     case T_CODE:
-        if (op->op != O_IN) {
-            return t1->calc2(op);
-        }
-        break;
+        return t1->calc2(op);
     case T_REGISTER:
         if (Register(op->v1)->len == 1) {
             am = register_to_indexing(Register(op->v1)->data[0]);
