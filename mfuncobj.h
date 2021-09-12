@@ -29,6 +29,7 @@ struct mfunc_param_s {
     str_t name;
     str_t cfname;
     Obj *init;
+    Obj *type;
     struct linepos_s epoint;
 };
 

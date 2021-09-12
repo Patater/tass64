@@ -153,7 +153,7 @@ macro.o: macro.c macro.h inttypes.h wait_e.h stdbool.h file.h \
  attributes.h str.h eval.h oper_e.h values.h section.h avl.h variables.h \
  64tass.h listing.h error.h errors_e.h arguments.h optimizer.h listobj.h \
  obj.h typeobj.h noneobj.h namespaceobj.h labelobj.h macroobj.h \
- mfuncobj.h memblocksobj.h
+ mfuncobj.h memblocksobj.h functionobj.h
 macroobj.o: macroobj.c macroobj.h obj.h attributes.h inttypes.h str.h \
  stdbool.h values.h eval.h oper_e.h error.h errors_e.h file.h typeobj.h \
  namespaceobj.h intobj.h noneobj.h errorobj.h
