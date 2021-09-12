@@ -57,7 +57,8 @@ codeobj.o: codeobj.c codeobj.h obj.h attributes.h inttypes.h values.h \
  eval.h stdbool.h oper_e.h mem.h 64tass.h wait_e.h section.h avl.h str.h \
  variables.h error.h errors_e.h arguments.h boolobj.h floatobj.h \
  namespaceobj.h listobj.h intobj.h bitsobj.h bytesobj.h gapobj.h \
- typeobj.h noneobj.h errorobj.h memblocksobj.h symbolobj.h addressobj.h
+ typeobj.h noneobj.h errorobj.h memblocksobj.h symbolobj.h addressobj.h \
+ strobj.h
 console.o: console.c console.h stdbool.h
 dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h eval.h \
  stdbool.h oper_e.h error.h errors_e.h variables.h intobj.h listobj.h \
@@ -152,7 +153,7 @@ namespaceobj.o: namespaceobj.c namespaceobj.h obj.h attributes.h \
  inttypes.h variables.h stdbool.h eval.h oper_e.h error.h errors_e.h \
  arguments.h 64tass.h wait_e.h listobj.h values.h strobj.h typeobj.h \
  noneobj.h labelobj.h str.h errorobj.h symbolobj.h anonsymbolobj.h \
- codeobj.h macroobj.h mfuncobj.h
+ codeobj.h macroobj.h mfuncobj.h boolobj.h
 noneobj.o: noneobj.c noneobj.h obj.h attributes.h inttypes.h eval.h \
  stdbool.h oper_e.h typeobj.h errorobj.h errors_e.h
 obj.o: obj.c obj.h attributes.h inttypes.h eval.h stdbool.h oper_e.h \
