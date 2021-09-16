@@ -170,12 +170,10 @@ int wmain(int argc, wchar_t *argv2[]) {
 int main(void)
 {
   LPWSTR commandLine = GetCommandLineW();
-  int argcw = 0;
+  int result, argcw = 0;
   LPWSTR *argvw = CommandLineToArgvW(commandLine, &argcw);
-  if (!argvw)
-    return EXIT_FAILURE;
-
-  int result = wmain(argcw, argvw);
+  if (argvw == NULL) return EXIT_FAILURE;
+  result = wmain(argcw, argvw);
   LocalFree(argvw);
   return result;
 }
