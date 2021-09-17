@@ -315,7 +315,16 @@ typedef enum Command_types {
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
-static void tfree(void) {
+static void compile_init(const char *name) {
+    err_init(name);
+    objects_init();
+    init_section();
+    init_file();
+    init_variables();
+    init_eval();
+}
+
+static void compile_destroy(void) {
     destroy_lastlb();
     destroy_eval();
     destroy_variables();
@@ -4905,17 +4914,12 @@ int main2(int *argc2, char **argv2[]) {
     int argc;
     bool failed;
 
-    err_init(*argv2[0]);
-    objects_init();
-    init_section();
-    init_file();
-    init_variables();
-    init_eval();
+    compile_init(*argv2[0]);
 
     fin = openfile(NULL, "", 0, NULL, &nopoint);
     opts = testarg(argc2, argv2, fin); argc = *argc2; argv = *argv2;
     if (opts <= 0) {
-        tfree();
+        compile_destroy();
         return (opts < 0) ? EXIT_FAILURE : EXIT_SUCCESS;
     }
     init_encoding(arguments.to_ascii);
@@ -4987,6 +4991,6 @@ int main2(int *argc2, char **argv2[]) {
         if (!failed) sectionprint(stdout);
         fflush(stdout);
     }
-    tfree();
+    compile_destroy();
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }
