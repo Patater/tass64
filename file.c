@@ -737,24 +737,23 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
         if (command_line == NULL) command_line = lastfi;
     }
     if (tmp == NULL) { /* new file */
-        FILE *f;
-        filesize_t fp;
-
-        lastfi->nomacro = NULL;
-        lastfi->line = NULL;
-        lastfi->lines = 0;
-        lastfi->data = NULL;
-        lastfi->len = 0;
-        lastfi->open = 0;
-        lastfi->err_no = 0;
-        lastfi->read_error = false;
-        lastfi->portable = false;
-        lastfi->pass = 0;
-        lastfi->entercount = 0;
-        lastfi->encoding = E_UNKNOWN;
         tmp = lastfi;
         lastfi = NULL;
+        tmp->nomacro = NULL;
+        tmp->line = NULL;
+        tmp->lines = 0;
+        tmp->data = NULL;
+        tmp->len = 0;
+        tmp->open = 0;
+        tmp->err_no = 0;
+        tmp->read_error = false;
+        tmp->portable = false;
+        tmp->pass = 0;
+        tmp->entercount = 0;
+        tmp->encoding = E_UNKNOWN;
         if (name != NULL) {
+            FILE *f;
+            filesize_t fp;
             int err = 1;
             char *path = NULL;
             size_t namelen = strlen(name) + 1;
