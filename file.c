@@ -435,9 +435,288 @@ static filesize_t fsize(FILE *f) {
     return 0;
 }
 
+static filesize_t read_binary(struct file_s *tmp, FILE *f, int *err) {
+    filesize_t fp = 0;
+    bool check;
+    filesize_t fs = fsize(f);
+    if (fs > 0) {
+        tmp->data = allocate_array(uint8_t, fs);
+        if (tmp->data != NULL) tmp->len = fs;
+    }
+    check = (tmp->data != NULL);
+    clearerr(f); errno = 0;
+    if (tmp->len != 0 || !extendfile(tmp)) {
+        for (;;) {
+            fp += (filesize_t)fread(tmp->data + fp, 1, tmp->len - fp, f);
+            if (feof(f) == 0 && fp >= tmp->len && !signal_received) {
+                if (check) {
+                    int c2 = getc(f);
+                    check = false;
+                    if (c2 != EOF) {
+                        if (extendfile(tmp)) break;
+                        tmp->data[fp++] = (uint8_t)c2;
+                        continue;
+                    }
+                } else {
+                    if (extendfile(tmp)) break;
+                    continue;
+                }
+            }
+            *err = 0;
+            break;
+        }
+    }
+    return fp;
+}
+
+static struct ubuff_s last_ubuff;
+static filesize_t read_source(struct file_s *tmp, FILE *f, int *err) {
+    Encoding_types encoding = E_UNKNOWN;
+    filesize_t fp = 0;
+    unichar_t c = 0;
+    struct ubuff_s ubuff = last_ubuff;
+    size_t max_lines = 0;
+    linenum_t lines = 0;
+    uint8_t buffer[BUFSIZ * 2];
+    size_t bp = 0, bl;
+    unsigned int qr = 1;
+    filesize_t fs = fsize(f);
+    if (fs > 0) {
+        filesize_t len2;
+        if (add_overflow(fs, 4096, &len2)) len2 = ~(filesize_t)0;
+        tmp->data = allocate_array(uint8_t, len2);
+        if (tmp->data != NULL) tmp->len = len2;
+        max_lines = (len2 / 20 + 1024) & ~(size_t)1023;
+        tmp->line = allocate_array(filesize_t, max_lines);
+        if (tmp->line == NULL) max_lines = 0;
+    }
+    clearerr(f); errno = 0;
+    bl = fread(buffer, 1, BUFSIZ, f);
+    if (bl != 0 && buffer[0] == 0) encoding = E_UTF16BE; /* most likely */
+#ifdef _WIN32
+    setlocale(LC_CTYPE, "");
+#endif
+    ubuff.p = 0;
+    do {
+        filesize_t p;
+        unichar_t lastchar;
+        bool qc = true;
+        uint8_t cclass = 0;
+
+        if (lines >= max_lines) {
+            filesize_t *d;
+            size_t len2;
+            if (add_overflow(max_lines, 1024, &len2)) goto failed;
+            d = reallocate_array(tmp->line, len2);
+            if (d == NULL) goto failed;
+            tmp->line = d;
+            max_lines = len2;
+        }
+        tmp->line[lines] = fp;
+        if (inc_overflow(&lines, 1)) goto failed;
+        p = fp;
+        for (;;) {
+            unsigned int i, j;
+            uint8_t ch2;
+            if (p + 6*6 + 1 > tmp->len && extendfile(tmp)) goto failed;
+            if (bp / (BUFSIZ / 2) == qr) {
+                if (qr == 1) {
+                    qr = 3;
+                    if (feof(f) == 0) bl = BUFSIZ + fread(buffer + BUFSIZ, 1, BUFSIZ, f);
+                } else {
+                    qr = 1;
+                    if (feof(f) == 0) bl = fread(buffer, 1, BUFSIZ, f);
+                }
+                if (signal_received) bl = bp;
+            }
+            if (bp == bl) break;
+            lastchar = c;
+            c = buffer[bp]; bp = (bp + 1) % (BUFSIZ * 2);
+            if (!arguments.to_ascii) {
+                if (c == 10) {
+                    if (lastchar == 13) continue;
+                    break;
+                }
+                if (c == 13) {
+                    break;
+                }
+                if (c != 0 && c < 0x80) tmp->data[p++] = (uint8_t)c; else p += utf8out(c, tmp->data + p);
+                continue;
+            }
+            switch (encoding) {
+            case E_UNKNOWN:
+            case E_UTF8:
+                if (c < 0x80) goto done;
+                if (c < 0xc0) {
+                invalid:
+                    if (encoding == E_UNKNOWN) {
+                        c = fromiso(c);
+                        encoding = E_ISO; break;
+                    }
+                    c = REPLACEMENT_CHARACTER; break;
+                }
+                ch2 = (bp == bl) ? 0 : buffer[bp];
+                if (c < 0xe0) {
+                    if (c < 0xc2) goto invalid;
+                    c ^= 0xc0; i = 1;
+                } else if (c < 0xf0) {
+                    if ((c ^ 0xe0) == 0 && (ch2 ^ 0xa0) >= 0x20) goto invalid;
+                    c ^= 0xe0; i = 2;
+                } else if (c < 0xf8) {
+                    if ((c ^ 0xf0) == 0 && (uint8_t)(ch2 - 0x90) >= 0x30) goto invalid;
+                    c ^= 0xf0; i = 3;
+                } else if (c < 0xfc) {
+                    if ((c ^ 0xf8) == 0 && (uint8_t)(ch2 - 0x88) >= 0x38) goto invalid;
+                    c ^= 0xf8; i = 4;
+                } else if (c < 0xfe) {
+                    if ((c ^ 0xfc) == 0 && (uint8_t)(ch2 - 0x84) >= 0x3c) goto invalid;
+                    c ^= 0xfc; i = 5;
+                } else {
+                    if (encoding != E_UNKNOWN) goto invalid;
+                    if (c == 0xff && ch2 == 0xfe) encoding = E_UTF16LE;
+                    else if (c == 0xfe && ch2 == 0xff) encoding = E_UTF16BE;
+                    else goto invalid;
+                    bp = (bp + 1) % (BUFSIZ * 2);
+                    continue;
+                }
+
+                for (j = i; i != 0; i--) {
+                    if (bp != bl) {
+                        ch2 = buffer[bp];
+                        if ((ch2 ^ 0x80) < 0x40) {
+                            c = (c << 6) ^ ch2 ^ 0x80;
+                            bp = (bp + 1) % (BUFSIZ * 2);
+                            continue;
+                        }
+                    }
+                    if (encoding != E_UNKNOWN) {
+                        c = REPLACEMENT_CHARACTER;break;
+                    }
+                    encoding = E_ISO;
+                    i = (j - i) * 6;
+                    qc = false;
+                    if (ubuff.p >= ubuff.len && extend_ubuff(&ubuff)) goto failed;
+                    ubuff.data[ubuff.p++] = fromiso(((~0x7f >> j) & 0xff) | (c >> i));
+                    for (;i != 0; i-= 6) {
+                        if (ubuff.p >= ubuff.len && extend_ubuff(&ubuff)) goto failed;
+                        ubuff.data[ubuff.p++] = fromiso(((c >> (i-6)) & 0x3f) | 0x80);
+                    }
+                    if (bp == bl) goto eof;
+                    c = (ch2 >= 0x80) ? fromiso(ch2) : ch2;
+                    j = 0;
+                    bp = (bp + 1) % (BUFSIZ * 2);
+                    break;
+                }
+                if (j != 0) encoding = E_UTF8;
+                break;
+            case E_UTF16LE:
+                if (bp == bl) goto invalid;
+                c |= (unichar_t)buffer[bp] << 8; bp = (bp + 1) % (BUFSIZ * 2);
+                if (c == 0xfffe) {
+                    encoding = E_UTF16BE;
+                    continue;
+                }
+                break;
+            case E_UTF16BE:
+                if (bp == bl) goto invalid;
+                c = (c << 8) | buffer[bp]; bp = (bp + 1) % (BUFSIZ * 2);
+                if (c == 0xfffe) {
+                    encoding = E_UTF16LE;
+                    continue;
+                }
+                break;
+            case E_ISO:
+                if (c >= 0x80) c = fromiso(c);
+                goto done;
+            }
+            if (c == 0xfeff) continue;
+            if (encoding != E_UTF8) {
+                if (c >= 0xd800 && c < 0xdc00) {
+                    if (lastchar < 0xd800 || lastchar >= 0xdc00) continue;
+                    c = REPLACEMENT_CHARACTER;
+                } else if (c >= 0xdc00 && c < 0xe000) {
+                    if (lastchar >= 0xd800 && lastchar < 0xdc00) {
+                        c ^= 0x360dc00 ^ (lastchar << 10);
+                        c += 0x10000;
+                    } else c = REPLACEMENT_CHARACTER;
+                } else if (lastchar >= 0xd800 && lastchar < 0xdc00) {
+                    c = REPLACEMENT_CHARACTER;
+                }
+            }
+        done:
+            if (c < 0xc0) {
+                if (c == 10) {
+                    if (lastchar == 13) continue;
+                    break;
+                }
+                if (c == 13) {
+                    break;
+                }
+                cclass = 0;
+                if (!qc) {
+                    if (unfc(&ubuff)) goto failed;
+                    qc = true;
+                }
+                if (ubuff.p == 1) {
+                    if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
+                } else {
+                    if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
+                    ubuff.p = 1;
+                }
+                ubuff.data[0] = c;
+            } else {
+                const struct properties_s *prop = uget_property(c);
+                uint8_t ncclass = prop->combclass;
+                if ((ncclass != 0 && cclass > ncclass) || (prop->property & (qc_N | qc_M)) != 0) {
+                    qc = false;
+                    if (ubuff.p >= ubuff.len && extend_ubuff(&ubuff)) goto failed;
+                    ubuff.data[ubuff.p++] = c;
+                } else {
+                    if (!qc) {
+                        if (unfc(&ubuff)) goto failed;
+                        qc = true;
+                    }
+                    if (ubuff.p == 1) {
+                        if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
+                    } else {
+                        if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
+                        ubuff.p = 1;
+                    }
+                    ubuff.data[0] = c;
+                }
+                cclass = ncclass;
+            }
+        }
+    eof:
+        if (!qc && unfc(&ubuff)) goto failed;
+        if (ubuff.p == 1) {
+            if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
+        } else {
+            if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
+        }
+        ubuff.p = 0;
+        while (p > fp && (tmp->data[p - 1] == ' ' || tmp->data[p - 1] == '\t')) p--;
+        if (fp == 0 && p > 1 && tmp->data[0] == '#' && tmp->data[1] == '!') p = 0;
+        tmp->data[p++] = 0;
+        fp = p;
+    } while (bp != bl);
+    *err = 0;
+failed:
+#ifdef _WIN32
+    setlocale(LC_CTYPE, "C");
+#endif
+    last_ubuff = ubuff;
+    tmp->lines = lines;
+    if (lines != max_lines) {
+        filesize_t *d = reallocate_array(tmp->line, lines);
+        if (lines == 0 || d != NULL) tmp->line = d;
+    }
+    tmp->encoding = encoding;
+    return fp;
+}
+
 static struct file_s *command_line = NULL;
 static struct file_s *lastfi = NULL;
-static struct ubuff_s last_ubuff;
 static uint16_t curfnum;
 struct file_s *openfile(const char *name, const char *base, unsigned int ftype, const str_t *val, linepos_t epoint) {
     struct file_s *tmp;
@@ -458,10 +737,8 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
         if (command_line == NULL) command_line = lastfi;
     }
     if (tmp == NULL) { /* new file */
-        Encoding_types encoding = E_UNKNOWN;
         FILE *f;
-        unichar_t c = 0;
-        filesize_t fp = 0;
+        filesize_t fp;
 
         lastfi->nomacro = NULL;
         lastfi->line = NULL;
@@ -474,6 +751,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
         lastfi->portable = false;
         lastfi->pass = 0;
         lastfi->entercount = 0;
+        lastfi->encoding = E_UNKNOWN;
         tmp = lastfi;
         lastfi = NULL;
         if (name != NULL) {
@@ -504,275 +782,8 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
             }
             if (f == NULL) goto openerr;
             tmp->read_error = true;
-            if (ftype == 1) {
-                bool check;
-                filesize_t fs = fsize(f);
-                if (fs > 0) {
-                    tmp->data = allocate_array(uint8_t, fs);
-                    if (tmp->data != NULL) tmp->len = fs;
-                }
-                check = (tmp->data != NULL);
-                clearerr(f); errno = 0;
-                if (tmp->len != 0 || !extendfile(tmp)) {
-                    for (;;) {
-                        fp += (filesize_t)fread(tmp->data + fp, 1, tmp->len - fp, f);
-                        if (feof(f) == 0 && fp >= tmp->len && !signal_received) {
-                            if (check) {
-                                int c2 = getc(f);
-                                check = false;
-                                if (c2 != EOF) {
-                                    if (extendfile(tmp)) break;
-                                    tmp->data[fp++] = (uint8_t)c2;
-                                    continue;
-                                }
-                            } else {
-                                if (extendfile(tmp)) break;
-                                continue;
-                            }
-                        }
-                        err = 0;
-                        break;
-                    }
-                }
-            } else {
-                struct ubuff_s ubuff = last_ubuff;
-                size_t max_lines = 0;
-                linenum_t lines = 0;
-                uint8_t buffer[BUFSIZ * 2];
-                size_t bp = 0, bl;
-                unsigned int qr = 1;
-                filesize_t fs = fsize(f);
-                if (fs > 0) {
-                    filesize_t len2;
-                    if (add_overflow(fs, 4096, &len2)) len2 = ~(filesize_t)0;
-                    tmp->data = allocate_array(uint8_t, len2);
-                    if (tmp->data != NULL) tmp->len = len2;
-                    max_lines = (len2 / 20 + 1024) & ~(size_t)1023;
-                    tmp->line = allocate_array(filesize_t, max_lines);
-                    if (tmp->line == NULL) max_lines = 0;
-                }
-                clearerr(f); errno = 0;
-                bl = fread(buffer, 1, BUFSIZ, f);
-                if (bl != 0 && buffer[0] == 0) encoding = E_UTF16BE; /* most likely */
-#ifdef _WIN32
-                setlocale(LC_CTYPE, "");
-#endif
-                ubuff.p = 0;
-                do {
-                    filesize_t p;
-                    unichar_t lastchar;
-                    bool qc = true;
-                    uint8_t cclass = 0;
-
-                    if (lines >= max_lines) {
-                        filesize_t *d;
-                        size_t len2;
-                        if (add_overflow(max_lines, 1024, &len2)) goto failed;
-                        d = reallocate_array(tmp->line, len2);
-                        if (d == NULL) goto failed;
-                        tmp->line = d;
-                        max_lines = len2;
-                    }
-                    tmp->line[lines] = fp;
-                    if (inc_overflow(&lines, 1)) goto failed;
-                    p = fp;
-                    for (;;) {
-                        unsigned int i, j;
-                        uint8_t ch2;
-                        if (p + 6*6 + 1 > tmp->len && extendfile(tmp)) goto failed;
-                        if (bp / (BUFSIZ / 2) == qr) {
-                            if (qr == 1) {
-                                qr = 3;
-                                if (feof(f) == 0) bl = BUFSIZ + fread(buffer + BUFSIZ, 1, BUFSIZ, f);
-                            } else {
-                                qr = 1;
-                                if (feof(f) == 0) bl = fread(buffer, 1, BUFSIZ, f);
-                            }
-                            if (signal_received) bl = bp;
-                        }
-                        if (bp == bl) break;
-                        lastchar = c;
-                        c = buffer[bp]; bp = (bp + 1) % (BUFSIZ * 2);
-                        if (!arguments.to_ascii) {
-                            if (c == 10) {
-                                if (lastchar == 13) continue;
-                                break;
-                            }
-                            if (c == 13) {
-                                break;
-                            }
-                            if (c != 0 && c < 0x80) tmp->data[p++] = (uint8_t)c; else p += utf8out(c, tmp->data + p);
-                            continue;
-                        }
-                        switch (encoding) {
-                        case E_UNKNOWN:
-                        case E_UTF8:
-                            if (c < 0x80) goto done;
-                            if (c < 0xc0) {
-                            invalid:
-                                if (encoding == E_UNKNOWN) {
-                                    c = fromiso(c);
-                                    encoding = E_ISO; break;
-                                }
-                                c = REPLACEMENT_CHARACTER; break;
-                            }
-                            ch2 = (bp == bl) ? 0 : buffer[bp];
-                            if (c < 0xe0) {
-                                if (c < 0xc2) goto invalid;
-                                c ^= 0xc0; i = 1;
-                            } else if (c < 0xf0) {
-                                if ((c ^ 0xe0) == 0 && (ch2 ^ 0xa0) >= 0x20) goto invalid;
-                                c ^= 0xe0; i = 2;
-                            } else if (c < 0xf8) {
-                                if ((c ^ 0xf0) == 0 && (uint8_t)(ch2 - 0x90) >= 0x30) goto invalid;
-                                c ^= 0xf0; i = 3;
-                            } else if (c < 0xfc) {
-                                if ((c ^ 0xf8) == 0 && (uint8_t)(ch2 - 0x88) >= 0x38) goto invalid;
-                                c ^= 0xf8; i = 4;
-                            } else if (c < 0xfe) {
-                                if ((c ^ 0xfc) == 0 && (uint8_t)(ch2 - 0x84) >= 0x3c) goto invalid;
-                                c ^= 0xfc; i = 5;
-                            } else {
-                                if (encoding != E_UNKNOWN) goto invalid;
-                                if (c == 0xff && ch2 == 0xfe) encoding = E_UTF16LE;
-                                else if (c == 0xfe && ch2 == 0xff) encoding = E_UTF16BE;
-                                else goto invalid;
-                                bp = (bp + 1) % (BUFSIZ * 2);
-                                continue;
-                            }
-
-                            for (j = i; i != 0; i--) {
-                                if (bp != bl) {
-                                    ch2 = buffer[bp];
-                                    if ((ch2 ^ 0x80) < 0x40) {
-                                        c = (c << 6) ^ ch2 ^ 0x80;
-                                        bp = (bp + 1) % (BUFSIZ * 2);
-                                        continue;
-                                    }
-                                }
-                                if (encoding != E_UNKNOWN) {
-                                    c = REPLACEMENT_CHARACTER;break;
-                                }
-                                encoding = E_ISO;
-                                i = (j - i) * 6;
-                                qc = false;
-                                if (ubuff.p >= ubuff.len && extend_ubuff(&ubuff)) goto failed;
-                                ubuff.data[ubuff.p++] = fromiso(((~0x7f >> j) & 0xff) | (c >> i));
-                                for (;i != 0; i-= 6) {
-                                    if (ubuff.p >= ubuff.len && extend_ubuff(&ubuff)) goto failed;
-                                    ubuff.data[ubuff.p++] = fromiso(((c >> (i-6)) & 0x3f) | 0x80);
-                                }
-                                if (bp == bl) goto eof;
-                                c = (ch2 >= 0x80) ? fromiso(ch2) : ch2;
-                                j = 0;
-                                bp = (bp + 1) % (BUFSIZ * 2);
-                                break;
-                            }
-                            if (j != 0) encoding = E_UTF8;
-                            break;
-                        case E_UTF16LE:
-                            if (bp == bl) goto invalid;
-                            c |= (unichar_t)buffer[bp] << 8; bp = (bp + 1) % (BUFSIZ * 2);
-                            if (c == 0xfffe) {
-                                encoding = E_UTF16BE;
-                                continue;
-                            }
-                            break;
-                        case E_UTF16BE:
-                            if (bp == bl) goto invalid;
-                            c = (c << 8) | buffer[bp]; bp = (bp + 1) % (BUFSIZ * 2);
-                            if (c == 0xfffe) {
-                                encoding = E_UTF16LE;
-                                continue;
-                            }
-                            break;
-                        case E_ISO:
-                            if (c >= 0x80) c = fromiso(c);
-                            goto done;
-                        }
-                        if (c == 0xfeff) continue;
-                        if (encoding != E_UTF8) {
-                            if (c >= 0xd800 && c < 0xdc00) {
-                                if (lastchar < 0xd800 || lastchar >= 0xdc00) continue;
-                                c = REPLACEMENT_CHARACTER;
-                            } else if (c >= 0xdc00 && c < 0xe000) {
-                                if (lastchar >= 0xd800 && lastchar < 0xdc00) {
-                                    c ^= 0x360dc00 ^ (lastchar << 10);
-                                    c += 0x10000;
-                                } else c = REPLACEMENT_CHARACTER;
-                            } else if (lastchar >= 0xd800 && lastchar < 0xdc00) {
-                                c = REPLACEMENT_CHARACTER;
-                            }
-                        }
-                    done:
-                        if (c < 0xc0) {
-                            if (c == 10) {
-                                if (lastchar == 13) continue;
-                                break;
-                            }
-                            if (c == 13) {
-                                break;
-                            }
-                            cclass = 0;
-                            if (!qc) {
-                                if (unfc(&ubuff)) goto failed;
-                                qc = true;
-                            }
-                            if (ubuff.p == 1) {
-                                if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
-                            } else {
-                                if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
-                                ubuff.p = 1;
-                            }
-                            ubuff.data[0] = c;
-                        } else {
-                            const struct properties_s *prop = uget_property(c);
-                            uint8_t ncclass = prop->combclass;
-                            if ((ncclass != 0 && cclass > ncclass) || (prop->property & (qc_N | qc_M)) != 0) {
-                                qc = false;
-                                if (ubuff.p >= ubuff.len && extend_ubuff(&ubuff)) goto failed;
-                                ubuff.data[ubuff.p++] = c;
-                            } else {
-                                if (!qc) {
-                                    if (unfc(&ubuff)) goto failed;
-                                    qc = true;
-                                }
-                                if (ubuff.p == 1) {
-                                    if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
-                                } else {
-                                    if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
-                                    ubuff.p = 1;
-                                }
-                                ubuff.data[0] = c;
-                            }
-                            cclass = ncclass;
-                        }
-                    }
-                eof:
-                    if (!qc && unfc(&ubuff)) goto failed;
-                    if (ubuff.p == 1) {
-                        if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) tmp->data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], tmp->data + p);
-                    } else {
-                        if (ubuff.p != 0 && flush_ubuff(&ubuff, &p, tmp)) goto failed;
-                    }
-                    ubuff.p = 0;
-                    while (p > fp && (tmp->data[p - 1] == ' ' || tmp->data[p - 1] == '\t')) p--;
-                    if (fp == 0 && p > 1 && tmp->data[0] == '#' && tmp->data[1] == '!') p = 0;
-                    tmp->data[p++] = 0;
-                    fp = p;
-                } while (bp != bl);
-                err = 0;
-            failed:
-#ifdef _WIN32
-                setlocale(LC_CTYPE, "C");
-#endif
-                last_ubuff = ubuff;
-                tmp->lines = lines;
-                if (lines != max_lines) {
-                    filesize_t *d = reallocate_array(tmp->line, lines);
-                    if (lines == 0 || d != NULL) tmp->line = d;
-                }
-            }
+            if (ftype == 1) fp = read_binary(tmp, f, &err);
+            else fp = read_source(tmp, f, &err);
             if (fp == 0) {
                 free(tmp->data);
                 tmp->data = NULL;
@@ -805,7 +816,6 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
         }
 
         tmp->uid = (ftype != 1) ? curfnum++ : 0;
-        tmp->encoding = encoding;
     }
     if (tmp->err_no != 0) {
         if (tmp->pass != pass) {
