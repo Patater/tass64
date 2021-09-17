@@ -369,7 +369,7 @@ static void file_free(struct file_s *a)
     free(a);
 }
 
-static bool extendfile(struct file_s *tmp) {
+static bool file_extend(struct file_s *tmp) {
     uint8_t *d;
     filesize_t len2;
     if (add_overflow(tmp->len, 4096, &len2)) return true;
@@ -380,12 +380,23 @@ static bool extendfile(struct file_s *tmp) {
     return false;
 }
 
+static void file_normalize(struct file_s *file, filesize_t fp) {
+    if (fp == 0) {
+        free(file->data);
+        file->data = NULL;
+    } else if (file->len != fp) {
+        uint8_t *d = reallocate_array(file->data, fp);
+        if (d != NULL) file->data = d;
+    }
+    file->len = fp;
+}
+
 static bool flush_ubuff(struct ubuff_s *ubuff, filesize_t *p2, struct file_s *tmp) {
     uint32_t i;
     filesize_t p = *p2;
     for (i = 0; i < ubuff->p; i++) {
         unichar_t ch;
-        if (p + 6*6 + 1 > tmp->len && extendfile(tmp)) return true;
+        if (p + 6*6 + 1 > tmp->len && file_extend(tmp)) return true;
         ch = ubuff->data[i];
         if (ch != 0 && ch < 0x80) tmp->data[p++] = (uint8_t)ch; else p += utf8out(ch, tmp->data + p);
     }
@@ -435,17 +446,6 @@ static filesize_t fsize(FILE *f) {
     return 0;
 }
 
-static void file_normalize(struct file_s *file, filesize_t fp) {
-    if (fp == 0) {
-        free(file->data);
-        file->data = NULL;
-    } else if (file->len != fp) {
-        uint8_t *d = reallocate_array(file->data, fp);
-        if (d != NULL) file->data = d;
-    }
-    file->len = fp;
-}
-
 static int read_binary(struct file_s *file, FILE *f) {
     filesize_t fp = 0;
     int err = 1;
@@ -455,7 +455,7 @@ static int read_binary(struct file_s *file, FILE *f) {
         if (file->data != NULL) file->len = fs;
     }
     clearerr(f); errno = 0;
-    if (file->len != 0 || !extendfile(file)) {
+    if (file->len != 0 || !file_extend(file)) {
         bool check = (file->data != NULL);
         for (;;) {
             fp += (filesize_t)fread(file->data + fp, 1, file->len - fp, f);
@@ -464,12 +464,12 @@ static int read_binary(struct file_s *file, FILE *f) {
                     int c2 = getc(f);
                     check = false;
                     if (c2 != EOF) {
-                        if (extendfile(file)) break;
+                        if (file_extend(file)) break;
                         file->data[fp++] = (uint8_t)c2;
                         continue;
                     }
                 } else {
-                    if (extendfile(file)) break;
+                    if (file_extend(file)) break;
                     continue;
                 }
             }
@@ -531,7 +531,7 @@ static int read_source(struct file_s *file, FILE *f) {
         for (;;) {
             unsigned int i, j;
             uint8_t ch2;
-            if (p + 6*6 + 1 > file->len && extendfile(file)) goto failed;
+            if (p + 6*6 + 1 > file->len && file_extend(file)) goto failed;
             if (bp / (BUFSIZ / 2) == qr) {
                 if (qr == 1) {
                     qr = 3;
