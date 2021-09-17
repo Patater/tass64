@@ -28,7 +28,7 @@
 #endif
 #include <errno.h>
 #include "error.h"
-#include "file.h"
+#include "unicode.h"
 #include "64tass.h"
 #include "listing.h"
 #include "arguments.h"
@@ -530,7 +530,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 #endif
         fout = stdout;
     } else {
-        fout = file_open(output->name, output->append ? (binary ? "ab" : "at") : (binary ? "wb" : "wt"));
+        fout = fopen_utf8(output->name, output->append ? (binary ? "ab" : "at") : (binary ? "wb" : "wt"));
     }
     if (fout == NULL) {
         err_msg_file(ERROR_CANT_WRTE_OBJ, output->name, &nopoint);

@@ -34,8 +34,6 @@
 #include "unicodedata.h"
 #include "avl.h"
 
-#define REPLACEMENT_CHARACTER 0xfffd
-
 struct include_list_s {
     struct include_list_s *next;
 #if __STDC_VERSION__ >= 199901L
@@ -155,41 +153,6 @@ char *get_path(const str_t *v, const char *base) {
     return path;
 }
 
-#ifdef _WIN32
-static MUST_CHECK wchar_t *convert_name(const char *name, size_t max) {
-    wchar_t *wname;
-    unichar_t ch;
-    size_t i = 0, j = 0, len = ((max != SIZE_MAX) ? max : strlen(name)) + 2;
-    wname = allocate_array(wchar_t, len);
-    if (wname == NULL) return NULL;
-    while (name[i] != 0 && i < max) {
-        ch = (uint8_t)name[i];
-        if ((ch & 0x80) != 0) {
-            i += utf8in((const uint8_t *)name + i, &ch);
-            if (ch == 0) ch = REPLACEMENT_CHARACTER;
-        } else i++;
-        if (j + 3 > len) {
-            wchar_t *d;
-            if (inc_overflow(&len, 64)) goto failed;
-            d = reallocate_array(wname, len);
-            if (d == NULL) goto failed;
-            wname = d;
-        }
-        if (ch < 0x10000) {
-        } else if (ch < 0x110000) {
-            wname[j++] = (wchar_t)((ch >> 10) + 0xd7c0);
-            ch = (ch & 0x3ff) | 0xdc00;
-        } else ch = REPLACEMENT_CHARACTER;
-        wname[j++] = (wchar_t)ch;
-    }
-    wname[j] = 0;
-    return wname;
-failed:
-    free(wname);
-    return NULL;
-}
-#endif
-
 static bool portability(const str_t *name, linepos_t epoint) {
     struct linepos_s epoint2;
     const uint8_t *pos;
@@ -273,12 +236,12 @@ static wchar_t *get_real_name(const wchar_t *name) {
 }
 
 static bool portability2(const str_t *name, const char *realname, linepos_t epoint) {
-    wchar_t *wname = convert_name(realname, SIZE_MAX);
+    wchar_t *wname = utf8_to_wchar(realname, SIZE_MAX);
     if (wname != NULL) {
         bool different = false;
         wchar_t *wname2 = get_real_name(wname);
         if (wname2 != NULL) {
-            wchar_t *bname = convert_name((const char *)name->data, name->len);
+            wchar_t *bname = utf8_to_wchar((const char *)name->data, name->len);
             if (bname != NULL) {
                 size_t len = wcslen(wname);
                 size_t len2 = wcslen(bname);
@@ -304,60 +267,6 @@ static bool portability2(const str_t *name, const char *realname, linepos_t epoi
     return portability(name, epoint);
 }
 #endif
-
-FILE *file_open(const char *name, const char *mode) {
-    FILE *f;
-#ifdef _WIN32
-    wchar_t *wname, *c2, wmode[3];
-    const uint8_t *c;
-    wname = convert_name(name, SIZE_MAX);
-    if (wname == NULL) {
-        errno = ENOMEM;
-        return NULL;
-    }
-    c2 = wmode; c = (uint8_t *)mode;
-    while ((*c2++=(wchar_t)*c++) != 0);
-    f = _wfopen(wname, wmode);
-    free(wname);
-#else
-    size_t len = 0, max = strlen(name) + 1;
-    char *newname = allocate_array(char, max);
-    const uint8_t *c = (const uint8_t *)name;
-    unichar_t ch;
-    mbstate_t ps;
-    errno = ENOMEM;
-    f = NULL;
-    if (newname == NULL || max < 1) goto failed;
-    memset(&ps, 0, sizeof ps);
-    do {
-        char temp[64];
-        ssize_t l;
-        ch = *c;
-        if ((ch & 0x80) != 0) {
-            c += utf8in(c, &ch);
-            if (ch == 0) {errno = ENOENT; goto failed;}
-        } else c++;
-        l = (ssize_t)wcrtomb(temp, (wchar_t)ch, &ps);
-        if (l <= 0) goto failed;
-        len += (size_t)l;
-        if (len < (size_t)l) goto failed;
-        if (len > max) {
-            char *d;
-            if (add_overflow(len, 64, &max)) goto failed;
-            d = reallocate_array(newname, max);
-            if (d == NULL) goto failed;
-            newname = d;
-        }
-        memcpy(newname + len - l, temp, (size_t)l);
-    } while (ch != 0);
-    errno = 0;
-    f = fopen(newname, mode);
-    if (f == NULL && errno == 0) errno = (mode[0] == 'r') ? ENOENT : EINVAL;
-failed:
-    free(newname);
-#endif
-    return f;
-}
 
 static void file_free(struct file_s *a)
 {
@@ -483,6 +392,7 @@ static int read_binary(struct file_s *file, FILE *f) {
 
 static struct ubuff_s last_ubuff;
 static int read_source(struct file_s *file, FILE *f) {
+    enum { REPLACEMENT_CHARACTER = 0xfffd };
     Encoding_types encoding = E_UNKNOWN;
     filesize_t fp = 0;
     unichar_t c = 0;
@@ -732,7 +642,7 @@ failed:
 static struct file_s *command_line = NULL;
 static struct file_s *lastfi = NULL;
 static uint16_t curfnum;
-struct file_s *openfile(const char *name, const char *base, unsigned int ftype, const str_t *val, linepos_t epoint) {
+struct file_s *file_open(const char *name, const char *base, unsigned int ftype, const str_t *val, linepos_t epoint) {
     struct file_s *file;
     char *s;
     if (lastfi == NULL) new_instance(&lastfi);
@@ -774,15 +684,15 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
             memcpy(s, name, namelen); file->name = s;
             if (val != NULL) {
                 struct include_list_s *i = include_list.next;
-                f = file_open(name, "rb");
+                f = fopen_utf8(name, "rb");
                 while (f == NULL && i != NULL) {
                     free(path);
                     path = get_path(val, i->path);
-                    f = file_open(path, "rb");
+                    f = fopen_utf8(path, "rb");
                     i = i->next;
                 }
             } else {
-                f = dash_name(name) ? stdin : file_open(name, "rb");
+                f = dash_name(name) ? stdin : fopen_utf8(name, "rb");
             }
             if (path == NULL) path = s;
             file->realname = path;
@@ -845,7 +755,7 @@ struct file_s *openfile(const char *name, const char *base, unsigned int ftype, 
     return file;
 }
 
-void closefile(struct file_s *f) {
+void file_close(struct file_s *f) {
     if (f->open != 0) f->open--;
 }
 
@@ -967,7 +877,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
     size_t len = 0, j;
     int i, err;
 
-    f = dash_name(arguments.make) ? stdout : file_open(arguments.make, "wt");
+    f = dash_name(arguments.make) ? stdout : fopen_utf8(arguments.make, "wt");
     if (f == NULL) {
         err_msg_file(ERROR_CANT_WRTE_MAK, arguments.make, &nopoint);
         return;

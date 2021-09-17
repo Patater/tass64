@@ -697,7 +697,7 @@ void labelprint(const struct symbol_output_s *output) {
     int err;
     Namespace *space;
 
-    flab = dash_name(output->name) ? stdout : file_open(output->name, output->append ? "at" : "wt");
+    flab = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
     if (flab == NULL) {
         err_msg_file(ERROR_CANT_WRTE_LBL, output->name, &nopoint);
         return;

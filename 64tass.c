@@ -3633,7 +3633,7 @@ MUST_CHECK Obj *compile(void)
                         vs = get_val();
                         if (!tostr(vs, &filename)) {
                             char *path = get_path(&filename, current_file_list->file->realname);
-                            cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, &vs->epoint);
+                            cfile2 = file_open(path, current_file_list->file->realname, 1, &filename, &vs->epoint);
                             free(path);
                         }
                         if ((vs = get_val()) != NULL) {
@@ -4262,7 +4262,7 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val();
                     if (!tostr(vs, &filename)) {
                         char *path = get_path(&filename, current_file_list->file->realname);
-                        f = openfile(path, current_file_list->file->realname, 2, &filename, &vs->epoint);
+                        f = file_open(path, current_file_list->file->realname, 2, &filename, &vs->epoint);
                         free(path);
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
@@ -4306,7 +4306,7 @@ MUST_CHECK Obj *compile(void)
                         exitfile();
                         listing_file(listing, ";******  Return to file: ", current_file_list->file);
                     }
-                    closefile(f);
+                    file_close(f);
                     goto breakerr;
                 }
                 break;
@@ -4889,13 +4889,13 @@ static void one_pass(int argc, char **argv, int opts, struct file_s *fin) {
             continue;
         }
 
-        cfile = openfile(argv[i], "", 0, NULL, &nopoint);
+        cfile = file_open(argv[i], "", 0, NULL, &nopoint);
         if (cfile != NULL) {
             enterfile(cfile, &nopoint);
             listing_file(listing, ";******  Processing input file: ", cfile);
             val = compile();
             if (val != NULL) val_destroy(val);
-            closefile(cfile);
+            file_close(cfile);
             exitfile();
         }
     }
@@ -4916,7 +4916,7 @@ int main2(int *argc2, char **argv2[]) {
 
     compile_init(*argv2[0]);
 
-    fin = openfile(NULL, "", 0, NULL, &nopoint);
+    fin = file_open(NULL, "", 0, NULL, &nopoint);
     opts = testarg(argc2, argv2, fin); argc = *argc2; argv = *argv2;
     if (opts <= 0) {
         compile_destroy();

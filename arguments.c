@@ -752,7 +752,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
         for (i = my_optind; i < argc; i++) {
             char *arg = argv[i];
             if (arg[0] == '@' && arg[1] != 0) {
-                FILE *f = file_open(arg + 1, "rb");
+                FILE *f = fopen_utf8(arg + 1, "rb");
                 if (f == NULL) continue;
                 while (feof(f) == 0) {
                     size_t l;
@@ -811,7 +811,7 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
         filesize_t *d = reallocate_array(fin->line, fin->lines);
         if (fin->lines == 0 || d != NULL) fin->line = d;
     }
-    closefile(fin);
+    file_close(fin);
     if (fp != fin->len) {
         fin->len = fp;
         if (fp != 0) {
