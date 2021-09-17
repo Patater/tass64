@@ -433,7 +433,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
 
     if (!tostr(&v[0], &filename)) {
         char *path = get_path(&filename, current_file_list->file->realname);
-        cfile2 = openfile(path, current_file_list->file->realname, 1, &filename, &v[0].epoint);
+        cfile2 = file_open(path, current_file_list->file->realname, 1, &filename, &v[0].epoint);
         free(path);
     }
 

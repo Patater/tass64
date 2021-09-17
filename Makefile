@@ -163,7 +163,7 @@ math.o: math.c math.h
 memblocksobj.o: memblocksobj.c memblocksobj.h obj.h attributes.h \
  inttypes.h stdbool.h values.h error.h errors_e.h typeobj.h
 mem.o: mem.c mem.h attributes.h stdbool.h inttypes.h error.h errors_e.h \
- file.h str.h 64tass.h wait_e.h listing.h arguments.h values.h \
+ unicode.h 64tass.h wait_e.h listing.h arguments.h values.h \
  memblocksobj.h obj.h
 mfuncobj.o: mfuncobj.c mfuncobj.h obj.h attributes.h inttypes.h str.h \
  stdbool.h values.h eval.h oper_e.h error.h errors_e.h macro.h wait_e.h \

@@ -41,6 +41,12 @@ extern void printable_print(const uint8_t *, FILE *);
 extern size_t printable_print2(const uint8_t *, FILE *, size_t);
 extern void caret_print(const uint8_t *, FILE *, size_t);
 extern size_t calcpos(const uint8_t *, size_t);
+extern MUST_CHECK wchar_t *utf8_to_wchar(const char *, size_t);
+extern FILE *fopen_utf8(const char *, const char *);
+
+static inline bool dash_name(const char *name) {
+    return (name[0] == '-' && name[1] == 0);
+}
 
 static inline unsigned int utf8len(unichar_t ch) {
     if (ch < 0x80) return 1;

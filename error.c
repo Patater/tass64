@@ -1465,7 +1465,7 @@ void error_print(const struct error_output_s *output) {
     }
 
     if (output->name != NULL) {
-        ferr = dash_name(output->name) ? stdout : file_open(output->name, output->append ? "at" : "wt");
+        ferr = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
         if (ferr == NULL) {
             err_msg_file(ERROR_CANT_WRTE_ERR, output->name, &nopoint);
             ferr = stderr;
