@@ -60,12 +60,11 @@ struct star_s {
 };
 
 extern struct file_s *file_open(const char *, const char *, unsigned int, const struct str_t *, linepos_t);
-extern void file_close(struct file_s*);
+extern void file_close(struct file_s *);
 extern struct star_s *new_star(linenum_t);
 extern struct star_s *init_star(linenum_t);
 extern void destroy_file(void);
 extern void init_file(void);
-extern void include_list_add(const char *);
 extern size_t get_base(const char *);
 extern char *get_path(const struct str_t *, const char *);
 extern void makefile(int, char *[], bool);

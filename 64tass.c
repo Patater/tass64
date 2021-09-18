@@ -337,8 +337,7 @@ static void compile_destroy(void) {
     destroy_file();
     destroy_ternary();
     destroy_opt_bit();
-    free(arguments.output);
-    free(arguments.symbol_output);
+    destroy_arguments();
     if (unfc(NULL)) {}
     if (unfkc(NULL, NULL, 0)) {}
     str_cfcpy(NULL, NULL);
