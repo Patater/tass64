@@ -24,7 +24,7 @@
 #include "str.h"
 
 typedef enum Encoding_types {
-    E_UNKNOWN, E_UTF8, E_UTF16LE, E_UTF16BE, E_ISO
+    E_UNKNOWN, E_UTF8, E_UTF16LE, E_UTF16BE, E_ISO, E_RAW
 } Encoding_types;
 
 typedef uint32_t filesize_t;
