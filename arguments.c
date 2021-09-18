@@ -230,8 +230,8 @@ static struct diagnostics_s diagnostic_error_all = {
 };
 
 struct w_options_s {
-    const char *name;
-    bool *opt;
+    const char *const name;
+    bool *const opt;
 };
 
 static const struct w_options_s w_options[] = {
@@ -328,7 +328,7 @@ static bool woption(const char *s) {
     return true;
 }
 
-static const char *short_options = "wqnbfXaTCBicxtel:L:I:M:msV?o:D:E:W:";
+static const char *const short_options = "wqnbfXaTCBicxtel:L:I:M:msV?o:D:E:W:";
 
 enum {
     HELP = 256, USAGE, TAB_SIZE, CARET_DIAG, MACRO_CARET_DIAG, NO_CARET_DIAG,

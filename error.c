@@ -708,7 +708,7 @@ static void notdefines_free(struct avltree_node *aa) {
     free(a);
 }
 
-static struct notdefines_s *lastnd = NULL;
+static struct notdefines_s *lastnd;
 static void err_msg_not_defined3(const Error *err) {
     Namespace *l = err->u.notdef.names;
     struct notdefines_s *tmp2;
@@ -1572,6 +1572,7 @@ void err_init(const char *name) {
     dummy_file_list = &file_list.flist;
     included_from = &file_list;
     avltree_init(&notdefines);
+    lastnd = NULL;
 }
 
 void err_destroy(void) {

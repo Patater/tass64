@@ -32,7 +32,7 @@ static void longjump_free(struct avltree_node *aa)
     free(a);
 }
 
-static struct longjump_s *lastlj = NULL;
+static struct longjump_s *lastlj;
 struct longjump_s *new_longjump(struct avltree *t, address_t address) {
     struct avltree_node *b;
     struct longjump_s *tmp;
@@ -51,6 +51,7 @@ struct longjump_s *new_longjump(struct avltree *t, address_t address) {
 
 void destroy_longjump(void) {
     free(lastlj);
+    lastlj = NULL;
 }
 
 void longjump_destroy(struct avltree *t) {

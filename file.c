@@ -37,6 +37,7 @@
 static struct {
     size_t len, mask;
     struct file_s **data;
+    uint16_t uid;
 } file_table;
 
 static struct file_s *file_table_update(struct file_s *p) {
@@ -365,7 +366,6 @@ static int read_binary(struct file_s *file, FILE *f) {
 
 static struct ubuff_s last_ubuff;
 static int read_source(struct file_s *file, FILE *f) {
-    static uint16_t curfnum;
     enum { REPLACEMENT_CHARACTER = 0xfffd };
     Encoding_types encoding = E_UNKNOWN;
     filesize_t fp = 0, bfp = 0;
@@ -635,14 +635,14 @@ failed:
         if (lines == 0 || d != NULL) file->line = d;
     }
     file->encoding = encoding;
-    file->uid = ++curfnum;
+    file->uid = ++file_table.uid;
     file_normalize(&file->source, fp);
     return err;
 }
 
 struct file_s file_defines;
 struct file_s file_stdin;
-static struct file_s *lastfi = NULL;
+static struct file_s *lastfi;
 struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype, linepos_t epoint) {
     struct file_s *file;
     switch (ftype) {
@@ -866,6 +866,7 @@ void init_file(void) {
     file_table.len = 0;
     file_table.mask = 0;
     file_table.data = NULL;
+    file_table.uid = 0;
     file_stdin.name = file_stdin.realname = "-";
     file_defines.name = ""; 
     file_defines.realname = "<command line>";
@@ -875,6 +876,7 @@ void init_file(void) {
     lastst = &stars->stars[starsp];
     new_array(&last_ubuff.data, 16);
     last_ubuff.len = 16;
+    lastfi = NULL;
     avltree_init(&star_root.tree);
 }
 
