@@ -703,7 +703,7 @@ struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype
             file->read_error = true;
             file->binary.data = (uint8_t *)arguments.defines.data;
             arguments.defines.data = NULL;
-            file->binary.len = arguments.defines.len;
+            file->binary.len = (arguments.defines.len & ~(size_t)~(filesize_t)0) == 0 ? (filesize_t)arguments.defines.len : ~(filesize_t)0;
             arguments.defines.len = 0;
             file->binary.read = true;
         } else if (arguments.quiet) {
