@@ -374,7 +374,7 @@ static int read_source(struct file_s *file, FILE *f) {
     size_t max_lines = 0;
     linenum_t lines = 0;
     uint8_t buffer[BUFSIZ * 2];
-    size_t bp = 0, bl;
+    filesize_t bp = 0, bl;
     unsigned int qr = 1;
     int err = 1;
     filesize_t fs = (f == NULL) ? file->binary.len : fsize(f);
@@ -393,7 +393,7 @@ static int read_source(struct file_s *file, FILE *f) {
         if (bl > 0) memcpy(buffer, file->binary.data, bl);
     } else {
         clearerr(f); errno = 0;
-        bl = fread(buffer, 1, BUFSIZ, f);
+        bl = (filesize_t)fread(buffer, 1, BUFSIZ, f);
     }
     if (bl != 0 && buffer[0] == 0) encoding = E_UTF16BE; /* most likely */
 #ifdef _WIN32
@@ -434,7 +434,7 @@ static int read_source(struct file_s *file, FILE *f) {
                         }
                         bl = BUFSIZ + rl;
                     } else {
-                        if (feof(f) == 0) bl = BUFSIZ + fread(buffer + BUFSIZ, 1, BUFSIZ, f);
+                        if (feof(f) == 0) bl = BUFSIZ + (filesize_t)fread(buffer + BUFSIZ, 1, BUFSIZ, f);
                     }
                 } else {
                     qr = 1;
@@ -447,7 +447,7 @@ static int read_source(struct file_s *file, FILE *f) {
                         }
                         bl = rl;
                     } else {
-                        if (feof(f) == 0) bl = fread(buffer, 1, BUFSIZ, f);
+                        if (feof(f) == 0) bl = (filesize_t)fread(buffer, 1, BUFSIZ, f);
                     }
                 }
                 if (signal_received) bl = bp;
@@ -640,8 +640,8 @@ failed:
     return err;
 }
 
-struct file_s file_defines;
-struct file_s file_stdin;
+static struct file_s file_defines;
+static struct file_s file_stdin;
 static struct file_s *lastfi;
 struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype, linepos_t epoint) {
     struct file_s *file;
