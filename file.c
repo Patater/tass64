@@ -367,7 +367,7 @@ static int read_binary(struct file_s *file, FILE *f) {
 static struct ubuff_s last_ubuff;
 static int read_source(struct file_s *file, FILE *f) {
     enum { REPLACEMENT_CHARACTER = 0xfffd };
-    Encoding_types encoding = E_UNKNOWN;
+    Encoding_types encoding = arguments.to_ascii ? E_UNKNOWN : E_RAW;
     filesize_t fp = 0, bfp = 0;
     unichar_t c = 0;
     struct ubuff_s ubuff = last_ubuff;
@@ -395,7 +395,7 @@ static int read_source(struct file_s *file, FILE *f) {
         clearerr(f); errno = 0;
         bl = (filesize_t)fread(buffer, 1, BUFSIZ, f);
     }
-    if (bl != 0 && buffer[0] == 0) encoding = E_UTF16BE; /* most likely */
+    if (encoding == E_UNKNOWN && bl != 0 && buffer[0] == 0) encoding = E_UTF16BE; /* most likely */
 #ifdef _WIN32
     setlocale(LC_CTYPE, "");
 #endif
@@ -455,18 +455,17 @@ static int read_source(struct file_s *file, FILE *f) {
             if (bp == bl) break;
             lastchar = c;
             c = buffer[bp]; bp = (bp + 1) % (BUFSIZ * 2);
-            if (!arguments.to_ascii) {
+            switch (encoding) {
+            case E_RAW:
                 if (c == 10) {
                     if (lastchar == 13) continue;
-                    break;
+                    goto eol;
                 }
                 if (c == 13) {
-                    break;
+                    goto eol;
                 }
                 if (c != 0 && c < 0x80) file->source.data[p++] = (uint8_t)c; else p += utf8out(c, file->source.data + p);
                 continue;
-            }
-            switch (encoding) {
             case E_UNKNOWN:
             case E_UTF8:
                 if (c < 0x80) goto done;
@@ -524,7 +523,7 @@ static int read_source(struct file_s *file, FILE *f) {
                         if (ubuff.p >= ubuff.len && extend_ubuff(&ubuff)) goto failed;
                         ubuff.data[ubuff.p++] = fromiso(((c >> (i-6)) & 0x3f) | 0x80);
                     }
-                    if (bp == bl) goto eof;
+                    if (bp == bl) goto eol;
                     c = (ch2 >= 0x80) ? fromiso(ch2) : ch2;
                     j = 0;
                     bp = (bp + 1) % (BUFSIZ * 2);
@@ -570,10 +569,10 @@ static int read_source(struct file_s *file, FILE *f) {
             if (c < 0xc0) {
                 if (c == 10) {
                     if (lastchar == 13) continue;
-                    break;
+                    goto eol;
                 }
                 if (c == 13) {
-                    break;
+                    goto eol;
                 }
                 cclass = 0;
                 if (!qc) {
@@ -610,7 +609,7 @@ static int read_source(struct file_s *file, FILE *f) {
                 cclass = ncclass;
             }
         }
-    eof:
+    eol:
         if (!qc && unfc(&ubuff)) goto failed;
         if (ubuff.p == 1) {
             if (ubuff.data[0] != 0 && ubuff.data[0] < 0x80) file->source.data[p++] = (uint8_t)ubuff.data[0]; else p += utf8out(ubuff.data[0], file->source.data + p);
