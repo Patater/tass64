@@ -167,7 +167,7 @@ static struct waitfor_s {
 
 struct star_s *star_tree = NULL;
 
-static const char * const command[] = { /* must be sorted, first char is the ID */
+static const char *const command[] = { /* must be sorted, first char is the ID */
     "\x08" "addr",
     "\x22" "al",
     "\x34" "align",

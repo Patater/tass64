@@ -322,7 +322,7 @@ static void adderror(const char *s) {
     adderror2((const uint8_t *)s, strlen(s));
 }
 
-static const char * const terr_warning[] = {
+static const char *const terr_warning[] = {
     "deprecated modulo operator, use '%' instead",
     "deprecated not equal operator, use '!=' instead",
     "deprecated directive, only for TASM compatible mode",
@@ -341,7 +341,7 @@ static const char * const terr_warning[] = {
     "use relative path for '"
 };
 
-static const char * const terr_error[] = {
+static const char *const terr_error[] = {
     "double defined range",
     "double defined escape",
     "extra characters on line",
@@ -398,7 +398,7 @@ static const char * const terr_error[] = {
     "not measurable as start offset beyond size of original"
 };
 
-static const char * const terr_fatal[] = {
+static const char *const terr_fatal[] = {
     "can't open file",
     "error reading file",
     "can't write object file",
@@ -1095,7 +1095,7 @@ void err_msg_macro_prefix(linepos_t epoint) {
     adderror("macro call without prefix [-Wmacro-prefix]");
 }
 
-static const char * const opr_names[ADR_LEN] = {
+static const char *const opr_names[ADR_LEN] = {
     "", /* ADR_REG */
     "", /* ADR_IMPLIED */
     "", /* ADR_IMMEDIATE */
@@ -1168,7 +1168,7 @@ void err_msg_shadow_defined2(Label *l) {
     adderror(" [-Wshadow]");
 }
 
-static const char * const order_suffix[4] = {
+static const char order_suffix[4][3] = {
     "st", "nd", "rd", "th"
 };
 
