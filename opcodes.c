@@ -849,7 +849,7 @@ const struct cpu_s c4510 = {
 
 const char *reg_names = "axysdrizbkp";
 
-const char * const addr_modes[ADR_LEN+1] = {
+const char *const addr_modes[ADR_LEN+1] = {
     "a",      /* ADR_REG */
     " ",      /* ADR_IMPLIED */
     "#",      /* ADR_IMMEDIATE */

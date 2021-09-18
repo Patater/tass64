@@ -117,7 +117,7 @@ static const struct translate_table_s petscii_trans[] = {
 };
 
 /* PETSCII codes, must be sorted */
-const char *petscii_esc =
+const char *const petscii_esc =
     "\x07" "{bell}\0"
     "\x90" "{black}\0"
     "\x90" "{blk}\0"
@@ -425,7 +425,7 @@ static const struct translate_table_s petscii_screen_trans[] = {
 };
 
 /* petscii screen codes, must be sorted */
-static const char *petscii_screen_esc =
+static const char petscii_screen_esc[] =
     "\x5f" "{cbm-*}\0"
     "\x66" "{cbm-+}\0"
     "\x5c" "{cbm--}\0"

@@ -328,7 +328,7 @@ static bool woption(const char *s) {
     return true;
 }
 
-static const char *const short_options = "wqnbfXaTCBicxtel:L:I:M:msV?o:D:E:W:";
+static const char short_options[] = "wqnbfXaTCBicxtel:L:I:M:msV?o:D:E:W:";
 
 enum {
     HELP = 256, USAGE, TAB_SIZE, CARET_DIAG, MACRO_CARET_DIAG, NO_CARET_DIAG,
