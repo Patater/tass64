@@ -120,7 +120,7 @@ static FAST_CALL int duplicate_compare(const struct avltree_node *aa, const stru
         } else if (a->epoint.line == 0) {
             aline = (const uint8_t *)"";
         } else {
-            aline = &a->file_list->file->data[a->file_list->file->line[a->epoint.line - 1]];
+            aline = &a->file_list->file->source.data[a->file_list->file->line[a->epoint.line - 1]];
         }
 
         if (b->line_len != 0) {
@@ -129,7 +129,7 @@ static FAST_CALL int duplicate_compare(const struct avltree_node *aa, const stru
         } else if (a->epoint.line == 0) {
             bline = (const uint8_t *)"";
         } else {
-            bline = &a->file_list->file->data[a->file_list->file->line[a->epoint.line - 1]];
+            bline = &a->file_list->file->source.data[a->file_list->file->line[a->epoint.line - 1]];
         }
 
         i = strcmp((const char *)aline, (const char *)bline);
@@ -1360,7 +1360,7 @@ static const uint8_t *printline(const struct file_list_s *cfile, linepos_t epoin
     const struct file_s *file;
     if (epoint->line == 0) return NULL;
     file = cfile->file;
-    if (line == NULL) line = &file->data[file->line[epoint->line - 1]];
+    if (line == NULL) line = &file->source.data[file->line[epoint->line - 1]];
     fprintf(f, ":%" PRIuline ":%" PRIlinepos, epoint->line, ((file->encoding == E_UTF8) ? (linecpos_t)calcpos(line, epoint->pos) : epoint->pos) + 1);
     return line;
 }
@@ -1561,8 +1561,8 @@ void err_init(const char *name) {
     lastfl = &file_lists->file_lists[file_listsp];
     file_list_file.name = "";
     file_list_file.realname = file_list_file.name;
-    file_list_file.data = (uint8_t *)0;
-    file_list_file.len = ~(filesize_t)0;
+    file_list_file.source.data = (uint8_t *)0;
+    file_list_file.source.len = ~(filesize_t)0;
     file_list.flist.file = &file_list_file;
     avltree_init(&file_list.members);
     error_list.len = error_list.max = error_list.header_pos = 0;

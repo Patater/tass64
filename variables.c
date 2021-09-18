@@ -615,7 +615,7 @@ static void labelprint2(Namespace *names, FILE *flab, Symbollist_types labelmode
 }
 
 static inline const uint8_t *get_line(const struct file_s *file, linenum_t line) {
-    return &file->data[file->line[line - 1]];
+    return &file->source.data[file->line[line - 1]];
 }
 
 static void labeldump(Namespace *names, FILE *flab) {

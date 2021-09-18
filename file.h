@@ -29,6 +29,12 @@ typedef enum Encoding_types {
 
 typedef uint32_t filesize_t;
 
+struct file_data_s {
+    uint8_t *data;
+    filesize_t len;
+    bool read;
+};
+
 struct file_s {
     const char *name;
     const char *realname;
@@ -37,20 +43,20 @@ struct file_s {
     uint8_t *nomacro;
     filesize_t *line;
     linenum_t lines;
-    uint8_t *data;    /* data */
-    filesize_t len;   /* length */
-    uint16_t open;    /* open/not open */
-    uint16_t uid;     /* uid */
-    unsigned int type;
+    struct file_data_s source;
+    struct file_data_s binary;
+    uint16_t uid;
     int err_no;
+    bool open;
     bool read_error;
     bool portable;
+    bool cmdline;
     uint8_t pass;
     uint8_t entercount;
     Encoding_types encoding;
 };
 
-#define not_in_file(a, b) ((size_t)((a) - (1 ? (b) : (struct file_s *)(void *)(b))->data) >= (b)->len)
+#define not_in_file(a, b) ((size_t)((a) - (1 ? (b) : (struct file_s *)(void *)(b))->source.data) >= (b)->source.len)
 
 struct star_s {
     linenum_t line, vline;
@@ -58,14 +64,11 @@ struct star_s {
     uint8_t pass;
 };
 
-extern struct file_s *file_open(const char *, const char *, unsigned int, const struct str_t *, linepos_t);
-extern void file_close(struct file_s *);
+extern struct file_s *file_open(const struct str_t *, const char *, unsigned int, linepos_t);
 extern struct star_s *new_star(linenum_t);
 extern struct star_s *init_star(linenum_t);
 extern void destroy_file(void);
 extern void init_file(void);
-extern size_t get_base(const char *);
-extern char *get_path(const struct str_t *, const char *);
 extern void makefile(int, char *[], bool);
 
 #endif
