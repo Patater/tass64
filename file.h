@@ -45,7 +45,6 @@ struct file_s {
     linenum_t lines;
     struct file_data_s source;
     struct file_data_s binary;
-    uint16_t uid;
     int err_no;
     bool open;
     bool read_error;
@@ -53,6 +52,7 @@ struct file_s {
     bool cmdline;
     uint8_t pass;
     uint8_t entercount;
+    uint16_t uid;
     Encoding_types encoding;
 };
 
