@@ -34,20 +34,6 @@
 #include "unicodedata.h"
 #include "avl.h"
 
-struct include_list_s {
-    struct include_list_s *next;
-#if __STDC_VERSION__ >= 199901L
-    char path[];
-#elif __GNUC__ >= 3
-    char path[];
-#else
-    char path[1];
-#endif
-};
-
-static struct include_list_s include_list;
-static struct include_list_s *include_list_last = &include_list;
-
 static struct {
     size_t len, mask;
     struct file_s **data;
@@ -93,26 +79,6 @@ static struct file_s *file_table_update(struct file_s *p) {
     file_table.data[offs] = p;
     file_table.len++;
     return NULL;
-}
-
-void include_list_add(const char *path)
-{
-    size_t i, j, len;
-    j = i = strlen(path);
-    if (i == 0) return;
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
-    if (path[i - 1] != '/' && path[i-1] != '\\') j++;
-#else
-    if (path[i - 1] != '/') j++;
-#endif
-    len = j + 1;
-    if (inc_overflow(&len, sizeof(struct include_list_s))) err_msg_out_of_memory();
-    include_list_last->next = (struct include_list_s *)allocate_array(uint8_t, len);
-    if (include_list_last->next == NULL) err_msg_out_of_memory();
-    include_list_last = include_list_last->next;
-    include_list_last->next = NULL;
-    memcpy(include_list_last->path, path, i + 1);
-    if (i != j) memcpy(include_list_last->path + i, "/", 2);
 }
 
 #if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
@@ -683,7 +649,7 @@ struct file_s *file_open(const char *name, const char *base, unsigned int ftype,
             new_array(&s, namelen);
             memcpy(s, name, namelen); file->name = s;
             if (val != NULL) {
-                struct include_list_s *i = include_list.next;
+                struct include_list_s *i = arguments.include;
                 f = fopen_utf8(name, "rb");
                 while (f == NULL && i != NULL) {
                     free(path);
@@ -830,13 +796,6 @@ void destroy_file(void) {
     free(lastfi);
     free(last_ubuff.data);
     if (command_line != NULL) file_free(command_line);
-
-    include_list_last = include_list.next;
-    while (include_list_last != NULL) {
-        struct include_list_s *tmp = include_list_last;
-        include_list_last = tmp->next;
-        free(tmp);
-    }
 
     while (stars != NULL) {
         old = stars;

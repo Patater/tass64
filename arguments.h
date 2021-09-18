@@ -67,6 +67,17 @@ struct list_output_s {
     bool verbose;
 };
 
+struct include_list_s {
+    struct include_list_s *next;
+#if __STDC_VERSION__ >= 199901L
+    char path[];
+#elif __GNUC__ >= 3
+    char path[];
+#else
+    char path[1];
+#endif
+};
+
 struct arguments_s {
     bool quiet;
     bool to_ascii;
@@ -79,6 +90,7 @@ struct arguments_s {
     const struct cpu_s *cpumode;
     struct symbol_output_s *symbol_output;
     size_t symbol_output_len;
+    struct include_list_s *include;
     struct list_output_s list;
     const char *make;
     struct error_output_s error;
@@ -127,6 +139,7 @@ struct diagnostics_s {
 };
 
 extern int testarg(int *, char ***, struct file_s *);
+extern void destroy_arguments(void);
 extern struct arguments_s arguments;
 extern struct diagnostics_s diagnostics, diagnostic_errors;
 

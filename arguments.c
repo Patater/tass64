@@ -41,6 +41,7 @@ struct arguments_s arguments = {
     &c6502,      /* cpumode */
     NULL,        /* symbol_output */
     0,           /* symbol_output_len */
+    NULL,        /* include */
     {            /* list */
         NULL,    /* name */
         true,    /* monitor */
@@ -489,6 +490,29 @@ static address_t get_all_mem2(void) {
     return min;
 }
 
+static void include_list_add(const char *path)
+{
+    static struct include_list_s **last = &arguments.include;
+    struct include_list_s *include; 
+    size_t i, j, len;
+    j = i = strlen(path);
+    if (i == 0) return;
+#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+    if (path[i - 1] != '/' && path[i-1] != '\\') j++;
+#else
+    if (path[i - 1] != '/') j++;
+#endif
+    len = j + 1;
+    if (inc_overflow(&len, sizeof(struct include_list_s))) err_msg_out_of_memory();
+    include = (struct include_list_s *)allocate_array(uint8_t, len);
+    if (include == NULL) err_msg_out_of_memory();
+    include->next = NULL;
+    memcpy(include->path, path, i + 1);
+    if (i != j) memcpy(include->path + i, "/", 2);
+    *last = include;
+    last = &include->next;
+}
+
 int testarg(int *argc2, char **argv2[], struct file_s *fin) {
     int argc = *argc2;
     char **argv = *argv2;
@@ -826,4 +850,16 @@ int testarg(int *argc2, char **argv2[], struct file_s *fin) {
         return -1;
     }
     return my_optind;
+}
+
+void destroy_arguments(void) {
+    struct include_list_s *include;
+    free(arguments.output);
+    free(arguments.symbol_output);
+    include = arguments.include;
+    while (include != NULL) {
+        struct include_list_s *tmp = include;
+        include = tmp->next;
+        free(tmp);
+    }
 }
