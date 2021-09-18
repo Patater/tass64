@@ -4915,7 +4915,7 @@ static void one_pass(int argc, char **argv, int opts) {
 int main2(int *argc2, char **argv2[]) {
     size_t j;
     int opts;
-    static struct linepos_s nopoint = {0, 0};
+    static const struct linepos_s nopoint = {0, 0};
     char **argv;
     int argc;
     bool failed;

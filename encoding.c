@@ -558,7 +558,7 @@ static void encoding_free(struct avltree_node *aa)
 
 static Enc *enc_from_name(str_t *, linepos_t);
 
-static struct encoding_s *lasten = NULL;
+static struct encoding_s *lasten;
 Enc *new_encoding(const str_t *name, linepos_t epoint)
 {
     struct avltree_node *b;
@@ -643,6 +643,7 @@ void init_encoding(bool toascii)
 {
     avltree_init(&encoding_tree);
     ascii_mode = toascii;
+    lasten = NULL;
 }
 
 void destroy_encoding(void)

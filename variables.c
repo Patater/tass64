@@ -48,7 +48,7 @@
 #include "errorobj.h"
 #include "mfuncobj.h"
 
-static Label *lastlb = NULL;
+static Label *lastlb;
 
 #define EQUAL_COLUMN 16
 

@@ -140,7 +140,7 @@ static FAST_CALL int trans_compare(const struct avltree_node *aa, const struct a
     return 0;
 }
 
-static struct trans_s *lasttr = NULL;
+static struct trans_s *lasttr;
 bool enc_trans_add(Enc *enc, const struct character_range_s *range, linepos_t epoint)
 {
     struct avltree_node *b;
@@ -444,6 +444,7 @@ void encobj_init(void) {
     actual_encoding->escapes = NULL;
     actual_encoding->map = NULL;
     avltree_init(&actual_encoding->ranges);
+    lasttr = NULL;
 }
 
 void encobj_destroy(void) {
