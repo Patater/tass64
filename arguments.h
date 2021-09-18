@@ -34,8 +34,6 @@ typedef enum Caret_types {
     CARET_ALWAYS, CARET_MACRO, CARET_NEVER
 } Caret_types;
 
-struct file_s;
-
 struct output_s {
     const char *name;
     const char *section;
@@ -67,6 +65,11 @@ struct list_output_s {
     bool verbose;
 };
 
+struct cmdline_defines_s {
+    char *data;
+    size_t len;
+};
+
 struct include_list_s {
     struct include_list_s *next;
 #if __STDC_VERSION__ >= 199901L
@@ -93,6 +96,7 @@ struct arguments_s {
     struct include_list_s *include;
     struct list_output_s list;
     const char *make;
+    struct cmdline_defines_s defines;
     struct error_output_s error;
     unsigned int tab_size;
 };
@@ -138,7 +142,7 @@ struct diagnostics_s {
     bool size_larger;
 };
 
-extern int testarg(int *, char ***, struct file_s *);
+extern int testarg(int *, char ***);
 extern void destroy_arguments(void);
 extern struct arguments_s arguments;
 extern struct diagnostics_s diagnostics, diagnostic_errors;
