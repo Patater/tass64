@@ -133,13 +133,8 @@ Bit *inv_bit(Bit *v) {
 
 void mod_bit(Bit *v, Bit_types b) {
     v->b = b;
-    if (v->r == NULL) return;
-    v = v->r;
-    switch (b) {
-    case B0: v->b = B1; return;
-    case B1: v->b = B0; return;
-    default: v->b = BU; return;
-    }
+    if (b == BU || v->r == NULL) return;
+    v->r->b = (b == B0) ? B1 : B0;
 }
 
 Bit_types get_bit(const Bit *v) {
