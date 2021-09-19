@@ -166,9 +166,11 @@ static NO_RETURN void err_msg_out_of_memory2(void)
 
 static void error_extend(void) {
     struct errorentry_s *err;
-    uint8_t *data = reallocate_array(error_list.data, error_list.max);
+    uint8_t *data;
     size_t diff, pos;
     bool dir;
+    if (add_overflow(error_list.len, 0x200, &error_list.max)) err_msg_out_of_memory2();
+    data = reallocate_array(error_list.data, error_list.max);
     if (data == NULL) err_msg_out_of_memory2();
     dir = data >= error_list.data;
     diff = dir ? (size_t)(data - error_list.data) : (size_t)(error_list.data - data);
@@ -194,10 +196,7 @@ static struct errorentry_s *new_error_msg_common(const uint8_t *line) {
         line_len = strlen((const char *)line) + 1;
         if (inc_overflow(&error_list.len, line_len)) err_msg_out_of_memory2();
     }
-    if (error_list.len > error_list.max) {
-        if (add_overflow(error_list.len, 0x200, &error_list.max)) err_msg_out_of_memory2();
-        error_extend();
-    }
+    if (error_list.len > error_list.max) error_extend();
     if (line_len != 0) memcpy(&error_list.data[error_list.header_pos + sizeof *err], line, line_len);
     err = (struct errorentry_s *)&error_list.data[error_list.header_pos];
     err->line_len = line_len;
@@ -316,12 +315,10 @@ void exitfile(void) {
 }
 
 static void adderror2(const uint8_t *s, size_t len) {
-    if (len + error_list.len > error_list.max) {
-        error_list.max += (len > 0x200) ? len : 0x200;
-        error_extend();
-    }
-    memcpy(error_list.data + error_list.len, s, len);
-    error_list.len += len;
+    size_t pos = error_list.len;
+    if (inc_overflow(&error_list.len, len)) err_msg_out_of_memory2();
+    if (error_list.len > error_list.max) error_extend();
+    memcpy(error_list.data + pos, s, len);
 }
 
 static void adderror(const char *s) {
