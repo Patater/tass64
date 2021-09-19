@@ -204,13 +204,33 @@ static struct errorentry_s *new_error_msg_common(const uint8_t *line) {
     return err;
 }
 
+static void adderror2(const uint8_t *s, size_t len) {
+    size_t pos = error_list.len;
+    if (inc_overflow(&error_list.len, len)) err_msg_out_of_memory2();
+    if (error_list.len > error_list.max) error_extend();
+    memcpy(error_list.data + pos, s, len);
+}
+
+static void adderror(const char *s) {
+    adderror2((const uint8_t *)s, strlen(s));
+}
+
 static struct {
     Severity_types severity;
     const struct file_list_s *flist;
     linepos_t epoint;
 } new_error_msg_more_param;
 
-static void new_error_msg_more(void);
+static void new_error_msg_more(void) {
+    struct errorentry_s *err = new_error_msg_common((new_error_msg_more_param.severity != SV_NOTE && (new_error_msg_more_param.epoint->line == lpoint.line) && not_in_file(pline, new_error_msg_more_param.flist->file)) ? pline : NULL);
+    err->severity = SV_NOTE;
+    err->file_list = new_error_msg_more_param.flist;
+    err->epoint.line = new_error_msg_more_param.epoint->line;
+    err->epoint.pos = macro_error_translate2(new_error_msg_more_param.epoint->pos);
+    err->caret = new_error_msg_more_param.epoint->pos;
+    adderror("original location in an expanded macro was here");
+}
+
 static bool new_error_msg(Severity_types severity, const struct file_list_s *flist, linepos_t epoint) {
     struct errorentry_s *err;
     if (in_macro && flist == current_file_list && epoint->line == lpoint.line) {
@@ -312,17 +332,6 @@ void enterfile(struct file_s *file, linepos_t epoint) {
 void exitfile(void) {
     struct file_listnode_s *cflist = (struct file_listnode_s *)current_file_list;
     if (cflist->parent != NULL) current_file_list = &cflist->parent->flist;
-}
-
-static void adderror2(const uint8_t *s, size_t len) {
-    size_t pos = error_list.len;
-    if (inc_overflow(&error_list.len, len)) err_msg_out_of_memory2();
-    if (error_list.len > error_list.max) error_extend();
-    memcpy(error_list.data + pos, s, len);
-}
-
-static void adderror(const char *s) {
-    adderror2((const uint8_t *)s, strlen(s));
 }
 
 static const char *const terr_warning[] = {
@@ -656,16 +665,6 @@ static void new_error_msg_err_more(const Error *err) {
     tmp->file_list = err->file_list;
     tmp->epoint = err->epoint;
     tmp->caret = (err->line == NULL) ? err->epoint.pos : err->caret;
-    adderror("original location in an expanded macro was here");
-}
-
-static void new_error_msg_more(void) {
-    struct errorentry_s *err = new_error_msg_common((new_error_msg_more_param.severity != SV_NOTE && (new_error_msg_more_param.epoint->line == lpoint.line) && not_in_file(pline, new_error_msg_more_param.flist->file)) ? pline : NULL);
-    err->severity = SV_NOTE;
-    err->file_list = new_error_msg_more_param.flist;
-    err->epoint.line = new_error_msg_more_param.epoint->line;
-    err->epoint.pos = macro_error_translate2(new_error_msg_more_param.epoint->pos);
-    err->caret = new_error_msg_more_param.epoint->pos;
     adderror("original location in an expanded macro was here");
 }
 
