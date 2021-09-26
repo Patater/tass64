@@ -329,30 +329,30 @@ static filesize_t fsize(FILE *f) {
     return 0;
 }
 
-static int read_binary(struct file_s *file, FILE *f) {
+static int read_binary(struct file_data_s *file, FILE *f) {
     filesize_t fp = 0;
     int err = 1;
     filesize_t fs = fsize(f);
     if (fs > 0) {
-        file->binary.data = allocate_array(uint8_t, fs);
-        if (file->binary.data != NULL) file->binary.len = fs;
+        file->data = allocate_array(uint8_t, fs);
+        if (file->data != NULL) file->len = fs;
     }
     clearerr(f); errno = 0;
-    if (file->binary.len != 0 || !file_extend(&file->binary)) {
-        bool check = (file->binary.data != NULL);
+    if (file->len != 0 || !file_extend(file)) {
+        bool check = (file->data != NULL);
         for (;;) {
-            fp += (filesize_t)fread(file->binary.data + fp, 1, file->binary.len - fp, f);
-            if (feof(f) == 0 && fp >= file->binary.len && !signal_received) {
+            fp += (filesize_t)fread(file->data + fp, 1, file->len - fp, f);
+            if (feof(f) == 0 && fp >= file->len && !signal_received) {
                 if (check) {
                     int c2 = getc(f);
                     check = false;
                     if (c2 != EOF) {
-                        if (file_extend(&file->binary)) break;
-                        file->binary.data[fp++] = (uint8_t)c2;
+                        if (file_extend(file)) break;
+                        file->data[fp++] = (uint8_t)c2;
                         continue;
                     }
                 } else {
-                    if (file_extend(&file->binary)) break;
+                    if (file_extend(file)) break;
                     continue;
                 }
             }
@@ -360,7 +360,7 @@ static int read_binary(struct file_s *file, FILE *f) {
             break;
         }
     }
-    file_normalize(&file->binary, fp);
+    file_normalize(file, fp);
     return err;
 }
 
@@ -736,7 +736,7 @@ struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype
             if (f != NULL) {
                 file->read_error = true;
                 if (ftype == 1) {
-                    err = read_binary(file, f);
+                    err = read_binary(&file->binary, f);
                 } else {
                     err = read_source(file, f);
                 }
