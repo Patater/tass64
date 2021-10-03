@@ -1226,6 +1226,7 @@ static bool get_val2(struct eval_context_s *ev) {
             val_destroy(val);
             continue;
         case O_IDENTITY: 
+        case O_NIDENTITY: 
             v2 = v1; v1 = &values[--vsp - 1];
             if (vsp == 0) goto syntaxe;
             val = v1->val;
@@ -1236,7 +1237,10 @@ static bool get_val2(struct eval_context_s *ev) {
                 v1->val = val;
                 continue;
             }
-            val = truth_reference(v1->val == v2->val || v1->val->obj->same(v1->val, v2->val));
+            {
+                bool result = truth_reference(v1->val == v2->val || v1->val->obj->same(v1->val, v2->val));
+                val = truth_reference(oper.op == O_IDENTITY ? result : !result);
+            }
             val_destroy(v1->val); v1->val = val;
             continue;
         case O_MIN: /* <? */
@@ -1802,7 +1806,7 @@ static bool get_exp2(int stop) {
             }
             goto push2;
         case '!':
-            if (pline[lpoint.pos + 1] == '=') {op = O_NE;goto push2;}
+            if (pline[lpoint.pos + 1] == '=') {op = pline[lpoint.pos + 2] != '=' ? O_NE : O_NIDENTITY;goto push2;}
             if (get_label(pline + lpoint.pos + 1) == 2 && 
                 (pline[epoint.pos + 1] | arguments.caseinsensitive) == 'i' &&
                 (pline[epoint.pos + 2] | arguments.caseinsensitive) == 'n') {op = O_NOTIN;goto push2;}
