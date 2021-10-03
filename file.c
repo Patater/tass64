@@ -86,6 +86,14 @@ static inline bool is_driveletter(const char *name) {
 }
 #endif
 
+static inline bool is_absolute(const str_t *v) {
+#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+    return (v->len != 0 && (v->data[0] == '/' || v->data[0] == '\\')) || (v->len > 1 && is_driveletter((const char *)v->data));
+#else
+    return v->len != 0 && v->data[0] == '/';
+#endif
+}
+
 static size_t get_base(const char *base) {
 #if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
     size_t i, j = is_driveletter(base) ? 2 : 0;
@@ -130,10 +138,6 @@ static bool portability(const str_t *name, linepos_t epoint) {
         err_msg2(ERROR_____BACKSLASH, name, &epoint2);
         return false;
     }
-    if (name->data[0] == '/' || is_driveletter((const char *)name->data)) {
-        err_msg2(ERROR_ABSOLUTE_PATH, name, epoint);
-        return false;
-    }
 #else
     const char *c;
     if (name->len == 0) return true;
@@ -145,11 +149,11 @@ static bool portability(const str_t *name, linepos_t epoint) {
         err_msg2(ERROR__RESERVED_CHR, name, &epoint2);
         return false;
     }
-    if (name->data[0] == '/') {
+#endif
+    if (is_absolute(name)) {
         err_msg2(ERROR_ABSOLUTE_PATH, name, epoint);
         return false;
     }
-#endif
     return true;
 }
 
@@ -717,7 +721,7 @@ struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype
                 f = stdin;
             } else {
                 f = fopen_utf8(file->realname, "rb");
-                if (f == NULL && (errno == ENOENT || errno == ENOTDIR) && base != NULL) {
+                if (f == NULL && (errno == ENOENT || errno == ENOTDIR) && base != NULL && !is_absolute(name)) {
                     struct include_list_s *i;
                     for (i = arguments.include; i != NULL; i = i->next) {
                         char *path = get_path(name, i->path);
