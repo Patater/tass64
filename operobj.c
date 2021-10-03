@@ -80,6 +80,7 @@ Oper operators[] = {
     { {NULL, 0}, "logical and '&&", O_LAND, 7, 2},
     { {NULL, 0}, "identity '===", O_IDENTITY, 8, 3},
     { {NULL, 0}, "contains 'in", O_IN, 8, 2},
+    { {NULL, 0}, "lacks '!in", O_NOTIN, 8, 3},
     { {NULL, 0}, "compare '<=>", O_CMP, 8, 3},
     { {NULL, 0}, "equal '==", O_EQ, 8, 2},
     { {NULL, 0}, "not equal '!=", O_NE, 8, 2},

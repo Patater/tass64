@@ -321,7 +321,7 @@ static MUST_CHECK Obj *contains(oper_t op) {
         return obj_oper_error(op);
     }
     if (l != NULL) touch_label(l);
-    return truth_reference(l != NULL);
+    return truth_reference(op->op == O_IN ? (l != NULL) : (l == NULL));
 }
 
 void namespaceobj_init(void) {

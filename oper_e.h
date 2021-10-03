@@ -73,6 +73,7 @@ typedef enum Oper_types {
     O_LAND,          /* &&    */
     O_IDENTITY,      /* ===   */
     O_IN,            /* in    */
+    O_NOTIN,         /* !in   */
     O_CMP,           /* <=>   */
     O_EQ,            /* ==    */
     O_NE,            /* !=    */
