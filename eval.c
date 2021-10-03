@@ -1215,7 +1215,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 continue;
             }
             {
-                bool result = truth_reference(v1->val == v2->val || v1->val->obj->same(v1->val, v2->val));
+                bool result = v1->val == v2->val || v1->val->obj->same(v1->val, v2->val);
                 val = truth_reference(oper.op == O_IDENTITY ? result : !result);
             }
             val_destroy(v1->val); v1->val = val;
