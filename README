@@ -1231,7 +1231,7 @@ in line with it's use in most other assemblers.
 &     binary and                        <<    shift left
 >>    shift right                       .     member
 ..    concat                            x     repeat
-in    contains                          !in   lacks
+in    contains                          !in   excludes
 
 Spacing must be used for the `x' and `in' operators or else they won't be
 recognized as such. For example the expression `[1,2]x2' should be written as
@@ -1249,10 +1249,11 @@ Traditional comparison operators give false or true depending on the result.
 The compare operator (<=>) gives -1 for less, 0 for equal and 1 for more.
 
                              Comparison operators
-<=>   compare                           ===   identical
+<=>   compare
 ==    equals                            !=    not equal
 <     less than                         >=    more than or equals
 >     more than                         <=    less than or equals
+===   identical                         !==   not identical
 
 Bit string extraction operators
 
