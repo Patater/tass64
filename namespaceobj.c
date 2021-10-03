@@ -298,7 +298,13 @@ static MUST_CHECK Obj *contains(oper_t op) {
         {
             Symbol *v1 = Symbol(o1);
             l = find_label2(&v1->name, v2);
-            if (l != NULL && diagnostics.case_symbol && str_cmp(&v1->name, &l->name) != 0) err_msg_symbol_case(&v1->name, l, op->epoint);
+            if (l != NULL) {
+                if (diagnostics.case_symbol && str_cmp(&v1->name, &l->name) != 0) err_msg_symbol_case(&v1->name, l, op->epoint);
+                if (l->constant) {
+                    err_msg_not_variable(l, &v1->name, op->epoint);
+                    l = NULL;
+                }
+            }
         }
         break;
     case T_ANONSYMBOL:
