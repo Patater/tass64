@@ -1262,6 +1262,7 @@ static bool get_val2(struct eval_context_s *ev) {
             val_destroy(val);
             continue;
         case O_IN:
+        case O_NOTIN:
             v2 = v1; v1 = &values[--vsp - 1];
             if (vsp == 0) goto syntaxe;
             epoint.pos = out->pos;
@@ -1802,6 +1803,9 @@ static bool get_exp2(int stop) {
             goto push2;
         case '!':
             if (pline[lpoint.pos + 1] == '=') {op = O_NE;goto push2;}
+            if (get_label(pline + lpoint.pos + 1) == 2 && 
+                (pline[epoint.pos + 1] | arguments.caseinsensitive) == 'i' &&
+                (pline[epoint.pos + 2] | arguments.caseinsensitive) == 'n') {op = O_NOTIN;goto push2;}
             err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
             goto error;
         case ')':

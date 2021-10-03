@@ -1231,7 +1231,7 @@ in line with it's use in most other assemblers.
 &     binary and                        <<    shift left
 >>    shift right                       .     member
 ..    concat                            x     repeat
-in    contains
+in    contains                          !in   lacks
 
 Spacing must be used for the `x' and `in' operators or else they won't be
 recognized as such. For example the expression `[1,2]x2' should be written as
