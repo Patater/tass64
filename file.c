@@ -650,6 +650,7 @@ struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype
         break;
     case 3:
         file = &file_defines;
+        if (!file->binary.read && arguments.defines.data == NULL) return NULL;
         break;
     default:
         {

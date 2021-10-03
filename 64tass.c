@@ -4875,7 +4875,7 @@ static void one_pass(int argc, char **argv, int opts) {
 
         if (i == opts - 1) {
             cfile = file_open(&cmdline_name, NULL, 3, &nopoint);
-            if (cfile != NULL && cfile->source.len != 0) {
+            if (cfile != NULL) {
                 cfile->open = true;
                 enterfile(cfile, &nopoint);
                 listing_file(listing, ";******  Command line definitions", NULL);
