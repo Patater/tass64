@@ -717,12 +717,12 @@ struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype
                 f = stdin;
             } else {
                 f = fopen_utf8(file->realname, "rb");
-                if (f == NULL && base != NULL) {
+                if (f == NULL && (errno == ENOENT || errno == ENOTDIR) && base != NULL) {
                     struct include_list_s *i;
                     for (i = arguments.include; i != NULL; i = i->next) {
                         char *path = get_path(name, i->path);
                         f = fopen_utf8(path, "rb");
-                        if (f != NULL) {
+                        if (f != NULL || (errno != ENOENT && errno != ENOTDIR)) {
                             file->realname = path;
                             break;
                         }
