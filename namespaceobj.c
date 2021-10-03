@@ -309,6 +309,10 @@ static MUST_CHECK Obj *contains(oper_t op) {
         break;
     case T_ANONSYMBOL:
         l = find_anonlabel2(Anonsymbol(o1)->count, v2);
+        if (l != NULL && l->constant) {
+            err_msg_not_variable(l, &l->name, op->epoint);
+            l = NULL;
+        }
         break;
     case T_NONE:
     case T_ERROR:
