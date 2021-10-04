@@ -1335,6 +1335,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference((v1->len != 0) ? Obj(v1) : o2);
     }
+    if (op->op == O_LXOR) {
+        if (diagnostics.strict_bool) err_msg_bool_oper(op);
+        return calc2_lxor(op, v1->len != 0);
+    }
     switch (o2->obj->type) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);

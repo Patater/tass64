@@ -1176,32 +1176,6 @@ static bool get_val2(struct eval_context_s *ev) {
                 continue;
             }
             continue;
-        case O_LXOR: /* ^^ */
-            v2 = v1; v1 = &values[--vsp - 1];
-            if (vsp == 0) goto syntaxe;
-            val = v1->val->obj->truth(v1->val, TRUTH_BOOL, &v1->epoint);
-            if (val->obj != BOOL_OBJ) {
-                val_destroy(v1->val); v1->val = val;
-                continue;
-            }
-            if (diagnostics.strict_bool && v1->val->obj != BOOL_OBJ) err_msg_bool(ERROR_____CANT_BOOL, v1->val, &v1->epoint); /* TODO */
-            {
-                Obj *val2 = v2->val->obj->truth(v2->val, TRUTH_BOOL, &v2->epoint);
-                if (val2->obj != BOOL_OBJ) {
-                    val_destroy(v1->val); v1->val = val2;
-                    val_destroy(val);
-                    continue;
-                }
-                if (diagnostics.strict_bool && v2->val->obj != BOOL_OBJ) err_msg_bool(ERROR_____CANT_BOOL, v2->val, &v2->epoint); /* TODO */
-                if (val == true_value) {
-                    if (val2 == true_value) val_replace(&v1->val, false_value);
-                } else {
-                    val_replace(&v1->val, val2 == true_value ? v2->val : false_value);
-                }
-                val_destroy(val2);
-            }
-            val_destroy(val);
-            continue;
         case O_IDENTITY: 
         case O_NIDENTITY: 
             v2 = v1; v1 = &values[--vsp - 1];
@@ -1983,6 +1957,21 @@ Obj *get_vals_addrlist(struct linepos_s *epoints) {
     }
     list->len = i;
     return Obj(list);
+}
+
+MUST_CHECK Obj *calc2_lxor(oper_t op, bool i) {
+    Obj *o2 = op->v2;
+    Obj *result = o2->obj->truth(o2, TRUTH_BOOL, op->epoint2);
+    if (result->obj != BOOL_OBJ) return result;
+    if (i == Bool(result)->value) {
+        if (i) {
+            val_destroy(result); 
+            result = ref_false();
+        }
+        return result;
+    }
+    val_destroy(result);
+    return val_reference(i ? op->v1 : o2);
 }
 
 void eval_enter(void) {
