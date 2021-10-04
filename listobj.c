@@ -244,9 +244,8 @@ static MUST_CHECK Obj *hash(Obj *o1, int *hs, linepos_t epoint) {
     return NULL;
 }
 
-static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize) {
+static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize, bool tupleorlist) {
     Tuple *v1 = List(o1);
-    bool tupleorlist = (o1->obj != ADDRLIST_OBJ && o1->obj != COLONLIST_OBJ);
     size_t i, len = tupleorlist ? 2 : 0, chars = len;
     Tuple *list = NULL;
     Obj **vals = NULL, *val;
@@ -305,6 +304,14 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize)
     if (tupleorlist) *s = (o1->obj == LIST_OBJ) ? ']' : ')';
     if (list != NULL) val_destroy(Obj(list));
     return Obj(v);
+}
+
+static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
+    return repr_listtuple(o1, epoint, maxsize, o1->obj != ADDRLIST_OBJ);
+}
+
+static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
+    return repr_listtuple(o1, epoint, maxsize, o1->obj != ADDRLIST_OBJ && o1->obj != COLONLIST_OBJ);
 }
 
 static MUST_CHECK Obj *len(oper_t op) {
@@ -900,7 +907,7 @@ static void init(Type *obj) {
     obj->rcalc2 = rcalc2;
     obj->slice = slice;
     obj->contains = contains;
-    obj->repr = repr_listtuple;
+    obj->repr = repr;
 }
 
 void listobj_init(void) {
@@ -916,13 +923,14 @@ void listobj_init(void) {
     type->destroy = destroy;
     type->garbage = garbage;
     type->same = same;
-    type->repr = repr_listtuple;
+    type->repr = repr;
 
     type = new_type(&colonlist_obj, T_COLONLIST, "colonlist", sizeof(Colonlist));
     type->destroy = destroy;
     type->garbage = garbage;
     type->same = same;
-    type->repr = repr_listtuple;
+    type->repr = repr;
+    type->str = str;
 }
 
 void listobj_names(void) {
