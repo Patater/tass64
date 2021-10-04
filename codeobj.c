@@ -596,14 +596,15 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
         return obj_oper_error(op);
     }
-    if (op->op == O_LAND || op->op == O_LOR) {
+    if (op->op == O_LAND || op->op == O_LOR || op->op == O_LXOR) {
         Obj *result = truth(Obj(v1), TRUTH_BOOL, op->epoint);
         bool i;
         if (result->obj != BOOL_OBJ) return result;
-        i = Bool(result)->value != (op->op == O_LOR);
+        i = Bool(result)->value;
         val_destroy(result);
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
-        return val_reference(i ? o2 : Obj(v1));
+        if (op->op == O_LXOR) return calc2_lxor(op, i);
+        return val_reference(i != (op->op == O_LOR) ? o2 : Obj(v1));
     }
     switch (o2->obj->type) {
     case T_CODE:

@@ -468,6 +468,7 @@ static MUST_CHECK Obj *calc2_list(oper_t op) {
     case O_MEMBER:
     case O_LAND:
     case O_LOR:
+    case O_LXOR:
         {
             if (v1->len == v2->len) {
                 if (v1->len != 0) {

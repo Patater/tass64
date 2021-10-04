@@ -375,6 +375,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference((Float(op->v1)->real != 0.0) ? op->v1 : v2);
     }
+    if (op->op == O_LXOR) {
+        if (diagnostics.strict_bool) err_msg_bool_oper(op);
+        return calc2_lxor(op, Float(op->v1)->real != 0.0);
+    }
     switch (v2->obj->type) {
     case T_FLOAT: return calc2_double(op);
     case T_BOOL:

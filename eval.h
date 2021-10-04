@@ -52,6 +52,7 @@ extern MUST_CHECK struct Obj *get_star(void);
 extern struct Obj *get_vals_tuple(void);
 extern struct Obj *get_vals_addrlist(struct linepos_s *);
 extern void touch_label(struct Label *);
+extern MUST_CHECK struct Obj *calc2_lxor(oper_t, bool);
 
 struct values_s {
     struct Obj *val;

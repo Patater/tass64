@@ -204,6 +204,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (diagnostics.strict_bool && !is_bool) err_msg_bool_oper(op);
         return val_reference(Bool(o1)->value ? o1 : o2);
     }
+    if (op->op == O_LXOR) {
+        if (diagnostics.strict_bool && !is_bool) err_msg_bool_oper(op);
+        return calc2_lxor(op, Bool(o1)->value);
+    }
     if (is_bool) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return calc2_bool(op);

@@ -1326,6 +1326,10 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         return val_reference(to_bool(v1) ? Obj(v1) : o2);
     }
+    if (op->op == O_LXOR) {
+        if (diagnostics.strict_bool) err_msg_bool_oper(op);
+        return calc2_lxor(op, to_bool(v1));
+    }
     if (o2->obj->iterable) {
         if (op->op != O_MEMBER) {
             return o2->obj->rcalc2(op);
