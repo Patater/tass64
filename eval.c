@@ -1138,7 +1138,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     continue;
                 }
             }
-            if (v1->val->obj->iterable || v1->val->obj == ADDRLIST_OBJ) {
+            if (v1->val->obj->iterable) {
                 struct iter_s iter;
                 size_t k, len;
                 argcount_t len2;
@@ -1917,19 +1917,12 @@ Obj *get_vals_tuple(void) {
 Obj *get_vals_addrlist(struct linepos_s *epoints) {
     argcount_t i, j, len = get_val_remaining();
     Addrlist *list;
-    Obj *val;
 
     switch (len) {
     case 0:
         return val_reference(null_addrlist);
     case 1:
-        val = pull_val(&epoints[0]);
-        if (val->obj == ADDRLIST_OBJ) {
-            list = Addrlist(val);
-            i = list->len < 3 ? (argcount_t)list->len : 3;
-            for (j = 1; j < i; j++) epoints[j] = epoints[0];
-        }
-        return val;
+        return pull_val(&epoints[0]);
     default:
         break;
     }
