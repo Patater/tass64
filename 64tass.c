@@ -1713,10 +1713,9 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             skip = waitfor->skip;
             waitfor->skip = 1;
             if (nopos > 0) {
-                struct linepos_s epoints[3];
                 lpoint = bpoint;
                 if (!get_exp(0, 0, 0, &bpoint)) break;
-                val = get_vals_addrlist(epoints);
+                val = get_vals_tuple();
                 if (tmp.op != O_NONE) {
                     bool minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
                     Obj *result2, *val1 = label->value;
@@ -2126,14 +2125,13 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (here() == 0 || here() == ';') val2 = val_reference(null_addrlist);
                     else {
-                        struct linepos_s epoints[3];
                         bool oldreferenceit = referenceit;
                         referenceit &= 1; /* not good... */
                         if (!get_exp(0, 0, 0, NULL)) {
                             if (label == NULL && val != NULL) val_destroy(val);
                             goto breakerr;
                         }
-                        val2 = get_vals_addrlist(epoints);
+                        val2 = get_vals_tuple();
                         referenceit = oldreferenceit;
                     }
                     if (val == NULL) {
@@ -2198,7 +2196,7 @@ MUST_CHECK Obj *compile(void)
                 switch (wht) {
                 case '=':
                     { /* variable */
-                        struct linepos_s epoints[3];
+                        struct linepos_s opoint;
                         Label *label;
                         bool labelexists;
                     starassign:
@@ -2207,7 +2205,7 @@ MUST_CHECK Obj *compile(void)
                             if (diagnostics.optimize) cpu_opt_invalidate();
                         } else label = find_label3(&labelname, mycontext, strength);
                         lpoint.pos++; ignore();
-                        epoints[0] = lpoint; /* for no elements! */
+                        opoint = lpoint; /* for no elements! */
                         if (here() == 0 || here() == ';') {
                             if (labelname.data[0] == '*') {
                                 err_msg(ERROR______EXPECTED, "an expression is");
@@ -2220,11 +2218,11 @@ MUST_CHECK Obj *compile(void)
                                 referenceit = false;
                             }
                             if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                            val = get_vals_addrlist(epoints);
+                            val = get_vals_tuple();
                             referenceit = oldreferenceit;
                         }
                         if (labelname.data[0] == '*') {
-                            starhandle(val, &epoint, &epoints[0]);
+                            starhandle(val, &epoint, &opoint);
                             goto finish;
                         }
                         if (label != NULL) {
@@ -2280,11 +2278,10 @@ MUST_CHECK Obj *compile(void)
                             label = find_label3(&labelname, mycontext, strength);
                             if (here() == 0 || here() == ';') val = val_reference(null_addrlist);
                             else {
-                                struct linepos_s epoints[3];
                                 bool oldreferenceit = referenceit;
                                 referenceit &= 1; /* not good... */
                                 if (!get_exp(0, 0, 0, NULL)) goto breakerr;
-                                val = get_vals_addrlist(epoints);
+                                val = get_vals_tuple();
                                 referenceit = oldreferenceit;
                             }
                             if (label != NULL) {
