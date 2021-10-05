@@ -307,11 +307,11 @@ static MUST_CHECK Obj *repr_listtuple(Obj *o1, linepos_t epoint, size_t maxsize,
 }
 
 static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
-    return repr_listtuple(o1, epoint, maxsize, o1->obj != ADDRLIST_OBJ);
+    return repr_listtuple(o1, epoint, maxsize, true);
 }
 
 static MUST_CHECK Obj *str(Obj *o1, linepos_t epoint, size_t maxsize) {
-    return repr_listtuple(o1, epoint, maxsize, o1->obj != ADDRLIST_OBJ && o1->obj != COLONLIST_OBJ);
+    return repr_listtuple(o1, epoint, maxsize, o1->obj != COLONLIST_OBJ);
 }
 
 static MUST_CHECK Obj *len(oper_t op) {
