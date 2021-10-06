@@ -1261,11 +1261,9 @@ struct values_s *get_val(void) {
     return &eval->values[eval->values_p++];
 }
 
-Obj *pull_val(struct linepos_s *epoint) {
-    Obj *val;
+Obj *pull_val(void) {
     struct values_s *value = &eval->values[eval->values_p++];
-    if (epoint != NULL) *epoint = value->epoint;
-    val = value->val;
+    Obj *val = value->val;
     value->val = NULL;
     return val;
 }
@@ -1894,8 +1892,7 @@ bool get_exp(int stop, argcount_t min, argcount_t max, linepos_t epoint) {/* len
     return true;
 }
 
-
-Obj *get_vals_tuple(void) {
+MUST_CHECK Obj *get_vals_tuple(void) {
     argcount_t i, len = get_val_remaining();
     Tuple *list;
 
@@ -1903,53 +1900,20 @@ Obj *get_vals_tuple(void) {
     case 0:
         return val_reference(null_tuple);
     case 1:
-        return pull_val(NULL);
+        return pull_val();
     default:
         break;
     }
     list = new_tuple(len);
     for (i = 0; i < len; i++) {
-        list->data[i] = pull_val(NULL);
+        list->data[i] = pull_val();
     }
     return Obj(list);
 }
 
-Obj *get_vals_addrlist(struct linepos_s *epoints) {
-    argcount_t i, j, len = get_val_remaining();
-    Addrlist *list;
-
-    switch (len) {
-    case 0:
-        return val_reference(null_addrlist);
-    case 1:
-        return pull_val(&epoints[0]);
-    default:
-        break;
-    }
-    list = new_addrlist();
-    list->data = list_create_elements(list, len);
-    for (i = j = 0; j < len; j++) {
-        Obj *val2 = pull_val((i < 3) ? &epoints[i] : NULL);
-        if (val2->obj == REGISTER_OBJ && Register(val2)->len == 1 && i != 0) {
-            Address_types am = register_to_indexing(Register(val2)->data[0]);
-            if (am != A_NONE) {
-                val_destroy(val2);
-                val2 = apply_addressing(list->data[i - 1], am, true);
-                val_destroy(list->data[i - 1]);
-                list->data[i - 1] = val2;
-                continue;
-            }
-        }
-        list->data[i++] = val2;
-    }
-    if (i == 1) {
-        Obj *val2 = list->data[0];
-        list->len = 0;
-        val_destroy(Obj(list));
-        return val2;
-    }
-    list->len = i;
-    return Obj(list);
+void get_vals_funcargs(Funcargs *f) {
+    f->val = eval->values;
+    f->len = eval->values_len;
 }
 
 MUST_CHECK Obj *calc2_lxor(oper_t op, bool i) {
