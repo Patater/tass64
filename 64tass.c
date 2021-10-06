@@ -1714,7 +1714,11 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             waitfor->skip = 1;
             if (nopos > 0) {
                 lpoint = bpoint;
-                if (!get_exp(0, 0, 0, &bpoint)) break;
+                if (here() == 0 || here() == ';') {
+                    err_msg(ERROR______EXPECTED, "an expression is");
+                    break;
+                }
+                if (!get_exp(0, 1, 0, &bpoint)) break;
                 val = get_vals_tuple();
                 if (tmp.op != O_NONE) {
                     bool minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
@@ -2123,12 +2127,15 @@ MUST_CHECK Obj *compile(void)
                         val = label->value;
                         label->usepass = 0;
                     }
-                    if (here() == 0 || here() == ';') val2 = val_reference(null_addrlist);
-                    else {
+                    if (here() == 0 || here() == ';') {
+                        err_msg(ERROR______EXPECTED, "an expression is");
+                        goto breakerr;
+                    } else {
                         bool oldreferenceit = referenceit;
                         referenceit &= 1; /* not good... */
-                        if (!get_exp(0, 0, 0, NULL)) {
+                        if (!get_exp(0, 1, 0, NULL)) {
                             if (label == NULL && val != NULL) val_destroy(val);
+                            referenceit = oldreferenceit;
                             goto breakerr;
                         }
                         val2 = get_vals_tuple();
@@ -2207,17 +2214,17 @@ MUST_CHECK Obj *compile(void)
                         lpoint.pos++; ignore();
                         opoint = lpoint; /* for no elements! */
                         if (here() == 0 || here() == ';') {
-                            if (labelname.data[0] == '*') {
-                                err_msg(ERROR______EXPECTED, "an expression is");
-                                goto breakerr;
-                            }
-                            val = val_reference(null_addrlist);
+                            err_msg(ERROR______EXPECTED, "an expression is");
+                            goto breakerr;
                         } else {
                             bool oldreferenceit = referenceit;
                             if (label != NULL && !label->ref) {
                                 referenceit = false;
                             }
-                            if (!get_exp(0, 0, 0, NULL)) goto breakerr;
+                            if (!get_exp(0, 1, 0, NULL)) {
+                                referenceit = oldreferenceit;
+                                goto breakerr;
+                            }
                             val = get_vals_tuple();
                             referenceit = oldreferenceit;
                         }
@@ -2276,11 +2283,16 @@ MUST_CHECK Obj *compile(void)
                             bool labelexists;
                         itsvar:
                             label = find_label3(&labelname, mycontext, strength);
-                            if (here() == 0 || here() == ';') val = val_reference(null_addrlist);
-                            else {
+                            if (here() == 0 || here() == ';') {
+                                err_msg(ERROR______EXPECTED, "an expression is");
+                                goto breakerr;
+                            } else {
                                 bool oldreferenceit = referenceit;
                                 referenceit &= 1; /* not good... */
-                                if (!get_exp(0, 0, 0, NULL)) goto breakerr;
+                                if (!get_exp(0, 1, 0, NULL)) {
+                                    referenceit = oldreferenceit;
+                                    goto breakerr;
+                                }
                                 val = get_vals_tuple();
                                 referenceit = oldreferenceit;
                             }
