@@ -913,23 +913,6 @@ static void byterecursion(Obj *val, int prm, struct byterecursion_s *brec, int b
     iter_destroy(&iter);
 }
 
-static bool instrecursion(Obj *o1, int prm, unsigned int w, linepos_t epoint, struct linepos_s *epoints) {
-    struct iter_s iter;
-    Error *err;
-    bool was = false;
-    iter.data = o1; o1->obj->getiter(&iter);
-    while ((o1 = iter.next(&iter)) != NULL) {
-        if (o1->obj->iterable) {
-            if (instrecursion(o1, prm, w, epoint, epoints)) was = true;
-        } else {
-            err = instruction(prm, w, o1, epoint, epoints);
-            if (err != NULL) err_msg_output_and_destroy(err); else was = true;
-        }
-    }
-    iter_destroy(&iter);
-    return was;
-}
-
 static void logical_close(linepos_t epoint) {
     address_t diff;
     if (current_address->unionmode) {
@@ -1481,7 +1464,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 val_destroy(val); val = ref_none();
             } else {
                 if (!get_exp(1, 1, 1, &lpoint)) goto error;
-                val = pull_val(NULL);
+                val = pull_val();
             }
         }
         label = new_label(&varname, (varname.data[0] == '_') ? cheap_context : current_context, strength, &labelexists, current_file_list);
@@ -4763,7 +4746,7 @@ MUST_CHECK Obj *compile(void)
                 if (opname.len == 3 && (prm = lookup_opcode(opname.data)) >= 0) {
                     Error *err;
                     struct linepos_s oldlpoint;
-                    struct linepos_s epoints[3];
+                    Funcargs tmp;
                     unsigned int w;
                     if (false) {
                 as_opcode:
@@ -4772,8 +4755,10 @@ MUST_CHECK Obj *compile(void)
                     ignore();
                     oldlpoint = lpoint;
                     w = 3; /* 0=byte 1=word 2=long 3=negative/too big */
-                    if (here() == 0 || here() == ';') {val = val_reference(null_addrlist);}
-                    else {
+                    if (here() == 0 || here() == ';') {
+                        tmp.len = 0;
+                        err = instruction(prm, w, &tmp, &epoint);
+                    } else {
                         if (arguments.tasmcomp) {
                             if (here() == '!') {w = 1; lpoint.pos++;}
                         } else {
@@ -4788,17 +4773,10 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                         if (!get_exp(3, 0, 0, NULL)) goto breakerr;
-                        val = get_vals_addrlist(epoints);
+                        get_vals_funcargs(&tmp);
+                        err = instruction(prm, w, &tmp, &epoint);
                     }
-                    if (val->obj->iterable) {
-                        epoints[1] = epoints[0];
-                        epoints[2] = epoints[0];
-                        if (!instrecursion(val, prm, w, &epoint, epoints)) {
-                            listing_instr(listing, 0, 0, -1);
-                        }
-                        err = NULL;
-                    } else err = instruction(prm, w, val, &epoint, epoints);
-                    val_destroy(val);
+                    if (llist != NULL) listing_instr(listing, 0, 0, -1);
                     if (err == NULL) {
                         if (diagnostics.alias && prm != current_cpu->alias[prm]) err_msg_alias(current_cpu->mnemonic[prm], current_cpu->mnemonic[current_cpu->alias[prm]], &epoint);
                         break;

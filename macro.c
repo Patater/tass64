@@ -484,7 +484,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
             argcount_t j, len = get_val_remaining();
             tuple = new_tuple(len);
             for (j = 0; j < len; j++) {
-                tuple->data[j] = pull_val(NULL);
+                tuple->data[j] = pull_val();
             }
             val = val_reference(Obj(tuple));
         } else {
@@ -672,7 +672,7 @@ bool get_func_params(Mfunc *v, bool single) {
                     ret = true;
                     break;
                 }
-                param->type = pull_val(NULL);
+                param->type = pull_val();
             }
             if (here() == '=') {
                 lpoint.pos++;
@@ -680,7 +680,7 @@ bool get_func_params(Mfunc *v, bool single) {
                     ret = true;
                     break;
                 }
-                param->init = pull_val(NULL);
+                param->init = pull_val();
             }
             if (here() == 0 || here() == ';') {
                 break;
