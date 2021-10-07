@@ -728,11 +728,65 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             adrgen = AG_DB3; opr = ADR_ZP; /* lda $ff lda $ffff lda $ffffff */
             break;
         }
-        err = new_error(ERROR___NO_LOT_OPER, epoint2);
-        err->u.opers.num = 1;
-        err->u.opers.cod = mnemonic[prm];
-        return err;
+        goto unknown;
     case 2:
+        if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable) {
+            struct values_s *v;
+            argcount_t args;
+            argcount_t j;
+            size_t ln2;
+            struct elements_s {
+                Obj *oval;
+                struct iter_s iter;
+            } elements[3];
+        broadcast:
+            v = vals->val;
+            args = vals->len;
+            ln2 = 1;
+            err = NULL;
+            for (j = 0; j < args; j++) {
+                const Type *objt = v[j].val->obj;
+                if (objt->iterable) {
+                    struct iter_s *iter = &elements[j].iter;
+                    elements[j].oval = iter->data = v[j].val; objt->getiter(iter);
+                    if (iter->len == 1) {
+                        v[j].val = iter->next(iter);
+                    } else if (iter->len != ln2) {
+                        if (ln2 != 1) {
+                            err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
+                            err->u.broadcast.v1 = ln2;
+                            err->u.broadcast.v2 = iter->len;
+                            for (j++; j < args; j++) {
+                                elements[j].oval = NULL;
+                            }
+                            break;
+                        }
+                        ln2 = iter->len;
+                    }
+                } else {
+                    elements[j].oval = NULL;
+                }
+            }
+            if (err == NULL) {
+                while (ln2 != 0) {
+                    Error *err2;
+                    for (j = 0; j < args; j++) {
+                        if (elements[j].oval == NULL) continue;
+                        if (elements[j].iter.len != 1) v[j].val = elements[j].iter.next(&elements[j].iter);
+                    }
+                    err2 = instruction(prm, w, vals, epoint);
+                    if (err != NULL) err_msg_output_and_destroy(err);
+                    err = err2;
+                    ln2--;
+                }
+            }
+            for (j = 0; j < args; j++) {
+                if (elements[j].oval == NULL) continue;
+                v[j].val = elements[j].oval;
+                iter_destroy(&elements[j].iter);
+            }
+            return err;
+        }
         if (vals->val[1].val->obj == REGISTER_OBJ) {
             am = Register(vals->val[1].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[1].val)->data[0]);
             if (am != A_NONE) {
@@ -778,11 +832,11 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             opr = ADR_BIT_ZP;
             break;
         }
-        err = new_error(ERROR___NO_LOT_OPER, epoint2);
-        err->u.opers.num = 2;
-        err->u.opers.cod = mnemonic[prm];
-        return err;
+        goto unknown;
     case 3:
+        if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable || vals->val[2].val->obj->iterable) {
+            goto broadcast;
+        }
         if (cnmemonic[ADR_BIT_ZP_REL] != ____) {
             if (w != 3 && w != 1) return err_addressize((w != 0) ? ERROR__NO_LONG_ADDR : ERROR__NO_BYTE_ADDR, epoint2, prm);
             if (touval(vals->val[0].val, &uval, 3, epoint2)) {}
@@ -823,6 +877,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         FALL_THROUGH; /* fall through */
     default:
+    unknown:
         err = new_error(ERROR___NO_LOT_OPER, epoint2);
         err->u.opers.num = vals->len;
         err->u.opers.cod = mnemonic[prm];
