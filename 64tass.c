@@ -2118,7 +2118,7 @@ MUST_CHECK Obj *compile(void)
                     } else {
                         bool oldreferenceit = referenceit;
                         referenceit &= 1; /* not good... */
-                        if (!get_exp(0, 1, 0, NULL)) {
+                        if (!get_exp(0, 1, 0, &epoint2)) {
                             if (label == NULL && val != NULL) val_destroy(val);
                             referenceit = oldreferenceit;
                             goto breakerr;
@@ -2206,7 +2206,7 @@ MUST_CHECK Obj *compile(void)
                             if (label != NULL && !label->ref) {
                                 referenceit = false;
                             }
-                            if (!get_exp(0, 1, 0, NULL)) {
+                            if (!get_exp(0, 1, 0, &opoint)) {
                                 referenceit = oldreferenceit;
                                 goto breakerr;
                             }
@@ -2274,7 +2274,8 @@ MUST_CHECK Obj *compile(void)
                             } else {
                                 bool oldreferenceit = referenceit;
                                 referenceit &= 1; /* not good... */
-                                if (!get_exp(0, 1, 0, NULL)) {
+                                cmdpoint = lpoint;
+                                if (!get_exp(0, 1, 0, &cmdpoint)) {
                                     referenceit = oldreferenceit;
                                     goto breakerr;
                                 }
