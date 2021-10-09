@@ -628,10 +628,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
     argcount_t vsp = 0;
     Oper_types op;
     argcount_t i;
-    Obj *val;
     Error *err;
-    struct values_s *v1, *v2;
-    struct out_s *out;
     struct values_s *values;
     struct linepos_s epoint;
 
@@ -640,8 +637,9 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
 
     epoint.line = lpoint.line;
     for (i = ev->outp2; i < ev->out.p; i++) {
-        out = &ev->out.data[i];
-        val = out->val;
+        struct values_s *v;
+        struct out_s *out = &ev->out.data[i];
+        Obj *val = out->val;
         if (val->obj != OPER_OBJ) {
             if (vsp >= ev->values_size) values = extend_values(ev, 16);
             val = values[vsp].val;
@@ -655,7 +653,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
         op = Oper(val)->op;
 
         if (vsp < 1) goto syntaxe;
-        v1 = &values[vsp - 1];
+        v = &values[vsp - 1];
         switch (op) {
         case O_LOWER:
         case O_HIGHER:
@@ -663,17 +661,17 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
         case O_COMMAX:
         case O_COMMAY:
         case O_TUPLE:
-            switch (v1->val->obj->type) {
+            switch (v[0].val->obj->type) {
             case T_ADDRESS:
                 switch (op) {
                 case O_COMMAX:
                 case O_COMMAY:
                 case O_TUPLE:
                     {
-                        const Address *old = Address(v1->val);
+                        const Address *old = Address(v[0].val);
                         Obj *val2 = new_address(val_reference(old->val), (old->type << 4) | ((op == O_TUPLE) ? A_I : (op == O_COMMAX) ? A_XR : A_YR));
-                        val_destroy(v1->val); v1->val = val2;
-                        v1->epoint.pos = out->pos;
+                        val_destroy(v[0].val); v[0].val = val2;
+                        v[0].epoint.pos = out->pos;
                         continue;
                     }
                 default:break;
@@ -681,18 +679,18 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 epoint.pos = out->pos;
                 err = new_error(ERROR__INVALID_OPER, &epoint);
                 err->u.invoper.op = op;
-                err->u.invoper.v1 = v1->val;
+                err->u.invoper.v1 = v[0].val;
                 err->u.invoper.v2 = NULL;
-                v1->val = Obj(err);
+                v[0].val = Obj(err);
                 break;
             default:
                 {
                     uint16_t val1;
                     uval_t uval;
-                    err = v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint);
+                    err = v[0].val->obj->uval(v[0].val, &uval, 8 * sizeof uval, &v[0].epoint);
                     if (err != NULL) {
-                        val_destroy(v1->val);
-                        v1->val = Obj(err);
+                        val_destroy(v[0].val);
+                        v[0].val = Obj(err);
                         break;
                     }
                     val1 = (uint16_t)uval;
@@ -701,8 +699,8 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_HASH:
                     case O_COMMAX:
                     case O_COMMAY:
-                        v1->val = new_address(v1->val, (op == O_HASH) ? A_IMMEDIATE : (op == O_COMMAX) ? A_XR : A_YR);
-                        v1->epoint.pos = out->pos;
+                        v[0].val = new_address(v[0].val, (op == O_HASH) ? A_IMMEDIATE : (op == O_COMMAX) ? A_XR : A_YR);
+                        v[0].epoint.pos = out->pos;
                         continue;
                     case O_HIGHER:
                         val1 = (uint8_t)(val1 >> 8);
@@ -711,19 +709,19 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                         val1 = (uint8_t)val1;
                         break;
                     case O_TUPLE:
-                        v1->val = new_address(v1->val, A_I);
-                        v1->epoint.pos = out->pos;
+                        v[0].val = new_address(v[0].val, A_I);
+                        v[0].epoint.pos = out->pos;
                         continue;
                     default: break;
                     }
-                    val_destroy(v1->val);
-                    v1->val = int_from_uval(val1);
+                    val_destroy(v[0].val);
+                    v[0].val = int_from_uval(val1);
                     break;
                 }
             case T_ERROR:
             case T_NONE:break;
             }
-            v1->epoint.pos = out->pos;
+            v[0].epoint.pos = out->pos;
             continue;
         default:break;
         }
@@ -734,14 +732,15 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
             ev->values_len = 0;
             return false;
         }
-        v2 = v1; v1 = &values[--vsp - 1];
-        switch (v1->val->obj->type) {
+        vsp--;
+        v--;
+        switch (v[0].val->obj->type) {
         case T_INT:
         case T_BITS:
         case T_CODE:
         case T_STR:
         case T_ADDRESS:
-            switch (v2->val->obj->type) {
+            switch (v[1].val->obj->type) {
             case T_INT:
             case T_BITS:
             case T_CODE:
@@ -750,17 +749,17 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 {
                     uint16_t val1, val2;
                     uval_t uval;
-                    err = v1->val->obj->uval(v1->val, &uval, 8 * sizeof uval, &v1->epoint);
+                    err = v[0].val->obj->uval(v[0].val, &uval, 8 * sizeof uval, &v[0].epoint);
                     if (err != NULL) {
-                        val_destroy(v1->val);
-                        v1->val = Obj(err);
+                        val_destroy(v[0].val);
+                        v[0].val = Obj(err);
                         continue;
                     }
                     val1 = (uint16_t)uval;
-                    err = v2->val->obj->uval(v2->val, &uval, 8 * sizeof uval, &v2->epoint);
+                    err = v[1].val->obj->uval(v[1].val, &uval, 8 * sizeof uval, &v[1].epoint);
                     if (err != NULL) {
-                        val_destroy(v1->val);
-                        v1->val = Obj(err);
+                        val_destroy(v[0].val);
+                        v[0].val = Obj(err);
                         continue;
                     }
                     val2 = (uint16_t)uval;
@@ -770,7 +769,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_DIV:
                         if (val2 == 0) {
                             epoint.pos = out->pos;
-                            val_destroy(v1->val); v1->val = new_error_obj(ERROR_DIVISION_BY_Z, v2->val, &epoint);
+                            val_destroy(v[0].val); v[0].val = new_error_obj(ERROR_DIVISION_BY_Z, v[1].val, &epoint);
                             continue;
                         }
                         val1 /= val2; break;
@@ -781,8 +780,8 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                     case O_XOR: val1 ^= val2; break;
                     default: break;
                     }
-                    val_destroy(v1->val);
-                    v1->val = int_from_uval(val1);
+                    val_destroy(v[0].val);
+                    v[0].val = int_from_uval(val1);
                     continue;
                 }
             default: 
@@ -790,7 +789,7 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
                 break;
             case T_ERROR:
             case T_NONE:
-                val_replace(&v1->val, v2->val);
+                val_replace(&v[0].val, v[1].val);
                 continue;
             }
             break;
@@ -802,9 +801,9 @@ static bool get_val2_compat(struct eval_context_s *ev) {/* length in bytes, defi
         }
         err = new_error(ERROR__INVALID_OPER, &epoint);
         err->u.invoper.op = op;
-        err->u.invoper.v1 = v1->val;
-        err->u.invoper.v2 = val_reference(v2->val);
-        v1->val = Obj(err);
+        err->u.invoper.v1 = v[0].val;
+        err->u.invoper.v2 = val_reference(v[1].val);
+        v[0].val = Obj(err);
     }
     ev->outp2 = i;
     ev->values_len = vsp;
