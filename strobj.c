@@ -884,7 +884,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *tmp;
 
     if (op->op == O_X) {
-        if (v2 == none_value || v2->obj == ERROR_OBJ) return val_reference(v2);
+        if (v2 == none_value) return val_reference(v2);
         return repeat(op);
     }
     if (op->op == O_LAND || op->op == O_LOR || op->op == O_LXOR) {

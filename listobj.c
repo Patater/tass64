@@ -804,7 +804,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     Obj **vals;
 
     if (op->op == O_X) {
-        if (o2 == none_value || o2->obj == ERROR_OBJ) return val_reference(o2);
+        if (o2 == none_value) return val_reference(o2);
         return repeat(op);
     }
     if (o2 == fold_value) {
