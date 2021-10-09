@@ -850,10 +850,7 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, Address_types am, bool inplace)
 static bool get_val2(struct eval_context_s *ev) {
     argcount_t vsp = 0;
     argcount_t i;
-    struct values_s *v1, *v2;
     bool stop = (ev->gstop == 3 || ev->gstop == 4);
-    struct out_s *out;
-    Obj *val;
     struct values_s *values;
     struct oper_s oper;
     Address_types am;
@@ -863,9 +860,11 @@ static bool get_val2(struct eval_context_s *ev) {
     values = ev->values;
 
     epoint.line = lpoint.line;
+    oper.epoint3 = &epoint;
     for (i = ev->outp2; i < ev->out.p; i++) {
-        out = &ev->out.data[i];
-        val = out->val;
+        struct values_s *v;
+        const struct out_s *out = &ev->out.data[i];
+        Obj *val = out->val;
         if (val->obj != OPER_OBJ || Oper(val)->op == O_PARENT || Oper(val)->op == O_BRACKET || Oper(val)->op == O_BRACE) {
             if (vsp >= ev->values_size) values = extend_values(ev, 16);
             val = values[vsp].val;
@@ -878,39 +877,39 @@ static bool get_val2(struct eval_context_s *ev) {
 
         if (Oper(val)->op == O_COMMA || Oper(val)->op == O_COLON2) continue;
         oper.op = Oper(val)->op;
-        if (vsp == 0) goto syntaxe;
-        v1 = &values[vsp - 1];
         switch (oper.op) {
         case O_FUNC:
         case O_INDEX:
             {
-                argcount_t args = 0;
+                argcount_t args = vsp;
                 Funcargs tmp;
                 Oper_types op = (oper.op == O_FUNC) ? O_PARENT : O_BRACKET;
-                while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != op) {
-                    args++;
-                    if (vsp <= args) goto syntaxe;
-                    v1 = &values[vsp - 1 - args];
+                if (vsp == 0) goto syntaxe;
+                v = &values[vsp - 1];
+                while (v->val->obj != OPER_OBJ || Oper(v->val)->op != op) {
+                    vsp--;
+                    if (vsp == 0) goto syntaxe;
+                    v--;
                 }
-                if (v1 == values) goto syntaxe;
-                tmp.val = &values[vsp - args];
+                args -= vsp;
+                vsp--;
+                if (vsp == 0) goto syntaxe;
+                tmp.val = v + 1;
                 tmp.len = args; /* assumes no referencing */
-                vsp -= args + 1;
                 tmp.v.obj = FUNCARGS_OBJ;
-                v1--;
 
                 epoint.pos = out->pos;
-                oper.v1 = v1[1].val = v1->val;
+                v--;
+                oper.v1 = v[1].val = v[0].val;
                 oper.v2 = &tmp.v;
-                oper.epoint = &v1->epoint;
+                oper.epoint = &v[0].epoint;
                 oper.epoint2 = (args != 0) ? &tmp.val->epoint : &epoint;
-                oper.epoint3 = &epoint;
                 if (op == O_BRACKET) {
                     oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
-                    v1->val = oper.v1->obj->slice(&oper, 0);
+                    v[0].val = oper.v1->obj->slice(&oper, 0);
                 } else {
                     oper.inplace = NULL;
-                    v1->val = oper.v1->obj->calc2(&oper);
+                    v[0].val = oper.v1->obj->calc2(&oper);
                 }
                 while ((args--) != 0) {
                     val_destroy(tmp.val[args].val);
@@ -925,17 +924,19 @@ static bool get_val2(struct eval_context_s *ev) {
             {
                 List *list;
                 bool tup = (oper.op == O_RPARENT), expc = (oper.op == O_TUPLE || oper.op == O_LIST);
-                argcount_t args = 0;
+                argcount_t args = vsp;
                 Oper_types op = (oper.op == O_RBRACKET || oper.op == O_LIST) ? O_BRACKET : O_PARENT;
-                while (v1->val->obj != OPER_OBJ || Oper(v1->val)->op != op) {
-                    args++;
-                    if (vsp <= args) goto syntaxe;
-                    v1 = &values[vsp - 1 - args];
+                if (vsp == 0) goto syntaxe;
+                v = &values[vsp - 1];
+                while (v->val->obj != OPER_OBJ || Oper(v->val)->op != op) {
+                    vsp--;
+                    if (vsp == 0) goto syntaxe;
+                    v--;
                 }
+                args -= vsp;
                 if (args == 1) {
                     if (stop && !expc) {
                         argcount_t j = i + 1;
-                        vsp--;
                         if (tup && j < ev->out.p) {
                             Obj *obj = ev->out.data[j].val;
                             if (obj->obj != OPER_OBJ ||
@@ -946,22 +947,23 @@ static bool get_val2(struct eval_context_s *ev) {
                                      Oper(obj)->op != O_COMMA &&     /* [(3),(3)] */
                                      !(Oper(obj)->op >= O_COMMAX && Oper(obj)->op <= O_COMMAK) /* (3),y */
                                     )) {
-                                v1->val = values[vsp].val;
-                                values[vsp].val = NULL;
+                                v[0].val = v[1].val; v[1].val = NULL;
                                 continue;
                             }
                         }
                         am = (op == O_BRACKET) ? A_LI : A_I;
-                        v1->val = apply_addressing(values[vsp].val, am, true);
-                        val_destroy(values[vsp].val);
-                        values[vsp].val = NULL;
+                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable) {
+                            v[0].val = new_address(v[1].val, am);
+                        } else {
+                            v[0].val = apply_addressing(v[1].val, am, true);
+                            val_destroy(v[1].val);
+                        }
+                        v[1].val = NULL;
                         continue;
                     }
                     if (tup) {
-                        vsp--;
-                        v1->val = values[vsp].val;
-                        v1->epoint = values[vsp].epoint;
-                        values[vsp].val = NULL;
+                        v[0].val = v[1].val; v[1].val = NULL;
+                        v[0].epoint.pos = v[1].epoint.pos;
                         continue;
                     }
                 }
@@ -969,70 +971,68 @@ static bool get_val2(struct eval_context_s *ev) {
                     list = List(val_alloc((op == O_BRACKET) ? LIST_OBJ : TUPLE_OBJ));
                     list->len = args;
                     list->data = list_create_elements(list, args);
-                    while ((args--) != 0) {
-                        v2 = &values[vsp - 1];
-                        list->data[args] = v2->val;
-                        v2->val = NULL;
-                        vsp--;
+                    while (args != 0) {
+                        list->data[args - 1] = v[args].val;
+                        v[args].val = NULL;
+                        args--;
                     }
                 } else list = List(val_reference((op == O_BRACKET) ? null_list : null_tuple));
-                v1->val = Obj(list);
+                v[0].val = Obj(list);
                 continue;
             }
         case O_RBRACE:
         case O_DICT:
             {
-                argcount_t args = 0;
-                while (v1->val != &operators[O_BRACE].v) {
-                    args++;
-                    if (vsp <= args) goto syntaxe;
-                    v1 = &values[vsp - 1 - args];
+                argcount_t args = vsp;
+                if (vsp == 0) goto syntaxe;
+                v = &values[vsp - 1];
+                while (v->val != &operators[O_BRACE].v) {
+                    vsp--;
+                    if (vsp == 0) goto syntaxe;
+                    v--;
                 }
-                vsp -= args;
-                v1->val = dictobj_parse(&values[vsp], args);
+                args -= vsp;
+                v[0].val = dictobj_parse(v + 1, args);
                 continue;
             }
         case O_COND:
-            v2 = v1; vsp--;
-            if (vsp == 0) goto syntaxe;
-            v1 = &values[vsp - 1]; vsp--;
-            if (vsp == 0) goto syntaxe;
-            val = values[vsp - 1].val;
+            if (vsp < 3) goto syntaxe;
+            vsp -= 2;
+            v = &values[vsp - 1];
+            val = v[0].val;
             if (val == true_value) {
             cond_true:
-                values[vsp - 1].val = v1->val;
-                values[vsp - 1].epoint = v1->epoint;
-                v1->val = val;
+                v[0].val = v[1].val;
+                v[0].epoint.pos = v[1].epoint.pos;
+                v[1].val = val;
                 continue;
             }
             if (val == false_value) {
             cond_false:
-                values[vsp - 1].val = v2->val;
-                values[vsp - 1].epoint = v2->epoint;
-                v2->val = val;
+                v[0].val = v[2].val;
+                v[0].epoint.pos = v[2].epoint.pos;
+                v[2].val = val;
                 continue;
             }
             {
-                Obj *tmp = val->obj->truth(val, TRUTH_BOOL, &values[vsp - 1].epoint);
+                Obj *tmp = val->obj->truth(val, TRUTH_BOOL, &v[0].epoint);
                 if (tmp->obj != BOOL_OBJ) {
                     val_destroy(val);
-                    values[vsp - 1].val = tmp;
+                    v[0].val = tmp;
                     continue;
                 }
                 val_destroy(tmp);
-                if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, val, &values[vsp - 1].epoint);
+                if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, val, &v[0].epoint);
                 if (tmp == true_value) goto cond_true;
                 goto cond_false;
             }
         case O_DCOND:
             {
                 Funcargs tmp;
-                vsp--;
-                if (vsp == 0) goto syntaxe;
-                vsp--;
-                if (vsp == 0) goto syntaxe;
-                v1 = &values[vsp - 1];
-                tmp.val = v1;
+                if (vsp < 3) goto syntaxe;
+                vsp -= 2;
+                v = &values[vsp - 1];
+                tmp.val = v;
                 tmp.len = 3; /* assumes no referencing */
                 tmp.v.obj = FUNCARGS_OBJ;
 
@@ -1040,34 +1040,33 @@ static bool get_val2(struct eval_context_s *ev) {
                 oper.v1 = none_value; 
                 oper.v2 = &tmp.v;
                 oper.epoint = &epoint;
-                oper.epoint2 = &v1->epoint;
-                oper.epoint3 = &epoint;
+                oper.epoint2 = &v[0].epoint;
                 oper.inplace = NULL;
                 val = apply_condition(&oper);
-                val_destroy(v1->val); v1->val = val;
-                val_destroy(v1[1].val);
-                val_destroy(v1[2].val);
-                v1[1].val = NULL;
-                v1[2].val = NULL;
+                val_destroy(v[0].val); v[0].val = val;
+                val_destroy(v[1].val);
+                val_destroy(v[2].val);
+                v[1].val = NULL;
+                v[2].val = NULL;
                 continue;
             }
         case O_QUEST:
         case O_DQUEST:
+            if (vsp < 2) goto syntaxe;
             vsp--;
-            if (vsp == 0) goto syntaxe;
-            v1 = &values[vsp - 1];
+            v = &values[vsp - 1];
             epoint.pos = out->pos;
-            err_msg2(ERROR______EXPECTED,"':'", &epoint);
-            val_replace(&v1->val, none_value);
+            err_msg2(ERROR______EXPECTED, "':'", &epoint);
+            val_destroy(v[0].val); v[0].val = ref_none();
             continue;
         case O_COLON:
             {
                 Colonlist *list;
                 argcount_t args, j;
                 for (args = i + 1; args < ev->out.p; args++) {
-                    Obj *v = ev->out.data[args].val;
-                    if (v->obj != OPER_OBJ) break;
-                    if (Oper(v)->op != O_COLON) break;
+                    Obj *vv = ev->out.data[args].val;
+                    if (vv->obj != OPER_OBJ) break;
+                    if (Oper(vv)->op != O_COLON) break;
                 }
                 args -= i - 1;
                 if (vsp < args) goto syntaxe;
@@ -1075,9 +1074,9 @@ static bool get_val2(struct eval_context_s *ev) {
                 list->len = args;
                 list->data = list_create_elements(list, args);
                 for (j = 0; j < args; j++) {
-                    struct values_s *v = &values[vsp - args + j];
-                    list->data[j] = v->val;
-                    v->val = NULL;
+                    struct values_s *vv = &values[vsp - args + j];
+                    list->data[j] = vv->val;
+                    vv->val = NULL;
                 }
                 vsp -= args - 1;
                 i += args - 2;
@@ -1096,14 +1095,15 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_POS:     /* +  */
         case O_LNOT:    /* !  */
             epoint.pos = out->pos;
-            oper.v1 = v1->val;
+            if (vsp == 0) goto syntaxe;
+            v = &values[vsp - 1];
+            oper.v1 = v[0].val;
             oper.v2 = none_value;
-            oper.epoint = &v1->epoint;
-            oper.epoint3 = &epoint;
+            oper.epoint = &v[0].epoint;
             oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
             val = oper.v1->obj->calc1(&oper);
-            val_destroy(v1->val); v1->val = val;
-            v1->epoint.pos = out->pos;
+            val_destroy(v[0].val); v[0].val = val;
+            v[0].epoint.pos = out->pos;
             continue;
         case O_COMMAS: am = A_SR; goto addr;                    /* ,s */
         case O_COMMAR: am = A_RR; goto addr;                    /* ,r */
@@ -1116,42 +1116,46 @@ static bool get_val2(struct eval_context_s *ev) {
         case O_HASH_SIGNED: am = A_IMMEDIATE_SIGNED; goto addr; /* #+ */
         case O_HASH: am = A_IMMEDIATE;                          /* #  */
         addr:
-            if (v1->val->obj != ADDRESS_OBJ && !v1->val->obj->iterable) {
-                v1->val = new_address(v1->val, am);
+            if (vsp == 0) goto syntaxe;
+            v = &values[vsp - 1];
+            if (v[0].val->obj != ADDRESS_OBJ && !v[0].val->obj->iterable) {
+                v[0].val = new_address(v[0].val, am);
             } else {
-                val = apply_addressing(v1->val, am, true);
-                val_destroy(v1->val); v1->val = val;
+                val = apply_addressing(v[0].val, am, true);
+                val_destroy(v[0].val); v[0].val = val;
             }
-            if (oper.op == O_HASH || oper.op == O_HASH_SIGNED) v1->epoint.pos = out->pos;
+            if (oper.op == O_HASH || oper.op == O_HASH_SIGNED) v[0].epoint.pos = out->pos;
             continue;
         case O_SPLAT:   /* *  */
+            if (vsp == 0) goto syntaxe;
+            v = &values[vsp - 1];
             if (i + 1 < ev->out.p) {
                 Obj *o = ev->out.data[i + 1].val;
                 if (o->obj != OPER_OBJ || (Oper(o)->op != O_RPARENT && Oper(o)->op != O_RBRACKET && Oper(o)->op != O_RBRACE && Oper(o)->op != O_FUNC && Oper(o)->op != O_INDEX && Oper(o)->op != O_COMMA)) {
                     if (o == &operators[O_MEMBER].v) {
-                        v1->epoint.pos = out->pos;
+                        v[0].epoint.pos = out->pos;
                         continue;
                     }
                     epoint.pos = out->pos;
                     err_msg2(ERROR_EXPRES_SYNTAX, NULL, &epoint);
-                    val_replace(&v1->val, none_value);
+                    val_destroy(v[0].val); v[0].val = ref_none();
                     continue;
                 }
             }
-            if (v1->val->obj->iterable) {
+            if (v[0].val->obj->iterable) {
                 struct iter_s iter;
                 size_t k, len;
                 argcount_t len2;
                 Obj *tmp, *def;
-                iter.data = v1->val; v1->val->obj->getiter(&iter);
+                iter.data = v[0].val; v[0].val->obj->getiter(&iter);
                 len = iter.len;
 
-                if (v1->val->obj == DICT_OBJ && Dict(v1->val)->def != NULL) {
+                if (v[0].val->obj == DICT_OBJ && Dict(v[0].val)->def != NULL) {
                     Colonlist *list = new_colonlist();
                     list->len = 2;
                     list->data = list->u.val;
                     list->data[0] = ref_default();
-                    list->data[1] = val_reference(Dict(v1->val)->def);
+                    list->data[1] = val_reference(Dict(v[0].val)->def);
                     def = Obj(list);
                     if (inc_overflow(&len, 1)) err_msg_out_of_memory();
                 } else def = NULL;
@@ -1178,78 +1182,78 @@ static bool get_val2(struct eval_context_s *ev) {
             continue;
         case O_IDENTITY: 
         case O_NIDENTITY: 
-            v2 = v1; v1 = &values[--vsp - 1];
-            if (vsp == 0) goto syntaxe;
-            val = v1->val;
+            if (vsp < 2) goto syntaxe;
+            vsp--;
+            v = &values[vsp - 1];
+            val = v[0].val;
             if (val == none_value || val->obj == ERROR_OBJ) continue;
-            val = v2->val;
+            val = v[1].val;
             if (val == none_value || val->obj == ERROR_OBJ) {
-                v2->val = v1->val;
-                v1->val = val;
+                v[1].val = v[0].val;
+                v[0].val = val;
                 continue;
             }
             {
-                bool result = v1->val == v2->val || v1->val->obj->same(v1->val, v2->val);
+                bool result = v[0].val == v[1].val || v[0].val->obj->same(v[0].val, v[1].val);
                 val = truth_reference(oper.op == O_IDENTITY ? result : !result);
             }
-            val_destroy(v1->val); v1->val = val;
+            val_destroy(v[0].val); v[0].val = val;
             continue;
         case O_MIN: /* <? */
         case O_MAX: /* >? */
-            v2 = v1; v1 = &values[--vsp - 1];
-            if (vsp == 0) goto syntaxe;
             epoint.pos = out->pos;
-            oper.v1 = v1->val;
-            oper.v2 = v2->val;
-            oper.epoint = &v1->epoint;
-            oper.epoint2 = &v2->epoint;
-            oper.epoint3 = &epoint;
+            if (vsp < 2) goto syntaxe;
+            vsp--;
+            v = &values[vsp - 1];
+            oper.v1 = v[0].val;
+            oper.v2 = v[1].val;
+            oper.epoint = &v[0].epoint;
+            oper.epoint2 = &v[1].epoint;
             oper.inplace = NULL;
             val = oper.v1->obj->calc2(&oper);
             if (val->obj != BOOL_OBJ) {
-                val_destroy(v1->val); v1->val = val;
+                val_destroy(v[0].val); v[0].val = val;
                 continue;
             }
             if (val != true_value) {
-                v1->epoint = v2->epoint;
-                val_replace(&v1->val, v2->val);
+                val_destroy(v[0].val); v[0].val = v[1].val; v[1].val = NULL;
+                v[0].epoint.pos = v[1].epoint.pos;
             }
             val_destroy(val);
             continue;
         case O_IN:
         case O_NOTIN:
-            v2 = v1; v1 = &values[--vsp - 1];
-            if (vsp == 0) goto syntaxe;
             epoint.pos = out->pos;
-            oper.v1 = v1->val;
-            oper.v2 = v2->val;
-            oper.epoint = &v1->epoint;
-            oper.epoint2 = &v2->epoint;
-            oper.epoint3 = &epoint;
-            oper.inplace = (oper.v1->refcount == 1) ? v1->val : NULL;
-            val = oper.v2->obj->contains(&oper);
-            val_destroy(v1->val); v1->val = val;
+            if (vsp < 2) goto syntaxe;
+            vsp--;
+            v = &values[vsp - 1];
+            oper.v1 = v[0].val;
+            oper.v2 = v[1].val;
+            oper.epoint = &v[0].epoint;
+            oper.epoint2 = &v[1].epoint;
+            oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
+            val = oper.v1->obj->contains(&oper);
+            val_destroy(v[0].val); v[0].val = val;
             continue;
         default: break;
         }
-        v2 = v1; v1 = &values[--vsp - 1];
-        if (vsp == 0) {
+        epoint.pos = out->pos;
+        if (vsp < 2) {
         syntaxe:
             err_msg(ERROR_EXPRES_SYNTAX, NULL);
             ev->outp2 = i + 1;
             ev->values_len = 0;
             return false;
         }
-
-        epoint.pos = out->pos;
-        oper.v1 = v1->val;
-        oper.v2 = v2->val;
-        oper.epoint = &v1->epoint;
-        oper.epoint2 = &v2->epoint;
-        oper.epoint3 = &epoint;
-        oper.inplace = (oper.v1->refcount == 1) ? v1->val : NULL;
+        vsp--;
+        v = &values[vsp - 1];
+        oper.v1 = v[0].val;
+        oper.v2 = v[1].val;
+        oper.epoint = &v[0].epoint;
+        oper.epoint2 = &v[1].epoint;
+        oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
         val = oper.v1->obj->calc2(&oper);
-        val_destroy(v1->val); v1->val = val;
+        val_destroy(v[0].val); v[0].val = val;
     }
     ev->outp2 = i;
     ev->values_len = vsp;
