@@ -988,11 +988,11 @@ static bool get_val2(struct eval_context_s *ev) {
                     list = List(val_alloc((op == O_BRACKET) ? LIST_OBJ : TUPLE_OBJ));
                     list->len = args;
                     list->data = list_create_elements(list, args);
-                    while (args != 0) {
+                    do  {
                         list->data[args - 1] = v[args].val;
                         v[args].val = NULL;
                         args--;
-                    }
+                    } while (args != 0);
                 } else list = List(val_reference((op == O_BRACKET) ? null_list : null_tuple));
                 v[0].val = Obj(list);
                 continue;
@@ -1250,7 +1250,7 @@ static bool get_val2(struct eval_context_s *ev) {
             oper.epoint = &v[0].epoint;
             oper.epoint2 = &v[1].epoint;
             oper.inplace = (oper.v1->refcount == 1) ? oper.v1 : NULL;
-            val = oper.v1->obj->contains(&oper);
+            val = oper.v2->obj->contains(&oper);
             val_destroy(v[0].val); v[0].val = val;
             continue;
         default: break;
