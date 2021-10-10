@@ -2114,6 +2114,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (here() == 0 || here() == ';') {
                         err_msg(ERROR______EXPECTED, "an expression is");
+                        if (label == NULL && val != NULL) val_destroy(val);
                         goto breakerr;
                     } else {
                         bool oldreferenceit = referenceit;
