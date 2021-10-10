@@ -1724,7 +1724,7 @@ static bool get_exp2(int stop) {
             }
             opr.p->op = op;
             opr.p->pos = epoint.pos;
-            if (++opr.p == opr.data) extend_opr(&opr);
+            if (++opr.p == opr.max) extend_opr(&opr);
             continue;
         case '=':
             if (pline[lpoint.pos + 1] != '=') {
