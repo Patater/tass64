@@ -72,7 +72,7 @@ static void newline(Listing *ls) {
 
 static void padding2(Listing *ls, unsigned int t) {
     unsigned int ts;
-    unsigned int c = ls->c + (unsigned int)(ls->s - ls->buf);
+    size_t c = ls->c + (size_t)(ls->s - ls->buf);
     if (c >= t) {*ls->s++ = '\n'; flushbuf(ls); c = 0;}
     ts = ls->tab_size;
     if (ts > 1) {
@@ -80,7 +80,7 @@ static void padding2(Listing *ls, unsigned int t) {
         while (c + ts <= t) { c += ts; *ls->s++ = '\t'; }
     }
     while (c < t) { c++; *ls->s++ = ' '; }
-    ls->c = c - (unsigned int)(ls->s - ls->buf);
+    ls->c = c - (size_t)(ls->s - ls->buf);
 }
 
 static inline void out_hex(Listing *ls, unsigned int c) {
