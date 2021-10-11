@@ -286,7 +286,7 @@ bool mtranslate(void) {
         last = p; last2 = p2;
     }
     mline->rp = n;
-    if (last2 != 0) {
+    if (last2 != pline) {
         while (p2 != pline && (p2[-1] == 0x20 || p2[-1] == 0x09)) p2--;
         p += (linecpos_t)(p2 - last2);
         if (p + 1 < p) err_msg_out_of_memory(); /* overflow */
