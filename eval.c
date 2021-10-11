@@ -71,21 +71,25 @@ static FAST_CALL NO_INLINE unsigned int get_label_continue(const uint8_t *s) {
 }
 
 FAST_CALL size_t get_label(const uint8_t *s) {
-    size_t i;
-    if (((uint8_t)((*s | 0x20) - 'a')) > 'z' - 'a' && *s != '_') {
+    const uint8_t *i;
+    if likely(((uint8_t)((*s | 0x20) - 'a')) <= 'z' - 'a' || *s == '_') {
+        i = s + 1;
+    } else {
+        unsigned int l;
         if (*s < 0x80) return 0;
-        i = get_label_start(s);
-        if (i == 0) return 0;
-    } else i = 1;
+        l = get_label_start(s);
+        if (l == 0) return 0;
+        i = s + l;
+    }
     for (;;) {
         unsigned int l;
-        if likely(((uint8_t)((s[i] | 0x20) - 'a')) <= 'z' - 'a' || (s[i] ^ 0x30) < 10 || s[i] == '_') {
+        if likely(((uint8_t)((*i | 0x20) - 'a')) <= 'z' - 'a' || (*i ^ 0x30) < 10 || *i == '_') {
             i++;
             continue;
         }
-        if (s[i] < 0x80) return i;
-        l = get_label_continue(s + i);
-        if (l == 0) return i;
+        if (*i < 0x80) return (size_t)(i - s);
+        l = get_label_continue(i);
+        if (l == 0) return (size_t)(i - s);
         i += l;
     }
 }
