@@ -533,9 +533,9 @@ static int unknown_print(FILE *f, unichar_t ch) {
     return sprintf(temp, format, ch);
 }
 
-void printable_print(const uint8_t *line, FILE *f) {
+void printable_print(const uint8_t *l, FILE *f) {
 #ifdef _WIN32
-    const uint8_t *i = line, *l = line;
+    const uint8_t *i = l;
     for (;;) {
         unichar_t ch;
         if ((*i >= 0x20 && *i <= 0x7e) || *i == 0x09) {
@@ -563,7 +563,7 @@ void printable_print(const uint8_t *line, FILE *f) {
         unknown_print(f, ch);
     }
 #else
-    const uint8_t *i = line, *l = line;
+    const uint8_t *i = l;
     for (;;) {
         unichar_t ch;
         if likely((*i >= 0x20 && *i <= 0x7e) || *i == 0x09) {
