@@ -175,19 +175,7 @@ static void iadd(const Int *, const Int *, Int *);
 static void isub(const Int *, const Int *, Int *);
 
 static MUST_CHECK Obj *invert(Int *v1) {
-    Int *v;
-    switch (v1->len) {
-    case 1:
-        if (~v1->data[0] == 0) break;
-        return return_int(v1->data[0] + 1, true);
-    case 0: 
-        return val_reference(minus1_value);
-    case -1:
-        return return_int(v1->data[0] - 1, false);
-    default:
-        break;
-    }
-    v = new_int();
+    Int *v = new_int();
     if (v1->len < 0) isub(v1, Int(int_value[1]), v);
     else {
         iadd(v1, Int(int_value[1]), v);
@@ -421,21 +409,25 @@ static MUST_CHECK Obj *calc1(oper_t op) {
     case O_BSWORD:
         return bits_calc1(op->op, ldigit(v1));
     case O_INV:
-        if (op->inplace == Obj(v1)) {
-            switch (v1->len) {
-            case 1:
-                if (~v1->data[0] == 0) break;
+        switch (v1->len) {
+        case 1:
+            if (~v1->data[0] == 0) break;
+            if (op->inplace == Obj(v1)) {
                 v1->data[0]++; v1->len = -1;
                 return Obj(ref_int(v1));
-            case 0:
-                return val_reference(minus1_value);
-            case -1:
-                if (v1->data[0] == 1) return val_reference(int_value[0]);
+            }
+            return return_int(v1->data[0] + 1, true);
+        case 0:
+            return val_reference(minus1_value);
+        case -1:
+            if (v1->data[0] == 1) return val_reference(int_value[0]);
+            if (op->inplace == Obj(v1)) {
                 v1->data[0]--; v1->len = 1;
                 return Obj(ref_int(v1));
-            default: 
-                break;
             }
+            return return_int(v1->data[0] - 1, false);
+        default: 
+            break;
         }
         return invert(v1);
     case O_NEG:
