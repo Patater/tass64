@@ -842,7 +842,6 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
     Int *vv1 = Int(op->v1);
     size_t i, sz;
     unsigned int word, bit;
-    bool neg;
     digit_t *v1, *v;
     Int *vv;
 
@@ -867,45 +866,62 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
 
     word = s / SHIFT;
     bit = s % SHIFT;
-    neg = (vv1->len < 0);
-    if (neg) {
-        vv = new_int();
-        isub(vv1, Int(int_value[1]), vv);
-        vv1 = vv;
-        if ((size_t)vv->len <= word) {
-            val_destroy(Obj(vv));
-            return val_reference(minus1_value);
-        }
-        sz = (size_t)vv->len - word;
+    sz = intlen(vv1);
+    if (sz <= word) return val_reference(vv1->len < 0 ? minus1_value : int_value[0]);
+    sz -= word;
+    if (op->inplace == Obj(vv1)) {
+        vv = ref_int(vv1);
         v = vv->data;
     } else {
-        if ((size_t)vv1->len <= word) return val_reference(int_value[0]);
-        sz = (size_t)vv1->len - word;
-        if (op->inplace == Obj(vv1)) {
-            vv = ref_int(vv1);
-            v = vv->data;
-        }
-        else {
-            vv = new_int();
-            vv->data = v = inew2(vv, sz);
-            if (v == NULL) goto failed2;
-        }
+        vv = new_int();
+        vv->data = v = inew2(vv, sz);
+        if (v == NULL) goto failed2;
     }
     v1 = vv1->data + word;
+    if (vv1->len < 0) {
+        bool c;
+        for (i = 0; i < word; i++) {
+            if (vv1->data[i] != 0) break;
+        }
+        c = (i == word);
+        if (bit != 0) {
+            bool c2 = true;
+            for (i = 0; i < sz - 1; i++) {
+                if (c) {
+                    v[i] = (v1[i] - 1) >> bit;
+                    c = (v1[i] == 0);
+                } else v[i] = v1[i] >> bit;
+                if (c) v[i] |= (v1[i + 1] - 1) << (SHIFT - bit);
+                else v[i] |= v1[i + 1] << (SHIFT - bit);
+                if (c2) {
+                    v[i]++;
+                    c2 = (v[i] == 0);
+                }
+            }
+            if (c) v[i] = (v1[i] - 1) >> bit;
+            else v[i] = v1[i] >> bit;
+            if (c2) v[i]++;
+        } else {
+            if (c) {
+                memmove(v, v1, sz * sizeof *v);
+            } else {
+                c = true;
+                for (i = 0; c && i < sz; i++) {
+                    v[i] = v1[i] + 1;
+                    c = (v[i] == 0);
+                }
+                for (; i < sz; i++) v[i] = v1[i];
+            }
+        }
+        return normalize(vv, sz, true);
+    } 
     if (bit != 0) {
         for (i = 0; i < sz - 1; i++) {
             v[i] = v1[i] >> bit;
             v[i] |= v1[i + 1] << (SHIFT - bit);
         }
         v[i] = v1[i] >> bit;
-    } else if (sz != 0) memmove(v, v1, sz * sizeof *v);
-
-    if (neg) {
-        vv->len = (ssize_t)sz;
-        iadd(Int(int_value[1]), vv, vv);
-        vv->len = -vv->len;
-        return Obj(vv);
-    }
+    } else memmove(v, v1, sz * sizeof *v);
     return normalize(vv, sz, false);
 failed2:
     val_destroy(Obj(vv));
