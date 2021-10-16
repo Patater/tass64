@@ -3643,7 +3643,7 @@ MUST_CHECK Obj *compile(void)
                         if (cfile2 != NULL) {
                             filesize_t foffset;
                             mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
-                            if (foffs < 0) foffset = (uval_t)-foffs < cfile2->binary.len ? (cfile2->binary.len - (uval_t)-foffs) : 0;
+                            if (foffs < 0) foffset = -(uval_t)foffs < cfile2->binary.len ? (cfile2->binary.len - -(uval_t)foffs) : 0;
                             else foffset = (uval_t)foffs;
                             for (; fsize != 0 && foffset < cfile2->binary.len;) {
                                 filesize_t i, ln = cfile2->binary.len - foffset;
@@ -3677,7 +3677,7 @@ MUST_CHECK Obj *compile(void)
                         current_address->moved = true;
                     }
                     current_address->wrapwarn = false;
-                    addr = (ival < 0 ? current_address->l_address - (uval_t)-ival : current_address->l_address + (uval_t)ival) & all_mem2;
+                    addr = (ival < 0 ? current_address->l_address - -(uval_t)ival : current_address->l_address + (uval_t)ival) & all_mem2;
                     if (current_address->address != addr) {
                         current_address->address = addr;
                         memjmp(current_address->mem, current_address->address);

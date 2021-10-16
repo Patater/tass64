@@ -331,9 +331,9 @@ static MUST_CHECK Error *ival(Obj *o1, ival_t *iv, unsigned int bits, linepos_t 
             if (bits <= SHIFT && (d >> (bits - 1)) != 0) break;
             return NULL;
     case 0: *iv = 0; return NULL;
-    case -1: d = v1->data[0];
-             *iv = -(ival_t)d;
-             if (bits <= SHIFT && ((d - 1) >> (bits - 1)) != 0) break;
+    case -1: d = v1->data[0] - 1;
+             *iv = ~(ival_t)d;
+             if (bits <= SHIFT && (d >> (bits - 1)) != 0) break;
              return NULL;
     default: break;
     }
@@ -1324,7 +1324,7 @@ MUST_CHECK Obj *int_from_ival(ival_t i) {
         v->val[0] = (uval_t)i;
         v->len = 1;
     } else {
-        v->val[0] = (uval_t)-i;
+        v->val[0] = -(uval_t)i;
         v->len = -1;
     }
     return Obj(v);
@@ -1731,12 +1731,12 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
         err = ival(Obj(v2), &shift, 8 * sizeof shift, op->epoint2);
         if (err != NULL) return Obj(err);
         if (shift == 0) return val_reference(Obj(v1));
-        return (shift < 0) ? rshift(op, (uval_t)-shift) : lshift(op, (uval_t)shift);
+        return (shift < 0) ? rshift(op, -(uval_t)shift) : lshift(op, (uval_t)shift);
     case O_RSHIFT:
         err = ival(Obj(v2), &shift, 8 * sizeof shift, op->epoint2);
         if (err != NULL) return Obj(err);
         if (shift == 0) return val_reference(Obj(v1));
-        return (shift < 0) ? lshift(op, (uval_t)-shift) : rshift(op, (uval_t)shift);
+        return (shift < 0) ? lshift(op, -(uval_t)shift) : rshift(op, (uval_t)shift);
     case O_AND: return and_(op);
     case O_OR: return or_(op);
     case O_XOR: return xor_(op);

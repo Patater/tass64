@@ -62,7 +62,7 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
 static MUST_CHECK Obj *str(Obj *o1, linepos_t UNUSED(epoint), size_t maxsize) {
     Anonsymbol *v1 = Anonsymbol(o1);
     Str *v;
-    size_t len = v1->count < 0 ? (size_t)-v1->count : ((size_t)v1->count + 1U);
+    size_t len = v1->count < 0 ? -(size_t)v1->count : ((size_t)v1->count + 1U);
     if (len > maxsize) return NULL;
     v = new_str2(len);
     if (v == NULL) return NULL;

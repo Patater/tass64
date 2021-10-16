@@ -669,7 +669,7 @@ MUST_CHECK Obj *sliceparams(struct sliceparam_s *s, const struct indexoffs_s *io
         s->length = (uval_t)(end - offs + step - 1) / (uval_t)step;
     } else {
         if (end > offs) end = offs;
-        s->length = (uval_t)(offs - end - step - 1) / (uval_t)-step;
+        s->length = (uval_t)(offs - end - step - 1) / -(uval_t)step;
     }
 
     s->offset = offs;
