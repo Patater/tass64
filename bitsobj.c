@@ -615,7 +615,7 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
         if (v1->chars == 1) {
             unichar_t ch2 = v1->data[0];
             if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
-            return return_bits(ch2 & 0xffffff, 24);
+            return return_bits(ch2 & 0xffffff, ch2 < 256 ? 8 : ch2 < 65536 ? 16 : 24);
         }
         return Obj(new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint));
     }

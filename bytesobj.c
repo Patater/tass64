@@ -553,7 +553,7 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
             if (v1->chars == 1) {
                 unichar_t ch2 = v1->data[0];
                 if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
-                return bytes_from_uval(ch2, 3);
+                return bytes_from_uval(ch2, ch2 < 256 ? 1 : ch2 < 65536 ? 2 : 3);
             }
             return Obj(new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint));
         }
