@@ -181,7 +181,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
             return Obj(err);
         }
     } else {
-        len2 = (uval_t)-ival;
+        len2 = -(uval_t)ival;
     }
     blen = byteslen(bytes);
     if (blen > len2 || (ival < 0 && blen == len2 && bytes->data[len2 - 1] >= 0x80)) {

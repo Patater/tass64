@@ -1357,12 +1357,12 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             err = o2->obj->ival(o2, &shift, 8 * sizeof shift, op->epoint2);
             if (err != NULL) return Obj(err);
             if (shift == 0) return val_reference(Obj(v1));
-            return (shift < 0) ? rshift(op, (uval_t)-shift) : lshift(op, (uval_t)shift);
+            return (shift < 0) ? rshift(op, -(uval_t)shift) : lshift(op, (uval_t)shift);
         case O_RSHIFT:
             err = o2->obj->ival(o2, &shift, 8 * sizeof shift, op->epoint2);
             if (err != NULL) return Obj(err);
             if (shift == 0) return val_reference(Obj(v1));
-            return (shift < 0) ? lshift(op, (uval_t)-shift) : rshift(op, (uval_t)shift);
+            return (shift < 0) ? lshift(op, -(uval_t)shift) : rshift(op, (uval_t)shift);
         default: break;
         }
         tmp = int_from_bits(v1, op->epoint);

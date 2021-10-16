@@ -269,7 +269,7 @@ static inline void hexa(Data *p)
 
     integer = Int(get_int(p));
     minus = (integer->len < 0);
-    bp2 = minus ? (size_t)-integer->len : (size_t)integer->len;
+    bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
     bp = b = 0;
     do {
         if (bp == 0) {
@@ -304,7 +304,7 @@ static inline void bin(Data *p)
 
     integer = Int(get_int(p));
     minus = (integer->len < 0);
-    bp2 = minus ? (size_t)-integer->len : (size_t)integer->len;
+    bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
     bp = b = 0;
     do {
         if (bp == 0) {

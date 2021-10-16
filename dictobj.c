@@ -554,7 +554,7 @@ static MUST_CHECK Obj *dictsliceparams(const Dict *v1, const Colonlist *v2, stru
         s->length = (uval_t)(end - offs + step - 1) / (uval_t)step;
     } else {
         if (end > offs) end = offs;
-        s->length = (uval_t)(offs - end - step - 1) / (uval_t)-step;
+        s->length = (uval_t)(offs - end - step - 1) / -(uval_t)step;
     }
 
     s->offset = offs;

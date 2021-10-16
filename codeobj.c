@@ -105,7 +105,7 @@ static FAST_CALL bool same(const Obj *o1, const Obj *o2) {
 }
 
 static inline address_t code_address(const Code *v1) {
-    return v1->offs < 0 ? v1->addr - (uval_t)-v1->offs : v1->addr + (uval_t)v1->offs;
+    return v1->offs < 0 ? v1->addr - -(uval_t)v1->offs : v1->addr + (uval_t)v1->offs;
 }
 
 static MUST_CHECK Obj *get_code_address(const Code *v1, linepos_t epoint) {
@@ -291,7 +291,7 @@ static MUST_CHECK Obj *len(oper_t op) {
         s = v1->size - (uval_t)v1->offs;
         if (s > v1->size) return Obj(new_error(ERROR_NEGATIVE_SIZE, op->epoint2));
     } else {
-        if (add_overflow((uval_t)-v1->offs, v1->size, &s)) err_msg_out_of_memory();
+        if (add_overflow(-(uval_t)v1->offs, v1->size, &s)) err_msg_out_of_memory();
         if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
     ln = (v1->dtype < 0) ? (address_t)-v1->dtype : (address_t)v1->dtype;
@@ -310,7 +310,7 @@ static MUST_CHECK Obj *size(oper_t op) {
         s = v1->size - (uval_t)v1->offs;
         if (s > v1->size) return Obj(new_error(ERROR_NEGATIVE_SIZE, op->epoint2));
     } else {
-        if (add_overflow((uval_t)-v1->offs, v1->size, &s)) err_msg_out_of_memory();
+        if (add_overflow(-(uval_t)v1->offs, v1->size, &s)) err_msg_out_of_memory();
         if (diagnostics.size_larger) err_msg_size_larger(op->epoint2);
     }
     return int_from_size(s);
@@ -350,8 +350,8 @@ static MUST_CHECK Obj *code_item(const struct code_item_s *ci) {
     uval_t val;
 
     if (ci->offs0 < 0) {
-        if (ci->offs2 < (uval_t)-ci->offs0) return ref_gap();
-        offs = ci->offs2 - (uval_t)-ci->offs0;
+        if (ci->offs2 < -(uval_t)ci->offs0) return ref_gap();
+        offs = ci->offs2 - -(uval_t)ci->offs0;
     } else {
         offs = ci->offs2 + (uval_t)ci->offs0;
     }
@@ -380,8 +380,8 @@ static address_t code_item_prepare(struct code_item_s *ci, const Code *v1) {
         if (v1->size < (uval_t)v1->offs) return 0;
         return (v1->size - (uval_t)v1->offs) / ln2;
     } 
-    ci->offs0 = -(ival_t)(((uval_t)-v1->offs + ln2 - 1) / ln2);
-    if (add_overflow((uval_t)-v1->offs, v1->size, &ln)) err_msg_out_of_memory();
+    ci->offs0 = -(ival_t)((-(uval_t)v1->offs + ln2 - 1) / ln2);
+    if (add_overflow(-(uval_t)v1->offs, v1->size, &ln)) err_msg_out_of_memory();
     return ln / ln2;
 }
 
