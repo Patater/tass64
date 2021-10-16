@@ -4340,7 +4340,7 @@ MUST_CHECK Obj *compile(void)
                     if (lst->len > i) list_shrink(lst, i);
                     const_assign(label, Obj(lst));
                     goto breakerr;
-                } else {push_dummy_context(); new_waitfor(prm == CMD_FOR ? W_ENDFOR3 : prm == CMD_REPT ? W_ENDREPT3 : W_ENDWHILE3, &epoint);}
+                } else {push_dummy_context(); new_waitfor(prm == CMD_BFOR ? W_ENDFOR3 : prm == CMD_BREPT ? W_ENDREPT3 : W_ENDWHILE3, &epoint);}
                 break;
             case CMD_FOR: if ((waitfor->skip & 1) != 0)
                 { /* .for */
