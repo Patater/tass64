@@ -45,8 +45,11 @@ typedef struct Dict {
 
 #define Dict(a) OBJ_CAST(Dict, a)
 
+extern Obj *const null_dict;
+
 extern void dictobj_init(void);
 extern void dictobj_names(void);
+extern void dictobj_destroy(void);
 
 extern Obj *dictobj_parse(struct values_s *, size_t);
 extern MUST_CHECK Obj *dict_sort(Dict *, const size_t *);

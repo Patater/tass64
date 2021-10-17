@@ -1013,7 +1013,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     v--;
                 }
                 args -= vsp;
-                v[0].val = dictobj_parse(v + 1, args);
+                v[0].val = (args == 0) ? val_reference(null_dict) : dictobj_parse(v + 1, args);
                 continue;
             }
         case O_COND:
