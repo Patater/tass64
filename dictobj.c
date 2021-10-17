@@ -616,7 +616,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         }
 
         if (s.step == 1 && s.length == v1->len && v1->def == NULL && !more) {
-            return val_reference(Obj(v1)); /* original tuple */
+            return val_reference(Obj(v1)); /* original dict */
         }
         v = new_dict(s.length);
         if (v == NULL) return new_error_mem(epoint2); /* overflow */
