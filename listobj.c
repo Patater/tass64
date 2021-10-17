@@ -728,20 +728,38 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
             return val_reference((v1->v.obj == TUPLE_OBJ) ? null_tuple : null_list);
         }
 
-        if (s.step == 1 && s.length == v1->len && !more) {
-            return val_reference(Obj(v1)); /* original tuple */
-        }
-        v = List(val_alloc(v1->v.obj));
-        vals = lnew(v, s.length);
-        if (vals == NULL) goto failed;
-        for (i = 0; i < s.length; i++) {
-            if (more) {
-                op->v1 = v1->data[s.offset];
-                vals[i] = op->v1->obj->slice(op, indx + 1);
-            } else {
-                vals[i] = val_reference(v1->data[s.offset]);
+        if (s.step > 0 && op->inplace == Obj(v1)) {
+            if (s.offset != 0 || s.step != 1 || more) {
+                vals = v1->data;
+                for (i = 0; i < s.length; i++) {
+                    Obj *val;
+                    if (more) {
+                        op->v1 = vals[s.offset];
+                        val = op->v1->obj->slice(op, indx + 1);
+                        val_destroy(vals[i]);
+                    } else {
+                        val = vals[s.offset];
+                        vals[s.offset] = vals[i];
+                    }
+                    vals[i] = val;
+                    s.offset += s.step;
+                }
             }
-            s.offset += s.step;
+            if (v1->len != s.length) list_shrink(v1, s.length);
+            v = ref_list(v1);
+        } else {
+            v = List(val_alloc(v1->v.obj));
+            vals = lnew(v, s.length);
+            if (vals == NULL) goto failed;
+            for (i = 0; i < s.length; i++) {
+                if (more) {
+                    op->v1 = v1->data[s.offset];
+                    vals[i] = op->v1->obj->slice(op, indx + 1);
+                } else {
+                    vals[i] = val_reference(v1->data[s.offset]);
+                }
+                s.offset += s.step;
+            }
         }
         return Obj(v);
     }
