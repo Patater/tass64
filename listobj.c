@@ -748,6 +748,9 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
             if (v1->len != s.length) list_shrink(v1, s.length);
             v = ref_list(v1);
         } else {
+            if (s.step == 1 && s.length == v1->len && !more) {
+                return val_reference(Obj(v1)); /* original tuple */
+            }
             v = List(val_alloc(v1->v.obj));
             vals = lnew(v, s.length);
             if (vals == NULL) goto failed;
