@@ -346,6 +346,7 @@ void objects_init(void) {
 }
 
 void objects_destroy(void) {
+    dictobj_destroy();
     listobj_destroy();
     bitsobj_destroy();
     bytesobj_destroy();

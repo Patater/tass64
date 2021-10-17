@@ -35,6 +35,10 @@ static Type obj;
 
 Type *const DICT_OBJ = &obj;
 
+static Dict null_dictval = { { &obj, 1 }, 0, null_dictval.u.val, { { { 0 } } }, NULL };
+
+Obj *const null_dict = &null_dictval.v;
+
 static Dict *new_dict(size_t ln) {
     size_t ln1, ln2, ln3;
     Dict *v;
@@ -608,7 +612,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         if (err != NULL) return err;
 
         if (s.length == 0) {
-            return val_reference((v1->v.obj == TUPLE_OBJ) ? null_tuple : null_list);
+            return val_reference(null_dict);
         }
 
         if (s.step == 1 && s.length == v1->len && v1->def == NULL && !more) {
@@ -845,3 +849,8 @@ void dictobj_names(void) {
     new_builtin("dict", val_reference(Obj(DICT_OBJ)));
 }
 
+void dictobj_destroy(void) {
+#ifdef DEBUG
+    if (null_dict->refcount != 1) fprintf(stderr, "dict %" PRIuSIZE "\n", null_dict->refcount - 1);
+#endif
+}
