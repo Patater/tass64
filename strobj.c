@@ -693,7 +693,7 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
             if (s.step > 0) {
                 for (k = i; i < s.end; i++) {
                     j = utf8len(*p);
-                    if (i != k) {
+                    if (i == k) {
                         for (offs2 = 0; offs2 < j; offs2++) p2[offs2] = p[offs2];
                         p2 += j; k += s.step;
                     }
@@ -706,7 +706,10 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
                     do {
                         p--;j++;
                     } while (*p >= 0x80 && *p < 0xc0);
-                    if (i == k) {memcpy(p2, p, j);p2 += j; k += s.step;}
+                    if (i == k) {
+                        for (offs2 = 0; offs2 < j; offs2++) p2[offs2] = p[offs2];
+                        p2 += j; k += s.step;
+                    }
                 }
             }
             len2 = (size_t)(p2 - o);
