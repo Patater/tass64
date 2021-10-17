@@ -661,7 +661,6 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         List *v;
         Obj **vals;
         iter.data = o2; o2->obj->getiter(&iter);
-        op->inplace = NULL;
 
         if (iter.len == 0) {
             iter_destroy(&iter);
@@ -669,11 +668,18 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
         }
         v = new_list();
         v->data = vals = list_create_elements(v, iter.len);
-        for (i = 0; i < iter.len && (args->val[indx].val = iter.next(&iter)) != NULL; i++) {
-            vals[i] = slice(op, indx);
+        for (i = 0; i < iter.len && (o2 = iter.next(&iter)) != NULL; i++) {
+            vv = findit(v1, o2, epoint2);
+            if (vv->obj != ERROR_OBJ && more) {
+                Obj *result;
+                op->v1 = vv;
+                result = vv->obj->slice(op, indx + 1);
+                val_destroy(vv);
+                vv = result;
+            }
+            vals[i] = vv;
         }
         v->len = i;
-        args->val[indx].val = o2;
         iter_destroy(&iter);
         return Obj(v);
     }
