@@ -702,9 +702,9 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return val_reference((v1->v.obj == TUPLE_OBJ) ? null_tuple : null_list);
+            return val_reference(null_list);
         }
-        v = List(val_alloc(v1->v.obj));
+        v = List(val_alloc(LIST_OBJ));
         vals = lnew(v, iter.len);
         if (vals == NULL) {
             iter_destroy(&iter);
