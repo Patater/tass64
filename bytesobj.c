@@ -1177,31 +1177,24 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
 
     if (io.val->obj->iterable) {
         struct iter_s iter;
+        List *l;
+        Obj **vals;
         iter.data = io.val; io.val->obj->getiter(&iter);
+        op->inplace = NULL;
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return val_reference(null_bytes);
+            return val_reference(null_list);
         }
-        v = new_bytes2(iter.len);
-        if (v == NULL) {
-            iter_destroy(&iter);
-            goto failed;
+        l = new_list();
+        l->data = vals = list_create_elements(l, iter.len);
+        for (i = 0; i < iter.len && (args->val[indx].val = iter.next(&iter)) != NULL; i++) {
+            vals[i] = slice(op, indx);
         }
-        p2 = v->data;
-        for (i = 0; i < iter.len && (io.val = iter.next(&iter)) != NULL; i++) {
-            err = indexoffs(&io);
-            if (err != NULL) {
-                val_destroy(Obj(v));
-                iter_destroy(&iter);
-                return err;
-            }
-            p2[i] = v1->data[io.offs] ^ inv;
-        }
+        l->len = i;
+        args->val[indx].val = io.val;
         iter_destroy(&iter);
-        if (i > SSIZE_MAX) goto failed2; /* overflow */
-        v->len = (ssize_t)i;
-        return Obj(v);
+        return Obj(l);
     }
     if (io.val->obj == COLONLIST_OBJ) {
         struct sliceparam_s s;
@@ -1264,8 +1257,6 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     err = indexoffs(&io);
     if (err != NULL) return err;
     return bytes_from_u8(v1->data[io.offs] ^ inv);
-failed2:
-    val_destroy(Obj(v));
 failed:
     return new_error_mem(op->epoint3);
 }
