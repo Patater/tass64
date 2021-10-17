@@ -1189,46 +1189,24 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
 
     if (io.val->obj->iterable) {
         struct iter_s iter;
+        List *l;
+        Obj **vals;
         iter.data = io.val; io.val->obj->getiter(&iter);
+        op->inplace = NULL;
 
         if (iter.len == 0) {
             iter_destroy(&iter);
-            return val_reference(null_bits);
+            return val_reference(null_list);
         }
-        sz = (iter.len + SHIFT - 1) / SHIFT;
-
-        vv = new_bits2(sz);
-        if (vv == NULL) {
-            iter_destroy(&iter);
-            goto failed;
+        l = new_list();
+        l->data = vals = list_create_elements(l, iter.len);
+        for (i = 0; i < iter.len && (args->val[indx].val = iter.next(&iter)) != NULL; i++) {
+            vals[i] = slice(op, indx);
         }
-        v = vv->data;
-
-        uv = inv;
-        bits = 0; sz = 0;
-        for (i = 0; i < iter.len && (io.val = iter.next(&iter)) != NULL; i++) {
-            err = indexoffs(&io);
-            if (err != NULL) {
-                val_destroy(Obj(vv));
-                iter_destroy(&iter);
-                return err;
-            }
-            o = io.offs / SHIFT;
-            if (o < bitslen(vv1) && ((vv1->data[o] >> (io.offs % SHIFT)) & 1) != 0) {
-                uv ^= 1U << bits;
-            }
-            bits++;
-            if (bits == SHIFT) {
-                v[sz++] = uv;
-                uv = inv;
-                bits = 0;
-            }
-        }
+        l->len = i;
+        args->val[indx].val = io.val;
         iter_destroy(&iter);
-        if (bits != 0) v[sz++] = uv & ((1U << bits) - 1);
-
-        vv->bits = i;
-        return normalize(vv, sz, false);
+        return Obj(l);
     }
     if (io.val->obj == COLONLIST_OBJ) {
         struct sliceparam_s s;
