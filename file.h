@@ -28,6 +28,10 @@ typedef enum Encoding_types {
     E_UNKNOWN, E_UTF8, E_UTF16LE, E_UTF16BE, E_ISO, E_RAW
 } Encoding_types;
 
+typedef enum File_open_type {
+    FILE_OPEN_STDIN, FILE_OPEN_BINARY, FILE_OPEN_SOURCE, FILE_OPEN_COMMAND_LINE
+} File_open_type;
+
 typedef uint32_t filesize_t;
 
 struct file_data_s {
@@ -65,7 +69,7 @@ struct star_s {
     uint8_t pass;
 };
 
-extern struct file_s *file_open(const struct str_t *, const char *, unsigned int, linepos_t);
+extern struct file_s *file_open(const struct str_t *, const char *, File_open_type, linepos_t);
 extern struct star_s *new_star(linenum_t);
 extern struct star_s *init_star(linenum_t);
 extern void destroy_file(void);
