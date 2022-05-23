@@ -432,7 +432,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
     str_t filename;
 
     if (!tostr(&v[0], &filename)) {
-        cfile2 = file_open(&filename, current_file_list->file->realname, 1, &v[0].epoint);
+        cfile2 = file_open(&filename, current_file_list->file->realname, FILE_OPEN_BINARY, &v[0].epoint);
     }
 
     switch (vals->len) {

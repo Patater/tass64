@@ -3627,7 +3627,7 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 1, 3, &epoint)) goto breakerr;
                         vs = get_val();
                         if (!tostr(vs, &filename)) {
-                            cfile2 = file_open(&filename, current_file_list->file->realname, 1, &vs->epoint);
+                            cfile2 = file_open(&filename, current_file_list->file->realname, FILE_OPEN_BINARY, &vs->epoint);
                         }
                         if ((vs = get_val()) != NULL) {
                             ival_t ival;
@@ -4254,7 +4254,7 @@ MUST_CHECK Obj *compile(void)
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (!tostr(vs, &filename)) {
-                        f = file_open(&filename, current_file_list->file->realname, 2, &vs->epoint);
+                        f = file_open(&filename, current_file_list->file->realname, FILE_OPEN_SOURCE, &vs->epoint);
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
 
@@ -4865,7 +4865,7 @@ static void one_pass(int argc, char **argv, int opts) {
         star_tree = init_star((linenum_t)i);
 
         if (i == opts - 1) {
-            cfile = file_open(&cmdline_name, NULL, 3, &nopoint);
+            cfile = file_open(&cmdline_name, NULL, FILE_OPEN_COMMAND_LINE, &nopoint);
             if (cfile != NULL) {
                 cfile->open = true;
                 enterfile(cfile, &nopoint);
@@ -4885,7 +4885,7 @@ static void one_pass(int argc, char **argv, int opts) {
 
         filename.data = (const uint8_t *)argv[i];
         filename.len = strlen(argv[i]);
-        cfile = file_open(&filename, NULL, dash_name(argv[i]) ? 0 : 2, &nopoint);
+        cfile = file_open(&filename, NULL, dash_name(argv[i]) ? FILE_OPEN_STDIN : FILE_OPEN_SOURCE, &nopoint);
         if (cfile != NULL) {
             cfile->cmdline = true;
             cfile->open = true;
