@@ -636,6 +636,15 @@ failed:
     return err;
 }
 
+static void file_read_message(const struct file_s *file, unsigned int ftype) {
+    if (ftype != 3 && arguments.quiet) {
+        fputs((ftype == 1) ? "Reading file:      " : "Assembling file:   ", stdout);
+        argv_print(file->realname, stdout);
+        putchar('\n');
+        fflush(stdout);
+    }
+}
+
 static struct file_s file_defines;
 static struct file_s file_stdin;
 static struct file_s *lastfi;
@@ -701,13 +710,9 @@ struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype
             file->binary.len = (arguments.defines.len & ~(size_t)~(filesize_t)0) == 0 ? (filesize_t)arguments.defines.len : ~(filesize_t)0;
             arguments.defines.len = 0;
             file->binary.read = true;
-        } else if (arguments.quiet) {
-            fputs((ftype == 1) ? "Reading file:      " : "Assembling file:   ", stdout);
-            argv_print(file->realname, stdout);
-            putchar('\n');
-            fflush(stdout);
         }
         if (ftype != 1 && file->binary.read) {
+            file_read_message(file, ftype);
             err = read_source(file, NULL);
             if (err != 0) errno = ENOMEM;
         } else {
@@ -729,6 +734,7 @@ struct file_s *file_open(const str_t *name, const char *base, unsigned int ftype
                     }
                 }
             }
+            file_read_message(file, ftype);
             if (f != NULL) {
                 file->read_error = true;
                 if (ftype == 1) {
