@@ -636,7 +636,7 @@ failed:
     return err;
 }
 
-static void file_read_message(const struct file_s *file, unsigned int ftype) {
+static void file_read_message(const struct file_s *file, File_open_type ftype) {
     if (arguments.quiet) {
         fputs((ftype == FILE_OPEN_BINARY) ? "Reading file:      " : "Assembling file:   ", stdout);
         argv_print(file->realname, stdout);
