@@ -24,7 +24,6 @@
 #include "opcodes.h"
 #include "opt_bit.h"
 #include "macro.h"
-#include "64tass.h"
 
 typedef struct Bit Bit;
 
