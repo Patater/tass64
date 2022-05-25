@@ -159,7 +159,15 @@ static struct waitfor_s {
         } cmd_function;
         struct {
             Obj *val;
+            address_t addr;
+            Label *label;
+            size_t membp;
         } cmd_switch;
+        struct {
+            address_t addr;
+            Label *label;
+            size_t membp;
+        } cmd_if;
     } u;
 } *waitfors, *waitfor;
 
@@ -984,9 +992,12 @@ static void union_close(linepos_t epoint) {
 static const char *check_waitfor(void) {
     switch (waitfor->what) {
     case W_FI2:
-    case W_FI: return ".endif";
+    case W_FI: 
+        if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
+        return ".endif";
     case W_SWITCH2:
     case W_SWITCH:
+        if (waitfor->u.cmd_switch.label != NULL) {set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);val_destroy(Obj(waitfor->u.cmd_switch.label));}
         if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
         return ".endswitch";
     case W_WEAK2:
@@ -3098,6 +3109,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_FI: /* .fi */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
+                    if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
                     if (!close_waitfor(W_FI2) && !close_waitfor(W_FI)) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 }
@@ -3106,6 +3118,7 @@ MUST_CHECK Obj *compile(void)
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     if (waitfor->what==W_SWITCH || waitfor->what==W_SWITCH2) {
+                        if (waitfor->u.cmd_switch.label != NULL) {set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);val_destroy(Obj(waitfor->u.cmd_switch.label));}
                         if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
                         close_waitfor(waitfor->what);
                     } else {err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr;}
@@ -3145,6 +3158,11 @@ MUST_CHECK Obj *compile(void)
                     struct values_s *vs;
                     if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     new_waitfor(W_FI2, &epoint);
+                    waitfor->u.cmd_if.label = newlabel;
+                    if (newlabel != NULL) {
+                        waitfor->u.cmd_if.addr = current_address->address;waitfor->u.cmd_if.membp = newmembp;
+                        newlabel = NULL;
+                    }
                     if (skwait != 1) { waitfor->skip = 0; break; }
                     if (!get_exp(0, 1, 1, &epoint)) { waitfor->skip = 0; goto breakerr;}
                     vs = get_val(); val = vs->val;
@@ -3205,6 +3223,11 @@ MUST_CHECK Obj *compile(void)
                     uint8_t skwait = waitfor->skip;
                     if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     new_waitfor(W_SWITCH2, &epoint);
+                    waitfor->u.cmd_switch.label = newlabel;
+                    if (newlabel != NULL) {
+                        waitfor->u.cmd_switch.addr = current_address->address;waitfor->u.cmd_switch.membp = newmembp;
+                        newlabel = NULL;
+                    }
                     if (skwait == 1) {
                         struct values_s *vs;
                         if (!get_exp(0, 1, 1, &epoint)) {waitfor->skip = 0; waitfor->u.cmd_switch.val = NULL; goto breakerr;}
@@ -4450,6 +4473,12 @@ MUST_CHECK Obj *compile(void)
                             switch (waitfor->what) {
                             case W_FI:
                             case W_FI2:
+                                if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
+                                break;
+                            case W_SWITCH2:
+                            case W_SWITCH:
+                                if (waitfor->u.cmd_switch.label != NULL) {set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);val_destroy(Obj(waitfor->u.cmd_switch.label));}
+                                if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
                                 break;
                             default:
                                 msg = check_waitfor();
