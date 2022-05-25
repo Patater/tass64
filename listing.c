@@ -43,7 +43,7 @@
 bool listing_pccolumn;
 unsigned int nolisting;   /* listing */
 const uint8_t *llist = NULL;
-struct Listing *listing = NULL;
+static struct Listing *listing = NULL;
 
 typedef struct Listing {
     size_t c;
@@ -139,7 +139,7 @@ static void out_txt(Listing *ls, const char *s) {
     }
 }
 
-MUST_CHECK Listing *listing_open(const char *filename, int argc, char *argv[]) {
+void listing_open(const char *filename, int argc, char *argv[]) {
     Listing *ls;
     struct linepos_s nopoint = {0, 0};
     time_t t;
@@ -149,7 +149,8 @@ MUST_CHECK Listing *listing_open(const char *filename, int argc, char *argv[]) {
     flist = dash_name(filename) ? stdout : fopen_utf8(filename, "wt");
     if (flist == NULL) {
         err_msg_file(ERROR_CANT_WRTE_LST, filename, &nopoint);
-        return NULL;
+        listing = NULL;
+        return;
     }
     clearerr(flist); errno = 0;
 
@@ -201,10 +202,11 @@ MUST_CHECK Listing *listing_open(const char *filename, int argc, char *argv[]) {
     }
     flushbuf(ls);
     newline(ls);
-    return ls;
+    listing = ls;
 }
 
-void listing_close(Listing *ls) {
+void listing_close(void) {
+    Listing *const ls = listing;
     struct linepos_s nopoint = {0, 0};
     int err;
     if (ls == NULL) return;
@@ -214,6 +216,7 @@ void listing_close(Listing *ls) {
     err |= (ls->flist != stdout) ? fclose(ls->flist) : fflush(ls->flist);
     if (err != 0 && errno != 0) err_msg_file(ERROR_CANT_WRTE_LST, ls->filename, &nopoint);
     free(ls);
+    listing = NULL;
 }
 
 static bool printllist(Listing *ls) {
@@ -258,7 +261,8 @@ static void printline(Listing *ls) {
     printfile(ls);
 }
 
-FAST_CALL void listing_equal(Listing *ls, Obj *val) {
+FAST_CALL void listing_equal(Obj *val) {
+    Listing *const ls = listing; 
     if (ls == NULL) return;
     if (nolisting != 0 || !ls->source || functionrecursion != 0) return;
     if (ls->linenum) {
@@ -378,7 +382,8 @@ static void printsource(Listing *ls, linecpos_t pos) {
     newline(ls);
 }
 
-FAST_CALL void listing_equal2(Listing *ls, Obj *val, linecpos_t pos) {
+FAST_CALL void listing_equal2(Obj *val, linecpos_t pos) {
+    Listing *const ls = listing;
     if (ls == NULL) return;
     if (nolisting != 0 || !ls->source || functionrecursion != 0) return;
     if (ls->linenum) {
@@ -397,7 +402,8 @@ FAST_CALL void listing_equal2(Listing *ls, Obj *val, linecpos_t pos) {
 }
 
 
-FAST_CALL void listing_line(Listing *ls, linecpos_t pos) {
+FAST_CALL void listing_line(linecpos_t pos) {
+    Listing *const ls = listing;
     size_t i;
     if (nolisting != 0  || functionrecursion != 0 || llist == NULL) return;
     if (ls == NULL) {
@@ -435,7 +441,8 @@ FAST_CALL void listing_line(Listing *ls, linecpos_t pos) {
     llist = NULL;
 }
 
-FAST_CALL void listing_line_cut(Listing *ls, linecpos_t pos) {
+FAST_CALL void listing_line_cut(linecpos_t pos) {
+    Listing *const ls = listing; 
     size_t i;
     if (nolisting != 0 || functionrecursion != 0 || llist == NULL) return;
     if (ls == NULL) {
@@ -460,7 +467,8 @@ FAST_CALL void listing_line_cut(Listing *ls, linecpos_t pos) {
     llist = NULL;
 }
 
-FAST_CALL void listing_line_cut2(Listing *ls, linecpos_t pos) {
+FAST_CALL void listing_line_cut2(linecpos_t pos) {
+    Listing *const ls = listing; 
     if (ls == NULL || !ls->verbose || llist == NULL) return;
     if (nolisting == 0 && ls->source && functionrecursion == 0) {
         if (ls->linenum) printline(ls);
@@ -473,13 +481,15 @@ FAST_CALL void listing_line_cut2(Listing *ls, linecpos_t pos) {
     }
 }
 
-FAST_CALL void listing_set_cpumode(Listing *ls, const struct cpu_s *cpumode) {
+FAST_CALL void listing_set_cpumode(const struct cpu_s *cpumode) {
+    Listing *const ls = listing;
     if (ls == NULL) return;
     ls->disasm = cpumode->disasm;
     ls->mnemonic = cpumode->mnemonic;
 }
 
-void listing_instr(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
+void listing_instr(unsigned int cod, uint32_t adr, int ln) {
+    Listing *const ls = listing; 
     address_t addr, addr2;
     if (nolisting != 0 || functionrecursion != 0) return;
     if (ls == NULL) {
@@ -509,7 +519,8 @@ void listing_instr(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
     newline(ls);
 }
 
-void listing_mem(Listing *ls, const uint8_t *data, size_t len, address_t myaddr, address_t myaddr2) {
+void listing_mem(const uint8_t *data, size_t len, address_t myaddr, address_t myaddr2) {
+    Listing *const ls = listing; 
     bool print, exitnow;
     int lcol;
     unsigned int repeat;
@@ -587,7 +598,8 @@ void listing_mem(Listing *ls, const uint8_t *data, size_t len, address_t myaddr,
     goto flush;
 }
 
-void listing_file(Listing *ls, const char *txt, const struct file_s *file) {
+void listing_file(const char *txt, const struct file_s *file) {
+    Listing *const ls = listing; 
     if (ls == NULL) return;
     newline(ls);
     if (ls->linenum) {

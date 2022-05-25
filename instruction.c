@@ -147,7 +147,7 @@ static void dump_instr(unsigned int cod, uint32_t adr, int ln, linepos_t epoint)
         default: d[0] = (uint8_t)(cod ^ outputeor);
         }
     }
-    listing_instr(listing, cod, adr, ln);
+    listing_instr(cod, adr, ln);
 }
 
 typedef enum Adrgen { 

@@ -656,6 +656,6 @@ void list_mem(const struct mem_mark_s *mm, const Memblocks *memblocks) {
         } else {
             if (len == 0) continue;
         }
-        listing_mem(listing, memblocks->mem.data + p, len, addr, (mm->oaddr2 + addr - addr2) & all_mem);
+        listing_mem(memblocks->mem.data + p, len, addr, (mm->oaddr2 + addr - addr2) & all_mem);
     }
 }
