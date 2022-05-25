@@ -264,7 +264,7 @@ static void printline(Listing *ls) {
 FAST_CALL void listing_equal(Obj *val) {
     Listing *const ls = listing; 
     if (ls == NULL) return;
-    if (nolisting != 0 || !ls->source || functionrecursion != 0) return;
+    if (nolisting != 0 || !ls->source || in_function) return;
     if (ls->linenum) {
         printline(ls);
         padding2(ls, ls->columns.addr);
@@ -385,7 +385,7 @@ static void printsource(Listing *ls, linecpos_t pos) {
 FAST_CALL void listing_equal2(Obj *val, linecpos_t pos) {
     Listing *const ls = listing;
     if (ls == NULL) return;
-    if (nolisting != 0 || !ls->source || functionrecursion != 0) return;
+    if (nolisting != 0 || !ls->source || in_function) return;
     if (ls->linenum) {
         printline(ls);
         padding2(ls, ls->columns.addr);
@@ -405,7 +405,7 @@ FAST_CALL void listing_equal2(Obj *val, linecpos_t pos) {
 FAST_CALL void listing_line(linecpos_t pos) {
     Listing *const ls = listing;
     size_t i;
-    if (nolisting != 0  || functionrecursion != 0 || llist == NULL) return;
+    if (nolisting != 0  || in_function || llist == NULL) return;
     if (ls == NULL) {
         address_t addr;
         if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
@@ -444,7 +444,7 @@ FAST_CALL void listing_line(linecpos_t pos) {
 FAST_CALL void listing_line_cut(linecpos_t pos) {
     Listing *const ls = listing; 
     size_t i;
-    if (nolisting != 0 || functionrecursion != 0 || llist == NULL) return;
+    if (nolisting != 0 || in_function || llist == NULL) return;
     if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
         i = 0;
@@ -470,7 +470,7 @@ FAST_CALL void listing_line_cut(linecpos_t pos) {
 FAST_CALL void listing_line_cut2(linecpos_t pos) {
     Listing *const ls = listing; 
     if (ls == NULL || !ls->verbose || llist == NULL) return;
-    if (nolisting == 0 && ls->source && functionrecursion == 0) {
+    if (nolisting == 0 && ls->source && !in_function) {
         if (ls->linenum) printline(ls);
         padding2(ls, ls->columns.source);
         flushbuf(ls);
@@ -491,7 +491,7 @@ FAST_CALL void listing_set_cpumode(const struct cpu_s *cpumode) {
 void listing_instr(unsigned int cod, uint32_t adr, int ln) {
     Listing *const ls = listing; 
     address_t addr, addr2;
-    if (nolisting != 0 || functionrecursion != 0) return;
+    if (nolisting != 0 || in_function) return;
     if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn) return;
         ln++;
@@ -531,7 +531,7 @@ void listing_mem(const uint8_t *data, size_t len, address_t myaddr, address_t my
     } prev, current;
     size_t p;
 
-    if (nolisting != 0 || functionrecursion != 0) return;
+    if (nolisting != 0 || in_function) return;
     if (ls == NULL) {
          if (myaddr != myaddr2) listing_pccolumn = true;
          return;
