@@ -61,8 +61,6 @@ typedef struct Listing {
     bool linenum, verbose, monitor, pccolumn, source;
 } Listing;
 
-static Listing listing;
-
 static void flushbuf(Listing *ls) {
     ls->c += fwrite(ls->buf, 1, (size_t)(ls->s - ls->buf), ls->flist);
     ls->s = ls->buf;
@@ -140,21 +138,29 @@ static void out_txt(Listing *ls, const char *s) {
     }
 }
 
+static Listing *listing;
+
 void listing_open(const char *filename, int argc, char *argv[]) {
-    Listing *const ls = &listing;
+    static Listing listing2;
+    Listing *ls;
     struct linepos_s nopoint = {0, 0};
     time_t t;
     int i;
+    FILE *flist;
 
-    ls->flist = dash_name(filename) ? stdout : fopen_utf8(filename, "wt");
-    if (ls->flist == NULL) {
+    flist = dash_name(filename) ? stdout : fopen_utf8(filename, "wt");
+    if (flist == NULL) {
         err_msg_file(ERROR_CANT_WRTE_LST, filename, &nopoint);
+        listing = NULL;
         return;
     }
-    clearerr(ls->flist); errno = 0;
+    clearerr(flist); errno = 0;
+
+    ls = &listing2;
 
     memcpy(ls->hex, "0123456789abcdef", 16);
     ls->filename = filename;
+    ls->flist = flist;
     ls->linenum = arguments.list.linenum;
     ls->pccolumn = listing_pccolumn;
     ls->columns.addr = arguments.list.linenum ? LINE_WIDTH : 0;
@@ -169,13 +175,13 @@ void listing_open(const char *filename, int argc, char *argv[]) {
     ls->lastfile = 0;
     ls->s = ls->buf;
 
-    fputs("\n; 64tass Turbo Assembler Macro V" VERSION " listing file\n;", ls->flist);
+    fputs("\n; 64tass Turbo Assembler Macro V" VERSION " listing file\n;", flist);
     for (i = 0; i < argc; i++) {
-        putc(' ', ls->flist);
-        argv_print(argv[i], ls->flist);
+        putc(' ', flist);
+        argv_print(argv[i], flist);
     }
-    fputs("\n; ", ls->flist);
-    time(&t); fputs(ctime(&t), ls->flist);
+    fputs("\n; ", flist);
+    time(&t); fputs(ctime(&t), flist);
     newline(ls);
     if (ls->linenum) {
         out_txt(ls, ";Line");
@@ -198,19 +204,20 @@ void listing_open(const char *filename, int argc, char *argv[]) {
     }
     flushbuf(ls);
     newline(ls);
+    listing = ls;
 }
 
 void listing_close(void) {
-    Listing *const ls = &listing;
+    Listing *const ls = listing;
     struct linepos_s nopoint = {0, 0};
     int err;
-    if (ls->flist == NULL) return;
+    if (ls == NULL) return;
 
     fputs("\n;******  End of listing\n", ls->flist);
     err = ferror(ls->flist);
     err |= (ls->flist != stdout) ? fclose(ls->flist) : fflush(ls->flist);
     if (err != 0 && errno != 0) err_msg_file(ERROR_CANT_WRTE_LST, ls->filename, &nopoint);
-    ls->flist = NULL;
+    listing = NULL;
 }
 
 static bool printllist(Listing *ls) {
@@ -256,8 +263,8 @@ static void printline(Listing *ls) {
 }
 
 FAST_CALL void listing_equal(Obj *val) {
-    Listing *const ls = &listing;
-    if (ls->flist == NULL) return;
+    Listing *const ls = listing;
+    if (ls == NULL) return;
     if (nolisting != 0 || !ls->source || in_function) return;
     if (ls->linenum) {
         printline(ls);
@@ -377,8 +384,8 @@ static void printsource(Listing *ls, linecpos_t pos) {
 }
 
 FAST_CALL void listing_equal2(Obj *val, linecpos_t pos) {
-    Listing *const ls = &listing;
-    if (ls->flist == NULL) return;
+    Listing *const ls = listing;
+    if (ls == NULL) return;
     if (nolisting != 0 || !ls->source || in_function) return;
     if (ls->linenum) {
         printline(ls);
@@ -397,10 +404,10 @@ FAST_CALL void listing_equal2(Obj *val, linecpos_t pos) {
 
 
 FAST_CALL void listing_line(linecpos_t pos) {
-    Listing *const ls = &listing;
+    Listing *const ls = listing;
     size_t i;
     if (nolisting != 0  || in_function || llist == NULL) return;
-    if (ls->flist == NULL) {
+    if (ls == NULL) {
         address_t addr;
         if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
         addr = current_address->l_address;
@@ -436,10 +443,10 @@ FAST_CALL void listing_line(linecpos_t pos) {
 }
 
 FAST_CALL void listing_line_cut(linecpos_t pos) {
-    Listing *const ls = &listing;
+    Listing *const ls = listing;
     size_t i;
     if (nolisting != 0 || in_function || llist == NULL) return;
-    if (ls->flist == NULL) {
+    if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
         i = 0;
         while (i < pos && (llist[i] == 0x20 || llist[i] == 0x09)) i++;
@@ -462,8 +469,8 @@ FAST_CALL void listing_line_cut(linecpos_t pos) {
 }
 
 FAST_CALL void listing_line_cut2(linecpos_t pos) {
-    Listing *const ls = &listing;
-    if (ls->flist == NULL || !ls->verbose || llist == NULL) return;
+    Listing *const ls = listing;
+    if (ls == NULL || !ls->verbose || llist == NULL) return;
     if (nolisting == 0 && ls->source && !in_function) {
         if (ls->linenum) printline(ls);
         padding2(ls, ls->columns.source);
@@ -476,16 +483,17 @@ FAST_CALL void listing_line_cut2(linecpos_t pos) {
 }
 
 FAST_CALL void listing_set_cpumode(const struct cpu_s *cpumode) {
-    Listing *const ls = &listing;
+    Listing *const ls = listing;
+    if (ls == NULL) return;
     ls->disasm = cpumode->disasm;
     ls->mnemonic = cpumode->mnemonic;
 }
 
 void listing_instr(unsigned int cod, uint32_t adr, int ln) {
-    Listing *const ls = &listing;
+    Listing *const ls = listing;
     address_t addr, addr2;
     if (nolisting != 0 || in_function) return;
-    if (ls->flist == NULL) {
+    if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn) return;
         ln++;
         addr = (current_address->l_address - (unsigned int)ln) & all_mem;
@@ -513,7 +521,7 @@ void listing_instr(unsigned int cod, uint32_t adr, int ln) {
 }
 
 void listing_mem(const uint8_t *data, size_t len, address_t myaddr, address_t myaddr2) {
-    Listing *const ls = &listing;
+    Listing *const ls = listing;
     bool print, exitnow;
     int lcol;
     unsigned int repeat;
@@ -525,7 +533,7 @@ void listing_mem(const uint8_t *data, size_t len, address_t myaddr, address_t my
     size_t p;
 
     if (nolisting != 0 || in_function) return;
-    if (ls->flist == NULL) {
+    if (ls == NULL) {
          if (myaddr != myaddr2) listing_pccolumn = true;
          return;
     }
@@ -592,8 +600,8 @@ void listing_mem(const uint8_t *data, size_t len, address_t myaddr, address_t my
 }
 
 void listing_file(const char *txt, const struct file_s *file) {
-    Listing *const ls = &listing;
-    if (ls->flist == NULL) return;
+    Listing *const ls = listing;
+    if (ls == NULL) return;
     newline(ls);
     if (ls->linenum) {
         if (file != NULL) {
