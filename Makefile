@@ -142,7 +142,7 @@ labelobj.o: labelobj.c labelobj.h obj.h attributes.h inttypes.h str.h \
  typeobj.h
 listing.o: listing.c listing.h attributes.h inttypes.h stdbool.h file.h \
  error.h errors_e.h 64tass.h wait_e.h opcodes.h unicode.h section.h avl.h \
- str.h instruction.h obj.h values.h arguments.h version.h
+ str.h instruction.h obj.h values.h arguments.h macro.h version.h
 listobj.o: listobj.c listobj.h obj.h attributes.h inttypes.h values.h \
  stdbool.h eval.h oper_e.h variables.h error.h errors_e.h boolobj.h \
  codeobj.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h foldobj.h

@@ -31,6 +31,7 @@
 #include "obj.h"
 #include "values.h"
 #include "arguments.h"
+#include "macro.h"
 #include "version.h"
 
 #define LINE_WIDTH 8
@@ -42,6 +43,7 @@
 bool listing_pccolumn;
 unsigned int nolisting;   /* listing */
 const uint8_t *llist = NULL;
+struct Listing *listing = NULL;
 
 typedef struct Listing {
     size_t c;
@@ -258,7 +260,7 @@ static void printline(Listing *ls) {
 
 FAST_CALL void listing_equal(Listing *ls, Obj *val) {
     if (ls == NULL) return;
-    if (nolisting != 0 || !ls->source || temporary_label_branch != 0) return;
+    if (nolisting != 0 || !ls->source || functionrecursion != 0) return;
     if (ls->linenum) {
         printline(ls);
         padding2(ls, ls->columns.addr);
@@ -378,7 +380,7 @@ static void printsource(Listing *ls, linecpos_t pos) {
 
 FAST_CALL void listing_equal2(Listing *ls, Obj *val, linecpos_t pos) {
     if (ls == NULL) return;
-    if (nolisting != 0 || !ls->source || temporary_label_branch != 0) return;
+    if (nolisting != 0 || !ls->source || functionrecursion != 0) return;
     if (ls->linenum) {
         printline(ls);
         padding2(ls, ls->columns.addr);
@@ -397,7 +399,7 @@ FAST_CALL void listing_equal2(Listing *ls, Obj *val, linecpos_t pos) {
 
 FAST_CALL void listing_line(Listing *ls, linecpos_t pos) {
     size_t i;
-    if (nolisting != 0  || temporary_label_branch != 0 || llist == NULL) return;
+    if (nolisting != 0  || functionrecursion != 0 || llist == NULL) return;
     if (ls == NULL) {
         address_t addr;
         if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
@@ -435,7 +437,7 @@ FAST_CALL void listing_line(Listing *ls, linecpos_t pos) {
 
 FAST_CALL void listing_line_cut(Listing *ls, linecpos_t pos) {
     size_t i;
-    if (nolisting != 0 || temporary_label_branch != 0 || llist == NULL) return;
+    if (nolisting != 0 || functionrecursion != 0 || llist == NULL) return;
     if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn || !arguments.list.source) return;
         i = 0;
@@ -460,7 +462,7 @@ FAST_CALL void listing_line_cut(Listing *ls, linecpos_t pos) {
 
 FAST_CALL void listing_line_cut2(Listing *ls, linecpos_t pos) {
     if (ls == NULL || !ls->verbose || llist == NULL) return;
-    if (nolisting == 0 && ls->source && temporary_label_branch == 0) {
+    if (nolisting == 0 && ls->source && functionrecursion == 0) {
         if (ls->linenum) printline(ls);
         padding2(ls, ls->columns.source);
         flushbuf(ls);
@@ -479,7 +481,7 @@ FAST_CALL void listing_set_cpumode(Listing *ls, const struct cpu_s *cpumode) {
 
 void listing_instr(Listing *ls, unsigned int cod, uint32_t adr, int ln) {
     address_t addr, addr2;
-    if (nolisting != 0 || temporary_label_branch != 0) return;
+    if (nolisting != 0 || functionrecursion != 0) return;
     if (ls == NULL) {
         if (!fixeddig || constcreated || listing_pccolumn) return;
         ln++;
@@ -518,7 +520,7 @@ void listing_mem(Listing *ls, const uint8_t *data, size_t len, address_t myaddr,
     } prev, current;
     size_t p;
 
-    if (nolisting != 0 || temporary_label_branch != 0) return;
+    if (nolisting != 0 || functionrecursion != 0) return;
     if (ls == NULL) {
          if (myaddr != myaddr2) listing_pccolumn = true;
          return;

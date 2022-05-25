@@ -29,6 +29,7 @@ struct file_s;
 extern bool listing_pccolumn;
 extern unsigned int nolisting;
 extern const uint8_t *llist;
+extern struct Listing *listing;
 extern MUST_CHECK struct Listing *listing_open(const char *, int, char *[]);
 extern void listing_close(struct Listing *);
 extern FAST_CALL void listing_equal(struct Listing *, struct Obj *);

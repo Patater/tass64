@@ -75,8 +75,6 @@
 #include "dictobj.h"
 #include "encobj.h"
 
-struct Listing *listing = NULL;
-int temporary_label_branch; /* function declaration in function context, not good */
 linenum_t vline;      /* current line */
 address_t all_mem, all_mem2;
 unsigned int all_mem_bits;
@@ -4855,7 +4853,7 @@ static void one_pass(int argc, char **argv, int opts) {
         star = databank = dpage = strength = 0;longaccu = longindex = autosize = false;
         val_destroy(Obj(actual_encoding));
         actual_encoding = ref_enc(new_encoding(&none_enc, &nopoint));
-        allowslowbranch = true; longbranchasjmp = false; temporary_label_branch = 0;
+        allowslowbranch = true; longbranchasjmp = false;
         reset_waitfor();lpoint.line = vline = 0;outputeor = 0; pline = (const uint8_t *)"";
         reset_context();
         current_section = &root_section;
