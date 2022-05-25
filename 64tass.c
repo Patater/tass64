@@ -549,7 +549,7 @@ static void set_cpumode(const struct cpu_s *cpumode) {
     all_mem = cpumode->max_address;
     all_mem_bits = (all_mem == 0xffff) ? 16 : 24;
     select_opcodes(cpumode);
-    listing_set_cpumode(listing, cpumode);
+    listing_set_cpumode(cpumode);
     cpu_opt_set_cpumode(cpumode);
     if (registerobj_createnames(cpumode->registers)) constcreated = true;
 }
@@ -1142,7 +1142,7 @@ static bool virtual_start(linepos_t epoint) {
     bool retval = false;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    listing_line(listing, epoint->pos);
+    listing_line(epoint->pos);
     new_waitfor(W_ENDV2, epoint); waitfor->u.cmd_virtual.section_address = current_address; waitfor->u.cmd_virtual.label = NULL;
     new_instance(&section_address);
     section_address->wrapwarn = section_address->moved = false;
@@ -1195,7 +1195,7 @@ static void starhandle(Obj *val, linepos_t epoint, linepos_t epoint2) {
         if (current_address->end < current_address->address) current_address->end = current_address->address;
         current_address->moved = true;
     }
-    listing_line(listing, epoint->pos);
+    listing_line(epoint->pos);
     do {
         {
             address_t max = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? all_mem2 : all_mem;
@@ -1417,8 +1417,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     iter.data = NULL;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    if (lst != NULL && newlabel != NULL) listing_equal2(listing, Obj(lst), epoint->pos);
-    else listing_line(listing, epoint->pos);
+    if (lst != NULL && newlabel != NULL) listing_equal2(Obj(lst), epoint->pos);
+    else listing_line(epoint->pos);
 
     do { /* label */
         bool labelexists;
@@ -1541,7 +1541,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
 
             while ((val2 = iter.next(&iter)) != NULL) {
                 if (nopos < 0) nopos = 0;
-                else if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+                else if ((waitfor->skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
                 if (labels.p == 1) {
                     val_destroy(label->value);
                     label->value = val_reference(val2);
@@ -1609,7 +1609,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 if (here() == 0 || here() == ';') {bpoint.pos = 0; nopos = 0;}
                 else bpoint = lpoint;
             } else {
-                if ((skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+                if ((skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
             }
             if (lst != NULL) {
                 if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
@@ -1730,8 +1730,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
         lpoint.line = xlin;
     }
     if (nf != NULL) {
-        if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
-        else listing_line_cut2(listing, waitfor->epoint.pos);
+        if ((waitfor->skip & 1) != 0) listing_line(waitfor->epoint.pos);
+        else listing_line_cut2(waitfor->epoint.pos);
         close_waitfor(W_ENDFOR2);
     } else {
         waitfor->what = W_ENDFOR; waitfor->skip = 0;
@@ -1748,8 +1748,8 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     size_t i = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    if (lst != NULL && newlabel != NULL) listing_equal2(listing, Obj(lst), epoint->pos);
-    else listing_line(listing, epoint->pos);
+    if (lst != NULL && newlabel != NULL) listing_equal2(Obj(lst), epoint->pos);
+    else listing_line(epoint->pos);
     if (!get_exp(0, 1, 1, epoint)) cnt = 0;
     else {
         if (touval2(get_val(), &cnt, 8 * sizeof cnt)) cnt = 0;
@@ -1780,12 +1780,12 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
             if (nf == NULL || waitfor->u.cmd_rept.breakout || (--cnt) == 0) {
                 break;
             }
-            if ((waitfor->skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+            if ((waitfor->skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
             waitfor->skip = 1;
         }
         if (nf != NULL) {
-            if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
-            else listing_line_cut2(listing, waitfor->epoint.pos);
+            if ((waitfor->skip & 1) != 0) listing_line(waitfor->epoint.pos);
+            else listing_line_cut2(waitfor->epoint.pos);
             close_waitfor(W_ENDREPT2);
         } else {
             waitfor->what = W_ENDREPT; waitfor->skip = 0;
@@ -1806,8 +1806,8 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     uint8_t skip = 0;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    if (lst != NULL && newlabel != NULL) listing_equal2(listing, Obj(lst), epoint->pos);
-    else listing_line(listing, epoint->pos);
+    if (lst != NULL && newlabel != NULL) listing_equal2(Obj(lst), epoint->pos);
+    else listing_line(epoint->pos);
 
     s = new_star(vline); stree_old = star_tree;
     if (s->pass != 0 && s->addr != star) {
@@ -1834,7 +1834,7 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
             waitfor->skip = skip;
             break;
         }
-        if ((skip & 1) != 0) listing_line_cut(listing, waitfor->epoint.pos);
+        if ((skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
         if (lst != NULL) {
             if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
             else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1852,8 +1852,8 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     lpoint.line = xlin;
     
     if (nf != NULL) {
-        if ((waitfor->skip & 1) != 0) listing_line(listing, waitfor->epoint.pos);
-        else listing_line_cut2(listing, waitfor->epoint.pos);
+        if ((waitfor->skip & 1) != 0) listing_line(waitfor->epoint.pos);
+        else listing_line_cut2(waitfor->epoint.pos);
         close_waitfor(W_ENDWHILE2);
     } else {
         waitfor->what = W_ENDWHILE; waitfor->skip = 0;
@@ -2171,7 +2171,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     val_destroy(val2);
                     if (label != NULL) {
-                        listing_equal(listing, result2);
+                        listing_equal(result2);
                         if (label->file_list != current_file_list) {
                             label_move(label, &labelname, current_file_list);
                         }
@@ -2219,7 +2219,7 @@ MUST_CHECK Obj *compile(void)
                         if (label != NULL) {
                             labelexists = true;
                         } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                        listing_equal(listing, val);
+                        listing_equal(val);
                         if (labelexists) {
                             if (label->defpass == pass) {
                                 val_destroy(val);
@@ -2285,7 +2285,7 @@ MUST_CHECK Obj *compile(void)
                                 labelexists = true;
                                 if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
                             } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                            listing_equal(listing, val);
+                            listing_equal(val);
                             if (labelexists) {
                                 if (label->constant) {
                                     err_msg_double_defined(label, &labelname, &epoint);
@@ -2319,7 +2319,7 @@ MUST_CHECK Obj *compile(void)
                             Label *label;
                             Lbl *lbl;
                             bool labelexists;
-                            listing_line(listing, 0);
+                            listing_line(0);
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             lbl = Lbl(val_alloc(LBL_OBJ));
                             lbl->sline = epoint.line;
@@ -2388,7 +2388,7 @@ MUST_CHECK Obj *compile(void)
                             label->constant = true;
                             label->epoint = epoint;
                             label->ref = false;
-                            listing_line(listing, 0);
+                            listing_line(0);
                             new_waitfor(W_ENDN, &cmdpoint);
                             if (get_exp(0, 0, 1, &cmdpoint)) {
                                 struct values_s *vs = get_val();
@@ -2429,7 +2429,7 @@ MUST_CHECK Obj *compile(void)
                             Macro *macro;
                             Type *obj = (prm == CMD_MACRO) ? MACRO_OBJ : SEGMENT_OBJ;
                             bool labelexists;
-                            listing_line(listing, 0);
+                            listing_line(0);
                             new_waitfor(prm == CMD_MACRO ? W_ENDMACRO : W_ENDSEGMENT, &cmdpoint);waitfor->skip = 0;
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             macro = Macro(val_alloc(obj));
@@ -2485,7 +2485,7 @@ MUST_CHECK Obj *compile(void)
                             Mfunc *mfunc;
                             bool labelexists, failed;
                             Type *obj = (prm == CMD_FUNCTION) ? MFUNC_OBJ : SFUNC_OBJ;
-                            listing_line(listing, 0);
+                            listing_line(0);
                             if (prm == CMD_FUNCTION) new_waitfor(W_ENDF, &cmdpoint);
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             mfunc = Mfunc(val_alloc(obj));
@@ -2652,7 +2652,7 @@ MUST_CHECK Obj *compile(void)
                                 structure->size = 0;
                                 structure->names = new_namespace(current_file_list, &epoint);
                             }
-                            listing_line(listing, cmdpoint.pos);
+                            listing_line(cmdpoint.pos);
                             waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
                             waitfor->skip = 1;
                             val = macro_recurse(W_ENDS, Obj(structure), structure->names, &cmdpoint);
@@ -2783,7 +2783,7 @@ MUST_CHECK Obj *compile(void)
                             }
 
                             if (diagnostics.optimize) cpu_opt_invalidate();
-                            listing_line(listing, cmdpoint.pos);
+                            listing_line(cmdpoint.pos);
                             if (get_exp(1, 1, 0, &cmdpoint)) {
                                 struct values_s *vs = get_val();
                                 val = vs->val;
@@ -2938,12 +2938,12 @@ MUST_CHECK Obj *compile(void)
                     case CMD_PROC:
                         new_waitfor(W_PEND, &epoint);
                         if (newlabel->value->obj != CODE_OBJ) {
-                            listing_line(listing, 0);
+                            listing_line(0);
                             waitfor->skip = 0; push_dummy_context();
                             waitfor->u.cmd_proc.label = NULL;
                             val_destroy(Obj(newlabel));
                         } else if (!newlabel->ref && Code(newlabel->value)->pass != 0) {
-                            listing_line(listing, 0);
+                            listing_line(0);
                             waitfor->skip = 0; 
                             set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
                             Code(newlabel->value)->pass = 1;
@@ -2951,7 +2951,7 @@ MUST_CHECK Obj *compile(void)
                             waitfor->u.cmd_proc.label = NULL;
                             val_destroy(Obj(newlabel));
                         } else {         /* TODO: first time it should not compile */
-                            listing_line(listing, epoint.pos);
+                            listing_line(epoint.pos);
                             push_context(Code(newlabel->value)->names);
                             newlabel->ref = false;
                             waitfor->u.cmd_proc.addr = current_address->address;waitfor->u.cmd_proc.membp = newmembp;waitfor->u.cmd_proc.label = newlabel;
@@ -2960,13 +2960,13 @@ MUST_CHECK Obj *compile(void)
                         goto finish;
                     case CMD_SECTION:
                         waitfor->u.cmd_section.addr = current_address->address;waitfor->u.cmd_section.membp = newmembp;waitfor->u.cmd_section.label = newlabel;
-                        listing_line(listing, epoint.pos);
+                        listing_line(epoint.pos);
                         newlabel->ref = false;
                         newlabel = NULL;
                         goto finish;
                     case CMD_VIRTUAL:
                         waitfor->u.cmd_virtual.membp = newmembp;waitfor->u.cmd_virtual.label = newlabel;
-                        listing_line(listing, epoint.pos);
+                        listing_line(epoint.pos);
                         newlabel->ref = false;
                         newlabel = NULL;
                         goto finish;
@@ -3078,7 +3078,7 @@ MUST_CHECK Obj *compile(void)
         case '\0':
             if ((waitfor->skip & 1) != 0) {
                 if (newlabel != NULL && newlabel->value->obj == CODE_OBJ && labelname.len != 0 && labelname.data[0] != '_' && labelname.data[0] != '+' && labelname.data[0] != '-') {val_destroy(Obj(cheap_context));cheap_context = ref_namespace(Code(newlabel->value)->names);}
-                listing_line(listing, epoint.pos);
+                listing_line(epoint.pos);
             }
             break;
         case '.':
@@ -3090,45 +3090,45 @@ MUST_CHECK Obj *compile(void)
         as_command:
             switch (prm) {
             case CMD_ENDC: /* .endc */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (!close_waitfor(W_ENDC)) {err_msg2(ERROR__MISSING_OPEN, ".comment", &epoint); goto breakerr;}
-                if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 break;
             case CMD_FI: /* .fi */
                 {
-                    if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     if (!close_waitfor(W_FI2) && !close_waitfor(W_FI)) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 }
                 break;
             case CMD_ENDSWITCH: /* .endswitch */
                 {
-                    if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     if (waitfor->what==W_SWITCH || waitfor->what==W_SWITCH2) {
                         if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
                         close_waitfor(waitfor->what);
                     } else {err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr;}
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 }
                 break;
             case CMD_DEFAULT: /* .default */
                 {
-                    if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut(epoint.pos);
                     if (waitfor->what==W_SWITCH) {err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr;}
                     if (waitfor->what!=W_SWITCH2) {err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr;}
                     waitfor->skip = (uint8_t)(waitfor->skip >> 1);
                     waitfor->what = W_SWITCH;waitfor->epoint = epoint;
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2( epoint.pos);
                 }
                 break;
             case CMD_ELSE: /* .else */
                 {
-                    if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut(epoint.pos);
                     if (waitfor->what==W_FI) { err_msg2(ERROR______EXPECTED, "'.endif'", &epoint); goto breakerr; }
                     if (waitfor->what!=W_FI2) { err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr; }
                     waitfor->skip = (uint8_t)(waitfor->skip >> 1);
                     waitfor->what = W_FI;waitfor->epoint = epoint;
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 }
                 break;
             case CMD_IF: /* .if */
@@ -3142,7 +3142,7 @@ MUST_CHECK Obj *compile(void)
                     bool truth;
                     Obj *err;
                     struct values_s *vs;
-                    if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     new_waitfor(W_FI2, &epoint);
                     if (skwait != 1) { waitfor->skip = 0; break; }
                     if (!get_exp(0, 1, 1, &epoint)) { waitfor->skip = 0; goto breakerr;}
@@ -3187,7 +3187,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_ELSIF: /* .elsif */
                 {
                     bool truth;
-                    if ((waitfor->skip & 1) != 0) listing_line_cut(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut(epoint.pos);
                     if (waitfor->what == W_FI) {err_msg2(ERROR______EXPECTED, "'.endif'", &epoint); goto breakerr; }
                     if (waitfor->what != W_FI2) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     waitfor->epoint = epoint;
@@ -3195,14 +3195,14 @@ MUST_CHECK Obj *compile(void)
                     waitfor->skip = 1;
                     if (!get_exp(0, 1, 1, &epoint)) { waitfor->skip = 0; goto breakerr;}
                     if (tobool(get_val(), &truth)) waitfor->skip = 0;
-                    else if (truth) listing_line_cut2(listing, epoint.pos);
+                    else if (truth) listing_line_cut2(epoint.pos);
                     else waitfor->skip = 2;
                 }
                 break;
             case CMD_SWITCH: /* .switch */
                 {
                     uint8_t skwait = waitfor->skip;
-                    if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     new_waitfor(W_SWITCH2, &epoint);
                     if (skwait == 1) {
                         struct values_s *vs;
@@ -3219,7 +3219,7 @@ MUST_CHECK Obj *compile(void)
                 {
                     bool truth = false;
                     uint8_t skwait = waitfor->skip;
-                    if ((skwait & 1) != 0) listing_line_cut(listing, epoint.pos);
+                    if ((skwait & 1) != 0) listing_line_cut(epoint.pos);
                     if (waitfor->what == W_SWITCH) { err_msg2(ERROR______EXPECTED, "'.endswitch'", &epoint); goto breakerr; }
                     if (waitfor->what != W_SWITCH2) { err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr; }
                     waitfor->epoint = epoint;
@@ -3258,7 +3258,7 @@ MUST_CHECK Obj *compile(void)
                         val_destroy(result2);
                     }
                     waitfor->skip = truth ? (uint8_t)(skwait >> 1) : (skwait & 2);
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 }
                 break;
             case CMD_ENDMACRO: /* .endmacro */
@@ -3270,7 +3270,7 @@ MUST_CHECK Obj *compile(void)
                         val_destroy(waitfor->u.cmd_macro.val);
                     }
                     close_waitfor(waitfor->what);
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 } else if ((prm != CMD_ENDSEGMENT && waitfor->what == W_ENDMACRO2) || (prm != CMD_ENDMACRO && waitfor->what==W_ENDSEGMENT2)) { /* not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
@@ -3286,7 +3286,7 @@ MUST_CHECK Obj *compile(void)
                         val_destroy(waitfor->u.cmd_function.val);
                     }
                     close_waitfor(W_ENDF);
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 } else if (waitfor->what==W_ENDF3) { /* not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
@@ -3317,7 +3317,7 @@ MUST_CHECK Obj *compile(void)
             cmd_endfor:
                 waitfor->epoint = epoint;
                 if (close_waitfor(W_ENDFOR)) {
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 } else if (waitfor->what == W_ENDFOR2) {
                     retval = true_value; /* anything non-null */
                     nobreak = false;
@@ -3329,7 +3329,7 @@ MUST_CHECK Obj *compile(void)
             cmd_endrept:
                 waitfor->epoint = epoint;
                 if (close_waitfor(W_ENDREPT)) {
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 } else if (waitfor->what == W_ENDREPT2) {
                     retval = true_value; /* anything non-null */
                     nobreak = false;
@@ -3341,7 +3341,7 @@ MUST_CHECK Obj *compile(void)
             cmd_endwhile:
                 waitfor->epoint = epoint;
                 if (close_waitfor(W_ENDWHILE)) {
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 } else if (waitfor->what == W_ENDWHILE2) {
                     retval = true_value; /* anything non-null */
                     nobreak = false;
@@ -3352,16 +3352,16 @@ MUST_CHECK Obj *compile(void)
             case CMD_PEND: /* .pend */
                 if (waitfor->what==W_PEND) {
                     if ((waitfor->skip & 1) != 0) {
-                        listing_line(listing, epoint.pos);
+                        listing_line(epoint.pos);
                         if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".proc", &epoint);
                         if (waitfor->u.cmd_proc.label != NULL) {set_size(waitfor->u.cmd_proc.label, current_address->address - waitfor->u.cmd_proc.addr, current_address->mem, waitfor->u.cmd_proc.addr, waitfor->u.cmd_proc.membp);val_destroy(Obj(waitfor->u.cmd_proc.label));}
                     } else pop_context();
                     close_waitfor(W_PEND);
-                    if ((waitfor->skip & 1) != 0) listing_line_cut2(listing, epoint.pos);
+                    if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".proc", &epoint); goto breakerr;}
                 break;
             case CMD_ENDS: /* .ends */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (waitfor->what==W_ENDS) {
                     if ((waitfor->skip & 1) != 0) {
                         current_address->unionmode = waitfor->u.cmd_struct.unionmode;
@@ -3378,7 +3378,7 @@ MUST_CHECK Obj *compile(void)
                 } else err_msg2(ERROR__MISSING_OPEN, ".struct", &epoint);
                 goto breakerr;
             case CMD_SEND: /* .send */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_SEND)) {
                     lpoint.pos += (linecpos_t)get_label(pline + lpoint.pos);
                 } else if (waitfor->what==W_SEND2) {
@@ -3404,7 +3404,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_ENDU: /* .endu */
                 if (diagnostics.optimize) cpu_opt_invalidate();
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (waitfor->what==W_ENDU) {
                     if ((waitfor->skip & 1) != 0) union_close(&epoint);
                     close_waitfor(W_ENDU);
@@ -3418,7 +3418,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_ENDP: /* .endp */
                 if (diagnostics.optimize) cpu_opt_invalidate();
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_ENDP)) {
                 } else if (waitfor->what==W_ENDP2) {
                     if (diagnostics.page) {
@@ -3432,7 +3432,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_HERE: /* .here */
                 if (diagnostics.optimize) cpu_opt_invalidate();
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_HERE)) {
                 } else if (waitfor->what==W_HERE2) {
                     logical_close(&epoint);
@@ -3441,7 +3441,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_ENDV: /* .endv */
                 if (diagnostics.optimize) cpu_opt_invalidate();
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_ENDV)) {
                 } else if (waitfor->what==W_ENDV2) {
                     virtual_close(&epoint);
@@ -3449,7 +3449,7 @@ MUST_CHECK Obj *compile(void)
                 } else {err_msg2(ERROR__MISSING_OPEN, ".virtual", &epoint); goto breakerr;}
                 break;
             case CMD_BEND: /* .bend */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_BEND)) {
                     pop_context();
                 } else if (waitfor->what==W_BEND2) {
@@ -3459,7 +3459,7 @@ MUST_CHECK Obj *compile(void)
                 } else {err_msg2(ERROR__MISSING_OPEN, ".block", &epoint); goto breakerr;}
                 break;
             case CMD_ENDN: /* .endn */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_ENDN)) {
                     pop_context();
                 } else if (waitfor->what==W_ENDN2) {
@@ -3468,7 +3468,7 @@ MUST_CHECK Obj *compile(void)
                 } else {err_msg2(ERROR__MISSING_OPEN, ".namespace", &epoint); goto breakerr;}
                 break;
             case CMD_ENDWITH: /* .endwith */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if ((waitfor->what==W_ENDWITH || waitfor->what==W_ENDWITH2) && waitfor->u.cmd_with.label != NULL) {
                     set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(Obj(waitfor->u.cmd_with.label));
                 }
@@ -3479,7 +3479,7 @@ MUST_CHECK Obj *compile(void)
                 } else {err_msg2(ERROR__MISSING_OPEN, ".with", &epoint); goto breakerr;}
                 break;
             case CMD_ENDWEAK: /* .endweak */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_WEAK)) {
                 } else if (waitfor->what==W_WEAK2) {
                     if (waitfor->u.cmd_weak.label != NULL) {set_size(waitfor->u.cmd_weak.label, current_address->address - waitfor->u.cmd_weak.addr, current_address->mem, waitfor->u.cmd_weak.addr, waitfor->u.cmd_weak.membp);val_destroy(Obj(waitfor->u.cmd_weak.label));}
@@ -3488,7 +3488,7 @@ MUST_CHECK Obj *compile(void)
                 } else {err_msg2(ERROR__MISSING_OPEN, ".weak", &epoint); goto breakerr;}
                 break;
             case CMD_END: /* .end */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 nobreak = false;
                 break;
             case CMD_TEXT: /* .text */
@@ -3666,7 +3666,7 @@ MUST_CHECK Obj *compile(void)
                     address_t addr;
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (toival(vs->val, &ival, 8 * sizeof ival, &vs->epoint)) break;
@@ -3690,7 +3690,7 @@ MUST_CHECK Obj *compile(void)
                     Obj *tmp;
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     new_waitfor(W_HERE2, &epoint);
                     waitfor->u.cmd_logical.laddr = current_address->unionmode ? current_address->l_union : current_address->l_address;
                     waitfor->u.cmd_logical.addr = current_address->address;
@@ -3722,34 +3722,34 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_VIRTUAL: if ((waitfor->skip & 1) != 0)
                 { /* .virtual */
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (virtual_start(&epoint)) goto breakerr;
                 } else new_waitfor(W_ENDV, &epoint);
                 break;
             case CMD_AS: /* .as */
             case CMD_AL: /* .al */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     longaccu = (prm == CMD_AL);
                 }
                 break;
             case CMD_XS: /* .xs */
             case CMD_XL: /* .xl */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     longindex = (prm == CMD_XL);
                 }
                 break;
             case CMD_AUTSIZ: /* .autsiz */
             case CMD_MANSIZ: /* .mansiz */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     autosize = (prm == CMD_AUTSIZ);
                 }
                 break;
             case CMD_BLOCK: if ((waitfor->skip & 1) != 0)
                 { /* .block */
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     new_waitfor(W_BEND2, &epoint);
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         push_context(Code(newlabel->value)->names);
@@ -3767,7 +3767,7 @@ MUST_CHECK Obj *compile(void)
                     Label *label;
                     bool labelexists;
                     str_t tmpname;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     new_waitfor(W_ENDN, &epoint);
                     if (get_exp(0, 0, 1, &epoint)) {
                         vs = get_val();
@@ -3817,7 +3817,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_WITH: if ((waitfor->skip & 1) != 0)
                 { /* .with */
                     struct values_s *vs;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     new_waitfor(W_ENDWITH, &epoint);
                     waitfor->u.cmd_with.label = newlabel;
                     if (newlabel != NULL) {
@@ -3836,7 +3836,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_WEAK: if ((waitfor->skip & 1) != 0)
                 { /* .weak */
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     new_waitfor(W_WEAK2, &epoint);
                     waitfor->u.cmd_weak.label = newlabel;
                     if (newlabel != NULL) {
@@ -3854,7 +3854,7 @@ MUST_CHECK Obj *compile(void)
                 { /* .seed .databank, .dpage, .eor */
                     uval_t uval;
                     struct values_s *vs;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     switch (prm) {
@@ -3968,7 +3968,7 @@ MUST_CHECK Obj *compile(void)
                 { /* .assert */
                     uval_t uval;
                     struct values_s *vs;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (!get_exp(0, 3, 3, &epoint)) goto breakerr;
                     vs = get_val();
                     if (touval2(vs, &uval, 8 * sizeof uval)) current_section->provides = ~(uval_t)0;
@@ -3983,7 +3983,7 @@ MUST_CHECK Obj *compile(void)
                 { /* .check */
                     uval_t uval;
                     struct values_s *vs;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (!get_exp(0, 2, 2, &epoint)) goto breakerr;
                     vs = get_val();
                     if (touval2(vs, &uval, 8 * sizeof uval)) {}
@@ -4003,7 +4003,7 @@ MUST_CHECK Obj *compile(void)
                     uint8_t *s;
                     Tuple *tmp;
                     struct values_s *vs;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (prm == CMD_CWARN || prm == CMD_CERROR) {
                         bool writeit;
                         if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
@@ -4055,7 +4055,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_ENC: if ((waitfor->skip & 1) != 0)
                 { /* .enc */
                     str_t encname;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     encname.len = 0;
                     if (pline[lpoint.pos] != '"' && pline[lpoint.pos] != '\'') { /* will be removed to allow variables */
                         if (diagnostics.deprecated) err_msg2(ERROR_______OLD_ENC, NULL, &lpoint);
@@ -4079,7 +4079,7 @@ MUST_CHECK Obj *compile(void)
                     Enc *old = actual_encoding;
                     bool rc;
                     argcount_t len;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     actual_encoding = NULL;
                     rc = get_exp(0, 2, 0, &epoint);
                     actual_encoding = old;
@@ -4158,7 +4158,7 @@ MUST_CHECK Obj *compile(void)
                     Enc *old = actual_encoding;
                     bool rc;
                     argcount_t len;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     actual_encoding = NULL;
                     rc = get_exp(0, 2, 0, &epoint);
                     actual_encoding = old;
@@ -4199,7 +4199,7 @@ MUST_CHECK Obj *compile(void)
                     str_t cpuname;
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (tostr(vs, &cpuname)) break;
@@ -4219,25 +4219,25 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_PRON: /* .pron */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (nolisting != 0) nolisting--;
                 }
                 break;
             case CMD_PROFF: /* .proff */
                 if ((waitfor->skip & 1) != 0) {
                     nolisting++;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                 }
                 break;
             case CMD_SHOWMAC: /* .showmac */
             case CMD_HIDEMAC: /* .hidemac */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (diagnostics.ignored) err_msg2(ERROR_DIRECTIVE_IGN, NULL, &epoint);
                 }
                 break;
             case CMD_COMMENT: /* .comment */
-                if ((waitfor->skip & 1) != 0) listing_line(listing, epoint.pos);
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 new_waitfor(W_ENDC, &epoint);
                 waitfor->skip = 0;
                 break;
@@ -4248,7 +4248,7 @@ MUST_CHECK Obj *compile(void)
                     struct values_s *vs;
                     str_t filename;
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (!tostr(vs, &filename)) {
@@ -4274,7 +4274,7 @@ MUST_CHECK Obj *compile(void)
                             fixeddig = false;
                         }
                         s->addr = star;
-                        listing_file(listing, ";******  Processing file: ", f);
+                        listing_file(";******  Processing file: ", f);
                         if (prm == CMD_BINCLUDE) {
                             if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                                 push_context(Code(newlabel->value)->names);
@@ -4295,7 +4295,7 @@ MUST_CHECK Obj *compile(void)
                         s->vline = vline; star_tree = stree_old; vline = star_tree->vline;
                         exitfile();
                         f->open = false;
-                        listing_file(listing, ";******  Return to file: ", current_file_list->file);
+                        listing_file(";******  Return to file: ", current_file_list->file);
                     }
                     goto breakerr;
                 }
@@ -4365,7 +4365,7 @@ MUST_CHECK Obj *compile(void)
                 { /* .continue, .break, .continueif, .breakif */
                     size_t wp = waitfor_p + 1;
                     bool nok = true, doit = true;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (prm == CMD_CONTINUEIF || prm == CMD_BREAKIF) {
                         if (get_exp(0, 1, 1, &epoint)) { 
                             struct values_s *vs = get_val(); 
@@ -4399,7 +4399,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_PAGE: if ((waitfor->skip & 1) != 0)
                 { /* .page */
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     new_waitfor(W_ENDP2, &epoint);
                     waitfor->u.cmd_page.laddr = current_address->l_address;
                     waitfor->u.cmd_page.label = newlabel;
@@ -4415,7 +4415,7 @@ MUST_CHECK Obj *compile(void)
                     static const str_t longjmp = {(const uint8_t *)"auto_longbranch_as_jmp", 22};
                     struct values_s *vs;
                     str_t optname, cf;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     optname.data = pline + lpoint.pos; optname.len = get_label(optname.data);
                     if (optname.len == 0) { err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
                     lpoint.pos += (linecpos_t)optname.len;
@@ -4437,7 +4437,7 @@ MUST_CHECK Obj *compile(void)
                     bool noerr = true;
                     struct values_s *vs;
                     Lbl *lbl;
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     if (!arguments.tasmcomp && diagnostics.deprecated) err_msg2(ERROR______OLD_GOTO, NULL, &epoint);
                     vs = get_val(); val = vs->val;
@@ -4468,7 +4468,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_MACRO:
             case CMD_SEGMENT: /* .macro, .segment */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                 }
                 new_waitfor(prm == CMD_MACRO ? W_ENDMACRO : W_ENDSEGMENT, &epoint);
@@ -4477,7 +4477,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_FUNCTION: /* .function */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                 }
                 new_waitfor(W_ENDF, &epoint);
@@ -4487,21 +4487,21 @@ MUST_CHECK Obj *compile(void)
             case CMD_SFUNCTION: /* .sfunction */
             case CMD_VAR: /* .var */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                     goto breakerr;
                 }
                 break;
             case CMD_LBL: /* .lbl */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                     else if (!arguments.tasmcomp && diagnostics.deprecated) err_msg2(ERROR______OLD_GOTO, NULL, &epoint);
                 }
                 break;
             case CMD_PROC: /* .proc */
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (labelname.len == 0) err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint);
                 }
                 push_dummy_context();
@@ -4511,7 +4511,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_STRUCT: /* .struct */
                 new_waitfor(W_ENDS, &epoint);
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, 0);
+                    listing_line(0);
                     waitfor->u.cmd_struct.unionmode = current_address->unionmode;
                     current_address->unionmode = false;
                 }
@@ -4520,7 +4520,7 @@ MUST_CHECK Obj *compile(void)
                 new_waitfor(W_ENDU, &epoint);
                 if ((waitfor->skip & 1) != 0) {
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, 0);
+                    listing_line(0);
                     waitfor->u.cmd_union.unionmode = current_address->unionmode;
                     current_address->unionmode = true;
                     waitfor->u.cmd_union.addr = current_address->start;
@@ -4539,7 +4539,7 @@ MUST_CHECK Obj *compile(void)
                     struct values_s *vs;
                     Type *obj;
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (!get_exp(1, 1, 0, &epoint)) goto breakerr;
                     vs = get_val(); val = vs->val;
                     if (here() == ',') lpoint.pos++;
@@ -4573,7 +4573,7 @@ MUST_CHECK Obj *compile(void)
                     str_t sectionname;
 
                     if (diagnostics.optimize) cpu_opt_invalidate();
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     epoint = lpoint;
                     sectionname.data = pline + lpoint.pos; sectionname.len = get_label(sectionname.data);
                     if (sectionname.len == 0) {err_msg2(ERROR_LABEL_REQUIRE, NULL, &epoint); goto breakerr;}
@@ -4661,7 +4661,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_SECTION: if ((waitfor->skip & 1) != 0)
                 { /* .section */
-                    listing_line(listing, 0);
+                    listing_line(0);
                     if (section_start(&epoint)) goto breakerr;
                 } else new_waitfor(W_SEND, &epoint);
                 break;
@@ -4670,7 +4670,7 @@ MUST_CHECK Obj *compile(void)
                 break;
             default:
                 if ((waitfor->skip & 1) != 0) {
-                    listing_line(listing, epoint.pos);
+                    listing_line(epoint.pos);
                     err_msg(ERROR_GENERL_SYNTAX,NULL);
                     goto breakerr;
                 }
@@ -4701,9 +4701,9 @@ MUST_CHECK Obj *compile(void)
                         context = anonlabel(mycontext, '#', &epoint);
                     }
                     if (newlabel != NULL && Macro(val)->retval) {
-                        listing_equal(listing, newlabel->value);
+                        listing_equal(newlabel->value);
                     } else {
-                        listing_line_cut(listing, epoint.pos);
+                        listing_line_cut(epoint.pos);
                     }
                     val = macro_recurse(val->obj == MACRO_OBJ ? W_ENDMACRO2 : val->obj == STRUCT_OBJ ? W_ENDS3 : W_ENDU3, val, context, &epoint);
                 } else if (val->obj == MFUNC_OBJ) {
@@ -4714,17 +4714,17 @@ MUST_CHECK Obj *compile(void)
                         goto breakerr;
                     }
                     if (newlabel != NULL && mfunc->retval) {
-                        listing_equal(listing, newlabel->value);
+                        listing_equal(newlabel->value);
                     } else {
-                        listing_line_cut(listing, epoint.pos);
+                        listing_line_cut(epoint.pos);
                     }
                     val = mfunc_recurse(mfunc, anonlabel(mfunc->namespaces[mfunc->nslen - 1], '#', &epoint), strength, &epoint);
                     val_destroy(Obj(mfunc));
                 } else { /* segment */
                     if (newlabel != NULL && Macro(val)->retval) {
-                        listing_equal(listing, newlabel->value);
+                        listing_equal(newlabel->value);
                     } else {
-                        listing_line_cut(listing, epoint.pos);
+                        listing_line_cut(epoint.pos);
                     }
                     val = macro_recurse(W_ENDSEGMENT2, val, NULL, &epoint);
                 }
@@ -4778,7 +4778,7 @@ MUST_CHECK Obj *compile(void)
                         get_vals_funcargs(&tmp);
                         err = instruction(prm, w, &tmp, &epoint);
                     }
-                    if (llist != NULL) listing_instr(listing, 0, 0, -1);
+                    if (llist != NULL) listing_instr(0, 0, -1);
                     if (err == NULL) {
                         if (diagnostics.alias && prm != current_cpu->alias[prm]) err_msg_alias(current_cpu->mnemonic[prm], current_cpu->mnemonic[current_cpu->alias[prm]], &epoint);
                         break;
@@ -4867,7 +4867,7 @@ static void one_pass(int argc, char **argv, int opts) {
             if (cfile != NULL) {
                 cfile->open = true;
                 enterfile(cfile, &nopoint);
-                listing_file(listing, ";******  Command line definitions", NULL);
+                listing_file(";******  Command line definitions", NULL);
                 val = compile();
                 if (val != NULL) val_destroy(val);
                 exitfile();
@@ -4888,7 +4888,7 @@ static void one_pass(int argc, char **argv, int opts) {
             cfile->cmdline = true;
             cfile->open = true;
             enterfile(cfile, &nopoint);
-            listing_file(listing, ";******  Processing input file: ", cfile);
+            listing_file(";******  Processing input file: ", cfile);
             val = compile();
             if (val != NULL) val_destroy(val);
             exitfile();
@@ -4943,10 +4943,9 @@ int main2(int *argc2, char **argv2[]) {
             nolisting = 0;
 
             max_pass = pass; pass++;
-            listing = listing_open(arguments.list.name, argc, argv);
+            listing_open(arguments.list.name, argc, argv);
             one_pass(argc, argv, opts);
-            listing_close(listing);
-            listing = NULL;
+            listing_close();
 
             if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
         }
