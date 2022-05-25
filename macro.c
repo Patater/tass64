@@ -28,6 +28,7 @@
 #include "error.h"
 #include "arguments.h"
 #include "optimizer.h"
+#include "main.h"
 
 #include "listobj.h"
 #include "typeobj.h"
