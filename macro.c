@@ -1031,6 +1031,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
 void init_macro(void) {
     macro_parameters.p = 0;
     in_macro = false;
+    in_function = false;
     functionrecursion = 0;
 }
 
