@@ -39,7 +39,7 @@
 #include "memblocksobj.h"
 #include "functionobj.h"
 
-static int functionrecursion;
+int functionrecursion;
 
 struct macro_rpos_s {
     linecpos_t opos, olen, pos, len;
@@ -958,7 +958,6 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
             push_context(mfunc->namespaces[j]);
         }
         push_context(context);
-        temporary_label_branch++;
         functionrecursion++;
         if (mfunc->v.obj == SFUNC_OBJ) {
             if (mtranslate()) {
@@ -1012,7 +1011,6 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         for (j = 0; j < mfunc->nslen; j++) {
             pop_context();
         }
-        temporary_label_branch--;
         lpoint = opoint;
         pline = opline;
         llist = ollist;

@@ -28,6 +28,7 @@ struct Mfunc;
 struct Obj;
 
 extern bool in_macro;
+extern int functionrecursion;
 
 extern bool mtranslate(void);
 extern struct Obj *macro_recurse(Wait_types, struct Obj *, struct Namespace *, linepos_t);
