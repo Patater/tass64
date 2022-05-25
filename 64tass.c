@@ -2323,6 +2323,7 @@ MUST_CHECK Obj *compile(void)
                             label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             lbl = Lbl(val_alloc(LBL_OBJ));
                             lbl->sline = epoint.line;
+                            lbl->pass = pass;
                             lbl->waitforp = waitfor_p;
                             lbl->file_list = current_file_list;
                             lbl->parent = current_context;
@@ -4443,7 +4444,7 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val(); val = vs->val;
                     if (val->obj != LBL_OBJ) {err_msg_wrong_type2(val, LBL_OBJ, &vs->epoint); break;}
                     lbl = Lbl(val);
-                    if (lbl->file_list == current_file_list && lbl->parent == current_context && oldwaitforp <= lbl->waitforp) {
+                    if (lbl->pass == pass && lbl->file_list == current_file_list && lbl->parent == current_context && oldwaitforp <= lbl->waitforp) {
                         while (lbl->waitforp < waitfor_p) {
                             const char *msg;
                             switch (waitfor->what) {
