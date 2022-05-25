@@ -49,6 +49,7 @@
 #include "longjump.h"
 #include "mem.h"
 #include "unicodedata.h"
+#include "main.h"
 #include "version.h"
 
 #include "listobj.h"
@@ -86,7 +87,6 @@ static uint8_t strength = 0;
 bool fixeddig, constcreated;
 uint32_t outputeor = 0; /* EOR value for final output (usually 0, unless changed by .eor) */
 bool referenceit = true;
-bool signal_received = false;
 const struct cpu_s *current_cpu;
 
 static size_t waitfor_p, waitfor_len;

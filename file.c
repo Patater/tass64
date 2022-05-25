@@ -34,6 +34,7 @@
 #include "unicodedata.h"
 #include "avl.h"
 #include "str.h"
+#include "main.h"
 
 static struct {
     size_t len, mask;

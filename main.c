@@ -27,7 +27,7 @@
 
 */
 
-#include "64tass.h"
+#include "main.h"
 #include <string.h>
 #include <signal.h>
 #ifdef SIGALRM
@@ -38,6 +38,9 @@
 #include "error.h"
 #include "unicode.h"
 #include "console.h"
+#include "64tass.h"
+
+bool signal_received = false;
 
 static void signal_reset(int signum) {
 #if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
