@@ -40,7 +40,10 @@
 #include "memblocksobj.h"
 #include "functionobj.h"
 
-int functionrecursion;
+bool in_macro;
+bool in_function;
+
+static int functionrecursion;
 
 struct macro_rpos_s {
     linecpos_t opos, olen, pos, len;
@@ -73,8 +76,6 @@ static struct {
     size_t p, len;
     struct macro_params_s *params, *current;
 } macro_parameters = {0, 0, NULL, NULL};
-
-bool in_macro;
 
 #define ALL_MACRO_PARAMS (~(argcount_t)0)
 
@@ -939,6 +940,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         const uint8_t *ollist = llist;
         size_t oldbottom;
         bool in_macro_old = in_macro;
+        bool in_function_old = in_function;
         struct section_address_s section_address, *oldsection_address = current_address;
         struct star_s *s = new_star(vline);
         struct star_s *stree_old = star_tree;
@@ -952,6 +954,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         star_tree->vline = vline; star_tree = s; vline = s->vline;
 
         in_macro = false;
+        in_function = true;
 
         lpoint.line = mfunc->epoint.line;
         oldbottom = context_get_bottom();
@@ -1016,6 +1019,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         pline = opline;
         llist = ollist;
         in_macro = in_macro_old;
+        in_function = in_function_old;
     }
     exitfile();
     if (context->v.refcount == 1 && clean_namespace(context)) {

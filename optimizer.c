@@ -613,7 +613,7 @@ void cpu_opt(unsigned int cod, uint32_t adr, int ln, linepos_t epoint) {
     cpu->pc = ((int)cpu->pc + ln + 1) & 0xffff;
 
     if (cpu->call) {
-        if (cod == 0x60 && !in_macro && functionrecursion == 0) err_msg2(ERROR_____REDUNDANT, "if last 'jsr' is changed to 'jmp'", epoint);
+        if (cod == 0x60 && !in_macro && !in_function) err_msg2(ERROR_____REDUNDANT, "if last 'jsr' is changed to 'jmp'", epoint);
         cpu->call = false;
     }
 
@@ -1819,34 +1819,34 @@ void cpu_opt(unsigned int cod, uint32_t adr, int ln, linepos_t epoint) {
     }
     return;
 remove:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR_____REDUNDANT, "as it does not change anything", epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR_____REDUNDANT, "as it does not change anything", epoint);
     return;
 removecond:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR_____REDUNDANT, "as the condition is never met", epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR_____REDUNDANT, "as the condition is never met", epoint);
     return;
 removeset:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR_____REDUNDANT, "as flag is already set", epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR_____REDUNDANT, "as flag is already set", epoint);
     return;
 removeclr:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR_____REDUNDANT, "as flag is already clear", epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR_____REDUNDANT, "as flag is already clear", epoint);
     return;
 jump:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR_____REDUNDANT, "as target is the next instruction", epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR_____REDUNDANT, "as target is the next instruction", epoint);
     return;
 constind:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR_____REDUNDANT, "indexing with a constant value", epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR_____REDUNDANT, "indexing with a constant value", epoint);
     return;
 constresult:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR__CONST_RESULT, NULL, epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR__CONST_RESULT, NULL, epoint);
     return;
 indresult:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR____IND_RESULT, NULL, epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR____IND_RESULT, NULL, epoint);
     return;
 replace:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR___OPTIMIZABLE, optname, epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR___OPTIMIZABLE, optname, epoint);
     return;
 simplify:
-    if (!in_macro && functionrecursion == 0) err_msg2(ERROR______SIMPLIFY, optname, epoint);
+    if (!in_macro && !in_function) err_msg2(ERROR______SIMPLIFY, optname, epoint);
 }
 
 void cpu_opt_invalidate(void) {
