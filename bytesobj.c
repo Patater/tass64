@@ -856,9 +856,9 @@ static FAST_CALL MUST_CHECK Obj *iter_element(struct iter_s *v1, size_t i) {
         iter->v.refcount--;
         iter = new_bytes(1);
         v1->iter = Obj(iter);
-        iter->len = (vv1->len < 0) ? ~1 : 1;
+        iter->len = 1;
     }
-    iter->data[0] = vv1->data[i];
+    iter->data[0] = (vv1->len < 0) ? ~vv1->data[i] : vv1->data[i];
     return Obj(iter);
 }
 
