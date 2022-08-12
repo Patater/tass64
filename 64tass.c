@@ -2087,16 +2087,16 @@ MUST_CHECK Obj *compile(void)
                         label = NULL; val = NULL;
                     } else {
                         label = find_label3(&labelname, mycontext, strength);
-                        if (label == NULL) {
-                            if (tmp.op == O_MUL) {
-                                if (diagnostics.star_assign) {
-                                    err_msg_star_assign(&epoint3);
-                                    if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
-                                }
-                                lpoint.pos = epoint3.pos;
-                                wht = '*';
-                                break;
+                        if (tmp.op == O_MUL && !islabel && (label == NULL || label->constant)) {
+                            if (diagnostics.star_assign) {
+                                err_msg_star_assign(&epoint3);
+                                if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
                             }
+                            lpoint.pos = epoint3.pos;
+                            wht = '*';
+                            break;
+                        }
+                        if (label == NULL) {
                             if (labelname.data == (const uint8_t *)&anonsymbol) {
                                 err_msg_not_defined2a((anonsymbol.dir == '-') ? -1 : 0, mycontext, false, &epoint);
                             } else {
@@ -2105,15 +2105,6 @@ MUST_CHECK Obj *compile(void)
                             goto breakerr;
                         }
                         if (label->constant) {
-                            if (tmp.op == O_MUL) {
-                                if (diagnostics.star_assign) {
-                                    err_msg_star_assign(&epoint3);
-                                    if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
-                                }
-                                lpoint.pos = epoint3.pos;
-                                wht = '*';
-                                break;
-                            }
                             err_msg_not_variable(label, &labelname, &epoint);
                             goto breakerr;
                         }
