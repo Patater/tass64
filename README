@@ -1344,7 +1344,10 @@ Constants can't be changed of course.
 <?=   smaller                           >?=   greater
 x=    repeat                            .=    member
 
-v       += 1            ; same as 'v .var v + 1'
+v       += 1            ; almost same as 'v .var v + 1'
+
+Compound assignment operators can modify variables defined in parent scopes
+which `:=' or `.var' cannot.
 
 Slicing and indexing
 

@@ -1702,8 +1702,11 @@ or <q><a href="#d_var"><code>.var</code></a></q>. Constants can't be changed of 
 </table></div>
 
 <pre width="80">
-v       <b>+=</b> <span>1</span>            <i>; same as 'v .var v + 1'</i>
+v       <b>+=</b> <span>1</span>            <i>; almost same as 'v .var v + 1'</i>
 </pre>
+
+<p>Compound assignment operators can modify variables defined in parent
+scopes which <q><code>:=</code></q> or <q><a href="#d_var"><code>.var</code></a></q> cannot.
 
 <h4>Slicing and indexing<a name="slicing_indexing" href="#slicing_indexing"></a></h4>
 

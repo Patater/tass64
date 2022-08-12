@@ -1697,7 +1697,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                         label->epoint = bpoint;
                     }
                 } else {
-                    label = find_label3(&varname, context, strength);
+                    label = (varname.data[0] == '_') ? find_label2(&varname, context) : find_label(&varname, NULL);
                     if (label == NULL) {err_msg_not_defined2(&varname, context, false, &bpoint); break;}
                     if (label->constant) {err_msg_not_variable(label, &varname, &bpoint); break;}
                     if (diagnostics.case_symbol && str_cmp(&varname, &label->name) != 0) err_msg_symbol_case(&varname, label, &bpoint);
@@ -1976,7 +1976,7 @@ MUST_CHECK Obj *compile(void)
             labelname.len = get_label(labelname.data);
             if (labelname.len != 0) {
                 struct linepos_s cmdpoint;
-                bool islabel, error;
+                bool islabel, tcontext, error;
                 lpoint.pos += (linecpos_t)labelname.len;
                 islabel = false; error = (waitfor->skip & 1) == 0;
                 while (here() == '.' && pline[lpoint.pos+1] != '.') {
@@ -2023,14 +2023,15 @@ MUST_CHECK Obj *compile(void)
                     }
                 }
                 if (!islabel && labelname.data[0] == '_') {
+                    tcontext = true;
                     mycontext = cheap_context;
-                }
+                } else tcontext = islabel;
                 if (here() == ':' && pline[lpoint.pos + 1] != '=') {islabel = true; lpoint.pos++;}
                 if (!islabel && labelname.len == 3 && (prm = lookup_opcode(labelname.data)) >=0) {
                     if (!error) goto as_opcode; else continue;
                 }
                 if (false) {
-                hh: islabel = true; error = (waitfor->skip & 1) == 0;
+                hh: islabel = true; tcontext = true; error = (waitfor->skip & 1) == 0;
                 }
                 ignore();wht = here();
                 if (error) {epoint = lpoint; goto jn;} /* skip things if needed */
@@ -2086,7 +2087,7 @@ MUST_CHECK Obj *compile(void)
                     } else if (tmp.op == O_COND) {
                         label = NULL; val = NULL;
                     } else {
-                        label = find_label3(&labelname, mycontext, strength);
+                        label = tcontext ? find_label2(&labelname, mycontext) : find_label(&labelname, NULL);
                         if (tmp.op == O_MUL && !islabel && (label == NULL || label->constant)) {
                             if (diagnostics.star_assign) {
                                 err_msg_star_assign(&epoint3);
@@ -2098,9 +2099,9 @@ MUST_CHECK Obj *compile(void)
                         }
                         if (label == NULL) {
                             if (labelname.data == (const uint8_t *)&anonsymbol) {
-                                err_msg_not_defined2a((anonsymbol.dir == '-') ? -1 : 0, mycontext, false, &epoint);
+                                err_msg_not_defined2a((anonsymbol.dir == '-') ? -1 : 0, mycontext, !tcontext, &epoint);
                             } else {
-                                err_msg_not_defined2(&labelname, mycontext, false, &epoint);
+                                err_msg_not_defined2(&labelname, mycontext, !tcontext, &epoint);
                             }
                             goto breakerr;
                         }
