@@ -34,6 +34,7 @@ typedef enum Oper_types {
     O_COMMA,         /* ,     */
     O_ASSIGN,        /* =     */
     O_COLON_ASSIGN,  /* :=    */
+    O_REASSIGN,      /* ::=   */
     O_MIN_ASSIGN,    /* <?=   */
     O_MAX_ASSIGN,    /* >?=   */
     O_OR_ASSIGN,     /* |=    */

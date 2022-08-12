@@ -1349,6 +1349,9 @@ v       += 1            ; almost same as 'v .var v + 1'
 Compound assignment operators can modify variables defined in parent scopes
 which `:=' or `.var' cannot.
 
+If an existing variable needs to be modified in a parent scope then the `::='
+variable reassign operator can do that.
+
 Slicing and indexing
 
 Lists, character strings, byte strings and bit strings support various slicing

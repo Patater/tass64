@@ -1711,6 +1711,7 @@ static bool get_exp2(int stop) {
         case '?': op = (pline[lpoint.pos + 1] == '?') ? O_DQUEST : O_QUEST; lpoint.pos += operators[op].len; prec = operators[O_COND].prio + 1; goto push3;
         case ':': if (pline[lpoint.pos + 1] == '=') {op = O_COLON_ASSIGN;goto push2;}
             if (pline[lpoint.pos + 1] == '?' && pline[lpoint.pos + 2] == '=') {op = O_COND_ASSIGN;goto push2;}
+            if (pline[lpoint.pos + 1] == ':' && pline[lpoint.pos + 2] == '=') {op = O_REASSIGN;goto push2;}
             lpoint.pos++;
             op = O_COLON;
             prec = operators[O_COLON].prio + 1;

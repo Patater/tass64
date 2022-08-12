@@ -1280,6 +1280,7 @@ static Oper_types oper_from_token2(int wht, int wht2) {
         case '<': return O_LSHIFT;
         case '.': return O_CONCAT;
         case '*': return O_EXP;
+        case ':': return O_REASSIGN;
         default: return O_NONE;
         }
     }
@@ -1714,7 +1715,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 }
                 if (!get_exp(0, 1, 0, &bpoint)) break;
                 val = get_vals_tuple();
-                if (tmp.op != O_NONE) {
+                if (tmp.op != O_NONE && tmp.op != O_REASSIGN) {
                     bool minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
                     Obj *result2, *val1 = label->value;
                     tmp.v1 = val1;
@@ -2160,19 +2161,23 @@ MUST_CHECK Obj *compile(void)
                         }
                         goto finish;
                     }
-                    minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
-                    tmp.v1 = val;
-                    tmp.v2 = val2;
-                    tmp.epoint = &epoint;
-                    tmp.epoint2 = &epoint2;
-                    tmp.epoint3 = &epoint3;
-                    tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
-                    result2 = tmp.v1->obj->calc2(&tmp);
-                    if (minmax) {
-                        if (result2 == true_value) val_replace(&result2, val);
-                        else if (result2 == false_value) val_replace(&result2, val2);
+                    if (tmp.op == O_REASSIGN) {
+                        result2 = val2;
+                    } else {
+                        minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
+                        tmp.v1 = val;
+                        tmp.v2 = val2;
+                        tmp.epoint = &epoint;
+                        tmp.epoint2 = &epoint2;
+                        tmp.epoint3 = &epoint3;
+                        tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
+                        result2 = tmp.v1->obj->calc2(&tmp);
+                        if (minmax) {
+                            if (result2 == true_value) val_replace(&result2, val);
+                            else if (result2 == false_value) val_replace(&result2, val2);
+                        }
+                        val_destroy(val2);
                     }
-                    val_destroy(val2);
                     if (label != NULL) {
                         listing_equal(result2);
                         if (label->file_list != current_file_list) {

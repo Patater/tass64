@@ -1708,6 +1708,9 @@ v       <b>+=</b> <span>1</span>            <i>; almost same as 'v .var v + 1'</
 <p>Compound assignment operators can modify variables defined in parent
 scopes which <q><code>:=</code></q> or <q><a href="#d_var"><code>.var</code></a></q> cannot.
 
+<p>If an existing variable needs to be modified in a parent scope then the
+<q><code>::=</code></q> variable reassign operator can do that.
+
 <h4>Slicing and indexing<a name="slicing_indexing" href="#slicing_indexing"></a></h4>
 
 <p>Lists, character strings, byte strings and bit strings support various
