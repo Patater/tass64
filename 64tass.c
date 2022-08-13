@@ -1658,8 +1658,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                         lpoint.pos += 2;
                     } else if (wht2 != 0 && pline[lpoint.pos + 2] == '=') {
                         Oper_types op;
-                        if (wht == '?') break;
                         op = oper_from_token2(wht, wht2);
+                        if (op == O_COND) op = O_NONE;
                         if (op == O_NONE) break;
                         tmp.op = op;
                         epoint3 = lpoint;
