@@ -2032,7 +2032,7 @@ MUST_CHECK Obj *compile(void)
                     if (!error) goto as_opcode; else continue;
                 }
                 if (false) {
-                hh: islabel = true; tcontext = true; error = (waitfor->skip & 1) == 0;
+                hh: islabel = true; tcontext = false; error = (waitfor->skip & 1) == 0;
                 }
                 ignore();wht = here();
                 if (error) {epoint = lpoint; goto jn;} /* skip things if needed */
@@ -2069,16 +2069,6 @@ MUST_CHECK Obj *compile(void)
                         lpoint.pos += 3;
                     } else break;
 
-                    if (labelname.data == (const uint8_t *)&anonsymbol) {
-                        uint32_t count = (anonsymbol.dir == '-') ? --current_context->backr :  --current_context->forwr;
-                        count--;
-                        labelname.len = 2;
-                        while (count != 0) {
-                            anonsymbol.count[labelname.len - 2] = (uint8_t)count;
-                            labelname.len++;
-                            count >>= 8;
-                        }
-                    }
                     ignore();
                     epoint2 = lpoint;
                     if (labelname.data[0] == '*') {
@@ -2088,7 +2078,17 @@ MUST_CHECK Obj *compile(void)
                     } else if (tmp.op == O_COND) {
                         label = NULL; val = NULL;
                     } else {
-                        label = tcontext ? find_label2(&labelname, mycontext) : find_label(&labelname, NULL);
+                        if (labelname.data == (const uint8_t *)&anonsymbol) {
+                            ssize_t cnt;
+                            if (anonsymbol.dir == '-') {
+                                cnt = -1; current_context->backr--;
+                            } else {
+                                cnt = 0;  current_context->forwr--;
+                            }
+                            label = tcontext ? find_anonlabel2(cnt, mycontext) : find_anonlabel(cnt);
+                        } else {
+                            label = tcontext ? find_label2(&labelname, mycontext) : find_label(&labelname, NULL);
+                        }
                         if (tmp.op == O_MUL && !islabel && (label == NULL || label->constant)) {
                             if (diagnostics.star_assign) {
                                 err_msg_star_assign(&epoint3);
@@ -2130,8 +2130,34 @@ MUST_CHECK Obj *compile(void)
                         referenceit = oldreferenceit;
                     }
                     if (val == NULL) {
-                        bool labelexists;
-                        label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                        bool labelexists = false;
+                        if (labelname.data == (const uint8_t *)&anonsymbol) {
+                            str_t labelname2;
+                            struct anonsymbol_s anonsymbol3;
+                            uint32_t count = (anonsymbol.dir == '-') ? current_context->backr :  current_context->forwr;
+                            count -= 2;
+                            anonsymbol3.dir = anonsymbol.dir;
+                            anonsymbol3.pad = 0;
+                            labelname2.len = 2;
+                            while (count != 0) {
+                                anonsymbol3.count[labelname2.len - 2] = (uint8_t)count;
+                                labelname2.len++;
+                                count >>= 8;
+                            }
+                            labelname2.data = (const uint8_t *)&anonsymbol3;
+                            label = find_label3(&labelname2, mycontext, strength);
+                            if (label != NULL) {
+                                if (anonsymbol.dir == '-') {
+                                    current_context->backr--;
+                                } else {
+                                    current_context->forwr--;
+                                }
+                                labelexists = true;
+                            }
+                        }
+                        if (!labelexists) {
+                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                        }
                         if (labelexists) {
                             if (label->constant) {
                                 err_msg_not_variable(label, &labelname, &epoint);
