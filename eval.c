@@ -988,6 +988,21 @@ static bool get_val2(struct eval_context_s *ev) {
                         continue;
                     }
                 }
+                if (args == 2 && stop && !expc) {
+                    if (out + 1 == ev->out.end && v[2].val->obj == REGISTER_OBJ && Register(v[2].val)->len == 1) {
+                        am = (op == O_BRACKET) ? A_LI: A_I;
+                        am |= register_to_indexing(Register(v[2].val)->data[0]) << 4;
+                        val_destroy(v[2].val);
+                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable) {
+                            v[0].val = new_address(v[1].val, am);
+                        } else {
+                            v[0].val = apply_addressing(v[1].val, am, true);
+                            val_destroy(v[1].val);
+                        }
+                        v[1].val = NULL;
+                        continue;
+                    }
+                }
                 if (args != 0) {
                     list = List(val_alloc((op == O_BRACKET) ? LIST_OBJ : TUPLE_OBJ));
                     list->len = args;
