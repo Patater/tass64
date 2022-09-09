@@ -92,6 +92,7 @@ extern void err_msg_page(address_t, address_t, linepos_t);
 extern void err_msg_alias(uint32_t, uint32_t, linepos_t);
 extern void err_msg_deprecated(Error_types, linepos_t);
 extern void err_msg_unknown_char(unichar_t, linepos_t);
+extern bool err_msg_wrong_character(linepos_t);
 extern void err_msg_encode_definition_note(const struct file_list_s *, linepos_t);
 extern void err_msg_star_assign(linepos_t);
 extern void err_msg_compound_note(linepos_t);
