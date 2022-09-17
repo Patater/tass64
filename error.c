@@ -1340,7 +1340,7 @@ void err_msg_alias(uint32_t a, uint32_t b, linepos_t epoint) {
 
 static void err_unicode_character(unichar_t ch) {
     uint8_t line[256], *s = line;
-    char quote = (ch == '\'' || (ch >= 0x2018 && ch <= 0x201b) || ch == 0xff07) ? '"' : '\'';
+    uint8_t quote = (ch == '\'' || (ch >= 0x2018 && ch <= 0x201b) || ch == 0xff07) ? '"' : '\'';
     *s++ = ' ';
     *s++ = quote;
     if (ch != 0 && ch < 0x80) *s++ = (uint8_t)ch; else s += utf8out(ch, s);
