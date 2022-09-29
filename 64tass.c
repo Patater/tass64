@@ -4831,8 +4831,8 @@ MUST_CHECK Obj *compile(void)
                         get_vals_funcargs(&tmp);
                         err = instruction(prm, w, &tmp, &epoint);
                     }
-                    if (llist != NULL) listing_instr(0, 0, -1);
                     if (err == NULL) {
+                        if (llist != NULL) listing_instr(0, 0, -1);
                         if (diagnostics.alias && prm != current_cpu->alias[prm]) err_msg_alias(current_cpu->mnemonic[prm], current_cpu->mnemonic[current_cpu->alias[prm]], &epoint);
                         break;
                     }
