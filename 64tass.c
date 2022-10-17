@@ -580,6 +580,7 @@ struct textrecursion_s {
     address_t gaps, p;
     address_t sum, max;
     int prm;
+    Textconv_types tconv;
     Error_types error;
     uint8_t buff[16];
     linepos_t epoint;
@@ -693,19 +694,10 @@ static void textrecursion(struct textrecursion_s *trec, Obj *val) {
 retry:
     switch (val->obj->type) {
     case T_STR:
-        {
-            Textconv_types m;
-            switch (trec->prm) {
-            case CMD_SHIFTL:
-            case CMD_SHIFT: m = BYTES_MODE_SHIFT_CHECK; break;
-            case CMD_NULL: m = BYTES_MODE_NULL_CHECK; break;
-            default: m = BYTES_MODE_TEXT; break;
-            }
-            val = bytes_from_str(Str(val), trec->epoint, m);
-            textrecursion(trec, val);
-            val_destroy(val);
-            return;
-        }
+        val = bytes_from_str(Str(val), trec->epoint, trec->tconv);
+        textrecursion(trec, val);
+        val_destroy(val);
+        return;
     case T_ERROR:
     case T_FLOAT:
     case T_INT:
@@ -3565,6 +3557,12 @@ MUST_CHECK Obj *compile(void)
                         trec.gaps = 0;
                         trec.max = ~(address_t)0;
                         trec.prm = prm;
+                        switch (prm) {
+                        case CMD_SHIFTL:
+                        case CMD_SHIFT: trec.tconv = BYTES_MODE_SHIFT_CHECK; break;
+                        case CMD_NULL: trec.tconv = BYTES_MODE_NULL_CHECK; break;
+                        default: trec.tconv = BYTES_MODE_TEXT; break;
+                        }
                         trec.error = ERROR__USER_DEFINED;
                         trec.epoint = &epoint;
                         mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
@@ -3955,6 +3953,7 @@ MUST_CHECK Obj *compile(void)
                         trec.sum = 0;
                         trec.max = db;
                         trec.prm = CMD_TEXT;
+                        trec.tconv = BYTES_MODE_TEXT;
                         trec.error = ERROR__USER_DEFINED;
                         trec.epoint = &vs->epoint;
                         textrecursion(&trec, vs->val);
