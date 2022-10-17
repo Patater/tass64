@@ -387,6 +387,8 @@ static const char *const terr_error[] = {
     "not a key and value pair ",
     "too large for a %u bit signed integer ",
     "too large for a %u bit unsigned integer ",
+    "too large for a %u byte signed integer ",
+    "too large for a %u byte unsigned integer ",
     "value needs to be non-negative ",
     "operands could not be broadcast together with shapes %" PRIuSIZE " and %" PRIuSIZE,
     "can't get sign of ",
@@ -895,6 +897,8 @@ void err_msg_output(const Error *val) {
     case ERROR__INVALID_CONV: more = err_msg_invalid_conv(val);break;
     case ERROR__INVALID_OPER: err_msg_invalid_oper3(val);break;
     case ERROR____STILL_NONE: more = err_msg_still_none2(val); break;
+    case ERROR____CANT_IVAL2:
+    case ERROR____CANT_UVAL2:
     case ERROR_____CANT_IVAL:
     case ERROR_____CANT_UVAL:
     case ERROR______NOT_UVAL: more = err_msg_big_integer(val); break;
