@@ -686,7 +686,6 @@ static void textdump_bytes(struct textrecursion_s *trec, const Bytes *bytes) {
 
 static void textrecursion(struct textrecursion_s *trec, Obj *val) {
     struct iter_s iter;
-    Obj *val2 = NULL;
     uval_t uval;
 
     if (trec->sum >= trec->max) return;
@@ -695,7 +694,6 @@ retry:
     switch (val->obj->type) {
     case T_STR:
         {
-            Obj *tmp;
             Textconv_types m;
             switch (trec->prm) {
             case CMD_SHIFTL:
@@ -703,9 +701,9 @@ retry:
             case CMD_NULL: m = BYTES_MODE_NULL_CHECK; break;
             default: m = BYTES_MODE_TEXT; break;
             }
-            tmp = bytes_from_str(Str(val), trec->epoint, m);
-            textrecursion(trec, tmp);
-            val_destroy(tmp);
+            val = bytes_from_str(Str(val), trec->epoint, m);
+            textrecursion(trec, val);
+            val_destroy(val);
             return;
         }
     case T_ERROR:
@@ -714,19 +712,15 @@ retry:
     case T_BOOL:
     case T_NONE:
         iter.data = NULL;
-        val2 = val;
         goto doit;
     case T_CODE:
-        {
-            Obj *tmp = get_code_value(Code(val), trec->epoint);
-            textrecursion(trec, tmp);
-            val_destroy(tmp);
-            return;
-        }
+        val = get_code_value(Code(val), trec->epoint);
+        textrecursion(trec, val);
+        val_destroy(val);
+        return;
     case T_ADDRESS:
         if (Address(val)->type != A_NONE) {
             iter.data = NULL;
-            val2 = val;
             goto doit;
         }
         val = Address(val)->val;
@@ -735,43 +729,36 @@ retry:
         iter.data = NULL;
         goto dogap;
     case T_BITS:
-        {
-            Obj *tmp;
-            size_t bits = Bits(val)->bits;
-            if (bits == 0) return;
-            if (bits <= 8) {
-                iter.data = NULL;
-                val2 = val;
-                goto doit;
-            }
-            tmp = bytes_from_bits(Bits(val), trec->epoint);
-            textrecursion(trec, tmp);
-            val_destroy(tmp);
-            return;
+        if (Bits(val)->bits <= 8) {
+            if (Bits(val)->bits == 0) return;
+            iter.data = NULL;
+            goto doit;
         }
+        val = bytes_from_bits(Bits(val), trec->epoint);
+        textrecursion(trec, val);
+        val_destroy(val);
+        return;
     case T_BYTES:
         iter.data = NULL;
-        val2 = val;
         goto dobytes;
     default:
         iter.data = val; val->obj->getiter(&iter);
     }
 
-    while ((val2 = iter.next(&iter)) != NULL) {
-        if (val2->obj->iterable) goto rec;
-        switch (val2->obj->type) {
+    while ((val = iter.next(&iter)) != NULL) {
+        if (val->obj->iterable) goto rec;
+        switch (val->obj->type) {
         case T_BITS:
-            {
-                size_t bits = Bits(val2)->bits;
-                if (bits == 0) break;
-                if (bits <= 8) goto doit;
+            if (Bits(val)->bits <= 8) {
+                if (Bits(val)->bits == 0) break;
+                goto doit;
             }
             FALL_THROUGH; /* fall through */
         case T_STR:
         case T_CODE:
         case T_ADDRESS:
         rec:
-            textrecursion(trec, val2);
+            textrecursion(trec, val);
             break;
         case T_GAP:
         dogap:
@@ -782,12 +769,12 @@ retry:
             break;
         case T_BYTES:
         dobytes:
-            textdump_bytes(trec, Bytes(val2));
+            textdump_bytes(trec, Bytes(val));
             if (iter.data == NULL) return;
             break;
         default:
         doit:
-            if (touval(val2, &uval, 8, trec->epoint)) uval = 256 + '?'; else uval &= 0xff;
+            if (touval(val, &uval, 8, trec->epoint)) uval = 256 + '?'; else uval &= 0xff;
             trec->sum++;
             if (trec->gaps > 0) textrecursion_gaps(trec);
             textdump(trec, uval);
