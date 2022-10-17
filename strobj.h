@@ -54,4 +54,5 @@ extern MUST_CHECK Obj *str_from_obj(Obj *, linepos_t);
 extern MUST_CHECK Obj *float_from_str(const Str *, linepos_t);
 extern size_t str_quoting(const uint8_t *, size_t, uint8_t *);
 extern bool tostr(const struct values_s *, struct str_t *);
+extern MUST_CHECK Obj *tostr2(const struct values_s *, struct str_t *);
 #endif

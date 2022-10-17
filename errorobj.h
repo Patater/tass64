@@ -73,6 +73,10 @@ typedef struct Error {
         struct {
             argcount_t num, min, max;
         } argnum;
+        struct {
+            const struct Type *t1;
+            const struct Type *t2;
+        } otype;
     } u;
 } Error;
 
