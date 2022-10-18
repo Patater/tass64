@@ -413,7 +413,7 @@ Label *find_anonlabel2(ssize_t count, Namespace *context) {
 }
 
 /* --------------------------------------------------------------------------- */
-Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *exists, const struct file_list_s *cflist) {
+Label *new_label(const str_t *name, Namespace *context, uint8_t strength, const struct file_list_s *cflist) {
     Label *b;
     if (lastlb == NULL) lastlb = Label(val_alloc(LABEL_OBJ));
 
@@ -434,13 +434,12 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, bool *
         lastlb->update_after = false;
         lastlb->usepass = 0;
         lastlb->fwpass = 0;
+        lastlb->value = NULL;
         lastlb->defpass = pass;
-        *exists = false;
         b = lastlb;
         lastlb = NULL;
         return b;
     }
-    *exists = true;
     return b;
 }
 
@@ -759,10 +758,9 @@ void new_builtin(const char *symbol, Obj *val) {
     struct linepos_s nopoint = {0, 0};
     str_t name;
     Label *label;
-    bool label_exists;
     name.len = strlen(symbol);
     name.data = (const uint8_t *)symbol;
-    label = new_label(&name, builtin_namespace, 0, &label_exists, dummy_file_list);
+    label = new_label(&name, builtin_namespace, 0, dummy_file_list);
     label->constant = true;
     label->owner = true;
     label->value = val;

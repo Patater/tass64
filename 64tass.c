@@ -1412,7 +1412,6 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     else listing_line(epoint->pos);
 
     do { /* label */
-        bool labelexists;
         str_t varname;
         epoint2 = lpoint;
 
@@ -1458,23 +1457,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 val = pull_val();
             }
         }
-        label = new_label(&varname, (varname.data[0] == '_') ? cheap_context : current_context, strength, &labelexists, current_file_list);
-        if (foreach) {
-            if (labels.p == 0) {
-                labels.len = lenof(labels.val);
-                labels.data = labels.val;
-            } else if (labels.p >= labels.len) {
-                if (inc_overflow(&labels.len, 16)) err_msg_out_of_memory();
-                if (labels.data == labels.val) {
-                    new_array(&labels.data, labels.len);
-                    memcpy(labels.data, labels.val, sizeof labels.val);
-                } else {
-                    resize_array(&labels.data, labels.len);
-                }
-            }
-            labels.data[labels.p++] = label;
-        }
-        if (labelexists) {
+        label = new_label(&varname, (varname.data[0] == '_') ? cheap_context : current_context, strength, current_file_list);
+        if (label->value != NULL) {
             if (label->constant) {
                 err_msg_double_defined(label, &varname, &epoint2);
                 val_destroy(val);
@@ -1499,6 +1483,21 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             label->owner = false;
             label->value = val;
             label->epoint = epoint2;
+        }
+        if (foreach) {
+            if (labels.p == 0) {
+                labels.len = lenof(labels.val);
+                labels.data = labels.val;
+            } else if (labels.p >= labels.len) {
+                if (inc_overflow(&labels.len, 16)) err_msg_out_of_memory();
+                if (labels.data == labels.val) {
+                    new_array(&labels.data, labels.len);
+                    memcpy(labels.data, labels.val, sizeof labels.val);
+                } else {
+                    resize_array(&labels.data, labels.len);
+                }
+            }
+            labels.data[labels.p++] = label;
         }
         ignore();
     } while (wht == ',');
@@ -1614,7 +1613,6 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
             if (nopos < 0) {
                 str_t varname;
                 Namespace *context;
-                bool labelexists;
                 lpoint = bpoint;
                 varname.data = pline + lpoint.pos; varname.len = get_label(varname.data);
                 if (varname.len == 0) {err_msg2(ERROR_LABEL_REQUIRE, NULL, &bpoint);break;}
@@ -1656,8 +1654,8 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
                 if (tmp.op == O_NONE) {
                     if (wht != '=') {err_msg(ERROR______EXPECTED, "':='"); break;}
                     lpoint.pos++;ignore();
-                    label = new_label(&varname, context, strength, &labelexists, current_file_list);
-                    if (labelexists) {
+                    label = new_label(&varname, context, strength, current_file_list);
+                    if (label->value != NULL) {
                         if (label->constant) { err_msg_double_defined(label, &varname, &bpoint); break; }
                         if (label->defpass != pass) {
                             label->ref = false;
@@ -1862,7 +1860,6 @@ static Namespace *anonlabel(Namespace *mycontext, uint8_t type, linepos_t epoint
         struct star_s *star_tree;
     } anonsymbol;
     Label *label;
-    bool labelexists;
     str_t tmpname;
     if (sizeof(anonsymbol) != sizeof(anonsymbol.type) + sizeof(anonsymbol.padding) + sizeof(anonsymbol.star_tree) + sizeof(anonsymbol.vline)) memset(&anonsymbol, 0, sizeof anonsymbol);
     else anonsymbol.padding[0] = anonsymbol.padding[1] = anonsymbol.padding[2] = 0;
@@ -1870,8 +1867,8 @@ static Namespace *anonlabel(Namespace *mycontext, uint8_t type, linepos_t epoint
     anonsymbol.star_tree = star_tree;
     anonsymbol.vline = vline;
     tmpname.data = (const uint8_t *)&anonsymbol; tmpname.len = sizeof anonsymbol;
-    label = new_label(&tmpname, mycontext, strength, &labelexists, current_file_list);
-    if (labelexists) {
+    label = new_label(&tmpname, mycontext, strength, current_file_list);
+    if (label->value != NULL) {
         if (label->defpass == pass) err_msg_double_defined(label, &tmpname, epoint);
         else if (label->fwpass == pass) fwcount--;
         label->constant = true;
@@ -1895,7 +1892,7 @@ static Namespace *anonlabel(Namespace *mycontext, uint8_t type, linepos_t epoint
     return Namespace(label->value);
 }
 
-static MUST_CHECK Label *new_anonlabel(Namespace *context, bool *exists) {
+static MUST_CHECK Label *new_anonlabel(Namespace *context) {
     struct {
         uint8_t type;
         uint8_t padding[3];
@@ -1909,7 +1906,7 @@ static MUST_CHECK Label *new_anonlabel(Namespace *context, bool *exists) {
     anonsymbol.star_tree = star_tree;
     anonsymbol.vline = vline;
     tmpname.data = (const uint8_t *)&anonsymbol; tmpname.len = sizeof anonsymbol;
-    return new_label(&tmpname, context, strength, exists, current_file_list);
+    return new_label(&tmpname, context, strength, current_file_list);
 }
 
 MUST_CHECK Obj *compile(void)
@@ -2146,7 +2143,8 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                         if (!labelexists) {
-                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            label = new_label(&labelname, mycontext, strength, current_file_list);
+                            labelexists = label->value != NULL;
                         }
                         if (labelexists) {
                             if (label->constant) {
@@ -2242,7 +2240,10 @@ MUST_CHECK Obj *compile(void)
                         }
                         if (label != NULL) {
                             labelexists = true;
-                        } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                        } else {
+                            label = new_label(&labelname, mycontext, strength, current_file_list);
+                            labelexists = label->value != NULL;
+                        }
                         listing_equal(val);
                         if (labelexists) {
                             if (label->defpass == pass) {
@@ -2308,7 +2309,10 @@ MUST_CHECK Obj *compile(void)
                             if (label != NULL) {
                                 labelexists = true;
                                 if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
-                            } else label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            } else {
+                                label = new_label(&labelname, mycontext, strength, current_file_list);
+                                labelexists = label->value != NULL;
+                            }
                             listing_equal(val);
                             if (labelexists) {
                                 if (label->constant) {
@@ -2340,18 +2344,16 @@ MUST_CHECK Obj *compile(void)
                         }
                     case CMD_LBL:
                         { /* label */
-                            Label *label;
                             Lbl *lbl;
-                            bool labelexists;
+                            Label *label = new_label(&labelname, mycontext, strength, current_file_list);
                             listing_line(0);
-                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
                             lbl = Lbl(val_alloc(LBL_OBJ));
                             lbl->sline = epoint.line;
                             lbl->pass = pass;
                             lbl->waitforp = waitfor_p;
                             lbl->file_list = current_file_list;
                             lbl->parent = current_context;
-                            if (labelexists) {
+                            if (label->value != NULL) {
                                 if (label->defpass == pass) {
                                     val_destroy(Obj(lbl));
                                     err_msg_double_defined(label, &labelname, &epoint);
@@ -2386,8 +2388,8 @@ MUST_CHECK Obj *compile(void)
                         }
                     case CMD_NAMESPACE:
                         { /* namespace */
-                            bool labelexists;
-                            Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            Label *label = new_label(&labelname, mycontext, strength, current_file_list);
+                            bool labelexists = label->value != NULL;
                             if (labelexists) {
                                 if (label->defpass == pass) {
                                     err_msg_double_defined(label, &labelname, &epoint);
@@ -2453,15 +2455,14 @@ MUST_CHECK Obj *compile(void)
                             Label *label;
                             Macro *macro;
                             Type *obj = (prm == CMD_MACRO) ? MACRO_OBJ : SEGMENT_OBJ;
-                            bool labelexists;
                             listing_line(0);
                             new_waitfor(prm == CMD_MACRO ? W_ENDMACRO : W_ENDSEGMENT, &cmdpoint);waitfor->skip = 0;
-                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            label = new_label(&labelname, mycontext, strength, current_file_list);
                             macro = Macro(val_alloc(obj));
                             macro->file_list = current_file_list;
                             macro->line = epoint.line;
                             macro->recursion_pass = 0;
-                            if (labelexists && label->value->obj == obj) {
+                            if (label->value != NULL && label->value->obj == obj) {
                                 macro->retval = Macro(label->value)->retval;
                                 macro->argc = Macro(label->value)->argc;
                             } else {
@@ -2469,7 +2470,7 @@ MUST_CHECK Obj *compile(void)
                                 macro->argc = 0;
                             }
                             get_macro_params(Obj(macro));
-                            if (labelexists) {
+                            if (label->value != NULL) {
                                 if (label->defpass == pass) {
                                     waitfor->u.cmd_macro.val = Obj(macro);
                                     err_msg_double_defined(label, &labelname, &epoint);
@@ -2508,11 +2509,11 @@ MUST_CHECK Obj *compile(void)
                         {
                             Label *label;
                             Mfunc *mfunc;
-                            bool labelexists, failed;
+                            bool failed;
                             Type *obj = (prm == CMD_FUNCTION) ? MFUNC_OBJ : SFUNC_OBJ;
                             listing_line(0);
                             if (prm == CMD_FUNCTION) new_waitfor(W_ENDF, &cmdpoint);
-                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            label = new_label(&labelname, mycontext, strength, current_file_list);
                             mfunc = Mfunc(val_alloc(obj));
                             mfunc->file_list = current_file_list;
                             mfunc->epoint.line = epoint.line;
@@ -2529,7 +2530,7 @@ MUST_CHECK Obj *compile(void)
                                 if (l != NULL) memcpy(l, pline, ln);
                                 mfunc->line = l;
                             } else mfunc->line = NULL;
-                            if (labelexists) {
+                            if (label->value != NULL) {
                                 mfunc->retval = (label->value->obj == obj) && Mfunc(label->value)->retval;
                                 if (label->defpass == pass) {
                                     mfunc->names = new_namespace(current_file_list, &epoint);
@@ -2598,12 +2599,12 @@ MUST_CHECK Obj *compile(void)
                             Struct *structure;
                             struct section_address_s section_address, *oldsection_address = current_address;
                             uval_t provides = current_section->provides, requires = current_section->requires, conflicts = current_section->conflicts;
-                            bool labelexists, doubledef = false;
+                            bool doubledef = false;
                             Type *obj = (prm == CMD_STRUCT) ? STRUCT_OBJ : UNION_OBJ;
 
                             if (diagnostics.optimize) cpu_opt_invalidate();
                             new_waitfor((prm==CMD_STRUCT) ? W_ENDS : W_ENDU, &cmdpoint);waitfor->skip = 0;
-                            label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            label = new_label(&labelname, mycontext, strength, current_file_list);
 
                             current_section->provides = ~(uval_t)0;current_section->requires = current_section->conflicts = 0;
                             section_address.wrapwarn = section_address.moved = false;
@@ -2623,7 +2624,7 @@ MUST_CHECK Obj *compile(void)
                             structure->file_list = current_file_list;
                             structure->line = epoint.line;
                             structure->recursion_pass = 0;
-                            if (labelexists && label->value->obj == obj) {
+                            if (label->value != NULL && label->value->obj == obj) {
                                 structure->retval = Struct(label->value)->retval;
                                 structure->argc = Struct(label->value)->argc;
                             } else {
@@ -2631,7 +2632,7 @@ MUST_CHECK Obj *compile(void)
                                 structure->argc = 0;
                             }
                             get_macro_params(Obj(structure));
-                            if (labelexists) {
+                            if (label->value != NULL) {
                                 if (label->defpass == pass) {
                                     doubledef = true;
                                     structure->size = 0;
@@ -2722,10 +2723,9 @@ MUST_CHECK Obj *compile(void)
                     case CMD_BWHILE:
                         { /* .bfor */
                             List *lst;
-                            bool labelexists;
                             size_t i;
-                            Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
-                            if (labelexists) {
+                            Label *label = new_label(&labelname, mycontext, strength, current_file_list);
+                            if (label->value != NULL) {
                                 if (label->defpass == pass) {
                                     err_msg_double_defined(label, &labelname, &epoint);
                                     epoint = cmdpoint;
@@ -2773,10 +2773,11 @@ MUST_CHECK Obj *compile(void)
                             address_t oldstart, oldend;
                             address_t oldl_start, oldl_union;
                             bool oldunionmode;
-                            bool labelexists, ret, doubledef = false;
+                            bool ret, doubledef = false;
                             Type *obj;
                             Namespace *context;
-                            Label *label = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                            Label *label = new_label(&labelname, mycontext, strength, current_file_list);
+                            bool labelexists = label->value != NULL;
                             if (labelexists) {
                                 if (label->defpass == pass) {
                                     doubledef = true;
@@ -2905,7 +2906,10 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                     }
-                    if (!labelexists) newlabel = new_label(&labelname, mycontext, strength, &labelexists, current_file_list);
+                    if (!labelexists) {
+                        newlabel = new_label(&labelname, mycontext, strength, current_file_list);
+                        labelexists = newlabel->value != NULL;
+                    }
                     oaddr = current_address->address;
                     ref_label(newlabel);
                     if (labelexists) {
@@ -3809,7 +3813,6 @@ MUST_CHECK Obj *compile(void)
                 { /* .namespace */
                     struct values_s *vs;
                     Label *label;
-                    bool labelexists;
                     listing_line(epoint.pos);
                     new_waitfor(W_ENDN, &epoint);
                     if (get_exp(0, 0, 1, &epoint)) {
@@ -3820,8 +3823,8 @@ MUST_CHECK Obj *compile(void)
                             if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
                         } else val = NULL;
                     } else val = NULL;
-                    label = new_anonlabel(mycontext, &labelexists);
-                    if (labelexists) {
+                    label = new_anonlabel(mycontext);
+                    if (label->value != NULL) {
                         if (label->defpass == pass) err_msg_double_defined(label, &label->name, &epoint);
                         else if (label->fwpass == pass) fwcount--;
                         label->constant = true;
@@ -4344,9 +4347,8 @@ MUST_CHECK Obj *compile(void)
                 { /* .bfor */
                     List *lst;
                     size_t i;
-                    bool labelexists;
-                    Label *label = new_anonlabel(mycontext, &labelexists);
-                    if (labelexists) {
+                    Label *label = new_anonlabel(mycontext);
+                    if (label->value != NULL) {
                         if (label->defpass == pass) err_msg_double_defined(label, &label->name, &epoint);
                         else if (label->fwpass == pass) fwcount--;
                         label->defpass = pass;
