@@ -2859,6 +2859,7 @@ MUST_CHECK Obj *compile(void)
                             goto breakerr;
                         }
                     }
+                    islabel = true;
                     break;
                 }
                 {
