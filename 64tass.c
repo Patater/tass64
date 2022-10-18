@@ -3811,45 +3811,20 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_NAMESPACE: if ((waitfor->skip & 1) != 0)
                 { /* .namespace */
-                    struct values_s *vs;
-                    Label *label;
                     listing_line(epoint.pos);
                     new_waitfor(W_ENDN, &epoint);
                     if (get_exp(0, 0, 1, &epoint)) {
-                        vs = get_val();
+                        struct values_s *vs = get_val();
                         if (vs != NULL) {
-                            val = vs->val;
-                            val = Obj(get_namespace(val));
+                            val = Obj(get_namespace(vs->val));
                             if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
                         } else val = NULL;
                     } else val = NULL;
-                    label = new_anonlabel(mycontext);
-                    if (label->value != NULL) {
-                        if (label->defpass == pass) err_msg_double_defined(label, &label->name, &epoint);
-                        else if (label->fwpass == pass) fwcount--;
-                        label->constant = true;
-                        label->owner = (val == NULL);
-                        if (val != NULL) const_assign(label, val_reference(val));
-                        else {
-                            label->defpass = pass;
-                            if (label->value->obj != NAMESPACE_OBJ) {
-                                val_destroy(label->value);
-                                label->value = Obj(new_namespace(current_file_list, &epoint));
-                            } else {
-                                Namespace *names = Namespace(label->value);
-                                names->backr = names->forwr = 0;
-                                names->file_list = current_file_list;
-                                names->epoint = epoint;
-                            }
-                        }
-                    } else {
-                        label->constant = true;
-                        label->owner = (val == NULL);
-                        label->value = (val != NULL) ? val_reference(val) : Obj(new_namespace(current_file_list, &epoint));
-                        label->epoint = epoint;
+                    if (val == NULL) {
+                        val = Obj(anonlabel(mycontext, '.', &epoint));
                     }
-                    if (label->value->obj == NAMESPACE_OBJ) {
-                        push_context(Namespace(label->value));
+                    if (val->obj == NAMESPACE_OBJ) {
+                        push_context(Namespace(val));
                         waitfor->what = W_ENDN2;
                     } else push_context(current_context);
                 } else {push_dummy_context(); new_waitfor(W_ENDN, &epoint);}
