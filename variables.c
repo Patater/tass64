@@ -438,7 +438,6 @@ Label *new_label(const str_t *name, Namespace *context, uint8_t strength, const 
         lastlb->defpass = pass;
         b = lastlb;
         lastlb = NULL;
-        return b;
     }
     return b;
 }
