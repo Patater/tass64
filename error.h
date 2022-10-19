@@ -47,6 +47,7 @@ struct error_output_s;
 extern void err_msg(Error_types, const void *);
 extern void err_msg2(Error_types, const void *, linepos_t);
 extern void err_msg_wrong_type2(const struct Obj *, struct Type *, linepos_t);
+extern void err_msg_invalid_namespace_conv(struct Obj *, linepos_t);
 extern void err_msg_cant_unpack(size_t, size_t, linepos_t);
 extern void err_msg_cant_calculate(const struct str_t *, linepos_t);
 extern void err_msg_cant_calculate2(const struct str_t *, const struct file_list_s *, linepos_t);

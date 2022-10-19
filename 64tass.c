@@ -2422,7 +2422,7 @@ MUST_CHECK Obj *compile(void)
                                 if (vs != NULL) {
                                     val = vs->val;
                                     val = Obj(get_namespace(val));
-                                    if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
+                                    if (val == NULL) err_msg_invalid_namespace_conv(vs->val, &vs->epoint);
                                 } else val = NULL;
                             } else val = NULL;
                             label->owner = (val == NULL);
@@ -3817,7 +3817,7 @@ MUST_CHECK Obj *compile(void)
                         struct values_s *vs = get_val();
                         if (vs != NULL) {
                             val = Obj(get_namespace(vs->val));
-                            if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
+                            if (val == NULL) err_msg_invalid_namespace_conv(vs->val, &vs->epoint);
                         } else val = NULL;
                     } else val = NULL;
                     if (val == NULL) {
@@ -3842,7 +3842,7 @@ MUST_CHECK Obj *compile(void)
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     val = Obj(get_namespace(vs->val));
-                    if (val == NULL) err_msg_wrong_type2(vs->val, NULL, &vs->epoint);
+                    if (val == NULL) err_msg_invalid_namespace_conv(vs->val, &vs->epoint);
                     else {
                         push_context2(Namespace(val));
                         waitfor->what = W_ENDWITH2;

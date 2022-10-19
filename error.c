@@ -970,6 +970,15 @@ void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
     else err_msg_wrong_type(val->obj, expected, epoint);
 }
 
+void err_msg_invalid_namespace_conv(Obj *val, linepos_t epoint) {
+    if (val->obj == ERROR_OBJ) err_msg_output(Error(val));
+    else if (val == none_value) err_msg_still_none(NULL, epoint);
+    else {
+        Obj *err = new_error_conv(val, NAMESPACE_OBJ, epoint);
+        err_msg_output_and_destroy(Error(err));
+    }
+}
+
 void err_msg_cant_unpack(size_t expect, size_t got, linepos_t epoint) {
     char line[1024];
     bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
