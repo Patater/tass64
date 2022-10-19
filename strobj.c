@@ -135,9 +135,6 @@ MUST_CHECK Obj *tostr2(const struct values_s *v1, str_t *out) {
         out->len = Str(val)->len;
         out->data = Str(val)->data;
         return NULL;
-    case T_ADDRESS:
-        if (Address(val)->val == none_value || Address(val)->val->obj == ERROR_OBJ) return val_reference(Address(val)->val);
-        FALL_THROUGH; /* fall through */
     default:
         err = new_error(ERROR____WRONG_TYPE, &v1->epoint);
         err->u.otype.t1 = val->obj;
