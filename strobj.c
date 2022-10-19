@@ -33,7 +33,6 @@
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
-#include "addressobj.h"
 
 static Type obj;
 
