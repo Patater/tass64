@@ -23,7 +23,7 @@
 
 typedef enum Output_types {
     OUTPUT_CBM, OUTPUT_RAW, OUTPUT_NONLINEAR, OUTPUT_FLAT, OUTPUT_XEX,
-    OUTPUT_APPLE, OUTPUT_IHEX, OUTPUT_SREC
+    OUTPUT_APPLE, OUTPUT_IHEX, OUTPUT_SREC, OUTPUT_MHEX
 } Output_types;
 
 typedef enum Symbollist_types {

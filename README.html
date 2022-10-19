@@ -3584,6 +3584,25 @@ and uninitialized areas are skipped. I8HEX up to 64&nbsp;KiB, I32HEX up to 4&nbs
 :00000001FF
 </pre>
 
+<dt><b>--mos-hex</b><a name="o_mos-hex" href="#o_mos-hex"></a>
+<dd>Use MOS Technology output file format. Also known as Paper Tape Format.
+
+<p>Overlapping blocks are kept, data is stored in the definition order,
+and uninitialized areas are skipped. Up to 64&nbsp;KiB.</p>
+
+<pre width="80">
+64tass --mos-hex a.asm
+*       <b>=</b> <span>$0c00</span>
+        <b>rts</b>
+</pre>
+
+<p>Result of compilation:</p>
+
+<pre width="80">
+;010C0060006D
+;0000010001
+</pre>
+
 <dt><b>--s-record</b><a name="o_s-record" href="#o_s-record"></a>
 <dd>Use Motorola S-record output file format.
 

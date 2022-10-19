@@ -405,6 +405,91 @@ static void output_mem_ihex(FILE *fout, const Memblocks *memblocks) {
     if (output_mem_ihex_line(&ihex, 0, 0, 1, NULL)) return;
 }
 
+enum { MHEX_LENGTH = 24U };
+
+struct mhex_s {
+    FILE *file;
+    address_t address;
+    unsigned int lines;
+    uint8_t data[MHEX_LENGTH];
+    unsigned int length;
+};
+
+static MUST_CHECK bool output_mem_mhex_line(struct mhex_s *mhex, unsigned int length, address_t address, const uint8_t *data) {
+    unsigned int i;
+    char line[1+(1+2+MHEX_LENGTH+2)*2+2];
+    struct hexput_s h;
+    h.line = line + 1;
+    h.sum =  0;
+    line[0] = ';';
+    hexput(&h, length);
+    hexput(&h, address >> 8);
+    hexput(&h, address & 0xff);
+    for (i = 0; i < length; i++) {
+        hexput(&h, data[i]);
+    }
+    i = h.sum;
+    hexput(&h, i >> 8);
+    hexput(&h, i);
+    *h.line++ = '\r';
+    *h.line++ = '\n';
+    return fwrite(line, (size_t)(h.line - line), 1, mhex->file) == 0;
+}
+
+static MUST_CHECK bool output_mem_mhex_data(struct mhex_s *mhex) {
+    const uint8_t *data = mhex->data;
+    if ((mhex->address & 0xffff) + mhex->length > 0x10000) {
+        uint16_t length = (uint16_t)-mhex->address;
+        unsigned int remains = mhex->length - length;
+        mhex->length = length;
+        if (output_mem_mhex_data(mhex)) return true;
+        data += length;
+        mhex->length = remains;
+    }
+    if (output_mem_mhex_line(mhex, mhex->length, mhex->address, data)) return true;
+    mhex->lines++;
+    mhex->address += mhex->length;
+    mhex->length = 0;
+    return false;
+}
+
+static void output_mem_mhex(FILE *fout, const Memblocks *memblocks) {
+    struct mhex_s mhex;
+    size_t i;
+
+    mhex.file = fout;
+    mhex.address = 0;
+    mhex.lines = 0;
+    mhex.length = 0;
+    for (i = 0; i < memblocks->p; i++) {
+        const struct memblock_s *b = &memblocks->data[i];
+        const uint8_t *d = memblocks->mem.data + b->p;
+        address_t addr = b->addr;
+        address_t blen = b->len;
+        if (blen != 0 && mhex.address + mhex.length != addr) {
+            if (mhex.length != 0) {
+                if (output_mem_mhex_data(&mhex)) return;
+            }
+            mhex.address = addr;
+        }
+        while (blen != 0) {
+            unsigned int left = MHEX_LENGTH - mhex.length;
+            address_t copy = blen > left ? left : blen;
+            memcpy(mhex.data + mhex.length, d, copy);
+            mhex.length += copy;
+            d += copy;
+            blen -= copy;
+            if (mhex.length == sizeof mhex.data) {
+                if (output_mem_mhex_data(&mhex)) return;
+            }
+        }
+    }
+    if (mhex.length != 0) {
+        if (output_mem_mhex_data(&mhex)) return;
+    }
+    if (output_mem_mhex_line(&mhex, 0, mhex.lines, NULL)) return;
+}
+
 enum { SRECORD_LENGTH = 32U };
 
 struct srecord_s {
@@ -520,7 +605,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     int oldmode = -1;
 #endif
 
-    memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC);
+    memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC || output->mode == OUTPUT_MHEX);
 
     if (output->name == NULL) return;
 
@@ -546,6 +631,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     case OUTPUT_CBM: output_mem_c64(fout, memblocks, output); break;
     case OUTPUT_IHEX: output_mem_ihex(fout, memblocks); break;
     case OUTPUT_SREC: output_mem_srec(fout, memblocks); break;
+    case OUTPUT_MHEX: output_mem_mhex(fout, memblocks); break;
     }
     err = ferror(fout);
     err |= (fout != stdout) ? fclose(fout) : fflush(fout);
