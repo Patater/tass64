@@ -970,10 +970,11 @@ void err_msg_wrong_type2(const Obj *val, Type *expected, linepos_t epoint) {
     else err_msg_wrong_type(val->obj, expected, epoint);
 }
 
-void err_msg_invalid_namespace_conv(Obj *val, linepos_t epoint) {
+void err_msg_invalid_namespace_conv(const struct values_s *vs) {
+    Obj *val = vs->val;
     if (val->obj == ERROR_OBJ) err_msg_output(Error(val));
-    else if (val == none_value) err_msg_still_none(NULL, epoint);
-    else err_msg_output_and_destroy(Error(new_error_conv(val, NAMESPACE_OBJ, epoint)));
+    else if (val == none_value) err_msg_still_none(NULL, &vs->epoint);
+    else err_msg_output_and_destroy(Error(new_error_conv(val, NAMESPACE_OBJ, &vs->epoint)));
 }
 
 void err_msg_cant_unpack(size_t expect, size_t got, linepos_t epoint) {
