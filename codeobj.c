@@ -108,6 +108,10 @@ static inline address_t code_address(const Code *v1) {
     return v1->offs < 0 ? v1->addr - -(uval_t)v1->offs : v1->addr + (uval_t)v1->offs;
 }
 
+static inline address_t code_memaddress(const Code *v1) {
+    return v1->offs < 0 ? v1->memaddr - -(uval_t)v1->offs : v1->memaddr + (uval_t)v1->offs;
+}
+
 static MUST_CHECK Obj *get_code_address(const Code *v1, linepos_t epoint) {
     address_t addr2 = code_address(v1);
     address_t addr = addr2 & all_mem;
@@ -586,7 +590,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 str_cfcpy(&cf, &v2->name);
                 if (str_cmp(&cf, &of) == 0) {
                     if (diagnostics.case_symbol && str_cmp(&v2->name, &cf) != 0) err_msg_symbol_case(&v2->name, NULL, op->epoint2);
-                    return int_from_uval(code_address(v1) & all_mem2);
+                    return int_from_uval(code_memaddress(v1) & all_mem2);
                 }
             }
         }
