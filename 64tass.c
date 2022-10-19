@@ -3127,8 +3127,10 @@ MUST_CHECK Obj *compile(void)
             case CMD_FI: /* .fi */
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
-                    if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
-                    if (!close_waitfor(W_FI2) && !close_waitfor(W_FI)) {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
+                    if (waitfor->what==W_FI || waitfor->what==W_FI2) {
+                        if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
+                        close_waitfor(waitfor->what);
+                    } else {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
                 }
                 break;
