@@ -308,6 +308,7 @@ static MUST_CHECK Obj *truth(Obj *o1, Truth_types type, linepos_t UNUSED(epoint)
         for (i = 0; i < sz2; i++) {
             if (v1->data[i] != inv) return ref_false();
         }
+        if ((v1->bits % SHIFT) == 0) return ref_true();
         b = (i >= sz) ? 0 : v1->data[i];
         b ^= inv;
         b <<= SHIFT - v1->bits % SHIFT;
