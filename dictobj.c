@@ -35,7 +35,7 @@ static Type obj;
 
 Type *const DICT_OBJ = &obj;
 
-static Dict null_dictval = { { &obj, 1 }, 0, null_dictval.u.val, { { { 0 } } }, NULL };
+static Dict null_dictval = { { &obj, 1 }, 0, null_dictval.u.val, { { { 0, NULL, NULL } } }, NULL };
 
 Obj *const null_dict = &null_dictval.v;
 
