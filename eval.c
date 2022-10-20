@@ -499,7 +499,7 @@ rest:
             llen = (linecpos_t)get_label(pline + lpoint.pos);
             if (llen == 0) {
                 if (opr.p != opr.data) epoint.pos = opr.p[-1].pos;
-                if (ch < ' ' || ch > '~') {
+                if ((ch < ' ' && ch != 0) || ch > '~') {
                     if (err_msg_wrong_character(&lpoint)) goto error;
                 }
                 err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
@@ -1600,7 +1600,7 @@ static bool get_exp2(int stop) {
                 }
                 epoint.pos = opr.p[-1].pos;
             }
-            if (ch < ' ' || ch > '~') {
+            if ((ch < ' ' && ch != 0) || ch > '~') {
                 if (err_msg_wrong_character(&lpoint)) goto error;
             }
             err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
@@ -1818,9 +1818,6 @@ static bool get_exp2(int stop) {
             if (get_label(pline + lpoint.pos + 1) == 2 && 
                 (pline[epoint.pos + 1] | arguments.caseinsensitive) == 'i' &&
                 (pline[epoint.pos + 2] | arguments.caseinsensitive) == 'n') {op = O_NOTIN;goto push2;}
-            if (ch < ' ' || ch > '~') {
-                if (err_msg_wrong_character(&epoint)) goto error;
-            }
             err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
             goto error;
         case ')':
