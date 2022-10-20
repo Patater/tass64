@@ -517,6 +517,7 @@ static MUST_CHECK Obj *contains(oper_t op) {
             op->v2 = o1;
             op->inplace = NULL;
             result = tmp->obj->calc2(op);
+            val_destroy(tmp);
             if (result == good) {
                 val_destroy(result);
                 continue;
