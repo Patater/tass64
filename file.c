@@ -870,8 +870,10 @@ void init_file(void) {
     file_table.data = NULL;
     file_table.uid = 0;
     file_stdin.name = file_stdin.realname = "-";
+    file_stdin.portable = true;
     file_defines.name = ""; 
     file_defines.realname = "<command line>";
+    file_defines.portable = true;
     new_instance(&stars);
     stars->next = NULL;
     starsp = 0;
