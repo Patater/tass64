@@ -700,7 +700,7 @@ static struct file_s *file_lookup(const str_t *name, const char *base) {
 
 static struct file_s file_defines;
 static struct file_s file_stdin;
-struct file_s *file_open(const str_t *name, const char *base, File_open_type ftype, linepos_t epoint) {
+struct file_s *file_open(const str_t *name, const struct file_list_s *cfile, File_open_type ftype, linepos_t epoint) {
     int err = 0;
     struct file_s *file;
     switch (ftype) {
@@ -720,7 +720,7 @@ struct file_s *file_open(const str_t *name, const char *base, File_open_type fty
         }
         break;
     default:
-        file = file_lookup(name, base != NULL ? base : "");
+        file = file_lookup(name, cfile != NULL ? cfile->file->name : "");
     }
     if (!(file->binary.read || (ftype != FILE_OPEN_BINARY && file->source.read))) {
         FILE *f = NULL;
@@ -731,7 +731,7 @@ struct file_s *file_open(const str_t *name, const char *base, File_open_type fty
                 f = file_fopen(file);
             }
         }
-        if (f == NULL && (file->err_no == ENOENT || file->err_no == ENOTDIR) && base != NULL && !is_absolute(name)) {
+        if (f == NULL && (file->err_no == ENOENT || file->err_no == ENOTDIR) && cfile != NULL && !is_absolute(name)) {
             struct include_list_s *i;
             for (i = arguments.include; i != NULL; i = i->next) {
                 struct file_s *file2 = file_lookup(name, i->path);
@@ -790,7 +790,7 @@ struct file_s *file_open(const str_t *name, const char *base, File_open_type fty
         }
         return NULL;
     }
-    if (!file->portable && base != NULL && diagnostics.portable) {
+    if (!file->portable && cfile != NULL && diagnostics.portable) {
 #ifdef _WIN32
         file->portable = portability2(name, file->name, epoint);
 #else

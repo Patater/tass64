@@ -22,8 +22,6 @@
 #include "stdbool.h"
 #include "inttypes.h"
 
-struct str_t;
-
 typedef enum Encoding_types {
     E_UNKNOWN, E_UTF8, E_UTF16LE, E_UTF16BE, E_ISO, E_RAW
 } Encoding_types;
@@ -67,7 +65,10 @@ struct star_s {
     uint8_t pass;
 };
 
-extern struct file_s *file_open(const struct str_t *, const char *, File_open_type, linepos_t);
+struct str_t;
+struct file_list_s;
+
+extern struct file_s *file_open(const struct str_t *, const struct file_list_s *, File_open_type, linepos_t);
 extern struct star_s *new_star(linenum_t);
 extern struct star_s *init_star(linenum_t);
 extern void destroy_file(void);

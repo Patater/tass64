@@ -3675,7 +3675,7 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 1, 3, &epoint)) goto breakerr;
                         vs = get_val();
                         if (!tostr(vs, &filename)) {
-                            cfile2 = file_open(&filename, current_file_list->file->name, FILE_OPEN_BINARY, &vs->epoint);
+                            cfile2 = file_open(&filename, current_file_list, FILE_OPEN_BINARY, &vs->epoint);
                         }
                         if ((vs = get_val()) != NULL) {
                             ival_t ival;
@@ -4270,7 +4270,7 @@ MUST_CHECK Obj *compile(void)
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (!tostr(vs, &filename)) {
-                        f = file_open(&filename, current_file_list->file->name, FILE_OPEN_SOURCE, &vs->epoint);
+                        f = file_open(&filename, current_file_list, FILE_OPEN_SOURCE, &vs->epoint);
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
 
