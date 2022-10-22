@@ -72,7 +72,8 @@ extern void err_msg_symbol_case(const struct str_t *, const struct Label *, line
 extern void err_msg_symbol_case2(const struct Symbol *, const struct Symbol *);
 extern void err_msg_macro_prefix(linepos_t);
 extern void err_msg_address_mismatch(unsigned int, unsigned int, linepos_t);
-extern void err_msg_file(Error_types, const char *, linepos_t);
+extern void err_msg_file(Error_types, const char *, const struct file_list_s *, linepos_t);
+extern void err_msg_file2(Error_types, const char *);
 extern void err_msg_output(const struct Error *);
 extern void err_msg_output_and_destroy(struct Error *);
 extern void err_msg_argnum(argcount_t, argcount_t, argcount_t, linepos_t);

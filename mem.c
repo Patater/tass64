@@ -598,7 +598,6 @@ static void output_mem_srec(FILE *fout, const Memblocks *memblocks) {
 
 void output_mem(Memblocks *memblocks, const struct output_s *output) {
     FILE* fout;
-    struct linepos_s nopoint = {0, 0};
     bool binary = (output->mode != OUTPUT_IHEX) && (output->mode != OUTPUT_SREC);
     int err;
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
@@ -618,7 +617,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
         fout = fopen_utf8(output->name, output->append ? (binary ? "ab" : "at") : (binary ? "wb" : "wt"));
     }
     if (fout == NULL) {
-        err_msg_file(ERROR_CANT_WRTE_OBJ, output->name, &nopoint);
+        err_msg_file2(ERROR_CANT_WRTE_OBJ, output->name);
         return;
     }
     clearerr(fout); errno = 0;
@@ -635,7 +634,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     }
     err = ferror(fout);
     err |= (fout != stdout) ? fclose(fout) : fflush(fout);
-    if (err != 0 && errno != 0) err_msg_file(ERROR_CANT_WRTE_OBJ, output->name, &nopoint);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_OBJ, output->name);
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     if (oldmode >= 0) setmode(STDOUT_FILENO, oldmode);
 #endif

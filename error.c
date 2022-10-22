@@ -1508,7 +1508,6 @@ void error_print(const struct error_output_s *output) {
     size_t pos, end;
     bool noneerr = false, anyerr = false, usenote;
     FILE *ferr;
-    struct linepos_s nopoint = {0, 0};
 
     if (error_list.header_pos != 0) {
         avltree_destroy(&file_list.members, walkfilelist);
@@ -1517,7 +1516,7 @@ void error_print(const struct error_output_s *output) {
     if (output->name != NULL) {
         ferr = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
         if (ferr == NULL) {
-            err_msg_file(ERROR_CANT_WRTE_ERR, output->name, &nopoint);
+            err_msg_file2(ERROR_CANT_WRTE_ERR, output->name);
             ferr = stderr;
         }
     } else ferr = output->no_output ? NULL : stderr;
@@ -1669,7 +1668,7 @@ void err_msg_signal(void)
     }
 }
 
-void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
+void err_msg_file(Error_types no, const char *prm, const struct file_list_s *cfile, linepos_t epoint) {
     mbstate_t ps;
     const char *s;
     wchar_t w;
@@ -1681,7 +1680,7 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
     s = strerror(errno);
     n = strlen(s);
 
-    more = new_error_msg(SV_FATAL, current_file_list, epoint);
+    more = new_error_msg(SV_FATAL, cfile, epoint);
     adderror(terr_fatal[no - 0xc0]);
     adderror(" '");
     adderror(prm);
@@ -1704,6 +1703,11 @@ void err_msg_file(Error_types no, const char *prm, linepos_t epoint) {
         i += (size_t)l;
     }
     if (more) new_error_msg_more();
+}
+
+void err_msg_file2(Error_types no, const char *prm) {
+    static const struct linepos_s nopoint = {0, 0};
+    err_msg_file(no, prm, current_file_list, &nopoint);
 }
 
 static void error_status_val(const char *head, unsigned int val) {

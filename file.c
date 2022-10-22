@@ -785,7 +785,7 @@ struct file_s *file_open(const str_t *name, const struct file_list_s *cfile, Fil
     if (file->err_no != 0) {
         if (file->pass != pass) {
             errno = file->err_no;
-            err_msg_file(file->read_error ? ERROR__READING_FILE : ERROR_CANT_FINDFILE, file->name, epoint);
+            err_msg_file(file->read_error ? ERROR__READING_FILE : ERROR_CANT_FINDFILE, file->name, current_file_list, epoint);
             file->pass = pass;
         }
         return NULL;
@@ -913,13 +913,12 @@ static size_t wrap_print(const char *txt, FILE *f, size_t len) {
 
 void makefile(int argc, char *argv[], bool make_phony) {
     FILE *f;
-    struct linepos_s nopoint = {0, 0};
     size_t len = 0, j;
     int i, err;
 
     f = dash_name(arguments.make) ? stdout : fopen_utf8(arguments.make, "wt");
     if (f == NULL) {
-        err_msg_file(ERROR_CANT_WRTE_MAK, arguments.make, &nopoint);
+        err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make);
         return;
     }
     clearerr(f); errno = 0;
@@ -971,5 +970,5 @@ void makefile(int argc, char *argv[], bool make_phony) {
 
     err = ferror(f);
     err |= (f != stdout) ? fclose(f) : fflush(f);
-    if (err != 0 && errno != 0) err_msg_file(ERROR_CANT_WRTE_MAK, arguments.make, &nopoint);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make);
 }

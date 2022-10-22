@@ -697,7 +697,7 @@ void labelprint(const struct symbol_output_s *output) {
 
     flab = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
     if (flab == NULL) {
-        err_msg_file(ERROR_CANT_WRTE_LBL, output->name, &nopoint);
+        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
         return;
     }
     clearerr(flab); errno = 0;
@@ -718,7 +718,7 @@ void labelprint(const struct symbol_output_s *output) {
     err = ferror(flab);
     err |= (flab != stdout) ? fclose(flab) : fflush(flab);
     if (err != 0 && errno != 0) {
-        err_msg_file(ERROR_CANT_WRTE_LBL, output->name, &nopoint);
+        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
     }
 }
 
