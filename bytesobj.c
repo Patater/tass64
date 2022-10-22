@@ -996,6 +996,24 @@ static MUST_CHECK Obj *concat(oper_t op) {
         s = extend_bytes(v1, ln2);
         if (s == NULL) goto failed;
         v = ref_bytes(v1);
+    } else if (op->inplace == Obj(v2)) {
+        size_t ln2;
+        bool inv = (v2->len ^ v1->len) < 0;
+        if (ln > sizeof v2->u.val && v2->u.val != v2->data && ln > v2->u.s.max) {
+            ln2 = ln + (ln < 1024 ? ln : 1024);
+            if (ln2 < ln) ln2 = ln;
+        } else ln2 = ln;
+        s = extend_bytes(v2, ln2);
+        if (s == NULL) goto failed;
+        if (inv) {
+            for (i = len2; i != 0;) {
+                i--;
+                s[i + len1] = (uint8_t)~v2->data[i];
+            }
+        } else memmove(s + len1, v2->data, len2);
+        memcpy(s, v1->data, len1);
+        v2->len = (ssize_t)(v1->len < 0 ? ~ln : ln);
+        return val_reference(Obj(v2));
     } else {
         v = new_bytes2(ln);
         if (v == NULL) goto failed;
