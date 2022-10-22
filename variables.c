@@ -768,9 +768,15 @@ void new_builtin(const char *symbol, Obj *val) {
 
 void init_variables(void)
 {
+    enum { BUILTIN_SIZE = 128 };
     struct linepos_s nopoint = {0, 0};
 
     builtin_namespace = new_namespace(NULL, &nopoint);
+    builtin_namespace->data = allocate_array(Label *, BUILTIN_SIZE);
+    if (builtin_namespace->data != NULL) {
+        memset(builtin_namespace->data, 0, BUILTIN_SIZE * sizeof *builtin_namespace->data);
+        builtin_namespace->mask = BUILTIN_SIZE - 1;
+    }
     root_namespace = new_namespace(NULL, &nopoint);
     cheap_context = ref_namespace(root_namespace);
 
