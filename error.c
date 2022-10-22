@@ -1432,7 +1432,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
             while (included_from->parent != &file_list) {
                 fputs((&included_from->flist == cflist) ? "In file included from " : "                      ", f);
                 if (console_use_color) console_bold(f);
-                printable_print((const uint8_t *)included_from->parent->flist.file->realname, f);
+                printable_print((const uint8_t *)included_from->parent->flist.file->name, f);
                 printline(&included_from->parent->flist, &included_from->flist.epoint, NULL, f);
                 included_from = included_from->parent;
                 if (console_use_color) console_default(f);
@@ -1441,7 +1441,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
             included_from = (const struct file_listnode_s *)cflist;
         }
         if (console_use_color) console_bold(f);
-        printable_print((const uint8_t *)cflist->file->realname, f);
+        printable_print((const uint8_t *)cflist->file->name, f);
         line = printline(cflist, epoint, (err->line_len != 0) ? (const uint8_t *)(err + 1) : NULL, f);
     } else {
         if (console_use_color) console_bold(f);
@@ -1610,7 +1610,6 @@ void err_init(const char *name) {
     file_listsp = 0;
     lastfl = &file_lists->file_lists[file_listsp];
     file_list_file.name = "";
-    file_list_file.realname = file_list_file.name;
     file_list_file.source.data = (uint8_t *)0;
     file_list_file.source.len = ~(filesize_t)0;
     file_list.flist.file = &file_list_file;

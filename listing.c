@@ -615,7 +615,7 @@ void listing_file(const char *txt, const struct file_s *file) {
         flushbuf(ls);
     };
     fputs(txt, ls->flist);
-    if (file != NULL) argv_print(file->realname, ls->flist);
+    if (file != NULL) argv_print(file->name, ls->flist);
     newline(ls);
     newline(ls);
 }

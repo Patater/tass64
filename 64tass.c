@@ -3675,7 +3675,7 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 1, 3, &epoint)) goto breakerr;
                         vs = get_val();
                         if (!tostr(vs, &filename)) {
-                            cfile2 = file_open(&filename, current_file_list->file->realname, FILE_OPEN_BINARY, &vs->epoint);
+                            cfile2 = file_open(&filename, current_file_list->file->name, FILE_OPEN_BINARY, &vs->epoint);
                         }
                         if ((vs = get_val()) != NULL) {
                             ival_t ival;
@@ -4270,7 +4270,7 @@ MUST_CHECK Obj *compile(void)
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
                     if (!tostr(vs, &filename)) {
-                        f = file_open(&filename, current_file_list->file->realname, FILE_OPEN_SOURCE, &vs->epoint);
+                        f = file_open(&filename, current_file_list->file->name, FILE_OPEN_SOURCE, &vs->epoint);
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
 
@@ -4878,7 +4878,7 @@ static void one_pass(int argc, char **argv, int opts) {
         star_tree = init_star((linenum_t)i);
 
         if (i == opts - 1) {
-            cfile = file_open(&cmdline_name, NULL, FILE_OPEN_COMMAND_LINE, &nopoint);
+            cfile = file_open(&cmdline_name, NULL, FILE_OPEN_DEFINES, &nopoint);
             if (cfile != NULL) {
                 cfile->open = true;
                 enterfile(cfile, &nopoint);
