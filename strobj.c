@@ -534,12 +534,11 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             if (op->inplace == Obj(v1)) {
                 s = extend_str(v1, ln);
                 if (s == NULL) break;
-                memcpy(s + v1->len, v2->data, v2->len);
+                s += v1->len;
                 v1->len = ln;
                 v1->chars += v2->chars;
-                return val_reference(Obj(v1));
-            }
-            if (op->inplace == Obj(v2)) {
+                v = ref_str(v1);
+            } else if (op->inplace == Obj(v2)) {
                 s = extend_str(v2, ln);
                 if (s == NULL) break;
                 memmove(s + v1->len, v2->data, v2->len);
@@ -547,13 +546,19 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
                 v2->len = ln;
                 v2->chars += v1->chars;
                 return val_reference(Obj(v2));
+            } else {
+                v = new_str2(ln);
+                if (v == NULL) break;
+                v->chars = v1->chars + v2->chars;
+                s = v->data;
+                memcpy(s, v1->data, v1->len);
+                s += v1->len;
             }
-            v = new_str2(ln);
-            if (v == NULL) break;
-            v->chars = v1->chars + v2->chars;
-            s = v->data;
-            memcpy(s, v1->data, v1->len);
-            memcpy(s + v1->len, v2->data, v2->len);
+            if (v2->len == 1) {
+                s[0] = v2->data[0];
+            } else {
+                memcpy(s, v2->data, v2->len);
+            }
             return Obj(v);
         } while (false);
         return new_error_mem(op->epoint3);
@@ -583,9 +588,13 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
         if (v == NULL) break;
         v->chars = v1->chars * rep;
         s = v->data;
-        while ((rep--) != 0) {
-            memcpy(s, v1->data, ln);
-            s += ln;
+        if (ln == 1) {
+            memset(s, v1->data[0], v->len);
+        } else {
+            while ((rep--) != 0) {
+                memcpy(s, v1->data, ln);
+                s += ln;
+            }
         }
         return Obj(v);
     } while (false);

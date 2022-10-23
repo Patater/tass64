@@ -1022,7 +1022,11 @@ static MUST_CHECK Obj *concat(oper_t op) {
     }
     if ((v2->len ^ v1->len) < 0) {
         for (i = 0; i < len2; i++) s[i + len1] = (uint8_t)~v2->data[i];
-    } else memcpy(s + len1, v2->data, len2);
+    } else if (len2 == 1) {
+        s[len1] = v2->data[0];
+    } else {
+        memcpy(s + len1, v2->data, len2);
+    }
     v->len = (ssize_t)(v1->len < 0 ? ~ln : ln);
     return Obj(v);
 failed:
@@ -1166,10 +1170,15 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
         v = new_bytes2(len1 * rep);
         if (v == NULL) break;
         s = v->data;
-        v->len = 0;
-        while ((rep--) != 0) {
-            memcpy(s + v->len, v1->data, len1);
-            v->len += (ssize_t)len1;
+        if (len1 == 1) {
+            v->len = rep;
+            memset(s, v1->data[0], v->len);
+        } else {
+            v->len = 0;
+            while ((rep--) != 0) {
+                memcpy(s + v->len, v1->data, len1);
+                v->len += (ssize_t)len1;
+            }
         }
         if (v1->len < 0) v->len = ~v->len;
         return Obj(v);
