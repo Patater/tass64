@@ -165,10 +165,10 @@ static uint8_t *extend_str(Str *v, size_t ln) {
         return v->u.val;
     }
     if (v->u.val != v->data) {
-        size_t ln2;
-        if (ln <= v->u.s.max) return v->data;
-        ln2 = ln + (ln < 1024 ? ln : 1024);
-        if (ln2 > ln) ln = ln2;
+        if (ln <= v->u.s.max) {
+            v->u.s.hash = -1;
+            return v->data;
+        }
         tmp = reallocate_array(v->data, ln);
         if (tmp != NULL) {
             v->data = tmp;
@@ -532,14 +532,24 @@ static MUST_CHECK Obj *calc2_str(oper_t op) {
             if (add_overflow(v1->len, v2->len, &ln)) break;
 
             if (op->inplace == Obj(v1)) {
-                s = extend_str(v1, ln);
+                size_t ln2;
+                if (ln > sizeof v1->u.val && v1->u.val != v1->data && ln > v1->u.s.max) {
+                    ln2 = ln + (ln < 1024 ? ln : 1024);
+                    if (ln2 < ln) ln2 = ln;
+                } else ln2 = ln;
+                s = extend_str(v1, ln2);
                 if (s == NULL) break;
                 s += v1->len;
                 v1->len = ln;
                 v1->chars += v2->chars;
                 v = ref_str(v1);
             } else if (op->inplace == Obj(v2)) {
-                s = extend_str(v2, ln);
+                size_t ln2;
+                if (ln > sizeof v2->u.val && v2->u.val != v2->data && ln > v2->u.s.max) {
+                    ln2 = ln + (ln < 1024 ? ln : 1024);
+                    if (ln2 < ln) ln2 = ln;
+                } else ln2 = ln;
+                s = extend_str(v2, ln2);
                 if (s == NULL) break;
                 memmove(s + v1->len, v2->data, v2->len);
                 memcpy(s, v1->data, v1->len);
@@ -577,23 +587,31 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
 
     if (v1->len == 0 || rep == 0) return val_reference(null_str);
     do {
-        uint8_t *s;
-        size_t ln;
+        size_t ln, sz;
         if (rep == 1) {
             return Obj(ref_str(v1));
         }
         ln = v1->len;
         if (ln > SIZE_MAX / rep) break; /* overflow */
-        v = new_str2(ln * rep);
-        if (v == NULL) break;
-        v->chars = v1->chars * rep;
-        s = v->data;
-        if (ln == 1) {
-            memset(s, v1->data[0], v->len);
+        sz = ln * rep;
+        if (op->inplace == Obj(v1)) {
+            if (extend_str(v1, sz) == NULL) break;
+            v = ref_str(v1);
+            v->len = sz;
         } else {
-            while ((rep--) != 0) {
-                memcpy(s, v1->data, ln);
-                s += ln;
+            v = new_str2(sz);
+            if (v == NULL) break;
+        }
+        v->chars = v1->chars * rep;
+        if (ln == 1) {
+            memset(v->data, v1->data[0], sz);
+        } else {
+            if (v->data != v1->data) memcpy(v->data, v1->data, ln);
+            while (sz > ln) {
+                size_t oln = ln;
+                if (ln > sz - ln) ln = sz - ln;
+                memcpy(v->data + oln, v->data, ln);
+                ln += oln;
             }
         }
         return Obj(v);
