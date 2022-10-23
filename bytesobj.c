@@ -1171,8 +1171,8 @@ static inline MUST_CHECK Obj *repeat(oper_t op) {
         if (v == NULL) break;
         s = v->data;
         if (len1 == 1) {
-            v->len = rep;
-            memset(s, v1->data[0], v->len);
+            v->len = (ssize_t)rep;
+            memset(s, v1->data[0], rep);
         } else {
             v->len = 0;
             while ((rep--) != 0) {
