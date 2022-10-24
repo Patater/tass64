@@ -268,7 +268,7 @@ void outputprint(const struct output_s *output, const struct section_s *l, FILE 
     argv_print(output->name, f);
     putc('\n', f);
     memprint(l->address.mem, f);
-    sectionprint(l, f);
+    if (l->members.root != NULL) sectionprint(l, f);
 }
 
 void section_sizecheck(const struct avltree_node *b) {
