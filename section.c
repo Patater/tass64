@@ -304,9 +304,11 @@ static unsigned int memblocklevel(const Memblocks *mem, unsigned int level) {
 
 void outputprint(const struct output_s *output, const struct section_s *l, FILE *f) {
     struct memblocks_print_s state;
-    fputs("Output file:       ", f);
-    argv_print(output->name, f);
-    putc('\n', f);
+    if (output->name != NULL) {
+        fputs("Output file:       ", f);
+        argv_print(output->name, f);
+        putc('\n', f);
+    }
 
     state.f = f;
     state.level = 0;

@@ -4981,7 +4981,6 @@ int main2(int *argc2, char **argv2[]) {
         for (j = 0; j < arguments.output_len; j++) {
             const struct output_s *output = &arguments.output[j];
             struct section_s *section, *parent;
-            if (output->name == NULL) continue;
             section = find_this_section(output->section);
             if (section == NULL) {
                 str_t sectionname;
@@ -4993,14 +4992,16 @@ int main2(int *argc2, char **argv2[]) {
             parent = section->parent;
             section->parent = NULL;
             if (arguments.quiet) outputprint(output, section, stdout);
-            if (j == arguments.output_len - 1) { 
-                output_mem(section->address.mem, output);
-            } else {
-                Memblocks *tmp = section->address.mem;
-                section->address.mem = copy_memblocks(tmp);
-                output_mem(tmp, output);
-                val_destroy(Obj(section->address.mem));
-                section->address.mem = tmp;
+            if (output->name != NULL) {
+                if (j == arguments.output_len - 1) {
+                    output_mem(section->address.mem, output);
+                } else {
+                    Memblocks *tmp = section->address.mem;
+                    section->address.mem = copy_memblocks(tmp);
+                    output_mem(tmp, output);
+                    val_destroy(Obj(section->address.mem));
+                    section->address.mem = tmp;
+                }
             }
             section->parent = parent;
         }
