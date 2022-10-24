@@ -4989,12 +4989,12 @@ int main2(int *argc2, char **argv2[]) {
             section->parent = NULL;
             if (j == arguments.output_len - 1) { 
                 output_mem(section->address.mem, output);
-                outputprint(output, section, stdout);
+                if (arguments.quiet) outputprint(output, section, stdout);
             } else {
                 Memblocks *tmp = section->address.mem;
                 section->address.mem = copy_memblocks(tmp);
                 output_mem(tmp, output);
-                outputprint(output, section, stdout);
+                if (arguments.quiet) outputprint(output, section, stdout);
                 val_destroy(Obj(section->address.mem));
                 section->address.mem = tmp;
             }
