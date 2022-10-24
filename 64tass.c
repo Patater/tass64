@@ -1089,6 +1089,7 @@ static bool section_start(linepos_t epoint) {
         val_destroy(Obj(tmp->address.mem));
         tmp->address.mem = new_memblocks(ln, ln2);
         tmp->address.mem->lastaddr = tmp->address.address;
+        tmp->address.mem->section = tmp;
         if (diagnostics.optimize) cpu_opt_invalidate();
     } else if (tmp->usepass != pass) {
         address_t ln = tmp->address.mem->mem.p;
@@ -1106,6 +1107,7 @@ static bool section_start(linepos_t epoint) {
         val_destroy(Obj(tmp->address.mem));
         tmp->address.mem = new_memblocks(ln, ln2);
         tmp->address.mem->lastaddr = tmp->address.address;
+        tmp->address.mem->section = tmp;
         if (diagnostics.optimize) cpu_opt_invalidate();
     }
     tmp->usepass = pass;
@@ -4609,6 +4611,7 @@ MUST_CHECK Obj *compile(void)
                             val_destroy(Obj(tmp3->address.mem));
                             tmp3->address.mem = new_memblocks(ln, ln2);
                             tmp3->address.mem->lastaddr = tmp3->address.address;
+                            tmp3->address.mem->section = tmp3;
                             if (diagnostics.optimize) cpu_opt_invalidate();
                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
                             fixeddig = false;
@@ -4663,14 +4666,15 @@ MUST_CHECK Obj *compile(void)
                             val_destroy(Obj(tmp3->address.mem));
                             tmp3->address.mem = new_memblocks(ln, ln2);
                             tmp3->address.mem->lastaddr = tmp3->address.address;
+                            tmp3->address.mem->section = tmp3;
                             if (diagnostics.optimize) cpu_opt_invalidate();
                         }
                         tmp3->usepass = pass;
                         tmp3->defpass = pass;
+                        memref(current_address->mem, tmp3->address.mem, current_address->address, t);
                         if (t != 0) {
                             memskip(t, &epoint);
                         }
-                        memref(current_address->mem, tmp3->address.mem);
                     }
                 }
                 break;
@@ -4973,6 +4977,7 @@ int main2(int *argc2, char **argv2[]) {
         failed = error_serious();
     }
     if (!failed) {
+        memclose(root_section.address.mem);
         for (j = 0; j < arguments.output_len; j++) {
             const struct output_s *output = &arguments.output[j];
             struct section_s *section, *parent;
@@ -4987,14 +4992,13 @@ int main2(int *argc2, char **argv2[]) {
             } 
             parent = section->parent;
             section->parent = NULL;
+            if (arguments.quiet) outputprint(output, section, stdout);
             if (j == arguments.output_len - 1) { 
                 output_mem(section->address.mem, output);
-                if (arguments.quiet) outputprint(output, section, stdout);
             } else {
                 Memblocks *tmp = section->address.mem;
                 section->address.mem = copy_memblocks(tmp);
                 output_mem(tmp, output);
-                if (arguments.quiet) outputprint(output, section, stdout);
                 val_destroy(Obj(section->address.mem));
                 section->address.mem = tmp;
             }

@@ -66,6 +66,7 @@ MALLOC Memblocks *new_memblocks(address_t ln, size_t ln2) {
     val->flattened = false;
     val->merged = false;
     val->enumeration = false;
+    val->section = NULL;
     return val;
 }
 
@@ -86,6 +87,8 @@ MALLOC Memblocks *copy_memblocks(Memblocks *m) {
     if (m->len == 0) val->data = NULL; else new_array(&val->data, m->len);
     val->flattened = m->flattened;
     val->merged = m->merged;
+    val->enumeration = m->enumeration;
+    val->section = m->section;
     for (i = 0; i < m->len; i++) {
         const struct memblock_s *b = &m->data[i];
         val->data[i] = m->data[i];

@@ -22,6 +22,8 @@
 #include "stdbool.h"
 #include "inttypes.h"
 
+struct section_s;
+
 extern struct Type *const MEMBLOCKS_OBJ;
 
 struct memblock_s { /* starts and sizes */
@@ -41,6 +43,7 @@ typedef struct Memblocks {
     address_t lastaddr;
     bool flattened, merged, enumeration;
     struct memblock_s *data;
+    const struct section_s *section;
 } Memblocks;
 
 #define Memblocks(a) OBJ_CAST(Memblocks, a)
