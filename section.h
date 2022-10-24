@@ -26,6 +26,7 @@
 struct Obj;
 struct Memblocks;
 struct optimizer_s;
+struct output_s;
 
 struct section_address_s {
     address_t address;
@@ -60,7 +61,6 @@ struct section_s {
     uint8_t logicalrecursion;
     bool declared;
     struct section_s *parent;
-    struct section_s *next;
     const struct file_list_s *file_list;
     struct optimizer_s *optimizer;
     struct linepos_s epoint;
@@ -74,8 +74,8 @@ extern struct section_s *find_this_section(const char *);
 extern void init_section(void);
 extern void destroy_section(void);
 extern void reset_section(struct section_s *);
-extern void sectionprint(FILE *);
-extern void section_sizecheck(void);
+extern void outputprint(const struct output_s *, const struct section_s *, FILE *);
+extern void section_sizecheck(const struct avltree_node *);
 extern struct section_s *current_section, root_section;
 extern struct section_address_s *current_address;
 #endif

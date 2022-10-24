@@ -175,7 +175,7 @@ registerobj.o: registerobj.c registerobj.h obj.h attributes.h inttypes.h \
  errorobj.h errors_e.h addressobj.h intobj.h error.h
 section.o: section.c section.h avl.h attributes.h stdbool.h str.h \
  inttypes.h unicode.h error.h errors_e.h 64tass.h wait_e.h values.h \
- intobj.h obj.h longjump.h optimizer.h eval.h oper_e.h mem.h \
+ intobj.h obj.h longjump.h optimizer.h eval.h oper_e.h mem.h arguments.h \
  memblocksobj.h
 str.o: str.c str.h inttypes.h unicode.h attributes.h stdbool.h error.h \
  errors_e.h arguments.h

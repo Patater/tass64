@@ -26,6 +26,7 @@
 #include "optimizer.h"
 #include "eval.h"
 #include "mem.h"
+#include "arguments.h"
 
 #include "memblocksobj.h"
 
@@ -106,9 +107,7 @@ struct section_s *new_section(const str_t *name) {
         lastsc->address.moved = false;
         lastsc->address.wrapwarn = false;
         lastsc->address.bankwarn = false;
-        lastsc->next = NULL;
         lastsc->optimizer = NULL;
-        prev_section->next = lastsc;
         prev_section = lastsc;
         lastsc->address.mem = new_memblocks(0, 0);
         avltree_init(&lastsc->members);
@@ -160,7 +159,6 @@ void init_section(void) {
     root_section.name.len = 0;
     root_section.cfname.data = NULL;
     root_section.cfname.len = 0;
-    root_section.next = NULL;
     root_section.optimizer = NULL;
     root_section.address.mem = new_memblocks(0, 0);
     root_section.address.l_address_val = val_reference(int_value[0]);
@@ -181,56 +179,120 @@ void destroy_section(void) {
 }
 
 static void sectionprint2(const struct section_s *l, FILE *f) {
-    if (l->name.data != NULL) {
+    if (l->parent != NULL && l->parent->parent != NULL) {
         sectionprint2(l->parent, f);
-        printable_print2(l->name.data, f, l->name.len);
         putc('.', f);
     }
+    printable_print2(l->name.data, f, l->name.len);
 }
 
 static void printrange(const struct section_s *l, FILE *f) {
     char temp[10], temp2[10], temp3[10];
+    const Memblocks *memblocks;
+    const char *d;
+    size_t i;
+    bool detail;
+
     sprintf(temp, "$%04" PRIaddress, l->address.start);
     temp2[0] = 0;
     if (l->size != 0) {
         sprintf(temp2, "-$%04" PRIaddress, l->address.start + l->size - 1U);
     }
     sprintf(temp3, "$%04" PRIaddress, l->size);
-    fprintf(f, "Section: %15s%-8s %-7s", temp, temp2, temp3);
-}
 
-void sectionprint(FILE *f) {
-    struct section_s *l = &root_section;
-
-    if (l->size != 0) {
-        printrange(l, f);
-        putc('\n', f);
-    }
-    memprint(l->address.mem, f);
-    l = root_section.next;
-    while (l != NULL) {
-        if (l->defpass == pass) {
-            printrange(l, f);
-            putc(' ', f);
-            sectionprint2(l->parent, f);
-            printable_print2(l->name.data, f, l->name.len);
-            putc('\n', f);
-            memprint(l->address.mem, f);
+    memblocks = l->address.mem;
+    detail = false;
+    d = "Gap section:";
+    if (memblocks->p != 0) {
+        address_t start = l->address.start;
+        address_t size = 0;
+        for (i = 0; i < memblocks->p; i++) {
+            const struct memblock_s *b = &memblocks->data[i];
+            address_t addr = start + size;
+            if (b->addr != addr || addr < start) break;
+            size += b->len;
         }
-        l = l->next;
+        detail = (size != l->size);
+        d = detail ? "Mixed section:" : "Data section:";
     }
+    fprintf(f, "%-14s%10s%-8s %-7s ", d, temp, temp2, temp3);
+    sectionprint2(l, f);
+    putc('\n', f);
+
+    if (detail) memprint(l->address.mem, f);
 }
 
-void section_sizecheck(void) {
-    struct section_s *l = root_section.next;
-    while (l != NULL) {
+static size_t section_enumerate(struct avltree_node *b, size_t n, struct section_s **sections) {
+    do {
+        struct section_s *s = avltree_container_of(b, struct section_s, node);
+        if (s->defpass == pass) {
+            if (sections != NULL) sections[n] = s;
+            n++;
+        }
+        if (b->left != NULL) {
+            if (b->right == NULL) {
+                b = b->left;
+                continue;
+            }
+            n = section_enumerate(b->left, n, sections);
+        }
+        b = b->right;
+    } while (b != NULL);
+    return n;
+}
+
+static int sectionscomp(const void *a, const void *b) {
+    const struct section_s *aa = *(const struct section_s **)a;
+    const struct section_s *bb = *(const struct section_s **)b;
+    if (aa->address.start != bb->address.start) return (aa->address.start > bb->address.start) ? 1 : -1;
+    if (aa->address.end != bb->address.end) return (aa->address.end > bb->address.end) ? 1 : -1;
+    return str_cmp(&aa->cfname, &bb->cfname);
+}
+
+static void sectionprint(const struct section_s *section, FILE *f) {
+    struct section_s **sections = NULL;
+    size_t i, ln = section_enumerate(section->members.root, 0, NULL);
+    new_array(&sections, ln);
+    section_enumerate(section->members.root, 0, sections);
+    qsort(sections, ln, sizeof *sections, sectionscomp);
+    for (i = 0; i < ln; i++) {
+        const struct section_s *l = sections[i];
+        printrange(l, f);
+        if (l->members.root != NULL) sectionprint(l, f);
+    }
+    free(sections);
+}
+
+void outputprint(const struct output_s *output, const struct section_s *l, FILE *f) {
+    fputs("Output file:       ", f);
+    argv_print(output->name, f);
+    putc('\n', f);
+    memprint(l->address.mem, f);
+    sectionprint(l, f);
+}
+
+void section_sizecheck(const struct avltree_node *b) {
+    do {
+        const struct section_s *l = cavltree_container_of(b, struct section_s, node);
         if (l->defpass == pass) {
             if (l->size != ((!l->address.moved && l->address.end < l->address.address) ? l->address.address : l->address.end) - l->address.start) {
                 if (pass > max_pass) err_msg_cant_calculate2(&l->name, l->file_list, &l->epoint);
                 fixeddig = false;
                 return;
             }
+            if (l->members.root != NULL) {
+                section_sizecheck(l->members.root);
+                if (!fixeddig) return;
+            }
         }
-        l = l->next;
-    }
+        if (b->left != NULL) {
+            if (b->right == NULL) {
+                b = b->left;
+                continue;
+            }
+            section_sizecheck(b->left);
+            if (!fixeddig) return;
+        } 
+        b = b->right;
+    } while (b != NULL);
 }

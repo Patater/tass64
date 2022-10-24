@@ -4912,7 +4912,7 @@ static void one_pass(int argc, char **argv, int opts) {
     }
     ref_labels();
     if (fwcount != 0 || efwcount != 0) fixeddig = false;
-    if (fixeddig) section_sizecheck();
+    if (fixeddig && root_section.members.root != NULL) section_sizecheck(root_section.members.root);
     /*garbage_collect();*/
 }
 
@@ -4975,19 +4975,30 @@ int main2(int *argc2, char **argv2[]) {
     if (!failed) {
         for (j = 0; j < arguments.output_len; j++) {
             const struct output_s *output = &arguments.output[j];
-            struct section_s *section = find_this_section(output->section);
+            struct section_s *section, *parent;
+            if (output->name == NULL) continue;
+            section = find_this_section(output->section);
             if (section == NULL) {
                 str_t sectionname;
                 sectionname.data = pline;
                 sectionname.len = lpoint.pos;
                 err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
-            } else if (j == arguments.output_len - 1) { 
+                continue;
+            } 
+            parent = section->parent;
+            section->parent = NULL;
+            if (j == arguments.output_len - 1) { 
                 output_mem(section->address.mem, output);
+                outputprint(output, section, stdout);
             } else {
-                Memblocks *tmp = copy_memblocks(section->address.mem);
+                Memblocks *tmp = section->address.mem;
+                section->address.mem = copy_memblocks(tmp);
                 output_mem(tmp, output);
-                val_destroy(Obj(tmp));
+                outputprint(output, section, stdout);
+                val_destroy(Obj(section->address.mem));
+                section->address.mem = tmp;
             }
+            section->parent = parent;
         }
         failed = error_serious();
     }
@@ -4995,8 +5006,7 @@ int main2(int *argc2, char **argv2[]) {
     error_print(&arguments.error);
     if (arguments.quiet) {
         error_status();
-        printf("Passes:            %u\n",pass);
-        if (!failed) sectionprint(stdout);
+        printf("Passes:            %u\n", pass);
         fflush(stdout);
     }
     compile_destroy();
