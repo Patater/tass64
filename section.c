@@ -33,7 +33,6 @@
 struct section_s root_section;
 struct section_s *current_section = &root_section;
 struct section_address_s *current_address = &root_section.address;
-static struct section_s *prev_section;
 
 static FAST_CALL int section_compare(const struct avltree_node *aa, const struct avltree_node *bb)
 {
@@ -108,7 +107,6 @@ struct section_s *new_section(const str_t *name) {
         lastsc->address.wrapwarn = false;
         lastsc->address.bankwarn = false;
         lastsc->optimizer = NULL;
-        prev_section = lastsc;
         lastsc->address.mem = new_memblocks(0, 0);
         avltree_init(&lastsc->members);
         avltree_init(&lastsc->longjump);
@@ -164,7 +162,6 @@ void init_section(void) {
     root_section.address.l_address_val = val_reference(int_value[0]);
     avltree_init(&root_section.members);
     avltree_init(&root_section.longjump);
-    prev_section = &root_section;
 }
 
 void destroy_section(void) {
