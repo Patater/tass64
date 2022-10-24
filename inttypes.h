@@ -87,7 +87,8 @@ typedef uint32_t linenum_t;
 #define PRIuline PRIu32
 #define PRIxline PRIx32
 typedef uint32_t address_t;
-#define PRIaddress PRIx32
+#define PRIuaddress PRIu32
+#define PRIxaddress PRIx32
 typedef uint32_t linecpos_t;
 struct linepos_s {linenum_t line;linecpos_t pos;};
 #define PRIlinepos PRIu32

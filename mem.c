@@ -157,9 +157,9 @@ void memprint(Memblocks *memblocks, FILE *f) {
             if (b->addr != addr || addr < start) break;
             size += b->len;
         }
-        sprintf(temp, "$%04" PRIaddress, start);
-        sprintf(temp2, "$%04" PRIaddress, start + size - 1U);
-        fprintf(f, "Memory range: %10s-%-7s $%04" PRIaddress "\n", temp, temp2, size);
+        sprintf(temp, "$%04" PRIxaddress, start);
+        sprintf(temp2, "$%04" PRIxaddress, start + size - 1U);
+        fprintf(f, "Memory range: %10s-%-7s $%04" PRIxaddress "\n", temp, temp2, size);
     }
 }
 

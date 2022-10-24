@@ -1325,7 +1325,7 @@ void err_msg_branch_page(int by, linepos_t epoint) {
 void err_msg_page(address_t adr, address_t adr2, linepos_t epoint) {
     char line[256];
     new_error_msg2(diagnostic_errors.page, epoint);
-    sprintf(line,"different start and end page $%04" PRIaddress " and $%04" PRIaddress " [-Wpage]", adr, adr2);
+    sprintf(line,"different start and end page $%04" PRIxaddress " and $%04" PRIxaddress " [-Wpage]", adr, adr2);
     adderror(line);
 }
 
