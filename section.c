@@ -222,9 +222,9 @@ static void printrange(const struct section_s *l, FILE *f) {
     if (detail) memprint(l->address.mem, f);
 }
 
-static size_t section_enumerate(struct avltree_node *b, size_t n, struct section_s **sections) {
+static size_t section_enumerate(const struct avltree_node *b, size_t n, const struct section_s **sections) {
     do {
-        struct section_s *s = avltree_container_of(b, struct section_s, node);
+        const struct section_s *s = cavltree_container_of(b, struct section_s, node);
         if (s->defpass == pass) {
             if (sections != NULL) sections[n] = s;
             n++;
@@ -249,16 +249,16 @@ static int sectionscomp(const void *a, const void *b) {
     return str_cmp(&aa->cfname, &bb->cfname);
 }
 
-static void sectionprint(const struct section_s *section, FILE *f) {
-    struct section_s **sections = NULL;
-    size_t i, ln = section_enumerate(section->members.root, 0, NULL);
+static void sectionprint(const struct avltree_node *b, FILE *f) {
+    const struct section_s **sections = NULL;
+    size_t i, ln = section_enumerate(b, 0, NULL);
     new_array(&sections, ln);
-    section_enumerate(section->members.root, 0, sections);
+    section_enumerate(b, 0, sections);
     qsort(sections, ln, sizeof *sections, sectionscomp);
     for (i = 0; i < ln; i++) {
         const struct section_s *l = sections[i];
         printrange(l, f);
-        if (l->members.root != NULL) sectionprint(l, f);
+        if (l->members.root != NULL) sectionprint(l->members.root, f);
     }
     free(sections);
 }
@@ -268,7 +268,7 @@ void outputprint(const struct output_s *output, const struct section_s *l, FILE 
     argv_print(output->name, f);
     putc('\n', f);
     memprint(l->address.mem, f);
-    if (l->members.root != NULL) sectionprint(l, f);
+    if (l->members.root != NULL) sectionprint(l->members.root, f);
 }
 
 void section_sizecheck(const struct avltree_node *b) {
