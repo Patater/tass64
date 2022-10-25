@@ -24,6 +24,7 @@
 #include "section.h"
 #include "unicode.h"
 #include "arguments.h"
+#include "version.h"
 
 #include "typeobj.h"
 
@@ -241,6 +242,12 @@ void memorymapfile(const Memblocks *mem, const struct output_s *output) {
         return;
     }
     clearerr(state.f); errno = 0;
+
+    if (!arguments.quiet || state.f != stdout) {
+        fputs("\n64tass Turbo Assembler Macro V" VERSION " memory map file\nFor output file: ", state.f);
+        argv_print(output->name, state.f);
+        fputs("\n\n          Length      Range      Length  Name\n", state.f);
+    }
 
     state.level = 0;
     state.max = memblocklevel(mem, 0);
