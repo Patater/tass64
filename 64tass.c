@@ -4989,7 +4989,7 @@ int main2(int *argc2, char **argv2[]) {
                 err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
                 continue;
             } 
-            if (output->name != NULL) {
+            if (arguments.quiet && output->name != NULL) {
                 fputs("Output file:       ", stdout);
                 argv_print(output->name, stdout);
                 putc('\n', stdout);
