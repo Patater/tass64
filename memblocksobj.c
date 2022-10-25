@@ -157,16 +157,17 @@ static int memblockprintcomp(const void *a, const void *b) {
     return aa > bb ? 1 : -1;
 }
 
-static void memblockprint(const Memblocks *mem, struct memblocks_print_s *state) {
+static bool memblockprint(const Memblocks *mem, struct memblocks_print_s *state) {
     const struct memblock_s **memblocks;
     size_t i, ln;
     address_t addr, end;
     bool root;
+    bool data = false;
 
     ln = mem->p;
     if (ln == 0) {
         sectionprint(state);
-        return;
+        return data;
     }
     new_array(&memblocks, ln);
     for (i = 0; i < ln; i++) memblocks[i] = mem->data + i;
@@ -184,7 +185,7 @@ static void memblockprint(const Memblocks *mem, struct memblocks_print_s *state)
         const struct memblock_s *block = memblocks[i];
         address_t start = block->addr;
         if (start > addr) {
-            if (i != 0 || !root) { 
+            if (data || !root) {
                 sectionprint(state);
                 rangeprint(state->level == 0 ? "Gap: %11" PRIuaddress " %7s%-8s %s" : "Gap: %11" PRIuaddress " %7s%-8s %-7s ", addr, start - addr, state->f);
                 sectionprint3(state);
@@ -197,7 +198,7 @@ static void memblockprint(const Memblocks *mem, struct memblocks_print_s *state)
             sectionprint(state);
             state->level++;
             state->section = block->ref->section;
-            memblockprint(block->ref, state);
+            if (memblockprint(block->ref, state)) data = true;
             state->level--;
             continue;
         }
@@ -210,13 +211,15 @@ static void memblockprint(const Memblocks *mem, struct memblocks_print_s *state)
         if (i != ln || (end > addr && !root)) sectionprint(state);
         rangeprint(state->section == NULL && state->level == 0 ? "Data: %10" PRIuaddress " %7s%-8s %s" : "Data: %10" PRIuaddress " %7s%-8s %-7s ", start, addr - start, state->f);
         sectionprint3(state);
+        data = true;
     }
+    free(memblocks);
     if (end > addr && !root) {
         rangeprint(state->section == NULL && state->level == 0 ? "Gap: %11" PRIuaddress " %7s%-8s %s" : "Gap: %11" PRIuaddress " %7s%-8s %-7s ", addr, end - addr, state->f);
         sectionprint3(state);
     }
     sectionprint(state);
-    free(memblocks);
+    return data;
 }
 
 static unsigned int memblocklevel(const Memblocks *mem, unsigned int level) {
