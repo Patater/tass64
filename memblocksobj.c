@@ -161,6 +161,10 @@ static void memblockprint(const Memblocks *mem, struct memblocks_print_s *state)
     bool root;
 
     ln = mem->p;
+    if (ln == 0) {
+        sectionprint(state);
+        return;
+    }
     new_array(&memblocks, ln);
     for (i = 0; i < ln; i++) memblocks[i] = mem->data + i;
     qsort(memblocks, ln, sizeof *memblocks, memblockprintcomp);
