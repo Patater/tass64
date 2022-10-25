@@ -18,7 +18,6 @@
 */
 #ifndef SECTION_H
 #define SECTION_H
-#include <stdio.h>
 #include "avl.h"
 #include "stdbool.h"
 #include "str.h"
@@ -74,7 +73,6 @@ extern struct section_s *find_this_section(const char *);
 extern void init_section(void);
 extern void destroy_section(void);
 extern void reset_section(struct section_s *);
-extern void outputprint(const struct output_s *, const struct section_s *, FILE *);
 extern void section_sizecheck(const struct avltree_node *);
 extern struct section_s *current_section, root_section;
 extern struct section_address_s *current_address;

@@ -18,6 +18,7 @@
 */
 #ifndef MEMBLOCKSOBJ_H
 #define MEMBLOCKSOBJ_H
+#include <stdio.h>
 #include "obj.h"
 #include "stdbool.h"
 #include "inttypes.h"
@@ -56,4 +57,5 @@ static inline Memblocks *ref_memblocks(Memblocks *v1) {
 
 extern MALLOC Memblocks *new_memblocks(address_t, size_t);
 extern MALLOC Memblocks *copy_memblocks(Memblocks *);
+extern void memorymapfile(const Memblocks *, FILE *);
 #endif

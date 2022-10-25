@@ -18,9 +18,7 @@
 */
 #ifndef MEM_H
 #define MEM_H
-#include <stdio.h>
 #include "attributes.h"
-#include "stdbool.h"
 #include "inttypes.h"
 
 struct Memblocks;

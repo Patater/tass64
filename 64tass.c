@@ -4989,9 +4989,14 @@ int main2(int *argc2, char **argv2[]) {
                 err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
                 continue;
             } 
+            if (output->name != NULL) {
+                fputs("Output file:       ", stdout);
+                argv_print(output->name, stdout);
+                putc('\n', stdout);
+            }
             parent = section->parent;
             section->parent = NULL;
-            if (arguments.quiet) outputprint(output, section, stdout);
+            if (arguments.quiet) memorymapfile(section->address.mem, stdout);
             if (output->name != NULL) {
                 if (j == arguments.output_len - 1) {
                     output_mem(section->address.mem, output);

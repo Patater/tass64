@@ -20,6 +20,8 @@
 #include <string.h>
 #include "values.h"
 #include "error.h"
+#include "section.h"
+#include "unicode.h"
 
 #include "typeobj.h"
 
@@ -96,6 +98,141 @@ MALLOC Memblocks *copy_memblocks(Memblocks *m) {
     }
     return val;
 }
+
+struct memblocks_print_s {
+    FILE *f;
+    unsigned int level;
+    unsigned int max;
+    const struct section_s *section;
+};
+
+static void sectionprint2(const struct section_s *section, FILE *f) {
+    if (section->parent != NULL && section->parent->parent != NULL) {
+        sectionprint2(section->parent, f);
+        putc('.', f);
+    }
+    printable_print2(section->name.data, f, section->name.len);
+}
+
+static void rangeprint(const char *format, address_t start, address_t size, FILE *f) {
+    char temp[10], temp2[10], temp3[10];
+
+    sprintf(temp, "$%04" PRIxaddress, start);
+    temp2[0] = 0;
+    if (size != 0) {
+        sprintf(temp2, "-$%04" PRIxaddress, start + size - 1U);
+    }
+    sprintf(temp3, "$%04" PRIxaddress, size);
+
+    fprintf(f, format, size, temp, temp2, temp3);
+}
+
+static void sectionprint3(struct memblocks_print_s *state) {
+    unsigned int i;
+    for (i = (state->section != NULL) ? 1 : 0; i < state->level; i++) putc('|', state->f);
+    if (state->section != NULL) {
+        putc('.', state->f);
+        for (; i < state->max; i++) putc('-', state->f);
+        sectionprint2(state->section, state->f);
+        state->section = NULL;
+    }
+    putc('\n', state->f);
+}
+
+static void sectionprint(struct memblocks_print_s *state) {
+    if (state->section != NULL) {
+        rangeprint("Section:%8" PRIuaddress " %7s%-8s %-7s ", state->section->address.start, state->section->size, state->f);
+        sectionprint3(state);
+    }
+}
+
+static int memblockprintcomp(const void *a, const void *b) {
+    const struct memblock_s *aa = *(const struct memblock_s **)a;
+    const struct memblock_s *bb = *(const struct memblock_s **)b;
+    if (aa->addr != bb->addr) return (aa->addr > bb->addr) ? 1 : -1;
+    if ((aa->ref == NULL) == (bb->ref == NULL) && aa->len != bb->len) return (aa->len > bb->len) ? 1 : -1;
+    return aa > bb ? 1 : -1;
+}
+
+static void memblockprint(const Memblocks *mem, struct memblocks_print_s *state) {
+    const struct memblock_s **memblocks;
+    size_t i, ln;
+    address_t addr, end;
+    bool root;
+
+    ln = mem->p;
+    new_array(&memblocks, ln);
+    for (i = 0; i < ln; i++) memblocks[i] = mem->data + i;
+    qsort(memblocks, ln, sizeof *memblocks, memblockprintcomp);
+
+    root = (state->section == NULL);
+    if (root) {
+        addr = end = 0;
+    } else {
+        addr = state->section->address.start;
+        end = state->section->address.start + state->section->size;
+    }
+    i = 0;
+    while (i < ln) {
+        const struct memblock_s *block = memblocks[i];
+        address_t start = block->addr;
+        if (start > addr) {
+            if (i != 0 || !root) { 
+                sectionprint(state);
+                rangeprint(state->level == 0 ? "Gap: %11" PRIuaddress " %7s%-8s %s" : "Gap: %11" PRIuaddress " %7s%-8s %-7s ", addr, start - addr, state->f);
+                sectionprint3(state);
+            }
+        }
+        if (block->addr + block->len > addr) addr = block->addr + block->len;
+
+        i++;
+        if (block->ref != NULL) {
+            sectionprint(state);
+            state->level++;
+            state->section = block->ref->section;
+            memblockprint(block->ref, state);
+            state->level--;
+            continue;
+        }
+        for (; i < ln; i++) {
+            block = memblocks[i];
+            if (block->ref != NULL) break;
+            if (block->addr > addr) break;
+            if (block->addr + block->len > addr) addr = block->addr + block->len;
+        }
+        if (i != ln || (end > addr && !root)) sectionprint(state);
+        rangeprint(state->section == NULL && state->level == 0 ? "Data: %10" PRIuaddress " %7s%-8s %s" : "Data: %10" PRIuaddress " %7s%-8s %-7s ", start, addr - start, state->f);
+        sectionprint3(state);
+    }
+    if (end > addr && !root) {
+        rangeprint(state->section == NULL && state->level == 0 ? "Gap: %11" PRIuaddress " %7s%-8s %s" : "Gap: %11" PRIuaddress " %7s%-8s %-7s ", addr, end - addr, state->f);
+        sectionprint3(state);
+    }
+    sectionprint(state);
+    free(memblocks);
+}
+
+static unsigned int memblocklevel(const Memblocks *mem, unsigned int level) {
+    size_t i;
+    unsigned int next, ret = level;
+    for (i = 0; i < mem->p; i++) {
+        const struct memblock_s *block = mem->data + i;
+        if (block->ref == NULL) continue;
+        next = memblocklevel(block->ref, level + 1);
+        if (next > ret) ret = next;
+    }
+    return ret;
+}
+
+void memorymapfile(const Memblocks *mem, FILE *f) {
+    struct memblocks_print_s state;
+    state.f = f;
+    state.level = 0;
+    state.max = memblocklevel(mem, 0);
+    state.section = NULL;
+    memblockprint(mem, &state);
+}
+
 
 void memblocksobj_init(void) {
     Type *type = new_type(&obj, T_MEMBLOCKS, "memblocks", sizeof(Memblocks));
