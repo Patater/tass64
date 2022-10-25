@@ -590,10 +590,6 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     int oldmode = -1;
 #endif
 
-    memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC || output->mode == OUTPUT_MHEX);
-
-    if (output->name == NULL) return;
-
     if (dash_name(output->name)) {
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
         if (binary) oldmode = setmode(STDOUT_FILENO, O_BINARY);
@@ -606,6 +602,8 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
         err_msg_file2(ERROR_CANT_WRTE_OBJ, output->name);
         return;
     }
+    memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC || output->mode == OUTPUT_MHEX);
+
     clearerr(fout); errno = 0;
     switch (output->mode) {
     case OUTPUT_FLAT: output_mem_flat(fout, memblocks); break;
