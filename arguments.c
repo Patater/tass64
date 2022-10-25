@@ -492,8 +492,20 @@ static address_t check_outputs(const char *defmap) {
         case OUTPUT_APPLE:
         case OUTPUT_XEX: min &= 0xffff; break;
         }
+        if (tostdout) continue;
         if (output->name != NULL && dash_name(output->name)) tostdout = true;
         if (output->mapname != NULL && dash_name(output->mapname)) tostdout = true;
+    }
+    if (arguments.list.name != NULL && dash_name(arguments.list.name)) tostdout = true;
+    if (arguments.make != NULL && dash_name(arguments.make)) tostdout = true;
+    if (!tostdout) {
+        for (i = 0; i < arguments.symbol_output_len; i++) {
+            struct symbol_output_s *symbol_output = &arguments.symbol_output[i];
+            if (dash_name(symbol_output->name)) {
+                tostdout = true;
+                break;
+            }
+        }
     }
     if (tostdout) arguments.quiet = false;
     else setvbuf(stdout, NULL, _IOLBF, 1024);
@@ -536,7 +548,7 @@ int testarg(int *argc2, char **argv2[]) {
     size_t defines_p = 0;
     int max = 10;
     bool again;
-    char defmap;
+    char defmap = 0;
     struct symbol_output_s symbol_output = { NULL, NULL, LABEL_64TASS, false };
     struct output_s output = { "a.out", NULL, &defmap, OUTPUT_CBM, false, false, false };
 
