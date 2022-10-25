@@ -158,20 +158,10 @@ static int memblockprintcomp(const void *a, const void *b) {
 }
 
 static bool memblockprint(const Memblocks *mem, struct memblocks_print_s *state) {
-    const struct memblock_s **memblocks;
-    size_t i, ln;
+    size_t ln;
     address_t addr, end;
     bool root;
     bool data = false;
-
-    ln = mem->p;
-    if (ln == 0) {
-        sectionprint(state);
-        return data;
-    }
-    new_array(&memblocks, ln);
-    for (i = 0; i < ln; i++) memblocks[i] = mem->data + i;
-    qsort(memblocks, ln, sizeof *memblocks, memblockprintcomp);
 
     root = (state->section == NULL);
     if (root) {
@@ -180,40 +170,48 @@ static bool memblockprint(const Memblocks *mem, struct memblocks_print_s *state)
         addr = state->section->address.start;
         end = state->section->address.start + state->section->size;
     }
-    i = 0;
-    while (i < ln) {
-        const struct memblock_s *block = memblocks[i];
-        address_t start = block->addr;
-        if (start > addr) {
-            if (data || !root) {
-                sectionprint(state);
-                rangeprint(state->level == 0 ? "Gap: %11" PRIuaddress " %7s%-8s %s" : "Gap: %11" PRIuaddress " %7s%-8s %-7s ", addr, start - addr, state->f);
-                sectionprint3(state);
+    ln = mem->p;
+    if (ln != 0) {
+        const struct memblock_s **memblocks;
+        size_t i;
+        new_array(&memblocks, ln);
+        for (i = 0; i < ln; i++) memblocks[i] = mem->data + i;
+        qsort(memblocks, ln, sizeof *memblocks, memblockprintcomp);
+        i = 0;
+        while (i < ln) {
+            const struct memblock_s *block = memblocks[i];
+            address_t start = block->addr;
+            if (start > addr) {
+                if (data || !root) {
+                    sectionprint(state);
+                    rangeprint(state->level == 0 ? "Gap: %11" PRIuaddress " %7s%-8s %s" : "Gap: %11" PRIuaddress " %7s%-8s %-7s ", addr, start - addr, state->f);
+                    sectionprint3(state);
+                }
             }
-        }
-        if (block->addr + block->len > addr) addr = block->addr + block->len;
-
-        i++;
-        if (block->ref != NULL) {
-            sectionprint(state);
-            state->level++;
-            state->section = block->ref->section;
-            if (memblockprint(block->ref, state)) data = true;
-            state->level--;
-            continue;
-        }
-        for (; i < ln; i++) {
-            block = memblocks[i];
-            if (block->ref != NULL) break;
-            if (block->addr > addr) break;
             if (block->addr + block->len > addr) addr = block->addr + block->len;
+
+            i++;
+            if (block->ref != NULL) {
+                sectionprint(state);
+                state->level++;
+                state->section = block->ref->section;
+                if (memblockprint(block->ref, state)) data = true;
+                state->level--;
+                continue;
+            }
+            for (; i < ln; i++) {
+                block = memblocks[i];
+                if (block->ref != NULL) break;
+                if (block->addr > addr) break;
+                if (block->addr + block->len > addr) addr = block->addr + block->len;
+            }
+            if (i != ln || (end > addr && !root)) sectionprint(state);
+            rangeprint(state->section == NULL && state->level == 0 ? "Data: %10" PRIuaddress " %7s%-8s %s" : "Data: %10" PRIuaddress " %7s%-8s %-7s ", start, addr - start, state->f);
+            sectionprint3(state);
+            data = true;
         }
-        if (i != ln || (end > addr && !root)) sectionprint(state);
-        rangeprint(state->section == NULL && state->level == 0 ? "Data: %10" PRIuaddress " %7s%-8s %s" : "Data: %10" PRIuaddress " %7s%-8s %-7s ", start, addr - start, state->f);
-        sectionprint3(state);
-        data = true;
+        free(memblocks);
     }
-    free(memblocks);
     if (end > addr && !root) {
         rangeprint(state->section == NULL && state->level == 0 ? "Gap: %11" PRIuaddress " %7s%-8s %s" : "Gap: %11" PRIuaddress " %7s%-8s %-7s ", addr, end - addr, state->f);
         sectionprint3(state);
