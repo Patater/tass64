@@ -4996,7 +4996,7 @@ int main2(int *argc2, char **argv2[]) {
             }
             parent = section->parent;
             section->parent = NULL;
-            if (arguments.quiet) memorymapfile(section->address.mem, stdout);
+            memorymapfile(section->address.mem, output);
             if (output->name != NULL) {
                 if (j == arguments.output_len - 1) {
                     output_mem(section->address.mem, output);

@@ -18,12 +18,12 @@
 */
 #ifndef MEMBLOCKSOBJ_H
 #define MEMBLOCKSOBJ_H
-#include <stdio.h>
 #include "obj.h"
 #include "stdbool.h"
 #include "inttypes.h"
 
 struct section_s;
+struct output_s;
 
 extern struct Type *const MEMBLOCKS_OBJ;
 
@@ -57,5 +57,5 @@ static inline Memblocks *ref_memblocks(Memblocks *v1) {
 
 extern MALLOC Memblocks *new_memblocks(address_t, size_t);
 extern MALLOC Memblocks *copy_memblocks(Memblocks *);
-extern void memorymapfile(const Memblocks *, FILE *);
+extern void memorymapfile(const Memblocks *, const struct output_s *);
 #endif

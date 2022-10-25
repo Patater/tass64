@@ -18,10 +18,12 @@
 */
 #include "memblocksobj.h"
 #include <string.h>
+#include <errno.h>
 #include "values.h"
 #include "error.h"
 #include "section.h"
 #include "unicode.h"
+#include "arguments.h"
 
 #include "typeobj.h"
 
@@ -228,13 +230,26 @@ static unsigned int memblocklevel(const Memblocks *mem, unsigned int level) {
     return ret;
 }
 
-void memorymapfile(const Memblocks *mem, FILE *f) {
+void memorymapfile(const Memblocks *mem, const struct output_s *output) {
     struct memblocks_print_s state;
-    state.f = f;
+    int err;
+    if (output->mapname == NULL) return;
+
+    state.f = dash_name(output->mapname) ? stdout : fopen_utf8(output->mapname, output->mapappend ? "at" : "wt");
+    if (state.f == NULL) {
+        err_msg_file2(ERROR_CANT_WRTE_MAP, output->mapname);
+        return;
+    }
+    clearerr(state.f); errno = 0;
+
     state.level = 0;
     state.max = memblocklevel(mem, 0);
     state.section = NULL;
     memblockprint(mem, &state);
+
+    err = ferror(state.f);
+    err |= (state.f != stdout) ? fclose(state.f) : fflush(state.f);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAP, output->mapname);
 }
 
 

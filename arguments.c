@@ -338,7 +338,8 @@ enum {
     OUTPUT_SECTION, M4510, MW65C02, MR65C02, M65CE02, M65XX, NO_LONG_BRANCH,
     NO_CASE_SENSITIVE, NO_TASM_COMPATIBLE, NO_ASCII, CBM_PRG, S_RECORD,
     INTEL_HEX, APPLE_II, ATARI_XEX, MOS_HEX, NO_LONG_ADDRESS, NO_QUIET, WARN,
-    OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND
+    OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND, MAP,
+    NO_MAP, MAP_APPEND
 };
 
 static const struct my_option long_options[] = {
@@ -381,6 +382,9 @@ static const struct my_option long_options[] = {
     {"no-output"        , my_no_argument      , NULL,  NO_OUTPUT},
     {"output-append"    , my_required_argument, NULL,  OUTPUT_APPEND},
     {"output-section"   , my_required_argument, NULL,  OUTPUT_SECTION},
+    {"map"              , my_required_argument, NULL,  MAP},
+    {"no-map"           , my_no_argument      , NULL,  NO_MAP},
+    {"map-append"       , my_required_argument, NULL,  MAP_APPEND},
     {"error"            , my_required_argument, NULL, 'E'},
     {"no-error"         , my_no_argument      , NULL,  NO_ERROR},
     {"error-append"     , my_required_argument, NULL,  ERROR_APPEND},
@@ -471,7 +475,7 @@ static MUST_CHECK char *read_one(FILE *f) {
     return (char *)data;
 }
 
-static address_t get_all_mem2(void) {
+static address_t check_outputs(const char *defmap) {
     size_t i;
     bool tostdout = false;
     address_t min = 0xffffffff;
@@ -489,9 +493,16 @@ static address_t get_all_mem2(void) {
         case OUTPUT_XEX: min &= 0xffff; break;
         }
         if (output->name != NULL && dash_name(output->name)) tostdout = true;
+        if (output->mapname != NULL && dash_name(output->mapname)) tostdout = true;
     }
     if (tostdout) arguments.quiet = false;
     else setvbuf(stdout, NULL, _IOLBF, 1024);
+    for (i = 0; i < arguments.output_len; i++) {
+        struct output_s *output = &arguments.output[i];
+        if (output->mapname != defmap) continue;
+        output->mapname = arguments.quiet ? "-" : NULL;
+        output->mapappend = false;
+    }
     return min;
 }
 
@@ -525,8 +536,9 @@ int testarg(int *argc2, char **argv2[]) {
     size_t defines_p = 0;
     int max = 10;
     bool again;
+    char defmap;
     struct symbol_output_s symbol_output = { NULL, NULL, LABEL_64TASS, false };
-    struct output_s output = { "a.out", NULL, OUTPUT_CBM, false, false };
+    struct output_s output = { "a.out", NULL, &defmap, OUTPUT_CBM, false, false, false };
 
     do {
         int i;
@@ -564,8 +576,12 @@ int testarg(int *argc2, char **argv2[]) {
                       extend_array(&arguments.output, &arguments.output_len, 1);
                       arguments.output[arguments.output_len - 1] = output;
                       output.section = NULL;
+                      output.mapname = &defmap;
                       break;
             case OUTPUT_SECTION:output.section = my_optarg; break;
+            case MAP_APPEND:
+            case MAP: output.mapname = my_optarg; output.mapappend = (opt == MAP_APPEND); break;
+            case NO_MAP:output.mapname = NULL; break;
             case CARET_DIAG:arguments.error.caret = CARET_ALWAYS;break;
             case MACRO_CARET_DIAG:arguments.error.caret = CARET_MACRO;break;
             case NO_CARET_DIAG:arguments.error.caret = CARET_NEVER;break;
@@ -644,8 +660,8 @@ int testarg(int *argc2, char **argv2[]) {
                "        [--vice-labels-numeric] [--dump-labels] [--list=<file>] [--no-monitor]\n"
                "        [--no-source] [--line-numbers] [--tab-size=<value>] [--verbose-list]\n"
                "        [--dependencies=<file>] [--make-phony] [-W<option>] [--errors=<file>]\n"
-               "        [--output=<file>] [--output-append=<file>] [--no-output] [--help]\n"
-               "        [--usage] [--version] SOURCES");
+               "        [--output=<file>] [--output-append=<file>] [--no-output] [--map=<file>]\n"
+               "        [--map-append=<file>] [--no-map] [--help] [--usage] [--version] SOURCES");
                    return 0;
 
             case 'V':puts("64tass Turbo Assembler Macro V" VERSION);
@@ -716,6 +732,9 @@ int testarg(int *argc2, char **argv2[]) {
                "      --output-append=<f> Append output to <file>\n"
                "      --no-output        Do not create an output file\n"
                "      --output-section=<n> Output this section only\n"
+               "      --map=<f>          Place output map into <file>\n"
+               "      --map-append=<f>   Append output map to <file>\n"
+               "      --no-map           Do not create a map file\n"
                "  -b, --nostart          Strip starting address\n"
                "  -f, --flat             Generate flat output file\n"
                "  -n, --nonlinear        Generate nonlinear output file\n"
@@ -824,12 +843,15 @@ int testarg(int *argc2, char **argv2[]) {
         arguments.output[0] = output;
         arguments.output_len = 1;
     } else {
-        arguments.output[arguments.output_len - 1].mode = output.mode;
-        if (output.section != NULL) arguments.output[arguments.output_len - 1].section = NULL;
-        arguments.output[arguments.output_len - 1].longaddr = output.longaddr;
+        struct output_s *lastoutput = &arguments.output[arguments.output_len - 1];
+        lastoutput->mode = output.mode;
+        if (output.section != NULL) lastoutput->section = output.section;
+        lastoutput->longaddr = output.longaddr;
+        if (output.mapname != &defmap) lastoutput->mapname = output.mapname;
+        lastoutput->mapappend = output.mapappend;
     }
 
-    all_mem2 = get_all_mem2();
+    all_mem2 = check_outputs(&defmap);
     if (arguments.caseinsensitive == 0) {
         diagnostics.case_symbol = false;
     }

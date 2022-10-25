@@ -15,13 +15,23 @@ only describing the command line options. The many features are described in the
 .TP 0.5i
 \fB\-o\fR \fIfilename\fR, \fB\--output\fR \fIfilename\fR
 Place output into \fIfilename\fR. The default output filename is \(aqa.out\(aq,
-this option changes it. May be used multiple times. The format is remembered but section reverts to global after each file.
+this option changes it. May be used multiple times. The format is remembered
+but section and memory map file reverts to global after each file.
 .TP 0.5i
 \fB\-\-output\-append\fR \fIfilename\fR
 Append to output file instead of overwriting it.
 .TP 0.5i
 \fB\-\-no\-output\fR
 Same as output but no file will be written.
+.TP 0.5i
+\fB\--map\fR \fIfilename\fR
+Place memory map into \fIfilename\fR instead of displaying it.
+.TP 0.5i
+\fB\-\-map\-append\fR \fIfilename\fR
+Append memory map to a file instead of displaying it.
+.TP 0.5i
+\fB\-\-no\-map\fR
+The memory map won't be displayed or recorded.
 .TP 0.5i
 \fB\--output\-section\fR \fIsectionname\fR
 Output this section instead of everything

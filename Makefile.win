@@ -141,7 +141,7 @@ main.o: main.c main.h stdbool.h wchar.h inttypes.h error.h attributes.h \
 math.o: math.c math.h
 memblocksobj.o: memblocksobj.c memblocksobj.h obj.h attributes.h \
  inttypes.h stdbool.h values.h error.h errors_e.h section.h avl.h str.h \
- unicode.h typeobj.h
+ unicode.h arguments.h typeobj.h
 mem.o: mem.c mem.h attributes.h inttypes.h error.h stdbool.h errors_e.h \
  unicode.h 64tass.h wait_e.h listing.h arguments.h values.h \
  memblocksobj.h obj.h

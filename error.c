@@ -420,6 +420,7 @@ static const char *const terr_fatal[] = {
     "can't write label file",
     "can't write make file",
     "can't write error file",
+    "can't write map file",
     "file recursion",
     "macro recursion too deep",
     "function recursion too deep",

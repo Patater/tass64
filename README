@@ -2901,9 +2901,10 @@ Output options
 
     For multiple outputs the format options and output section selection must
     be placed before this option. The format selection will be unchanged if no
-    new selection was made but the output section selection must be repeated
-    for each output. The maximum image size will be the smallest of all
-    selected formats. Using the same name multiple times is not a good idea.
+    new selection was made but the output section selection and the map file
+    must be repeated for each output. The maximum image size will be the
+    smallest of all selected formats. Using the same name multiple times is not
+    a good idea.
 
 --output-append <filename>
     Same as the --output option but appends instead of overwrites.
@@ -2916,6 +2917,17 @@ Output options
 
     Useful for test compiles.
 
+--map <file>
+    Specify memory map output file.
+
+    Normally the memory map is displayed on the standard output together with
+    other messages. It's possible to write it to a file or to the standard
+    output by using `-' as the file name.
+
+--map-append <filename>
+    Same as the --map option but appends instead of overwrites.
+--no-map
+    Do not display or record the memory map.
 --output-section <sectionname>
     By default all sections go into the output file. Using this option limits
     the output to specific section and it's children. This is useful to split a

@@ -37,9 +37,11 @@ typedef enum Caret_types {
 struct output_s {
     const char *name;
     const char *section;
+    const char *mapname;
     Output_types mode;
     bool append;
     bool longaddr;
+    bool mapappend;
 };
 
 struct error_output_s {
