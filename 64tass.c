@@ -4962,7 +4962,7 @@ int main2(int *argc2, char **argv2[]) {
             nolisting = 0;
 
             max_pass = pass; pass++;
-            listing_open(arguments.list.name, argc, argv);
+            listing_open(&arguments.list, argc, argv);
             one_pass(argc, argv, opts);
             listing_close();
 

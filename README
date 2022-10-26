@@ -3793,6 +3793,8 @@ Assembly listing
 
     ;******  End of listing
 
+--list-append=<file>
+    Same as the --list option but appends instead of overwrites.
 -m, --no-monitor
     Don't put monitor code into listing. There won't be any monitor listing in
     the list file.

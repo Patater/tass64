@@ -65,6 +65,7 @@ struct list_output_s {
     bool source;
     bool linenum;
     bool verbose;
+    bool append;
 };
 
 struct cmdline_defines_s {
