@@ -257,6 +257,7 @@ uninstall:
 	-$(RM) $(DESTDIR)$(docdir)/LICENSE-LGPL-2.0
 	-$(RM) $(DESTDIR)$(docdir)/LICENSE-LGPL-2.1
 	-$(RM) $(DESTDIR)$(docdir)/LICENSE-my_getopt
+	-$(RM) $(DESTDIR)$(docdir)/README
 	-$(RM) $(DESTDIR)$(docdir)/README.html
 	-$(RM) $(DESTDIR)$(docdir)/NEWS
 	-$(RMDIR) $(DESTDIR)$(docdir)
