@@ -4220,16 +4220,8 @@ Fatal errors
 
 can't open file
     cannot open file
-can't write error file
-    cannot write the error file
-can't write label file
-    cannot write the label file
-can't write listing file
-    cannot write the list file
-can't write make file
-    cannot write the make rule file
-can't write object file
-    cannot write the result
+can't write ? file '?'
+    cannot write an output file
 compilation was interrupted
     shows the line where the interruption happened
 error reading file
