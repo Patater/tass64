@@ -239,7 +239,7 @@ install-man:
 
 install-doc:
 	-$(INSTALL) -d $(DESTDIR)$(docdir)
-	-$(INSTALL_DATA) LICENSE-GPL-2.0 LICENSE-LGPL-2.0 LICENSE-LGPL-2.1 LICENSE-my_getopt README.html NEWS $(DESTDIR)$(docdir)
+	-$(INSTALL_DATA) LICENSE-GPL-2.0 LICENSE-LGPL-2.0 LICENSE-LGPL-2.1 LICENSE-my_getopt README README.html NEWS $(DESTDIR)$(docdir)
 
 install: $(TARGET) install-man install-doc
 	-$(INSTALL) -d $(DESTDIR)$(bindir)
