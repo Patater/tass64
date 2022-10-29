@@ -564,7 +564,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
         star_tree->vline = vline; star_tree = s; vline = s->vline;
         enterfile(mfunc->file_list->file, epoint);
         lpoint.line = mfunc->epoint.line;
-        new_waitfor(W_ENDF3, epoint);
+        new_waitfor(W_ENDF2, epoint);
         oldbottom = context_get_bottom();
         for (i = 0; i < mfunc->nslen; i++) {
             push_context(mfunc->namespaces[i]);
@@ -578,7 +578,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
         for (i = 0; i < mfunc->nslen; i++) {
             pop_context();
         }
-        close_waitfor(W_ENDF3);
+        close_waitfor(W_ENDF2);
         star = s->addr;
         exitfile();
         s->vline = vline; star_tree = stree_old; vline = star_tree->vline;

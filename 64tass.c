@@ -1054,6 +1054,7 @@ static const char *check_waitfor(void) {
     case W_ENDS3:
     case W_ENDSEGMENT2:
     case W_ENDMACRO2:
+    case W_ENDF2:
     case W_ENDF3:
     case W_ENDFOR2:
     case W_ENDREPT2:
@@ -3333,7 +3334,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     close_waitfor(W_ENDF);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
-                } else if (waitfor->what==W_ENDF3) { /* not closed here */
+                } else if (waitfor->what==W_ENDF2 || waitfor->what==W_ENDF3) { /* not closed here */
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -4388,12 +4389,15 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                     }
-                    while ((wp--) != 0) {
-                        switch (waitfors[wp].what) {
+                    while (wp != 0) {
+                        switch (waitfors[--wp].what) {
                         case W_ENDFOR2:
                         case W_ENDREPT2:
                         case W_ENDWHILE2:
                             break;
+                        case W_ENDF3:
+                            wp = 0;
+                            continue;
                         default:
                             continue;
                         }
