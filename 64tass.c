@@ -4955,6 +4955,7 @@ int main2(int *argc2, char **argv2[]) {
         one_pass(argc, argv, opts);
         if (signal_received) { err_msg_signal(); break; }
     } while (!fixeddig || constcreated);
+    include_path_errors();
 
     if (arguments.list.name == NULL) {
         if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);

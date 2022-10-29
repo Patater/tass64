@@ -69,6 +69,7 @@ struct str_t;
 struct file_list_s;
 
 extern struct file_s *file_open(const struct str_t *, const struct file_list_s *, File_open_type, linepos_t);
+extern void include_path_errors(void);
 extern struct star_s *new_star(linenum_t);
 extern struct star_s *init_star(linenum_t);
 extern void destroy_file(void);
