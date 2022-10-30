@@ -800,7 +800,6 @@ static void byterecursion_gaps(struct byterecursion_s *brec) {
 
 static void byterecursion(struct byterecursion_s *brec, Obj *val) {
     struct iter_s iter;
-    Obj *val2;
     uint32_t ch2;
     uval_t uv;
     ival_t iv;
@@ -814,16 +813,15 @@ static void byterecursion(struct byterecursion_s *brec, Obj *val) {
         }
         iter.data = NULL;
         if (type == NONE_OBJ) goto donone;
-        val2 = val;
         goto doit;
     }
     iter.data = val; type->getiter(&iter);
-    while ((val2 = iter.next(&iter)) != NULL) {
-        if (val2->obj->iterable) {
-            byterecursion(brec, val2);
+    while ((val = iter.next(&iter)) != NULL) {
+        if (val->obj->iterable) {
+            byterecursion(brec, val);
             continue;
         }
-        switch (val2->obj->type) {
+        switch (val->obj->type) {
         case T_GAP:
             if (brec->p > 0) byterecursion_flush(brec);
             brec->gaps += (unsigned int)abs(brec->bits) / 8;
@@ -831,15 +829,15 @@ static void byterecursion(struct byterecursion_s *brec, Obj *val) {
         default:
         doit:
             if (brec->prm == CMD_RTA || brec->prm == CMD_ADDR) {
-                atype_t am = val2->obj->address(val2);
-                if (touaddress(val2, &uv, (am == A_KR) ? 16 : all_mem_bits, brec->epoint)) {
+                atype_t am = val->obj->address(val);
+                if (touaddress(val, &uv, (am == A_KR) ? 16 : all_mem_bits, brec->epoint)) {
                     ch2 = 0;
                     break;
                 }
                 uv &= all_mem;
                 switch (am) {
                 case A_NONE:
-                    if ((current_address->l_address ^ uv) > 0xffff) err_msg2(ERROR_CANT_CROSS_BA, val2, brec->epoint);
+                    if ((current_address->l_address ^ uv) > 0xffff) err_msg2(ERROR_CANT_CROSS_BA, val, brec->epoint);
                     break;
                 case A_KR:
                     break;
@@ -850,12 +848,12 @@ static void byterecursion(struct byterecursion_s *brec, Obj *val) {
                 break;
             }
             if (brec->bits >= 0) {
-                if (touval(val2, &uv, (unsigned int)brec->bits, brec->epoint)) {
+                if (touval(val, &uv, (unsigned int)brec->bits, brec->epoint)) {
                     if (diagnostics.pitfalls) {
                         static unsigned int once;
-                        if (brec->prm == CMD_BYTE && val2->obj == STR_OBJ) err_msg_byte_note(brec->epoint2);
+                        if (brec->prm == CMD_BYTE && val->obj == STR_OBJ) err_msg_byte_note(brec->epoint2);
                         else if (brec->prm != CMD_RTA && brec->prm != CMD_ADDR && once != pass) {
-                            Error *err = val2->obj->ival(val2, &iv, (unsigned int)brec->bits, brec->epoint2);
+                            Error *err = val->obj->ival(val, &iv, (unsigned int)brec->bits, brec->epoint2);
                             if (err != NULL) val_destroy(Obj(err));
                             else {
                                 const char *txt;
@@ -875,7 +873,7 @@ static void byterecursion(struct byterecursion_s *brec, Obj *val) {
                 }
                 ch2 = uv;
             } else {
-                if (toival(val2, &iv, (unsigned int)-brec->bits, brec->epoint)) iv = 0;
+                if (toival(val, &iv, (unsigned int)-brec->bits, brec->epoint)) iv = 0;
                 ch2 = (uint32_t)iv;
             }
             break;
