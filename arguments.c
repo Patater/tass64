@@ -554,7 +554,8 @@ int testarg(int *argc2, char **argv2[]) {
     bool again;
     char defmap = 0;
     struct symbol_output_s symbol_output = { NULL, NULL, LABEL_64TASS, false };
-    struct output_s output = { "a.out", NULL, &defmap, OUTPUT_CBM, false, false, false };
+    struct output_s output = { "a.out", NULL, NULL, OUTPUT_CBM, false, false, false };
+    output.mapname = &defmap;
 
     do {
         int i;
