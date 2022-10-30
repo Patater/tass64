@@ -230,6 +230,15 @@ bool mtranslate(void) {
                     p += (linecpos_t)(p2 - last2);
                     op = p2;
                     p2 += 2;
+                    if (j < macro_parameters.current->len) {
+                        param.data = macro_parameters.current->param[j].data;
+                        param.len = macro_parameters.current->param[j].len;
+                        if (param.len > 1 && param.data[0] == '"' && param.data[param.len-1] == '"') {
+                            param.data++;
+                            param.len -= 2;
+                        }
+                        goto tasmc;
+                    }
                     break;
                 }
             }
@@ -255,6 +264,7 @@ bool mtranslate(void) {
                 param.len = 0;
             }
         } 
+    tasmc:
         if (p + param.len < p) err_msg_out_of_memory(); /* overflow */
         if (p + param.len > mline->len) {
             mline->len = p + param.len;
