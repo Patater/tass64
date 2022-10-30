@@ -151,6 +151,7 @@ void memref(Memblocks *memblocks, Memblocks *ref, address_t addr, address_t ln) 
 
 static MUST_CHECK bool padding(address_t size, FILE *f) {
     unsigned char nuls[256];
+#if defined _POSIX_C_SOURCE || defined __unix__ || defined __MINGW32__
     while (size >= 0x80000000) {
         if (fseek(f, 0x40000000, SEEK_CUR) != 0) goto err;
         size -= 0x40000000;
@@ -159,6 +160,7 @@ static MUST_CHECK bool padding(address_t size, FILE *f) {
         return false;
     }
 err:
+#endif
     nuls[0] = 1;
     while (size != 0) {
         address_t db = size < sizeof nuls ? size : sizeof nuls;
