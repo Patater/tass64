@@ -68,7 +68,7 @@ dictobj.o: dictobj.c dictobj.h obj.h attributes.h inttypes.h eval.h \
 encobj.o: encobj.c encobj.h obj.h attributes.h inttypes.h stdbool.h avl.h \
  errors_e.h values.h ternary.h str.h error.h 64tass.h wait_e.h encoding.h \
  unicode.h eval.h oper_e.h typeobj.h strobj.h bytesobj.h bitsobj.h \
- errorobj.h
+ errorobj.h functionobj.h
 encoding.o: encoding.c encoding.h stdbool.h error.h attributes.h \
  errors_e.h inttypes.h ternary.h values.h 64tass.h wait_e.h str.h \
  encobj.h obj.h avl.h

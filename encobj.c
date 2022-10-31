@@ -33,6 +33,7 @@
 #include "bytesobj.h"
 #include "bitsobj.h"
 #include "errorobj.h"
+#include "functionobj.h"
 
 Enc *actual_encoding;
 size_t efwcount;
@@ -404,6 +405,21 @@ next:
     return 256 + '?';
 }
 
+static MUST_CHECK Obj *convert(oper_t op) {
+    Error *err;
+    Obj *o2 = op->v2;
+    switch (o2->obj->type) {
+    case T_NONE:
+    case T_ERROR: return val_reference(o2);
+    case T_STR: return bytes_from_str(Str(o2), op->epoint2, BYTES_MODE_TEXT);
+    default: break;
+    }
+    err = new_error(ERROR____WRONG_TYPE, op->epoint2);
+    err->u.otype.t1 = o2->obj;
+    err->u.otype.t2 = STR_OBJ;
+    return Obj(err);
+}
+
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     switch (o2->obj->type) {
@@ -411,19 +427,16 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         if (op->op == O_FUNC) {
             Enc *oldenc;
             Funcargs *v2 = Funcargs(o2);
-            if (v2->len > 0) {
-                str_t tmp;
-                o2 = tostr2(&v2->val[0], &tmp);
-                if (o2 != NULL) return o2;
+            struct values_s *v = v2->val;
+            argcount_t args = v2->len;
+            if (args != 1) {
+                return new_error_argnum(args, 1, 1, op->epoint2);
             }
             oldenc = actual_encoding;
             actual_encoding = Enc(op->v1);
-            if (v2->len == 1) {
-                o2 = bytes_from_str(Str(v2->val[0].val), op->epoint2, BYTES_MODE_TEXT);
-            } else {
-                op->v1 = Obj(BYTES_OBJ);
-                o2 = op->v1->obj->calc2(op);
-            }
+            op->v2 = v->val;
+            op->inplace = NULL;
+            o2 = apply_function(op, convert);
             actual_encoding = oldenc;
             return o2;
         }
