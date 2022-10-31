@@ -24,7 +24,7 @@
 #include <locale.h>
 #include <windows.h>
 #endif
-#if defined _POSIX_C_SOURCE || defined __unix__ || defined __MINGW32__
+#if defined _POSIX_C_SOURCE || defined __unix__
 #include <sys/stat.h>
 #endif
 #include "64tass.h"
