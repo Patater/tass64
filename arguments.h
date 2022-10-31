@@ -75,8 +75,6 @@ struct cmdline_defines_s {
 
 struct include_list_s {
     struct include_list_s *next;
-    size_t len;
-    int err_no;
 #if __STDC_VERSION__ >= 199901L
     char path[];
 #elif __GNUC__ >= 3

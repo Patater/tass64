@@ -537,8 +537,6 @@ static void include_list_add(const char *path)
     include = (struct include_list_s *)allocate_array(uint8_t, len);
     if (include == NULL) err_msg_out_of_memory();
     include->next = NULL;
-    include->len = i;
-    include->err_no = -1;
     memcpy(include->path, path, i + 1);
     if (i != j) memcpy(include->path + i, "/", 2);
     *last = include;

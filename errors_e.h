@@ -42,7 +42,6 @@ typedef enum Error_types {
     ERROR__RESERVED_CHR,
 #endif
     ERROR_ABSOLUTE_PATH,
-    ERROR__INCLUDE_PATH,
     ERROR_WUSER_DEFINED,
     ERROR___OPTIMIZABLE,
     ERROR______SIMPLIFY,

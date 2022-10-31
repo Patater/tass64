@@ -350,8 +350,7 @@ static const char *const terr_warning[] = {
 #else
     "this name uses reserved characters '",
 #endif
-    "use relative path for '",
-    "include path"
+    "use relative path for '"
 };
 
 static const char *const terr_error[] = {
@@ -1682,8 +1681,8 @@ void err_msg_file(Error_types no, const char *prm, const struct file_list_s *cfi
     s = strerror(errno);
     n = strlen(s);
 
-    more = new_error_msg(no >= 0xc0 ? SV_FATAL : SV_WARNING, cfile, epoint);
-    adderror(no >= 0xc0 ? terr_fatal[no - 0xc0] : terr_warning[no]);
+    more = new_error_msg(SV_FATAL, cfile, epoint);
+    adderror(terr_fatal[no - 0xc0]);
     adderror(" '");
     adderror(prm);
     adderror("': ");

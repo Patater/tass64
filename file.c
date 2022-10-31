@@ -306,20 +306,6 @@ static inline unichar_t fromiso(unichar_t c) {
     return conv[c];
 }
 
-static int fnotdir(struct include_list_s *path) {
-#if defined _POSIX_C_SOURCE || defined __unix__ || defined __MINGW32__
-    struct stat st;
-    char oc = path->path[path->len];
-    path->path[path->len] = '\0';
-    if (stat(path->path, &st) == 0) {
-        errno = S_ISDIR(st.st_mode) ? 0 : ENOTDIR;
-    }
-    path->path[path->len] = oc;
-    return errno;
-#endif
-    return 0;
-}
-
 static filesize_t fsize(FILE *f) {
 #if defined _POSIX_C_SOURCE || defined __unix__
     struct stat st;
@@ -752,15 +738,12 @@ struct file_s *file_open(const str_t *name, const struct file_list_s *cfile, Fil
         if (f == NULL && (file->err_no == ENOENT || file->err_no == ENOTDIR) && cfile != NULL && !is_absolute(name)) {
             struct include_list_s *i;
             for (i = arguments.include; i != NULL; i = i->next) {
-                struct file_s *file2;
-                if (i->err_no > 0) continue;
-                file2 = file_lookup(name, i->path);
+                struct file_s *file2 = file_lookup(name, i->path);
                 if (file2->err_no == ENOENT || file2->err_no == ENOTDIR) continue;
                 if (file2->err_no == 0 && !(file2->binary.read || (ftype != FILE_OPEN_BINARY && file2->source.read))) {
                     f = file_fopen(file2);
-                    if (i->err_no < 0) i->err_no = f == NULL ? fnotdir(i) : 0;
                     if (f == NULL) {
-                        if (file2->err_no == ENOENT || file2->err_no == ENOTDIR || i->err_no != 0) continue;
+                        if (file2->err_no == ENOENT || file2->err_no == ENOTDIR) continue;
                     }
                 }
                 file = file2;
@@ -819,20 +802,6 @@ struct file_s *file_open(const str_t *name, const struct file_list_s *cfile, Fil
 #endif
     }
     return file;
-}
-
-void include_path_errors(void) {
-    struct include_list_s *i;
-    for (i = arguments.include; i != NULL; i = i->next) {
-        char oc;
-        if (i->err_no < 0) i->err_no = fnotdir(i);
-        if (i->err_no == 0) continue;
-        errno = i->err_no;
-        oc = i->path[i->len];
-        i->path[i->len] = '\0';
-        err_msg_file2(ERROR__INCLUDE_PATH, i->path);
-        i->path[i->len] = oc;
-    }
 }
 
 struct starnode_s {
