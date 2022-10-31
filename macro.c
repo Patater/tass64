@@ -514,7 +514,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
                         if (Type(oper.v1)->iterable || Type(oper.v1) == TYPE_OBJ) {
                             val = Type(oper.v1)->convert(&oper);
                         } else {
-                            val = apply_convert(&oper);
+                            val = apply_function(&oper, Type(oper.v1)->convert);
                         }
                     } else {
                         Funcargs tmp;
@@ -893,7 +893,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
                         if (Type(oper.v1)->iterable || Type(oper.v1) == TYPE_OBJ) {
                             val = Type(oper.v1)->convert(&oper);
                         } else {
-                            val = apply_convert(&oper);
+                            val = apply_function(&oper, Type(oper.v1)->convert);
                         }
                     } else {
                         Funcargs tmp;

@@ -113,7 +113,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (v1->iterable || v1 == TYPE_OBJ) {
                 return v1->convert(op);
             }
-            return apply_convert(op);
+            return apply_function(op, v1->convert);
         }
         break;
     case T_NONE:

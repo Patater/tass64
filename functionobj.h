@@ -43,7 +43,9 @@ typedef struct Function {
 
 struct oper_s;
 
-extern MUST_CHECK Obj *apply_convert(struct oper_s *);
+typedef MUST_CHECK Obj *(*apply_func_t)(struct oper_s *);
+
+extern MUST_CHECK Obj *apply_function(struct oper_s *, apply_func_t);
 extern MUST_CHECK Obj *apply_convert2(struct oper_s *);
 extern MUST_CHECK Obj *apply_condition(struct oper_s *);
 extern void functionobj_init(void);
