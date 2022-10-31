@@ -409,16 +409,21 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     switch (o2->obj->type) {
     case T_FUNCARGS:
         if (op->op == O_FUNC) {
-            Funcargs *v2 = Funcargs(o2);
             Enc *oldenc;
-            if (v2->len != 1) {
-                return new_error_argnum(v2->len, 1, 1, op->epoint2);
+            Funcargs *v2 = Funcargs(o2);
+            if (v2->len > 0) {
+                str_t tmp;
+                o2 = tostr2(&v2->val[0], &tmp);
+                if (o2 != NULL) return o2;
             }
-            o2 = v2->val[0].val;
-            if (o2->obj != STR_OBJ) break;
             oldenc = actual_encoding;
             actual_encoding = Enc(op->v1);
-            o2 = bytes_from_str(Str(o2), op->epoint2, BYTES_MODE_TEXT);
+            if (v2->len == 1) {
+                o2 = bytes_from_str(Str(v2->val[0].val), op->epoint2, BYTES_MODE_TEXT);
+            } else {
+                op->v1 = Obj(BYTES_OBJ);
+                o2 = op->v1->obj->calc2(op);
+            }
             actual_encoding = oldenc;
             return o2;
         }
