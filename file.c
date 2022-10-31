@@ -321,13 +321,17 @@ static int fnotdir(struct include_list_s *path) {
 }
 
 static filesize_t fsize(FILE *f) {
-#if defined _POSIX_C_SOURCE || defined __unix__ || defined __MINGW32__
+#if defined _POSIX_C_SOURCE || defined __unix__
     struct stat st;
     if (fstat(fileno(f), &st) == 0) {
         if (S_ISREG(st.st_mode) && st.st_size > 0) {
             return (st.st_size & ~(off_t)~(filesize_t)0) == 0 ? (filesize_t)st.st_size : ~(filesize_t)0;
         }
     }
+#elif defined _WIN32
+    DWORD h;
+    DWORD l = GetFileSize((HANDLE)_get_osfhandle(fileno(f)), &h);
+    return (l == INVALID_FILE_SIZE || h != 0) ? 0 : (filesize_t)l;
 #else
     if (fseek(f, 0, SEEK_END) == 0) {
         long len = ftell(f);
