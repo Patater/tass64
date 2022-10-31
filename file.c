@@ -314,10 +314,11 @@ static filesize_t fsize(FILE *f) {
             return (st.st_size & ~(off_t)~(filesize_t)0) == 0 ? (filesize_t)st.st_size : ~(filesize_t)0;
         }
     }
-#elif defined _WIN32
-    DWORD h;
-    DWORD l = GetFileSize((HANDLE)_get_osfhandle(fileno(f)), &h);
-    return (l == INVALID_FILE_SIZE || h != 0) ? 0 : (filesize_t)l;
+#elif defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+    long len = filelength(fileno(f));
+    if (len > 0) {
+        return (unsigned long)len < ~(filesize_t)0 ? (filesize_t)len : ~(filesize_t)0;
+    }
 #else
     if (fseek(f, 0, SEEK_END) == 0) {
         long len = ftell(f);
