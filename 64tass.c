@@ -4209,23 +4209,21 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_ENC: if ((waitfor->skip & 1) != 0)
                 { /* .enc */
-                    str_t encname;
+                    struct values_s *vs;
+                    Enc *newenc;
                     listing_line(epoint.pos);
-                    encname.len = 0;
-                    if (pline[lpoint.pos] != '"' && pline[lpoint.pos] != '\'') { /* will be removed to allow variables */
-                        if (diagnostics.deprecated) err_msg2(ERROR_______OLD_ENC, NULL, &lpoint);
-                        encname.data = pline + lpoint.pos; encname.len = get_label(encname.data);
-                        lpoint.pos += (linecpos_t)encname.len;
-                    }
-                    if (encname.len == 0) {
-                        struct values_s *vs;
-                        if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
-                        vs = get_val();
+                    if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
+                    vs = get_val();
+                    if (vs->val->obj == ENC_OBJ) {
+                        newenc = Enc(vs->val);
+                    } else {
+                        str_t encname;
                         if (tostr(vs, &encname)) break;
                         if (encname.len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); break;}
+                        newenc = new_encoding(&encname, &epoint);
                     }
                     val_destroy(Obj(actual_encoding));
-                    actual_encoding = ref_enc(new_encoding(&encname, &epoint));
+                    actual_encoding = ref_enc(newenc);
                 }
                 break;
             case CMD_CDEF: if ((waitfor->skip & 1) != 0)

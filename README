@@ -1750,13 +1750,13 @@ encoding. To take advantage of this capability custom encodings can be defined
 to map Unicode characters to 8 bit values in strings. Even in plain ASCII
 sources it could be useful to define escape sequences for control codes.
 
-.enc "<name>"
-    Selects text encoding
+.enc <expression>
+    Selects text encoding by a character string name or from an encoding object
 
-    Predefined encodings are `none' and `screen' (screen code), anything else
-    is user defined. All user encodings start without any character or escape
-    definitions, add some as required. Please note that the encoding names are
-    global.
+    Predefined encodings names are `none' and `screen' (screen code), anything
+    else is user defined. All user encodings start without any character or
+    escape definitions, add some as required. Please note that the encoding
+    names are global.
 
     This directive changes the text encoding after it therefore it's usually
     placed somewhere at the beginning of the source to make sure everything is
@@ -1773,7 +1773,7 @@ sources it could be useful to define escape sequences for control codes.
                                     .enc "none" ;normal mode again
     .100e  c9 55     cmp #$55       cmp #"u"    ;compare PETSCII
 
-.encode [<symbol>]
+.encode [<expression>]
     Encoding area start
 .endencode
     Encoding area end
@@ -1804,6 +1804,7 @@ sources it could be useful to define escape sequences for control codes.
             lda #"{esc}"
             .endencode  ;restores original encoding
             cmp #vt100("{esc}");conversion when not in scope
+            .enc vt100;select custom encoding (at start of source)
 
 .cdef <start>, <end>, <coded> [, <start>, <end>, <coded>, ...]
 .cdef "<start><end>", <coded> [, "<start><end>", <coded>, ...]
@@ -2401,7 +2402,7 @@ ctable  .byte colors.(red, green, blue)
     count   ldx #0
             .bend
 
-.namespace [<symbol>]
+.namespace [<exression>]
     Namespace area start
 .endn
 .endnamespace
@@ -2445,7 +2446,7 @@ ctable  .byte colors.(red, green, blue)
     Please note that .ifdef/.ifndef directives are left out from 64tass for of
     technical reasons, so don't wait for them to appear anytime soon.
 
-.with <symbol>
+.with <exression>
 .endwith
     Namespace access
 
@@ -4066,9 +4067,6 @@ memory location address overflow
 please use format("%d", ...) as '^' will change it's meaning
     this operator will be changed to mean the bank byte later, please update
     your sources
-please use quotes now to allow expressions in future
-    the directive will allow expressions later and the parameter will be a
-    string
 possible jmp ($xxff) bug
     some 6502 variants read don't increment the high byte on page cross and
     this may be unexpected

@@ -2136,10 +2136,10 @@ to 8&nbsp;bit values in strings. Even in plain ASCII sources it could be
 useful to define escape sequences for control codes.
 
 <dl class="dir">
-<dt><b>.enc</b> "&lt;name&gt;"<a name="d_enc" href="#d_enc"></a>
-<dd>Selects text encoding
+<dt><b>.enc</b> &lt;expression&gt;<a name="d_enc" href="#d_enc"></a>
+<dd>Selects text encoding by a character string name or from an encoding object
 
-<p>Predefined encodings are <q>none</q> and <q>screen</q> (screen code),
+<p>Predefined encodings names are <q>none</q> and <q>screen</q> (screen code),
 anything else is user defined. All user encodings start without any character
 or escape definitions, add some as required. Please note that the encoding names
 are global.
@@ -2161,7 +2161,7 @@ use case <a href="#d_encode"><code>.encode</code></a> is better suited.</p>
 .100e  c9 55     cmp #$55       <b>cmp</b> #<span class="s">"u"</span>    <i>;compare PETSCII</i>
 </pre>
 
-<dt><b>.encode</b> [&lt;symbol&gt;]<a name="d_encode" href="#d_encode"></a>
+<dt><b>.encode</b> [&lt;expression&gt;]<a name="d_encode" href="#d_encode"></a>
 <dd>Encoding area start
 <dt><b>.endencode</b><a name="d_endencode" href="#d_endencode"></a>
 <dd>Encoding area end
@@ -2192,6 +2192,7 @@ vt100   <b class="k">.encode</b>     <i>;define custom encoding</i>
         <b>lda</b> #<span class="s">"<span>{esc}"</span></span>
         <b class="k">.endencode</b>  <i>;restores original encoding</i>
         <b>cmp</b> #<u>vt100</u>(<span class="s">"<span>{esc}</span>"</span>)<i>;conversion when not in scope</i>
+        <b class="k">.enc</b> <u>vt100</u><i>;select custom encoding (at start of source)</i>
 </pre>
 
 <dt><b>.cdef</b> &lt;start&gt;, &lt;end&gt;, &lt;coded&gt; [, &lt;start&gt;, &lt;end&gt;, &lt;coded&gt;, &hellip;]<a name="d_cdef" href="#d_cdef"></a>
@@ -2862,7 +2863,7 @@ count   <b>ldx</b> #<span>0</span>
         <b class="k">.bend</b>
 </pre>
 
-<dt><b>.namespace</b> [&lt;symbol&gt;]<a name="d_namespace" href="#d_namespace"></a>
+<dt><b>.namespace</b> [&lt;exression&gt;]<a name="d_namespace" href="#d_namespace"></a>
 <dd>Namespace area start
 <dt><b>.endn</b><a name="d_endn" href="#d_endn"></a>
 <dt><b>.endnamespace</b><a name="d_endnamespace" href="#d_endnamespace"></a>
@@ -2907,7 +2908,7 @@ scope is of course not allowed and it results in double definition error.</p>
 left out from 64tass for of technical reasons, so don't wait for them to appear
 anytime soon.</p>
 
-<dt><b>.with</b> &lt;symbol&gt;<a name="d_with" href="#d_with"></a>
+<dt><b>.with</b> &lt;exression&gt;<a name="d_with" href="#d_with"></a>
 <dt><b>.endwith</b><a name="d_endwith" href="#d_endwith"></a>
 <dd>Namespace access
 
@@ -4658,7 +4659,6 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 <dt>long branch used<dd>branch distance was too long so long branch was used (bxx &lowast;+5 jmp)
 <dt>memory location address overflow<dd>the calculated memory location address ended up outside of the processors address space
 <dt>please use format("%d", ...) as '^' will change it's meaning<dd>this operator will be changed to mean the bank byte later, please update your sources
-<dt>please use quotes now to allow expressions in future<dd>the directive will allow expressions later and the parameter will be a string
 <dt>possible jmp ($xxff) bug<dd>some 6502 variants read don't increment the high byte on page cross and this may be unexpected
 <dt>possibly redundant as ...<dd>according to the optimizer this might not be needed
 <dt>possibly redundant if last 'jsr' is changed to 'jmp'<dd>tail call elimination possibility was detected
