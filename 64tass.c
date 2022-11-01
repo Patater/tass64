@@ -2019,10 +2019,10 @@ static bool tdef_command(linepos_t epoint) {
         }
         doublerange = false;
         iter.data = val; 
-        if (val->obj == BITS_OBJ) {
-            DEFAULT_OBJ->getiter(&iter);
-        } else {
+        if (val->obj->iterable || val->obj == STR_OBJ) {
             val->obj->getiter(&iter);
+        } else {
+            DEFAULT_OBJ->getiter(&iter);
         }
         if (iter2.data != NULL && iter.len != iter2.len) {
             Error *err = new_error(ERROR_CANT_BROADCAS, &vs->epoint);
