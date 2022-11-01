@@ -1747,12 +1747,24 @@ Text encoding
 
 64tass supports sources written in UTF-8, UTF-16 (be/le) and RAW 8 bit
 encoding. To take advantage of this capability custom encodings can be defined
-to map Unicode characters to 8 bit values in strings.
+to map Unicode characters to 8 bit values in strings. Even in plain ASCII
+sources it could be useful to define escape sequences for control codes.
 
 .enc "<name>"
-    Selects text encoding, predefined encodings are `none' and `screen' (screen
-    code), anything else is user defined. All user encodings start without any
-    character or escape definitions, add some as required.
+    Selects text encoding
+
+    Predefined encodings are `none' and `screen' (screen code), anything else
+    is user defined. All user encodings start without any character or escape
+    definitions, add some as required. Please note that the encoding names are
+    global.
+
+    This directive changes the text encoding after it therefore it's usually
+    placed somewhere at the beginning of the source to make sure everything is
+    covered.
+
+    While it is possible to juggle with multiple encodings throughout the
+    source code using the .enc directive this is not recommended. For such use
+    case .encode is better suited.
 
                                     .enc "screen";screen code mode
     >1000  13 03 12 05 05 0e 20 03  .text "screen codes"
@@ -1760,6 +1772,38 @@ to map Unicode characters to 8 bit values in strings.
     .100c  c9 15     cmp #$15       cmp #"u"    ;compare screen code
                                     .enc "none" ;normal mode again
     .100e  c9 55     cmp #$55       cmp #"u"    ;compare PETSCII
+
+.encode [<symbol>]
+    Encoding area start
+.endencode
+    Encoding area end
+
+    This directive either creates a new text encoding (if used without a
+    parameter) or makes the one in the parameter effective within the enclosed
+    area.
+
+    The text encoding can be assigned to a symbol in front of the directive so
+    it can be reused whenever it's needed. This symbol can also act as a
+    conversion function which converts a character string to a byte string
+    using the encoding.
+
+            .encode     ;starts anonymous local encoding scope
+            .enc "titlefont";special character set
+            .text "game title"
+            .endencode  ;restores original encoding
+
+    vt100   .encode     ;define custom encoding
+            .cdef " ~", 32
+            .edef "{esc}", 27;add escape codes
+            .edef "{moff}", [27, "[", "m"]
+            .edef "{bold}", [27, "[", "1", "m"]
+            .endencode
+
+            .encode vt100;use custom encoding from here
+            .text "{bold}bold{moff} text"
+            lda #"{esc}"
+            .endencode  ;restores original encoding
+            cmp #vt100("{esc}");conversion when not in scope
 
 .cdef <start>, <end>, <coded> [, <start>, <end>, <coded>, ...]
 .cdef "<start><end>", <coded> [, "<start><end>", <coded>, ...]
@@ -4786,15 +4830,16 @@ Assembler directives
 .addr .al .align .as .assert .autsiz .bend .binary .binclude .bfor .block
 .break .breakif .brept .bwhile .byte .case .cdef .cerror .char .check .comment
 .continue .continueif .cpu .cwarn .databank .default .dint .dpage .dsection
-.dstruct .dunion .dword .edef .else .elsif .enc .end .endblock .endc
-.endcomment .endf .endfor .endfunction .endif .endlogical .endm .endmacro .endn
-.endnamespace .endp .endpage .endproc .endrept .ends .endsection .endsegment
-.endstruct .endswitch .endu .endunion .endv .endvirtual .endweak .endwhile
-.endwith .eor .error .fi .fill .for .function .goto .here .hidemac .if .ifeq
-.ifmi .ifne .ifpl .include .lbl .lint .logical .long .macro .mansiz .namespace
-.next .null .offs .option .page .pend .proc .proff .pron .ptext .rept .rta
-.section .seed .segment .send .sfunction .shift .shiftl .showmac .sint .struct
-.switch .text .union .var .virtual .warn .weak .while .with .word .xl .xs
+.dstruct .dunion .dword .edef .else .elsif .enc .encode .end .endblock .endc
+.endcomment .endencode .endf .endfor .endfunction .endif .endlogical .endm
+.endmacro .endn .endnamespace .endp .endpage .endproc .endrept .ends
+.endsection .endsegment .endstruct .endswitch .endu .endunion .endv .endvirtual
+.endweak .endwhile .endwith .eor .error .fi .fill .for .function .goto .here
+.hidemac .if .ifeq .ifmi .ifne .ifpl .include .lbl .lint .logical .long .macro
+.mansiz .namespace .next .null .offs .option .page .pend .proc .proff .pron
+.ptext .rept .rta .section .seed .segment .send .sfunction .shift .shiftl
+.showmac .sint .struct .switch .text .union .var .virtual .warn .weak .while
+.with .word .xl .xs
 
 -------------------------------------------------------------------------------
 

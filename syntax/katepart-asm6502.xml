@@ -109,6 +109,8 @@
         <RegExpr endRegion="proc" String="\.(pend|endproc)\b" context="Error" attribute="Preprocessor" insensitive="TRUE"/>
         <RegExpr beginRegion="block" String="\.block\b" context="Error" attribute="Preprocessor" insensitive="TRUE"/>
         <RegExpr endRegion="block" String="\.(bend|endblock)\b" context="Error" attribute="Preprocessor" insensitive="TRUE"/>
+        <RegExpr beginRegion="encode" String="\.encode\b" context="Miscparam" attribute="Preprocessor" insensitive="TRUE"/>
+        <RegExpr endRegion="encode" String="\.endencode\b" context="Error" attribute="Preprocessor" insensitive="TRUE"/>
         <RegExpr beginRegion="section" String="\.section\b" context="Miscparam" attribute="Preprocessor" insensitive="TRUE"/>
         <RegExpr endRegion="section" String="\.(send|endsection)\b" context="Miscparam" attribute="Preprocessor" insensitive="TRUE"/>
         <RegExpr beginRegion="struct" String="\.struct\b" context="Miscparam" attribute="Preprocessor" insensitive="TRUE"/>

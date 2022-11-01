@@ -2132,13 +2132,25 @@ string (pascal style string). Therefore it can't do more than 255 bytes.
 
 <p>64tass supports sources written in UTF-8, UTF-16 (be/le) and RAW 8&nbsp;bit encoding. To take
 advantage of this capability custom encodings can be defined to map Unicode characters
-to 8&nbsp;bit values in strings.
+to 8&nbsp;bit values in strings. Even in plain ASCII sources it could be
+useful to define escape sequences for control codes.
 
 <dl class="dir">
 <dt><b>.enc</b> "&lt;name&gt;"<a name="d_enc" href="#d_enc"></a>
-<dd>Selects text encoding, predefined encodings are <q>none</q> and
-<q>screen</q> (screen code), anything else is user defined. All user encodings
-start without any character or escape definitions, add some as required.
+<dd>Selects text encoding
+
+<p>Predefined encodings are <q>none</q> and <q>screen</q> (screen code),
+anything else is user defined. All user encodings start without any character
+or escape definitions, add some as required. Please note that the encoding names
+are global.
+
+<p>This directive changes the text encoding after it therefore it's usually
+placed somewhere at the beginning of the source to make sure everything is
+covered.
+
+<p>While it is possible to juggle with multiple encodings throughout the source
+code using the <code>.enc</code> directive this is not recommended. For such
+use case <a href="#d_encode"><code>.encode</code></a> is better suited.</p>
 
 <pre width="80">
                                 <b class="k">.enc</b> <span class="s">"screen"</span><i>;screen code mode</i>
@@ -2147,6 +2159,39 @@ start without any character or escape definitions, add some as required.
 .100c  c9 15     cmp #$15       <b>cmp</b> #<span class="s">"u"</span>    <i>;compare screen code</i>
                                 <b class="k">.enc</b> <span class="s">"none"</span> <i>;normal mode again</i>
 .100e  c9 55     cmp #$55       <b>cmp</b> #<span class="s">"u"</span>    <i>;compare PETSCII</i>
+</pre>
+
+<dt><b>.encode</b> [&lt;symbol&gt;]<a name="d_encode" href="#d_encode"></a>
+<dd>Encoding area start
+<dt><b>.endencode</b><a name="d_endencode" href="#d_endencode"></a>
+<dd>Encoding area end
+
+<p>This directive either creates a new text encoding (if used without a
+parameter) or makes the one in the parameter effective within the enclosed
+area.
+
+<p>The text encoding can be assigned to a symbol in front of the directive so
+it can be reused whenever it's needed. This symbol can also act as a conversion
+function which converts a character string to a byte string using the encoding.
+
+<pre width="80">
+        <b class="k">.encode</b>     <i>;starts anonymous local encoding scope</i>
+        <b class="k">.enc</b> <span class="s">"titlefont"</span><i>;special character set</i>
+        <b class="d">.text</b> <span class="s">"game title"</span>
+        <b class="k">.endencode</b>  <i>;restores original encoding</i>
+
+vt100   <b class="k">.encode</b>     <i>;define custom encoding</i>
+        <b class="k">.cdef</b> <span class="s">" ~"</span>, <span>32</span>
+        <b class="k">.edef</b> <span class="s">"{esc}"</span>, <span>27</span><i>;add escape codes</i>
+        <b class="k">.edef</b> <span class="s">"{moff}"</span>, [<span>27</span>, <span class="s">"["</span>, <span class="s">"m"</span>]
+        <b class="k">.edef</b> <span class="s">"{bold}"</span>, [<span>27</span>, <span class="s">"["</span>, <span class="s">"1"</span>, <span class="s">"m"</span>]
+        <b class="k">.endencode</b>
+
+        <b class="k">.encode</b> <u>vt100</u><i>;use custom encoding from here</i>
+        <b class="d">.text</b> <span class="s">"<span>{bold}</span>bold<span>{moff}</span> text"</span>
+        <b>lda</b> #<span class="s">"<span>{esc}"</span></span>
+        <b class="k">.endencode</b>  <i>;restores original encoding</i>
+        <b>cmp</b> #<u>vt100</u>(<span class="s">"<span>{esc}</span>"</span>)<i>;conversion when not in scope</i>
 </pre>
 
 <dt><b>.cdef</b> &lt;start&gt;, &lt;end&gt;, &lt;coded&gt; [, &lt;start&gt;, &lt;end&gt;, &lt;coded&gt;, &hellip;]<a name="d_cdef" href="#d_cdef"></a>
@@ -5801,10 +5846,12 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_else">.else</a>
 <a href="#d_elsif">.elsif</a>
 <a href="#d_enc">.enc</a>
+<a href="#d_encode">.encode</a>
 <a href="#d_end">.end</a>
 <a href="#d_endblock">.endblock</a>
 <a href="#d_endc">.endc</a>
 <a href="#d_endcomment">.endcomment</a>
+<a href="#d_endencode">.endencode</a>
 <a href="#d_endf">.endf</a>
 <a href="#d_endfor">.endfor</a>
 <a href="#d_endfunction">.endfunction</a>

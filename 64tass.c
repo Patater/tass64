@@ -168,6 +168,9 @@ static struct waitfor_s {
             Label *label;
             size_t membp;
         } cmd_if;
+        struct {
+            Enc *enc;
+        } cmd_encode;
     } u;
 } *waitfors, *waitfor;
 
@@ -212,10 +215,12 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x15" "else",
     "\x17" "elsif",
     "\x2c" "enc",
+    "\x6f" "encode",
     "\x3f" "end",
     "\x3a" "endblock",
     "\x1c" "endc",
     "\x1c" "endcomment",
+    "\x70" "endencode",
     "\x52" "endf",
     "\x6c" "endfor",
     "\x52" "endfunction",
@@ -317,7 +322,7 @@ typedef enum Command_types {
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
     CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF,
     CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT, CMD_ENDFOR,
-    CMD_ENDREPT, CMD_ENDWHILE
+    CMD_ENDREPT, CMD_ENDWHILE, CMD_ENCODE, CMD_ENDENCODE
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -966,6 +971,11 @@ static void union_close(linepos_t epoint) {
     }
 }
 
+static void encode_close(void) {
+    val_destroy(Obj(actual_encoding));
+    actual_encoding = waitfor->u.cmd_encode.enc;
+}
+
 static const char *check_waitfor(void) {
     switch (waitfor->what) {
     case W_FI2:
@@ -1027,6 +1037,10 @@ static const char *check_waitfor(void) {
     case W_ENDWITH:
         if (waitfor->u.cmd_with.label != NULL) {set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(Obj(waitfor->u.cmd_with.label));}
         return ".endwith";
+    case W_ENDENCODE2:
+        encode_close();
+        FALL_THROUGH; /* fall through */
+    case W_ENDENCODE: return ".endencode";
     case W_ENDC: return ".endcomment";
     case W_ENDS:
         if ((waitfor->skip & 1) != 0) current_address->unionmode = waitfor->u.cmd_struct.unionmode;
@@ -2450,6 +2464,73 @@ MUST_CHECK Obj *compile(void)
                             } else push_context(current_context);
                             goto finish;
                         }
+                    case CMD_ENCODE:
+                        { /* encode */
+                            Label *label = new_label(&labelname, mycontext, strength, current_file_list);
+                            bool labelexists = label->value != NULL;
+                            if (labelexists) {
+                                if (label->defpass == pass) {
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                    epoint = cmdpoint;
+                                    goto as_command;
+                                }
+                                if (label->fwpass == pass) fwcount--;
+                                if (!constcreated && label->defpass != pass - 1) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                if (label->file_list != current_file_list) {
+                                    label_move(label, &labelname, current_file_list);
+                                }
+                            } else {
+                                if (!constcreated) {
+                                    if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                    constcreated = true;
+                                }
+                                label->owner = true;
+                                label->value = none_value;
+                            }
+                            label->constant = true;
+                            label->epoint = epoint;
+                            label->ref = false;
+                            listing_line(0);
+                            new_waitfor(W_ENDENCODE, &cmdpoint);
+                            if (get_exp(0, 0, 1, &cmdpoint)) {
+                                struct values_s *vs = get_val();
+                                if (vs != NULL) {
+                                    val = vs->val;
+                                    if (val->obj != ENC_OBJ) {
+                                        val = NULL;
+                                        err_msg_wrong_type2(vs->val, ENC_OBJ, &vs->epoint);
+                                    }
+                                } else val = NULL;
+                            } else val = NULL;
+                            label->owner = (val == NULL);
+                            if (labelexists) {
+                                if (val != NULL) const_assign(label, val_reference(val));
+                                else {
+                                    label->defpass = pass;
+                                    if (label->value->obj != ENC_OBJ) {
+                                        val_destroy(label->value);
+                                        label->value = new_enc(current_file_list, &epoint);
+                                    } else {
+                                        Enc *enc = Enc(label->value);
+                                        enc->file_list = current_file_list;
+                                        enc->epoint = epoint;
+                                    }
+                                }
+                            } else {
+                                label->value = (val != NULL) ? val_reference(val) : new_enc(current_file_list, &epoint);
+                            }
+                            if (label->value->obj == ENC_OBJ) {
+                                waitfor->u.cmd_encode.enc = actual_encoding;
+                                actual_encoding = Enc(val_reference(label->value));
+                                waitfor->what = W_ENDENCODE2;
+                            } else {
+                                waitfor->u.cmd_encode.enc = NULL;
+                            }
+                            goto finish;
+                        }
                     case CMD_MACRO:/* .macro */
                     case CMD_SEGMENT:
                         {
@@ -3512,6 +3593,14 @@ MUST_CHECK Obj *compile(void)
                     close_waitfor(W_ENDN2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".namespace", &epoint); goto breakerr;}
                 break;
+            case CMD_ENDENCODE: /* .endencode */
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
+                if (close_waitfor(W_ENDENCODE)) {
+                } else if (waitfor->what==W_ENDENCODE2) {
+                    encode_close();
+                    close_waitfor(W_ENDENCODE2);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".encode", &epoint); goto breakerr;}
+                break;
             case CMD_ENDWITH: /* .endwith */
                 if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if ((waitfor->what==W_ENDWITH || waitfor->what==W_ENDWITH2) && waitfor->u.cmd_with.label != NULL) {
@@ -3831,6 +3920,53 @@ MUST_CHECK Obj *compile(void)
                         waitfor->what = W_ENDN2;
                     } else push_context(current_context);
                 } else {push_dummy_context(); new_waitfor(W_ENDN, &epoint);}
+                break;
+            case CMD_ENCODE: if ((waitfor->skip & 1) != 0)
+                { /* .encode */
+                    listing_line(epoint.pos);
+                    new_waitfor(W_ENDENCODE, &epoint);
+                    if (get_exp(0, 0, 1, &epoint)) {
+                        struct values_s *vs = get_val();
+                        if (vs != NULL) {
+                            val = vs->val;
+                            if (val->obj != ENC_OBJ) {
+                                val = NULL;
+                                err_msg_wrong_type2(vs->val, ENC_OBJ, &vs->epoint);
+                            }
+                        } else val = NULL;
+                    } else val = NULL;
+                    if (val == NULL) {
+                        Label *label = new_anonlabel(mycontext);
+                        if (label->value != NULL) {
+                            if (label->defpass == pass) err_msg_double_defined(label, &label->name, &epoint);
+                            else if (label->fwpass == pass) fwcount--;
+                            label->constant = true;
+                            label->owner = true;
+                            label->defpass = pass;
+                            if (label->value->obj != ENC_OBJ) {
+                                val_destroy(label->value);
+                                label->value = new_enc(current_file_list, &epoint);
+                            } else {
+                                Enc *enc = Enc(label->value);
+                                enc->file_list = current_file_list;
+                                enc->epoint = epoint;
+                            }
+                        } else {
+                            label->constant = true;
+                            label->owner = true;
+                            label->value = new_enc(current_file_list, &epoint);
+                            label->epoint = epoint;
+                        }
+                        val = label->value;
+                    }
+                    if (val->obj == ENC_OBJ) {
+                        waitfor->u.cmd_encode.enc = actual_encoding;
+                        actual_encoding = Enc(val_reference(val));
+                        waitfor->what = W_ENDENCODE2;
+                    } else {
+                        waitfor->u.cmd_encode.enc = NULL;
+                    }
+                } else new_waitfor(W_ENDENCODE, &epoint);
                 break;
             case CMD_WITH: if ((waitfor->skip & 1) != 0)
                 { /* .with */

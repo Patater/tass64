@@ -140,10 +140,12 @@ context default lightgray
     keyword whole .else brightcyan
     keyword whole .elsif brightcyan
     keyword whole .enc brightcyan
+    keyword whole .encode brightcyan
     keyword whole .end brightcyan
     keyword whole .endblock brightcyan
     keyword whole .endc brightcyan
     keyword whole .endcomment brightcyan
+    keyword whole .endencode brightcyan
     keyword whole .endf brightcyan
     keyword whole .endfor brightcyan
     keyword whole .endfunction brightcyan
