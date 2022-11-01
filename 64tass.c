@@ -1868,6 +1868,123 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     return i;
 }
 
+
+static bool cdef_command(linepos_t epoint) {
+    Obj *val;
+    struct character_range_s tmp;
+    Enc *old = actual_encoding;
+    bool rc;
+    argcount_t len;
+    listing_line(epoint->pos);
+    actual_encoding = NULL;
+    rc = get_exp(0, 2, 0, epoint);
+    actual_encoding = old;
+    len = get_val_remaining();
+    if (!rc) return true;
+    for (;;) {
+        bool endok = false;
+        size_t i;
+        bool tryit = true;
+        uval_t uval;
+        struct values_s *vs;
+        linepos_t opoint;
+
+        vs = get_val();
+        if (vs == NULL) break;
+
+        opoint = &vs->epoint;
+        val = vs->val;
+        if (val->obj == STR_OBJ) {
+            Str *str = Str(val);
+            if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
+            else {
+                unichar_t ch = str->data[0];
+                if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
+                tmp.start = ch;
+                if (str->len > i) {
+                    ch = str->data[i];
+                    if ((ch & 0x80) != 0) i += utf8in(str->data + i, &ch); else i++;
+                    tmp.end = ch & 0xffffff;
+                    endok = true;
+                    if (str->len > i) {err_msg2(ERROR_NOT_TWO_CHARS, NULL, &vs->epoint); tryit = false;}
+                }
+            }
+        } else {
+            if (touval2(vs, &uval, 24)) tryit = false;
+            else tmp.start = uval & 0xffffff;
+        }
+        if (!endok) {
+            vs = get_val();
+            if (vs == NULL) { err_msg_argnum(len, len + 2, 0, epoint); return true; }
+
+            val = vs->val;
+            if (val->obj == STR_OBJ) {
+                Str *str = Str(val);
+                if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
+                else {
+                    unichar_t ch = str->data[0];
+                    if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
+                    tmp.end = ch & 0xffffff;
+                    if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, NULL, &vs->epoint); tryit = false;}
+                }
+            } else {
+                if (touval2(vs, &uval, 24)) tryit = false;
+                else tmp.end = uval & 0xffffff;
+            }
+        }
+        vs = get_val();
+        if (vs == NULL) { err_msg_argnum(len, len + 1, 0, epoint); return true;}
+        if (touval2(vs, &uval, 8)) {}
+        else if (tryit) {
+            tmp.offset = uval & 0xff;
+            if (tmp.start > tmp.end) {
+                unichar_t tmpe = tmp.start;
+                tmp.start = tmp.end;
+                tmp.end = tmpe & 0xffffff;
+            }
+            if (enc_trans_add(actual_encoding, &tmp, epoint)) {
+                err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); return true;
+            }
+        }
+    }
+    return false;
+}
+
+static bool edef_command(linepos_t epoint) {
+    Obj *val;
+    Enc *old = actual_encoding;
+    bool rc;
+    argcount_t len;
+    listing_line(epoint->pos);
+    actual_encoding = NULL;
+    rc = get_exp(0, 2, 0, epoint);
+    actual_encoding = old;
+    if (!rc) return true;
+    len = get_val_remaining();
+    for (;;) {
+        struct values_s *vs, *vs2;
+        bool tryit;
+        str_t escape;
+
+        vs = get_val();
+        if (vs == NULL) break;
+        tryit = !tostr(vs, &escape);
+
+        if (tryit && (escape.len == 0 || escape.len > 1024)) {
+            err_msg2(escape.len == 0 ? ERROR__EMPTY_STRING : ERROR_OUT_OF_MEMORY, NULL, &vs->epoint);
+            tryit = false;
+        }
+        vs2 = get_val();
+        if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, epoint); return true; }
+        val = vs2->val;
+        if (val == none_value) err_msg_still_none(NULL, &vs2->epoint);
+        else if (tryit && enc_escape_add(actual_encoding, &escape, val, &vs2->epoint)) {
+            err_msg2(ERROR_DOUBLE_ESCAPE, NULL, &vs->epoint); return true;
+        }
+    }
+    return false;
+}
+
 static bool tdef_command(linepos_t epoint) {
     Obj *val;
     Enc *old = actual_encoding;
@@ -4311,116 +4428,12 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_CDEF: if ((waitfor->skip & 1) != 0)
                 { /* .cdef */
-                    struct character_range_s tmp;
-                    Enc *old = actual_encoding;
-                    bool rc;
-                    argcount_t len;
-                    listing_line(epoint.pos);
-                    actual_encoding = NULL;
-                    rc = get_exp(0, 2, 0, &epoint);
-                    actual_encoding = old;
-                    len = get_val_remaining();
-                    if (!rc) goto breakerr;
-                    for (;;) {
-                        bool endok = false;
-                        size_t i;
-                        bool tryit = true;
-                        uval_t uval;
-                        struct values_s *vs;
-                        linepos_t opoint;
-
-                        vs = get_val();
-                        if (vs == NULL) break;
-
-                        opoint = &vs->epoint;
-                        val = vs->val;
-                        if (val->obj == STR_OBJ) {
-                            Str *str = Str(val);
-                            if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
-                            else {
-                                unichar_t ch = str->data[0];
-                                if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
-                                tmp.start = ch;
-                                if (str->len > i) {
-                                    ch = str->data[i];
-                                    if ((ch & 0x80) != 0) i += utf8in(str->data + i, &ch); else i++;
-                                    tmp.end = ch & 0xffffff;
-                                    endok = true;
-                                    if (str->len > i) {err_msg2(ERROR_NOT_TWO_CHARS, NULL, &vs->epoint); tryit = false;}
-                                }
-                            }
-                        } else {
-                            if (touval2(vs, &uval, 24)) tryit = false;
-                            else tmp.start = uval & 0xffffff;
-                        }
-                        if (!endok) {
-                            vs = get_val();
-                            if (vs == NULL) { err_msg_argnum(len, len + 2, 0, &epoint); goto breakerr; }
-
-                            val = vs->val;
-                            if (val->obj == STR_OBJ) {
-                                Str *str = Str(val);
-                                if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
-                                else {
-                                    unichar_t ch = str->data[0];
-                                    if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
-                                    tmp.end = ch & 0xffffff;
-                                    if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, NULL, &vs->epoint); tryit = false;}
-                                }
-                            } else {
-                                if (touval2(vs, &uval, 24)) tryit = false;
-                                else tmp.end = uval & 0xffffff;
-                            }
-                        }
-                        vs = get_val();
-                        if (vs == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr;}
-                        if (touval2(vs, &uval, 8)) {}
-                        else if (tryit) {
-                            tmp.offset = uval & 0xff;
-                            if (tmp.start > tmp.end) {
-                                unichar_t tmpe = tmp.start;
-                                tmp.start = tmp.end;
-                                tmp.end = tmpe & 0xffffff;
-                            }
-                            if (enc_trans_add(actual_encoding, &tmp, &epoint)) {
-                                err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); goto breakerr;
-                            }
-                        }
-                    }
+                    if (cdef_command(&epoint)) goto breakerr;
                 }
                 break;
             case CMD_EDEF: if ((waitfor->skip & 1) != 0)
                 { /* .edef */
-                    Enc *old = actual_encoding;
-                    bool rc;
-                    argcount_t len;
-                    listing_line(epoint.pos);
-                    actual_encoding = NULL;
-                    rc = get_exp(0, 2, 0, &epoint);
-                    actual_encoding = old;
-                    if (!rc) goto breakerr;
-                    len = get_val_remaining();
-                    for (;;) {
-                        struct values_s *vs, *vs2;
-                        bool tryit;
-                        str_t escape;
-
-                        vs = get_val();
-                        if (vs == NULL) break;
-                        tryit = !tostr(vs, &escape);
-
-                        if (tryit && (escape.len == 0 || escape.len > 1024)) {
-                            err_msg2(escape.len == 0 ? ERROR__EMPTY_STRING : ERROR_OUT_OF_MEMORY, NULL, &vs->epoint);
-                            tryit = false;
-                        }
-                        vs2 = get_val();
-                        if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, &epoint); goto breakerr; }
-                        val = vs2->val;
-                        if (val == none_value) err_msg_still_none(NULL, &vs2->epoint);
-                        else if (tryit && enc_escape_add(actual_encoding, &escape, val, &vs2->epoint)) {
-                            err_msg2(ERROR_DOUBLE_ESCAPE, NULL, &vs->epoint); goto breakerr;
-                        }
-                    }
+                    if (edef_command(&epoint)) goto breakerr;
                 }
                 break;
             case CMD_TDEF: if ((waitfor->skip & 1) != 0)
