@@ -291,6 +291,7 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x09" "sint",
     "\x45" "struct",
     "\x53" "switch",
+    "\x71" "tdef",
     "\x00" "text",
     "\x48" "union",
     "\x42" "var",
@@ -322,7 +323,7 @@ typedef enum Command_types {
     CMD_MANSIZ, CMD_SEED, CMD_NAMESPACE, CMD_ENDN, CMD_VIRTUAL, CMD_ENDV,
     CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF,
     CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT, CMD_ENDFOR,
-    CMD_ENDREPT, CMD_ENDWHILE, CMD_ENCODE, CMD_ENDENCODE
+    CMD_ENDREPT, CMD_ENDWHILE, CMD_ENCODE, CMD_ENDENCODE, CMD_TDEF 
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -1865,6 +1866,88 @@ static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
     if (expr != oldpline) free(expr);
     s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - apoint.line;
     return i;
+}
+
+static bool tdef_command(linepos_t epoint) {
+    Obj *val;
+    Enc *old = actual_encoding;
+    bool rc;
+    argcount_t len;
+    listing_line(epoint->pos);
+    actual_encoding = NULL;
+    rc = get_exp(0, 2, 0, epoint);
+    actual_encoding = old;
+    if (!rc) return true;
+    len = get_val_remaining();
+    for (;;) {
+        struct character_range_s tmp;
+        struct iter_s iter, iter2;
+        struct values_s *vs, *vs2;
+        bool doublerange;
+        uval_t uval;
+
+        vs = get_val();
+        if (vs == NULL) break;
+        val = vs->val;
+
+        vs2 = get_val();
+        if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, epoint); return true; }
+        if (vs2->val->obj->iterable) {
+            iter2.data = vs2->val; iter2.data->obj->getiter(&iter2);
+        } else if (touval2(vs2, &uval, 8)) {
+            continue;
+        } else {
+            uval &= 0xff;
+            iter2.data = NULL;
+        }
+        doublerange = false;
+        iter.data = val; 
+        if (val->obj == BITS_OBJ) {
+            DEFAULT_OBJ->getiter(&iter);
+        } else {
+            val->obj->getiter(&iter);
+        }
+        if (iter2.data != NULL && iter.len != iter2.len) {
+            Error *err = new_error(ERROR_CANT_BROADCAS, &vs->epoint);
+            err->u.broadcast.v1 = iter.len;
+            err->u.broadcast.v2 = iter2.len;
+            err_msg_output_and_destroy(err);
+        }
+        while ((val = iter.next(&iter)) != NULL) {
+            uval_t uval2;
+            bool ret;
+            actual_encoding = NULL;
+            ret = touval(val, &uval2, 24, &vs->epoint);
+            if (iter2.data != NULL) {
+                val = iter2.next(&iter2);
+                if (val != NULL) {
+                    if (touval(val, &uval, 8, &vs2->epoint)) ret = true;
+                }
+            } else if (uval > 255) {
+                if (uval == 256) {
+                    val = int_from_uval(uval);
+                    if (touval(val, &uval, 8, &vs2->epoint)) ret = true;
+                    val_destroy(val);
+                }
+                ret = true;
+            }
+            actual_encoding = old;
+            if (val == NULL) break;
+            if (!ret) {
+                tmp.offset = uval & 0xff;
+                tmp.end = uval2 & 0xffffff;
+                tmp.start = tmp.end;
+                if (enc_trans_add(actual_encoding, &tmp, &vs2->epoint)) doublerange = true;
+            }
+            uval++;
+        }
+        iter_destroy(&iter);
+        if (iter2.data != NULL) iter_destroy(&iter2);
+        if (doublerange) {
+            err_msg2(ERROR__DOUBLE_RANGE, NULL, &vs->epoint);
+        }
+    }
+    return false;
 }
 
 static Namespace *anonlabel(Namespace *mycontext, uint8_t type, linepos_t epoint) {
@@ -4338,6 +4421,11 @@ MUST_CHECK Obj *compile(void)
                             err_msg2(ERROR_DOUBLE_ESCAPE, NULL, &vs->epoint); goto breakerr;
                         }
                     }
+                }
+                break;
+            case CMD_TDEF: if ((waitfor->skip & 1) != 0)
+                { /* .tdef */
+                    if (tdef_command(&epoint)) goto breakerr;
                 }
                 break;
             case CMD_CPU: if ((waitfor->skip & 1) != 0)

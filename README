@@ -1810,13 +1810,32 @@ sources it could be useful to define escape sequences for control codes.
 .cdef "<start><end>", <coded> [, "<start><end>", <coded>, ...]
     Assigns characters in a range to single bytes.
 
-    This is a simple single character to byte translation definition. It is
-    applied to a range as characters and bytes are usually assigned
-    sequentially. The start and end positions are Unicode character codes
-    either by numbers or by typing them. Overlapping ranges are not allowed.
+    This is a simple single character to byte translation definition. It's
+    useful to map a range of Unicode characters to a range of bytes. The start
+    and end positions are Unicode character codes either by numbers or by
+    typing them. Overlapping ranges are not allowed.
 
             .enc "ascii"    ;define an ascii encoding
-            .cdef " ~", 32  ;identity for printable
+            .cdef " ~", 32  ;identity mapping for printable
+
+.tdef <expression>, <expression> [, <expression>, <expression>, ...]
+    Assign single characters to byte values.
+
+    Similar to .cdef it is a single character to byte translation definition.
+    It's easier to use when the character codes are not consecutive.
+    Overlapping ranges with the former and itself are not allowed.
+
+    It tries to assign Unicode character codes from the first expression to
+    byte values from the second. More than one pair of such assigments can be
+    given.
+
+    If the byte value expression is not iterable then it will get incremented
+    for each character definition. This allows easy assignment of randomly
+    scattered Unicode values to a consecutive range of bytes values.
+
+            .mdef "A", 65;A -> 65
+            .mdef "ACX", 65;A -> 65, C-> 66, X -> 67
+            .mdef "ACX", [65, 33, 11];A -> 65, C-> 33, X -> 11
 
 .edef "<escapetext>", <value> [, "<escapetext>", <value>, ...]
     Assigns strings to byte sequences as a translated value.
@@ -1826,23 +1845,39 @@ sources it could be useful to define escape sequences for control codes.
     wins. Useful for defining non-typeable control code aliases, or as a simple
     tokenizer.
 
-        .enc "petscii"  ;define an ascii->petscii encoding
-        .cdef " @", 32  ;characters
+            .edef "\n", 13  ;one byte control codes
+            .edef "{clr}", 147
+            .edef "{crlf}", [13, 10];two byte control code
+            .edef "<nothing>", [];replace with no bytes
+
+The example below shows how all this fits together:
+
+petscii .namespace
+common  .segment;common definitions
+        .cdef " @", $20;32-64 is identical
+        .tdef "[?]??", $5b, "???", $db
+        .edef "{clr}", 147, "{cr}", 13
+        .endsegment
+upper   .encode;uppercase PETSCII
+        #common
         .cdef "AZ", $c1
-        .cdef "az", $41
-        .cdef "[[", $5b
-        .cdef "??", $5c
-        .cdef "]]", $5d
-        .cdef "??", $5e
-        .cdef $2190, $2190, $1f;left arrow
+        .tdef "????????????????????????????????", $a1
+        .tdef "??????????????????????????", $c1
+        .tdef "????", [$df, $ff, $c0, $dd]
+        .endencode
 
-        .edef "\n", 13  ;one byte control codes
-        .edef "{clr}", 147
-        .edef "{crlf}", [13, 10];two byte control code
-        .edef "<nothing>", [];replace with no bytes
+lower   .encode;lowercase PETSCII
+        #common
+        .cdef "az", $41, "AZ", $c1;the easy ranges
+        .tdef "????????????????????????????????", $a1
+        .tdef "????", [$df, $ff, $c0, $dd];random one to ones
+        .endencode
+        .endnamespace
 
->1000  93 d4 45 58 54 20 49 4e     .text "{clr}Text in PETSCII\n"
+                                    .encode petscii.lower
+>1000  93 d4 45 58 54 20 49 4e     .text "{clr}Text in PETSCII{cr}"
 >1008  20 d0 c5 d4 d3 c3 c9 c9 0d
+                                    .endencode
 
 Structured data
 
@@ -4836,8 +4871,8 @@ Assembler directives
 .hidemac .if .ifeq .ifmi .ifne .ifpl .include .lbl .lint .logical .long .macro
 .mansiz .namespace .next .null .offs .option .page .pend .proc .proff .pron
 .ptext .rept .rta .section .seed .segment .send .sfunction .shift .shiftl
-.showmac .sint .struct .switch .text .union .var .virtual .warn .weak .while
-.with .word .xl .xs
+.showmac .sint .struct .switch .tdef .text .union .var .virtual .warn .weak
+.while .with .word .xl .xs
 
 -------------------------------------------------------------------------------
 

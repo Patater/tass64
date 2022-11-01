@@ -206,6 +206,7 @@ context default lightgray
     keyword whole .showmac brightcyan
     keyword whole .struct brightcyan
     keyword whole .switch brightcyan
+    keyword whole .tdef brightcyan
     keyword whole .union brightcyan
     keyword whole .var brightcyan
     keyword whole .virtual brightcyan

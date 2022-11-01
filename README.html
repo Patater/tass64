@@ -2199,14 +2199,34 @@ vt100   <b class="k">.encode</b>     <i>;define custom encoding</i>
 <dt><b>.cdef</b> "&lt;start&gt;&lt;end&gt;", &lt;coded&gt; [, "&lt;start&gt;&lt;end&gt;", &lt;coded&gt;, &hellip;]
 <dd>Assigns characters in a range to single bytes.
 
-<p>This is a simple single character to byte translation definition. It is
-applied to a range as characters and bytes are usually assigned sequentially.
-The start and end positions are Unicode character codes either by numbers or by
-typing them. Overlapping ranges are not allowed.</p>
+<p>This is a simple single character to byte translation definition. It's
+useful to map a range of Unicode characters to a range of bytes. The start and
+end positions are Unicode character codes either by numbers or by typing them.
+Overlapping ranges are not allowed.</p>
 
 <pre width="80">
         <b class="k">.enc</b> <span class="s">"ascii"</span>    <i>;define an ascii encoding</i>
-        <b class="k">.cdef</b> <span class="s">" ~"</span>, <span>32</span>  <i>;identity for printable</i>
+        <b class="k">.cdef</b> <span class="s">" ~"</span>, <span>32</span>  <i>;identity mapping for printable</i>
+</pre>
+
+<dt><b>.tdef</b> &lt;expression&gt;, &lt;expression&gt; [, &lt;expression&gt;, &lt;expression&gt;, &hellip;]<a name="d_tdef" href="#d_tdef"></a>
+<dd>Assign single characters to byte values.
+
+<p>Similar to <a href="#d_cdef"><code>.cdef</code></a> it is a single character to byte translation
+definition. It's easier to use when the character codes are not consecutive.
+Overlapping ranges with the former and itself are not allowed.
+
+<p>It tries to assign Unicode character codes from the first expression to byte
+values from the second. More than one pair of such assigments can be given.
+
+<p>If the byte value expression is not iterable then it will get incremented
+for each character definition. This allows easy assignment of randomly
+scattered Unicode values to a consecutive range of bytes values.</p>
+
+<pre width="80">
+        <b class="k">.mdef</b> <span class="s">"A"</span>, <span>65</span><i>;A -> 65</i>
+        <b class="k">.mdef</b> <span class="s">"ACX"</span>, <span>65</span><i>;A -> 65, C-> 66, X -> 67</i>
+        <b class="k">.mdef</b> <span class="s">"ACX"</span>, [<span>65</span>, <span>33</span>, <span>11</span>]<i>;A -> 65, C-> 33, X -> 11</i>
 </pre>
 
 <dt><b>.edef</b> "&lt;escapetext&gt;", &lt;value&gt; [, "&lt;escapetext&gt;", &lt;value&gt;, &hellip;]<a name="d_edef" href="#d_edef"></a>
@@ -2215,26 +2235,44 @@ typing them. Overlapping ranges are not allowed.</p>
 <p>When these substrings are found in a text they are replaced by bytes defined here.
 When strings with common prefixes are used the longest match wins. Useful for defining
 non-typeable control code aliases, or as a simple tokenizer.</p>
-</dl>
 
 <pre width="80">
-        <b class="k">.enc</b> <span class="s">"petscii"</span>  <i>;define an ascii-&gt;petscii encoding</i>
-        <b class="k">.cdef</b> <span class="s">" @"</span>, <span>32</span>  <i>;characters</i>
-        <b class="k">.cdef</b> <span class="s">"AZ"</span>, <span>$c1</span>
-        <b class="k">.cdef</b> <span class="s">"az"</span>, <span>$41</span>
-        <b class="k">.cdef</b> <span class="s">"[["</span>, <span>$5b</span>
-        <b class="k">.cdef</b> <span class="s">"&pound;&pound;"</span>, <span>$5c</span>
-        <b class="k">.cdef</b> <span class="s">"]]"</span>, <span>$5d</span>
-        <b class="k">.cdef</b> <span class="s">"&pi;&pi;"</span>, <span>$5e</span>
-        <b class="k">.cdef</b> <span>$2190</span>, <span>$2190</span>, <span>$1f</span><i>;left arrow</i>
-
         <b class="k">.edef</b> <span class="s">"\n"</span>, <span>13</span>  <i>;one byte control codes</i>
         <b class="k">.edef</b> <span class="s">"{clr}"</span>, <span>147</span>
         <b class="k">.edef</b> <span class="s">"{crlf}"</span>, [<span>13</span>, <span>10</span>]<i>;two byte control code</i>
         <b class="k">.edef</b> <span class="s">"&lt;nothing&gt;"</span>, []<i>;replace with no bytes</i>
+</pre>
+</dl>
 
-&gt;1000  93 d4 45 58 54 20 49 4e     <b class="d">.text</b> <span class="s">"<span>{clr}</span>Text in PETSCII<span>\n</span>"</span>
+<p>The example below shows how all this fits together:
+
+<pre width="80">
+petscii <b class="k">.namespace</b>
+common  <b class="k">.segment</b><i>;common definitions</i>
+        <b class="k">.cdef</b> <span class="s">" @"</span>, <span>$20</span><i>;32-64 is identical</i>
+        <b class="k">.tdef</b> <span class="s">"[£]↑←"</span>, <span>$5b</span>, <span class="s">"┼🮌🭳"</span>, <span>$db</span>
+        <b class="k">.edef</b> <span class="s">"{clr}"</span>, <span>147</span>, <span class="s">"{cr}"</span>, <span>13</span>
+        <b class="k">.endsegment</b>
+upper   <b class="k">.encode</b><i>;uppercase PETSCII</i>
+        <b class="k">#common</b>
+        <b class="k">.cdef</b> <span class="s">"AZ"</span>, <span>$c1</span>
+        <b class="k">.tdef</b> <span class="s">"▌▄▔▁▏▒▕🮏◤🮇├▗└┐▂┌┴┬┤▎▍🮈🮂🮃▃🭿▖▝┘▘▚🭹"</span>, <span>$a1</span>
+        <b class="k">.tdef</b> <span class="s">"♠🭲🭸🭷🭶🭺🭱🭴╮╰╯🭼╲╱🭽🭾●🭻♥🭰╭╳○♣🭵♦"</span>, <span>$c1</span>
+        <b class="k">.tdef</b> <span class="s">"◥π─│"</span>, [<span>$df</span>, <span>$ff</span>, <span>$c0</span>, <span>$dd</span>]
+        <b class="k">.endencode</b>
+
+lower   <b class="k">.encode</b><i>;lowercase PETSCII</i>
+        <b class="k">#common</b>
+        <b class="k">.cdef</b> <span class="s">"az"</span>, <span>$41</span>, <span class="s">"AZ"</span>, <span>$c1</span><i>;the easy ranges</i>
+        <b class="k">.tdef</b> <span class="s">"▌▄▔▁▏▒▕🮏🮙🮇├▗└┐▂┌┴┬┤▎▍🮈🮂🮃▃✓▖▝┘▘▚🭹"</span>, <span>$a1</span>
+        <b class="k">.tdef</b> <span class="s">"🮘🮕─│"</span>, [<span>$df</span>, <span>$ff</span>, <span>$c0</span>, <span>$dd</span>]<i>;random one to ones</i>
+        <b class="k">.endencode</b>
+        <b class="k">.endnamespace</b>
+
+                                    <b class="k">.encode</b> <u>petscii</u>.<u>lower</u>
+&gt;1000  93 d4 45 58 54 20 49 4e     <b class="d">.text</b> <span class="s">"<span>{clr}</span>Text in PETSCII<span>{cr}</span>"</span>
 &gt;1008  20 d0 c5 d4 d3 c3 c9 c9 0d
+                                    <b class="k">.endencode</b>
 </pre>
 
 <h3>Structured data<a name="structures" href="#structures"></a></h3>
@@ -5922,6 +5960,7 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_sint">.sint</a>
 <a href="#d_struct">.struct</a>
 <a href="#d_switch">.switch</a>
+<a href="#d_tdef">.tdef</a>
 <a href="#d_text">.text</a>
 <a href="#d_union">.union</a>
 <a href="#d_var">.var</a>
