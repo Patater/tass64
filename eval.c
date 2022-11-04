@@ -2033,6 +2033,7 @@ void eval_leave(void) {
 }
 
 void init_eval(void) {
+    evx = NULL;
     evxnum = 0;
     evx_p = ~(size_t)0;
     eval_enter();
