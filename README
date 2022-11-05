@@ -1826,7 +1826,7 @@ sources it could be useful to define escape sequences for control codes.
     Overlapping ranges with the former and itself are not allowed.
 
     It tries to assign Unicode character codes from the first expression to
-    byte values from the second. More than one pair of such assigments can be
+    byte values from the second. More than one pair of such assignments can be
     given.
 
     If the byte value expression is not iterable then it will get incremented
@@ -1843,7 +1843,7 @@ sources it could be useful to define escape sequences for control codes.
     When these substrings are found in a text they are replaced by bytes
     defined here. When strings with common prefixes are used the longest match
     wins. Useful for defining non-typeable control code aliases, or as a simple
-    tokenizer.
+    tokeniser.
 
             .edef "\n", 13  ;one byte control codes
             .edef "{clr}", 147
@@ -2437,7 +2437,7 @@ ctable  .byte colors.(red, green, blue)
     count   ldx #0
             .bend
 
-.namespace [<exression>]
+.namespace [<expression>]
     Namespace area start
 .endn
 .endnamespace
@@ -2447,9 +2447,14 @@ ctable  .byte colors.(red, green, blue)
     activates the one in the parameter.
 
     The scope can be assigned to a symbol in front of the directive so that it
-    can be reactivated later.
+    can be reactivated later. This enables label definitions into the same
+    scope in different files.
 
-    This enabled label definitions into the same scope in different files.
+    colors  .namespace
+    red     = 2
+    blue    = 6
+            .endnamespace
+            lda #colors.red
 
 .weak
 .endweak
@@ -2481,7 +2486,7 @@ ctable  .byte colors.(red, green, blue)
     Please note that .ifdef/.ifndef directives are left out from 64tass for of
     technical reasons, so don't wait for them to appear anytime soon.
 
-.with <exression>
+.with <expression>
 .endwith
     Namespace access
 
@@ -4274,9 +4279,9 @@ square root of negative number
 too large for a ? bit signed/unsigned integer
     value out of range
 unexpected character '?'
-    unexpected control or unicode character
+    unexpected control or Unicode character
 unknown processor '?'
-    unknown cpu name
+    unknown CPU name
 unknown argument name '?'
     no parameter argument known like this
 unknown format character '?'

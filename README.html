@@ -2217,7 +2217,7 @@ definition. It's easier to use when the character codes are not consecutive.
 Overlapping ranges with the former and itself are not allowed.
 
 <p>It tries to assign Unicode character codes from the first expression to byte
-values from the second. More than one pair of such assigments can be given.
+values from the second. More than one pair of such assignments can be given.
 
 <p>If the byte value expression is not iterable then it will get incremented
 for each character definition. This allows easy assignment of randomly
@@ -2234,7 +2234,7 @@ scattered Unicode values to a consecutive range of bytes values.</p>
 
 <p>When these substrings are found in a text they are replaced by bytes defined here.
 When strings with common prefixes are used the longest match wins. Useful for defining
-non-typeable control code aliases, or as a simple tokenizer.</p>
+non-typeable control code aliases, or as a simple tokeniser.</p>
 
 <pre width="80">
         <b class="k">.edef</b> <span class="s">"\n"</span>, <span>13</span>  <i>;one byte control codes</i>
@@ -2901,7 +2901,7 @@ count   <b>ldx</b> #<span>0</span>
         <b class="k">.bend</b>
 </pre>
 
-<dt><b>.namespace</b> [&lt;exression&gt;]<a name="d_namespace" href="#d_namespace"></a>
+<dt><b>.namespace</b> [&lt;expression&gt;]<a name="d_namespace" href="#d_namespace"></a>
 <dd>Namespace area start
 <dt><b>.endn</b><a name="d_endn" href="#d_endn"></a>
 <dt><b>.endnamespace</b><a name="d_endnamespace" href="#d_endnamespace"></a>
@@ -2909,9 +2909,17 @@ count   <b>ldx</b> #<span>0</span>
 
 <p>This directive either creates a new scope (if used without a parameter) or activates the one in the parameter.</p>
 
-<p>The scope can be assigned to a symbol in front of the directive so that it can be reactivated later.</p>
+<p>The scope can be assigned to a symbol in front of the directive so that it
+can be reactivated later. This enables label definitions into the same scope in
+different files.</p>
 
-<p>This enabled label definitions into the same scope in different files.</p>
+<pre width="80">
+colors  <b class="k">.namespace</b>
+red     <b>=</b> <span>2</span>
+blue    <b>=</b> <span>6</span>
+        <b class="k">.endnamespace</b>
+        <b>lda</b> #<u>colors</u>.<u>red</u>
+</pre>
 
 <dt><b>.weak</b><a name="d_weak" href="#d_weak"></a>
 <dt><b>.endweak</b><a name="d_endweak" href="#d_endweak"></a>
@@ -2946,7 +2954,7 @@ scope is of course not allowed and it results in double definition error.</p>
 left out from 64tass for of technical reasons, so don't wait for them to appear
 anytime soon.</p>
 
-<dt><b>.with</b> &lt;exression&gt;<a name="d_with" href="#d_with"></a>
+<dt><b>.with</b> &lt;expression&gt;<a name="d_with" href="#d_with"></a>
 <dt><b>.endwith</b><a name="d_endwith" href="#d_endwith"></a>
 <dd>Namespace access
 
@@ -4780,8 +4788,8 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 <dt>some operation '?' of type '?' and type '?' not possible<dd>can't do this calculation with these values
 <dt>square root of negative number<dd>can't calculate the square root of a negative number
 <dt>too large for a ? bit signed/unsigned integer<dd>value out of range
-<dt>unexpected character '?'<dd>unexpected control or unicode character
-<dt>unknown processor '?'<dd>unknown cpu name
+<dt>unexpected character '?'<dd>unexpected control or Unicode character
+<dt>unknown processor '?'<dd>unknown CPU name
 <dt>unknown argument name '?'<dd>no parameter argument known like this
 <dt>unknown format character '?'<dd>no format character known like this
 <dt>use '?' instead of '?'<dd>wrong sort of character was used. For example a left double quotation mark was used instead of a regular quotation mark.

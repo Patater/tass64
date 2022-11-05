@@ -1717,14 +1717,9 @@ void err_msg_file2(Error_types no, const char *prm) {
     err_msg_file(no, prm, current_file_list, &nopoint);
 }
 
-static void error_status_val(const char *head, unsigned int val) {
-    fputs(head, stdout);
-    if (val != 0) printf("%u\n", val); else puts("None");
-}
-
 void error_status(void) {
-    error_status_val("Error messages:    ", errors);
-    error_status_val("Warning messages:  ", warnings);
+    if (errors != 0) printf("Error messages:    %u\n", errors);
+    if (warnings!= 0) printf("Warning messages:  %u\n", warnings);
 }
 
 linecpos_t interstring_position(linepos_t epoint, const uint8_t *data, size_t i) {
