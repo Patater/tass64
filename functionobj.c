@@ -919,6 +919,7 @@ void functionobj_names(void) {
     unsigned int i;
     for (i = 0; i < lenof(builtin_functions); i++) {
         builtin_functions[i].v.obj = &obj;
+        builtin_functions[i].v.refcount = 2;
         new_builtin(builtin_functions[i].name, Obj(builtin_functions + i));
     }
 }

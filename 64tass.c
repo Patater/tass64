@@ -329,11 +329,20 @@ typedef enum Command_types {
 /* --------------------------------------------------------------------------- */
 static void compile_init(const char *name) {
     err_init(name);
+    init_values();
+    init_type();
     objects_init();
     init_section();
     init_file();
     init_variables();
     init_eval();
+    init_ternary();
+    init_opt_bit();
+    waitfors = NULL;
+    waitfor_p = 0;
+    waitfor_len = 0;
+    pass = 0;
+    max_pass = MAX_PASS;
 }
 
 static void compile_destroy(void) {

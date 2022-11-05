@@ -128,6 +128,9 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     return obj_oper_error(op);
 }
 
+void init_type(void) {
+    memset(values_free, 0, sizeof values_free);
+}
 
 void typeobj_init(void) {
     Type *type = new_type(&obj, T_TYPE, "type", sizeof(Type));

@@ -45,6 +45,7 @@ extern struct Bit *v_bit(struct Bit *, struct Bit *, struct Bit *);
 extern struct Bit *and_bit(struct Bit *, struct Bit *);
 extern struct Bit *or_bit(struct Bit *, struct Bit *);
 extern struct Bit *xor_bit(struct Bit *, struct Bit *);
+extern void init_opt_bit(void);
 extern void destroy_opt_bit(void);
 
 #endif

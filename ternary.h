@@ -37,6 +37,7 @@ typedef struct ternary_node_def
 }
 ternary_node;
 
+extern void init_ternary(void);
 extern void destroy_ternary(void);
 
 /* Insert string S into tree P, associating it with DATA.

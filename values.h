@@ -38,6 +38,7 @@ extern FAST_CALL void val_replace(struct Obj **, struct Obj *);
 extern size_t val_print(struct Obj *, FILE *, size_t);
 extern FAST_CALL void iter_destroy(struct iter_s *);
 
+extern void init_values(void);
 extern void destroy_values(void);
 extern void garbage_collect(void);
 #endif

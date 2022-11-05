@@ -76,6 +76,7 @@ enum { MAXIMUM_TYPE_LENGTH = 33 };
 
 #define Type(a) OBJ_CAST(Type, a)
 
+extern void init_type(void);
 extern void typeobj_init(void);
 extern void typeobj_names(void);
 extern Type *new_type(Type *, Type_types, const char *, size_t);

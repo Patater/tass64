@@ -88,12 +88,12 @@ static MALLOC struct trans_s *trans_alloc(void) {
 static union trans_u {
     struct trans_s trans;
     union trans_u *next;
-} *transs_free = NULL;
+} *transs_free;
 
 static struct transs_s {
     union trans_u transs[31];
     struct transs_s *next;
-} *transs = NULL;
+} *transs;
 
 static void trans_free(union trans_u *trans) {
     trans->next = transs_free;
@@ -464,6 +464,10 @@ void encobj_init(void) {
     actual_encoding->map = NULL;
     avltree_init(&actual_encoding->ranges);
     lasttr = NULL;
+#ifndef DEBUG
+    transs_free = NULL;
+    transs = NULL;
+#endif
 }
 
 void encobj_destroy(void) {

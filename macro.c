@@ -1051,4 +1051,6 @@ void free_macro(void) {
         free(macro_parameters.params[i].param);
     }
     free(macro_parameters.params);
+    macro_parameters.len = 0;
+    macro_parameters.params = NULL;
 }

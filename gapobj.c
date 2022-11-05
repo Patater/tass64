@@ -184,6 +184,7 @@ void gapobj_init(void) {
     type->calc1 = calc1;
     type->calc2 = calc2;
     type->rcalc2 = rcalc2;
+    gapval.repr = NULL;
 }
 
 void gapobj_names(void) {

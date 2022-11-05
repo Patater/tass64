@@ -169,9 +169,7 @@ void destroy_section(void) {
     longjump_destroy(&root_section.longjump);
     val_destroy(Obj(root_section.address.mem));
     val_destroy(root_section.address.l_address_val);
-    root_section.address.l_address_val = NULL;
     cpu_opt_destroy(root_section.optimizer);
-    root_section.optimizer = NULL;
 }
 
 void section_sizecheck(const struct avltree_node *b) {

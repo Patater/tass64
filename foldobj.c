@@ -138,6 +138,7 @@ void foldobj_init(void) {
     type->repr = repr;
     type->calc2 = calc2;
     type->rcalc2 = rcalc2;
+    foldval.repr = NULL;
 }
 
 void foldobj_destroy(void) {

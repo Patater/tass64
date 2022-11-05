@@ -239,6 +239,12 @@ static void file_free_static(struct file_s *a)
     free(a->binary.data);
     free(a->line);
     free(a->nomacro);
+    a->source.data = NULL;
+    a->source.read = false;
+    a->binary.data = NULL;
+    a->binary.read = false;
+    a->line = NULL;
+    a->nomacro = NULL;
 }
 
 static void file_free(struct file_s *a)

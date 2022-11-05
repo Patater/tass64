@@ -235,6 +235,10 @@ void boolobj_init(void) {
     type->function = function;
     type->calc1 = calc1;
     type->calc2 = calc2;
+    falseval.v.refcount = 2;
+    falseval.repr = NULL;
+    trueval.v.refcount = 2;
+    trueval.repr = NULL;
 }
 
 void boolobj_names(void) {
