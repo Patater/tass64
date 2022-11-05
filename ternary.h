@@ -37,22 +37,22 @@ typedef struct ternary_node_def
 }
 ternary_node;
 
-void destroy_ternary(void);
+extern void destroy_ternary(void);
 
 /* Insert string S into tree P, associating it with DATA.
    Return the data in the tree associated with the string if it's
    already there, and replace is 0.
    Otherwise, replaces if it it exists, inserts if it doesn't, and
    returns the data you passed in. */
-ternary_tree *ternary_insert(ternary_tree *, const uint8_t *, const uint8_t *);
+extern ternary_tree *ternary_insert(ternary_tree *, const uint8_t *, const uint8_t *);
 
 typedef void (*ternary_free_fn_t)(void *);
 
 /* Delete the ternary search tree rooted at P.
    Does NOT delete the data you associated with the strings. */
-void ternary_cleanup (ternary_tree, ternary_free_fn_t);
+extern void ternary_cleanup (ternary_tree, ternary_free_fn_t);
 
 /* Search the ternary tree for string S, returning the data associated
    with it if found. */
-void *ternary_search (const ternary_node *, const uint8_t *, size_t *);
+extern void *ternary_search (const ternary_node *, const uint8_t *, size_t *);
 #endif
