@@ -9,7 +9,7 @@ OBJS = 64tass.o opcodes.o str.o avl.o my_getopt.o eval.o error.o section.o \
  foldobj.o main.o console.o encobj.o
 LDLIBS = -lm
 LANG = C
-VERSION = 1.56
+VERSION = 1.57
 CFLAGS = -O2
 CFLAGS += -g -W -Wall -Wextra -Wwrite-strings -Wshadow -fstrict-aliasing -Wstrict-aliasing=2 -Werror=missing-prototypes
 LDFLAGS =
