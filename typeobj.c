@@ -28,7 +28,7 @@ static Type obj;
 
 Type *const TYPE_OBJ = &obj;
 
-static struct Slot *values_free[33];
+static struct Slot *values_free[MAXIMUM_TYPE_LENGTH];
 
 #define ALIGN sizeof(int *)
 

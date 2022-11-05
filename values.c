@@ -37,7 +37,7 @@ typedef struct Slotcoll {
     struct Slotcoll *next;
 } Slotcoll;
 
-static Slotcoll *slotcoll[32];
+static Slotcoll *slotcoll[MAXIMUM_TYPE_LENGTH];
 
 static void value_free(Obj *val) {
     Slot *slot = (Slot *)val, **c = val->obj->slot;

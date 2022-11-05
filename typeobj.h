@@ -72,6 +72,8 @@ typedef struct Type {
     void (*getriter)(struct iter_s *);
 } Type;
 
+enum { MAXIMUM_TYPE_LENGTH = 33 };
+
 #define Type(a) OBJ_CAST(Type, a)
 
 extern void typeobj_init(void);
