@@ -88,6 +88,7 @@ bool fixeddig, constcreated;
 uint32_t outputeor = 0; /* EOR value for final output (usually 0, unless changed by .eor) */
 bool referenceit = true;
 const struct cpu_s *current_cpu;
+static unsigned int err_msg_char_note_once;
 
 static size_t waitfor_p, waitfor_len;
 static struct waitfor_s {
@@ -329,7 +330,6 @@ typedef enum Command_types {
 /* --------------------------------------------------------------------------- */
 static void compile_init(const char *name) {
     err_init(name);
-    init_values();
     init_type();
     objects_init();
     init_section();
@@ -342,6 +342,7 @@ static void compile_init(const char *name) {
     waitfor_p = 0;
     waitfor_len = 0;
     pass = 0;
+    err_msg_char_note_once = 0;
     max_pass = MAX_PASS;
 }
 
@@ -865,9 +866,8 @@ static void byterecursion(struct byterecursion_s *brec, Obj *val) {
             if (brec->bits >= 0) {
                 if (touval(val, &uv, (unsigned int)brec->bits, brec->epoint)) {
                     if (diagnostics.pitfalls) {
-                        static unsigned int once;
                         if (brec->prm == CMD_BYTE && val->obj == STR_OBJ) err_msg_byte_note(brec->epoint2);
-                        else if (brec->prm != CMD_RTA && brec->prm != CMD_ADDR && once != pass) {
+                        else if (brec->prm != CMD_RTA && brec->prm != CMD_ADDR && err_msg_char_note_once != pass) {
                             Error *err = val->obj->ival(val, &iv, (unsigned int)brec->bits, brec->epoint2);
                             if (err != NULL) val_destroy(Obj(err));
                             else {
@@ -880,7 +880,7 @@ static void byterecursion(struct byterecursion_s *brec, Obj *val) {
                                 case CMD_WORD:  txt = ".sint"; break;
                                 }
                                 err_msg_char_note(txt, brec->epoint2);
-                                once = pass;
+                                err_msg_char_note_once = pass;
                             }
                         }
                     }

@@ -1497,6 +1497,8 @@ void bytesobj_destroy(void) {
 #endif
 
     for (i = 0; i < 256; i++) {
-        if (bytes_value[i] != NULL) val_destroy(Obj(bytes_value[i]));
+        if (bytes_value[i] == NULL) continue;
+        val_destroy(Obj(bytes_value[i]));
+        bytes_value[i] = NULL;
     }
 }

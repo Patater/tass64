@@ -257,6 +257,7 @@ MUST_CHECK bool unfc(struct ubuff_s *b) {
     if (b == NULL) {
         free(dbuf.data);
         dbuf.data = NULL;
+        dbuf.len = 0;
         return false;
     }
     for (dbuf.p = i = 0; i < b->p; i++) {
@@ -277,6 +278,8 @@ MUST_CHECK bool unfkc(str_t *s1, const str_t *s2, int mode) {
         free(dbuf2.data);
         dbuf.data = NULL;
         dbuf2.data = NULL;
+        dbuf.len = 0;
+        dbuf2.len = 0;
         return false;
     }
     mode = ((mode != 0) ? U_CASEFOLD : 0) | U_COMPAT;

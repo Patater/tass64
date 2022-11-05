@@ -305,11 +305,11 @@ static unichar_t fromiso2(unichar_t c) {
     return (unichar_t)w;
 }
 
+static unichar_t fromiso_conv[128];
 static inline unichar_t fromiso(unichar_t c) {
-    static unichar_t conv[128];
     c &= 0x7f;
-    if (conv[c] == 0) conv[c] = fromiso2(c);
-    return conv[c];
+    if (fromiso_conv[c] == 0) fromiso_conv[c] = fromiso2(c);
+    return fromiso_conv[c];
 }
 
 static filesize_t fsize(FILE *f) {
@@ -908,6 +908,7 @@ void init_file(void) {
     last_ubuff.len = 16;
     lastfi = NULL;
     avltree_init(&star_root.tree);
+    memset(fromiso_conv, 0, sizeof fromiso_conv);
 }
 
 static size_t wrap_print(const char *txt, FILE *f, size_t len) {

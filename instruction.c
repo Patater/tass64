@@ -407,7 +407,6 @@ static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned i
 
 MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t epoint) {
     Adrgen adrgen;
-    static unsigned int once;
     Adr_types opr;
     Reg_types reg;
     const uint8_t *cnmemonic; /* current nmemonic */
@@ -972,10 +971,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 if (adrgen == AG_SBYTE && diagnostics.pitfalls && val != none_value) {
                     err = val->obj->iaddress(val, (ival_t *)&uval, 8, epoint2);
                     if (err != NULL) val_destroy(Obj(err));
-                    else if (once != pass) {
-                        err_msg_immediate_note(epoint2);
-                        once = pass;
-                    }
+                    else err_msg_immediate_note(epoint2);
                 }
                 break;
             }
@@ -1099,10 +1095,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 if (adrgen == AG_SWORD && diagnostics.pitfalls && val != none_value) {
                     err = val->obj->iaddress(val, (ival_t *)&uval, 16, epoint2);
                     if (err != NULL) val_destroy(Obj(err));
-                    else if (once != pass) {
-                        err_msg_immediate_note(epoint2);
-                        once = pass;
-                    }
+                    else err_msg_immediate_note(epoint2);
                 }
                 break;
             }

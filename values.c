@@ -160,10 +160,6 @@ FAST_CALL void iter_destroy(struct iter_s *v1) {
     val_destroy(v1->data);
 }
 
-void init_values(void) {
-    memset(slotcoll, 0, sizeof slotcoll);
-}
-
 void destroy_values(void)
 {
     size_t j;
@@ -191,10 +187,12 @@ void destroy_values(void)
 
     for (j = 0; j < lenof(slotcoll); j++) {
         Slotcoll *s = slotcoll[j];
-        while (s != NULL) {
+        if (s == NULL) continue;
+        slotcoll[j] = NULL;
+        do {
             Slotcoll *old = s;
             s = s->next;
             free(old);
-        }
+        } while (s != NULL);
     }
 }
