@@ -603,7 +603,7 @@ int testarg(int *argc2, char **argv2[]) {
             case NO_OUTPUT:
             case OUTPUT_APPEND:
             case 'o': output.name = (opt == NO_OUTPUT) ? NULL : my_optarg;
-                      output.append = (opt == OUTPUT_APPEND);
+                      output.append = (opt == OUTPUT_APPEND) || (output.name != NULL && dash_name(output.name));
                       extend_array(&arguments.output, &arguments.output_len, 1);
                       arguments.output[arguments.output_len - 1] = output;
                       output.section = NULL;
