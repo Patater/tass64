@@ -911,51 +911,56 @@ void init_file(void) {
     memset(fromiso_conv, 0, sizeof fromiso_conv);
 }
 
-static size_t wrap_print(const char *txt, FILE *f, size_t len) {
-    if (len != 0) {
-        if (len > 64) {
-            fputs(" \\\n", f);
-            len = 0;
+struct makefile_s {
+    FILE *f;
+    size_t len;
+};
+
+static void wrap_print(struct makefile_s *m, const char *name) {
+    if (m->len != 0) {
+        if (m->len > 64) {
+            fputs(" \\\n", m->f);
+            m->len = 0;
         }
-        len++;
-        putc(' ', f);
+        m->len++;
+        putc(' ', m->f);
     }
-    return len + makefile_print(txt, f);
+    m->len += makefile_print(name, m->f);
+}
+
+static void wrap_print_nodash(struct makefile_s *m, const char *name) {
+    if (name == NULL || dash_name(name)) return;
+    wrap_print(m, name);
 }
 
 void makefile(int argc, char *argv[], bool make_phony) {
-    FILE *f;
-    size_t len = 0, j;
+    struct makefile_s m;
+    size_t j;
     int i, err;
 
-    f = dash_name(arguments.make) ? stdout : fopen_utf8(arguments.make, "wt");
-    if (f == NULL) {
+    m.f = dash_name(arguments.make) ? stdout : fopen_utf8(arguments.make, "wt");
+    if (m.f == NULL) {
         err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make);
         return;
     }
-    clearerr(f); errno = 0;
+    clearerr(m.f); errno = 0; m.len = 0;
     for (j = 0; j < arguments.output_len; j++) {
-        const struct output_s *output = &arguments.output[j];
-        if (dash_name(output->name)) continue;
-        len = wrap_print(output->name, f, len);
+        wrap_print_nodash(&m, arguments.output[j].name);
     }
-    if (arguments.list.name != NULL) {
-        if (!dash_name(arguments.list.name)) {
-            len = wrap_print(arguments.list.name, f, len);
-        }
-    }
+    wrap_print_nodash(&m, arguments.list.name);
     for (j = 0; j < arguments.symbol_output_len; j++) {
-        const struct symbol_output_s *output = &arguments.symbol_output[j];
-        if (dash_name(output->name)) continue;
-        len = wrap_print(output->name, f, len);
+        wrap_print_nodash(&m, arguments.symbol_output[j].name);
     }
-    if (len != 0) {
-        len++;
-        putc(':', f);
+    for (j = 0; j < arguments.output_len; j++) {
+        wrap_print_nodash(&m, arguments.output[j].mapname);
+    }
+    wrap_print_nodash(&m, arguments.error.name);
+    if (m.len != 0) {
+        m.len++;
+        putc(':', m.f);
 
         for (i = 0; i < argc; i++) {
-            if (dash_name(argv[i])) continue;
-            len = wrap_print(argv[i], f, len);
+            wrap_print_nodash(&m, argv[i]);
         }
 
         if (file_table.data != NULL) {
@@ -963,24 +968,24 @@ void makefile(int argc, char *argv[], bool make_phony) {
                 const struct file_s *a = file_table.data[j];
                 if (a == NULL) continue;
                 if (a->cmdline || a->err_no != 0) continue;
-                len = wrap_print(a->name, f, len);
+                wrap_print(&m, a->name);
             }
         }
-        putc('\n', f);
+        putc('\n', m.f);
 
         if (file_table.data != NULL && make_phony) {
-            len = 0;
+            m.len = 0;
             for (j = 0; j <= file_table.mask; j++) {
                 const struct file_s *a = file_table.data[j];
                 if (a == NULL) continue;
                 if (a->cmdline || a->err_no != 0) continue;
-                len = wrap_print(a->name, f, len);
+                wrap_print(&m, a->name);
             }
-            if (len != 0) fputs(":\n", f);
+            if (m.len != 0) fputs(":\n", m.f);
         }
     }
 
-    err = ferror(f);
-    err |= (f != stdout) ? fclose(f) : fflush(f);
+    err = ferror(m.f);
+    err |= (m.f != stdout) ? fclose(m.f) : fflush(m.f);
     if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make);
 }
