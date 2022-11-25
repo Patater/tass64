@@ -192,7 +192,7 @@ int main(void)
 static const char *prgname(const char *name) {
     const char *newp = strrchr(name, '/');
     if (newp != NULL) return newp + 1;
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     newp = strrchr(name, '\\');
     if (newp != NULL) return newp + 1;
     newp = strrchr(name, ':');

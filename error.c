@@ -344,7 +344,7 @@ static const char *const terr_warning[] = {
 #ifdef _WIN32
     "the file's real name is not '",
 #endif
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     "use '/' as path separation '",
 #else
     "this name uses reserved characters '",
@@ -532,7 +532,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
 #ifdef _WIN32
         case ERROR___INSENSITIVE:
 #endif
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
         case ERROR_____BACKSLASH:
 #else
         case ERROR__RESERVED_CHR:

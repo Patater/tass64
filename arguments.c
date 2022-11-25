@@ -534,7 +534,7 @@ static struct include_list_s **include_list_add(struct include_list_s **lastil, 
     size_t i, j, len;
     j = i = strlen(path);
     if (i == 0) return lastil;
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     if (path[i - 1] != '/' && path[i-1] != '\\') j++;
 #else
     if (path[i - 1] != '/') j++;

@@ -81,14 +81,14 @@ static struct file_s *file_table_update(struct file_s *p) {
     return NULL;
 }
 
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
 static inline bool is_driveletter(const char *name) {
     return (uint8_t)((name[0] | 0x20) - 'a') < 26 && name[1] == ':';
 }
 #endif
 
 static inline bool is_absolute(const str_t *v) {
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     return (v->len != 0 && (v->data[0] == '/' || v->data[0] == '\\')) || (v->len > 1 && is_driveletter((const char *)v->data));
 #else
     return v->len != 0 && v->data[0] == '/';
@@ -96,7 +96,7 @@ static inline bool is_absolute(const str_t *v) {
 }
 
 static size_t get_base(const char *base) {
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     size_t i, j = is_driveletter(base) ? 2 : 0;
     for (i = j; base[i] != '\0'; i++) {
         if (base[i] == '/' || base[i] == '\\') j = i + 1;
@@ -112,7 +112,7 @@ static char *get_path(const str_t *v, const char *base) {
     char *path;
     size_t i, len;
 
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     if (v->len != 0 && (v->data[0] == '/' || v->data[0] == '\\')) i = is_driveletter(base) ? 2 : 0;
     else i = (v->len > 1 && is_driveletter((const char *)v->data)) ? 0 : get_base(base);
 #else
@@ -130,7 +130,7 @@ static char *get_path(const str_t *v, const char *base) {
 static bool portability(const str_t *name, linepos_t epoint) {
     struct linepos_s epoint2;
     const uint8_t *pos;
-#if defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     if (name->len == 0) return true;
     pos = (const uint8_t *)memchr(name->data, '\\', name->len);
     if (pos != NULL) {
@@ -320,7 +320,7 @@ static filesize_t fsize(FILE *f) {
             return (st.st_size & ~(off_t)~(filesize_t)0) == 0 ? (filesize_t)st.st_size : ~(filesize_t)0;
         }
     }
-#elif defined _WIN32 || defined __WIN32__ || defined __MSDOS__ || defined __DOS__
+#elif defined _WIN32 || defined __MSDOS__ || defined __DOS__
     long len = filelength(fileno(f));
     if (len > 0) {
         return (unsigned long)len < ~(filesize_t)0 ? (filesize_t)len : ~(filesize_t)0;
