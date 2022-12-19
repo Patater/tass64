@@ -86,15 +86,15 @@ MALLOC Memblocks *copy_memblocks(Memblocks *m) {
         memcpy(val->mem.data, m->mem.data, m->mem.len);
     }
     val->p = m->p;
-    val->len = m->len;
+    val->len = m->p;
     val->lastp = m->lastp;
     val->lastaddr = m->lastaddr;
-    if (m->len == 0) val->data = NULL; else new_array(&val->data, m->len);
+    if (m->p == 0) val->data = NULL; else new_array(&val->data, m->p);
     val->flattened = m->flattened;
     val->merged = m->merged;
     val->enumeration = m->enumeration;
     val->section = m->section;
-    for (i = 0; i < m->len; i++) {
+    for (i = 0; i < m->p; i++) {
         const struct memblock_s *b = &m->data[i];
         val->data[i] = m->data[i];
         if (b->ref != NULL) val->data[i].ref = copy_memblocks(b->ref);
