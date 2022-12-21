@@ -1676,39 +1676,13 @@ void err_msg_signal(void)
 }
 
 void err_msg_file(Error_types no, const char *prm, const struct file_list_s *cfile, linepos_t epoint) {
-    mbstate_t ps;
-    const char *s;
-    wchar_t w;
-    uint8_t s2[10];
-    size_t n, i = 0;
-    ssize_t l;
-    bool more;
-
-    s = strerror(errno);
-    n = strlen(s);
-
-    more = new_error_msg(SV_FATAL, cfile, epoint);
+    const char *s = strerror(errno);
+    bool more = new_error_msg(SV_FATAL, cfile, epoint);
     adderror(terr_fatal[no - 0xc0]);
     adderror(" '");
     adderror(prm);
     adderror("': ");
-    memset(&ps, 0, sizeof ps);
-    while (i < n) {
-        if (s[i] != 0 && (s[i] & 0x80) == 0) {
-            adderror2((const uint8_t *)s + i, 1);
-            i++;
-            continue;
-        }
-        l = (ssize_t)mbrtowc(&w, s + i, n - i,  &ps);
-        if (l < 1) {
-            w = (uint8_t)s[i];
-            if (w == 0 || l == 0) break;
-            l = 1;
-        }
-        s2[utf8out((unichar_t)w, s2)] = 0;
-        adderror((char *)s2);
-        i += (size_t)l;
-    }
+    adderror(s);
     if (more) new_error_msg_more();
 }
 
