@@ -21,7 +21,7 @@
 #include "wchar.h"
 #include <errno.h>
 #ifdef _WIN32
-#include <locale.h>
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 #if defined _POSIX_C_SOURCE || defined __unix__
@@ -291,17 +291,22 @@ static bool flush_ubuff(struct ubuff_s *ubuff, filesize_t *p2, struct file_data_
 }
 
 static unichar_t fromiso2(unichar_t c) {
-    mbstate_t ps;
+    uint8_t c2 = (uint8_t)(c | 0x80);
     wchar_t w;
+#ifdef _WIN32
+    int l = MultiByteToWideChar(CP_ACP, 0, (const char *)&c2, 1, &w, 1);
+    if (l < 1) return c2;
+#else
+    mbstate_t ps;
     int olderrno;
     ssize_t l;
-    uint8_t c2 = (uint8_t)(c | 0x80);
 
     memset(&ps, 0, sizeof ps);
     olderrno = errno;
     l = (ssize_t)mbrtowc(&w, (char *)&c2, 1,  &ps);
     errno = olderrno;
     if (l < 0) return c2;
+#endif
     return (unichar_t)w;
 }
 
@@ -404,9 +409,6 @@ static int read_source(struct file_s *file, FILE *f) {
         bl = (filesize_t)fread(buffer, 1, BUFSIZ, f);
     }
     if (encoding == E_UNKNOWN && bl != 0 && buffer[0] == 0) encoding = E_UTF16BE; /* most likely */
-#ifdef _WIN32
-    setlocale(LC_CTYPE, "");
-#endif
     ubuff.p = 0;
     do {
         filesize_t p;
@@ -632,9 +634,6 @@ static int read_source(struct file_s *file, FILE *f) {
     } while (bp != bl);
     err = 0;
 failed:
-#ifdef _WIN32
-    setlocale(LC_CTYPE, "C");
-#endif
     last_ubuff = ubuff;
     file->lines = lines;
     if (lines != max_lines) {
