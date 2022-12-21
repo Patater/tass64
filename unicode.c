@@ -744,17 +744,25 @@ failed:
 FILE *fopen_utf8(const char *name, const char *mode) {
     FILE *f;
 #ifdef _WIN32
-    wchar_t *wname, *c2, wmode[3];
-    const uint8_t *c;
-    wname = utf8_to_wchar(name, SIZE_MAX);
-    if (wname == NULL) {
-        errno = ENOMEM;
-        return NULL;
+    size_t max;
+    for (max = 0; name[max] != '\0'; max++) {
+        if ((uint8_t)name[max] > '~') break;
     }
-    c2 = wmode; c = (uint8_t *)mode;
-    while ((*c2++=(wchar_t)*c++) != 0);
-    f = _wfopen(wname, wmode);
-    free(wname);
+    if (name[max] != '\0') {
+        wchar_t *c2, wmode[3];
+        const uint8_t *c;
+        wchar_t *wname = utf8_to_wchar(name, SIZE_MAX);
+        if (wname == NULL) {
+            errno = ENOMEM;
+            return NULL;
+        }
+        c2 = wmode; c = (uint8_t *)mode;
+        while ((*c2++ = (wchar_t)*c++) != 0);
+        f = _wfopen(wname, wmode);
+        free(wname);
+    } else {
+        f = fopen(name, mode);
+    }
 #else
     size_t len = 1, max;
     char *newname = NULL;
