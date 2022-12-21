@@ -49,6 +49,7 @@ static bool terminal_detect(FILE *f) {
 }
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 static bool use_ansi;

@@ -181,6 +181,7 @@ int wmain(int argc, wchar_t *argv2[]) {
 }
 
 #ifdef __MINGW32__
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
 
@@ -215,11 +216,11 @@ int main(int argc, char *argv[])
           new_array(&data, len);
 
           if (p == 0) {
-              int l = MultiByteToWideChar(CP_ACP, 0, s, n, NULL, 0);
+              int l = n <= ((~(unsigned int)0) >> 1) ? MultiByteToWideChar(CP_ACP, 0, s, (int)n, NULL, 0) : -1;
               if (l > 0) {
                   wchar_t *w = allocate_array(wchar_t, (unsigned int)l);
                   if (w != NULL) {
-                      l = MultiByteToWideChar(CP_ACP, 0, s, n, w, l);
+                      l = MultiByteToWideChar(CP_ACP, 0, s, (int)n, w, l);
                       if (l > 0) {
                           int j;
                           for (j = 0; j < l; j++) {
