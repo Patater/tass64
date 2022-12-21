@@ -98,15 +98,27 @@ static inline void install_signal_handler(void) {
 #endif
 }
 
+static const char *prgname(const char *name) {
+    const char *newp = name;
+    while (*name != '\0') {
+        char c = *name++;
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+        if (c == '/' || c == '\\' || c == ':') newp = name;
+#else
+        if (c == '/') newp = name;
+#endif
+    }
+    return newp;
+}
+
 #ifdef _WIN32
 static const wchar_t *wprgname(const wchar_t *name) {
-    const wchar_t *p = name;
-    while (*p != 0) p++;
-    while (p != name) {
-        p--;
-        if (*p == '/' || *p == '\\' || *p == ':') return p + 1;
+    const wchar_t *newp = name;
+    while (*name != '\0') {
+        wchar_t c = *name++;
+        if (c == L'/' || c == L'\\' || c == L':') newp = name;
     }
-    return p;
+    return newp;
 }
 
 #ifdef __MINGW32__
@@ -171,16 +183,6 @@ int wmain(int argc, wchar_t *argv2[]) {
 #ifdef __MINGW32__
 #include <windows.h>
 #include <shellapi.h>
-
-static const char *prgname(const char *name) {
-    const char *newp = strrchr(name, '/');
-    if (newp != NULL) return newp + 1;
-    newp = strrchr(name, '\\');
-    if (newp != NULL) return newp + 1;
-    newp = strrchr(name, ':');
-    if (newp != NULL) return newp + 1;
-    return name;
-}
 
 int main(int argc, char *argv[])
 {
@@ -256,18 +258,6 @@ int main(int argc, char *argv[])
 #if _POSIX_VERSION >= 200112L
 #include <sys/resource.h>
 #endif
-
-static const char *prgname(const char *name) {
-    const char *newp = strrchr(name, '/');
-    if (newp != NULL) return newp + 1;
-#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
-    newp = strrchr(name, '\\');
-    if (newp != NULL) return newp + 1;
-    newp = strrchr(name, ':');
-    if (newp != NULL) return newp + 1;
-#endif
-    return name;
-}
 
 int main(int argc, char *argv[]) {
     int i, r;
