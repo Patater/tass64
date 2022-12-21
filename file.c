@@ -18,11 +18,12 @@
 */
 #include "file.h"
 #include <string.h>
-#include "wchar.h"
 #include <errno.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include "wchar.h"
 #endif
 #if defined _POSIX_C_SOURCE || defined __unix__
 #include <sys/stat.h>

@@ -19,7 +19,6 @@
 #include "error.h"
 #include <string.h>
 #include <errno.h>
-#include "wchar.h"
 #include "file.h"
 #include "64tass.h"
 #include "unicode.h"
