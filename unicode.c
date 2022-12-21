@@ -351,19 +351,12 @@ size_t argv_print(const char *line, FILE *f) {
             unichar_t ch2 = (uint8_t)ch;
             unsigned int ln = utf8in(i, &ch2);
             if (iswprint((wint_t)ch2) != 0) {
-                int ln2;
-                char tmp[64];
-                memcpy(tmp, i, ln);
-                tmp[ln] = 0;
-                ln2 = fwprintf(f, L"%S", tmp);
-                if (ln2 > 0) {
-                    i += ln;
-                    len += (unsigned int)ln2;
-                    continue;
-                }
+                len += fwrite(i, ln, 1, f);
+            } else {
+                putc('?', f);
+                len++;
             }
             i += ln;
-            len++;putc('?', f);
             continue;
         }
         if (ch == 0) break;
@@ -462,21 +455,15 @@ size_t makefile_print(const char *line, FILE *f) {
             unichar_t ch2 = (uint8_t)ch;
 #ifdef _WIN32
             unsigned int ln = utf8in(i, &ch2);
+            bl = 0;
             if (iswprint((wint_t)ch2) != 0) {
-                int ln2;
-                char tmp[64];
-                memcpy(tmp, i, ln);
-                tmp[ln] = 0;
-                ln2 = fwprintf(f, L"%S", tmp);
-                if (ln2 > 0) {
-                    i += ln;
-                    len += (unsigned int)ln2;
-                    bl = 0;
-                    continue;
-                }
+                len += fwrite(i, ln, 1, f);
+                i += ln;
+                continue;
             }
             i += ln;
 #else
+            bl = 0;
             i += utf8in(i, &ch2);
             if (iswprint((wint_t)ch2) != 0) {
                 mbstate_t ps;
@@ -486,13 +473,11 @@ size_t makefile_print(const char *line, FILE *f) {
                 ln = wcrtomb(temp, (wchar_t)ch2, &ps);
                 if (ln != (size_t)-1) {
                     len += fwrite(temp, ln, 1, f);
-                    bl = 0;
                     continue;
                 }
             }
 #endif
             len++;putc('?', f);
-            bl = 0;
             continue;
         }
         if (ch == 0) break;
@@ -540,35 +525,6 @@ static int unknown_print(FILE *f, unichar_t ch) {
 }
 
 void printable_print(const uint8_t *l, FILE *f) {
-#ifdef _WIN32
-    const uint8_t *i = l;
-    for (;;) {
-        unichar_t ch;
-        if ((*i >= 0x20 && *i <= 0x7e) || *i == 0x09) {
-            i++;
-            continue;
-        }
-        if (l != i) fwrite(l, 1, (size_t)(i - l), f);
-        if (*i == 0) break;
-        ch = *i;
-        if ((ch & 0x80) != 0) {
-            unsigned int ln = utf8in(i, &ch);
-            if (iswprint((wint_t)ch) != 0) {
-                char tmp[64];
-                memcpy(tmp, i, ln);
-                tmp[ln] = 0;
-                if (fwprintf(f, L"%S", tmp) > 0) {
-                    i += ln;
-                    l = i;
-                    continue;
-                }
-            }
-            i += ln;
-        } else i++;
-        l = i;
-        unknown_print(f, ch);
-    }
-#else
     const uint8_t *i = l;
     for (;;) {
         unichar_t ch;
@@ -582,6 +538,9 @@ void printable_print(const uint8_t *l, FILE *f) {
         if ((ch & 0x80) != 0) {
             i += utf8in(i, &ch);
             if (iswprint((wint_t)ch) != 0) {
+#ifdef _WIN32
+                continue;
+#else
                 mbstate_t ps;
                 char temp[64];
                 size_t ln;
@@ -592,12 +551,12 @@ void printable_print(const uint8_t *l, FILE *f) {
                     l = i;
                     continue;
                 }
+#endif
             }
         } else i++;
         unknown_print(f, ch);
         l = i;
     }
-#endif
 }
 
 size_t printable_print2(const uint8_t *line, FILE *f, size_t max) {
@@ -605,37 +564,24 @@ size_t printable_print2(const uint8_t *line, FILE *f, size_t max) {
     size_t i, l = 0, len = 0;
     int err;
     for (i = 0; i < max;) {
+        unsigned int ln;
         unichar_t ch = line[i];
-        if ((ch & 0x80) != 0) {
-            unsigned int ln;
-            if (l != i) len += fwrite(line + l, 1, i - l, f);
+        if likely((ch >= 0x20 && ch <= 0x7e) || ch == 0x09) {
+            i++;
+            continue;
+        }
+        if ((ch & 0x80) == 0) ln = 1; else {
             ln = utf8in(line + i, &ch);
             if (iswprint((wint_t)ch) != 0) {
-                char tmp[64];
-                memcpy(tmp, line + i, ln);
-                tmp[ln] = 0;
-                if (fwprintf(f, L"%S", tmp) >= 0) {
-                    i += ln;
-                    l = i;
-                    len++;
-                    continue;
-                }
+                i += ln;
+                continue;
             }
-            i += ln;
-            l = i;
-            err = unknown_print(f, ch);
-            if (err > 0) len += (unsigned int)err;
-            continue;
         }
-        if ((ch < 0x20 && ch != 0x09) || ch > 0x7e) {
-            if (l != i) len += fwrite(line + l, 1, i - l, f);
-            i++;
-            l = i;
-            err = unknown_print(f, ch);
-            if (err > 0) len += (unsigned int)err;
-            continue;
-        }
-        i++;
+        if (l != i) len += fwrite(line + l, 1, i - l, f);
+        err = unknown_print(f, ch);
+        if (err > 0) len += (unsigned int)err;
+        i += ln;
+        l = i;
     }
     if (i != l) len += fwrite(line + l, 1, i - l, f);
     return len;
@@ -684,24 +630,13 @@ void caret_print(const uint8_t *line, FILE *f, size_t max) {
     for (i = 0; i < max;) {
         unichar_t ch = line[i];
         if ((ch & 0x80) != 0) {
-#ifdef _WIN32
-            unsigned int ln = utf8in(line + i, &ch);
-            if (iswprint((wint_t)ch) != 0) {
-                char tmp[64];
-                wchar_t tmp2[64];
-                memcpy(tmp, line + i, ln);
-                tmp[ln] = 0;
-                if (_snwprintf(tmp2, lenof(tmp2), L"%S", tmp) > 0) {
-                    int width = wcwidth_v9(ch);
-                    if (width > 0) l += (unsigned int)width;
-                    i += ln;
-                    continue;
-                }
-            }
-            i += ln;
-#else
             i += utf8in(line + i, &ch);
             if (iswprint((wint_t)ch) != 0) {
+#ifdef _WIN32
+                int width = wcwidth_v9(ch);
+                if (width > 0) l += (unsigned int)width;
+                continue;
+#else
                 char temp[64];
                 mbstate_t ps;
                 memset(&ps, 0, sizeof ps);
@@ -710,8 +645,8 @@ void caret_print(const uint8_t *line, FILE *f, size_t max) {
                     if (width > 0) l += (unsigned int)width;
                     continue;
                 }
-            }
 #endif
+            }
             err = unknown_print(NULL, ch);
             if (err > 0) l += (unsigned int)err;
             continue;
