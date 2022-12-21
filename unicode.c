@@ -525,6 +525,30 @@ static int unknown_print(FILE *f, unichar_t ch) {
 }
 
 void printable_print(const uint8_t *l, FILE *f) {
+#ifdef _WIN32
+    const uint8_t *i = l;
+    for (;;) {
+        unichar_t ch;
+        if ((*i >= 0x20 && *i <= 0x7e) || *i == 0x09) {
+            i++;
+            continue;
+        }
+        if (l != i) fwrite(l, 1, (size_t)(i - l), f);
+        if (*i == 0) break;
+        ch = *i;
+        if ((ch & 0x80) != 0) {
+            unsigned int ln = utf8in(i, &ch);
+            if (iswprint((wint_t)ch) != 0) {
+                l = i;
+                i += ln;
+                continue;
+            }
+            i += ln;
+        } else i++;
+        l = i;
+        unknown_print(f, ch);
+    }
+#else
     const uint8_t *i = l;
     for (;;) {
         unichar_t ch;
@@ -538,9 +562,6 @@ void printable_print(const uint8_t *l, FILE *f) {
         if ((ch & 0x80) != 0) {
             i += utf8in(i, &ch);
             if (iswprint((wint_t)ch) != 0) {
-#ifdef _WIN32
-                continue;
-#else
                 mbstate_t ps;
                 char temp[64];
                 size_t ln;
@@ -551,12 +572,12 @@ void printable_print(const uint8_t *l, FILE *f) {
                     l = i;
                     continue;
                 }
-#endif
             }
         } else i++;
         unknown_print(f, ch);
         l = i;
     }
+#endif
 }
 
 size_t printable_print2(const uint8_t *line, FILE *f, size_t max) {
