@@ -30,6 +30,7 @@
 #include "main.h"
 #include <string.h>
 #include <signal.h>
+#include <locale.h>
 #ifdef SIGALRM
 #include <unistd.h>
 #endif
@@ -98,7 +99,7 @@ static inline void install_signal_handler(void) {
 }
 
 #ifdef _WIN32
-static const wchar_t *prgname(const wchar_t *name) {
+static const wchar_t *wprgname(const wchar_t *name) {
     const wchar_t *p = name;
     while (*p != 0) p++;
     while (p != name) {
@@ -116,6 +117,7 @@ int wmain(int argc, wchar_t *argv2[]) {
     char **argv;
 
     install_signal_handler();
+    setlocale(LC_CTYPE, "");
     console_init();
     atexit(console_destroy);
 
@@ -127,7 +129,7 @@ int wmain(int argc, wchar_t *argv2[]) {
     new_array(&argv, (unsigned int)argc);
     for (i = 0; i < argc; i++) {
         unichar_t c = 0, lastchar;
-        const wchar_t *s = (i == 0) ? prgname(*argv2) : argv2[i];
+        const wchar_t *s = (i == 0) ? wprgname(*argv2) : argv2[i];
         const wchar_t *p = s;
         uint8_t *c2;
         size_t l;
@@ -170,12 +172,79 @@ int wmain(int argc, wchar_t *argv2[]) {
 #include <windows.h>
 #include <shellapi.h>
 
-int main(void)
+static const char *prgname(const char *name) {
+    const char *newp = strrchr(name, '/');
+    if (newp != NULL) return newp + 1;
+    newp = strrchr(name, '\\');
+    if (newp != NULL) return newp + 1;
+    newp = strrchr(name, ':');
+    if (newp != NULL) return newp + 1;
+    return name;
+}
+
+int main(int argc, char *argv[])
 {
   LPWSTR commandLine = GetCommandLineW();
   int result, argcw = 0;
   LPWSTR *argvw = CommandLineToArgvW(commandLine, &argcw);
-  if (argvw == NULL) return EXIT_FAILURE;
+  if (argvw == NULL) {
+      int i, r;
+      char **uargv;
+
+      install_signal_handler();
+      setlocale(LC_CTYPE, "");
+      console_init();
+      atexit(console_destroy);
+
+      if (argc < 1) {
+          static char *argvd[1] = { (char *)"64tass" };
+          argv = argvd;
+          argc = 1;
+      }
+      new_array(&uargv, (unsigned int)argc);
+      for (i = 0; i < argc; i++) {
+          const char *s = (i == 0) ? prgname(*argv) : argv[i];
+          size_t p = 65, n, len;
+          uint8_t *data;
+          for (n = 0; s[n] != '\0'; n++) {
+              if ((uint8_t)s[n] > '~') p = 0;
+          }
+          if (add_overflow(n, p ^ 64, &len)) err_msg_out_of_memory();
+          new_array(&data, len);
+
+          if (p == 0) {
+              int l = MultiByteToWideChar(CP_ACP, 0, s, n, NULL, 0);
+              if (l > 0) {
+                  wchar_t *w = allocate_array(wchar_t, (unsigned int)l);
+                  if (w != NULL) {
+                      l = MultiByteToWideChar(CP_ACP, 0, s, n, w, l);
+                      if (l > 0) {
+                          int j;
+                          for (j = 0; j < l; j++) {
+                              unichar_t ch;
+                              if (p + 6*6 + 1 > len) {
+                                  if (inc_overflow(&len, 1024)) err_msg_out_of_memory();
+                                  resize_array(&data, len);
+                              }
+                              ch = (unichar_t)w[j];
+                              if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
+                          }
+                      }
+                      free(w);
+                  }
+              }
+              data[p] = 0;
+          }  else {
+              memcpy(data, s, len);
+          }
+          uargv[i] = (char *)data;
+      }
+      r = main2(&argc, &uargv);
+
+      for (i = 0; i < argc; i++) free(uargv[i]);
+      free(uargv);
+      return r;
+  }
   result = wmain(argcw, argvw);
   LocalFree(argvw);
   return result;
@@ -183,7 +252,6 @@ int main(void)
 #endif /* __MINGW32__ */
 
 #else /* _WIN32 */
-#include <locale.h>
 #include <unistd.h>
 #if _POSIX_VERSION >= 200112L
 #include <sys/resource.h>
