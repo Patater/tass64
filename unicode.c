@@ -451,12 +451,9 @@ size_t argv_print(const char *line, FILE *f) {
             int ln2;
             i += utf8in(i, &ch2);
             if (iswprint((wint_t)ch2) != 0) {
-                mbstate_t ps;
                 char temp[64];
-                size_t ln;
-                memset(&ps, 0, sizeof ps);
-                ln = wcrtomb(temp, (wchar_t)ch2, &ps);
-                if (ln != (size_t)-1) {
+                size_t ln = utf8_to_chars(temp, sizeof temp, ch2);
+                if (ln != 0) {
                     len += fwrite(temp, ln, 1, f);
                     continue;
                 }
