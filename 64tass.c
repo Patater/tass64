@@ -5239,6 +5239,7 @@ int main2(int *argc2, char **argv2[]) {
                 fputs("Output file:       ", stdout);
                 argv_print(output->name, stdout);
                 putc('\n', stdout);
+                if (fflush(stdout) != 0) setvbuf(stdout, NULL, _IOLBF, 1024);
             }
             parent = section->parent;
             section->parent = NULL;

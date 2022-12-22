@@ -114,7 +114,7 @@ void console_attribute(int c, FILE *f) {
         fputs(ansi_sequences[c], f);
         return;
     }
-    fflush(f);
+    if (fflush(f) != 0) setvbuf(f, NULL, _IOLBF, 1024);
     switch (c) {
     case 0: current_attributes |= FOREGROUND_INTENSITY; break;
     case 1: current_attributes = old_attributes | FOREGROUND_INTENSITY; break;
