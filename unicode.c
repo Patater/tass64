@@ -855,6 +855,19 @@ FILE *fopen_utf8(const char *name, const char *mode) {
         c2 = wmode; c = (uint8_t *)mode;
         while ((*c2++ = (wchar_t)*c++) != 0);
         f = _wfopen(wname, wmode);
+        if (f == NULL && errno == EBADF) {
+            int l = WideCharToMultiByte(CP_ACP, 0, wname, -1, NULL, 0, NULL, NULL);
+            if (l > 0) {
+                char *name2 = allocate_array(char, (unsigned int)l);
+                if (name2 != NULL) {
+                    l = WideCharToMultiByte(CP_ACP, 0, wname, -1, name2, l, NULL, NULL);
+                    if (l > 0) {
+                        f = fopen(name2, mode);
+                    }
+                    free(name2);
+                } else errno = ENOMEM;
+            }
+        }
         free(wname);
     } else {
         f = fopen(name, mode);
