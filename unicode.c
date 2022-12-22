@@ -345,7 +345,7 @@ static size_t utf8_to_chars(char *dest, size_t destlen, unichar_t ch) {
         ch = (ch & 0x3ff) | 0xdc00;
     } else return 0;
     temp[j++] = (wchar_t)ch;
-    j = WideCharToMultiByte(CP_ACP, wide_flags, temp, 2, dest, (int)destlen, NULL, use_default_char ? &used_default : NULL);
+    j = WideCharToMultiByte(CP_ACP, wide_flags, temp, j, dest, (int)destlen, NULL, use_default_char ? &used_default : NULL);
     return !used_default && j >= 0 ? (size_t)j : 0;
 #else
     mbstate_t ps;
