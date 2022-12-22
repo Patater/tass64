@@ -610,6 +610,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     }
     memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC || output->mode == OUTPUT_MHEX);
 
+    if (fout == stdout && fflush(fout) != 0) setvbuf(fout, NULL, binary ? _IOFBF : _IOLBF, 1024);
     clearerr(fout); errno = 0;
     switch (output->mode) {
     case OUTPUT_FLAT: output_mem_flat(fout, memblocks, output->append); break;

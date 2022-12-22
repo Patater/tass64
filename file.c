@@ -943,6 +943,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
         err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make);
         return;
     }
+    if (m.f == stdout && fflush(m.f) != 0) setvbuf(m.f, NULL, _IOLBF, 1024);
     clearerr(m.f); errno = 0; m.len = 0;
     for (j = 0; j < arguments.output_len; j++) {
         wrap_print_nodash(&m, arguments.output[j].name);

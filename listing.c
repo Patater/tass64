@@ -153,6 +153,7 @@ void listing_open(const struct list_output_s *output, int argc, char *argv[]) {
         listing = NULL;
         return;
     }
+    if (flist == stdout && fflush(flist) != 0) setvbuf(flist, NULL, _IOLBF, 1024);
     clearerr(flist); errno = 0;
 
     ls = &listing2;

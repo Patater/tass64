@@ -242,6 +242,7 @@ void memorymapfile(const Memblocks *mem, const struct output_s *output) {
         err_msg_file2(ERROR_CANT_WRTE_MAP, output->mapname);
         return;
     }
+    if (state.f == stdout && fflush(state.f) != 0) setvbuf(state.f, NULL, _IOLBF, 1024);
     clearerr(state.f); errno = 0;
 
     if (!arguments.quiet || state.f != stdout) {

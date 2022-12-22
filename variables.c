@@ -700,6 +700,7 @@ void labelprint(const struct symbol_output_s *output) {
         err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
         return;
     }
+    if (flab == stdout && fflush(flab) != 0) setvbuf(flab, NULL, _IOLBF, 1024);
     clearerr(flab); errno = 0;
     label_stack.stack = NULL;
     label_stack.p = label_stack.len = 0;
