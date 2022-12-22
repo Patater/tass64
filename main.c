@@ -207,39 +207,15 @@ int main(int argc, char *argv[])
       new_array(&uargv, (unsigned int)argc);
       for (i = 0; i < argc; i++) {
           const char *s = (i == 0) ? prgname(*argv) : argv[i];
-          size_t p = 65, n, len;
-          uint8_t *data;
-          for (n = 0; s[n] != '\0'; n++) {
-              if ((uint8_t)s[n] > '~') p = 0;
-          }
-          if (add_overflow(n, p ^ 64, &len)) err_msg_out_of_memory();
-          new_array(&data, len);
-
-          if (p == 0) {
-              int l = n <= ((~(unsigned int)0) >> 1) ? MultiByteToWideChar(CP_ACP, 0, s, (int)n, NULL, 0) : -1;
-              if (l > 0) {
-                  wchar_t *w = allocate_array(wchar_t, (unsigned int)l);
-                  if (w != NULL) {
-                      l = MultiByteToWideChar(CP_ACP, 0, s, (int)n, w, l);
-                      if (l > 0) {
-                          int j;
-                          for (j = 0; j < l; j++) {
-                              unichar_t ch;
-                              if (p + 6*6 + 1 > len) {
-                                  if (inc_overflow(&len, 1024)) err_msg_out_of_memory();
-                                  resize_array(&data, len);
-                              }
-                              ch = (unichar_t)w[j];
-                              if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
-                          }
-                      }
-                      free(w);
-                  }
+          uint8_t *data = char_to_utf8(s);
+          if (data == (uint8_t *)s) {
+              size_t len = strlen(s);
+              data = inc_overflow(&len, 1) ? NULL : allocate_array(uint8_t, len);
+              if (data != NULL) {
+                  memcpy(data, s, len);
               }
-              data[p] = 0;
-          }  else {
-              memcpy(data, s, len);
           }
+          if (data == NULL) err_msg_out_of_memory();
           uargv[i] = (char *)data;
       }
       r = main2(&argc, &uargv);
@@ -284,40 +260,15 @@ int main(int argc, char *argv[]) {
     new_array(&uargv, (unsigned int)argc);
     for (i = 0; i < argc; i++) {
         const char *s = (i == 0) ? prgname(*argv) : argv[i];
-        size_t p = 65, n, len;
-        uint8_t *data;
-        for (n = 0; s[n] != '\0'; n++) {
-            if ((uint8_t)s[n] > '~') p = 0;
-        }
-        if (add_overflow(n, p ^ 64, &len)) err_msg_out_of_memory();
-        new_array(&data, len);
-
-        if (p == 0) {
-            mbstate_t ps;
-            size_t j = 0;
-            memset(&ps, 0, sizeof ps);
-            for (;;) {
-                ssize_t l;
-                wchar_t w;
-                unichar_t ch;
-                if (p + 6*6 + 1 > len) {
-                    if (inc_overflow(&len, 1024)) err_msg_out_of_memory();
-                    resize_array(&data, len);
-                }
-                l = (ssize_t)mbrtowc(&w, s + j, n - j,  &ps);
-                if (l < 1) {
-                    w = (uint8_t)s[j];
-                    if (w == 0 || l == 0) break;
-                    l = 1;
-                }
-                j += (size_t)l;
-                ch = (unichar_t)w;
-                if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
+        uint8_t *data = char_to_utf8(s);
+        if (data == (uint8_t *)s) {
+            size_t len = strlen(s);
+            data = inc_overflow(&len, 1) ? NULL : allocate_array(uint8_t, len);
+            if (data != NULL) {
+                memcpy(data, s, len);
             }
-            data[p] = 0;
-        } else {
-            memcpy(data, s, len);
         }
+        if (data == NULL) err_msg_out_of_memory();
         uargv[i] = (char *)data;
     }
     r = main2(&argc, &uargv);

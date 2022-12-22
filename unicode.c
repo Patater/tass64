@@ -22,6 +22,10 @@
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 #include "unicodedata.h"
 #include "str.h"
 #include "console.h"
@@ -738,6 +742,98 @@ MUST_CHECK wchar_t *utf8_to_wchar(const char *name, size_t max) {
 failed:
     free(wname);
     return NULL;
+}
+
+uint8_t *char_to_utf8(const char *s) {
+    size_t p, n, len;
+    int l;
+    uint8_t *data;
+    for (n = 0; s[n] != '\0'; n++) {
+        if ((uint8_t)s[n] > '~') break;
+    }
+    if (s[n] == '\0') {
+        return (uint8_t *)s;
+    }
+    while (s[n] != '\0') n++;
+
+    data = add_overflow(n, 64, &len) ? NULL : allocate_array(uint8_t, len);
+    if (data == NULL) return NULL;
+
+    p = 0;
+    l = n <= ((~(unsigned int)0) >> 1) ? MultiByteToWideChar(CP_ACP, 0, s, (int)n, NULL, 0) : -1;
+    if (l > 0) {
+        wchar_t *w = allocate_array(wchar_t, (unsigned int)l);
+        if (w == NULL) {
+            free(data);
+            return NULL;
+        }
+        l = MultiByteToWideChar(CP_ACP, 0, s, (int)n, w, l);
+        if (l > 0) {
+            int j;
+            for (j = 0; j < l; j++) {
+                unichar_t ch;
+                if (p + 6 + 1 > len) {
+                    uint8_t *d;
+                    d = inc_overflow(&len, 1024) ? NULL : reallocate_array(data, len);
+                    if (d == NULL) {
+                        free(w);
+                        free(data);
+                        return NULL;
+                    }
+                    data = d;
+                }
+                ch = (unichar_t)w[j];
+                if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
+            }
+        }
+        free(w);
+    }
+    data[p] = 0;
+    return data;
+}
+#else
+uint8_t *char_to_utf8(const char *s) {
+    mbstate_t ps;
+    size_t p, n, len, j;
+    uint8_t *data;
+    for (n = 0; s[n] != '\0'; n++) {
+        if ((uint8_t)s[n] > '~') break;
+    }
+    if (s[n] == '\0') {
+        return (uint8_t *)s;
+    }
+    while (s[n] != '\0') n++;
+        
+    data = add_overflow(n, 64, &len) ? NULL : allocate_array(uint8_t, len);
+    if (data == NULL) return NULL;
+
+    memset(&ps, 0, sizeof ps);
+    p = 0; j = 0;
+    for (;;) {
+        ssize_t l;
+        wchar_t w;
+        unichar_t ch;
+        if (p + 6 + 1 > len) {
+            uint8_t *d;
+            d = inc_overflow(&len, 1024) ? NULL : reallocate_array(data, len);
+            if (d == NULL) {
+                free(data);
+                return NULL;
+            }
+            data = d;
+        }
+        l = (ssize_t)mbrtowc(&w, s + j, n - j,  &ps);
+        if (l < 1) {
+            w = (uint8_t)s[j];
+            if (w == 0 || l == 0) break;
+            l = 1;
+        }
+        j += (size_t)l;
+        ch = (unichar_t)w;
+        if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
+    }
+    data[p] = 0;
+    return data;
 }
 #endif
 

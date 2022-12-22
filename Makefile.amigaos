@@ -74,10 +74,10 @@ encoding.o: encoding.c encoding.h stdbool.h error.h attributes.h \
  errors_e.h inttypes.h ternary.h values.h 64tass.h wait_e.h str.h \
  encobj.h obj.h avl.h
 error.o: error.c error.h attributes.h stdbool.h errors_e.h inttypes.h \
- wchar.h file.h 64tass.h wait_e.h unicode.h eval.h oper_e.h arguments.h \
- opcodes.h section.h avl.h str.h macro.h strobj.h obj.h addressobj.h \
- values.h registerobj.h namespaceobj.h operobj.h typeobj.h labelobj.h \
- errorobj.h noneobj.h symbolobj.h anonsymbolobj.h console.h
+ file.h 64tass.h wait_e.h unicode.h eval.h oper_e.h arguments.h opcodes.h \
+ section.h avl.h str.h macro.h strobj.h obj.h addressobj.h values.h \
+ registerobj.h namespaceobj.h operobj.h typeobj.h labelobj.h errorobj.h \
+ noneobj.h symbolobj.h anonsymbolobj.h console.h
 errorobj.o: errorobj.c errorobj.h obj.h attributes.h inttypes.h \
  errors_e.h oper_e.h stdbool.h eval.h values.h error.h 64tass.h wait_e.h \
  file.h macro.h typeobj.h registerobj.h namespaceobj.h

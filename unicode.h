@@ -42,6 +42,7 @@ extern size_t printable_print2(const uint8_t *, FILE *, size_t);
 extern void caret_print(const uint8_t *, FILE *, size_t);
 extern size_t calcpos(const uint8_t *, size_t);
 extern MUST_CHECK wchar_t *utf8_to_wchar(const char *, size_t);
+extern uint8_t *char_to_utf8(const char *);
 extern FILE *fopen_utf8(const char *, const char *);
 extern const char *unicode_character_name(unichar_t);
 
