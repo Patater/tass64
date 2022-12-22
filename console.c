@@ -53,27 +53,29 @@ static bool terminal_detect(FILE *f) {
 #include <windows.h>
 
 static bool use_ansi;
-static BOOL utf8_console;
 static UINT old_consoleoutputcp;
 static UINT old_consolecp;
 static HANDLE console_handle;
 static int old_attributes, current_attributes;
 
 void console_init(void) {
-    utf8_console = IsValidCodePage(CP_UTF8);
-    if (utf8_console) {
-        old_consoleoutputcp = GetConsoleOutputCP();
-        old_consolecp = GetConsoleCP();
-        SetConsoleCP(CP_UTF8);
-        SetConsoleOutputCP(CP_UTF8);
+    old_consoleoutputcp = 0;
+    old_consolecp = 0;
+    if (IsValidCodePage(CP_UTF8)) {
+        UINT consoleoutputcp = GetConsoleOutputCP();
+        UINT consolecp = GetConsoleCP();
+        if (consolecp != CP_UTF8) {
+            if (SetConsoleCP(CP_UTF8)) old_consolecp = consolecp;
+        }
+        if (consoleoutputcp != CP_UTF8) {
+            if (SetConsoleOutputCP(CP_UTF8)) old_consoleoutputcp = consoleoutputcp;
+        }
     }
 }
 
 void console_destroy(void) {
-    if (utf8_console) {
-        SetConsoleCP(old_consolecp);
-        SetConsoleOutputCP(old_consoleoutputcp);
-    }
+    if (old_consolecp != 0) SetConsoleCP(old_consolecp);
+    if (old_consoleoutputcp != 0) SetConsoleOutputCP(old_consoleoutputcp);
 }
 
 void console_use(FILE *f) {
