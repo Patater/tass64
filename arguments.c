@@ -25,7 +25,6 @@
 #include "my_getopt.h"
 #include "error.h"
 #include "unicode.h"
-#include "wchar.h"
 #include "version.h"
 
 struct arguments_s arguments;
@@ -429,10 +428,8 @@ static const struct my_option long_options[] = {
 static MUST_CHECK char *read_one(FILE *f) {
     bool q, q2, q3;
     char *line;
-    size_t i, ln, j, len;
+    size_t i, ln;
     int c;
-    mbstate_t ps;
-    size_t p;
     uint8_t *data;
 
     do {
@@ -460,28 +457,9 @@ static MUST_CHECK char *read_one(FILE *f) {
     }
     line[i] = 0;
 
-    if (add_overflow(i, 64, &len)) err_msg_out_of_memory();
-    new_array(&data, len);
-
-    memset(&ps, 0, sizeof ps);
-    p = 0; j = 0;
-    for (;;) {
-        ssize_t l;
-        wchar_t w;
-        unichar_t ch;
-        if (p + 6*6 + 1 > len) extend_array(&data, &len, 1024);
-        l = (ssize_t)mbrtowc(&w, line + j, i - j,  &ps);
-        if (l < 1) {
-            w = (uint8_t)line[j];
-            if (w == 0 || l == 0) break;
-            l = 1;
-        }
-        j += (size_t)l;
-        ch = (unichar_t)w;
-        if (ch != 0 && ch < 0x80) data[p++] = (uint8_t)ch; else p += utf8out(ch, data + p);
-    }
-    data[p] = 0;
-    free(line);
+    data = char_to_utf8(line);
+    if (data == NULL) err_msg_out_of_memory();
+    if ((char *)data != line) free(line);
     return (char *)data;
 }
 

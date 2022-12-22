@@ -132,6 +132,7 @@ int wmain(int argc, wchar_t *argv2[]) {
     setlocale(LC_CTYPE, "");
     console_init();
     atexit(console_destroy);
+    unicode_init();
 
     if (argc < 1) {
         static wchar_t *argvd[1] = { (wchar_t *)L"64tass" };
@@ -198,6 +199,7 @@ int main(int argc, char *argv[])
       setlocale(LC_CTYPE, "");
       console_init();
       atexit(console_destroy);
+      unicode_init();
 
       if (argc < 1) {
           static char *argvd[1] = { (char *)"64tass" };

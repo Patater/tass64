@@ -25,11 +25,19 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#ifndef WC_NO_BEST_FIT_CHARS
+#define WC_NO_BEST_FIT_CHARS 0x400
+#endif
 #endif
 #include "unicodedata.h"
 #include "str.h"
 #include "console.h"
 #include "error.h"
+
+#ifdef _WIN32
+static DWORD wide_flags;
+static BOOL use_default_char;
+#endif
 
 enum { U_CASEFOLD = 1, U_COMPAT = 2 };
 
@@ -326,6 +334,30 @@ MUST_CHECK bool unfkc(str_t *s1, const str_t *s2, int mode) {
     return false;
 }
 
+static size_t utf8_to_chars(char *dest, size_t destlen, unichar_t ch) {
+#ifdef _WIN32
+    wchar_t temp[2];
+    BOOL used_default = false;
+    int j = 0;
+    if (ch < 0x10000) {
+    } else if (ch < 0x110000) {
+        temp[j++] = (wchar_t)((ch >> 10) + 0xd7c0);
+        ch = (ch & 0x3ff) | 0xdc00;
+    } else return 0;
+    temp[j++] = (wchar_t)ch;
+    j = WideCharToMultiByte(CP_ACP, wide_flags, temp, 2, dest, (int)destlen, NULL, use_default_char ? &used_default : NULL);
+    return !used_default && j >= 0 ? (size_t)j : 0;
+#else
+    mbstate_t ps;
+    size_t ln;
+    (void)destlen;
+    if (ch != (unichar_t)(wchar_t)ch) return 0;
+    memset(&ps, 0, sizeof ps);
+    ln = wcrtomb(dest, (wchar_t)ch, &ps);
+    return (ln != (size_t)-1) ? ln : 0;
+#endif
+}
+
 size_t argv_print(const char *line, FILE *f) {
     size_t len = 0;
     const uint8_t *i = (const uint8_t *)line;
@@ -355,7 +387,14 @@ size_t argv_print(const char *line, FILE *f) {
             unichar_t ch2 = (uint8_t)ch;
             unsigned int ln = utf8in(i, &ch2);
             if (iswprint((wint_t)ch2) != 0) {
-                len += fwrite(i, ln, 1, f);
+                char temp[64];
+                size_t l = utf8_to_chars(temp, sizeof temp, ch2);
+                if (l != 0) {
+                    len += fwrite(temp, l, 1, f);
+                } else {
+                    putc('?', f); 
+                    len++;
+                }
             } else {
                 putc('?', f);
                 len++;
@@ -457,30 +496,16 @@ size_t makefile_print(const char *line, FILE *f) {
         int ch = *i;
         if ((ch & 0x80) != 0) {
             unichar_t ch2 = (uint8_t)ch;
-#ifdef _WIN32
-            unsigned int ln = utf8in(i, &ch2);
-            bl = 0;
-            if (iswprint((wint_t)ch2) != 0) {
-                len += fwrite(i, ln, 1, f);
-                i += ln;
-                continue;
-            }
-            i += ln;
-#else
             bl = 0;
             i += utf8in(i, &ch2);
             if (iswprint((wint_t)ch2) != 0) {
-                mbstate_t ps;
                 char temp[64];
-                size_t ln;
-                memset(&ps, 0, sizeof ps);
-                ln = wcrtomb(temp, (wchar_t)ch2, &ps);
-                if (ln != (size_t)-1) {
+                size_t ln = utf8_to_chars(temp, sizeof temp, ch2);
+                if (ln != 0) {
                     len += fwrite(temp, ln, 1, f);
                     continue;
                 }
             }
-#endif
             len++;putc('?', f);
             continue;
         }
@@ -529,30 +554,6 @@ static int unknown_print(FILE *f, unichar_t ch) {
 }
 
 void printable_print(const uint8_t *l, FILE *f) {
-#ifdef _WIN32
-    const uint8_t *i = l;
-    for (;;) {
-        unichar_t ch;
-        if ((*i >= 0x20 && *i <= 0x7e) || *i == 0x09) {
-            i++;
-            continue;
-        }
-        if (l != i) fwrite(l, 1, (size_t)(i - l), f);
-        if (*i == 0) break;
-        ch = *i;
-        if ((ch & 0x80) != 0) {
-            unsigned int ln = utf8in(i, &ch);
-            if (iswprint((wint_t)ch) != 0) {
-                l = i;
-                i += ln;
-                continue;
-            }
-            i += ln;
-        } else i++;
-        l = i;
-        unknown_print(f, ch);
-    }
-#else
     const uint8_t *i = l;
     for (;;) {
         unichar_t ch;
@@ -566,12 +567,9 @@ void printable_print(const uint8_t *l, FILE *f) {
         if ((ch & 0x80) != 0) {
             i += utf8in(i, &ch);
             if (iswprint((wint_t)ch) != 0) {
-                mbstate_t ps;
                 char temp[64];
-                size_t ln;
-                memset(&ps, 0, sizeof ps);
-                ln = wcrtomb(temp, (wchar_t)ch, &ps);
-                if (ln != (size_t)-1) {
+                size_t ln = utf8_to_chars(temp, sizeof temp, ch);
+                if (ln != 0) {
                     fwrite(temp, ln, 1, f);
                     l = i;
                     continue;
@@ -581,36 +579,9 @@ void printable_print(const uint8_t *l, FILE *f) {
         unknown_print(f, ch);
         l = i;
     }
-#endif
 }
 
 size_t printable_print2(const uint8_t *line, FILE *f, size_t max) {
-#ifdef _WIN32
-    size_t i, l = 0, len = 0;
-    int err;
-    for (i = 0; i < max;) {
-        unsigned int ln;
-        unichar_t ch = line[i];
-        if likely((ch >= 0x20 && ch <= 0x7e) || ch == 0x09) {
-            i++;
-            continue;
-        }
-        if ((ch & 0x80) == 0) ln = 1; else {
-            ln = utf8in(line + i, &ch);
-            if (iswprint((wint_t)ch) != 0) {
-                i += ln;
-                continue;
-            }
-        }
-        if (l != i) len += fwrite(line + l, 1, i - l, f);
-        err = unknown_print(f, ch);
-        if (err > 0) len += (unsigned int)err;
-        i += ln;
-        l = i;
-    }
-    if (i != l) len += fwrite(line + l, 1, i - l, f);
-    return len;
-#else
     size_t i, l = 0, len = 0;
     int err;
     for (i = 0; i < max;) {
@@ -620,12 +591,9 @@ size_t printable_print2(const uint8_t *line, FILE *f, size_t max) {
             i += utf8in(line + i, &ch);
             l = i;
             if (iswprint((wint_t)ch) != 0) {
-                mbstate_t ps;
                 char temp[64];
-                size_t ln;
-                memset(&ps, 0, sizeof ps);
-                ln = wcrtomb(temp, (wchar_t)ch, &ps);
-                if (ln != (size_t)-1) {
+                size_t ln = utf8_to_chars(temp, sizeof temp, ch);
+                if (ln != 0) {
                     len += fwrite(temp, ln, 1, f); /* 1 character */
                     continue;
                 }
@@ -646,7 +614,6 @@ size_t printable_print2(const uint8_t *line, FILE *f, size_t max) {
     }
     if (i != l) len += fwrite(line + l, 1, i - l, f);
     return len;
-#endif
 }
 
 void caret_print(const uint8_t *line, FILE *f, size_t max) {
@@ -657,20 +624,13 @@ void caret_print(const uint8_t *line, FILE *f, size_t max) {
         if ((ch & 0x80) != 0) {
             i += utf8in(line + i, &ch);
             if (iswprint((wint_t)ch) != 0) {
-#ifdef _WIN32
-                int width = wcwidth_v9(ch);
-                if (width > 0) l += (unsigned int)width;
-                continue;
-#else
                 char temp[64];
-                mbstate_t ps;
-                memset(&ps, 0, sizeof ps);
-                if (wcrtomb(temp, (wchar_t)ch, &ps) != (size_t)-1) {
+                size_t ln = utf8_to_chars(temp, sizeof temp, ch);
+                if (ln != 0) {
                     int width = wcwidth_v9(ch);
                     if (width > 0) l += (unsigned int)width;
                     continue;
                 }
-#endif
             }
             err = unknown_print(NULL, ch);
             if (err > 0) l += (unsigned int)err;
@@ -710,6 +670,16 @@ size_t calcpos(const uint8_t *line, size_t pos) {
 }
 
 #ifdef _WIN32
+void unicode_init(void) {
+    wchar_t w;
+    char c = '?';
+    BOOL used_default;
+    int ln = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, &w, 1, &c, 1, NULL, NULL);
+    wide_flags = (ln <= 0) ? 0 : WC_NO_BEST_FIT_CHARS;
+    ln = WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, NULL, &used_default);
+    use_default_char = (ln > 0);
+}
+
 MUST_CHECK wchar_t *utf8_to_wchar(const char *name, size_t max) {
     enum { REPLACEMENT_CHARACTER = 0xfffd };
     wchar_t *wname;
@@ -856,12 +826,13 @@ FILE *fopen_utf8(const char *name, const char *mode) {
         while ((*c2++ = (wchar_t)*c++) != 0);
         f = _wfopen(wname, wmode);
         if (f == NULL && errno == EBADF) {
-            int l = WideCharToMultiByte(CP_ACP, 0, wname, -1, NULL, 0, NULL, NULL);
-            if (l > 0) {
+            BOOL used_default = false;
+            int l = WideCharToMultiByte(CP_ACP, wide_flags, wname, -1, NULL, 0, NULL, use_default_char ? &used_default : NULL);
+            if (l > 0 && !used_default) {
                 char *name2 = allocate_array(char, (unsigned int)l);
                 if (name2 != NULL) {
-                    l = WideCharToMultiByte(CP_ACP, 0, wname, -1, name2, l, NULL, NULL);
-                    if (l > 0) {
+                    l = WideCharToMultiByte(CP_ACP, wide_flags, wname, -1, name2, l, NULL, use_default_char ? &used_default : NULL);
+                    if (l > 0 && !used_default) {
                         f = fopen(name2, mode);
                     }
                     free(name2);

@@ -59,17 +59,16 @@ static HANDLE console_handle;
 static int old_attributes, current_attributes;
 
 void console_init(void) {
+    UINT ansicp = GetACP();
+    UINT consoleoutputcp = GetConsoleOutputCP();
+    UINT consolecp = GetConsoleCP();
     old_consoleoutputcp = 0;
     old_consolecp = 0;
-    if (IsValidCodePage(CP_UTF8)) {
-        UINT consoleoutputcp = GetConsoleOutputCP();
-        UINT consolecp = GetConsoleCP();
-        if (consolecp != CP_UTF8) {
-            if (SetConsoleCP(CP_UTF8)) old_consolecp = consolecp;
-        }
-        if (consoleoutputcp != CP_UTF8) {
-            if (SetConsoleOutputCP(CP_UTF8)) old_consoleoutputcp = consoleoutputcp;
-        }
+    if (consolecp != ansicp) {
+        if (SetConsoleCP(ansicp)) old_consolecp = consolecp;
+    }
+    if (consoleoutputcp != ansicp) {
+        if (SetConsoleOutputCP(ansicp)) old_consoleoutputcp = consoleoutputcp;
     }
 }
 

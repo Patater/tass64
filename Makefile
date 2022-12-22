@@ -58,7 +58,7 @@ anonsymbolobj.o: anonsymbolobj.c anonsymbolobj.h obj.h attributes.h \
  inttypes.h eval.h stdbool.h oper_e.h values.h typeobj.h strobj.h
 arguments.o: arguments.c arguments.h stdbool.h inttypes.h 64tass.h \
  attributes.h wait_e.h opcodes.h my_getopt.h error.h errors_e.h unicode.h \
- wchar.h version.h
+ version.h
 avl.o: avl.c avl.h attributes.h stdbool.h
 bitsobj.o: bitsobj.c bitsobj.h obj.h attributes.h inttypes.h oper_e.h \
  math.h eval.h stdbool.h variables.h unicode.h error.h errors_e.h \

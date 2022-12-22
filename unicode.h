@@ -45,6 +45,7 @@ extern MUST_CHECK wchar_t *utf8_to_wchar(const char *, size_t);
 extern uint8_t *char_to_utf8(const char *);
 extern FILE *fopen_utf8(const char *, const char *);
 extern const char *unicode_character_name(unichar_t);
+extern void unicode_init(void);
 
 static inline bool dash_name(const char *name) {
     return (name[0] == '-' && name[1] == 0);
