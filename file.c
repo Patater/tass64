@@ -291,26 +291,6 @@ static bool flush_ubuff(struct ubuff_s *ubuff, filesize_t *p2, struct file_data_
     return false;
 }
 
-static unichar_t fromiso2(unichar_t c) {
-    uint8_t c2 = (uint8_t)(c | 0x80);
-    wchar_t w;
-#ifdef _WIN32
-    int l = MultiByteToWideChar(codepage, 0, (const char *)&c2, 1, &w, 1);
-    if (l < 1) return c2;
-#else
-    mbstate_t ps;
-    int olderrno;
-    ssize_t l;
-
-    memset(&ps, 0, sizeof ps);
-    olderrno = errno;
-    l = (ssize_t)mbrtowc(&w, (char *)&c2, 1,  &ps);
-    errno = olderrno;
-    if (l < 0) return c2;
-#endif
-    return (unichar_t)w;
-}
-
 static unichar_t fromiso_conv[128];
 static inline unichar_t fromiso(unichar_t c) {
     c &= 0x7f;

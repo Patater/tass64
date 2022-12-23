@@ -36,7 +36,10 @@
 
 #ifdef _WIN32
 static DWORD wide_flags;
+static DWORD wide_flags_acp;
+static DWORD multibyte_flags;
 static BOOL use_default_char;
+static BOOL use_default_char_acp;
 unsigned int codepage;
 #endif
 
@@ -332,6 +335,27 @@ MUST_CHECK bool unfkc(str_t *s1, const str_t *s2, int mode) {
     }
     return false;
 }
+
+unichar_t fromiso2(unichar_t c) {
+    uint8_t c2 = (uint8_t)(c | 0x80);
+    wchar_t w;
+#ifdef _WIN32
+    int l = (codepage == CP_UTF8) ? -1 : MultiByteToWideChar(codepage, multibyte_flags, (const char *)&c2, 1, &w, 1);
+    if (l < 1) return c2;
+#else
+    mbstate_t ps;
+    int olderrno;
+    ssize_t l;
+
+    memset(&ps, 0, sizeof ps);
+    olderrno = errno;
+    l = (ssize_t)mbrtowc(&w, (char *)&c2, 1,  &ps);
+    errno = olderrno;
+    if (l < 0) return c2;
+#endif
+    return (unichar_t)w;
+}
+
 
 static size_t utf8_to_chars(char *dest, size_t destlen, unichar_t ch) {
 #ifdef _WIN32
@@ -675,9 +699,16 @@ void unicode_init(void) {
     char c = '?';
     BOOL used_default;
     int ln = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, &w, 1, &c, 1, NULL, NULL);
+    wide_flags_acp = (ln <= 0) ? 0 : WC_NO_BEST_FIT_CHARS;
+    ln = WideCharToMultiByte(codepage, WC_NO_BEST_FIT_CHARS, &w, 1, &c, 1, NULL, NULL);
     wide_flags = (ln <= 0) ? 0 : WC_NO_BEST_FIT_CHARS;
     ln = WideCharToMultiByte(CP_ACP, 0, &w, 1, &c, 1, NULL, &used_default);
+    use_default_char_acp = (ln > 0);
+    ln = WideCharToMultiByte(codepage, 0, &w, 1, &c, 1, NULL, &used_default);
     use_default_char = (ln > 0);
+    w = L'?';
+    ln = MultiByteToWideChar(codepage, MB_ERR_INVALID_CHARS, &c, 1, &w, 1);
+    multibyte_flags = (ln <= 0) ? 0 : MB_ERR_INVALID_CHARS;
 }
 
 MUST_CHECK wchar_t *utf8_to_wchar(const char *name, size_t max) {
@@ -728,14 +759,14 @@ uint8_t *char_to_utf8(const char *s) {
     if (data == NULL) return NULL;
 
     p = 0;
-    l = n <= ((~(unsigned int)0) >> 1) ? MultiByteToWideChar(codepage, 0, s, (int)n, NULL, 0) : -1;
+    l = n <= ((~(unsigned int)0) >> 1) ? MultiByteToWideChar(codepage, multibyte_flags, s, (int)n, NULL, 0) : -1;
     if (l > 0) {
         wchar_t *w = allocate_array(wchar_t, (unsigned int)l);
         if (w == NULL) {
             free(data);
             return NULL;
         }
-        l = MultiByteToWideChar(codepage, 0, s, (int)n, w, l);
+        l = MultiByteToWideChar(codepage, multibyte_flags, s, (int)n, w, l);
         if (l > 0) {
             int j;
             for (j = 0; j < l; j++) {
@@ -823,11 +854,11 @@ FILE *fopen_utf8(const char *name, const char *mode) {
         f = _wfopen(wname, wmode);
         if (f == NULL && errno == EBADF) {
             BOOL used_default = false;
-            int l = WideCharToMultiByte(CP_ACP, wide_flags, wname, -1, NULL, 0, NULL, use_default_char ? &used_default : NULL);
+            int l = WideCharToMultiByte(CP_ACP, wide_flags_acp, wname, -1, NULL, 0, NULL, use_default_char_acp ? &used_default : NULL);
             if (l > 0 && !used_default) {
                 char *name2 = allocate_array(char, (unsigned int)l);
                 if (name2 != NULL) {
-                    l = WideCharToMultiByte(CP_ACP, wide_flags, wname, -1, name2, l, NULL, use_default_char ? &used_default : NULL);
+                    l = WideCharToMultiByte(CP_ACP, wide_flags_acp, wname, -1, name2, l, NULL, use_default_char_acp ? &used_default : NULL);
                     if (l > 0 && !used_default) {
                         f = fopen(name2, mode);
                     } else errno = EILSEQ;
