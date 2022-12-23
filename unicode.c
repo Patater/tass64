@@ -114,9 +114,7 @@ static inline unsigned int utf8outlen(unichar_t i) {
 
 MUST_CHECK bool extend_ubuff(struct ubuff_s *d) {
     uint32_t len;
-    unichar_t *data;
-    if (add_overflow(d->len, 16, &len)) return true;
-    data = reallocate_array(d->data, len);
+    unichar_t *data = add_overflow(d->len, 16, &len) ? NULL : reallocate_array(d->data, len);
     if (data == NULL) return true;
     d->data = data;
     d->len = len;
@@ -696,9 +694,7 @@ MUST_CHECK wchar_t *utf8_to_wchar(const char *name, size_t max) {
             if (ch == 0) ch = REPLACEMENT_CHARACTER;
         } else i++;
         if (j + 3 > len) {
-            wchar_t *d;
-            if (inc_overflow(&len, 64)) goto failed;
-            d = reallocate_array(wname, len);
+            wchar_t *d = inc_overflow(&len, 64) ? NULL : reallocate_array(wname, len);
             if (d == NULL) goto failed;
             wname = d;
         }
@@ -745,8 +741,7 @@ uint8_t *char_to_utf8(const char *s) {
             for (j = 0; j < l; j++) {
                 unichar_t ch;
                 if (p + 6 + 1 > len) {
-                    uint8_t *d;
-                    d = inc_overflow(&len, 1024) ? NULL : reallocate_array(data, len);
+                    uint8_t *d = inc_overflow(&len, 1024) ? NULL : reallocate_array(data, len);
                     if (d == NULL) {
                         free(w);
                         free(data);
@@ -786,8 +781,7 @@ uint8_t *char_to_utf8(const char *s) {
         wchar_t w;
         unichar_t ch;
         if (p + 6 + 1 > len) {
-            uint8_t *d;
-            d = inc_overflow(&len, 1024) ? NULL : reallocate_array(data, len);
+            uint8_t *d = inc_overflow(&len, 1024) ? NULL : reallocate_array(data, len);
             if (d == NULL) {
                 free(data);
                 return NULL;
@@ -869,13 +863,9 @@ FILE *fopen_utf8(const char *name, const char *mode) {
                 if (ch == 0) {errno = EILSEQ; goto failed;}
             } else c++;
             l = (ssize_t)wcrtomb(temp, (wchar_t)ch, &ps);
-            if (l <= 0) goto failed;
-            len += (size_t)l;
-            if (len < (size_t)l) goto failed;
+            if (l <= 0 || inc_overflow(&len, (size_t)l)) goto failed;
             if (len > max) {
-                char *d;
-                if (add_overflow(len, 64, &max)) goto failed;
-                d = reallocate_array(newname, max);
+                char *d = add_overflow(len, 64, &max) ? NULL : reallocate_array(newname, max);
                 if (d == NULL) goto failed;
                 newname = d;
             }
