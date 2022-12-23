@@ -241,8 +241,8 @@ static MUST_CHECK bool ucompose(const struct ubuff_s *buff, struct ubuff_s *d) {
                 continue;
             }
             if (sprop == NULL) sprop = uget_property(sc);
-            if (sprop->base >= 0 && prop->diar >= 0) {
-                int16_t comp = ucomposing[sprop->base + prop->diar];
+            if (sprop->diarbase >= 0 && prop->diarbase < -1) {
+                int16_t comp = ucomposing[sprop->diarbase - prop->diarbase - 2];
                 if (comp != 0) {
                     d->data[sp] = (comp > 0) ? (uint16_t)comp : ucomposed[-comp];
                     sprop = NULL;
@@ -651,7 +651,7 @@ void caret_print(const uint8_t *line, FILE *f, size_t max) {
                 char temp[64];
                 size_t ln = utf8_to_chars(temp, sizeof temp, ch);
                 if (ln != 0) {
-                    int width = wcwidth_v9(ch);
+                    int width = wcwidth_v13(ch);
                     if (width > 0) l += (unsigned int)width;
                     continue;
                 }
