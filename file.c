@@ -295,7 +295,7 @@ static unichar_t fromiso2(unichar_t c) {
     uint8_t c2 = (uint8_t)(c | 0x80);
     wchar_t w;
 #ifdef _WIN32
-    int l = MultiByteToWideChar(CP_ACP, 0, (const char *)&c2, 1, &w, 1);
+    int l = MultiByteToWideChar(codepage, 0, (const char *)&c2, 1, &w, 1);
     if (l < 1) return c2;
 #else
     mbstate_t ps;

@@ -23,6 +23,8 @@
 #include "inttypes.h"
 #include "stdbool.h"
 
+extern unsigned int codepage;
+
 struct ubuff_s {
     unichar_t *data;
     uint32_t len, p;

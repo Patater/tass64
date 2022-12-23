@@ -58,8 +58,7 @@ static UINT old_consolecp;
 static HANDLE console_handle;
 static int old_attributes, current_attributes;
 
-void console_init(void) {
-    UINT ansicp = GetACP();
+void console_init(unsigned int ansicp) {
     UINT consoleoutputcp = GetConsoleOutputCP();
     UINT consolecp = GetConsoleCP();
     old_consoleoutputcp = 0;

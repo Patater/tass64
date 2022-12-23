@@ -34,6 +34,11 @@
 #ifdef SIGALRM
 #include <unistd.h>
 #endif
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <shellapi.h>
+#endif
 
 #include "wchar.h"
 #include "error.h"
@@ -121,6 +126,60 @@ static const wchar_t *wprgname(const wchar_t *name) {
     return newp;
 }
 
+static unsigned int get_codepage(const char *locale) {
+    unsigned int cp = 0;
+    while (*locale != '\0' && *locale != '.') locale++;
+    if (*locale == '.') {
+        locale++;
+        if (*locale >= '0' && *locale <= '9') {
+            char *s;
+            unsigned long int ncp = strtoul(locale, &s, 10);
+            if (ncp > 0 && ncp <= 65535) {
+                cp = (unsigned int)ncp;
+            }
+            locale = s;
+        } else if ((*locale | 0x20) == 'u' && (locale[1] | 0x20) == 't' && (locale[2] | 0x20) == 'f') {
+            locale += 3;
+            if (*locale == '-') locale++;
+            if (*locale == '8') {
+                locale++;
+                cp = CP_UTF8;
+            }
+        }
+    }
+    return (*locale == '\0' || *locale == '@') ? cp : 0;
+}
+
+static unsigned int locale_init(void) {
+    char temp[16];
+    const char *env = getenv("LC_ALL");
+    unsigned int cp;
+    if (env == NULL) env = getenv("LC_TYPE");
+    if (env == NULL) env = getenv("LANG");
+    if (env == NULL) env = ".ACP";
+    if (strcmp(env, ".ACP") == 0) {
+        cp = GetACP();
+    } else if (strcmp(env, ".OCP") == 0) {
+        cp = GetOEMCP();
+    } else { 
+        cp = 0;
+    }
+    if (cp != 0) {
+        sprintf(temp, ".%u", cp);
+        env = temp;
+    } else {
+        cp = get_codepage(env);
+        if (!IsValidCodePage(cp)) cp = 0;
+    }
+    env = setlocale(LC_CTYPE, env);
+    if (cp == 0) {
+        if (env == NULL) env = setlocale(LC_CTYPE, NULL);
+        if (env != NULL) cp = get_codepage(env);
+    }
+    if (!IsValidCodePage(cp)) cp = 0;
+    return cp != 0 ? cp : GetACP();
+}
+
 #ifdef __MINGW32__
 static 
 #endif
@@ -129,8 +188,8 @@ int wmain(int argc, wchar_t *argv2[]) {
     char **argv;
 
     install_signal_handler();
-    setlocale(LC_CTYPE, "");
-    console_init();
+    codepage = locale_init();
+    console_init(codepage);
     atexit(console_destroy);
     unicode_init();
 
@@ -182,10 +241,6 @@ int wmain(int argc, wchar_t *argv2[]) {
 }
 
 #ifdef __MINGW32__
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <shellapi.h>
-
 int main(int argc, char *argv[])
 {
   LPWSTR commandLine = GetCommandLineW();
@@ -196,8 +251,8 @@ int main(int argc, char *argv[])
       char **uargv;
 
       install_signal_handler();
-      setlocale(LC_CTYPE, "");
-      console_init();
+      codepage = locale_init();
+      console_init(codepage);
       atexit(console_destroy);
       unicode_init();
 
@@ -209,7 +264,11 @@ int main(int argc, char *argv[])
       new_array(&uargv, (unsigned int)argc);
       for (i = 0; i < argc; i++) {
           const char *s = (i == 0) ? prgname(*argv) : argv[i];
-          uint8_t *data = char_to_utf8(s);
+          uint8_t *data;
+          unsigned int cp = codepage;
+          codepage = GetACP();
+          data = char_to_utf8(s);
+          codepage = cp;
           if (data == (uint8_t *)s) {
               size_t len = strlen(s);
               data = inc_overflow(&len, 1) ? NULL : allocate_array(uint8_t, len);

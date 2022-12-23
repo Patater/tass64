@@ -37,6 +37,7 @@
 #ifdef _WIN32
 static DWORD wide_flags;
 static BOOL use_default_char;
+unsigned int codepage;
 #endif
 
 enum { U_CASEFOLD = 1, U_COMPAT = 2 };
@@ -336,17 +337,21 @@ MUST_CHECK bool unfkc(str_t *s1, const str_t *s2, int mode) {
 
 static size_t utf8_to_chars(char *dest, size_t destlen, unichar_t ch) {
 #ifdef _WIN32
-    wchar_t temp[2];
-    BOOL used_default = false;
-    int j = 0;
-    if (ch < 0x10000) {
-    } else if (ch < 0x110000) {
-        temp[j++] = (wchar_t)((ch >> 10) + 0xd7c0);
-        ch = (ch & 0x3ff) | 0xdc00;
-    } else return 0;
-    temp[j++] = (wchar_t)ch;
-    j = WideCharToMultiByte(CP_ACP, wide_flags, temp, j, dest, (int)destlen, NULL, use_default_char ? &used_default : NULL);
-    return !used_default && j >= 0 ? (size_t)j : 0;
+    if (codepage == CP_UTF8) {
+        return utf8out(ch, (uint8_t *)dest);
+    } else {
+        wchar_t temp[2];
+        BOOL used_default = false;
+        int j = 0;
+        if (ch < 0x10000) {
+        } else if (ch < 0x110000) {
+            temp[j++] = (wchar_t)((ch >> 10) + 0xd7c0);
+            ch = (ch & 0x3ff) | 0xdc00;
+        } else return 0;
+        temp[j++] = (wchar_t)ch;
+        j = WideCharToMultiByte(codepage, wide_flags, temp, j, dest, (int)destlen, NULL, use_default_char ? &used_default : NULL);
+        return !used_default && j >= 0 ? (size_t)j : 0;
+    }
 #else
     mbstate_t ps;
     size_t ln;
@@ -727,14 +732,14 @@ uint8_t *char_to_utf8(const char *s) {
     if (data == NULL) return NULL;
 
     p = 0;
-    l = n <= ((~(unsigned int)0) >> 1) ? MultiByteToWideChar(CP_ACP, 0, s, (int)n, NULL, 0) : -1;
+    l = n <= ((~(unsigned int)0) >> 1) ? MultiByteToWideChar(codepage, 0, s, (int)n, NULL, 0) : -1;
     if (l > 0) {
         wchar_t *w = allocate_array(wchar_t, (unsigned int)l);
         if (w == NULL) {
             free(data);
             return NULL;
         }
-        l = MultiByteToWideChar(CP_ACP, 0, s, (int)n, w, l);
+        l = MultiByteToWideChar(codepage, 0, s, (int)n, w, l);
         if (l > 0) {
             int j;
             for (j = 0; j < l; j++) {
@@ -831,10 +836,10 @@ FILE *fopen_utf8(const char *name, const char *mode) {
                     l = WideCharToMultiByte(CP_ACP, wide_flags, wname, -1, name2, l, NULL, use_default_char ? &used_default : NULL);
                     if (l > 0 && !used_default) {
                         f = fopen(name2, mode);
-                    }
+                    } else errno = EILSEQ;
                     free(name2);
                 } else errno = ENOMEM;
-            }
+            } else errno = EILSEQ;
         }
         free(wname);
     } else {
@@ -861,7 +866,7 @@ FILE *fopen_utf8(const char *name, const char *mode) {
             ch = *c;
             if ((ch & 0x80) != 0) {
                 c += utf8in(c, &ch);
-                if (ch == 0) {errno = ENOENT; goto failed;}
+                if (ch == 0) {errno = EILSEQ; goto failed;}
             } else c++;
             l = (ssize_t)wcrtomb(temp, (wchar_t)ch, &ps);
             if (l <= 0) goto failed;

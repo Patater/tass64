@@ -32,7 +32,7 @@ extern bool console_use_bold;
 extern void console_use(FILE *);
 
 #ifdef _WIN32
-extern void console_init(void);
+extern void console_init(unsigned int);
 extern void console_destroy(void);
 extern void console_attribute(int c, FILE *f);
 #define console_bold(f) console_attribute(0, (f))
