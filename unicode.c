@@ -241,7 +241,7 @@ static MUST_CHECK bool ucompose(const struct ubuff_s *buff, struct ubuff_s *d) {
                 continue;
             }
             if (sprop == NULL) sprop = uget_property(sc);
-            if (sprop->diarbase >= 0 && prop->diarbase < -1) {
+            if (sprop->diarbase > 0 && prop->diarbase < 0) {
                 int16_t comp = ucomposing[sprop->diarbase - prop->diarbase - 2];
                 if (comp != 0) {
                     d->data[sp] = (comp > 0) ? (uint16_t)comp : ucomposed[-comp];
