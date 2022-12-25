@@ -413,10 +413,9 @@ static int get_codepage(void) {
     if ((regs.w.cflag & 1) == 0) {
         uint16_t seg = regs.w.ax;
         uint16_t sel = regs.w.dx;
-        uint16_t w[2];
+        uint16_t *w = (uint16_t *)(seg << 4);
 
-        _fmemset(MK_FP(sel, 0), 0, sizeof w);
-
+        w[1] = 0;
         rmi.eax = IOCTL_GENERIC_CHARACTER_DEVICE_REQUEST;
         rmi.ebx = STDOUT_HANDLE;
         rmi.ecx = DEVICE_CATEGORY_CON * 0x100u + QUERY_SELECTED_CODE_PAGE;
@@ -428,7 +427,6 @@ static int get_codepage(void) {
             rmi.flags = 1;
         }
         if ((rmi.flags & 1) == 0) {
-            _fmemcpy(w, MK_FP(sel, 0), sizeof w);
             dcp = w[1];
         }
 
