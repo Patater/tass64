@@ -21,7 +21,7 @@
 #define WCHAR_H
 #include "inttypes.h"
 
-#ifdef __DJGPP__
+#if defined __DJGPP__ || (defined __WATCOMC__ && !defined _WIN32)
 #include <wchar.h>
 extern size_t wcrtomb(char *, wchar_t, mbstate_t *);
 extern size_t mbrtowc(wchar_t *, const char *, size_t, mbstate_t *);

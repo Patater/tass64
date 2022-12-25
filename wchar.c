@@ -18,13 +18,18 @@
 */
 #include "wchar.h"
 
-#ifdef __DJGPP__
+#if defined __DJGPP__ || (defined __WATCOMC__ && !defined _WIN32)
 #include <errno.h>
 #include <ctype.h>
 #include "wctype.h"
 #include "attributes.h"
+#ifdef __DJGPP__
 #include <dpmi.h>
 #include <go32.h>
+#else
+#include <string.h>
+#include <i86.h>
+#endif
 
 static const wchar_t *cp;
 static uint32_t revcp[128];
@@ -328,6 +333,7 @@ static int compcp2(const void *a, const void *b) {
 static void set_cp(void) {
     uint16_t dcp;
     unsigned int i;
+#ifdef __DJGPP__
     __dpmi_regs regs;
     regs.x.ax = 0x440c;
     regs.x.bx = 1;
@@ -344,6 +350,74 @@ static void set_cp(void) {
     } else {
         dosmemget(__tb + 2, sizeof dcp, &dcp);
     }
+#else
+    union REGS regs;
+    struct SREGS sregs;
+
+    memset(&sregs, 0, sizeof sregs);
+    regs.w.ax = 0x100; /* alloc */
+    regs.w.bx = 1;
+    regs.w.cflag = 1;
+    int386x(0x31, &regs, &regs, &sregs);
+    if ((regs.w.cflag & 1) == 0) {
+        struct rmi_s {
+            uint32_t edi, esi, ebp, res, ebx, edx, ecx, eax;
+            uint16_t flags, es, ds, fs, gs, ip, cs, sp, ss;
+        };
+        static struct rmi_s rmi;
+        uint16_t seg = regs.w.ax;
+        uint16_t sel = regs.w.dx;
+        uint16_t dw[2] = { 0, 437};
+
+        _fmemcpy(MK_FP(sel, 0), dw, sizeof dw);
+
+        rmi.eax = 0x440c;
+        rmi.ebx = 1;
+        rmi.ecx = 0x36a;
+        rmi.ds = seg;
+        rmi.edx = 0;
+        rmi.flags = 1;
+
+        regs.w.ax = 0x300;
+        regs.h.bl = 0x21;
+        regs.h.bh = 0;
+        regs.w.cx = 0;
+        sregs.es = FP_SEG(&rmi);
+        regs.x.edi = FP_OFF(&rmi);
+        int386x(0x31, &regs, &regs, &sregs);
+        if (regs.w.cflag & 1) {
+            rmi.flags = 1;
+        } else {
+            _fmemcpy(&rmi, MK_FP(sregs.es, regs.x.edi), sizeof rmi);
+        }
+
+        if ((rmi.flags & 1) == 0) {
+            _fmemcpy(dw, MK_FP(sel, 0), sizeof dw);
+            dcp = dw[1];
+        } else {
+            rmi.eax = 0xad02;
+            rmi.ebx = 0xfffe;
+
+            regs.w.ax = 0x300;
+            regs.h.bl = 0x2f;
+            regs.h.bh = 0;
+            regs.w.cx = 0;
+            sregs.es = FP_SEG(&rmi);
+            regs.x.edi = FP_OFF(&rmi);
+            int386x(0x31, &regs, &regs, &sregs);
+            if (regs.w.cflag & 1) {
+                rmi.flags = 1;
+            } else {
+                _fmemcpy(&rmi, MK_FP(sregs.es, regs.x.edi), sizeof rmi);
+            }
+            dcp = (rmi.flags & 1) ? 0 : (uint16_t)rmi.ebx;
+        }
+
+        regs.w.ax = 0x101; /* free */
+        regs.w.dx = sel;
+        int386x(0x31, &regs, &regs, &sregs);
+    }
+#endif
     switch (dcp) {
     case 737: cp = cp737; break;
     case 775: cp = cp775; break;

@@ -20,7 +20,7 @@
 #ifndef WCTYPE_H
 #define WCTYPE_H
 
-#ifdef __DJGPP__
+#if defined __DJGPP__ || (defined __WATCOMC__ && !defined _WIN32)
 #include <wctype.h>
 extern int iswprint(wint_t wc);
 #elif defined __GNUC__ || _MSC_VER >= 1400 || defined __WATCOMC__
@@ -29,6 +29,7 @@ extern int iswprint(wint_t wc);
 #include <wctype.h>
 #else
 #include "wchar.h"
+#define ISWPRINT_NEEDED
 
 extern int iswprint(wint_t wc);
 #endif
