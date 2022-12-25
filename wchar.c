@@ -339,7 +339,7 @@ enum {
     DISPLAY_SYS_GET_ACTIVE_CODE_PAGE = 0xad02,
     DPMI_ALLOC = 0x100,
     DPMI_FREE = 0x101,
-    DPMI_INT = 0x300,
+    DPMI_INT = 0x300
 };
 
 #ifndef __DJGPP__
@@ -352,17 +352,13 @@ static int dpmi_int(int nr, struct rmi_s *rmi) {
     union REGS regs;
     struct SREGS sregs;
     memset(&sregs, 0, sizeof sregs);
+    memset(&regs, 0, sizeof regs);
     regs.w.ax = DPMI_INT;
     regs.h.bl = (uint8_t)nr;
-    regs.h.bh = 0;
-    regs.w.cx = 0;
     sregs.es = FP_SEG(rmi);
     regs.x.edi = FP_OFF(rmi);
     regs.x.cflag = 1;
     int386x(0x31, &regs, &regs, &sregs);
-    if ((regs.x.cflag & 1) == 0) {
-        _fmemcpy(rmi, MK_FP(sregs.es, regs.x.edi), sizeof rmi);
-    }
     return regs.x.cflag & 1;
 }
 #endif
@@ -399,7 +395,7 @@ static int get_codepage(void) {
     regs.x.bx = 0;
     regs.x.flags = 1;
     if (__dpmi_int(0x21, &regs) == 0 && (regs.x.flags & 1) == 0) {
-        return regs.x.bx; /* BX = active, DX = system */
+        return regs.x.bx;
     }
 #else
     static struct rmi_s rmi;
@@ -415,14 +411,13 @@ static int get_codepage(void) {
         uint16_t sel = regs.w.dx;
         uint16_t *w = (uint16_t *)(seg << 4);
 
-        w[1] = 0;
+        memset(w, 0, sizeof *w * 2);
         rmi.eax = IOCTL_GENERIC_CHARACTER_DEVICE_REQUEST;
         rmi.ebx = STDOUT_HANDLE;
         rmi.ecx = DEVICE_CATEGORY_CON * 0x100u + QUERY_SELECTED_CODE_PAGE;
         rmi.ds = seg;
         rmi.edx = 0;
         rmi.flags = 1;
-
         if (dpmi_int(0x21, &rmi)) {
             rmi.flags = 1;
         }
@@ -441,7 +436,6 @@ static int get_codepage(void) {
     rmi.eax = DISPLAY_SYS_GET_ACTIVE_CODE_PAGE;
     rmi.ebx = 0;
     rmi.flags = 1;
-
     if (dpmi_int(0x2f, &rmi)) {
         rmi.flags = 1;
     }
@@ -454,11 +448,10 @@ static int get_codepage(void) {
     rmi.eax = GET_GLOBAL_CODE_PAGE_TABLE;
     rmi.ebx = 0;
     rmi.flags = 1;
-
     if (dpmi_int(0x21, &rmi)) {
         rmi.flags = 1;
     }
-    if ((rmi.flags & 1) != 0) {
+    if ((rmi.flags & 1) == 0) {
         return (uint16_t)rmi.ebx;
     }
 #endif
