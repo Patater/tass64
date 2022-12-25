@@ -21,13 +21,13 @@
 #if defined __DJGPP__ || (defined __WATCOMC__ && !defined _WIN32)
 #include <errno.h>
 #include <ctype.h>
+#include <string.h>
 #include "wctype.h"
 #include "attributes.h"
 #ifdef __DJGPP__
 #include <dpmi.h>
 #include <go32.h>
 #else
-#include <string.h>
 #include <i86.h>
 #endif
 
@@ -330,94 +330,146 @@ static int compcp2(const void *a, const void *b) {
     return (int)(*(uint32_t *)a & ~0xffu) - (int)(*(uint32_t *)b & ~0xffu);
 }
 
-static void set_cp(void) {
-    uint16_t dcp;
-    unsigned int i;
-#ifdef __DJGPP__
-    __dpmi_regs regs;
-    regs.x.ax = 0x440c;
-    regs.x.bx = 1;
-    regs.x.cx = 0x36a;
-    regs.x.ds = (__tb >> 4) & 0xffff;
-    regs.x.dx = __tb & 0xf;
-    regs.x.flags |= 1;
-    __dpmi_int(0x21, &regs);
-    if (regs.x.flags & 1) {
-        regs.x.ax = 0xad02;
-        regs.x.bx = 0xfffe;
-        __dpmi_int(0x2f, &regs);
-        dcp = (regs.x.flags & 1) ? 0 : regs.x.bx;
-    } else {
-        dosmemget(__tb + 2, sizeof dcp, &dcp);
-    }
-#else
+enum {
+    GET_GLOBAL_CODE_PAGE_TABLE = 0x6601,
+    IOCTL_GENERIC_CHARACTER_DEVICE_REQUEST = 0x440c,
+    STDOUT_HANDLE = 1,
+    DEVICE_CATEGORY_CON = 3,
+    QUERY_SELECTED_CODE_PAGE = 0x6a,
+    DISPLAY_SYS_GET_ACTIVE_CODE_PAGE = 0xad02,
+    DPMI_ALLOC = 0x100,
+    DPMI_FREE = 0x101,
+    DPMI_INT = 0x300,
+};
+
+#ifndef __DJGPP__
+struct rmi_s {
+    uint32_t edi, esi, ebp, res, ebx, edx, ecx, eax;
+    uint16_t flags, es, ds, fs, gs, ip, cs, sp, ss;
+};
+
+static int dpmi_int(int nr, struct rmi_s *rmi) {
     union REGS regs;
     struct SREGS sregs;
-
     memset(&sregs, 0, sizeof sregs);
-    regs.w.ax = 0x100; /* alloc */
+    regs.w.ax = DPMI_INT;
+    regs.h.bl = (uint8_t)nr;
+    regs.h.bh = 0;
+    regs.w.cx = 0;
+    sregs.es = FP_SEG(rmi);
+    regs.x.edi = FP_OFF(rmi);
+    regs.x.cflag = 1;
+    int386x(0x31, &regs, &regs, &sregs);
+    if ((regs.x.cflag & 1) == 0) {
+        _fmemcpy(rmi, MK_FP(sregs.es, regs.x.edi), sizeof rmi);
+    }
+    return regs.x.cflag & 1;
+}
+#endif
+
+static int get_codepage(void) {
+#ifdef __DJGPP__
+    __dpmi_regs regs;
+    uint16_t w[2];
+    memset(&regs, 0, sizeof regs);
+    regs.x.ax = IOCTL_GENERIC_CHARACTER_DEVICE_REQUEST;
+    regs.x.bx = STDOUT_HANDLE;
+    regs.h.ch = DEVICE_CATEGORY_CON;
+    regs.h.cl = QUERY_SELECTED_CODE_PAGE;
+    regs.x.ds = (__tb >> 4) & 0xffff;
+    regs.x.dx = __tb & 0xf;
+    regs.x.flags = 1;
+    memset(w, 0, sizeof w);
+    dosmemput(w, sizeof w, __tb);
+    if (__dpmi_int(0x21, &regs) == 0 && (regs.x.flags & 1) == 0) {
+        dosmemget(__tb, sizeof w, w);
+        if (w[1] != 0) {
+            return w[1];
+        }
+    }
+    regs.x.ax = DISPLAY_SYS_GET_ACTIVE_CODE_PAGE;
+    regs.x.bx = 0;
+    regs.x.flags = 1;
+    if (__dpmi_int(0x2f, &regs) == 0 && (regs.x.flags & 1) == 0) {
+        if (regs.x.bx != 0) {
+            return regs.x.bx;
+        }
+    }
+    regs.x.ax = GET_GLOBAL_CODE_PAGE_TABLE; 
+    regs.x.bx = 0;
+    regs.x.flags = 1;
+    if (__dpmi_int(0x21, &regs) == 0 && (regs.x.flags & 1) == 0) {
+        return regs.x.bx; /* BX = active, DX = system */
+    }
+#else
+    static struct rmi_s rmi;
+    union REGS regs;
+    int dcp = 0;
+    memset(&rmi, 0, sizeof rmi);
+    regs.w.ax = DPMI_ALLOC;
     regs.w.bx = 1;
     regs.w.cflag = 1;
-    int386x(0x31, &regs, &regs, &sregs);
+    int386(0x31, &regs, &regs);
     if ((regs.w.cflag & 1) == 0) {
-        struct rmi_s {
-            uint32_t edi, esi, ebp, res, ebx, edx, ecx, eax;
-            uint16_t flags, es, ds, fs, gs, ip, cs, sp, ss;
-        };
-        static struct rmi_s rmi;
         uint16_t seg = regs.w.ax;
         uint16_t sel = regs.w.dx;
-        uint16_t dw[2] = { 0, 437};
+        uint16_t w[2];
 
-        _fmemcpy(MK_FP(sel, 0), dw, sizeof dw);
+        _fmemset(MK_FP(sel, 0), 0, sizeof w);
 
-        rmi.eax = 0x440c;
-        rmi.ebx = 1;
-        rmi.ecx = 0x36a;
+        rmi.eax = IOCTL_GENERIC_CHARACTER_DEVICE_REQUEST;
+        rmi.ebx = STDOUT_HANDLE;
+        rmi.ecx = DEVICE_CATEGORY_CON * 0x100u + QUERY_SELECTED_CODE_PAGE;
         rmi.ds = seg;
         rmi.edx = 0;
         rmi.flags = 1;
 
-        regs.w.ax = 0x300;
-        regs.h.bl = 0x21;
-        regs.h.bh = 0;
-        regs.w.cx = 0;
-        sregs.es = FP_SEG(&rmi);
-        regs.x.edi = FP_OFF(&rmi);
-        int386x(0x31, &regs, &regs, &sregs);
-        if (regs.w.cflag & 1) {
+        if (dpmi_int(0x21, &rmi)) {
             rmi.flags = 1;
-        } else {
-            _fmemcpy(&rmi, MK_FP(sregs.es, regs.x.edi), sizeof rmi);
         }
-
         if ((rmi.flags & 1) == 0) {
-            _fmemcpy(dw, MK_FP(sel, 0), sizeof dw);
-            dcp = dw[1];
-        } else {
-            rmi.eax = 0xad02;
-            rmi.ebx = 0xfffe;
-
-            regs.w.ax = 0x300;
-            regs.h.bl = 0x2f;
-            regs.h.bh = 0;
-            regs.w.cx = 0;
-            sregs.es = FP_SEG(&rmi);
-            regs.x.edi = FP_OFF(&rmi);
-            int386x(0x31, &regs, &regs, &sregs);
-            if (regs.w.cflag & 1) {
-                rmi.flags = 1;
-            } else {
-                _fmemcpy(&rmi, MK_FP(sregs.es, regs.x.edi), sizeof rmi);
-            }
-            dcp = (rmi.flags & 1) ? 0 : (uint16_t)rmi.ebx;
+            _fmemcpy(w, MK_FP(sel, 0), sizeof w);
+            dcp = w[1];
         }
 
-        regs.w.ax = 0x101; /* free */
+        regs.w.ax = DPMI_FREE;
         regs.w.dx = sel;
-        int386x(0x31, &regs, &regs, &sregs);
+        int386(0x31, &regs, &regs);
+    }
+    if (dcp != 0) {
+        return dcp;
+    }
+
+    rmi.eax = DISPLAY_SYS_GET_ACTIVE_CODE_PAGE;
+    rmi.ebx = 0;
+    rmi.flags = 1;
+
+    if (dpmi_int(0x2f, &rmi)) {
+        rmi.flags = 1;
+    }
+    if ((rmi.flags & 1) == 0) {
+        if ((uint16_t)rmi.ebx != 0) {
+            return (uint16_t)rmi.ebx;
+        }
+    }
+
+    rmi.eax = GET_GLOBAL_CODE_PAGE_TABLE;
+    rmi.ebx = 0;
+    rmi.flags = 1;
+
+    if (dpmi_int(0x21, &rmi)) {
+        rmi.flags = 1;
+    }
+    if ((rmi.flags & 1) != 0) {
+        return (uint16_t)rmi.ebx;
     }
 #endif
+    return 0;
+}
+
+static void set_cp(void) {
+    unsigned int i;
+    int dcp = get_codepage();
     switch (dcp) {
     case 737: cp = cp737; break;
     case 775: cp = cp775; break;
