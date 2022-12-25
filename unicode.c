@@ -461,6 +461,38 @@ size_t argv_print(const char *line, FILE *f) {
         if (quote) {len++;putc('^', f);}
         len++;putc('"', f);
     }
+#elif defined __MSDOS__ || defined __DOS__
+    bool quote = strpbrk(line, " <>|") != NULL;
+
+    if (quote) {len++;putc('"', f);}
+    for (;;) {
+        int ch = *i;
+        if ((ch & 0x80) != 0) {
+            unichar_t ch2 = (uint8_t)ch;
+            i += utf8in(i, &ch2);
+            if (iswprint((wint_t)ch2) != 0) {
+                char temp[64];
+                size_t ln = utf8_to_chars(temp, sizeof temp, ch2);
+                if (ln != 0) {
+                    len += fwrite(temp, ln, 1, f);
+                    continue;
+                }
+            }
+            putc('?', f);
+            len++;
+            continue;
+        }
+        if (ch == 0) break;
+        i++;
+        if (isprint(ch) == 0) {
+            putc('?', f);
+            len++;
+            continue;
+        }
+        if (ch == '%') {len++;putc('%', f);}
+        len++;putc(ch, f);
+    }
+    if (quote) {len++;putc('"', f);}
 #else
     bool quote = strchr(line, '!') == NULL && strpbrk(line, " \"$&()*;<>'?[\\]`{|}") != NULL;
 

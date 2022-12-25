@@ -398,7 +398,7 @@ static int get_codepage(void) {
         return regs.x.bx;
     }
 #else
-    static struct rmi_s rmi;
+    struct rmi_s rmi;
     union REGS regs;
     int dcp = 0;
     memset(&rmi, 0, sizeof rmi);
