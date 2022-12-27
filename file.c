@@ -25,7 +25,9 @@
 #else
 #include "wchar.h"
 #endif
-#if defined _POSIX_C_SOURCE || defined __unix__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+#include <io.h>
+#elif defined _POSIX_C_SOURCE || defined __unix__
 #include <sys/stat.h>
 #endif
 #include "64tass.h"
@@ -299,17 +301,17 @@ static inline unichar_t fromiso(unichar_t c) {
 }
 
 static filesize_t fsize(FILE *f) {
-#if defined _POSIX_C_SOURCE || defined __unix__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+    long len = filelength(fileno(f));
+    if (len > 0) {
+        return (unsigned long)len < ~(filesize_t)0 ? (filesize_t)len : ~(filesize_t)0;
+    }
+#elif defined _POSIX_C_SOURCE || defined __unix__
     struct stat st;
     if (fstat(fileno(f), &st) == 0) {
         if (S_ISREG(st.st_mode) && st.st_size > 0) {
             return (st.st_size & ~(off_t)~(filesize_t)0) == 0 ? (filesize_t)st.st_size : ~(filesize_t)0;
         }
-    }
-#elif defined _WIN32 || defined __MSDOS__ || defined __DOS__
-    long len = filelength(fileno(f));
-    if (len > 0) {
-        return (unsigned long)len < ~(filesize_t)0 ? (filesize_t)len : ~(filesize_t)0;
     }
 #else
     if (fseek(f, 0, SEEK_END) == 0) {
