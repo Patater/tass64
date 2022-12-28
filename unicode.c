@@ -727,8 +727,8 @@ size_t calcpos(const uint8_t *line, size_t pos) {
 
 #ifdef _WIN32
 void unicode_init(void) {
-    wchar_t w;
-    char c = '?';
+    wchar_t w = L'?';
+    char c;
     BOOL used_default;
     int ln = WideCharToMultiByte(CP_ACP, WC_NO_BEST_FIT_CHARS, &w, 1, &c, 1, NULL, NULL);
     wide_flags_acp = (ln <= 0) ? 0 : WC_NO_BEST_FIT_CHARS;
@@ -738,7 +738,7 @@ void unicode_init(void) {
     use_default_char_acp = (ln > 0);
     ln = WideCharToMultiByte(codepage, 0, &w, 1, &c, 1, NULL, &used_default);
     use_default_char = (ln > 0);
-    w = L'?';
+    c = '?';
     ln = MultiByteToWideChar(codepage, MB_ERR_INVALID_CHARS, &c, 1, &w, 1);
     multibyte_flags = (ln <= 0) ? 0 : MB_ERR_INVALID_CHARS;
 }
