@@ -46,12 +46,12 @@ typedef SSIZE_T ssize_t;
 #define PRIxPTR "lx"
 #endif
 
-#ifndef PRIxSIZE
-#if __STDC_VERSION__ >= 199901L && !defined _WIN32 && !defined __VBCC__
+#ifdef PRIxSIZE
+#elif __STDC_VERSION__ >= 199901L && !defined _WIN32 && !defined __VBCC__
 #define PRIxSIZE  "zx"
-#elif defined USHRT_MAX && SIZE_MAX == USHRT_MAX && !defined __VBCC__ && !defined __DJGPP__
+#elif defined USHRT_MAX && SIZE_MAX == USHRT_MAX && !defined __VBCC__
 #define PRIxSIZE  "hx"
-#elif defined UINT_MAX && SIZE_MAX == UINT_MAX && !defined __VBCC__ && !defined __DJGPP__
+#elif defined UINT_MAX && SIZE_MAX == UINT_MAX && !defined __VBCC__
 #define PRIxSIZE  "x"
 #elif defined ULONG_MAX && SIZE_MAX == ULONG_MAX
 #define PRIxSIZE  "lx"
@@ -60,16 +60,15 @@ typedef SSIZE_T ssize_t;
 #else
 #define PRIxSIZE  "x"
 #endif
-#endif
 
-#ifndef PRIuSIZE
-#if __STDC_VERSION__ >= 199901L && !defined _WIN32 && !defined __VBCC__
+#ifdef PRIuSIZE
+#elif __STDC_VERSION__ >= 199901L && !defined _WIN32 && !defined __VBCC__
 #define PRIuSIZE  "zu"
 #elif defined _WIN64 && defined PRIu64
 #define PRIuSIZE PRIu64
-#elif defined USHRT_MAX && SIZE_MAX == USHRT_MAX && !defined __VBCC__ && !defined __DJGPP__
+#elif defined USHRT_MAX && SIZE_MAX == USHRT_MAX && !defined __VBCC__
 #define PRIuSIZE  "hu"
-#elif defined UINT_MAX && SIZE_MAX == UINT_MAX && !defined __VBCC__ && !defined __DJGPP__
+#elif defined UINT_MAX && SIZE_MAX == UINT_MAX && !defined __VBCC__
 #define PRIuSIZE  "u"
 #elif defined ULONG_MAX && SIZE_MAX == ULONG_MAX
 #define PRIuSIZE  "lu"
@@ -77,7 +76,6 @@ typedef SSIZE_T ssize_t;
 #define PRIuSIZE  "llu"
 #else
 #define PRIuSIZE  "u"
-#endif
 #endif
 
 typedef uint32_t argcount_t;
