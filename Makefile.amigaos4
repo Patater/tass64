@@ -189,7 +189,7 @@ ternary.o: ternary.c ternary.h stdbool.h inttypes.h unicode.h \
  attributes.h error.h errors_e.h
 typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
  variables.h eval.h oper_e.h strobj.h functionobj.h
-unicodedata.o: unicodedata.c unicodedata.h inttypes.h
+unicodedata.o: unicodedata.c unicodedata.h inttypes.h attributes.h
 unicode.o: unicode.c unicode.h attributes.h inttypes.h stdbool.h wchar.h \
  wctype.h unicodedata.h str.h console.h error.h errors_e.h
 values.o: values.c values.h attributes.h obj.h inttypes.h unicode.h \

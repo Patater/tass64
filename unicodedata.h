@@ -19,6 +19,7 @@
 #ifndef UNICODEDATA_H
 #define UNICODEDATA_H
 #include "inttypes.h"
+#include "attributes.h"
 
 #define pr_compat 1
 #define id_Start 2
