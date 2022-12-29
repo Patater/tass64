@@ -18,7 +18,6 @@
 */
 #include "unicode.h"
 #include "wchar.h"
-#include "wctype.h"
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
@@ -413,7 +412,7 @@ size_t argv_print(const char *line, FILE *f) {
         if ((ch & 0x80) != 0) {
             unichar_t ch2 = (uint8_t)ch;
             unsigned int ln = utf8in(i, &ch2);
-            if (iswprint((wint_t)ch2) != 0) {
+            if (isprint_v13(ch2) != 0) {
                 char temp[64];
                 size_t l = utf8_to_chars(temp, sizeof temp, ch2);
                 if (l != 0) {
@@ -453,7 +452,7 @@ size_t argv_print(const char *line, FILE *f) {
         back = 0;
 
         i++;
-        if (isprint(ch) == 0) ch = '?';
+        if (ch < 0x20 || ch > 0x7e) ch = '?';
         len++;putc(ch, f);
     }
     if (space) {
@@ -470,7 +469,7 @@ size_t argv_print(const char *line, FILE *f) {
         if ((ch & 0x80) != 0) {
             unichar_t ch2 = (uint8_t)ch;
             i += utf8in(i, &ch2);
-            if (iswprint((wint_t)ch2) != 0) {
+            if (isprint_v13(ch2) != 0) {
                 char temp[64];
                 size_t ln = utf8_to_chars(temp, sizeof temp, ch2);
                 if (ln != 0) {
@@ -484,7 +483,7 @@ size_t argv_print(const char *line, FILE *f) {
         }
         if (ch == 0) break;
         i++;
-        if (isprint(ch) == 0) {
+        if (ch < 0x20 || ch > 0x7e) {
             putc('?', f);
             len++;
             continue;
@@ -509,7 +508,7 @@ size_t argv_print(const char *line, FILE *f) {
             unichar_t ch2 = (uint8_t)ch;
             int ln2;
             i += utf8in(i, &ch2);
-            if (iswprint((wint_t)ch2) != 0) {
+            if (isprint_v13(ch2) != 0) {
                 char temp[64];
                 size_t ln = utf8_to_chars(temp, sizeof temp, ch2);
                 if (ln != 0) {
@@ -532,7 +531,7 @@ size_t argv_print(const char *line, FILE *f) {
         }
 
         i++;
-        if (isprint(ch) == 0) {
+        if (ch < 0x20 || ch > 0x7e) {
             int ln = fprintf(f, "$'\\x%x'", ch);
             if (ln > 0) len += (unsigned int)ln;
             continue;
@@ -554,7 +553,7 @@ size_t makefile_print(const char *line, FILE *f) {
             unichar_t ch2 = (uint8_t)ch;
             bl = 0;
             i += utf8in(i, &ch2);
-            if (iswprint((wint_t)ch2) != 0) {
+            if (isprint_v13(ch2) != 0) {
                 char temp[64];
                 size_t ln = utf8_to_chars(temp, sizeof temp, ch2);
                 if (ln != 0) {
@@ -588,7 +587,7 @@ size_t makefile_print(const char *line, FILE *f) {
         }
 
         i++;
-        if (isprint(ch) == 0) ch = '?';
+        if (ch < 0x20 || ch > 0x7e) ch = '?';
         len++; putc(ch, f);
     }
     return len;
@@ -622,7 +621,7 @@ void printable_print(const uint8_t *l, FILE *f) {
         ch = *i;
         if ((ch & 0x80) != 0) {
             i += utf8in(i, &ch);
-            if (iswprint((wint_t)ch) != 0) {
+            if (isprint_v13(ch) != 0) {
                 char temp[64];
                 size_t ln = utf8_to_chars(temp, sizeof temp, ch);
                 if (ln != 0) {
@@ -646,7 +645,7 @@ size_t printable_print2(const uint8_t *line, FILE *f, size_t max) {
             if (l != i) len += fwrite(line + l, 1, i - l, f);
             i += utf8in(line + i, &ch);
             l = i;
-            if (iswprint((wint_t)ch) != 0) {
+            if (isprint_v13(ch) != 0) {
                 char temp[64];
                 size_t ln = utf8_to_chars(temp, sizeof temp, ch);
                 if (ln != 0) {
@@ -679,7 +678,7 @@ void caret_print(const uint8_t *line, FILE *f, size_t max) {
         unichar_t ch = line[i];
         if ((ch & 0x80) != 0) {
             i += utf8in(line + i, &ch);
-            if (iswprint((wint_t)ch) != 0) {
+            if (isprint_v13(ch) != 0) {
                 char temp[64];
                 size_t ln = utf8_to_chars(temp, sizeof temp, ch);
                 if (ln != 0) {

@@ -41,5 +41,6 @@ extern size_t mbrtowc(wchar_t *, const char *, size_t, mbstate_t *);
 #endif
 
 extern int wcwidth_v13(unichar_t);
+extern int isprint_v13(unichar_t);
 
 #endif
