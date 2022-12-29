@@ -916,7 +916,6 @@ static int compw32(const void *aa, const void *bb) {
 
 int isprint_v13(unichar_t ch) {
     if (ch < 0x10000) {
-        if (ch >=0x20 && ch <= 0x7e) return 1;
         if (bsearch(&ch, pr16a, lenof(pr16a), sizeof *pr16a, compw16) != NULL) return 1;
         return 0;
     } 
