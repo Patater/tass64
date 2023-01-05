@@ -1523,14 +1523,14 @@ void error_print(const struct error_output_s *output) {
         }
     } else ferr = output->no_output ? NULL : stderr;
 
-    if (ferr != NULL) {
-        if (ferr != stderr) console_use(ferr); else if (arguments.quiet) fflush(stdout);
-    }
-
     warnings = errors = 0;
     close_error();
 
     end = (error_list.header_stop != SIZE_MAX) ? error_list.header_stop : error_list.header_pos;
+    if (ferr != NULL && end != 0) {
+        console_use(ferr);
+        if (ferr == stderr && arguments.quiet) fflush(stdout);
+    }
     for (pos = 0; pos < end; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (const struct errorentry_s *)&error_list.data[pos];
         switch (err->severity) {
@@ -1589,8 +1589,8 @@ void error_print(const struct error_output_s *output) {
     if (ferr == NULL) return;
     if (err3 != NULL) print_error(ferr, err3, different_line(err2, err3));
     if (err2 != NULL) print_error(ferr, err2, caret_needed(err2));
-    if (ferr != stderr) console_use(stderr);
     if (ferr != stderr && ferr != stdout) fclose(ferr); else fflush(ferr);
+    console_use(NULL);
 }
 
 void error_reset(void) {
@@ -1605,7 +1605,6 @@ void err_init(const char *name) {
     static struct file_s file_list_file;
     prgname = name;
     setvbuf(stderr, NULL, _IOLBF, 1024);
-    console_use(stderr);
     new_instance(&file_lists);
     file_lists->next = NULL;
     file_listsp = 0;
@@ -1642,6 +1641,7 @@ void err_destroy(void) {
 
 void fatal_error(const char *txt) {
     if (txt != NULL) {
+        console_use(stderr);
         if (console_use_color) console_bold(stderr);
         printable_print((const uint8_t *)((prgname != NULL) ? prgname : "64tass"), stderr);
         fputs(": ", stderr);

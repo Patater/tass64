@@ -22,9 +22,37 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 bool console_use_color = false;
 bool console_use_bold = false;
+
+struct console_info_s {
+    bool known;
+    bool color;
+#ifdef _WIN32
+    bool use_ansi;
+    int attributes;
+    HANDLE handle;
+#endif
+};
+
+static struct console_info_s console_stdout, console_stderr;
+static const struct console_info_s console_file = {
+#ifdef _WIN32
+    true, false, false, 0, INVALID_HANDLE_VALUE
+#else
+    true, false
+#endif
+};
+#ifdef _WIN32
+static bool use_ansi;
+static int old_attributes, current_attributes;
+static HANDLE console_handle;
+#endif
 
 enum terminal_e {
     TERMINAL_UNKNOWN, TERMINAL_OK, TERMINAL_DUMB
@@ -33,30 +61,53 @@ enum terminal_e {
 static enum terminal_e terminal = TERMINAL_UNKNOWN;
 
 static bool terminal_detect(FILE *f) {
-    int fd;
-    if (f == stderr) {
-        fd = STDERR_FILENO;
-    } else if (f == stdout) {
-        fd = STDOUT_FILENO;
-    } else {
-        return false;
-    }
     if (terminal == TERMINAL_UNKNOWN) {
         char const *term = getenv("TERM");
         terminal = (term != NULL && strcmp(term, "dumb") != 0) ? TERMINAL_OK : TERMINAL_DUMB;
     }
-    return terminal == TERMINAL_OK && isatty(fd) == 1;
+    return terminal == TERMINAL_OK && isatty(f == stderr ? STDERR_FILENO : STDOUT_FILENO) == 1;
+}
+
+static bool console_known(FILE *f) {
+    const struct console_info_s *console;
+
+    if (f == stderr) {
+        console = &console_stderr;
+    } else if (f == stdout) {
+        console = &console_stdout;
+    } else {
+        console = &console_file;
+    }
+    if (console->known) {
+        console_use_color = console->color;
+#ifdef _WIN32
+        use_ansi = console->use_ansi;
+        old_attributes = current_attributes = console->attributes;
+        console_handle = console->handle;
+#endif
+        return true;
+    }
+    return false;
+}
+
+static void console_remember(FILE *f) {
+    struct console_info_s *console;
+    if (f == stderr) {
+        console = &console_stderr;
+    } else {
+        console = &console_stdout;
+    }
+    console->color = console_use_color;
+#ifdef _WIN32
+    console->use_ansi = use_ansi;
+    console->attributes = old_attributes;
+    console->handle = console_handle;
+#endif
 }
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
-static bool use_ansi;
 static UINT old_consoleoutputcp;
 static UINT old_consolecp;
-static HANDLE console_handle;
-static int old_attributes, current_attributes;
 
 void console_init(unsigned int ansicp) {
     UINT consoleoutputcp = GetConsoleOutputCP();
@@ -69,6 +120,8 @@ void console_init(unsigned int ansicp) {
     if (consoleoutputcp != ansicp) {
         if (SetConsoleOutputCP(ansicp)) old_consoleoutputcp = consoleoutputcp;
     }
+    console_stdout.known = false;
+    console_stderr.known = false;
 }
 
 void console_destroy(void) {
@@ -76,32 +129,31 @@ void console_destroy(void) {
     if (old_consoleoutputcp != 0) SetConsoleOutputCP(old_consoleoutputcp);
 }
 
-void console_use(FILE *f) {
+static bool console_detect(FILE *f) {
     CONSOLE_SCREEN_BUFFER_INFO console_info;
-    DWORD handle;
+
+    console_handle = INVALID_HANDLE_VALUE;
+    old_attributes = current_attributes = 0;
 
     use_ansi = terminal_detect(f);
     if (use_ansi) {
-        console_use_color = true;
-        return;
+        return true;
     }
-    console_use_color = false;
-    if (f == stderr) {
-        handle = STD_ERROR_HANDLE;
-    } else if (f == stdout) {
-        handle = STD_OUTPUT_HANDLE;
-    } else {
-        return;
-    }
-    console_handle = GetStdHandle(handle);
+    console_handle = GetStdHandle(f == stderr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
     if (console_handle == INVALID_HANDLE_VALUE) {
-        return;
+        return false;
     }
     if (GetConsoleScreenBufferInfo(console_handle, &console_info)) {
         old_attributes = current_attributes = console_info.wAttributes;
-        console_use_color = true;
-        return;
+        return true;
     }
+    return false;
+}
+
+void console_use(FILE *f) {
+    if (console_known(f)) return;
+    console_use_color = console_detect(f);
+    console_remember(f);
 }
 
 static const char *const ansi_sequences[8] = {
@@ -134,8 +186,15 @@ void console_attribute(int c, FILE *f) {
     SetConsoleTextAttribute(console_handle, (WORD)current_attributes);
 }
 #else
+void console_init(void) {
+    console_stdout.known = false;
+    console_stderr.known = false;
+}
+
 void console_use(FILE *f) {
+    if (console_known(f)) return;
     console_use_color = terminal_detect(f);
+    console_remember(f);
 }
 #endif
 

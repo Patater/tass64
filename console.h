@@ -44,6 +44,7 @@ extern void console_attribute(int c, FILE *f);
 #define console_boldgreen(f) console_attribute(6, (f))
 #define console_purple(f) console_attribute(7, (f))
 #else
+extern void console_init(void);
 #define console_bold(f) fputs("\33[1m", (f))
 #define console_defaultbold(f) fputs("\33[0;1m", (f))
 #define console_reverse(f) fputs("\33[7m", (f))
@@ -55,6 +56,7 @@ extern void console_attribute(int c, FILE *f);
 #endif
 
 #else
+#define console_init() do {} while (false)
 #define console_use_color false
 #define console_use_bold false
 #define console_use(f) do {} while (false)

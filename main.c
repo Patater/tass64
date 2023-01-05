@@ -312,6 +312,7 @@ int main(int argc, char *argv[]) {
 
     install_signal_handler();
     setlocale(LC_CTYPE, "");
+    console_init();
 
     if (argc < 1) {
         static char *argvd[1] = { (char *)"64tass" };
