@@ -103,6 +103,7 @@ static void console_remember(FILE *f) {
     console->attributes = old_attributes;
     console->handle = console_handle;
 #endif
+    console->known = true;
 }
 
 #ifdef _WIN32
