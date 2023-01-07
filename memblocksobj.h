@@ -57,5 +57,6 @@ static inline Memblocks *ref_memblocks(Memblocks *v1) {
 
 extern MALLOC Memblocks *new_memblocks(address_t, size_t);
 extern MALLOC Memblocks *copy_memblocks(Memblocks *);
+extern void printmemorymap(const Memblocks *);
 extern void memorymapfile(const Memblocks *, const struct output_s *);
 #endif

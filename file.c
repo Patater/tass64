@@ -633,7 +633,7 @@ static void file_read_message(const struct file_s *file, File_open_type ftype) {
     if (arguments.quiet) {
         fputs((ftype == FILE_OPEN_BINARY) ? "Reading file:      " : "Assembling file:   ", stdout);
         argv_print(file->name, stdout);
-        putchar('\n');
+        putc('\n', stdout);
         if (fflush(stdout) != 0) setvbuf(stdout, NULL, _IOLBF, 1024);
     }
 }

@@ -42,6 +42,7 @@ struct output_s {
     bool append;
     bool longaddr;
     bool mapappend;
+    bool mapfile;
 };
 
 struct error_output_s {

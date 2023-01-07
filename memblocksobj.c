@@ -232,10 +232,18 @@ static unsigned int memblocklevel(const Memblocks *mem, unsigned int level) {
     return ret;
 }
 
+void printmemorymap(const Memblocks *mem) {
+    struct memblocks_print_s state;
+    state.f = stdout;
+    state.level = 0;
+    state.max = memblocklevel(mem, 0);
+    state.section = NULL;
+    memblockprint(mem, &state);
+}
+
 void memorymapfile(const Memblocks *mem, const struct output_s *output) {
     struct memblocks_print_s state;
     int err;
-    if (output->mapname == NULL) return;
 
     state.f = dash_name(output->mapname) ? stdout : fopen_utf8(output->mapname, output->mapappend ? "at" : "wt");
     if (state.f == NULL) {
@@ -245,12 +253,10 @@ void memorymapfile(const Memblocks *mem, const struct output_s *output) {
     if (state.f == stdout && fflush(state.f) != 0) setvbuf(state.f, NULL, _IOLBF, 1024);
     clearerr(state.f); errno = 0;
 
-    if (!arguments.quiet || state.f != stdout) {
-        if (!output->mapappend) fputs("\n64tass Turbo Assembler Macro V" VERSION " memory map file\n", state.f);
-        fputs("\nMemory map for output file: ", state.f);
-        argv_print(output->name, state.f);
-        fputs("\n\nType        Size      Range      Size    Name\n", state.f);
-    }
+    if (!output->mapappend) fputs("\n64tass Turbo Assembler Macro V" VERSION " memory map file\n", state.f);
+    fputs("\nMemory map for output file: ", state.f);
+    argv_print(output->name, state.f);
+    fputs("\n\nType        Size      Range      Size    Name\n", state.f);
 
     state.level = 0;
     state.max = memblocklevel(mem, 0);
