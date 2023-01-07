@@ -597,6 +597,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 #endif
 
     if (dash_name(output->name)) {
+        if (fflush(stdout) != 0 || binary) setvbuf(stdout, NULL, binary ? _IOFBF : _IOLBF, 1024);
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
         if (binary) oldmode = setmode(STDOUT_FILENO, O_BINARY);
 #endif
@@ -610,7 +611,6 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     }
     memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC || output->mode == OUTPUT_MHEX);
 
-    if (fout == stdout && fflush(fout) != 0) setvbuf(fout, NULL, binary ? _IOFBF : _IOLBF, 1024);
     clearerr(fout); errno = 0;
     switch (output->mode) {
     case OUTPUT_FLAT: output_mem_flat(fout, memblocks, output->append); break;
@@ -629,6 +629,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
     if (oldmode >= 0) setmode(STDOUT_FILENO, oldmode);
 #endif
+    if (fout == stdout && binary) setvbuf(stdout, NULL, _IOLBF, 1024);
 }
 
 FAST_CALL uint8_t *alloc_mem(Memblocks *memblocks, address_t len) {
