@@ -597,7 +597,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
 #endif
 
     if (dash_name(output->name)) {
-        if (fflush(stdout) != 0 || binary) setvbuf(stdout, NULL, binary ? _IOFBF : _IOLBF, 1024);
+        if (fflush(stdout) != 0 || binary) setvbuf(stdout, NULL, binary ? _IOFBF : _IOLBF, binary ? BUFSIZ : 1024);
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
         if (binary) oldmode = setmode(STDOUT_FILENO, O_BINARY);
 #endif
