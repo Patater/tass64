@@ -518,7 +518,7 @@ size_t wcrtomb(char *s, wchar_t wc, mbstate_t *UNUSED(ps)) {
     errno = EILSEQ;
     return (size_t)-1;
 }
-#elif defined __GNUC__ || _MSC_VER >= 1400 || defined __WATCOMC__
+#elif defined __GNUC__ || defined _MSC_VER || defined __WATCOMC__
 #elif __STDC_VERSION__ >= 199901L && !defined __VBCC__
 #else
 #include <errno.h>
