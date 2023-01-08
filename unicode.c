@@ -411,21 +411,17 @@ size_t argv_print(const char *line, FILE *f) {
         int ch = *i;
         if ((ch & 0x80) != 0) {
             unichar_t ch2 = (uint8_t)ch;
-            unsigned int ln = utf8in(i, &ch2);
+            i += utf8in(i, &ch2);
             if (isprint_v13(ch2) != 0) {
                 char temp[64];
                 size_t l = utf8_to_chars(temp, sizeof temp, ch2);
                 if (l != 0) {
                     len += fwrite(temp, l, 1, f);
-                } else {
-                    putc('?', f); 
-                    len++;
+                    continue;
                 }
-            } else {
-                putc('?', f);
-                len++;
             }
-            i += ln;
+            putc('?', f);
+            len++;
             continue;
         }
         if (ch == 0) break;
