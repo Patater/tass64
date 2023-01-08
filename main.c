@@ -136,8 +136,8 @@ static unsigned int get_codepage(const char *locale) {
             unsigned long int ncp = strtoul(locale, &s, 10);
             if (ncp > 0 && ncp <= 65535) {
                 cp = (unsigned int)ncp;
+                locale = s;
             }
-            locale = s;
         } else if ((*locale | 0x20) == 'u' && (locale[1] | 0x20) == 't' && (locale[2] | 0x20) == 'f') {
             locale += 3;
             if (*locale == '-') locale++;
@@ -249,10 +249,11 @@ int main(int argc, char *argv[])
   if (argvw == NULL) {
       int i, r;
       char **uargv;
+      unsigned int cp;
 
       install_signal_handler();
-      codepage = locale_init();
-      console_init(codepage);
+      cp = locale_init();
+      console_init(cp);
       atexit(console_destroy);
       unicode_init();
 
@@ -262,13 +263,11 @@ int main(int argc, char *argv[])
           argc = 1;
       }
       new_array(&uargv, (unsigned int)argc);
+      codepage = GetACP();
       for (i = 0; i < argc; i++) {
           const char *s = (i == 0) ? prgname(*argv) : argv[i];
           uint8_t *data;
-          unsigned int cp = codepage;
-          codepage = GetACP();
           data = char_to_utf8(s);
-          codepage = cp;
           if (data == (uint8_t *)s) {
               size_t len = strlen(s);
               data = inc_overflow(&len, 1) ? NULL : allocate_array(uint8_t, len);
@@ -279,6 +278,7 @@ int main(int argc, char *argv[])
           if (data == NULL) err_msg_out_of_memory();
           uargv[i] = (char *)data;
       }
+      codepage = cp;
       r = main2(&argc, &uargv);
 
       for (i = 0; i < argc; i++) free(uargv[i]);
