@@ -21,10 +21,14 @@
 #ifdef COLOR_OUTPUT
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 4
+#endif
+#else
+#include <unistd.h>
 #endif
 
 bool console_use_color = false;
@@ -60,12 +64,12 @@ enum terminal_e {
 
 static enum terminal_e terminal = TERMINAL_UNKNOWN;
 
-static bool terminal_detect(FILE *f) {
+static bool terminal_detect(void) {
     if (terminal == TERMINAL_UNKNOWN) {
         char const *term = getenv("TERM");
         terminal = (term != NULL && strcmp(term, "dumb") != 0) ? TERMINAL_OK : TERMINAL_DUMB;
     }
-    return terminal == TERMINAL_OK && isatty(f == stderr ? STDERR_FILENO : STDOUT_FILENO) == 1;
+    return terminal == TERMINAL_OK;
 }
 
 static bool console_known(FILE *f) {
@@ -131,18 +135,27 @@ void console_destroy(void) {
 }
 
 static bool console_detect(FILE *f) {
+    DWORD mode;
     CONSOLE_SCREEN_BUFFER_INFO console_info;
 
-    console_handle = INVALID_HANDLE_VALUE;
+    use_ansi = false;
     old_attributes = current_attributes = 0;
 
-    use_ansi = terminal_detect(f);
-    if (use_ansi) {
-        return true;
-    }
     console_handle = GetStdHandle(f == stderr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
     if (console_handle == INVALID_HANDLE_VALUE) {
         return false;
+    }
+    mode = 0;
+    if (GetConsoleMode(console_handle, &mode) == 0) {
+        return false;
+    }
+    if ((mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0) {
+        use_ansi = true;
+        return true;
+    }
+    use_ansi = terminal_detect();
+    if (use_ansi) {
+        return true;
     }
     if (GetConsoleScreenBufferInfo(console_handle, &console_info)) {
         old_attributes = current_attributes = console_info.wAttributes;
@@ -194,7 +207,7 @@ void console_init(void) {
 
 void console_use(FILE *f) {
     if (console_known(f)) return;
-    console_use_color = terminal_detect(f);
+    console_use_color = terminal_detect() && isatty(f == stderr ? STDERR_FILENO : STDOUT_FILENO) == 1;
     console_remember(f);
 }
 #endif
