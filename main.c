@@ -48,22 +48,22 @@
 
 bool signal_received = false;
 
-static void signal_reset(int signum) {
 #if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L
 #ifdef SA_RESETHAND
-    (void)signum;
+#define signal_reset(signum) do {} while (false)
 #else
+static void signal_reset(int signum) {
     struct sigaction sa;
     sa.sa_handler = SIG_DFL;
     sa.sa_flags = 0;
     sigemptyset(&sa.sa_mask);
     sigaction(signum, &sa, NULL);
+}
 #define SA_RESETHAND 0
 #endif
 #else
-    signal(signum, SIG_DFL);
+#define signal_reset(signum) signal((signum), SIG_DFL)
 #endif
-}
 
 static void signal_set(int signum, void (*handler)(int)) {
 #if defined _POSIX_C_SOURCE || _POSIX_VERSION >= 199506L

@@ -356,8 +356,8 @@ unichar_t fromiso2(unichar_t c) {
 }
 
 
-static size_t utf8_to_chars(char *dest, size_t destlen, unichar_t ch) {
 #ifdef _WIN32
+static size_t utf8_to_chars(char *dest, size_t destlen, unichar_t ch) {
     if (codepage == CP_UTF8) {
         return utf8out(ch, (uint8_t *)dest);
     } else {
@@ -373,16 +373,17 @@ static size_t utf8_to_chars(char *dest, size_t destlen, unichar_t ch) {
         j = WideCharToMultiByte(codepage, wide_flags, temp, j, dest, (int)destlen, NULL, use_default_char ? &used_default : NULL);
         return !used_default && j >= 0 ? (size_t)j : 0;
     }
+}
 #else
+static size_t utf8_to_chars(char *dest, size_t UNUSED(destlen), unichar_t ch) {
     mbstate_t ps;
     size_t ln;
-    (void)destlen;
     if (ch != (unichar_t)(wchar_t)ch) return 0;
     memset(&ps, 0, sizeof ps);
     ln = wcrtomb(dest, (wchar_t)ch, &ps);
     return (ln != (size_t)-1) ? ln : 0;
-#endif
 }
+#endif
 
 size_t argv_print(const char *line, FILE *f) {
     size_t len = 0;
@@ -918,7 +919,14 @@ FILE *fopen_utf8(const char *name, const char *mode) {
             ch = *c;
             if ((ch & 0x80) != 0) {
                 c += utf8in(c, &ch);
-                if (ch == 0) {errno = EILSEQ; goto failed;}
+                if (ch == 0) {
+#ifdef EILSEQ
+                    errno = EILSEQ;
+#else
+                    errno = ENOENT;
+#endif
+                    goto failed;
+                }
             } else c++;
             l = (ssize_t)wcrtomb(temp, (wchar_t)ch, &ps);
             if (l <= 0 || inc_overflow(&len, (size_t)l)) goto failed;

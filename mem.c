@@ -147,7 +147,12 @@ void memref(Memblocks *memblocks, Memblocks *ref, address_t addr, address_t ln) 
     block->addr = addr;
 }
 
-static MUST_CHECK bool padding(FILE *f, address_t size, bool append) {
+#if defined _POSIX_C_SOURCE || defined __unix__
+static MUST_CHECK bool padding(FILE *f, address_t size, bool append)
+#else
+static MUST_CHECK bool padding(FILE *f, address_t size, bool UNUSED(append))
+#endif
+{
     uint8_t nuls[256];
 #if defined _POSIX_C_SOURCE || defined __unix__
     if (!append) {
@@ -160,8 +165,6 @@ static MUST_CHECK bool padding(FILE *f, address_t size, bool append) {
         }
     }
 err:
-#else
-    (void)append;
 #endif
     nuls[0] = 1;
     while (size != 0) {
