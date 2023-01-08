@@ -1528,8 +1528,10 @@ void error_print(const struct error_output_s *output) {
 
     end = (error_list.header_stop != SIZE_MAX) ? error_list.header_stop : error_list.header_pos;
     if (ferr != NULL && end != 0) {
+        if (ferr == stderr && arguments.quiet) {
+            if (fflush(stdout) != 0) setvbuf(stdout, NULL, _IOLBF, 1024);
+        }
         console_use(ferr);
-        if (ferr == stderr && arguments.quiet) fflush(stdout);
     }
     for (pos = 0; pos < end; pos = ALIGN(pos + (sizeof *err) + err->line_len + err->error_len)) {
         err = (const struct errorentry_s *)&error_list.data[pos];
