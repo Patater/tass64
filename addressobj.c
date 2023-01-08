@@ -555,7 +555,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                     case A_ZR:
                     case A_RR:
                     case A_SR:
-                        if (amc == am2) {
+                        if ((Address_types)amc == am2) {
                             am2 = A_NONE;
                             continue;
                         }
