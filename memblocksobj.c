@@ -172,7 +172,7 @@ static bool memblockprint(const Memblocks *mem, struct memblocks_print_s *state)
     }
     ln = mem->p;
     if (ln != 0) {
-        const struct memblock_s **memblocks;
+        struct memblock_s **memblocks;
         size_t i;
         new_array(&memblocks, ln);
         for (i = 0; i < ln; i++) memblocks[i] = mem->data + i;
