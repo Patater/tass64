@@ -527,7 +527,7 @@ size_t wcrtomb(char *s, wchar_t wc, mbstate_t *UNUSED(ps)) {
 size_t mbrtowc(wchar_t *wc, const char *s, size_t n, mbstate_t *UNUSED(ps)) {
     uint8_t ch;
     if (n == 0) return (size_t)-2;
-    ch = *s;
+    ch = (uint8_t)*s;
     if (ch < 0x80) {
         if (!ch) return 0;
         *wc = ch;
@@ -544,9 +544,8 @@ size_t mbrtowc(wchar_t *wc, const char *s, size_t n, mbstate_t *UNUSED(ps)) {
 }
 
 size_t wcrtomb(char *s, wchar_t wc, mbstate_t *UNUSED(ps)) {
-    uint32_t *ch, c;
     if (wc < 0x80 || (wc >= 0xa0 && wc <= 0xff)) {
-        *s = wc;
+        *s = (char)wc;
         return 1;
     }
 #ifdef EILSEQ
