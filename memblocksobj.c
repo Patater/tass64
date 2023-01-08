@@ -154,6 +154,7 @@ static int memblockprintcomp(const void *a, const void *b) {
     const struct memblock_s *bb = *(const struct memblock_s **)b;
     if (aa->addr != bb->addr) return (aa->addr > bb->addr) ? 1 : -1;
     if ((aa->ref == NULL) == (bb->ref == NULL) && aa->len != bb->len) return (aa->len > bb->len) ? 1 : -1;
+    if (aa == bb) return 0;
     return aa > bb ? 1 : -1;
 }
 
