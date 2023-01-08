@@ -18,13 +18,12 @@
 */
 #include "mem.h"
 #include <string.h>
-#ifdef _WIN32
-#include <fcntl.h>
-#include <unistd.h>
-#endif
-#if defined __MSDOS__ || defined __DOS__
+#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
 #include <io.h>
 #include <fcntl.h>
+#ifndef STDOUT_FILENO
+#define STDOUT_FILENO 1
+#endif
 #endif
 #include <errno.h>
 #include "error.h"
@@ -33,7 +32,6 @@
 #include "listing.h"
 #include "arguments.h"
 #include "values.h"
-
 #include "memblocksobj.h"
 
 static int memblockcomp(const void *a, const void *b) {
