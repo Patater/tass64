@@ -160,7 +160,7 @@ static bool is_pty_name(const WCHAR *name, DWORD len) {
         switch (s) {
         case 0: case 1: case 2: case 3: s = (c == L"-pty"[s]) ? s + 1 : 0; break;
         case 4: s = (c >= L'0' && c <= L'9') ? s + 1 : 0; break;
-        case 5: if (c < L'0' || c > L'9') s = (c == '-') ? s + 1 : 0; break;
+        case 5: if (c < L'0' || c > L'9') s = (c == L'-') ? s + 1 : 0; break;
         default: if (c == L'\\') s = 0; break;
         }
     }
