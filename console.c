@@ -134,6 +134,69 @@ void console_destroy(void) {
     if (old_consoleoutputcp != 0) SetConsoleOutputCP(old_consoleoutputcp);
 }
 
+static bool is_pty_name(WCHAR *name, DWORD len) {
+    DWORD i;
+    int s = 0;
+    len /= 2;
+    for (i = 0; i < len; i++) {
+        wchar_t c = name[i];
+        switch (s) {
+        case 0: case 1: case 2: case 3: s = (c == L"-pty"[s]) ? s + 1 : 0; break;
+        case 4: s = (c >= L'0' && c <= L'9') ? s + 1 : 0; break;
+        case 5: if (c < L'0' || c > L'9') s = (c == '-') ? s + 1 : 0; break;
+        default: if (c == L'\\') s = 0; break;
+        }
+    }
+    return s == 6;
+}
+
+static bool is_pipe_pty1(HANDLE *handle) {
+    typedef enum eFILE_INFO_BY_HANDLE_CLASS { eFileNameInfo = 2 } eFILE_INFO_BY_HANDLE_CLASS;
+    typedef BOOL (WINAPI *lpGetFileInformationByHandleEx)(HANDLE, eFILE_INFO_BY_HANDLE_CLASS, LPVOID, DWORD);
+    static lpGetFileInformationByHandleEx fnGetFileInformationByHandleEx;
+    static bool unavailable;
+    if (unavailable) {
+        return false;
+    }
+    if (fnGetFileInformationByHandleEx == NULL) {
+        HMODULE mhandle = GetModuleHandle("kernel32.dll");
+        if (mhandle != NULL) {
+            fnGetFileInformationByHandleEx = (lpGetFileInformationByHandleEx)GetProcAddress(mhandle, "GetFileInformationByHandleEx");
+        }
+    }
+    if (fnGetFileInformationByHandleEx != NULL) {
+        struct { DWORD length; WCHAR name[100]; } fni;
+        if (fnGetFileInformationByHandleEx(handle, eFileNameInfo, &fni, sizeof fni) != 0) {
+            return is_pty_name(fni.name, fni.length);
+        }
+    } else unavailable = true;
+    return false;
+}
+
+static bool is_pipe_pty2(HANDLE *handle) {
+    typedef enum eOBJECT_INFORMATION_CLASS { eObjectNameInformation = 1 } eOBJECT_INFORMATION_CLASS;
+    typedef LONG (NTAPI *lpNtQueryObject)(HANDLE, eOBJECT_INFORMATION_CLASS, PVOID, ULONG, PULONG);
+    static lpNtQueryObject fnNtQueryObject;
+    static bool unavailable;
+    if (unavailable) {
+        return false;
+    }
+    if (fnNtQueryObject == NULL) {
+        HANDLE mhandle = GetModuleHandle("ntdll.dll");
+        if (mhandle != NULL) {
+            fnNtQueryObject = (lpNtQueryObject)GetProcAddress(mhandle, "NtQueryObject");
+        }
+    }
+    if (fnNtQueryObject != NULL) {
+        DWORD len;
+        struct { USHORT Length; USHORT MaximumLength; PWSTR Buffer; WCHAR pad[200]; } oni;
+        if (fnNtQueryObject(handle, eObjectNameInformation, &oni, sizeof oni, &len) == 0) {
+            return is_pty_name(oni.Buffer, oni.Length);
+        }
+    } else unavailable = true;
+    return false;
+}
+
 static bool console_detect(FILE *f) {
     DWORD mode;
     CONSOLE_SCREEN_BUFFER_INFO console_info;
@@ -147,7 +210,19 @@ static bool console_detect(FILE *f) {
     }
     mode = 0;
     if (GetConsoleMode(console_handle, &mode) == 0) {
+        if (GetFileType(console_handle) == FILE_TYPE_PIPE) {
+            if (is_pipe_pty1(console_handle) || is_pipe_pty2(console_handle)) {
+                use_ansi = true; 
+                return true;
+            }
+        }
         return false;
+    }
+    if ((mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) == 0) {
+        if (SetConsoleMode(console_handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0) {
+            mode = 0;
+            if (GetConsoleMode(console_handle, &mode) == 0) mode = 0;
+        }
     }
     if ((mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0) {
         use_ansi = true;
