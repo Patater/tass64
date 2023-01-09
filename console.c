@@ -41,13 +41,14 @@ struct console_info_s {
     bool use_ansi;
     int attributes;
     HANDLE handle;
+    DWORD mode;
 #endif
 };
 
 static struct console_info_s console_stdout, console_stderr;
 static const struct console_info_s console_file = {
 #ifdef _WIN32
-    true, false, false, 0, INVALID_HANDLE_VALUE
+    true, false, false, 0, INVALID_HANDLE_VALUE, 0
 #else
     true, false
 #endif
@@ -55,7 +56,8 @@ static const struct console_info_s console_file = {
 #ifdef _WIN32
 static bool use_ansi;
 static int old_attributes, current_attributes;
-static HANDLE console_handle;
+static HANDLE console_handle = INVALID_HANDLE_VALUE;
+static DWORD console_mode;
 #endif
 
 enum terminal_e {
@@ -88,6 +90,7 @@ static bool console_known(FILE *f) {
         use_ansi = console->use_ansi;
         old_attributes = current_attributes = console->attributes;
         console_handle = console->handle;
+        console_mode = console->mode;
 #endif
         return true;
     }
@@ -106,6 +109,7 @@ static void console_remember(FILE *f) {
     console->use_ansi = use_ansi;
     console->attributes = old_attributes;
     console->handle = console_handle;
+    console->mode = console_mode;
 #endif
     console->known = true;
 }
@@ -129,12 +133,25 @@ void console_init(unsigned int ansicp) {
     console_stderr.known = false;
 }
 
+static void console_destroy2(const struct console_info_s *console) {
+    if (!console->known) return;
+    if (console->handle == INVALID_HANDLE_VALUE) return;
+    if (console->attributes >= 0) {
+        SetConsoleTextAttribute(console->handle, (WORD)console->attributes);
+    }
+    if ((console->mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0) {
+        SetConsoleMode(console->handle, console->mode ^ ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+    }
+}
+
 void console_destroy(void) {
     if (old_consolecp != 0) SetConsoleCP(old_consolecp);
     if (old_consoleoutputcp != 0) SetConsoleOutputCP(old_consoleoutputcp);
+    console_destroy2(&console_stdout);
+    console_destroy2(&console_stderr);
 }
 
-static bool is_pty_name(WCHAR *name, DWORD len) {
+static bool is_pty_name(const WCHAR *name, DWORD len) {
     DWORD i;
     int s = 0;
     len /= 2;
@@ -165,7 +182,7 @@ static bool is_pipe_pty1(HANDLE *handle) {
         }
     }
     if (fnGetFileInformationByHandleEx != NULL) {
-        struct { DWORD length; WCHAR name[100]; } fni;
+        struct { DWORD length; WCHAR name[200]; } fni;
         if (fnGetFileInformationByHandleEx(handle, eFileNameInfo, &fni, sizeof fni) != 0) {
             return is_pty_name(fni.name, fni.length);
         }
@@ -202,7 +219,9 @@ static bool console_detect(FILE *f) {
     CONSOLE_SCREEN_BUFFER_INFO console_info;
 
     use_ansi = false;
-    old_attributes = current_attributes = 0;
+    old_attributes = current_attributes = -1;
+    console_handle = INVALID_HANDLE_VALUE;
+    console_mode = 0;
 
     console_handle = GetStdHandle(f == stderr ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
     if (console_handle == INVALID_HANDLE_VALUE) {
@@ -220,6 +239,7 @@ static bool console_detect(FILE *f) {
     }
     if ((mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) == 0) {
         if (SetConsoleMode(console_handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0) {
+            console_mode = mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
             mode = 0;
             if (GetConsoleMode(console_handle, &mode) == 0) mode = 0;
         }
@@ -253,6 +273,9 @@ static const char *const ansi_sequences[8] = {
 void console_attribute(int c, FILE *f) {
     if (use_ansi) {
         fputs(ansi_sequences[c], f);
+        return;
+    }
+    if (console_handle == INVALID_HANDLE_VALUE) {
         return;
     }
     if (fflush(f) != 0) setvbuf(f, NULL, _IOLBF, 1024);
