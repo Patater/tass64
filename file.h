@@ -51,6 +51,7 @@ struct file_s {
     bool read_error;
     bool portable;
     bool cmdline;
+    bool notfile;
     uint8_t pass;
     uint8_t entercount;
     uint16_t uid;

@@ -255,7 +255,7 @@ static void printfile(Listing *ls) {
 
 static void printline(Listing *ls) {
     uint16_t curfile = current_file_list->file->uid;
-    if (curfile < 2) return;
+    if (current_file_list->file->notfile) return;
     printdec(ls, lpoint.line);
     if (ls->lastfile == curfile) return;
     ls->lastfile = curfile;
