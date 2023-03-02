@@ -3698,6 +3698,7 @@ MUST_CHECK Obj *compile(void)
                 } else {err_msg2(ERROR__MISSING_OPEN, ".proc", &epoint); goto breakerr;}
                 break;
             case CMD_ENDS: /* .ends */
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (waitfor->what==W_ENDS) {
                     if ((waitfor->skip & 1) != 0) {
                         current_address->unionmode = waitfor->u.cmd_struct.unionmode;
@@ -3706,10 +3707,6 @@ MUST_CHECK Obj *compile(void)
                     }
                     close_waitfor(W_ENDS);
                 } else if (waitfor->what==W_ENDS3 || waitfor->what==W_ENDS2) { /* not closed here */
-                    if ((waitfor->skip & 1) != 0) {
-                        if (waitfor->what==W_ENDS2) listing_line(epoint.pos);
-                        else listing_line_cut(epoint.pos);
-                    }
                     nobreak = false;
                     if (here() != 0 && here() != ';' && get_exp(0, 0, 0, NULL)) {
                         retval = get_vals_tuple();
@@ -3744,16 +3741,15 @@ MUST_CHECK Obj *compile(void)
                 break;
             case CMD_ENDU: /* .endu */
                 if (diagnostics.optimize) cpu_opt_invalidate();
+                if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (waitfor->what==W_ENDU) {
                     if ((waitfor->skip & 1) != 0) union_close(&epoint);
                     close_waitfor(W_ENDU);
                     oaddr = current_address->address;
                 } else if (waitfor->what==W_ENDU3) { /* not closed here */
-                    if ((waitfor->skip & 1) != 0) listing_line_cut(epoint.pos);
                     nobreak = false;
                     goto breakerr;
                 } else if (waitfor->what==W_ENDU2) { /* not closed here */
-                    if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     nobreak = false;
                 } else {err_msg2(ERROR__MISSING_OPEN, ".union", &epoint); goto breakerr;}
                 break;
