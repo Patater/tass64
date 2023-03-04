@@ -4521,7 +4521,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
 
-                    if (newlabel != NULL && prm == CMD_BINCLUDE && (f == NULL || f->open) && newlabel->value->obj == CODE_OBJ) {
+                    if (newlabel != NULL && prm == CMD_BINCLUDE && (f == NULL || f->open) && (newlabel->value->obj == CODE_OBJ || newlabel->value->obj == NONE_OBJ)) {
                         newlabel->update_after = true;
                         const_assign(newlabel, ref_none());
                     }
