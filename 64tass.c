@@ -1316,7 +1316,7 @@ static MUST_CHECK Obj *tuple_scope_light(Obj **o, linepos_t epoint) {
     return nf;
 }
 
-static void update_code(Label *newlabel, Code *code) {
+static void update_code(const Label *newlabel, Code *code) {
     Obj *tmp;
     if (current_address->bankwarn) {err_msg_pc_bank(&newlabel->epoint);current_address->bankwarn = false;}
     tmp = current_address->l_address_val;
@@ -1361,7 +1361,7 @@ static MUST_CHECK Code *create_code(linepos_t epoint) {
     return code;
 }
 
-static MUST_CHECK Obj *tuple_scope(Label *newlabel, Obj **o) {
+static MUST_CHECK Obj *tuple_scope(const Label *newlabel, Obj **o) {
     Obj *nf;
     address_t size;
     Code *code;
@@ -1412,7 +1412,7 @@ static MUST_CHECK bool list_extend2(List *lst) {
     return false;
 }
 
-static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
+static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
     int wht;
     linenum_t lin;
     int nopos = -1;
@@ -1756,7 +1756,7 @@ static size_t for_command(Label *newlabel, List *lst, linepos_t epoint) {
     return i;
 }
 
-static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
+static size_t rept_command(const Label *newlabel, List *lst, linepos_t epoint) {
     uval_t cnt;
     Obj *nf;
     size_t i = 0;
@@ -1809,7 +1809,7 @@ static size_t rept_command(Label *newlabel, List *lst, linepos_t epoint) {
     return i;
 }
 
-static size_t while_command(Label *newlabel, List *lst, linepos_t epoint) {
+static size_t while_command(const Label *newlabel, List *lst, linepos_t epoint) {
     uint8_t *expr;
     Obj *nf = NULL;
     struct star_s *s, *stree_old;
