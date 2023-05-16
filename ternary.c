@@ -71,7 +71,7 @@ static MALLOC ternary_node *tern_alloc(void) {
 /* Non-recursive so we don't waste stack space/time on large
    insertions. */
 
-ternary_tree *ternary_insert(ternary_tree *pcurr, const uint8_t *s, const uint8_t *end)
+void *ternary_insert(ternary_tree *pcurr, const uint8_t *s, const uint8_t *end)
 {
     unichar_t spchar;
     ternary_tree curr;

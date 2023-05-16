@@ -26,6 +26,8 @@
 
 #include "encobj.h"
 
+const char *identmap;
+
 struct translate_table_s {
     uint16_t start;
     uint8_t length;
@@ -603,7 +605,7 @@ static void add_esc(Enc *enc, const char *s) {
     enc->escape_char = '{';
     while (s[1] != 0) {
         size_t len = strlen(s + 1);
-        const uint8_t **b = (const uint8_t **)ternary_insert(&enc->escapes, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
+        const char **b = (const char **)ternary_insert(&enc->escapes, (const uint8_t*)s + 1, (const uint8_t*)s + 1 + len);
         if (b == NULL) err_msg_out_of_memory();
         *b = identmap + (uint8_t)s[0];
         if (enc->escape_length > len) enc->escape_length = len;
@@ -641,6 +643,7 @@ static Enc *enc_from_name(str_t *name, linepos_t epoint) {
 
 void init_encoding(bool toascii)
 {
+    identmap = petscii_esc;
     avltree_init(&encoding_tree);
     ascii_mode = toascii;
     lasten = NULL;

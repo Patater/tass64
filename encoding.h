@@ -24,8 +24,7 @@ struct Enc;
 struct str_t;
 struct linepos_s;
 
-extern const char *const petscii_esc;
-#define identmap (const uint8_t *)petscii_esc
+extern const char *identmap;
 
 extern struct Enc *new_encoding(const struct str_t *, const struct linepos_s *);
 extern void init_encoding(bool);
