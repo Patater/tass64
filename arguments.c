@@ -105,7 +105,8 @@ static const struct diagnostics_s diagnostics_default = {
     true,        /* page */
     false,       /* macro_prefix */
     false,       /* float_round */
-    true         /* size_larger */
+    true,        /* size_larger */
+    true         /* priority */
 };
 
 static const struct diagnostics_s diagnostic_errors_default = {
@@ -146,7 +147,8 @@ static const struct diagnostics_s diagnostic_errors_default = {
     true,        /* page */
     false,       /* macro_prefix */
     false,       /* float_round */
-    false        /* size_larger */
+    false,       /* size_larger */
+    false        /* priority */
 };
 
 static struct diagnostics_s diagnostic_no_all;
@@ -190,7 +192,8 @@ static const struct diagnostics_s diagnostic_all_default = {
     true,        /* page */
     false,       /* macro_prefix */
     true,        /* float_round */
-    true         /* size_larger */
+    true,        /* size_larger */
+    true         /* priority */
 };
 
 static struct diagnostics_s diagnostic_no_error_all;
@@ -234,7 +237,8 @@ static const struct diagnostics_s diagnostic_error_all_default = {
     true,        /* page */
     true,        /* macro_prefix */
     true,        /* float_round */
-    true         /* size_larger */
+    true,        /* size_larger */
+    true         /* priority */
 };
 
 struct w_options_s {
@@ -279,6 +283,7 @@ static const struct w_options_s w_options[] = {
     {"macro-prefix",    &diagnostics.macro_prefix},
     {"float-round",     &diagnostics.float_round},
     {"size-larger",     &diagnostics.size_larger},
+    {"priority",        &diagnostics.priority},
     {NULL,              NULL}
 };
 
@@ -720,6 +725,7 @@ int testarg(int *argc2, char **argv2[]) {
                "  -Wno-wrap-pc           No PC bank cross warning\n"
                "  -Wno-pitfalls          No common pitfall notes\n"
                "  -Wno-portable          No portability warnings\n"
+               "  -Wno-priority          No operator priority warnings\n"
                "  -Wno-size-larger       No size larger than original warnings\n"
                "  -Wno-star-assign       No label multiply warnings\n"
                "  -Wold-equal            Warn about old equal operator\n"

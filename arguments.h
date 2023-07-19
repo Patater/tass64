@@ -144,6 +144,7 @@ struct diagnostics_s {
     bool macro_prefix;
     bool float_round;
     bool size_larger;
+    bool priority;
 };
 
 extern int testarg(int *, char ***);

@@ -1331,6 +1331,13 @@ void err_msg_page(address_t adr, address_t adr2, linepos_t epoint) {
     adderror(line);
 }
 
+void err_msg_priority(const Oper *op, linepos_t epoint) {
+    new_error_msg2(diagnostic_errors.priority, epoint);
+    adderror("parentheses suggested as ");
+    adderror(op->name);
+    adderror("' applies to the whole expression [-Wpriority]");
+}
+
 void err_msg_alias(uint32_t a, uint32_t b, linepos_t epoint) {
     char name[4];
     new_error_msg2(diagnostic_errors.alias, epoint);

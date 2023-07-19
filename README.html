@@ -4112,6 +4112,17 @@ need extra notes about them. These are:</p>
 <li>Absolute paths
 </ul>
 
+<dt><b>-Wno-priority</b><a name="o_Wpriority" href="#o_Wpriority"></a>
+<dd>Don't warn about operator priority problems.
+
+<p>Not all of the unary operators are strongly binding and this may cause
+surprises. This warning is intended to catch mistakes like this:</p>
+
+<pre width="80">
+        <b class="k">.cerror</b> &gt;<u>start</u> != &gt;<u>end</u><i>; possibly wrong it's &gt;(start != (&gt;end))</i>
+        <b class="k">.cerror</b> (&gt;<u>start</u>) != &gt;<u>end</u><i>; correct high byte check</i>
+</pre>
+
 <dt><b>-Wno-size-larger</b><a name="o_Wsize-larger" href="#o_Wsize-larger"></a>
 <dd>Don't warn if size is larger due to negative offset
 

@@ -3535,6 +3535,15 @@ default, the others are disabled.
       + Use of backslashes for path separation instead of forward slashes.
       + Use of reserved characters in file names.
       + Absolute paths
+-Wno-priority
+    Don't warn about operator priority problems.
+
+    Not all of the unary operators are strongly binding and this may cause
+    surprises. This warning is intended to catch mistakes like this:
+
+            .cerror >start != >end; possibly wrong it's >(start != (>end))
+            .cerror (>start) != >end; correct high byte check
+
 -Wno-size-larger
     Don't warn if size is larger due to negative offset
 
