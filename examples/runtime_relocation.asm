@@ -1,8 +1,7 @@
 
 ; This example demonstrates how to do runtime relocation of code to an unknown
 ; address. To simplify matters the granuality is per-page but can be extended
-; to per byte e.g. by shifting by $102 instead of $100 and using 2 relocation
-; tables.
+; to per byte.
 
 ; The idea is to compile the code twice to different addresses and then check
 ; which bytes differ by the shift amount. Those will be the ones which need
