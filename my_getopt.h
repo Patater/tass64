@@ -30,8 +30,6 @@
 #include "stdbool.h"
 
 /* UNIX-style short-argument parser */
-/*extern int my_getopt(int argc, char *argv[], const char *opts);*/
-
 extern int my_optind, my_optopt;
 extern bool my_opterr;
 extern char *my_optarg;
@@ -51,10 +49,4 @@ struct my_option {
 /* GNU-style long-argument parsers */
 extern int my_getopt_long(int argc, char *argv[], const char *shortopts,
                        const struct my_option *longopts, int *longind);
-
-/*
-extern int my_getopt_long_only(int argc, char *argv[], const char *shortopts,
-                            const struct my_option *longopts, int *longind);
-
-*/
 #endif
