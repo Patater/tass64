@@ -147,7 +147,7 @@ struct diagnostics_s {
     bool priority;
 };
 
-extern int testarg(int *, char ***);
+extern int init_arguments(int *, char ***);
 extern void destroy_arguments(void);
 extern struct arguments_s arguments;
 extern struct diagnostics_s diagnostics, diagnostic_errors;

@@ -5178,7 +5178,7 @@ int main2(int *argc2, char **argv2[]) {
 
     compile_init(*argv2[0]);
 
-    opts = testarg(argc2, argv2); argc = *argc2; argv = *argv2;
+    opts = init_arguments(argc2, argv2); argc = *argc2; argv = *argv2;
     if (opts <= 0) {
         compile_destroy();
         return (opts < 0) ? EXIT_FAILURE : EXIT_SUCCESS;

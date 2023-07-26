@@ -527,7 +527,7 @@ static struct include_list_s **include_list_add(struct include_list_s **lastil, 
     return &include->next;
 }
 
-int testarg(int *argc2, char **argv2[]) {
+int init_arguments(int *argc2, char **argv2[]) {
     int argc = *argc2;
     char **argv = *argv2;
     int opt;
