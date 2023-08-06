@@ -36,7 +36,7 @@ td:first-child, th:first-child {border-left: 0px;}
 caption {caption-side:bottom;}
 table.opcodes th, table.opcodes td {text-align:left;table-layout:fixed;}
 table.trans td:nth-child(1), table.trans td:nth-child(4) {text-align:center;}
-dl.errorlist > dt, dl.dir > dt, table.trans td, table.esc td, table.opcodes th, table.opcodes td, code, pre, tt {font-family:monospace,monospace;}
+dl.errorlist > dt, dl.dir > dt, table.trans td, table.esc td, table.opcodes th, table.opcodes td, code, pre, tt, table.trans2 td {font-family:monospace,monospace;}
 dl.errorlist > dt {font-weight:bold;}
 
 thead th {background-color:#eee;border-bottom:1px solid black;}
@@ -1901,6 +1901,34 @@ change the way the alignment works.</p>
 
 <p>The <a href="#o_Walign">-Walign</a> command line option can warn about
 places were padding was necessary for alignment.</p>
+
+<dt><b>.calign</b> &lt;expression&gt;[, &lt;fill&gt;]<a name="d_calign" href="#d_calign"></a>
+<dd>Starts non-crossing data alignment block.
+<dt><b>.endcalign</b><a name="d_endcalign" href="#d_endcalign"></a>
+<dd>Ends a non-crossing data alignment block.
+
+<p>Often it does not matter if the data starts at a boundary only that it
+doesn't cross one. So there's a potential for space saving compared to aligning the
+data with regular <code>.align</code> to the start of a boundary.
+
+<p>If the data is short in many cases no padding will be added as there's a good
+chance that it does not cross a boundary. If padding is necessary then this directive works
+the same as <a href="#d_align"><code>.align</code></a> including alignment within structures.
+
+<p>It's typically used with 256 as a parameter to place tables so that absolute indexed
+read accesses won't suffer page crossing cycle penalties.
+
+<pre width="80">
+        <b class="k">.calign</b> <span>$100</span>
+table   <b class="d">.byte</b> <span>0</span>, <span>1</span>, <span>2</span>, <span>3</span>, <span>4</span>, <span>5</span>, <span>6</span>, <span>7</span>
+        <b class="k">.endcalign</b>
+        <b>lda</b> <u>table</u>,x     <i>; No cycles wasted on access</i>
+</pre>
+
+<p>Please note that this directive can't guarantee that a relative branch as a
+last instruction won't get slower due to the boundary. Also if the enclosed data size
+varies based on its memory location then doing the alignment may become
+impossible.</p>
 </dl>
 
 <h3>Dumping data<a name="data-dumping" href="#data-dumping"></a></h3>
@@ -3227,10 +3255,16 @@ href="#o_Wpage">-Wno-error=page</a> command line option can reduce it into a
 warning.</p>
 
 <pre width="80">
+        <b>ldx</b> #<span>3</span>          <i>;now this will execute in</i>
         <b class="k">.page</b>
-table   <b class="d">.byte</b> <span>0</span>, <span>1</span>, <span>2</span>, <span>3</span>, <span>4</span>, <span>5</span>, <span>6</span>, <span>7</span>
+-       <b>dex</b>             <i>;16 cycles for sure</i>
+        <b>bne</b> <u>-</u>
         <b class="k">.endpage</b>
 </pre>
+
+<p>This directive will guarantee that a relative branch as a last instruction
+won't cross a page. On the other hand it will give an error for data ending
+right before the boundary. For aligning data please consider using <a href="#d_calign"><code>.calign</code></a> instead.</p>
 
 <dt><b>.option</b> allow_branch_across_page<a name="d_option" href="#d_option"></a>
 <dd>Switches error generation on page boundary crossing during relative branch.
@@ -4749,6 +4783,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 <dt>leading zeros ignored<dd>leading zeros in front of decimals are redundant and don't denote an octal number
 <dt>long branch used<dd>branch distance was too long so long branch was used (bxx &lowast;+5 jmp)
 <dt>memory location address overflow<dd>the calculated memory location address ended up outside of the processors address space
+<dt>over the boundary by ? bytes, aligned by ? bytes<dd>crossed boundary so alignment was necessary
 <dt>please use format("%d", ...) as '^' will change it's meaning<dd>this operator will be changed to mean the bank byte later, please update your sources
 <dt>possible jmp ($xxff) bug<dd>some 6502 variants read don't increment the high byte on page cross and this may be unexpected
 <dt>possibly redundant as ...<dd>according to the optimizer this might not be needed
@@ -4902,7 +4937,7 @@ This mode is for compiling sources which are already PETSCII.
 
 <p>The following translation table applies, no escape sequences.
 
-<div><table width="100%">
+<div><table width="100%" class="trans2">
 <caption>Built-in PETSCII to PETSCII screen code translation table</caption>
 <thead>
 <tr><th>Input<th>Byte
@@ -5915,6 +5950,7 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_brept">.brept</a>
 <a href="#d_bwhile">.bwhile</a>
 <a href="#d_byte">.byte</a>
+<a href="#d_calign">.calign</a>
 <a href="#d_case">.case</a>
 <a href="#d_cdef">.cdef</a>
 <a href="#d_cerror">.cerror</a>
@@ -5941,6 +5977,7 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_end">.end</a>
 <a href="#d_endblock">.endblock</a>
 <a href="#d_endc">.endc</a>
+<a href="#d_endcalign">.endcalign</a>
 <a href="#d_endcomment">.endcomment</a>
 <a href="#d_endencode">.endencode</a>
 <a href="#d_endf">.endf</a>

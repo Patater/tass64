@@ -561,6 +561,9 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR____PTEXT_LONG:
             sprintf(line,"ptext too long by %" PRIuSIZE " bytes", *(const size_t *)prm - 0x100); adderror(line);
             break;
+        case ERROR___CALIGN_LONG:
+            sprintf(line,"code larger than alignment by %" PRIuSIZE " bytes", *(const size_t *)prm); adderror(line);
+            break;
         case ERROR__BRANCH_CROSS:
             sprintf(line,"branch crosses page by %+d bytes", *(const int *)prm); adderror(line);
             break;
@@ -1328,6 +1331,13 @@ void err_msg_align(address_t by, linepos_t epoint) {
     char msg2[256];
     new_error_msg2(diagnostic_errors.align, epoint);
     sprintf(msg2, "aligned by %" PRIuaddress " bytes [-Walign]", by);
+    adderror(msg2);
+}
+
+void err_msg_calign(address_t by, address_t by2, linepos_t epoint) {
+    char msg2[256];
+    new_error_msg2(diagnostic_errors.align, epoint);
+    sprintf(msg2, "over the boundary by %" PRIuaddress " bytes, aligned by %" PRIuaddress " bytes [-Walign]", by, by2);
     adderror(msg2);
 }
 

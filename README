@@ -1539,6 +1539,33 @@ it does not need to be.
     The -Walign command line option can warn about places were padding was
     necessary for alignment.
 
+.calign <expression>[, <fill>]
+    Starts non-crossing data alignment block.
+.endcalign
+    Ends a non-crossing data alignment block.
+
+    Often it does not matter if the data starts at a boundary only that it
+    doesn't cross one. So there's a potential for space saving compared to
+    aligning the data with regular .align to the start of a boundary.
+
+    If the data is short in many cases no padding will be added as there's a
+    good chance that it does not cross a boundary. If padding is necessary then
+    this directive works the same as .align including alignment within
+    structures.
+
+    It's typically used with 256 as a parameter to place tables so that
+    absolute indexed read accesses won't suffer page crossing cycle penalties.
+
+            .calign $100
+    table   .byte 0, 1, 2, 3, 4, 5, 6, 7
+            .endcalign
+            lda table,x     ; No cycles wasted on access
+
+    Please note that this directive can't guarantee that a relative branch as a
+    last instruction won't get slower due to the boundary. Also if the enclosed
+    data size varies based on its memory location then doing the alignment may
+    become impossible.
+
 Dumping data
 
 Storing numeric values
@@ -2735,9 +2762,16 @@ Controlling errors
     Normally a page mismatch results in an error but the -Wno-error=page
     command line option can reduce it into a warning.
 
+            ldx #3          ;now this will execute in
             .page
-    table   .byte 0, 1, 2, 3, 4, 5, 6, 7
+    -       dex             ;16 cycles for sure
+            bne -
             .endpage
+
+    This directive will guarantee that a relative branch as a last instruction
+    won't cross a page. On the other hand it will give an error for data ending
+    right before the boundary. For aligning data please consider using .calign
+    instead.
 
 .option allow_branch_across_page
     Switches error generation on page boundary crossing during relative branch.
@@ -4146,6 +4180,8 @@ long branch used
 memory location address overflow
     the calculated memory location address ended up outside of the processors
     address space
+over the boundary by ? bytes, aligned by ? bytes
+    crossed boundary so alignment was necessary
 please use format("%d", ...) as '^' will change it's meaning
     this operator will be changed to mean the bank byte later, please update
     your sources
@@ -4908,18 +4944,18 @@ Appendix
 Assembler directives
 
 .addr .al .align .as .assert .autsiz .bend .binary .binclude .bfor .block
-.break .breakif .brept .bwhile .byte .case .cdef .cerror .char .check .comment
-.continue .continueif .cpu .cwarn .databank .default .dint .dpage .dsection
-.dstruct .dunion .dword .edef .else .elsif .enc .encode .end .endblock .endc
-.endcomment .endencode .endf .endfor .endfunction .endif .endlogical .endm
-.endmacro .endn .endnamespace .endp .endpage .endproc .endrept .ends
-.endsection .endsegment .endstruct .endswitch .endu .endunion .endv .endvirtual
-.endweak .endwhile .endwith .eor .error .fi .fill .for .function .goto .here
-.hidemac .if .ifeq .ifmi .ifne .ifpl .include .lbl .lint .logical .long .macro
-.mansiz .namespace .next .null .offs .option .page .pend .proc .proff .pron
-.ptext .rept .rta .section .seed .segment .send .sfunction .shift .shiftl
-.showmac .sint .struct .switch .tdef .text .union .var .virtual .warn .weak
-.while .with .word .xl .xs
+.break .breakif .brept .bwhile .byte .calign .case .cdef .cerror .char .check
+.comment .continue .continueif .cpu .cwarn .databank .default .dint .dpage
+.dsection .dstruct .dunion .dword .edef .else .elsif .enc .encode .end
+.endblock .endc .endcalign .endcomment .endencode .endf .endfor .endfunction
+.endif .endlogical .endm .endmacro .endn .endnamespace .endp .endpage .endproc
+.endrept .ends .endsection .endsegment .endstruct .endswitch .endu .endunion
+.endv .endvirtual .endweak .endwhile .endwith .eor .error .fi .fill .for
+.function .goto .here .hidemac .if .ifeq .ifmi .ifne .ifpl .include .lbl .lint
+.logical .long .macro .mansiz .namespace .next .null .offs .option .page .pend
+.proc .proff .pron .ptext .rept .rta .section .seed .segment .send .sfunction
+.shift .shiftl .showmac .sint .struct .switch .tdef .text .union .var .virtual
+.warn .weak .while .with .word .xl .xs
 
 -------------------------------------------------------------------------------
 
