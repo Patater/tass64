@@ -4275,55 +4275,58 @@ MUST_CHECK Obj *compile(void)
                         if (touval2(vs, &uval, 8 * sizeof uval)) {}
                         else db = uval;
                     }
-                    mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
-                    if ((vs = get_val()) != NULL) {
-                        struct textrecursion_s trec;
-                        size_t membp = get_mem(current_address->mem);
-                        oaddr = current_address->address;
+                    if (db != 0) {
+                        if (prm == CMD_ALIGN && diagnostics.align) err_msg_align(db, &epoint);
+                        mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
+                        if ((vs = get_val()) != NULL) {
+                            struct textrecursion_s trec;
+                            size_t membp = get_mem(current_address->mem);
+                            oaddr = current_address->address;
 
-                        trec.p = 0;
-                        trec.gaps = 0;
-                        trec.sum = 0;
-                        trec.max = db;
-                        trec.prm = CMD_TEXT;
-                        trec.tconv = BYTES_MODE_TEXT;
-                        trec.error = ERROR__USER_DEFINED;
-                        trec.epoint = &vs->epoint;
-                        textrecursion(&trec, vs->val);
-                        if (trec.error != ERROR__USER_DEFINED) err_msg2(trec.error, NULL, trec.epoint);
+                            trec.p = 0;
+                            trec.gaps = 0;
+                            trec.sum = 0;
+                            trec.max = db;
+                            trec.prm = CMD_TEXT;
+                            trec.tconv = BYTES_MODE_TEXT;
+                            trec.error = ERROR__USER_DEFINED;
+                            trec.epoint = &vs->epoint;
+                            textrecursion(&trec, vs->val);
+                            if (trec.error != ERROR__USER_DEFINED) err_msg2(trec.error, NULL, trec.epoint);
 
-                        db -= trec.sum;
-                        if (db != 0) {
-                            if (trec.sum == 1 && trec.p == 1) {
-                                memset(pokealloc(db + 1, trec.epoint), trec.buff[0], db + 1); /* single byte shortcut */
-                                trec.p = 0;
-                            } else if (trec.sum == trec.gaps) {
-                                if (trec.sum == 0) err_msg2(ERROR__BYTES_NEEDED, NULL, trec.epoint);
-                                trec.gaps += db; /* gap shortcut */
-                            } else {
-                                address_t offs = 0;
-                                if (trec.p > 0) textrecursion_flush(&trec);
-                                while (db != 0) { /* pattern repeat */
-                                    int ch;
-                                    db--;
-                                    ch = read_mem(current_address->mem, oaddr, membp, offs);
-                                    if (ch < 0) {
-                                        if (trec.p > 0) textrecursion_flush(&trec);
-                                        trec.gaps++;
-                                    } else {
-                                        if (trec.gaps > 0) textrecursion_gaps(&trec);
-                                        else if (trec.p >= sizeof trec.buff) textrecursion_flush(&trec);
-                                        trec.buff[trec.p++] = (uint8_t)ch;
+                            db -= trec.sum;
+                            if (db != 0) {
+                                if (trec.sum == 1 && trec.p == 1) {
+                                    memset(pokealloc(db + 1, trec.epoint), trec.buff[0], db + 1); /* single byte shortcut */
+                                    trec.p = 0;
+                                } else if (trec.sum == trec.gaps) {
+                                    if (trec.sum == 0) err_msg2(ERROR__BYTES_NEEDED, NULL, trec.epoint);
+                                    trec.gaps += db; /* gap shortcut */
+                                } else {
+                                    address_t offs = 0;
+                                    if (trec.p > 0) textrecursion_flush(&trec);
+                                    while (db != 0) { /* pattern repeat */
+                                        int ch;
+                                        db--;
+                                        ch = read_mem(current_address->mem, oaddr, membp, offs);
+                                        if (ch < 0) {
+                                            if (trec.p > 0) textrecursion_flush(&trec);
+                                            trec.gaps++;
+                                        } else {
+                                            if (trec.gaps > 0) textrecursion_gaps(&trec);
+                                            else if (trec.p >= sizeof trec.buff) textrecursion_flush(&trec);
+                                            trec.buff[trec.p++] = (uint8_t)ch;
+                                        }
+                                        offs++;
+                                        if (offs >= trec.sum) offs = 0;
                                     }
-                                    offs++;
-                                    if (offs >= trec.sum) offs = 0;
                                 }
                             }
+                            if (trec.p > 0) textrecursion_flush(&trec);
+                            else if (trec.gaps > 0) textrecursion_gaps(&trec);
+                        } else if (db != 0) {
+                            memskip(db, &epoint);
                         }
-                        if (trec.p > 0) textrecursion_flush(&trec);
-                        else if (trec.gaps > 0) textrecursion_gaps(&trec);
-                    } else if (db != 0) {
-                        memskip(db, &epoint);
                     }
                     if (nolisting == 0) {
                         list_mem(&mm, current_address->mem);

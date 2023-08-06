@@ -140,6 +140,7 @@ struct diagnostics_s {
     bool ignored;
     bool long_branch;
     bool altmode;
+    bool align;
     bool page;
     bool macro_prefix;
     bool float_round;

@@ -1536,6 +1536,9 @@ it does not need to be.
     same independent which address it's instantiated at. Anonymous structures
     do not change the way the alignment works.
 
+    The -Walign command line option can warn about places were padding was
+    necessary for alignment.
+
 Dumping data
 
 Storing numeric values
@@ -2727,7 +2730,10 @@ Controlling errors
 .endpage
     End of page check block
 
-    Gives an error on page boundary crossing, e.g. for timing sensitive code.
+    Checks page boundary crossings, e.g. for timing sensitive code.
+
+    Normally a page mismatch results in an error but the -Wno-error=page
+    command line option can reduce it into a warning.
 
             .page
     table   .byte 0, 1, 2, 3, 4, 5, 6, 7
@@ -3378,6 +3384,11 @@ default, the others are disabled.
 
     There are several opcodes for the same task, especially for the "6502i"
     target.
+
+-Walign
+    Warns when padding bytes were used for alignment.
+
+    Can be used to see where space is wasted for alignment.
 
 -Waltmode
     Warn about alternative address modes.
@@ -4070,6 +4081,8 @@ them it into a fault. See Diagnostic options for more details.
 
 Warnings
 
+aligned by ? bytes
+    alignment was necessary
 approximate floating point
     floating point comparisons are not exact and the numbers were close but
     maybe not quite

@@ -1324,6 +1324,13 @@ void err_msg_branch_page(int by, linepos_t epoint) {
     adderror(msg2);
 }
 
+void err_msg_align(address_t by, linepos_t epoint) {
+    char msg2[256];
+    new_error_msg2(diagnostic_errors.align, epoint);
+    sprintf(msg2, "aligned by %" PRIuaddress " bytes [-Walign]", by);
+    adderror(msg2);
+}
+
 void err_msg_page(address_t adr, address_t adr2, linepos_t epoint) {
     char line[256];
     new_error_msg2(diagnostic_errors.page, epoint);

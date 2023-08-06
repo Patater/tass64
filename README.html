@@ -1898,6 +1898,9 @@ tmp     <b class="d">.byte</b> <span>?</span>         <i>; at #3,s</i>
 of the structure. This means the structure layout will be always the same
 independent which address it's instantiated at. Anonymous structures do not
 change the way the alignment works.</p>
+
+<p>The <a href="#o_Walign">-Walign</a> command line option can warn about
+places were padding was necessary for alignment.</p>
 </dl>
 
 <h3>Dumping data<a name="data-dumping" href="#data-dumping"></a></h3>
@@ -3217,7 +3220,11 @@ into a specific 256 byte address range. The default is 0, which is the first pag
 <dt><b>.endpage</b><a name="d_endpage" href="#d_endpage"></a>
 <dd>End of page check block
 
-<p>Gives an error on page boundary crossing, e.g. for timing sensitive code.</p>
+<p>Checks page boundary crossings, e.g. for timing sensitive code.<p>
+
+<p>Normally a page mismatch results in an error but the <a
+href="#o_Wpage">-Wno-error=page</a> command line option can reduce it into a
+warning.</p>
 
 <pre width="80">
         <b class="k">.page</b>
@@ -3953,6 +3960,11 @@ duplicate what's in the source editor window will be not.</p>
 <dd>Warns about alias opcodes.
 
 <p>There are several opcodes for the same task, especially for the "6502i" target.</p>
+
+<dt><b>-Walign</b><a name="o_Walign" href="#o_Walign"></a>
+<dd>Warns when padding bytes were used for alignment.
+
+<p>Can be used to see where space is wasted for alignment.</p>
 
 <dt><b>-Waltmode</b><a name="o_Waltmode" href="#o_Waltmode"></a>
 <dd>Warn about alternative address modes.
@@ -4712,6 +4724,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 <h3>Warnings<a name="messages-warnings" href="#messages-warnings"></a></h3>
 
 <dl class="errorlist">
+<dt>aligned by ? bytes<dd>alignment was necessary
 <dt>approximate floating point<dd>floating point comparisons are not exact and the numbers were close but maybe not quite
 <dt>bank 0 address overflow<dd>the calculated memory location address ended up outside of bank 0 and is now wrapped.
 <dt>case ignored, value already handled<dd>this value was already used in an earlier case so here it's ignored

@@ -102,6 +102,7 @@ static const struct diagnostics_s diagnostics_default = {
     true,        /* ignored */
     false,       /* long_branch */
     false,       /* altmode */
+    false,       /* align */
     true,        /* page */
     false,       /* macro_prefix */
     false,       /* float_round */
@@ -144,6 +145,7 @@ static const struct diagnostics_s diagnostic_errors_default = {
     false,       /* ignored */
     false,       /* long_branch */
     false,       /* altmode */
+    false,       /* align */
     true,        /* page */
     false,       /* macro_prefix */
     false,       /* float_round */
@@ -189,6 +191,7 @@ static const struct diagnostics_s diagnostic_all_default = {
     true,        /* ignored */
     false,       /* long_branch */
     false,       /* altmode */
+    false,       /* align */
     true,        /* page */
     false,       /* macro_prefix */
     true,        /* float_round */
@@ -234,6 +237,7 @@ static const struct diagnostics_s diagnostic_error_all_default = {
     true,        /* ignored */
     true,        /* long_branch */
     true,        /* altmode */
+    true,        /* align */
     true,        /* page */
     true,        /* macro_prefix */
     true,        /* float_round */
@@ -279,6 +283,7 @@ static const struct w_options_s w_options[] = {
     {"ignored",         &diagnostics.ignored},
     {"long-branch",     &diagnostics.long_branch},
     {"altmode",         &diagnostics.altmode},
+    {"align",           &diagnostics.align},
     {"page",            &diagnostics.page},
     {"macro-prefix",    &diagnostics.macro_prefix},
     {"float-round",     &diagnostics.float_round},
@@ -702,6 +707,7 @@ int init_arguments(int *argc2, char **argv2[]) {
                "  -Werror=<name>         Make a diagnostic to an error\n"
                "  -Wno-error=<name>      Make a diagnostic to a warning\n"
                "  -Walias                Warn about instruction aliases\n"
+               "  -Walign                Warn when alignment is done\n"
                "  -Waltmode              Warn about alternative addressing\n"
                "  -Wbranch-page          Warn if a branch crosses a page\n"
                "  -Wcase-symbol          Warn on mismatch of symbol case\n"
