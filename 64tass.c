@@ -4441,7 +4441,7 @@ MUST_CHECK Obj *compile(void)
                     waitfor->u.cmd_calign.addr2 = current_address->address;
                 } else new_waitfor(W_ENDCALIGN, &epoint);
                 break;
-            case CMD_FILL:
+            case CMD_FILL: if ((waitfor->skip & 1) != 0)
                 { /* .fill */
                     address_t db = 0;
                     uval_t uval;
