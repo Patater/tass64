@@ -665,8 +665,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                         v->typ = val_reference(v1->typ);
                     }
                     if (op->op == O_ADD) { v->offs += iv; } else { v->offs -= iv; }
-                    if (v->offs >= 1073741824) { err_msg2(ERROR__OFFSET_RANGE, NULL, op->epoint2); v->offs = 1073741823; }
-                    if (v->offs < -1073741824) { err_msg2(ERROR__OFFSET_RANGE, NULL, op->epoint2); v->offs = -1073741824; }
+                    if (v->offs >= 1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = 1073741823; }
+                    if (v->offs < -1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = -1073741824; }
                     return Obj(v);
                 }
             default: break;
@@ -706,8 +706,8 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
                 v->names = ref_namespace(v2->names);
                 v->typ = val_reference(v2->typ);
                 v->offs += iv;
-                if (v->offs >= 1073741824) { err_msg2(ERROR__OFFSET_RANGE, NULL, op->epoint2); v->offs = 1073741823; }
-                if (v->offs < -1073741824) { err_msg2(ERROR__OFFSET_RANGE, NULL, op->epoint2); v->offs = -1073741824; }
+                if (v->offs >= 1073741824) { err_msg2(ERROR__OFFSET_RANGE, o1, op->epoint2); v->offs = 1073741823; }
+                if (v->offs < -1073741824) { err_msg2(ERROR__OFFSET_RANGE, o1, op->epoint2); v->offs = -1073741824; }
                 return Obj(v);
             }
             result = access_check(v2, op->epoint2);

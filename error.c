@@ -380,7 +380,7 @@ static const char *const terr_error[] = {
     "conflict",
     "index out of range ",
     "key not in dictionary ",
-    "offset out of range",
+    "offset out of range ",
     "not hashable ",
     "not a key and value pair ",
     "too large for a %u bit signed integer ",
@@ -589,6 +589,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR____NOT_DIRECT:
         case ERROR__NOT_DATABANK:
         case ERROR_CANT_CROSS_BA:
+        case ERROR__OFFSET_RANGE:
             adderror(terr_error[no - 0x40]);
             if (prm != NULL) err_msg_variable((Obj *)prm);
             break;

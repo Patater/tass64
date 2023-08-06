@@ -1517,19 +1517,19 @@ it does not need to be.
             .endvirtual
             lda (p1),y      ; lda ($01,s),y
 
-.align <expression>[, <fill>]
+.align <alignment>[, <fill>[, <offset>]]
     Align the program counter to a dividable address by inserting uninitialized
     memory or repeated bytes.
 
     Usually used to page align data or code to avoid penalty cycles when
     indexing or branching.
 
-    ;Offset PC       Bytes          Disassembly     Source
-                                                    *       = $ffc
-    >0ffc                                                   .align $100
-    .1000            ee 19 d0       inc $d019       irq     inc $d019
-    >1003            ea                                     .align 4, $ea
-    .1004            69 01          adc #$01        loop    adc #1
+            .align $40      ; sprite bitmap (64 byte aligned)
+    sprite  .fill 64
+            .align $400     ; screen memory (1024 byte aligned)
+    screen  .fill 1000
+            .align $400, ?, -8
+    spritep .fill 8         ; sprite pointers (last 8 bytes)
 
     When alignment is done within named structures then it's relative to the
     start of the structure. This means the structure layout will be always the
@@ -1539,7 +1539,7 @@ it does not need to be.
     The -Walign command line option can warn about places were padding was
     necessary for alignment.
 
-.calign <expression>[, <fill>]
+.calign <alignment>[, <fill>[, <offset>]]
     Starts non-crossing data alignment block.
 .endcalign
     Ends a non-crossing data alignment block.

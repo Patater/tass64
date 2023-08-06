@@ -939,7 +939,7 @@ static void byterecursion(struct byterecursion_s *brec, Obj *val) {
     iter_destroy(&iter);
 }
 
-static void memfill(address_t db, struct values_s *vs) {
+static void memfill(address_t db, const struct values_s *vs) {
     struct textrecursion_s trec;
     size_t membp = get_mem(current_address->mem);
     address_t oaddr = current_address->address;
@@ -987,6 +987,48 @@ static void memfill(address_t db, struct values_s *vs) {
     else if (trec.gaps > 0) textrecursion_gaps(&trec);
 }
 
+static void memskipfill(address_t db, const struct values_s *vs, linepos_t epoint) {
+    struct mem_mark_s mm;
+    mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
+    if (db != 0) {
+        if (vs != NULL && vs->val != gap_value) {
+            memfill(db, vs);
+        } else {
+            memskip(db, epoint);
+        }
+    }
+    if (nolisting == 0) {
+        list_mem(&mm, current_address->mem);
+    }
+}
+
+static address_t memalign(const struct values_s *vs, uval_t size) {
+    address_t db = 0;
+    address_t offset = 0;
+    if (vs != NULL) {
+        const struct values_s *vs2 = get_val();
+        if (vs2 != NULL) {
+            ival_t ival;
+            if (toival(vs2->val, &ival, 8 * sizeof ival, &vs2->epoint)) vs2 = NULL;
+            else if (ival < 0) {
+                if (-(uval_t)ival <= size) {offset = size - -(uval_t)ival; vs2 = NULL;}
+            } else {
+                if ((uval_t)ival < size) {offset = (uval_t)ival; vs2 = NULL;}
+            }
+            if (vs2 != NULL) err_msg2(ERROR__OFFSET_RANGE, vs2->val, &vs2->epoint);
+        }
+    }
+    if (size > 1) {
+        address_t max = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? all_mem2 : all_mem;
+        address_t itt = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? current_address->address : ((current_address->l_address - current_address->l_start) & all_mem);
+        address_t rem;
+        if (size > max) size = max + 1;
+        rem = itt % size;
+        if (rem > offset) offset += size;
+        db = offset - rem;
+    }
+    return db;
+}
 
 static void logical_close(linepos_t epoint) {
     address_t diff;
@@ -4340,14 +4382,11 @@ MUST_CHECK Obj *compile(void)
                     Label *label;
                     address_t db = 0;
                     address_t size = 0;
-                    struct values_s *vs;
-                    struct mem_mark_s mm;
+                    const struct values_s *vs;
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         Code(newlabel->value)->dtype = D_BYTE;
                     }
-                    if (!get_exp(0, 1, 2, &epoint)) goto breakerr;
-                    vs = get_val();
                     new_waitfor(W_ENDCALIGN2, &epoint);
                     waitfor->u.cmd_calign.label = newlabel;
                     if (newlabel != NULL) {
@@ -4367,96 +4406,74 @@ MUST_CHECK Obj *compile(void)
                         } else {
                             Calign *calign = Calign(val_alloc(CALIGN_OBJ));
                             calign->size = 0;
-                            calign->pass = 0;
+                            calign->pass = pass;
                             val_destroy(label->value);
                             label->value = Obj(calign);
                         }
                     } else {
                         Calign *calign = Calign(val_alloc(CALIGN_OBJ));
                         calign->size = 0;
-                        calign->pass = 0;
+                        calign->pass = pass;
                         label->constant = true;
                         label->owner = true;
                         label->value = Obj(calign);
                         label->epoint = epoint;
                     }
                     waitfor->u.cmd_calign.label2 = ref_label(label);
-                    if (size != 0) {
-                        address_t max = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? all_mem2 : all_mem;
-                        address_t itt = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? current_address->address : ((current_address->l_address - current_address->l_start) & all_mem);
-                        uval_t uval;
-                        if (touval2(vs, &uval, 8 * sizeof uval)) {}
-                        else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
-                        else if (size > uval) {
-                            size_t ln2 = size - uval;
-                            err_msg2(ERROR___CALIGN_LONG, &ln2, &epoint);
-                        } else {
-                            if (uval > max) {
-                                if (itt != 0) db = max - itt + 1;
+                    if (get_exp(0, 1, 3, &epoint)) {
+                        vs = get_val();
+                        if (size != 0) {
+                            uval_t uval;
+                            if (touval2(vs, &uval, 8 * sizeof uval)) {}
+                            else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
+                            else if (size > uval) {
+                                size_t ln2 = size - uval;
+                                err_msg2(ERROR___CALIGN_LONG, &ln2, &epoint);
                             } else {
-                                address_t rem = itt % uval;
-                                db = (rem == 0) ? uval : uval - rem;
+                                vs = get_val();
+                                db = memalign(vs, uval);
+                                if (size <= db) db = 0;
                             }
-                            if (size <= db) db = 0;
+                            if (db != 0 && diagnostics.align) err_msg_calign(size - db, db, &epoint);
                         }
-                    }
-                    mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
-                    if (db != 0) {
-                        if (diagnostics.align) err_msg_calign(size - db, db, &epoint);
-                        if ((vs = get_val()) != NULL) {
-                            memfill(db, vs);
-                        } else {
-                            memskip(db, &epoint);
-                        }
-                    }
-                    if (nolisting == 0) {
-                        list_mem(&mm, current_address->mem);
+                        memskipfill(db, vs, &epoint);
                     }
                     waitfor->u.cmd_calign.addr2 = current_address->address;
                 } else new_waitfor(W_ENDCALIGN, &epoint);
                 break;
             case CMD_FILL:
-            case CMD_ALIGN: if ((waitfor->skip & 1) != 0)
-                { /* .fill, .align */
+                { /* .fill */
                     address_t db = 0;
                     uval_t uval;
-                    struct values_s *vs;
-                    struct mem_mark_s mm;
                     if (diagnostics.optimize) cpu_opt_invalidate();
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         Code(newlabel->value)->dtype = D_BYTE;
                     }
                     if (!get_exp(0, 1, 2, &epoint)) goto breakerr;
+                    if (touval2(get_val(), &uval, 8 * sizeof uval)) {}
+                    else db = uval;
+                    memskipfill(db, db != 0 ? get_val() : NULL, &epoint);
+                }
+                break;
+            case CMD_ALIGN: if ((waitfor->skip & 1) != 0)
+                { /* .align */
+                    address_t db = 0;
+                    uval_t uval;
+                    const struct values_s *vs;
+                    if (diagnostics.optimize) cpu_opt_invalidate();
+                    if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
+                        Code(newlabel->value)->dtype = D_BYTE;
+                    }
+                    if (!get_exp(0, 1, 3, &epoint)) goto breakerr;
                     vs = get_val();
-                    if (prm == CMD_ALIGN) {
-                        address_t max = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? all_mem2 : all_mem;
-                        if (touval2(vs, &uval, 8 * sizeof uval)) {}
-                        else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
-                        else if (uval > 1) {
-                            address_t itt = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? current_address->address : ((current_address->l_address - current_address->l_start) & all_mem);
-                            if (uval > max) {
-                                if (itt != 0) db = max - itt + 1;
-                            } else {
-                                address_t rem = itt % uval;
-                                if (rem != 0) db = uval - rem;
-                            }
-                        }
-                    } else {
-                        if (touval2(vs, &uval, 8 * sizeof uval)) {}
-                        else db = uval;
+                    if (touval2(vs, &uval, 8 * sizeof uval)) {}
+                    else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
+                    else {
+                        vs = get_val();
+                        db = memalign(vs, uval);
+                        if (db != 0 && diagnostics.align) err_msg_align(db, &epoint);
                     }
-                    mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
-                    if (db != 0) {
-                        if (prm == CMD_ALIGN && diagnostics.align) err_msg_align(db, &epoint);
-                        if ((vs = get_val()) != NULL) {
-                            memfill(db, vs);
-                        } else {
-                            memskip(db, &epoint);
-                        }
-                    }
-                    if (nolisting == 0) {
-                        list_mem(&mm, current_address->mem);
-                    }
+                    memskipfill(db, vs, &epoint);
                 }
                 break;
             case CMD_ASSERT: if ((waitfor->skip & 1) != 0)
