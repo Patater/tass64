@@ -1523,68 +1523,99 @@ Aligning data or code
 Limitations of hardware often impose alignment requirements like the address of
 something needs to be divisible by a certain amount.
 
-.align <alignment>[, <fill>[, <offset>]]
+.align [<alignment>[, <fill>[, <offset>]]]
     Align the program counter to a dividable address by inserting uninitialized
     memory or repeated bytes.
 
     This directive is useful when data needs to be placed at regular intervals.
-    For example if the video chip can only place the screen memory to an
-    address divisible by 1024 and the next such location is need.
+    By default it's 256 bytes as page alignment is most common.
 
-            .align $40      ; sprite bitmap (64 byte aligned)
+            .align $40      ;sprite bitmap (64 byte aligned)
     sprite  .fill 63
-            .align $400     ; screen memory (1024 byte aligned)
+            .align $400     ;screen memory (1024 byte aligned)
     screen  .fill 1000
-            .align $400, ?, -8; sprite pointers (last 8 bytes)
+            .align $400, ?, -8;sprite pointers (last 8 bytes)
     spritep .fill 8
-            .align $100     ; page sized buffer at page boundary
-    sendbuf .fill 256       ; to avoid indexing penalty cycles
+            .align          ; page sized buffer at page boundary
+    sendbuf .fill 256       ;to avoid indexing penalty cycles
 
     When alignment is done within named structures then it's relative to the
-    start of the structure. This means the structure layout will be always the
+    start of the structure. This means the structure layout will always be the
     same independent which address it's instantiated at. Anonymous structures
     do not change the way the alignment works.
 
     The -Walign command line option can warn about places were padding was
     necessary for alignment.
 
-.calign <alignment>[, <fill>[, <offset>]]
-    Starts non-crossing data alignment block.
-.endcalign
-    Ends a non-crossing data alignment block.
+.alignb [<alignment>[, <fill>[, <offset>]]]
+    Starts alignment block.
+.endalignb
+    Ends alignment block.
 
-    Often it does not matter if the data starts at a divisible address only
-    that it doesn't cross one. So there's a potential for space saving compared
-    to aligning the data with regular .align to the start of a divisible
-    boundary.
+    Often it does not matter if the data starts at a page boundary only that it
+    doesn't cross one. So there's a potential for space saving compared to
+    aligning the data with regular .align to the start of a page.
 
     If the data is short in many cases no padding will be added as there's a
     good chance that it does not cross a boundary. If padding is necessary then
     this directive works the same as .align including alignment within
     structures.
 
-    It's typically used with 256 as a parameter to place tables so that
-    absolute indexed read accesses won't suffer page crossing cycle penalties.
+    It's typically used to place tables so that absolute indexed read accesses
+    won't suffer page crossing cycle penalties.
 
-            .calign $100
+            .alignb         ;avoid page cross
     table   .byte 0, 1, 2, 3, 4, 5, 6, 7
-            .endcalign
-            lda table,x     ; No cycles wasted on access
+            .endalignb
+            lda table,x     ;no cycles wasted on access
 
-    Please note that this directive can't guarantee that a relative branch as a
-    last instruction won't get slower due to the boundary. Also if the enclosed
-    data size varies based on its memory location then doing the alignment may
-    become impossible.
+    Without a parameter it avoids crossing of 256 byte pages but other sizes
+    might be useful as well.
+
+    In case the stronger guarantee of having both the start and the end
+    directives in the same page is required then the alignment needs to be
+    given as a negative number (e.g. -256). This may be necessary when aligning
+    code with relative branches.
+
+    If the enclosed data size varies based on its memory location then doing
+    the alignment may become impossible.
+
+.alignpage <target>[, <alignment>[, <fill>[, <offset>]]]
+    Alignment of a page block.
+
+    The .alignb block alignment adds the alignment padding right at its start.
+    This is usually fine for data tables but it's not very practical for
+    avoiding a page difference in a loop in the middle of an assembly routine.
+
+    Instead this directive does the alignment of a block somewhere further
+    above. The result is the same but with more control over where the padding
+    is added.
+
+    While any block can be used as a target it's strongly recommended to use a
+    .page block with the same alignment parameter. This way in case the
+    alignment goes wrong it'll get noticed.
+
+            rts
+            .alignpage pageblk;add alignment padding here
+    wait    ldx #3
+    pageblk .page           ;now this will execute
+    -       dex             ;in 14 cycles for sure
+            bne -
+            .endpage
+
+    Care must be taken that this directive is placed so that it can really
+    influence the location of the remote block to be aligned. Otherwise it may
+    not deliver the desired outcome.
 
 .fill <length>
     Usually the .fill directive is used to reserve space but it may be useful
     to do alignments as well.
 
-    ; Replacement for a .cerror overrun check and *= combo
+    ;replacement for a .cerror overrun check and *= combo
             .fill start_address - *
-    ; Align the vectors "block" so it ends at end_address
+    ;align the vectors "block" so it ends at end_address
             .fill end_address - size(vectors) - *
-    vectors .logical *      ; Dummy non-scoped block for size()
+    vectors .logical *      ;dummy non-scoped block for size()
     ...
 
 Dumping data
@@ -2772,27 +2803,36 @@ routine .addr print
 
 Controlling errors
 
-.page
+.page [<size>]
     Start of page check block
 .endp
 .endpage
     End of page check block
 
-    Checks page boundary crossings, e.g. for timing sensitive code.
+    Checks for page difference or page crossing. Pages are normally 256 bytes
+    and that's what is assumed if no parameter was given.
 
-    Normally a page mismatch results in an error but the -Wno-error=page
-    command line option can reduce it into a warning.
+    By default or with a negative size parameter it verifies that the start and
+    end directives are on the same page. This is what's needed to guard
+    relative branches against jumping across pages:
 
-            ldx #3          ;now this will execute in
-            .page
-    -       dex             ;16 cycles for sure
+            ldx #3
+            .page           ;now this will execute
+    -       dex             ;in 14 cycles for sure
             bne -
             .endpage
 
-    This directive will guarantee that a relative branch as a last instruction
-    won't cross a page. On the other hand it will give an error for data ending
-    right before the boundary. For aligning data please consider using .calign
-    instead.
+    With a positive size parameter it verifies that there's no page cross in
+    the memory range between the directives. This is what's needed to guard
+    against indexed access page cross cycle penalties:
+
+    *       = $1c0
+            .page 256
+    table   .fill $40       ;table within the same page
+            .endpage        ;different page here but no crossing
+
+    Normally a page check results in an error but the -Wno-error=page command
+    line option can reduce it into a warning.
 
 .option allow_branch_across_page
     Switches error generation on page boundary crossing during relative branch.
@@ -2800,10 +2840,11 @@ Controlling errors
     can ruin the timing of a carefully cycle counted code.
 
             .option allow_branch_across_page = 0
-            ldx #3          ;now this will execute in
-    -       dex             ;16 cycles for sure
-            bne -
-            .option allow_branch_across_page = 1
+            bcc +           ;same execution time
+            inx             ;needed in both cases
+    +       bcs +
+            dex
+    +       .option allow_branch_across_page = 1
 
 .error <message> [, <message>, ...]
 .cerror <condition>, <message> [, <message>, ...]
@@ -3556,9 +3597,8 @@ default, the others are disabled.
     With this option it's fine that the high byte is read from the `wrong'
     address on a 6502, NMOS 6502 and 65DTV02.
 
-            .calign $100    ; jmp bug workaround
+            .alignpage vector, -256; jmp bug workaround
     vector  .addr ?         ; by avoiding page
-            .endcalign      ; crossing of vector
             jmp (vector)
 
 -Wno-label-left
@@ -4282,10 +4322,16 @@ can't get size of
     this type has no size
 closing/opening directive '?' not found
     couldn't find the other half of block directive pair
+code larger than alignment by ? bytes
+    impossible to align if larger than the alignment
+code larger than page by ? bytes
+    not expected to be larger than a page
 conflict
     at least one feature is provided, which shouldn't be there
 conversion of ? '?' to ? is not possible
     this type conversion can't be done
+crossing of ? byte page by ? bytes
+    the page directive detected a page cross between start and end directives
 division by zero
     dividing with zero can't be done
 double defined escape
@@ -4336,6 +4382,8 @@ most significant bit must be clear in byte
     for .shift and .shiftl only 7 bit "bytes" are valid
 must be used within a loop
     .break or .continue must be used within a loop
+must be defined later
+    remote alignment must placed before the aligned label
 negative number raised on fractional power
     can't calculate this
 no ? addressing mode for opcode 'xxx'
@@ -4366,8 +4414,6 @@ offset out of range
     code offset too much
 operands could not be broadcast together with shapes ? and ?
     list length must match or must have a single element only
-different start and end page $xxxx and $xxxx
-    page crossing was detected
 ptext too long by ? bytes
     .ptext is limited to 255 bytes maximum
 requirements not met
@@ -4380,6 +4426,8 @@ some operation '?' of type '?' and type '?' not possible
     can't do this calculation with these values
 square root of negative number
     can't calculate the square root of a negative number
+start and end on different ? byte page $xxxx and $xxxx
+    the page directive detected a mismatch of page
 too large for a ? bit signed/unsigned integer
     value out of range
 unexpected character '?'
@@ -4969,11 +5017,11 @@ Appendix
 
 Assembler directives
 
-.addr .al .align .as .assert .autsiz .bend .binary .binclude .bfor .block
-.break .breakif .brept .bwhile .byte .calign .case .cdef .cerror .char .check
-.comment .continue .continueif .cpu .cwarn .databank .default .dint .dpage
-.dsection .dstruct .dunion .dword .edef .else .elsif .enc .encode .end
-.endblock .endc .endcalign .endcomment .endencode .endf .endfor .endfunction
+.addr .al .align .alignb .alignpage .as .assert .autsiz .bend .binary .binclude
+.bfor .block .break .breakif .brept .bwhile .byte .case .cdef .cerror .char
+.check .comment .continue .continueif .cpu .cwarn .databank .default .dint
+.dpage .dsection .dstruct .dunion .dword .edef .else .elsif .enc .encode .end
+.endblock .endc .endalignb .endcomment .endencode .endf .endfor .endfunction
 .endif .endlogical .endm .endmacro .endn .endnamespace .endp .endpage .endproc
 .endrept .ends .endsection .endsegment .endstruct .endswitch .endu .endunion
 .endv .endvirtual .endweak .endwhile .endwith .eor .error .fi .fill .for

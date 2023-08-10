@@ -407,7 +407,8 @@ static const char *const terr_error[] = {
     "closing directive '",
     "opening directive '",
     "must be used within a loop",
-    "not measurable as start offset beyond size of original"
+    "not measurable as start offset beyond size of original",
+    "must be defined later"
 };
 
 static const char *const terr_fatal[] = {
@@ -561,8 +562,11 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR____PTEXT_LONG:
             sprintf(line,"ptext too long by %" PRIuSIZE " bytes", *(const size_t *)prm - 0x100); adderror(line);
             break;
-        case ERROR___CALIGN_LONG:
+        case ERROR___ALIGNB_LONG:
             sprintf(line,"code larger than alignment by %" PRIuSIZE " bytes", *(const size_t *)prm); adderror(line);
+            break;
+        case ERROR_____PAGE_LONG:
+            sprintf(line,"code larger than page by %" PRIuSIZE " bytes", *(const size_t *)prm); adderror(line);
             break;
         case ERROR__BRANCH_CROSS:
             sprintf(line,"branch crosses page by %+d bytes", *(const int *)prm); adderror(line);
@@ -1335,17 +1339,21 @@ void err_msg_align(address_t by, linepos_t epoint) {
     adderror(msg2);
 }
 
-void err_msg_calign(address_t by, address_t by2, linepos_t epoint) {
+void err_msg_alignb(address_t by, address_t by2, linepos_t epoint) {
     char msg2[256];
     new_error_msg2(diagnostic_errors.align, epoint);
     sprintf(msg2, "over the boundary by %" PRIuaddress " bytes, aligned by %" PRIuaddress " bytes [-Walign]", by, by2);
     adderror(msg2);
 }
 
-void err_msg_page(address_t adr, address_t adr2, linepos_t epoint) {
+void err_msg_page(address_t adr, address_t adr2, ival_t size, linepos_t epoint) {
     char line[256];
     new_error_msg2(diagnostic_errors.page, epoint);
-    sprintf(line,"different start and end page $%04" PRIxaddress " and $%04" PRIxaddress " [-Wpage]", adr, adr2);
+    if (size < 0) {
+        sprintf(line,"start and end on different %" PRIuval " byte page $%04" PRIxaddress " and $%04" PRIxaddress " [-Wpage]", -(uval_t)size, adr, adr2);
+    } else {
+        sprintf(line,"crossing of %" PRIuval " byte page by %" PRIuaddress " bytes [-Wpage]", (uval_t)size, adr2 % (uval_t)size);
+    }
     adderror(line);
 }
 
