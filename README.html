@@ -1116,9 +1116,9 @@ and backward (<code>&minus;</code>) references.
         <b>adc</b> #<span>44</span>
 +       <b>sta</b> <span>$400</span>,x
         <b>inx</b>
-        <b>bne</b> -
+        <b>bne</b> <u>-</u>
         <b>dey</b>
-        <b>bne</b> --
+        <b>bne</b> <u>--</u>
 </pre>
 
 <p>Excessive nesting or long distance references create poorly readable code.
@@ -1956,7 +1956,7 @@ memory range between the directives. This is what's needed to guard against
 indexed access page cross cycle penalties:<p>
 
 <pre width="80">
-*       <b>=</b> <span>$1c0</span>
+*       <b>=</b> <span>$10c0</span>
         <b class="k">.page</b> <span>256</span>
 table   <b class="d">.fill</b> <span>$40</span>       <i>;table within the same page</i>
         <b class="k">.endpage</b>        <i>;different page here but no crossing</i>
@@ -1993,9 +1993,9 @@ of the structure. This means the structure layout will always be the same
 independent of which address it's instantiated at. Anonymous structures do not
 change the way the alignment works.</p>
 
-<dt><b>.alignb</b> [&lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignb" href="#d_alignb"></a>
+<dt><b>.alignblk</b> [&lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignblk" href="#d_alignblk"></a>
 <dd>Starts alignment block.
-<dt><b>.endalignb</b><a name="d_endalignb" href="#d_endalignb"></a>
+<dt><b>.endalignblk</b><a name="d_endalignblk" href="#d_endalignblk"></a>
 <dd>Ends alignment block.
 
 <p>Often the start address is not important only avoiding the page boundary matters.
@@ -2007,9 +2007,9 @@ the same as <a href="#d_align"><code>.align</code></a> including alignment withi
 won't suffer page crossing cycle penalties.</p>
 
 <pre width="80">
-        <b class="k">.alignb</b>         <i>;avoid page cross</i>
+        <b class="k">.alignblk</b>       <i>;avoid page cross</i>
 table   <b class="d">.byte</b> <span>0</span>, <span>1</span>, <span>2</span>, <span>3</span>, <span>4</span>, <span>5</span>, <span>6</span>, <span>7</span>
-        <b class="k">.endalignb</b>
+        <b class="k">.endalignblk</b>
         <b>lda</b> <u>table</u>,x     <i>;no cycles wasted on access</i>
 </pre>
 
@@ -2020,16 +2020,16 @@ This may be necessary for aligning code with relative branches.
 <p>If the enclosed data size varies based on its memory location then doing the
 alignment may become impossible.
 
-<dt><b>.alignpage</b> &lt;target&gt;[, &lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignpage" href="#d_alignpage"></a>
+<dt><b>.alignpageind</b> &lt;target&gt;[, &lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignpageind" href="#d_alignpageind"></a>
 <dd>Alignment of a page block indirectly.
 
-<p>If page boundary control is needed within executable code padding right
-there may not be an option. This directive can add the alignment padding outside of the
-execution flow.
+<p>Using <a href="#d_alignblk"><code>.alignblk</code></a> in the middle of
+executable code is usually problematic as the alignment is done there as well.
+This directive can do the alignment padding outside of the execution flow.
 
 <pre width="80">
         <b>rts</b>
-        <b class="k">.alignpage</b> <u>pageblk</u><i>;add alignment padding here</i>
+        <b class="k">.alignpageind</b> <u>pageblk</u><i>;add alignment padding here</i>
 wait    <b>ldx</b> #<span>3</span>
 pageblk <b class="k">.page</b>           <i>;now this will execute</i>
 -       <b>dex</b>             <i>;in 14 cycles for sure</i>
@@ -2041,7 +2041,7 @@ pageblk <b class="k">.page</b>           <i>;now this will execute</i>
 as if it'd be right in front of it. If this isn't the case the alignment
 will fail.</p>
 
-<dt><b>.alignthis</b> &lt;target&gt;[&lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignthis" href="#d_alignthis"></a>
+<dt><b>.alignind</b> &lt;target&gt;[, &lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignind" href="#d_alignind"></a>
 <dd>Align the target location to a page boundary indirectly
 
 <p>This directive tries to align the target to a page boundary. If not already
@@ -2050,14 +2050,14 @@ reached.
 
 <pre width="80">
 <i>;Align "pos" to page boundary. It must come right after "neg".</i>
-        <b class="k">.alignthis</b> <u>pos</u>
+        <b class="k">.alignind</b> <u>pos</u>
 neg     <b class="d">.fill</b> <span>8</span>
 pos     <b class="d">.fill</b> <span>8</span>
         <b class="k">.cerror</b> (&lt;<u>pos</u>) != <span>0</span>, <span class="s">"pos should be page aligned"</span>
         <b class="k">.cerror</b> <u>pos</u> - <u>neg</u> != size(<u>neg</u>), <span class="s">"there should be no gap"</span>
 </pre>
 
-<p>It is assumed that the padding inserted will move the target block
+<p>It is assumed that the padding inserted will move the target
 as if it'd be right in front of it. If this isn't the case the alignment
 will fail.</p>
 
@@ -4240,7 +4240,7 @@ address on a 6502, NMOS 6502 and 65DTV02.</p>
 
 <pre width="80">
         <b>jmp</b> (<u>vector</u>)
-        <b class="k">.alignpage</b> <u>vector</u>, <span>256</span><i>; jmp bug workaround</i>
+        <b class="k">.alignpageind</b> <u>vector</u>, <span>256</span><i>; jmp bug workaround</i>
 vector  <b class="d">.addr</b> <span>?</span>         <i>; by avoiding page cross</i>
 </pre>
 
@@ -6072,8 +6072,9 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_addr">.addr</a>
 <a href="#d_al">.al</a>
 <a href="#d_align">.align</a>
-<a href="#d_alignb">.alignb</a>
-<a href="#d_alignpage">.alignpage</a>
+<a href="#d_alignblk">.alignblk</a>
+<a href="#d_alignind">.alignind</a>
+<a href="#d_alignpageind">.alignpageind</a>
 <a href="#d_as">.as</a>
 <a href="#d_assert">.assert</a>
 <a href="#d_autsiz">.autsiz</a>
@@ -6113,7 +6114,7 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_end">.end</a>
 <a href="#d_endblock">.endblock</a>
 <a href="#d_endc">.endc</a>
-<a href="#d_endalignb">.endalignb</a>
+<a href="#d_endalignblk">.endalignblk</a>
 <a href="#d_endcomment">.endcomment</a>
 <a href="#d_endencode">.endencode</a>
 <a href="#d_endf">.endf</a>

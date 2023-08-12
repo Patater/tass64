@@ -93,7 +93,7 @@ extern void err_msg_pbank_wrap(linepos_t);
 extern void err_msg_label_left(linepos_t);
 extern void err_msg_branch_page(int, linepos_t);
 extern void err_msg_align(address_t, linepos_t);
-extern void err_msg_alignb(address_t, address_t, linepos_t);
+extern void err_msg_alignblk(address_t, address_t, linepos_t);
 extern void err_msg_page(address_t, address_t, uval_t, linepos_t);
 extern void err_msg_page_cross(address_t, address_t, uval_t, linepos_t);
 extern void err_msg_priority(const struct Oper *, linepos_t);

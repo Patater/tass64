@@ -180,7 +180,7 @@ static struct waitfor_s {
             size_t membp;
             address_t addr2;
             Label *label2;
-        } cmd_alignb;
+        } cmd_alignblk;
     } u;
 } *waitfors, *waitfor;
 
@@ -190,9 +190,9 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x08" "addr",
     "\x22" "al",
     "\x34" "align",
-    "\x72" "alignb",
-    "\x74" "alignpage",
-    "\x75" "alignthis",
+    "\x72" "alignblk",
+    "\x75" "alignind",
+    "\x74" "alignpageind",
     "\x21" "as",
     "\x35" "assert",
     "\x5b" "autsiz",
@@ -230,7 +230,7 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x2c" "enc",
     "\x6f" "encode",
     "\x3f" "end",
-    "\x73" "endalignb",
+    "\x73" "endalignblk",
     "\x3a" "endblock",
     "\x1c" "endc",
     "\x1c" "endcomment",
@@ -338,7 +338,7 @@ typedef enum Command_types {
     CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF,
     CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT, CMD_ENDFOR,
     CMD_ENDREPT, CMD_ENDWHILE, CMD_ENCODE, CMD_ENDENCODE, CMD_TDEF, CMD_ALIGNB,
-    CMD_ENDALIGNB, CMD_ALIGNPAGE, CMD_ALIGNTHIS
+    CMD_ENDALIGNB, CMD_ALIGNPAGEIND, CMD_ALIGNIND
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -429,18 +429,18 @@ static void set_size(const Label *label, address_t size, Memblocks *mem, address
     code->membp = membp;
 }
 
-static void alignb_set_size(Label *label, address_t size) {
-    Alignb *alignb = Alignb(label->value);
-    if (alignb->v.obj != ALIGNB_OBJ) return;
+static void alignblk_set_size(Label *label, address_t size) {
+    Alignblk *alignblk = Alignblk(label->value);
+    if (alignblk->v.obj != ALIGNBLK_OBJ) return;
     size &= all_mem2;
-    if (alignb->size != size) {
-        alignb->size = size;
-        if (alignb->pass != 0) {
+    if (alignblk->size != size) {
+        alignblk->size = size;
+        if (alignblk->pass != 0) {
             if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &label->epoint);
             fixeddig = false;
         }
     }
-    alignb->pass = pass;
+    alignblk->pass = pass;
     val_destroy(Obj(label));
 }
 
@@ -1125,11 +1125,11 @@ static const char *check_waitfor(void) {
         if (waitfor->u.cmd_page.label != NULL) {set_size(waitfor->u.cmd_page.label, current_address->address - waitfor->u.cmd_page.addr, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);val_destroy(Obj(waitfor->u.cmd_page.label));}
         FALL_THROUGH; /* fall through */
     case W_ENDP: return ".endpage";
-    case W_ENDALIGNB2:
-        if (waitfor->u.cmd_alignb.label != NULL) {set_size(waitfor->u.cmd_alignb.label, current_address->address - waitfor->u.cmd_alignb.addr, current_address->mem, waitfor->u.cmd_alignb.addr, waitfor->u.cmd_alignb.membp);val_destroy(Obj(waitfor->u.cmd_alignb.label));}
-        alignb_set_size(waitfor->u.cmd_alignb.label2, current_address->address - waitfor->u.cmd_alignb.addr2);
+    case W_ENDALIGNBLK2:
+        if (waitfor->u.cmd_alignblk.label != NULL) {set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp);val_destroy(Obj(waitfor->u.cmd_alignblk.label));}
+        alignblk_set_size(waitfor->u.cmd_alignblk.label2, current_address->address - waitfor->u.cmd_alignblk.addr2);
         FALL_THROUGH; /* fall through */
-    case W_ENDALIGNB: return ".endalignb";
+    case W_ENDALIGNBLK: return ".endalignblk";
     case W_ENDSEGMENT:
         if (waitfor->u.cmd_macro.val != NULL) val_destroy(waitfor->u.cmd_macro.val);
         return ".endsegment";
@@ -3906,15 +3906,15 @@ MUST_CHECK Obj *compile(void)
                     close_waitfor(W_ENDP2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".page", &epoint); goto breakerr;}
                 break;
-            case CMD_ENDALIGNB: /* .endalignb */
+            case CMD_ENDALIGNB: /* .endalignblk */
                 if (diagnostics.optimize) cpu_opt_invalidate();
                 if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
-                if (close_waitfor(W_ENDALIGNB)) {
-                } else if (waitfor->what==W_ENDALIGNB2) {
-                    if (waitfor->u.cmd_alignb.label != NULL) {set_size(waitfor->u.cmd_alignb.label, current_address->address - waitfor->u.cmd_alignb.addr, current_address->mem, waitfor->u.cmd_alignb.addr, waitfor->u.cmd_alignb.membp); val_destroy(Obj(waitfor->u.cmd_alignb.label));}
-                    alignb_set_size(waitfor->u.cmd_alignb.label2, current_address->address - waitfor->u.cmd_alignb.addr2);
-                    close_waitfor(W_ENDALIGNB2);
-                } else {err_msg2(ERROR__MISSING_OPEN, ".alignb", &epoint); goto breakerr;}
+                if (close_waitfor(W_ENDALIGNBLK)) {
+                } else if (waitfor->what==W_ENDALIGNBLK2) {
+                    if (waitfor->u.cmd_alignblk.label != NULL) {set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp); val_destroy(Obj(waitfor->u.cmd_alignblk.label));}
+                    alignblk_set_size(waitfor->u.cmd_alignblk.label2, current_address->address - waitfor->u.cmd_alignblk.addr2);
+                    close_waitfor(W_ENDALIGNBLK2);
+                } else {err_msg2(ERROR__MISSING_OPEN, ".alignblk", &epoint); goto breakerr;}
                 break;
             case CMD_HERE: /* .here */
                 if (diagnostics.optimize) cpu_opt_invalidate();
@@ -4394,8 +4394,8 @@ MUST_CHECK Obj *compile(void)
                     }
                 }
                 break;
-            case CMD_ALIGNTHIS: if ((waitfor->skip & 1) != 0)
-                { /* .alignthis */
+            case CMD_ALIGNIND: if ((waitfor->skip & 1) != 0)
+                { /* .alignind */
                     struct star_s *s = NULL;
                     address_t db = 0;
                     uval_t itt;
@@ -4449,8 +4449,8 @@ MUST_CHECK Obj *compile(void)
                     }
                 }
                 break;
-            case CMD_ALIGNPAGE: if ((waitfor->skip & 1) != 0)
-                { /* .alignpage */
+            case CMD_ALIGNPAGEIND: if ((waitfor->skip & 1) != 0)
+                { /* .alignpageind */
                     struct star_s *s = NULL;
                     address_t db = 0;
                     address_t size = 0;
@@ -4512,7 +4512,7 @@ MUST_CHECK Obj *compile(void)
                                 offset = (vs2 == NULL) ? 0 : memalign_offset(get_val(), uval);
                                 db = rmemalign(offset, uval, itt2);
                                 if ((ival > 0) ? (size <= db) : (size < db)) db = 0;
-                                else if (db != 0 && diagnostics.align) err_msg_alignb(size - db, db, &epoint);
+                                else if (db != 0 && diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
                                 if (fixeddig) {
                                     itt %= uval;
                                     if (itt >= offset) offset += uval;
@@ -4537,7 +4537,7 @@ MUST_CHECK Obj *compile(void)
                 }
                 break;
             case CMD_ALIGNB: if ((waitfor->skip & 1) != 0)
-                { /* .alignb */
+                { /* .alignblk */
                     Label *label;
                     address_t db = 0;
                     address_t size = 0;
@@ -4546,10 +4546,10 @@ MUST_CHECK Obj *compile(void)
                     if (newlabel != NULL && newlabel->value->obj == CODE_OBJ) {
                         Code(newlabel->value)->dtype = D_BYTE;
                     }
-                    new_waitfor(W_ENDALIGNB2, &epoint);
-                    waitfor->u.cmd_alignb.label = newlabel;
+                    new_waitfor(W_ENDALIGNBLK2, &epoint);
+                    waitfor->u.cmd_alignblk.label = newlabel;
                     if (newlabel != NULL) {
-                        waitfor->u.cmd_alignb.addr = current_address->address;waitfor->u.cmd_alignb.membp = newmembp;
+                        waitfor->u.cmd_alignblk.addr = current_address->address;waitfor->u.cmd_alignblk.membp = newmembp;
                         newlabel = NULL;
                     }
                     label = new_anonlabel(mycontext);
@@ -4559,27 +4559,27 @@ MUST_CHECK Obj *compile(void)
                         label->constant = true;
                         label->owner = true;
                         label->defpass = pass;
-                        if (label->value->obj == ALIGNB_OBJ) {
-                            size = Alignb(label->value)->size;
+                        if (label->value->obj == ALIGNBLK_OBJ) {
+                            size = Alignblk(label->value)->size;
                         } else {
-                            Alignb *alignb = Alignb(val_alloc(ALIGNB_OBJ));
-                            alignb->size = 0;
-                            alignb->pass = pass;
+                            Alignblk *alignblk = Alignblk(val_alloc(ALIGNBLK_OBJ));
+                            alignblk->size = 0;
+                            alignblk->pass = pass;
                             val_destroy(label->value);
-                            label->value = Obj(alignb);
+                            label->value = Obj(alignblk);
                         }
                     } else {
-                        Alignb *alignb = Alignb(val_alloc(ALIGNB_OBJ));
-                        alignb->size = 0;
-                        alignb->pass = pass;
+                        Alignblk *alignblk = Alignblk(val_alloc(ALIGNBLK_OBJ));
+                        alignblk->size = 0;
+                        alignblk->pass = pass;
                         label->constant = true;
                         label->owner = true;
-                        label->value = Obj(alignb);
+                        label->value = Obj(alignblk);
                         label->epoint = epoint;
                     }
-                    waitfor->u.cmd_alignb.label2 = ref_label(label);
+                    waitfor->u.cmd_alignblk.label2 = ref_label(label);
                     if (!get_exp(0, 0, 3, &epoint)) {
-                        waitfor->u.cmd_alignb.addr2 = current_address->address;
+                        waitfor->u.cmd_alignblk.addr2 = current_address->address;
                         goto breakerr;
                     }
                     vs = get_val();
@@ -4600,11 +4600,11 @@ MUST_CHECK Obj *compile(void)
                                 if ((ival > 0) ? (size <= db) : (size < db)) db = 0;
                             }
                         }
-                        if (db != 0 && diagnostics.align) err_msg_alignb(size - db, db, &epoint);
+                        if (db != 0 && diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
                     }
                     memskipfill(db, vs, &epoint);
-                    waitfor->u.cmd_alignb.addr2 = current_address->address;
-                } else new_waitfor(W_ENDALIGNB, &epoint);
+                    waitfor->u.cmd_alignblk.addr2 = current_address->address;
+                } else new_waitfor(W_ENDALIGNBLK, &epoint);
                 break;
             case CMD_FILL: if ((waitfor->skip & 1) != 0)
                 { /* .fill */
