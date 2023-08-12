@@ -562,11 +562,8 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR____PTEXT_LONG:
             sprintf(line,"ptext too long by %" PRIuSIZE " bytes", *(const size_t *)prm - 0x100); adderror(line);
             break;
-        case ERROR___ALIGNB_LONG:
-            sprintf(line,"code larger than alignment by %" PRIuSIZE " bytes", *(const size_t *)prm); adderror(line);
-            break;
-        case ERROR_____PAGE_LONG:
-            sprintf(line,"code larger than page by %" PRIuSIZE " bytes", *(const size_t *)prm); adderror(line);
+        case ERROR____ALIGN_LONG:
+            sprintf(line,"block to long for alignment by %" PRIuaddress " bytes", *(const address_t *)prm); adderror(line);
             break;
         case ERROR__BRANCH_CROSS:
             sprintf(line,"branch crosses page by %+d bytes", *(const int *)prm); adderror(line);
@@ -1009,6 +1006,12 @@ void err_msg_still_none(const str_t *name, linepos_t epoint) {
     if (name != NULL) str_name(name->data, name->len);
 }
 
+void err_msg_still_align(linepos_t epoint) {
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
+    adderror("can't do the alignment of this");
+    if (more) new_error_msg_more();
+}
+
 void err_msg_not_defined(const str_t *name, linepos_t epoint) {
     err_msg_str_name("not defined", name, epoint);
 }
@@ -1346,14 +1349,17 @@ void err_msg_alignb(address_t by, address_t by2, linepos_t epoint) {
     adderror(msg2);
 }
 
-void err_msg_page(address_t adr, address_t adr2, ival_t size, linepos_t epoint) {
+void err_msg_page(address_t adr, address_t adr2, uval_t size, linepos_t epoint) {
     char line[256];
     new_error_msg2(diagnostic_errors.page, epoint);
-    if (size < 0) {
-        sprintf(line,"start and end on different %" PRIuval " byte page $%04" PRIxaddress " and $%04" PRIxaddress " [-Wpage]", -(uval_t)size, adr, adr2);
-    } else {
-        sprintf(line,"crossing of %" PRIuval " byte page by %" PRIuaddress " bytes [-Wpage]", (uval_t)size, adr2 % (uval_t)size);
-    }
+    sprintf(line,"start $%04" PRIxaddress " not on same %" PRIuval " byte page as end $%04" PRIxaddress " [-Wpage]", adr, size, adr2);
+    adderror(line);
+}
+
+void err_msg_page_cross(address_t at, address_t by, uval_t size, linepos_t epoint) {
+    char line[256];
+    new_error_msg2(diagnostic_errors.page, epoint);
+    sprintf(line,"crossing of %" PRIuval " byte page at $%04" PRIxaddress " by %" PRIuaddress " bytes [-Wpage]", size, at, by);
     adderror(line);
 }
 

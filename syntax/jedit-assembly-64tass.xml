@@ -43,6 +43,7 @@
                         <KEYWORD3>.align</KEYWORD3>
                         <KEYWORD3>.alignb</KEYWORD3>
                         <KEYWORD3>.alignpage</KEYWORD3>
+                        <KEYWORD3>.alignthis</KEYWORD3>
                         <KEYWORD3>.as</KEYWORD3>
                         <KEYWORD3>.assert</KEYWORD3>
                         <KEYWORD3>.autsiz</KEYWORD3>

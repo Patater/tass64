@@ -113,6 +113,7 @@ context default lightgray
     keyword whole .align brightcyan
     keyword whole .alignb brightcyan
     keyword whole .alignpage brightcyan
+    keyword whole .alignthis brightcyan
     keyword whole .as brightcyan
     keyword whole .assert brightcyan
     keyword whole .bend brightcyan

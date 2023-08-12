@@ -121,7 +121,7 @@ if exists("tass64_4510")
 endif
 
 " Assembler directives
-syn match tass64PreProc /\v\.%(al|align|as|autsiz|bend|block|endblock|alignb|endalignb|alignpage|cdef|cpu)>/ contained
+syn match tass64PreProc /\v\.%(al|align|as|autsiz|bend|block|endblock|alignb|endalignb|alignpage|alignthis|cdef|cpu)>/ contained
 syn match tass64PreProc /\v\.%(databank|dpage|dsection|edef|encode|enc|end|endpage|endp)>/ contained
 syn match tass64PreProc /\v\.%(endweak|eor|for|bfor|goto|here|endlogical|hidemac)>/ contained
 syn match tass64PreProc /\v\.%(lbl|logical|mansiz|next|endfor|endrept|endwhile|virtual|endv|endvirtual)>/ contained
