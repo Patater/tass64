@@ -920,10 +920,10 @@ when segments are copied into the code with their internal references.
 Anonymous symbols are looked up first in the current scope, then in lower
 scopes until the global scope is reached.
 
-Anonymous labels within conditionally assembled code are counted even if the
-code itself is not compiled and the label won't get defined. This ensures that
-anonymous labels are always at the same "distance" independent of the
-conditions in between.
+Anonymous labels within conditionally assembled code are non-existent when the
+condition doesn't hold. Also a single anonymous label may count as many inside
+a looping construct. Therefore attempting reference anonymous labels past such
+constructs by trying to count them just asks for trouble and should be avoided.
 
 Constant and re-definable symbols
 
