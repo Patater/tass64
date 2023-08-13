@@ -4047,6 +4047,12 @@ Symbol listing
 
     The output will contain symbol locations and paths.
 
+--simple-labels
+    List labels in a simple label = $x fashion for interoperatibility.
+
+    Somewhat limited but much easier to parse than the normal output with all
+    it's data types.
+
 Assembly listing
 
 -L <file>, --list=<file>

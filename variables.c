@@ -593,6 +593,22 @@ static void labelprint2(Namespace *names, FILE *flab, Symbollist_types labelmode
                     pop_label();
                 }
             }
+        } else if (labelmode == LABEL_SIMPLE) {
+            Obj *val;
+            if (!l->constant) continue;
+            val = l->value;
+            if (val->obj == ADDRESS_OBJ || val->obj == CODE_OBJ || val->obj == BITS_OBJ || val->obj == INT_OBJ) {
+                struct linepos_s epoint;
+                ival_t iv;
+                Error *err = val->obj->ival(val, &iv, 8 * sizeof iv, &epoint);
+                if (err == NULL) {
+                    size_t len = printable_print2(l->name.data, flab, l->name.len);
+                    padding(len, EQUAL_COLUMN, flab);
+                    if (len >= EQUAL_COLUMN) putc(' ', flab);
+                    fprintf(flab, iv >= 0 ? "= $%" PRIxval : "= -$%" PRIxval, (iv >= 0) ? (uval_t)iv: -(uval_t)iv);
+                    putc('\n', flab);
+                } else val_destroy(Obj(err));
+            }
         } else {
             Obj *val = l->value;
             val = val->obj->repr(val, NULL, SIZE_MAX);
