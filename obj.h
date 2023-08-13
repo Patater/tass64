@@ -59,6 +59,7 @@ typedef struct Default {
 
 typedef struct Alignblk {
     Obj v;
+    address_t addr;
     address_t size;
     uint8_t pass;
 } Alignblk;

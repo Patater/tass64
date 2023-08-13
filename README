@@ -1557,6 +1557,11 @@ correct it by adding padding. This is by default uninitialized (skip forward)
 but may be a fixed byte or anything more complex similarly to what the .fill
 directive accepts.
 
+When alignment is done within named structures then it's relative to the start
+of the structure. This means the structure layout will always be the same
+independent of which address it's instantiated at. Anonymous structures do not
+change the way the alignment works.
+
 The -Walign command line option can be used to emit warnings on where and how
 much padding was necessary for alignment.
 
@@ -1611,11 +1616,6 @@ much padding was necessary for alignment.
             .align          ; page sized buffer at page boundary
     sendbuf .fill 256       ;to avoid indexing penalty cycles
 
-    When alignment is done within named structures then it's relative to the
-    start of the structure. This means the structure layout will always be the
-    same independent of which address it's instantiated at. Anonymous
-    structures do not change the way the alignment works.
-
 .alignblk [<interval>[, <fill>[, <offset>]]]
     Starts alignment block.
 .endalignblk
@@ -1641,8 +1641,9 @@ much padding was necessary for alignment.
     to be given as a negative number (e.g. -256). This may be necessary for
     aligning code with relative branches.
 
-    If the enclosed data size varies based on its memory location then doing
-    the alignment may become impossible.
+    If the block size varies based on its memory location then doing the
+    alignment may become impossible.
+
 .alignpageind <target>[, <interval>[, <fill>[, <offset>]]]
     Alignment of a page block indirectly.
 
@@ -1658,9 +1659,16 @@ much padding was necessary for alignment.
             bne -
             .endpage
 
+    By default and with a negative interval it tries to avoids page
+    differences. With positive intervals page crosses. Same as the .page
+    assertion block.
+
     It is assumed that the padding inserted will move the target block as if
     it'd be right in front of it. If this isn't the case the alignment will
     fail.
+
+    If the block size varies based on its memory location then doing the
+    alignment may become impossible.
 
 .alignind <target>[, <interval>[, <fill>[, <offset>]]]
     Align the target location to a page boundary indirectly

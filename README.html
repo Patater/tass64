@@ -1924,7 +1924,12 @@ example.
 correct it by adding padding. This is by default <a
 href="#uninitialized">uninitialized</a> (skip forward) but may be a fixed byte
 or anything more complex similarly to what the <a
-href="#d_fill"><code>.fill</code></a> directive accepts.</p>
+href="#d_fill"><code>.fill</code></a> directive accepts.
+
+<p>When alignment is done within named structures then it's relative to the start
+of the structure. This means the structure layout will always be the same
+independent of which address it's instantiated at. Anonymous structures do not
+change the way the alignment works.
 
 <p>The <a href="#o_Walign">-Walign</a> command line option can be used to emit
 warnings on where and how much padding was necessary for alignment.</p>
@@ -1988,11 +1993,6 @@ spritep <b class="d">.fill</b> <span>8</span>
 sendbuf <b class="d">.fill</b> <span>256</span>       <i>;to avoid indexing penalty cycles</i>
 </pre>
 
-<p>When alignment is done within named structures then it's relative to the start
-of the structure. This means the structure layout will always be the same
-independent of which address it's instantiated at. Anonymous structures do not
-change the way the alignment works.</p>
-
 <dt><b>.alignblk</b> [&lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignblk" href="#d_alignblk"></a>
 <dd>Starts alignment block.
 <dt><b>.endalignblk</b><a name="d_endalignblk" href="#d_endalignblk"></a>
@@ -2017,8 +2017,8 @@ table   <b class="d">.byte</b> <span>0</span>, <span>1</span>, <span>2</span>, <
 the same page is required then the alignment interval needs to be given as a negative number (e.g. &minus;256).
 This may be necessary for aligning code with relative branches.
 
-<p>If the enclosed data size varies based on its memory location then doing the
-alignment may become impossible.
+<p>If the block size varies based on its memory location then doing the
+alignment may become impossible.</p>
 
 <dt><b>.alignpageind</b> &lt;target&gt;[, &lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignpageind" href="#d_alignpageind"></a>
 <dd>Alignment of a page block indirectly.
@@ -2037,9 +2037,16 @@ pageblk <b class="k">.page</b>           <i>;now this will execute</i>
         <b class="k">.endpage</b>
 </pre>
 
+<p>By default and with a negative interval it tries to avoids page differences.
+With positive intervals page crosses. Same as the <a
+href="#d_page"><code>.page</code></a> assertion block.
+
 <p>It is assumed that the padding inserted will move the target block
 as if it'd be right in front of it. If this isn't the case the alignment
 will fail.</p>
+
+<p>If the block size varies based on its memory location then doing the
+alignment may become impossible.</p>
 
 <dt><b>.alignind</b> &lt;target&gt;[, &lt;interval&gt;[, &lt;fill&gt;[, &lt;offset&gt;]]]<a name="d_alignind" href="#d_alignind"></a>
 <dd>Align the target location to a page boundary indirectly
