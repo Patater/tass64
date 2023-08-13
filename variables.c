@@ -605,8 +605,7 @@ static void labelprint2(Namespace *names, FILE *flab, Symbollist_types labelmode
                     size_t len = printable_print2(l->name.data, flab, l->name.len);
                     padding(len, EQUAL_COLUMN, flab);
                     if (len >= EQUAL_COLUMN) putc(' ', flab);
-                    fprintf(flab, iv >= 0 ? "= $%" PRIxval : "= -$%" PRIxval, (iv >= 0) ? (uval_t)iv: -(uval_t)iv);
-                    putc('\n', flab);
+                    fprintf(flab, iv >= 0 ? "= $%" PRIxval "\n" : "= -$%" PRIxval "\n", (iv >= 0) ? (uval_t)iv: -(uval_t)iv);
                 } else val_destroy(Obj(err));
             }
         } else {
