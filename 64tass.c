@@ -3925,8 +3925,8 @@ MUST_CHECK Obj *compile(void)
                             if ((waitfor->u.cmd_alignblk.size > 0) ? (size <= db) : (size < db)) db = 0;
                         }
                     }
-                    if (waitfor->u.cmd_alignblk.label != NULL) {set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp); val_destroy(Obj(waitfor->u.cmd_alignblk.label));}
                     if (db != 0) memskip(db, &epoint);
+                    if (waitfor->u.cmd_alignblk.label != NULL) {set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp); val_destroy(Obj(waitfor->u.cmd_alignblk.label));}
                     close_waitfor(W_ENDALIGNBLK2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".alignblk", &epoint); goto breakerr;}
                 break;
