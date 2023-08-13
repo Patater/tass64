@@ -102,7 +102,7 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, apply_func_t f) {
     Funcargs *vals = Funcargs(op->v2);
     struct values_s *v = vals->val;
     argcount_t args = vals->len;
-    argcount_t j, k;
+    argcount_t j, k = 0;
     size_t ln = 1;
     List *vv;
     struct elements_s {
