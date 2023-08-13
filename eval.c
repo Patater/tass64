@@ -1001,6 +1001,7 @@ static bool get_val2(struct eval_context_s *ev) {
                             atype_t addrtype = (op == O_BRACKET) ? A_LI: A_I;
                             addrtype |= am << 4;
                             val_destroy(v[2].val);
+                            v[2].val = NULL;
                             if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable) {
                                 v[0].val = new_address(v[1].val, addrtype);
                             } else {
