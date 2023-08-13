@@ -3459,7 +3459,7 @@ MUST_CHECK Obj *compile(void)
                 case ';':
                 case '\0':
                     {
-                        uint32_t count = ((waitfor->skip & 1) == 0) ? 0 : (wht == '-') ? current_context->backr++ : current_context->forwr++;
+                        uint32_t count = (wht == '-') ? current_context->backr++ : current_context->forwr++;
                         anonsymbol.dir = (uint8_t)wht;
                         anonsymbol.pad = 0;
                         labelname.len = 2;
