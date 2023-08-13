@@ -997,12 +997,10 @@ static void memfill(address_t db, const struct values_s *vs) {
 static void memskipfill(address_t db, const struct values_s *vs, linepos_t epoint) {
     struct mem_mark_s mm;
     mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
-    if (db != 0) {
-        if (vs != NULL && vs->val != gap_value) {
-            memfill(db, vs);
-        } else {
-            memskip(db, epoint);
-        }
+    if (vs != NULL && vs->val != gap_value) {
+        memfill(db, vs);
+    } else {
+        memskip(db, epoint);
     }
     if (nolisting == 0) {
         list_mem(&mm, current_address->mem);
@@ -4411,7 +4409,6 @@ MUST_CHECK Obj *compile(void)
             case CMD_ALIGNIND: if ((waitfor->skip & 1) != 0)
                 { /* .alignind */
                     struct star_s *s = NULL;
-                    address_t db = 0;
                     uval_t itt;
                     const struct values_s *vs;
                     if (diagnostics.optimize) cpu_opt_invalidate();
@@ -4427,6 +4424,7 @@ MUST_CHECK Obj *compile(void)
                         if (vs2 != NULL && touval2(vs2, &uval, 8 * sizeof uval)) {}
                         else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs2->epoint);
                         else {
+                            address_t db;
                             address_t oldstar, itt2;
                             uval_t offset;
                             s = new_star(vline);
@@ -4443,17 +4441,18 @@ MUST_CHECK Obj *compile(void)
                             vs2 = get_val();
                             offset = (vs2 == NULL) ? 0 : memalign_offset(get_val(), uval);
                             db = rmemalign(offset, uval, itt2);
-                            if (db != 0 && diagnostics.align) err_msg_align(db, &epoint);
+                            if (db != 0) {
+                                if (diagnostics.align) err_msg_align(db, &epoint);
+                                memskipfill(db, vs2, &epoint);
+                            }
                             if (fixeddig) {
                                 if (itt % uval != offset) {
                                     if (pass > max_pass) err_msg_still_align(&vs->epoint);
                                     fixeddig = false;
                                 }
                             }
-                            vs = vs2;
                         }
                     }
-                    memskipfill(db, vs, &epoint);
                     if (s != NULL) {
                         if (s->pass != 0 && s->addr != current_address->l_address) {
                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
@@ -4466,7 +4465,6 @@ MUST_CHECK Obj *compile(void)
             case CMD_ALIGNPAGEIND: if ((waitfor->skip & 1) != 0)
                 { /* .alignpageind */
                     struct star_s *s = NULL;
-                    address_t db = 0;
                     address_t size = 0;
                     const struct values_s *vs, *vs2;
                     Code *code;
@@ -4503,6 +4501,7 @@ MUST_CHECK Obj *compile(void)
                                 ln2 &= all_mem2;
                                 err_msg2(ERROR____ALIGN_LONG, &ln2, &epoint);
                             } else {
+                                address_t db;
                                 address_t itt, oldstar, itt2;
                                 uval_t offset;
                                 s = new_star(vline);
@@ -4525,8 +4524,11 @@ MUST_CHECK Obj *compile(void)
                                 vs2 = get_val();
                                 offset = (vs2 == NULL) ? 0 : memalign_offset(get_val(), uval);
                                 db = rmemalign(offset, uval, itt2);
-                                if ((ival > 0) ? (size <= db) : (size < db)) db = 0;
-                                else if (db != 0 && diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
+                                if ((ival > 0) ? (size <= db) : (size < db)) {}
+                                else if (db != 0) {
+                                    if (diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
+                                    memskipfill(db, vs2, &epoint);
+                                }
                                 if (fixeddig) {
                                     itt %= uval;
                                     if (itt >= offset) offset += uval;
@@ -4536,11 +4538,9 @@ MUST_CHECK Obj *compile(void)
                                         fixeddig = false;
                                     }
                                 }
-                                vs = vs2;
                             }
                         }
                     }
-                    memskipfill(db, vs, &epoint);
                     if (s != NULL) {
                         if (s->pass != 0 && s->addr != current_address->l_address) {
                             if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, &epoint);
@@ -4553,7 +4553,6 @@ MUST_CHECK Obj *compile(void)
             case CMD_ALIGNBLK: if ((waitfor->skip & 1) != 0)
                 { /* .alignblk */
                     Label *label;
-                    address_t db = 0;
                     address_t size = 0;
                     const struct values_s *vs;
                     if (diagnostics.optimize) cpu_opt_invalidate();
@@ -4611,18 +4610,21 @@ MUST_CHECK Obj *compile(void)
                                 ln2 &= all_mem2;
                                 err_msg2(ERROR____ALIGN_LONG, &ln2, &epoint);
                             } else {
+                                address_t db;
                                 uval_t offset;
                                 vs = get_val();
                                 waitfor->u.cmd_alignblk.size = ival;
                                 offset = (vs == NULL) ? 0 : memalign_offset(get_val(), uval);
                                 waitfor->u.cmd_alignblk.offset = offset;
                                 db = memalign(offset, uval);
-                                if ((ival > 0) ? (size <= db) : (size < db)) db = 0;
+                                if ((ival > 0) ? (size <= db) : (size < db)) {}
+                                else if (db != 0) {
+                                    if (diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
+                                    memskipfill(db, vs, &epoint);
+                                }
                             }
                         }
-                        if (db != 0 && diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
                     }
-                    memskipfill(db, vs, &epoint);
                     waitfor->u.cmd_alignblk.laddr = (all_mem2 == 0xffffffff && current_section->logicalrecursion == 0) ? current_address->address : ((current_address->l_address - current_address->l_start) & all_mem);
                     Alignblk(label->value)->addr = current_address->address;
                 } else new_waitfor(W_ENDALIGNBLK, &epoint);
@@ -4638,12 +4640,17 @@ MUST_CHECK Obj *compile(void)
                     if (!get_exp(0, 1, 2, &epoint)) goto breakerr;
                     if (touval2(get_val(), &uval, 8 * sizeof uval)) {}
                     else db = uval;
-                    memskipfill(db, db != 0 ? get_val() : NULL, &epoint);
+
+                    if (db != 0) memskipfill(db, get_val(), &epoint);
+                    else if (nolisting == 0) {
+                        struct mem_mark_s mm;
+                        mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
+                        list_mem(&mm, current_address->mem);
+                    }
                 }
                 break;
             case CMD_ALIGN: if ((waitfor->skip & 1) != 0)
                 { /* .align */
-                    address_t db = 0;
                     uval_t uval = 256;
                     const struct values_s *vs;
                     if (diagnostics.optimize) cpu_opt_invalidate();
@@ -4655,11 +4662,14 @@ MUST_CHECK Obj *compile(void)
                     if (vs != NULL && touval2(vs, &uval, 8 * sizeof uval)) {}
                     else if (uval == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
                     else {
+                        address_t db;
                         vs = get_val();
                         db = memalign((vs == NULL ? 0 : memalign_offset(get_val(), uval)), uval);
-                        if (db != 0 && diagnostics.align) err_msg_align(db, &epoint);
+                        if (db != 0) {
+                            if (diagnostics.align) err_msg_align(db, &epoint);
+                            memskipfill(db, vs, &epoint);
+                        }
                     }
-                    memskipfill(db, vs, &epoint);
                 }
                 break;
             case CMD_ASSERT: if ((waitfor->skip & 1) != 0)
