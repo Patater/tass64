@@ -3978,6 +3978,17 @@ Symbol listing
     This option can be used to limit the output to only a subset of labels. The
     parameter is a dot separated path to a scope started from the global scope.
 
+--labels-section=<sectionname>
+    Specify the section to list labels from
+
+    This option can be used to limit the output to a section which code labels
+    refer to.
+
+--labels-add-prefix=<string>
+    Add prefix to labels
+
+    If defined adds a prefix to labels for some formats.
+
 --normal-labels
     Lists labels in a 64tass readable format. (default)
 
@@ -4052,6 +4063,33 @@ Symbol listing
 
     Somewhat limited but much easier to parse than the normal output with all
     it's data types.
+
+--mesen-labels
+    List labels in Mesen format
+
+    It's a text file in the following format:
+
+    <type>:<range>:<name>
+
+      + type: the prefix set by the --labels-add-prefix command line option
+      + range: a single hexadecimal number or two with a dash for a multibyte
+        range
+      + label: name of the label
+
+    If the --labels-section command line option was given then the range is
+    relative to the section start.
+
+    If more than one type of labels need to be listed then the --labels-append
+    command line option can be used to append them.
+
+    64tass --mesen-labels @labeloptions.txt a.asm
+
+    Option file (labeloptions.txt):
+    --labels-section=rom --labels-add-prefix=P --labels labels.mlb
+    --labels-section=ram --labels-add-prefix=R --labels-append labels.mlb
+    --labels-section=save --labels-add-prefix=S --labels-append labels.mlb
+    --labels-section=work --labels-add-prefix=W --labels-append labels.mlb
+    --labels-section=registers --labels-add-prefix=G --labels-append labels.mlb
 
 Assembly listing
 

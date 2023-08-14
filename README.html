@@ -4612,6 +4612,16 @@ options must be placed before this option. Using the same name multiple times is
 <p>This option can be used to limit the output to only a subset of labels. The
 parameter is a dot separated path to a scope started from the global scope.</p></dd>
 
+<dt><b>--labels-section</b>=&lt;sectionname&gt;<a name="o_labels-section" href="#o_labels-section"></a>
+<dd>Specify the section to list labels from
+
+<p>This option can be used to limit the output to a section which code labels refer to.</p></dd>
+
+<dt><b>--labels-add-prefix</b>=&lt;string&gt;<a name="o_labels-add-prefix" href="#o_labels-add-prefix"></a>
+<dd>Add prefix to labels
+
+<p>If defined adds a prefix to labels for some formats.</p></dd>
+
 <dt><b>--normal-labels</b><a name="o_normal-labels" href="#o_normal-labels"></a>
 <dd>Lists labels in a 64tass readable format. (default)
 
@@ -4691,6 +4701,36 @@ uses numeric constants for addresses only this may be acceptable.</p></dd>
 
 <p>Somewhat limited but much easier to parse than the normal output with all
 it's data types.</p></dd>
+
+<dt><b>--mesen-labels</b><a name="o_mesen-labels" href="#o_mesen-labels"></a>
+<dd>List labels in Mesen format
+
+<p>It's a text file in the following format:
+
+<p>&lt;type&gt;:&lt;range&gt;:&lt;name&gt;</p>
+
+<ul>
+<li>type: the prefix set by the <a href="o_labels-add-prefix"><code>--labels-add-prefix</code></a> command line option</li>
+<li>range: a single hexadecimal number or two with a dash for a multibyte range</li>
+<li>label: name of the label</li>
+</ul>
+
+<p>If the <a href="o_labels-section"><code>--labels-section</code></a> command
+line option was given then the range is relative to the section start.
+
+<p>If more than one type of labels need to be listed then the <a href="o_labels-append"><code>--labels-append</code></a> command
+line option can be used to append them.</p>
+
+<pre>
+64tass --mesen-labels @labeloptions.txt a.asm
+
+Option file (labeloptions.txt):
+--labels-section=rom --labels-add-prefix=P --labels labels.mlb 
+--labels-section=ram --labels-add-prefix=R --labels-append labels.mlb
+--labels-section=save --labels-add-prefix=S --labels-append labels.mlb
+--labels-section=work --labels-add-prefix=W --labels-append labels.mlb
+--labels-section=registers --labels-add-prefix=G --labels-append labels.mlb
+</pre></dd>
 
 </dl>
 

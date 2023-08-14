@@ -357,7 +357,8 @@ enum {
     NO_CASE_SENSITIVE, NO_TASM_COMPATIBLE, NO_ASCII, CBM_PRG, S_RECORD,
     INTEL_HEX, APPLE_II, ATARI_XEX, MOS_HEX, NO_LONG_ADDRESS, NO_QUIET, WARN,
     OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND, MAP,
-    NO_MAP, MAP_APPEND, LIST_APPEND, SIMPLE_LABELS
+    NO_MAP, MAP_APPEND, LIST_APPEND, SIMPLE_LABELS, LABELS_SECTION,
+    MESEN_LABELS, LABELS_ADD_PREFIX
 };
 
 static const struct my_option long_options[] = {
@@ -412,9 +413,12 @@ static const struct my_option long_options[] = {
     {"vice-labels-numeric",my_no_argument     , NULL,  VICE_LABELS_NUMERIC},
     {"dump-labels"      , my_no_argument      , NULL,  DUMP_LABELS},
     {"simple-labels"    , my_no_argument      , NULL,  SIMPLE_LABELS},
+    {"mesen-labels"     , my_no_argument      , NULL,  MESEN_LABELS},
+    {"labels-add-prefix", my_required_argument, NULL,  LABELS_ADD_PREFIX},
     {"labels-root"      , my_required_argument, NULL,  LABELS_ROOT},
+    {"labels-section"   , my_required_argument, NULL,  LABELS_SECTION},
     {"list"             , my_required_argument, NULL, 'L'},
-    {"list-append"      , my_required_argument, NULL, LIST_APPEND},
+    {"list-append"      , my_required_argument, NULL,  LIST_APPEND},
     {"dependencies"     , my_required_argument, NULL, 'M'},
     {"no-make-phony"    , my_no_argument      , NULL,  NO_MAKE_PHONY},
     {"make-phony"       , my_no_argument      , NULL,  MAKE_PHONY},
@@ -541,7 +545,7 @@ int init_arguments(int *argc2, char **argv2[]) {
     int max = 10;
     bool again;
     struct include_list_s **lastil = &arguments.include;
-    struct symbol_output_s symbol_output = { NULL, NULL, LABEL_64TASS, false };
+    struct symbol_output_s symbol_output = { NULL, NULL, NULL, NULL, LABEL_64TASS, false };
     struct output_s output = { "a.out", NULL, NULL, OUTPUT_CBM, false, false, false, false };
     memcpy(&arguments, &arguments_default, sizeof arguments);
     memcpy(&diagnostics, &diagnostics_default, sizeof diagnostics);
@@ -628,6 +632,8 @@ int init_arguments(int *argc2, char **argv2[]) {
                       extend_array(&arguments.symbol_output, &arguments.symbol_output_len, 1);
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
                       symbol_output.space = NULL;
+                      symbol_output.section = NULL;
+                      symbol_output.add_prefix = NULL;
                       break;
             case NORMAL_LABELS: symbol_output.mode = LABEL_64TASS; break;
             case EXPORT_LABELS: symbol_output.mode = LABEL_EXPORT; break;
@@ -635,7 +641,10 @@ int init_arguments(int *argc2, char **argv2[]) {
             case VICE_LABELS_NUMERIC: symbol_output.mode = LABEL_VICE_NUMERIC; break;
             case DUMP_LABELS: symbol_output.mode = LABEL_DUMP; break;
             case SIMPLE_LABELS: symbol_output.mode = LABEL_SIMPLE; break;
+            case MESEN_LABELS: symbol_output.mode = LABEL_MESEN; break;
             case LABELS_ROOT: symbol_output.space = my_optarg; break;
+            case LABELS_SECTION: symbol_output.section = my_optarg; break;
+            case LABELS_ADD_PREFIX: symbol_output.add_prefix = my_optarg; break;
             case NO_ERROR: arguments.error.name = NULL; arguments.error.no_output = true; arguments.error.append = false; break;
             case ERROR_APPEND:
             case 'E': arguments.error.name = my_optarg; arguments.error.no_output = false; arguments.error.append = (opt == ERROR_APPEND); break;
@@ -786,6 +795,8 @@ int init_arguments(int *argc2, char **argv2[]) {
                "      --dump-labels      Dump for debugging\n"
                "      --simple-labels    Simple hexadecimal labels\n"
                "      --labels-root=<l>  List from scope <l> only\n"
+               "      --labels-section=<n> List from section <n> only\n"
+               "      --labels-add-prefix=<n> Set label prefix\n"
                "  -L, --list=<file>      List into <file>\n"
                "      --list-append=<f>  Append list to <file>\n"
                "  -m, --no-monitor       Don't put monitor code into listing\n"
@@ -856,6 +867,8 @@ int init_arguments(int *argc2, char **argv2[]) {
     if (arguments.symbol_output_len != 0) {
         arguments.symbol_output[arguments.symbol_output_len - 1].mode = symbol_output.mode;
         if (symbol_output.space != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].space = symbol_output.space;
+        if (symbol_output.section != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].section = symbol_output.section;
+        if (symbol_output.add_prefix != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].add_prefix = symbol_output.add_prefix;
     }
 
     if (arguments.output == NULL) {

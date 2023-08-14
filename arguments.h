@@ -28,7 +28,7 @@ typedef enum Output_types {
 
 typedef enum Symbollist_types {
     LABEL_64TASS, LABEL_VICE, LABEL_VICE_NUMERIC, LABEL_DUMP, LABEL_EXPORT,
-    LABEL_SIMPLE
+    LABEL_SIMPLE, LABEL_MESEN
 } Symbollist_types;
 
 typedef enum Caret_types {
@@ -57,6 +57,8 @@ struct error_output_s {
 struct symbol_output_s {
     const char *name;
     const char *space;
+    const char *section;
+    const char *add_prefix;
     Symbollist_types mode;
     bool append;
 };
