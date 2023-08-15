@@ -5583,6 +5583,7 @@ int main2(int *argc2, char **argv2[]) {
     }
     if (!failed) {
         memclose(root_section.address.mem);
+        if (root_section.members.root != NULL) section_memclose(root_section.members.root);
         for (j = 0; j < arguments.output_len; j++) {
             const struct output_s *output = &arguments.output[j];
             struct section_s *section, *parent;

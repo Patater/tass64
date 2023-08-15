@@ -27,6 +27,7 @@
 #include "eval.h"
 
 #include "memblocksobj.h"
+#include "mem.h"
 
 struct section_s root_section;
 struct section_s *current_section = &root_section;
@@ -193,6 +194,26 @@ void section_sizecheck(const struct avltree_node *b) {
             }
             section_sizecheck(b->left);
             if (!fixeddig) return;
+        } 
+        b = b->right;
+    } while (b != NULL);
+}
+
+void section_memclose(const struct avltree_node *b) {
+    do {
+        const struct section_s *l = cavltree_container_of(b, struct section_s, node);
+        if (l->defpass == pass) {
+            memclose(l->address.mem);
+            if (l->members.root != NULL) {
+                section_memclose(l->members.root);
+            }
+        }
+        if (b->left != NULL) {
+            if (b->right == NULL) {
+                b = b->left;
+                continue;
+            }
+            section_memclose(b->left);
         } 
         b = b->right;
     } while (b != NULL);

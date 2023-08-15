@@ -74,6 +74,7 @@ extern void init_section(void);
 extern void destroy_section(void);
 extern void reset_section(struct section_s *);
 extern void section_sizecheck(const struct avltree_node *);
+extern void section_memclose(const struct avltree_node *);
 extern struct section_s *current_section, root_section;
 extern struct section_address_s *current_address;
 #endif

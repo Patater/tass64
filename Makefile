@@ -196,7 +196,8 @@ registerobj.o: registerobj.c registerobj.h obj.h attributes.h inttypes.h \
  errorobj.h errors_e.h addressobj.h intobj.h error.h
 section.o: section.c section.h avl.h attributes.h stdbool.h str.h \
  inttypes.h unicode.h error.h errors_e.h 64tass.h wait_e.h values.h \
- intobj.h obj.h longjump.h optimizer.h eval.h oper_e.h memblocksobj.h
+ intobj.h obj.h longjump.h optimizer.h eval.h oper_e.h memblocksobj.h \
+ mem.h
 str.o: str.c str.h inttypes.h unicode.h attributes.h stdbool.h error.h \
  errors_e.h arguments.h
 strobj.o: strobj.c strobj.h obj.h attributes.h inttypes.h stdbool.h \
@@ -217,10 +218,10 @@ values.o: values.c values.h attributes.h obj.h inttypes.h unicode.h \
  stdbool.h error.h errors_e.h strobj.h typeobj.h
 variables.o: variables.c variables.h stdbool.h inttypes.h unicode.h \
  attributes.h 64tass.h wait_e.h file.h obj.h error.h errors_e.h values.h \
- arguments.h eval.h oper_e.h boolobj.h floatobj.h namespaceobj.h strobj.h \
- codeobj.h registerobj.h functionobj.h listobj.h intobj.h bytesobj.h \
- bitsobj.h dictobj.h addressobj.h gapobj.h typeobj.h noneobj.h labelobj.h \
- str.h errorobj.h mfuncobj.h
+ arguments.h eval.h oper_e.h section.h avl.h str.h boolobj.h floatobj.h \
+ namespaceobj.h strobj.h codeobj.h registerobj.h functionobj.h listobj.h \
+ intobj.h bytesobj.h bitsobj.h dictobj.h addressobj.h gapobj.h typeobj.h \
+ noneobj.h labelobj.h errorobj.h mfuncobj.h
 wchar.o: wchar.c wchar.h inttypes.h
 
 .PHONY: all clean distclean install install-strip uninstall install-man install-doc
