@@ -546,7 +546,7 @@ typedef struct Labelprint {
     const struct section_s *section;
     FILE *flab;
     Symbollist_types mode;
-    const char *add_prefix;
+    str_t add_prefix;
     size_t add_prefix_len;
 } Labelprint;
 
@@ -618,7 +618,7 @@ static void labelprint2(const Labelprint *lp, Namespace *names) {
                 ival_t iv;
                 Error *err = val->obj->ival(val, &iv, 8 * sizeof iv, &epoint);
                 if (err == NULL) {
-                    size_t len2 = (lp->add_prefix != NULL && lp->add_prefix_len != 0) ? printable_print2(lp->add_prefix, lp->flab, lp->add_prefix_len) : 0;
+                    size_t len2 = (lp->add_prefix.data != NULL && lp->add_prefix_len != 0) ? printable_print2(lp->add_prefix.data, lp->flab, lp->add_prefix_len) : 0;
                     size_t len = printable_print2(l->name.data, lp->flab, l->name.len);
                     if (inc_overflow(&len, len2)) len = ~(size_t)0;
                     padding(len, EQUAL_COLUMN, lp->flab);
@@ -641,7 +641,7 @@ static void labelprint2(const Labelprint *lp, Namespace *names) {
                         uv -= lp->section->l_restart;
                         if (uv >= lp->section->size) continue;
                     }
-                    if (lp->add_prefix != NULL && lp->add_prefix_len != 0) printable_print(lp->add_prefix, lp->flab);
+                    if (lp->add_prefix.data != NULL && lp->add_prefix_len != 0) printable_print2(lp->add_prefix.data, lp->flab, lp->add_prefix_len);
                     if (val->obj == CODE_OBJ && Code(val)->size > 0) {
                         fprintf(lp->flab, ":%" PRIXval "-%" PRIXval ":", uv, uv + (Code(val)->size - 1));
                     } else {
@@ -657,7 +657,7 @@ static void labelprint2(const Labelprint *lp, Namespace *names) {
             if (val == NULL) continue;
             if (val->obj == STR_OBJ) {
                 const Str *str = Str(val);
-                size_t len2 = (lp->add_prefix != NULL && lp->add_prefix_len != 0) ? printable_print2(lp->add_prefix, lp->flab, lp->add_prefix_len) : 0;
+                size_t len2 = (lp->add_prefix.data != NULL && lp->add_prefix_len != 0) ? printable_print2(lp->add_prefix.data, lp->flab, lp->add_prefix_len) : 0;
                 size_t len = printable_print2(l->name.data, lp->flab, l->name.len);
                 if (inc_overflow(&len, len2)) len = ~(size_t)0;
                 padding(len, EQUAL_COLUMN, lp->flab);
@@ -765,8 +765,8 @@ void labelprint(const struct symbol_output_s *output) {
     label_stack.stack = NULL;
     label_stack.p = label_stack.len = 0;
     lp.mode = output->mode;
-    lp.add_prefix = output->add_prefix;
-    lp.add_prefix_len = (output->add_prefix != NULL) ? strlen(output->add_prefix) : 0;
+    lp.add_prefix.data = (const uint8_t *)output->add_prefix;
+    lp.add_prefix.len = (output->add_prefix != NULL) ? strlen(output->add_prefix) : 0;
     if (output->section != NULL) {
         lp.section = find_this_section(output->section);
         if (lp.section == NULL) {
