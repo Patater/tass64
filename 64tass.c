@@ -3299,15 +3299,7 @@ MUST_CHECK Obj *compile(void)
                                     if (vs->val == none_value || vs->val->obj == ERROR_OBJ) {
                                         val = val_reference(vs->val);
                                     } else {
-                                        Error *err = new_error(ERROR__INVALID_OPER, &cmdpoint);
-                                        err->u.invoper.op = O_MEMBER;
-                                        err->u.invoper.v1 = val_reference(vs->val);
-                                        if (labelname.data == (const uint8_t *)&anonsymbol) {
-                                            err->u.invoper.v2 = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
-                                        } else {
-                                            err->u.invoper.v2 = new_symbol(&labelname, &epoint);
-                                        }
-                                        val = Obj(err);
+                                        val = new_error_conv(vs->val, NAMESPACE_OBJ, &vs->epoint);
                                     }
                                 } else {
                                     Label *l;
