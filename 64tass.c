@@ -2561,6 +2561,7 @@ MUST_CHECK Obj *compile(void)
                 switch (wht) {
                 case '=':
                     { /* variable */
+                        bool error;
                         struct linepos_s opoint;
                         Label *label;
                     starassign:
@@ -2572,20 +2573,22 @@ MUST_CHECK Obj *compile(void)
                         opoint = lpoint; /* for no elements! */
                         if (here() == 0 || here() == ';') {
                             err_msg(ERROR______EXPECTED, "an expression is");
-                            goto breakerr;
+                            val = ref_none();
+                            error = true;
                         } else {
                             bool oldreferenceit = referenceit;
                             if (label != NULL && !label->ref) {
                                 referenceit = false;
                             }
-                            if (!get_exp(0, 1, 0, &opoint)) {
-                                referenceit = oldreferenceit;
-                                goto breakerr;
-                            }
-                            val = get_vals_tuple();
+                            error = !get_exp(0, 1, 0, &opoint);
+                            val = error ? ref_none() : get_vals_tuple();
                             referenceit = oldreferenceit;
                         }
                         if (labelname.data[0] == '*') {
+                            if (error) {
+                                val_destroy(val);
+                                goto breakerr;
+                            }
                             starhandle(val, &epoint, &opoint);
                             goto finish;
                         }
@@ -2621,6 +2624,7 @@ MUST_CHECK Obj *compile(void)
                             label->epoint = epoint;
                             label->ref = false;
                         }
+                        if (error) goto breakerr;
                         goto finish;
                     }
                 case '.':
@@ -2634,21 +2638,20 @@ MUST_CHECK Obj *compile(void)
                     switch (prm) {
                     case CMD_VAR: /* variable */
                         {
+                            bool error;
                             Label *label;
                         itsvar:
                             label = find_label3(&labelname, mycontext, strength);
                             if (here() == 0 || here() == ';') {
                                 err_msg(ERROR______EXPECTED, "an expression is");
-                                goto breakerr;
+                                val = ref_none();
+                                error = true;
                             } else {
                                 bool oldreferenceit = referenceit;
                                 referenceit &= 1; /* not good... */
                                 cmdpoint = lpoint;
-                                if (!get_exp(0, 1, 0, &cmdpoint)) {
-                                    referenceit = oldreferenceit;
-                                    goto breakerr;
-                                }
-                                val = get_vals_tuple();
+                                error = !get_exp(0, 1, 0, &cmdpoint);
+                                val = error ? ref_none() : get_vals_tuple();
                                 referenceit = oldreferenceit;
                             }
                             listing_equal(val);
@@ -2680,6 +2683,7 @@ MUST_CHECK Obj *compile(void)
                                 label->value = val;
                                 label->epoint = epoint;
                             }
+                            if (error) goto breakerr;
                             goto finish;
                         }
                     case CMD_LBL:
@@ -3279,60 +3283,59 @@ MUST_CHECK Obj *compile(void)
                         }
                     case CMD_FROM: /* .from */
                         {
-                            struct values_s *vs;
-                            Namespace *context;
+                            bool error;
                             bool constant = true;
                             bool oldreferenceit = referenceit;
                             Label *label = find_label3(&labelname, mycontext, strength);
                             if (label != NULL && !label->ref) {
                                 referenceit = false;
                             }
-                            if (!get_exp(0, 1, 1, &cmdpoint)) {
-                                referenceit = oldreferenceit;
-                                goto breakerr;
-                            }
-                            vs = get_val();
-                            context = get_namespace(vs->val);
-                            if (context == NULL) {
-                                if (vs->val == none_value || vs->val->obj == ERROR_OBJ) {
-                                    val = val_reference(vs->val);
-                                } else {
-                                    Error *err = new_error(ERROR__INVALID_OPER, &cmdpoint);
-                                    err->u.invoper.op = O_MEMBER;
-                                    err->u.invoper.v1 = val_reference(vs->val);
-                                    if (labelname.data == (const uint8_t *)&anonsymbol) {
-                                        err->u.invoper.v2 = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
+                            error = !get_exp(0, 1, 1, &cmdpoint);
+                            if (error) val = ref_none();
+                            else {
+                                const struct values_s *vs = get_val();
+                                Namespace *context = get_namespace(vs->val);
+                                if (context == NULL) {
+                                    if (vs->val == none_value || vs->val->obj == ERROR_OBJ) {
+                                        val = val_reference(vs->val);
                                     } else {
-                                        err->u.invoper.v2 = new_symbol(&labelname, &epoint);
+                                        Error *err = new_error(ERROR__INVALID_OPER, &cmdpoint);
+                                        err->u.invoper.op = O_MEMBER;
+                                        err->u.invoper.v1 = val_reference(vs->val);
+                                        if (labelname.data == (const uint8_t *)&anonsymbol) {
+                                            err->u.invoper.v2 = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
+                                        } else {
+                                            err->u.invoper.v2 = new_symbol(&labelname, &epoint);
+                                        }
+                                        val = Obj(err);
                                     }
-                                    val = Obj(err);
-                                }
-                            } else {
-                                Label *l;
-                                if (labelname.data == (const uint8_t *)&anonsymbol) {
-                                    l = find_anonlabel2((anonsymbol.dir == '-') ? -1 : 0, context);
                                 } else {
-                                    l = find_label2(&labelname, context);
-                                }
-                                if (l != NULL) {
-                                    if (labelname.data != (const uint8_t *)&anonsymbol) {
-                                        if (diagnostics.case_symbol && str_cmp(&labelname, &l->name) != 0) err_msg_symbol_case(&labelname, l, &epoint);
-                                    }
-                                    touch_label(l);
-                                    val = val_reference(l->value);
-                                    constant = l->constant;
-                                } else if (constcreated && pass < max_pass) {
-                                    val = ref_none();
-                                } else {
-                                    Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
+                                    Label *l;
                                     if (labelname.data == (const uint8_t *)&anonsymbol) {
-                                        err->u.notdef.symbol = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
+                                        l = find_anonlabel2((anonsymbol.dir == '-') ? -1 : 0, context);
                                     } else {
-                                        err->u.notdef.symbol = new_symbol(&labelname, &epoint);
+                                        l = find_label2(&labelname, context);
                                     }
-                                    err->u.notdef.names = ref_namespace(context);
-                                    err->u.notdef.down = false;
-                                    val = Obj(err);
+                                    if (l != NULL) {
+                                        if (labelname.data != (const uint8_t *)&anonsymbol) {
+                                            if (diagnostics.case_symbol && str_cmp(&labelname, &l->name) != 0) err_msg_symbol_case(&labelname, l, &epoint);
+                                        }
+                                        touch_label(l);
+                                        val = val_reference(l->value);
+                                        constant = l->constant;
+                                    } else if (constcreated && pass < max_pass) {
+                                        val = ref_none();
+                                    } else {
+                                        Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
+                                        if (labelname.data == (const uint8_t *)&anonsymbol) {
+                                            err->u.notdef.symbol = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
+                                        } else {
+                                            err->u.notdef.symbol = new_symbol(&labelname, &epoint);
+                                        }
+                                        err->u.notdef.names = ref_namespace(context);
+                                        err->u.notdef.down = false;
+                                        val = Obj(err);
+                                    }
                                 }
                             }
                             referenceit = oldreferenceit;
@@ -3385,6 +3388,7 @@ MUST_CHECK Obj *compile(void)
                                     label->ref = false;
                                 }
                             }
+                            if (error) goto breakerr;
                             goto finish;
                         }
                     }
