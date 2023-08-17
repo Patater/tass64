@@ -3293,10 +3293,23 @@ MUST_CHECK Obj *compile(void)
                         {
                             struct values_s *vs;
                             Namespace *context;
+                            bool labelexists;
                             bool constant = true;
-                            Label *label;
-                            listing_line(0);
-                            if (!get_exp(0, 1, 1, &cmdpoint)) goto breakerr;
+                            bool oldreferenceit = referenceit;
+                            Label *label = find_label3(&labelname, mycontext, strength);
+                            if (label != NULL && !label->ref) {
+                                referenceit = false;
+                            }
+                            if (!get_exp(0, 1, 1, &cmdpoint)) {
+                                referenceit = oldreferenceit;
+                                goto breakerr;
+                            }
+                            if (label != NULL) {
+                                labelexists = true;
+                            } else {
+                                label = new_label(&labelname, mycontext, strength, current_file_list);
+                                labelexists = label->value != NULL;
+                            }
                             vs = get_val();
                             context = get_namespace(vs->val);
                             if (context == NULL) {
@@ -3341,8 +3354,9 @@ MUST_CHECK Obj *compile(void)
                                     val = Obj(err);
                                 }
                             }
-                            label = new_label(&labelname, mycontext, strength, current_file_list);
-                            if (label->value != NULL) {
+                            referenceit = oldreferenceit;
+                            listing_equal(val);
+                            if (labelexists) {
                                 if (constant ? (label->defpass == pass) : label->constant) {
                                     val_destroy(val);
                                     err_msg_double_defined(label, &labelname, &epoint);
