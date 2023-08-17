@@ -2635,7 +2635,6 @@ MUST_CHECK Obj *compile(void)
                     case CMD_VAR: /* variable */
                         {
                             Label *label;
-                            bool labelexists;
                         itsvar:
                             label = find_label3(&labelname, mycontext, strength);
                             if (here() == 0 || here() == ';') {
