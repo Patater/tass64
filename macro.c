@@ -600,7 +600,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
 
 bool get_func_params(Mfunc *v, bool single) {
     struct mfunc_param_s *params;
-    argcount_t len = v->argc, i = 0, j;
+    argcount_t len = v->argc, i = 0;
     str_t label;
     bool stard = false, ret = false;
 
@@ -642,14 +642,6 @@ bool get_func_params(Mfunc *v, bool single) {
                 str_cfcpy(&param->cfname, &label);
                 if (param->cfname.data != label.data) str_cfcpy(&param->cfname, NULL);
                 else param->cfname = param->name;
-                for (j = 0; j < i; j++) {
-                    if (params[j].name.data != NULL) {
-                        if (str_cmp(&params[j].cfname, &param->cfname) == 0) break;
-                    }
-                }
-                if (j != i) {
-                    err_msg_double_definedo(v->file_list, &params[j].epoint, &label, &param->epoint);
-                }
             } else {
                 err_msg2(ERROR_GENERL_SYNTAX, NULL, &param->epoint);
                 ret = true;
