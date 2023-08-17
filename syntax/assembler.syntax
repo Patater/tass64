@@ -179,6 +179,7 @@ context default lightgray
     keyword whole .error brightcyan
     keyword whole .fi brightcyan
     keyword whole .for brightcyan
+    keyword whole .from brightcyan
     keyword whole .function brightcyan
     keyword whole .goto brightcyan
     keyword whole .here brightcyan

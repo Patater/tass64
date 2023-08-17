@@ -73,6 +73,7 @@
 #include "mfuncobj.h"
 #include "memblocksobj.h"
 #include "symbolobj.h"
+#include "anonsymbolobj.h"
 #include "dictobj.h"
 #include "encobj.h"
 
@@ -267,6 +268,7 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x16" "fi",
     "\x2a" "fill",
     "\x12" "for",
+    "\x76" "from",
     "\x51" "function",
     "\x44" "goto",
     "\x20" "here",
@@ -340,7 +342,7 @@ typedef enum Command_types {
     CMD_BREPT, CMD_BFOR, CMD_WHILE, CMD_BWHILE, CMD_BREAKIF, CMD_CONTINUEIF,
     CMD_WITH, CMD_ENDWITH, CMD_ENDMACRO, CMD_ENDSEGMENT, CMD_ENDFOR,
     CMD_ENDREPT, CMD_ENDWHILE, CMD_ENCODE, CMD_ENDENCODE, CMD_TDEF,
-    CMD_ALIGNBLK, CMD_ENDALIGNBLK, CMD_ALIGNPAGEIND, CMD_ALIGNIND
+    CMD_ALIGNBLK, CMD_ENDALIGNBLK, CMD_ALIGNPAGEIND, CMD_ALIGNIND, CMD_FROM
 } Command_types;
 
 /* --------------------------------------------------------------------------- */
@@ -3287,6 +3289,108 @@ MUST_CHECK Obj *compile(void)
                             val_destroy(Obj(label));
                             goto breakerr;
                         }
+                    case CMD_FROM: /* .from */
+                        {
+                            struct values_s *vs;
+                            Namespace *context;
+                            bool constant = true;
+                            Label *label;
+                            listing_line(0);
+                            if (!get_exp(0, 1, 1, &cmdpoint)) goto breakerr;
+                            vs = get_val();
+                            context = get_namespace(vs->val);
+                            if (context == NULL) {
+                                if (vs->val == none_value || vs->val->obj == ERROR_OBJ) {
+                                    val = val_reference(vs->val);
+                                } else {
+                                    Error *err = new_error(ERROR__INVALID_OPER, &cmdpoint);
+                                    err->u.invoper.op = O_MEMBER;
+                                    err->u.invoper.v1 = val_reference(vs->val);
+                                    if (labelname.data == (const uint8_t *)&anonsymbol) {
+                                        err->u.invoper.v2 = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
+                                    } else {
+                                        err->u.invoper.v2 = new_symbol(&labelname, &epoint);
+                                    }
+                                    val = Obj(err);
+                                }
+                            } else {
+                                Label *l;
+                                if (labelname.data == (const uint8_t *)&anonsymbol) {
+                                    l = find_anonlabel2((anonsymbol.dir == '-') ? -1 : 0, context);
+                                } else {
+                                    l = find_label2(&labelname, context);
+                                }
+                                if (l != NULL) {
+                                    if (labelname.data != (const uint8_t *)&anonsymbol) {
+                                        if (diagnostics.case_symbol && str_cmp(&labelname, &l->name) != 0) err_msg_symbol_case(&labelname, l, &epoint);
+                                    }
+                                    touch_label(l);
+                                    val = val_reference(l->value);
+                                    constant = l->constant;
+                                } else if (constcreated && pass < max_pass) {
+                                    val = ref_none();
+                                } else {
+                                    Error *err = new_error(ERROR___NOT_DEFINED, &epoint);
+                                    if (labelname.data == (const uint8_t *)&anonsymbol) {
+                                        err->u.notdef.symbol = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
+                                    } else {
+                                        err->u.notdef.symbol = new_symbol(&labelname, &epoint);
+                                    }
+                                    err->u.notdef.names = ref_namespace(context);
+                                    err->u.notdef.down = false;
+                                    val = Obj(err);
+                                }
+                            }
+                            label = new_label(&labelname, mycontext, strength, current_file_list);
+                            if (label->value != NULL) {
+                                if (constant ? (label->defpass == pass) : label->constant) {
+                                    val_destroy(val);
+                                    err_msg_double_defined(label, &labelname, &epoint);
+                                } else {
+                                    if (constant) {
+                                        if (label->fwpass == pass) fwcount--;
+                                        if (!constcreated && label->defpass != pass - 1) {
+                                            if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                            constcreated = true;
+                                        }
+                                        label->constant = true;
+                                    } else {
+                                        if (label->defpass != pass) {
+                                            label->ref = false;
+                                            label->defpass = pass;
+                                        } else {
+                                            if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
+                                        }
+                                    }
+                                    label->owner = false;
+                                    if (label->file_list != current_file_list) {
+                                        label_move(label, &labelname, current_file_list);
+                                    }
+                                    label->epoint = epoint;
+                                    if (constant) {
+                                        label->ref = false;
+                                        const_assign(label, val);
+                                    } else {
+                                        val_destroy(label->value);
+                                        label->value = val;
+                                        label->usepass = 0;
+                                    }
+                                }
+                            } else {
+                                label->constant = constant;
+                                label->owner = false;
+                                label->value = val;
+                                label->epoint = epoint;
+                                if (constant) {
+                                    if (!constcreated) {
+                                        if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
+                                        constcreated = true;
+                                    }
+                                    label->ref = false;
+                                }
+                            }
+                            goto finish;
+                        }
                     }
                     islabel = true;
                     break;
@@ -5106,6 +5210,7 @@ MUST_CHECK Obj *compile(void)
                 waitfor->u.cmd_function.val = NULL;
                 waitfor->skip = 0;
                 break;
+            case CMD_FROM: /* .from */
             case CMD_SFUNCTION: /* .sfunction */
             case CMD_VAR: /* .var */
                 if ((waitfor->skip & 1) != 0) {

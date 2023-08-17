@@ -3451,7 +3451,7 @@ can ruin the timing of a carefully cycle counted code.
         <b class="k">.cpu</b> <span class="s">"r65c02"</span>   <i>;R65C02</i>
         <b class="k">.cpu</b> <span class="s">"w65c02"</span>   <i>;W65C02</i>
         <b class="k">.cpu</b> <span class="s">"4510"</span>     <i>;CSG 4510</i>
-        <b class="k">.cpu</b> <span class="s">"default"</span>  <i>;cpu set on commandline</i>
+        <b class="k">.cpu</b> <span class="s">"default"</span>  <i>;cpu set on command line</i>
 </pre></dd>
 </dl>
 
@@ -3471,7 +3471,28 @@ maximum 128 bits to make the generated numbers less boring.</dd>
 
 <dt><b>.var</b> &lt;expression&gt;<a name="d_var" href="#d_var"></a>
 <dd>Defines a variable identified by the label preceding, which
-is set to the value of expression or reference of variable.</dd>
+is set to the value of expression or reference of variable.
+
+<pre width="80">
+counter <b class="k">.var</b> <span>0</span>                <i>;define, same as :=</i>
+counter <b class="k">.var</b> <u>counter</u> + <span>1</span>      <i>;redefine, same as += 1</i>
+</pre></dd>
+
+<dt><b>.from</b> &lt;scope&gt;<a name="d_from" href="#d_from"></a>
+<dd>Defines a symbol to the value of the same symbol from another scope.
+
+<p>This directive looks up the symbol name to be defined in the other scope for
+its value. Useful for shorthand definitions without repeating the name if it's unchanged.</p>
+
+<pre width="80">
+red     <b class="k">.from</b> <u>vic</u>.<u>colors</u>      <i>;same as red = vic.colors.red</i>
+
+init    <b class="k">.from</b> <u>+</u>               <i>;expose these symbols publicly</i>
+play    <b class="k">.from</b> <u>+</u>
++       <b class="k">.block</b>                <i>;other symbols hidden in block</i>
+init    <b>sei</b>
+...
+</pre></dd>
 
 <dt><b>.assert</b><a name="d_assert" href="#d_assert"></a>
 <dt><b>.check</b><a name="d_check" href="#d_check"></a>
@@ -6202,6 +6223,7 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_fi">.fi</a>
 <a href="#d_fill">.fill</a>
 <a href="#d_for">.for</a>
+<a href="#d_from">.from</a>
 <a href="#d_function">.function</a>
 <a href="#d_goto">.goto</a>
 <a href="#d_here">.here</a>

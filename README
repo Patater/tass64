@@ -2927,7 +2927,7 @@ Target
             .cpu "r65c02"   ;R65C02
             .cpu "w65c02"   ;W65C02
             .cpu "4510"     ;CSG 4510
-            .cpu "default"  ;cpu set on commandline
+            .cpu "default"  ;cpu set on command line
 
 Misc
 
@@ -2942,6 +2942,25 @@ Misc
 .var <expression>
     Defines a variable identified by the label preceding, which is set to the
     value of expression or reference of variable.
+
+    counter .var 0                ;define, same as :=
+    counter .var counter + 1      ;redefine, same as += 1
+
+.from <scope>
+    Defines a symbol to the value of the same symbol from another scope.
+
+    This directive looks up the symbol name to be defined in the other scope
+    for its value. Useful for shorthand definitions without repeating the name
+    if it's unchanged.
+
+    red     .from vic.colors      ;same as red = vic.colors.red
+
+    init    .from +               ;expose these symbols publicly
+    play    .from +
+    +       .block                ;other symbols hidden in block
+    init    sei
+    ...
+
 .assert
 .check
     Do not use these, the syntax will change in next version!
@@ -5118,11 +5137,11 @@ Assembler directives
 .endfunction .endif .endlogical .endm .endmacro .endn .endnamespace .endp
 .endpage .endproc .endrept .ends .endsection .endsegment .endstruct .endswitch
 .endu .endunion .endv .endvirtual .endweak .endwhile .endwith .eor .error .fi
-.fill .for .function .goto .here .hidemac .if .ifeq .ifmi .ifne .ifpl .include
-.lbl .lint .logical .long .macro .mansiz .namespace .next .null .offs .option
-.page .pend .proc .proff .pron .ptext .rept .rta .section .seed .segment .send
-.sfunction .shift .shiftl .showmac .sint .struct .switch .tdef .text .union
-.var .virtual .warn .weak .while .with .word .xl .xs
+.fill .for .from .function .goto .here .hidemac .if .ifeq .ifmi .ifne .ifpl
+.include .lbl .lint .logical .long .macro .mansiz .namespace .next .null .offs
+.option .page .pend .proc .proff .pron .ptext .rept .rta .section .seed
+.segment .send .sfunction .shift .shiftl .showmac .sint .struct .switch .tdef
+.text .union .var .virtual .warn .weak .while .with .word .xl .xs
 
 -------------------------------------------------------------------------------
 
