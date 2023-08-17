@@ -2561,7 +2561,7 @@ MUST_CHECK Obj *compile(void)
                 switch (wht) {
                 case '=':
                     { /* variable */
-                        bool error;
+                        bool error2;
                         struct linepos_s opoint;
                         Label *label;
                     starassign:
@@ -2574,18 +2574,18 @@ MUST_CHECK Obj *compile(void)
                         if (here() == 0 || here() == ';') {
                             err_msg(ERROR______EXPECTED, "an expression is");
                             val = ref_none();
-                            error = true;
+                            error2 = true;
                         } else {
                             bool oldreferenceit = referenceit;
                             if (label != NULL && !label->ref) {
                                 referenceit = false;
                             }
-                            error = !get_exp(0, 1, 0, &opoint);
-                            val = error ? ref_none() : get_vals_tuple();
+                            error2 = !get_exp(0, 1, 0, &opoint);
+                            val = error2 ? ref_none() : get_vals_tuple();
                             referenceit = oldreferenceit;
                         }
                         if (labelname.data[0] == '*') {
-                            if (error) {
+                            if (error2) {
                                 val_destroy(val);
                                 goto breakerr;
                             }
@@ -2624,7 +2624,7 @@ MUST_CHECK Obj *compile(void)
                             label->epoint = epoint;
                             label->ref = false;
                         }
-                        if (error) goto breakerr;
+                        if (error2) goto breakerr;
                         goto finish;
                     }
                 case '.':
@@ -2638,20 +2638,20 @@ MUST_CHECK Obj *compile(void)
                     switch (prm) {
                     case CMD_VAR: /* variable */
                         {
-                            bool error;
+                            bool error2;
                             Label *label;
                         itsvar:
                             label = find_label3(&labelname, mycontext, strength);
                             if (here() == 0 || here() == ';') {
                                 err_msg(ERROR______EXPECTED, "an expression is");
                                 val = ref_none();
-                                error = true;
+                                error2 = true;
                             } else {
                                 bool oldreferenceit = referenceit;
                                 referenceit &= 1; /* not good... */
                                 cmdpoint = lpoint;
-                                error = !get_exp(0, 1, 0, &cmdpoint);
-                                val = error ? ref_none() : get_vals_tuple();
+                                error2 = !get_exp(0, 1, 0, &cmdpoint);
+                                val = error2 ? ref_none() : get_vals_tuple();
                                 referenceit = oldreferenceit;
                             }
                             listing_equal(val);
@@ -2683,7 +2683,7 @@ MUST_CHECK Obj *compile(void)
                                 label->value = val;
                                 label->epoint = epoint;
                             }
-                            if (error) goto breakerr;
+                            if (error2) goto breakerr;
                             goto finish;
                         }
                     case CMD_LBL:
@@ -3283,15 +3283,15 @@ MUST_CHECK Obj *compile(void)
                         }
                     case CMD_FROM: /* .from */
                         {
-                            bool error;
+                            bool error2;
                             bool constant = true;
                             bool oldreferenceit = referenceit;
                             Label *label = find_label3(&labelname, mycontext, strength);
                             if (label != NULL && !label->ref) {
                                 referenceit = false;
                             }
-                            error = !get_exp(0, 1, 1, &cmdpoint);
-                            if (error) val = ref_none();
+                            error2 = !get_exp(0, 1, 1, &cmdpoint);
+                            if (error2) val = ref_none();
                             else {
                                 const struct values_s *vs = get_val();
                                 Namespace *context = get_namespace(vs->val);
@@ -3380,7 +3380,7 @@ MUST_CHECK Obj *compile(void)
                                     label->ref = false;
                                 }
                             }
-                            if (error) goto breakerr;
+                            if (error2) goto breakerr;
                             goto finish;
                         }
                     }
