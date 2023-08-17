@@ -2563,7 +2563,6 @@ MUST_CHECK Obj *compile(void)
                     { /* variable */
                         struct linepos_s opoint;
                         Label *label;
-                        bool labelexists;
                     starassign:
                         if (labelname.data[0] == '*') {
                             label = NULL;
@@ -2590,14 +2589,9 @@ MUST_CHECK Obj *compile(void)
                             starhandle(val, &epoint, &opoint);
                             goto finish;
                         }
-                        if (label != NULL) {
-                            labelexists = true;
-                        } else {
-                            label = new_label(&labelname, mycontext, strength, current_file_list);
-                            labelexists = label->value != NULL;
-                        }
                         listing_equal(val);
-                        if (labelexists) {
+                        if (label == NULL) label = new_label(&labelname, mycontext, strength, current_file_list);
+                        if (label->value != NULL) {
                             if (label->defpass == pass) {
                                 val_destroy(val);
                                 err_msg_double_defined(label, &labelname, &epoint);
@@ -2658,15 +2652,10 @@ MUST_CHECK Obj *compile(void)
                                 val = get_vals_tuple();
                                 referenceit = oldreferenceit;
                             }
-                            if (label != NULL) {
-                                labelexists = true;
-                                if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
-                            } else {
-                                label = new_label(&labelname, mycontext, strength, current_file_list);
-                                labelexists = label->value != NULL;
-                            }
                             listing_equal(val);
-                            if (labelexists) {
+                            if (label == NULL) label = new_label(&labelname, mycontext, strength, current_file_list);
+                            else if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
+                            if (label->value != NULL) {
                                 if (label->constant) {
                                     err_msg_double_defined(label, &labelname, &epoint);
                                     val_destroy(val);
@@ -3293,7 +3282,6 @@ MUST_CHECK Obj *compile(void)
                         {
                             struct values_s *vs;
                             Namespace *context;
-                            bool labelexists;
                             bool constant = true;
                             bool oldreferenceit = referenceit;
                             Label *label = find_label3(&labelname, mycontext, strength);
@@ -3303,12 +3291,6 @@ MUST_CHECK Obj *compile(void)
                             if (!get_exp(0, 1, 1, &cmdpoint)) {
                                 referenceit = oldreferenceit;
                                 goto breakerr;
-                            }
-                            if (label != NULL) {
-                                labelexists = true;
-                            } else {
-                                label = new_label(&labelname, mycontext, strength, current_file_list);
-                                labelexists = label->value != NULL;
                             }
                             vs = get_val();
                             context = get_namespace(vs->val);
@@ -3356,7 +3338,8 @@ MUST_CHECK Obj *compile(void)
                             }
                             referenceit = oldreferenceit;
                             listing_equal(val);
-                            if (labelexists) {
+                            if (label == NULL) label = new_label(&labelname, mycontext, strength, current_file_list);
+                            if (label->value != NULL) {
                                 if (constant ? (label->defpass == pass) : label->constant) {
                                     val_destroy(val);
                                     err_msg_double_defined(label, &labelname, &epoint);
