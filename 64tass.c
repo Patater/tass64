@@ -1972,7 +1972,7 @@ static size_t while_command(const Label *newlabel, List *lst, linepos_t epoint) 
     waitfor->u.cmd_rept.breakout = false;
     for (;;) {
         bool truth;
-        if (!get_exp(1, 1, 1, &apoint) || tobool(get_val(), &truth) || !truth) {
+        if (!get_exp(0, 1, 1, &apoint) || tobool(get_val(), &truth) || !truth) {
             waitfor->skip = skip;
             break;
         }
