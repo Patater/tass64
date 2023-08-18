@@ -499,10 +499,8 @@ rest:
             llen = (linecpos_t)get_label(pline + lpoint.pos);
             if (llen == 0) {
                 if (opr.p != opr.data) epoint.pos = opr.p[-1].pos;
-                if ((ch < ' ' && ch != 0) || ch > '~') {
-                    if (err_msg_wrong_character(&lpoint)) goto error;
-                }
-                err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
+                if ((ch < ' ' && ch != 0) || ch > '~') err_msg_wrong_character(&lpoint);
+                else err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
                 goto error;
             }
             lpoint.pos += llen;
@@ -617,10 +615,8 @@ rest:
             }
             break;
         default:
-            if (ch < ' ' || ch > '~') {
-                if (err_msg_wrong_character(&epoint)) goto error;
-            }
-            err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
+            if (ch < ' ' || ch > '~') err_msg_wrong_character(&epoint);
+            else err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
             goto error;
         }
         if (opr.p == opr.data) {
@@ -1617,10 +1613,8 @@ static bool get_exp2(int stop) {
                 }
                 epoint.pos = opr.p[-1].pos;
             }
-            if ((ch < ' ' && ch != 0) || ch > '~') {
-                if (err_msg_wrong_character(&lpoint)) goto error;
-            }
-            err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
+            if ((ch < ' ' && ch != 0) || ch > '~') err_msg_wrong_character(&lpoint);
+            else err_msg2(ERROR______EXPECTED, "an expression is", &lpoint);
             goto error;
         }
         if (opr.p != opr.data && opr.p[-1].op == O_SPLAT) {
@@ -1933,10 +1927,8 @@ static bool get_exp2(int stop) {
             case 2: if ((pline[epoint.pos] | arguments.caseinsensitive) == 'i' &&
                         (pline[epoint.pos + 1] | arguments.caseinsensitive) == 'n') {op = O_IN;goto push2a;} break;
             }
-            if (ch < ' ' || ch > '~') {
-                if (err_msg_wrong_character(&epoint)) goto error;
-            }
-            err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
+            if (ch < ' ' || ch > '~') err_msg_wrong_character(&epoint);
+            else err_msg2(ERROR______EXPECTED, "an operator is", &epoint);
             goto error;
         }
         while (opr.p != opr.data) {

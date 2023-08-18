@@ -1424,7 +1424,7 @@ void err_msg_unknown_char(unichar_t ch, linepos_t epoint) {
     if (more) new_error_msg_more();
 }
 
-bool err_msg_wrong_character(linepos_t epoint) {
+void err_msg_wrong_character(linepos_t epoint) {
     unichar_t ch, ch2 = pline[epoint->pos];
     if ((ch2 & 0x80) != 0) utf8in(pline + epoint->pos, &ch2);
     switch (ch2) {
@@ -1444,7 +1444,6 @@ bool err_msg_wrong_character(linepos_t epoint) {
         ch = 0;
     }
     err_msg_wrong_character2(ch, ch2, epoint);
-    return true;
 }
 
 static const uint8_t *printline(const struct file_list_s *cfile, linepos_t epoint, const uint8_t *line, FILE *f) {
