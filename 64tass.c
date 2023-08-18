@@ -2377,6 +2377,7 @@ MUST_CHECK Obj *compile(void)
                 if (error) {epoint = lpoint; goto jn;} /* skip things if needed */
                 if (labelname.len > 1 && labelname.data[0] == '_' && labelname.data[1] == '_') {err_msg2(ERROR_RESERVED_LABL, &labelname, &epoint); goto breakerr;}
                 while (wht != 0 && !arguments.tasmcomp) {
+                    bool error2;
                     bool minmax;
                     Label *label;
                     struct oper_s tmp;
@@ -2455,17 +2456,13 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (here() == 0 || here() == ';') {
                         err_msg(ERROR______EXPECTED, "an expression is");
-                        if (label == NULL && val != NULL) val_destroy(val);
-                        goto breakerr;
+                        val2 = ref_none();
+                        error2 = true;
                     } else {
                         bool oldreferenceit = referenceit;
                         referenceit &= 1; /* not good... */
-                        if (!get_exp(0, 1, 0, &epoint2)) {
-                            if (label == NULL && val != NULL) val_destroy(val);
-                            referenceit = oldreferenceit;
-                            goto breakerr;
-                        }
-                        val2 = get_vals_tuple();
+                        error2 = !get_exp(0, 1, 0, &epoint2);
+                        val2 = error2 ? ref_none() : get_vals_tuple();
                         referenceit = oldreferenceit;
                     }
                     if (val == NULL) {
@@ -2502,29 +2499,27 @@ MUST_CHECK Obj *compile(void)
                             if (label->constant) {
                                 err_msg_not_variable(label, &labelname, &epoint);
                                 val_destroy(val2);
-                                goto breakerr;
-                            }
-                            if (label->defpass != pass) {
+                            } else if (label->defpass == pass) {
+                                val_destroy(val2);
+                            } else {
                                 label->ref = false;
                                 label->defpass = pass;
-                            } else {
-                                val_destroy(val2);
-                                goto finish;
+                                label->owner = false;
+                                if (label->file_list != current_file_list) {
+                                    label_move(label, &labelname, current_file_list);
+                                }
+                                label->epoint = epoint;
+                                val_destroy(label->value);
+                                label->value = val2;
+                                label->usepass = 0;
                             }
-                            label->owner = false;
-                            if (label->file_list != current_file_list) {
-                                label_move(label, &labelname, current_file_list);
-                            }
-                            label->epoint = epoint;
-                            val_destroy(label->value);
-                            label->value = val2;
-                            label->usepass = 0;
                         } else {
                             label->constant = false;
                             label->owner = false;
                             label->value = val2;
                             label->epoint = epoint;
                         }
+                        if (error2) goto breakerr;
                         goto finish;
                     }
                     if (tmp.op == O_REASSIGN) {
@@ -2554,8 +2549,13 @@ MUST_CHECK Obj *compile(void)
                         label->value = result2;
                     } else {
                         val_destroy(val);
+                        if (error2) {
+                            val_destroy(result2);
+                            goto breakerr;
+                        }
                         starhandle(result2, &epoint, &epoint2);
                     }
+                    if (error2) goto breakerr;
                     goto finish;
                 }
                 switch (wht) {
