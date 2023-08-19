@@ -1440,6 +1440,9 @@ void err_msg_wrong_character(linepos_t epoint) {
     case 0x201C: case 0x201D: case 0x201E: case 0x201F:
         ch = '"';
         break;
+    case 0x2217:
+        ch = '*';
+        break;
     default:
         ch = 0;
     }
