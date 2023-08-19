@@ -954,6 +954,7 @@ const char *unicode_character_name(unichar_t ch) {
     case 0x20: txt = " space"; break;
     case 0x22: txt = " quotation mark"; break;
     case 0x27: txt = " apostrophe"; break;
+    case 0x2a: txt = " asterix"; break;
     case 0x2d: txt = " hyphen-minus"; break;
     case 0xa0: txt = " no-break space"; break;
     case 0x2010: txt = " hyphen"; break;
@@ -970,6 +971,7 @@ const char *unicode_character_name(unichar_t ch) {
     case 0x201E: txt = " double low-9 quotation mark"; break;
     case 0x201F: txt = " double high-reversed-9 quotation mark"; break;
     case 0x2212: txt = " minus sign"; break;
+    case 0x2217: txt = " asterix operator"; break;
     case 0xFEFF: txt = " zero width no-break space"; break;
     default: txt = NULL;
     }
