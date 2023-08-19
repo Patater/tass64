@@ -275,7 +275,7 @@ static MUST_CHECK Obj *function_random(oper_t op) {
 
     switch (vals->len) {
     default:
-        return new_float((double)(random64() & (((uint64_t)1 << 53) - 1)) * ldexp(1, -53));
+        return new_float((double)(int64_t)(random64() & (((uint64_t)1 << 53) - 1)) * ldexp(1, -53));
     case 1:
         err = v[0].val->obj->ival(v[0].val, &end, 8 * sizeof end, &v[0].epoint);
         break;
