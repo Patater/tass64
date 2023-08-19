@@ -36,7 +36,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $@
 
 README: README.html
-	-command -v w3m >/dev/null 2>/dev/null && sed -e 's/&larr;/<-/g;s/&hellip;/.../g;s/&lowast;/*/g;s/&minus;/-/g;s/&ndash;/-/g;' README.html | w3m -T text/html -dump -no-graph | sed -e 's/\s\+$$//' >$@
+	-command -v w3m >/dev/null 2>/dev/null && sed -e 's/&larr;/<-/g;s/&hellip;/.../g;s/&lowast;/*/g;s/&minus;/-/g;s/&ndash;/-/g;' README.html | w3m -T text/html -dump -no-graph -O US-ASCII | sed -e 's/\s\+$$//' >$@
 
 version.h:
 	echo "#define VERSION \"$(VERSION).$(SVNVERSION:sh)$(shell $(SVNVERSION))\"" >$@
