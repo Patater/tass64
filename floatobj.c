@@ -259,7 +259,9 @@ static MUST_CHECK Obj *bitoper(oper_t op) {
         e2 = 63;
     }
     v1 = (uint64_t)ldexp(r1, e1);
+    if (neg1 && v1 == 0) v1 = 1;
     v2 = (uint64_t)ldexp(r2, e2);
+    if (neg2 && v2 == 0) v2 = 1;
 
     switch (op->op) {
     case O_AND: 
