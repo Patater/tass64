@@ -72,6 +72,7 @@ struct file_list_s;
 extern struct file_s *file_open(const struct str_t *, const struct file_list_s *, File_open_type, linepos_t);
 extern struct star_s *new_star(linenum_t);
 extern struct star_s *init_star(linenum_t);
+extern bool get_latest_file_time(void *);
 extern void destroy_file(void);
 extern void init_file(void);
 extern void makefile(int, char *[], bool);

@@ -182,7 +182,8 @@ void listing_open(const struct list_output_s *output, int argc, char *argv[]) {
         argv_print(argv[i], flist);
     }
     fputs("\n; ", flist);
-    time(&t); fputs(ctime(&t), flist);
+    if (get_latest_file_time((void *)&t)) time(&t); 
+    fputs(ctime(&t), flist);
     newline(ls);
     if (ls->linenum) {
         out_txt(ls, ";Line");

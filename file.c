@@ -26,7 +26,8 @@
 #include "wchar.h"
 #endif
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
-#include <io.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #elif defined _POSIX_C_SOURCE || defined __unix__
 #include <sys/stat.h>
 #endif
@@ -300,16 +301,27 @@ static inline unichar_t fromiso(unichar_t c) {
     return fromiso_conv[c];
 }
 
+static struct {
+    bool valid;
+    bool current;
+    time_t value;
+} latest_file_time;
+
+bool get_latest_file_time(void *time) {
+    if (!latest_file_time.valid || latest_file_time.current) return true;
+    *((time_t *)time) = latest_file_time.value;
+    return false;
+}
+
 static filesize_t fsize(FILE *f) {
-#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
-    long len = filelength(fileno(f));
-    if (len > 0) {
-        return (unsigned long)len < ~(filesize_t)0 ? (filesize_t)len : ~(filesize_t)0;
-    }
-#elif defined _POSIX_C_SOURCE || defined __unix__
+#if defined _POSIX_C_SOURCE || defined __unix__ || defined _WIN32 || defined __MSDOS__ || defined __DOS__
     struct stat st;
     if (fstat(fileno(f), &st) == 0) {
         if (S_ISREG(st.st_mode) && st.st_size > 0) {
+            if (!latest_file_time.valid || st.st_mtime > latest_file_time.value) {
+                latest_file_time.value = st.st_mtime;
+                latest_file_time.valid = true;
+            }
             return (st.st_size & ~(off_t)~(filesize_t)0) == 0 ? (filesize_t)st.st_size : ~(filesize_t)0;
         }
     }
@@ -322,6 +334,7 @@ static filesize_t fsize(FILE *f) {
         }
     }
 #endif
+    latest_file_time.current = true;
     return 0;
 }
 
@@ -887,6 +900,8 @@ void init_file(void) {
     file_defines.name = "<command line>";
     file_defines.portable = true;
     file_defines.notfile = true;
+    latest_file_time.valid = false;
+    latest_file_time.current = false;
     new_instance(&stars);
     stars->next = NULL;
     starsp = 0;
