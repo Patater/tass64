@@ -28,6 +28,9 @@
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef S_ISREG
+#define S_ISREG(mode) (((mode) & S_IFMT) == S_IFREG)
+#endif
 #define STAT_AVAILABLE
 #define DOS_STYLE_PATH
 #elif defined _POSIX_C_SOURCE || defined __unix__ || defined __HAIKU__
