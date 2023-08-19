@@ -28,8 +28,11 @@
 #if defined _WIN32 || defined __MSDOS__ || defined __DOS__
 #include <sys/types.h>
 #include <sys/stat.h>
-#elif defined _POSIX_C_SOURCE || defined __unix__
+#define STAT_AVAILABLE
+#define DOS_STYLE_PATH
+#elif defined _POSIX_C_SOURCE || defined __unix__ || defined __HAIKU__
 #include <sys/stat.h>
+#define STAT_AVAILABLE
 #endif
 #include "64tass.h"
 #include "unicode.h"
@@ -85,14 +88,14 @@ static struct file_s *file_table_update(struct file_s *p) {
     return NULL;
 }
 
-#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+#ifdef DOS_STYLE_PATH
 static inline bool is_driveletter(const char *name) {
     return (uint8_t)((name[0] | 0x20) - 'a') < 26 && name[1] == ':';
 }
 #endif
 
 static inline bool is_absolute(const str_t *v) {
-#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+#ifdef DOS_STYLE_PATH
     return (v->len != 0 && (v->data[0] == '/' || v->data[0] == '\\')) || (v->len > 1 && is_driveletter((const char *)v->data));
 #else
     return v->len != 0 && v->data[0] == '/';
@@ -100,7 +103,7 @@ static inline bool is_absolute(const str_t *v) {
 }
 
 static size_t get_base(const char *base) {
-#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+#ifdef DOS_STYLE_PATH
     size_t i, j = is_driveletter(base) ? 2 : 0;
     for (i = j; base[i] != '\0'; i++) {
         if (base[i] == '/' || base[i] == '\\') j = i + 1;
@@ -116,7 +119,7 @@ static char *get_path(const str_t *v, const char *base) {
     char *path;
     size_t i, len;
 
-#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+#ifdef DOS_STYLE_PATH
     if (v->len != 0 && (v->data[0] == '/' || v->data[0] == '\\')) i = is_driveletter(base) ? 2 : 0;
     else i = (v->len > 1 && is_driveletter((const char *)v->data)) ? 0 : get_base(base);
 #else
@@ -134,7 +137,7 @@ static char *get_path(const str_t *v, const char *base) {
 static bool portability(const str_t *name, linepos_t epoint) {
     struct linepos_s epoint2;
     const uint8_t *pos;
-#if defined _WIN32 || defined __MSDOS__ || defined __DOS__
+#ifdef DOS_STYLE_PATH
     if (name->len == 0) return true;
     pos = (const uint8_t *)memchr(name->data, '\\', name->len);
     if (pos != NULL) {
@@ -314,7 +317,7 @@ bool get_latest_file_time(void *time) {
 }
 
 static filesize_t fsize(FILE *f) {
-#if defined _POSIX_C_SOURCE || defined __unix__ || defined _WIN32 || defined __MSDOS__ || defined __DOS__
+#ifdef STAT_AVAILABLE
     struct stat st;
     if (fstat(fileno(f), &st) == 0) {
         if (S_ISREG(st.st_mode) && st.st_size > 0) {
