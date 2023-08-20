@@ -313,11 +313,10 @@ static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned i
             break;
         }
         return AG_NONE;
-    case (A_IMMEDIATE_SIGNED << 12) | (A_SR << 8) | (A_I << 4) | A_YR:/* lda (#+$ff,s),y */
     case (A_IMMEDIATE << 12) | (A_SR << 8) | (A_I << 4) | A_YR:/* lda (#$ff,s),y */
     case (A_SR << 8) | (A_I << 4) | A_YR:
         if (cnmemonic[ADR_ZP_S_I_Y] != ____) {
-            adrgen = (opcode == c65ce02.opcode || opcode == c4510.opcode) ? AG_CHAR : AG_BYTE; *opr = ADR_ZP_S_I_Y; /* lda ($ff,s),y */
+            adrgen = AG_BYTE; *opr = ADR_ZP_S_I_Y; /* lda ($ff,s),y */
             break;
         }
         return AG_NONE;
