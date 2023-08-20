@@ -187,7 +187,7 @@ static ival_t get_ival(void) {
 }
 
 /* if width and prec. in the args */
-static void star_args(Data *p)
+static const struct values_s *star_args(Data *p)
 {
     if (p->star_w) {
         ival_t ival = get_ival();
@@ -198,6 +198,7 @@ static void star_args(Data *p)
         ival_t ival = get_ival();
         p->precision = ival > 0 ? ival : 0;
     }
+    return next_arg();
 }
 
 /* for %d and friends, it puts in holder
@@ -205,13 +206,11 @@ static void star_args(Data *p)
  */
 static inline void decimal(Data *p)
 {
-    const struct values_s *v = next_arg();
+    const struct values_s *v = star_args(p);
     bool minus;
     size_t i;
     Str *str;
     Obj *err2 = NULL;
-
-    star_args(p);
 
     if (v == NULL) {
         minus = false;
@@ -245,9 +244,7 @@ static inline void decimal(Data *p)
 }
 
 static MUST_CHECK Obj *get_int(Data *p) {
-    const struct values_s *v = next_arg();
-
-    star_args(p);
+    const struct values_s *v = star_args(p);
 
     if (v != NULL) {
         Obj *val = v->val;
@@ -332,7 +329,7 @@ static inline void bin(Data *p)
 /* %c chars */
 static inline void chars(Data *p)
 {
-    const struct values_s *v = next_arg();
+    const struct values_s *v = star_args(p);
     uval_t uval;
     int i;
 
@@ -359,14 +356,12 @@ static inline void chars(Data *p)
 /* %s strings */
 static inline void strings(Data *p)
 {
-    const struct values_s *v = next_arg();
+    const struct values_s *v = star_args(p);
     size_t i;
     const uint8_t *tmp;
     unichar_t ch;
     Str *str;
     Obj *err = NULL;
-
-    star_args(p);
 
     if (v != NULL) {
         if (*p->pf == 'r') {
@@ -402,13 +397,11 @@ static inline void strings(Data *p)
 /* %f or %g  floating point representation */
 static inline void floating(Data *p)
 {
-    const struct values_s *v = next_arg();
+    const struct values_s *v = star_args(p);
     char tmp[400], *t, form[10];
     bool minus;
     double d;
     int l;
-
-    star_args(p);
 
     if (v == NULL) {
         d = 0.0;
@@ -574,7 +567,6 @@ MUST_CHECK Obj *isnprintf(oper_t op)
             default:
             error:
                 data.pf += err_msg_unknown_formatchar(Str(v[0].val), (size_t)(data.pf - fmt.data), &v[0].epoint);
-                next_arg();
                 star_args(&data);
                 while (pf < data.pf) {
                     c = *pf;
