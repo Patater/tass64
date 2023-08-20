@@ -145,6 +145,7 @@ static void pad_right2(Data *p, uint8_t c, bool minus, size_t ln)
 {
     size_t n = 0;
     p->width = (p->width < 0 || ln > (unsigned int)p->width) ? -1 : p->width - (int)ln;
+    if (p->precision != NOT_FOUND) p->pad = ' ';
     if (p->precision > 0 && (unsigned int)p->precision > ln) {
         n = (unsigned int)p->precision - ln;
         p->width = (p->width < 0 || n > (unsigned int)p->width) ? -1 : p->width - (int)n;
@@ -244,7 +245,10 @@ static inline void decimal(Data *p)
     pad_right2(p, 0, minus, str->len - i);
     for (; i < str->len; i++) {p->c = str->data[i]; put_char(p);}
     val_destroy(Obj(str));
-    if (p->left) pad(p);
+    if (p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
 }
 
 static MUST_CHECK Obj *get_int(Data *p) {
@@ -293,7 +297,10 @@ static inline void hexa(Data *p)
         b = (integer->data[bp2] >> bp) & 0xf;
     }
     val_destroy(Obj(integer));
-    if (p->left) pad(p);
+    if (p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
 }
 
 /* for %b binary representation */
@@ -329,7 +336,10 @@ static inline void bin(Data *p)
         b = (integer->data[bp2] >> bp) & 1;
     }
     val_destroy(Obj(integer));
-    if (p->left) pad(p);
+    if (p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
 }
 
 /* %c chars */
@@ -354,9 +364,15 @@ static inline void chars(Data *p)
 
     i = (p->dot && p->precision <= 0) ? 0 : 1;
     p->width = (p->width < 0 || i > p->width) ? -1 : p->width - i;
-    if (!p->left) pad(p);
+    if (!p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
     if (i != 0) {p->c = uval; put_char(p);}
-    if (p->left) pad(p);
+    if (p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
 }
 
 /* %s strings */
@@ -389,14 +405,20 @@ static inline void strings(Data *p)
         i = (p->precision < 0) ? 0 : (i < (unsigned int)p->precision) ? i : (unsigned int)p->precision;
     }
     p->width = (p->width < 0 || i > (unsigned int)p->width) ? -1 : p->width - (int)i;
-    if (!p->left) pad(p);
+    if (!p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
     for (; i != 0; i--) { /* put the string */
         p->c = *tmp;
         if ((p->c & 0x80) != 0) tmp += utf8in(tmp, &p->c); else tmp++;
         put_char(p);
     }
     val_destroy(Obj(str));
-    if (p->left) pad(p);
+    if (p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
 }
 
 /* %f or %g  floating point representation */
@@ -439,7 +461,10 @@ static inline void floating(Data *p)
         put_char(p);
         t++;
     }
-    if (p->left) pad(p);
+    if (p->left) {
+        p->pad = ' ';
+        pad(p);
+    }
 }
 
 MUST_CHECK Obj *isnprintf(oper_t op)
@@ -448,7 +473,6 @@ MUST_CHECK Obj *isnprintf(oper_t op)
     struct values_s *v = vals->val;
     argcount_t args = vals->len;
     Obj *err;
-    Str *str;
     Data data;
     str_t fmt;
 
