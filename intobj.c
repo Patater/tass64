@@ -888,8 +888,8 @@ static MUST_CHECK Obj *rshift(oper_t op, uval_t s) {
             bool c2 = true;
             for (i = 0; i < sz - 1; i++) {
                 if (c) {
-                    v[i] = (v1[i] - 1) >> bit;
                     c = (v1[i] == 0);
+                    v[i] = (v1[i] - 1) >> bit;
                 } else v[i] = v1[i] >> bit;
                 if (c) v[i] |= (v1[i + 1] - 1) << (SHIFT - bit);
                 else v[i] |= v1[i + 1] << (SHIFT - bit);
