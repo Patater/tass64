@@ -49,6 +49,7 @@ struct str_t;
 
 extern MALLOC Str *new_str(size_t);
 extern MALLOC Str *new_str2(size_t);
+extern uint8_t *extend_str(Str *, size_t);
 extern MUST_CHECK Obj *str_from_str(const uint8_t *, linecpos_t *, linepos_t);
 extern MUST_CHECK Obj *str_from_obj(Obj *, linepos_t);
 extern MUST_CHECK Obj *float_from_str(const Str *, linepos_t);

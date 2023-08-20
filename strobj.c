@@ -159,7 +159,7 @@ MALLOC Str *new_str2(size_t ln) {
     return v;
 }
 
-static uint8_t *extend_str(Str *v, size_t ln) {
+uint8_t *extend_str(Str *v, size_t ln) {
     uint8_t *tmp;
     if (ln <= sizeof v->u.val) {
         return v->u.val;
