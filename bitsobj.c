@@ -991,11 +991,12 @@ static inline MUST_CHECK Obj *concat(oper_t op) {
     bdigit_t inv;
     Bits *vv;
 
-    if (vv1->bits == 0) {
-        return Obj(ref_bits(vv2));
-    }
     if (vv2->bits == 0) {
         return Obj(ref_bits(vv1));
+    }
+    inv = ((vv1->len ^ vv2->len) < 0) ? ~(bdigit_t)0 : 0;
+    if (vv1->bits == 0 && inv == 0) {
+        return Obj(ref_bits(vv2));
     }
     if (add_overflow(vv1->bits, vv2->bits, &blen)) goto failed;
     sz = blen / SHIFT;
@@ -1006,7 +1007,6 @@ static inline MUST_CHECK Obj *concat(oper_t op) {
     vv = new_bits2(sz);
     if (vv == NULL) goto failed;
     v = vv->data;
-    inv = ((vv2->len ^ vv1->len) < 0) ? ~(bdigit_t)0 : 0;
 
     v1 = vv2->data;
     rbits = vv2->bits / SHIFT;

@@ -976,13 +976,15 @@ static inline MUST_CHECK Obj *binary(oper_t op) {
 static MUST_CHECK Obj *concat(oper_t op) {
     Bytes *v1 = Bytes(op->v1), *v2 = Bytes(op->v2), *v;
     uint8_t *s;
+    bool inv;
     size_t ln, i, len1, len2;
 
-    if (v1->len == 0) {
-        return Obj(ref_bytes(v2));
-    }
     if (v2->len == 0 || v2->len == ~(ssize_t)0) {
         return Obj(ref_bytes(v1));
+    }
+    inv = (v1->len ^ v2->len) < 0;
+    if ((v1->len == 0 || v1->len == ~(ssize_t)0) && !inv) {
+        return Obj(ref_bytes(v2));
     }
     len1 = byteslen(v1);
     len2 = byteslen(v2);
@@ -998,7 +1000,6 @@ static MUST_CHECK Obj *concat(oper_t op) {
         v = ref_bytes(v1);
     } else if (op->inplace == Obj(v2)) {
         size_t ln2;
-        bool inv = (v2->len ^ v1->len) < 0;
         if (ln > sizeof v2->u.val && v2->u.val != v2->data && ln > v2->u.s.max) {
             ln2 = ln + (ln < 1024 ? ln : 1024);
             if (ln2 < ln) ln2 = ln;
@@ -1020,7 +1021,7 @@ static MUST_CHECK Obj *concat(oper_t op) {
         s = v->data;
         memcpy(s, v1->data, len1);
     }
-    if ((v2->len ^ v1->len) < 0) {
+    if (inv) {
         for (i = 0; i < len2; i++) s[i + len1] = (uint8_t)~v2->data[i];
     } else if (len2 == 1) {
         s[len1] = v2->data[0];
