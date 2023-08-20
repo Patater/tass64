@@ -73,8 +73,7 @@ typedef struct Data {
     const uint8_t *pfend;
     /* FLAGS */
     int width, precision;
-    unichar_t pad;
-    bool left, square, space, plus, star_w, star_p, dot;
+    bool left, square, space, plus, star_w, star_p, dot, zero;
     argcount_t listp;
     const struct values_s *list;
     argcount_t largs;
@@ -132,27 +131,26 @@ static void put_char(Data *p) {
     s->len += utf8out(p->c, d + s->len);
 }
 
-/* pad right */
 static inline void pad(Data *p)
 {
-    if (p->width > 0) {
-        p->c = p->pad;
-        for (; p->width > 0; p->width--) put_char(p);
-    }
+    for (; p->width > 0; p->width--) put_char(p);
 }
 
 static void pad_right2(Data *p, uint8_t c, bool minus, size_t ln)
 {
     size_t n = 0;
     p->width = (p->width < 0 || ln > (unsigned int)p->width) ? -1 : p->width - (int)ln;
-    if (p->precision != NOT_FOUND) p->pad = ' ';
+    if (p->precision != NOT_FOUND) p->zero = false;
     if (p->precision > 0 && (unsigned int)p->precision > ln) {
         n = (unsigned int)p->precision - ln;
         p->width = (p->width < 0 || n > (unsigned int)p->width) ? -1 : p->width - (int)n;
     }
     if (minus || p->plus || p->space) p->width--;
     if (c != 0 && p->square) p->width--;
-    if (p->pad != '0' && !p->left) pad(p);
+    if (!p->zero && !p->left) {
+        p->c = ' ';
+        pad(p);
+    }
     do {
         if (minus) p->c = '-';
         else if (p->plus) p->c = '+';
@@ -161,8 +159,8 @@ static void pad_right2(Data *p, uint8_t c, bool minus, size_t ln)
         put_char(p);
     } while (false);
     if (c != 0 && p->square) {p->c = c; put_char(p);}
-    if (p->pad == '0' && !p->left) pad(p);
     p->c = '0';
+    if (p->zero && !p->left) pad(p);
     for (;n > 0; n--) put_char(p);
 }
 
@@ -246,7 +244,7 @@ static inline void decimal(Data *p)
     for (; i < str->len; i++) {p->c = str->data[i]; put_char(p);}
     val_destroy(Obj(str));
     if (p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
 }
@@ -298,7 +296,7 @@ static inline void hexa(Data *p)
     }
     val_destroy(Obj(integer));
     if (p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
 }
@@ -337,7 +335,7 @@ static inline void bin(Data *p)
     }
     val_destroy(Obj(integer));
     if (p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
 }
@@ -365,12 +363,12 @@ static inline void chars(Data *p)
     i = (p->dot && p->precision <= 0) ? 0 : 1;
     p->width = (p->width < 0 || i > p->width) ? -1 : p->width - i;
     if (!p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
     if (i != 0) {p->c = uval; put_char(p);}
     if (p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
 }
@@ -406,7 +404,7 @@ static inline void strings(Data *p)
     }
     p->width = (p->width < 0 || i > (unsigned int)p->width) ? -1 : p->width - (int)i;
     if (!p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
     for (; i != 0; i--) { /* put the string */
@@ -416,7 +414,7 @@ static inline void strings(Data *p)
     }
     val_destroy(Obj(str));
     if (p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
 }
@@ -462,7 +460,7 @@ static inline void floating(Data *p)
         t++;
     }
     if (p->left) {
-        p->pad = ' ';
+        p->c = ' ';
         pad(p);
     }
 }
@@ -508,7 +506,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
         data.star_w = data.star_p = false;
         data.square = data.plus = data.space = false;
         data.left = false; data.dot = false;
-        data.pad = ' ';
+        data.zero = false;
         while (data.pf < data.pfend) {
             data.pf++;
             if (data.pf >= data.pfend) goto error;
@@ -580,7 +578,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
                 continue;
             case '0':
                 if (data.width == NOT_FOUND) {
-                    data.pad = '0';
+                    data.zero = true;
                     continue;
                 }
                 FALL_THROUGH; /* fall through */
