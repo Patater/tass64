@@ -5674,7 +5674,7 @@ int main2(int *argc2, char **argv2[]) {
         for (j = 0; j < arguments.symbol_output_len; j++) {
             labelprint(&arguments.symbol_output[j]);
         }
-        if (arguments.make != NULL) makefile(argc - opts, argv + opts, arguments.make_phony);
+        if (arguments.make.name != NULL) makefile(argc - opts, argv + opts);
 
         failed = error_serious();
     }

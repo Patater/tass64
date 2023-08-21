@@ -941,14 +941,14 @@ static void wrap_print_nodash(struct makefile_s *m, const char *name) {
     wrap_print(m, name);
 }
 
-void makefile(int argc, char *argv[], bool make_phony) {
+void makefile(int argc, char *argv[]) {
     struct makefile_s m;
     size_t j;
     int i, err;
 
-    m.f = dash_name(arguments.make) ? stdout : fopen_utf8(arguments.make, "wt");
+    m.f = dash_name(arguments.make.name) ? stdout : fopen_utf8(arguments.make.name, arguments.make.append ? "at" : "wt");
     if (m.f == NULL) {
-        err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make);
+        err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make.name);
         return;
     }
     if (m.f == stdout && fflush(m.f) != 0) setvbuf(m.f, NULL, _IOLBF, 1024);
@@ -982,7 +982,7 @@ void makefile(int argc, char *argv[], bool make_phony) {
         }
         putc('\n', m.f);
 
-        if (file_table.data != NULL && make_phony) {
+        if (file_table.data != NULL && arguments.make.phony) {
             m.len = 0;
             for (j = 0; j <= file_table.mask; j++) {
                 const struct file_s *a = file_table.data[j];
@@ -996,5 +996,5 @@ void makefile(int argc, char *argv[], bool make_phony) {
 
     err = ferror(m.f);
     err |= (m.f != stdout) ? fclose(m.f) : fflush(m.f);
-    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make.name);
 }

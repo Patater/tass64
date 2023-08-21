@@ -36,7 +36,6 @@ static const struct arguments_s arguments_default = {
     false,       /* to_ascii */
     false,       /* longbranch */
     false,       /* tasmcomp */
-    false,       /* make_phony */
     0x20,        /* caseinsensitive */
     NULL,        /* output */
     0,           /* output_len */
@@ -52,8 +51,12 @@ static const struct arguments_s arguments_default = {
         false,   /* verbose */
         false    /* append */
     },
-    NULL,        /* make */
-    {
+    {            /* make */
+        NULL,    /* name */
+        false,   /* phony */
+        false    /* append */
+    },
+    {            /* defines */
         NULL,    /* data */
         0,       /* len */
     },
@@ -358,7 +361,7 @@ enum {
     INTEL_HEX, APPLE_II, ATARI_XEX, MOS_HEX, NO_LONG_ADDRESS, NO_QUIET, WARN,
     OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND, MAP,
     NO_MAP, MAP_APPEND, LIST_APPEND, SIMPLE_LABELS, LABELS_SECTION,
-    MESEN_LABELS, LABELS_ADD_PREFIX
+    MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND
 };
 
 static const struct my_option long_options[] = {
@@ -420,6 +423,7 @@ static const struct my_option long_options[] = {
     {"list"             , my_required_argument, NULL, 'L'},
     {"list-append"      , my_required_argument, NULL,  LIST_APPEND},
     {"dependencies"     , my_required_argument, NULL, 'M'},
+    {"dependencies-append", my_required_argument, NULL, MAKE_APPEND},
     {"no-make-phony"    , my_no_argument      , NULL,  NO_MAKE_PHONY},
     {"make-phony"       , my_no_argument      , NULL,  MAKE_PHONY},
     {"no-verbose-list"  , my_no_argument      , NULL,  NO_VERBOSE_LIST},
@@ -500,7 +504,7 @@ static address_t check_outputs(void) {
         if (output->mapname != NULL && dash_name(output->mapname)) tostdout = true;
     }
     if (arguments.list.name != NULL && dash_name(arguments.list.name)) tostdout = true;
-    if (arguments.make != NULL && dash_name(arguments.make)) tostdout = true;
+    if (arguments.make.name != NULL && dash_name(arguments.make.name)) tostdout = true;
     if (!tostdout) {
         for (i = 0; i < arguments.symbol_output_len; i++) {
             struct symbol_output_s *symbol_output = &arguments.symbol_output[i];
@@ -650,7 +654,8 @@ int init_arguments(int *argc2, char **argv2[]) {
             case 'E': arguments.error.name = my_optarg; arguments.error.no_output = false; arguments.error.append = (opt == ERROR_APPEND); break;
             case LIST_APPEND:
             case 'L': arguments.list.name = my_optarg; arguments.list.append = (opt == LIST_APPEND); break;
-            case 'M': arguments.make = my_optarg;break;
+            case MAKE_APPEND:
+            case 'M': arguments.make.name = my_optarg; arguments.make.append = (opt == MAKE_APPEND); break;
             case 'I': lastil = include_list_add(lastil, my_optarg);break;
             case 'm': arguments.list.monitor = false;break;
             case MONITOR: arguments.list.monitor = true;break;
@@ -662,8 +667,8 @@ int init_arguments(int *argc2, char **argv2[]) {
             case NO_CASE_SENSITIVE: arguments.caseinsensitive = 0x20;break;
             case VERBOSE_LIST: arguments.list.verbose = true;break;
             case NO_VERBOSE_LIST: arguments.list.verbose = false;break;
-            case MAKE_PHONY: arguments.make_phony = true;break;
-            case NO_MAKE_PHONY: arguments.make_phony = false;break;
+            case MAKE_PHONY: arguments.make.phony = true;break;
+            case NO_MAKE_PHONY: arguments.make.phony = false;break;
             case TAB_SIZE:
                 {
                     char *s;
@@ -683,10 +688,11 @@ int init_arguments(int *argc2, char **argv2[]) {
                "        [--labels=<file>] [--normal-labels] [--export-labels] [--vice-labels]\n"
                "        [--vice-labels-numeric] [--dump-labels] [--simple-labels]\n"
                "        [--list=<file>] [--list-append=<file>] [--no-monitor] [--no-source]\n"
-               "        [--line-numbers] [--tab-size=<value>] [--verbose-list]\n"
-               "        [--dependencies=<file>] [--make-phony] [-W<option>] [--errors=<file>]\n"
+               "        [--line-numbers] [--tab-size=<value>] [--verbose-list] [-W<option>]\n"
+               "        [--dependencies=<file>] [--dependencies-append=<file>] [--make-phony]\n"
                "        [--output=<file>] [--output-append=<file>] [--no-output] [--map=<file>]\n"
-               "        [--map-append=<file>] [--no-map] [--help] [--usage] [--version] SOURCES\n");
+               "        [--map-append=<file>] [--no-map] [--errors=<file>] [--help] [--usage]\n"
+               "        [--version] SOURCES\n");
                    return 0;
 
             case 'V':puts("64tass Turbo Assembler Macro V" VERSION);
@@ -705,6 +711,7 @@ int init_arguments(int *argc2, char **argv2[]) {
                "      --no-error         Do not output any errors\n"
                "  -I <path>              Include search path\n"
                "  -M, --dependencies=<f> Makefile dependencies to <file>\n"
+               "      --dependencies-append=<f> Append dependencies to <file>\n"
                "  -q, --quiet            Do not output summary and header\n"
                "  -T, --tasm-compatible  Enable TASM compatible mode\n"
                "  -w, --no-warn          Suppress warnings\n"

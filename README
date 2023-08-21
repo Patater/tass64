@@ -3474,6 +3474,8 @@ Operation options
     Please choose source file names which are compatible with Makefiles as
     there are very little escaping possibilities.
 
+--dependencies-append <file>
+    Same as the --dependencies option but appends instead of overwrites.
 --make-phony
     Enable phony targets for dependencies
 

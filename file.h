@@ -75,6 +75,6 @@ extern struct star_s *init_star(linenum_t);
 extern bool get_latest_file_time(void *);
 extern void destroy_file(void);
 extern void init_file(void);
-extern void makefile(int, char *[], bool);
+extern void makefile(int, char *[]);
 
 #endif
