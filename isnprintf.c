@@ -470,6 +470,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
     Funcargs *vals = Funcargs(op->v2);
     struct values_s *v = vals->val;
     argcount_t args = vals->len;
+    const uint8_t *invalid_format_char = NULL;
     Obj *err;
     Data data;
     str_t fmt;
@@ -598,7 +599,8 @@ MUST_CHECK Obj *isnprintf(oper_t op)
                 FALL_THROUGH; /* fall through */
             default:
             error:
-                data.pf += err_msg_unknown_formatchar(Str(v[0].val), (size_t)(data.pf - fmt.data), &v[0].epoint);
+                invalid_format_char = data.pf;
+                data.pf += utf8len(c);
                 star_args(&data);
                 while (pf < data.pf) {
                     data.c = *pf;
@@ -611,7 +613,9 @@ MUST_CHECK Obj *isnprintf(oper_t op)
             break;
         }
     }
-    if (data.listp != data.largs) {
+    if (invalid_format_char != NULL) {
+        err_msg_unknown_formatchar(Str(v[0].val), (size_t)(invalid_format_char - fmt.data), &v[0].epoint);
+    } else if (data.listp != data.largs) {
         err_msg_argnum(args, data.listp + 1, data.listp + 1, op->epoint);
     } else if (data.failure != NULL) {
         err_msg_output(Error(data.failure));

@@ -67,7 +67,7 @@ extern void err_msg_unused_label(struct Label *);
 extern void err_msg_unused_const(struct Label *);
 extern void err_msg_unused_variable(struct Label *);
 extern void err_msg_not_defined(const struct str_t *, linepos_t);
-extern unsigned int err_msg_unknown_formatchar(const struct Str *, size_t, linepos_t);
+extern void err_msg_unknown_formatchar(const struct Str *, size_t, linepos_t);
 extern void err_msg_not_defined2(const struct str_t *, struct Namespace *, bool, linepos_t);
 extern void err_msg_not_defined2a(ssize_t, struct Namespace *, bool, linepos_t);
 extern void err_msg_symbol_case(const struct str_t *, const struct Label *, linepos_t);

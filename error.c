@@ -1016,7 +1016,7 @@ void err_msg_not_defined(const str_t *name, linepos_t epoint) {
     err_msg_str_name("not defined", name, epoint);
 }
 
-unsigned int err_msg_unknown_formatchar(const Str *s, size_t offs, linepos_t epoint) {
+void err_msg_unknown_formatchar(const Str *s, size_t offs, linepos_t epoint) {
     struct linepos_s epoint2 = *epoint;
     unsigned int len;
     bool more;
@@ -1031,7 +1031,6 @@ unsigned int err_msg_unknown_formatchar(const Str *s, size_t offs, linepos_t epo
         adderror("'");
     }
     if (more) new_error_msg_more();
-    return len;
 }
 
 static void err_msg_double_note(const struct file_list_s *cflist, linepos_t epoint, const str_t *labelname2) {
