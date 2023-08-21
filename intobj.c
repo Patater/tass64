@@ -621,7 +621,7 @@ static MUST_CHECK Obj *idivrem(oper_t op, bool divrem) {
 
     len2 = intlen(vv2);
     if (len2 == 0) {
-        return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
+        return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint2);
     }
     len1 = intlen(vv1);
     v1 = vv1->data;

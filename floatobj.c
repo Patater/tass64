@@ -328,12 +328,12 @@ static MUST_CHECK Obj *calc2_double(oper_t op) {
     case O_MUL: return float_from_double_inplace(v1 * v2, op);
     case O_DIV:
         if (v2 == 0.0) {
-            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
+            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint2);
         }
         return float_from_double_inplace(v1 / v2, op);
     case O_MOD:
         if (v2 == 0.0) {
-            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint3);
+            return new_error_obj(ERROR_DIVISION_BY_Z, op->v2, op->epoint2);
         }
         r = fmod(v1, v2);
         if (r != 0.0 && ((v2 < 0.0) != (r < 0))) r += v2;
