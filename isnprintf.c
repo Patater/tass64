@@ -96,7 +96,7 @@ static const struct values_s *next_arg(Data *p) {
         ret = &p->list[p->listp];
         val = ret->val;
         if (val == none_value) {
-            if (p->none != 0) p->none = p->listp;
+            if (p->none == 0) p->none = p->listp + 1;
             ret = NULL;
         } else if (val->obj == ERROR_OBJ) {
             if (p->failure == NULL) p->failure = val_reference(val);
@@ -171,7 +171,7 @@ static void note_failure(Data *p, Obj *err) {
             return;
         }
     } else {
-        if (p->none != 0) p->none = p->listp;
+        if (p->none == 0) p->none = p->listp;
     }
     val_destroy(err);
 }
@@ -599,7 +599,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
                 FALL_THROUGH; /* fall through */
             default:
             error:
-                invalid_format_char = data.pf;
+                if (invalid_format_char == NULL) invalid_format_char = data.pf;
                 data.pf += utf8len(c);
                 star_args(&data);
                 while (pf < data.pf) {
