@@ -616,7 +616,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
     if (invalid_format_char != NULL) {
         err_msg_unknown_formatchar(Str(v[0].val), (size_t)(invalid_format_char - fmt.data), &v[0].epoint);
     } else if (data.listp != data.largs) {
-        err_msg_argnum(args, data.listp + 1, data.listp + 1, op->epoint);
+        err_msg_argnum(args, data.listp + 1, data.listp + 1, op->epoint3);
     } else if (data.failure != NULL) {
         err_msg_output(Error(data.failure));
     } else if (data.none != 0) {
