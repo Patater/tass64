@@ -769,42 +769,42 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 switch (func) {
                 case F_HYPOT:
                     if (args != 2) {
-                        return new_error_argnum(args, 2, 2, op->epoint2);
+                        return new_error_argnum(args, 2, 2, op->epoint3);
                     }
                     return gen_broadcast(op, function_hypot);
                 case F_ATAN2:
                     if (args != 2) {
-                        return new_error_argnum(args, 2, 2, op->epoint2);
+                        return new_error_argnum(args, 2, 2, op->epoint3);
                     }
                     return gen_broadcast(op, function_atan2);
                 case F_POW:
                     if (args != 2) {
-                        return new_error_argnum(args, 2, 2, op->epoint2);
+                        return new_error_argnum(args, 2, 2, op->epoint3);
                     }
                     return gen_broadcast(op, function_pow);
                 case F_RANGE:
                     if (args < 1 || args > 3) {
-                        return new_error_argnum(args, 1, 3, op->epoint2);
+                        return new_error_argnum(args, 1, 3, op->epoint3);
                     }
                     return gen_broadcast(op, function_range);
                 case F_BINARY:
                     if (args < 1 || args > 3) {
-                        return new_error_argnum(args, 1, 3, op->epoint2);
+                        return new_error_argnum(args, 1, 3, op->epoint3);
                     }
                     return gen_broadcast(op, function_binary);
                 case F_FORMAT:
                     if (args < 1) {
-                        return new_error_argnum(args, 1, 0, op->epoint2);
+                        return new_error_argnum(args, 1, 0, op->epoint3);
                     }
                     return gen_broadcast(op, isnprintf);
                 case F_RANDOM:
                     if (args > 3) {
-                        return new_error_argnum(args, 0, 3, op->epoint2);
+                        return new_error_argnum(args, 0, 3, op->epoint3);
                     }
                     return gen_broadcast(op, function_random);
                 default:
                     if (args != 1) {
-                        return new_error_argnum(args, 1, 1, op->epoint2);
+                        return new_error_argnum(args, 1, 1, op->epoint3);
                     }
                     switch (func) {
                     case F_ANY:
