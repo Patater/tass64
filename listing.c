@@ -391,6 +391,7 @@ FAST_CALL void listing_equal2(Obj *val, linecpos_t pos) {
     if (ls->linenum) {
         printline(ls);
         padding2(ls, ls->columns.addr);
+        flushbuf(ls);
     }
     putc('=', ls->flist);
     ls->c += val_print(val, ls->flist, ls->verbose ? SIZE_MAX : ls->columns.source - 2) + 1;
