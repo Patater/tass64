@@ -58,7 +58,7 @@ struct file_listnode_s {
 
 static struct file_listnode_s file_list;
 static const struct file_listnode_s *included_from = &file_list;
-static const char *prgname;
+static const char *prgname = "64tass";
 
 struct errorbuffer_s {
     size_t max;
@@ -1685,7 +1685,7 @@ void fatal_error(const char *txt) {
     if (txt != NULL) {
         console_use(stderr);
         if (console_use_color) console_bold(stderr);
-        printable_print((const uint8_t *)((prgname != NULL) ? prgname : "64tass"), stderr);
+        printable_print((const uint8_t *)prgname, stderr);
         fputs(": ", stderr);
         if (console_use_color) console_red(stderr);
         fputs("fatal error: ", stderr);
