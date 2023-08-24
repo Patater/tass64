@@ -2008,9 +2008,9 @@ sources it could be useful to define escape sequences for control codes.
     for each character definition. This allows easy assignment of randomly
     scattered Unicode values to a consecutive range of bytes values.
 
-            .mdef "A", 65;A -> 65
-            .mdef "ACX", 65;A -> 65, C-> 66, X -> 67
-            .mdef "ACX", [65, 33, 11];A -> 65, C-> 33, X -> 11
+            .tdef "A", 65;A -> 65
+            .tdef "ACX", 65;A -> 65, C-> 66, X -> 67
+            .tdef "ACX", [65, 33, 11];A -> 65, C-> 33, X -> 11
 
 .edef "<escapetext>", <value> [, "<escapetext>", <value>, ...]
     Assigns strings to byte sequences as a translated value.
