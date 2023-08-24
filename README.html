@@ -1041,7 +1041,7 @@ the symbol is used as a constant as there can be only one definition for them.
 <p>Duplicate names in parent scopes are not a problem and this gives the
 ability to override names defined in lower scopes. However this can just as well lead to mistakes if
 a lower scoped symbol with the same name was meant so there's a
-<a href="#o_Wshadow">-Wshadow</a> command line option to warn if such ambiguity exists.
+<q><a href="#o_Wshadow"><code>-Wshadow</code></a></q> command line option to warn if such ambiguity exists.
 
 <p>Case sensitivity can be enabled with the
 <q><a href="#o_case-sensitive"><code>-C</code></a></q> command line option, otherwise all
@@ -1933,7 +1933,7 @@ of the structure. This means the structure layout will always be the same
 independent of which address it's instantiated at. Anonymous structures do not
 change the way the alignment works.
 
-<p>The <a href="#o_Walign">-Walign</a> command line option can be used to emit
+<p>The <q><a href="#o_Walign"><code>-Walign</code></a></q> command line option can be used to emit
 warnings on where and how much padding was necessary for alignment.</p>
 
 <dl class="dir">
@@ -1969,9 +1969,9 @@ table   <b class="d">.fill</b> <span>$40</span>       <i>;table within the same 
         <b class="k">.endpage</b>        <i>;different page here but no crossing</i>
 </pre>
 
-<p>Normally a page check results in an error but the <a
-href="#o_Wpage">-Wno-error=page</a> command line option can reduce it into a
-warning.
+<p>Normally a page check results in an error but the <q><a
+href="#o_Wpage"><code>-Wno-error=page</code></a></q> command line option can
+reduce it into a warning.
 
 <p>Once this directive reports an error it's time to rearrange the source in
 a way that the check passes. Or alternatively the alignment
@@ -2375,24 +2375,24 @@ it can be reused whenever it's needed. This symbol can also act as a conversion
 function which converts a character string to a byte string using the encoding.
 
 <pre width="80">
-        <b class="k">.encode</b>     <i>;starts anonymous local encoding scope</i>
+        <b class="k">.encode</b>         <i>;starts anonymous local encoding scope</i>
         <b class="k">.enc</b> <span class="s">"titlefont"</span><i>;special character set</i>
         <b class="d">.text</b> <span class="s">"game title"</span>
-        <b class="k">.endencode</b>  <i>;restores original encoding</i>
+        <b class="k">.endencode</b>      <i>;restores original encoding</i>
 
-vt100   <b class="k">.encode</b>     <i>;define custom encoding</i>
+vt100   <b class="k">.encode</b>         <i>;define custom encoding</i>
         <b class="k">.cdef</b> <span class="s">" ~"</span>, <span>32</span>
         <b class="k">.edef</b> <span class="s">"{esc}"</span>, <span>27</span><i>;add escape codes</i>
         <b class="k">.edef</b> <span class="s">"{moff}"</span>, [<span>27</span>, <span class="s">"["</span>, <span class="s">"m"</span>]
         <b class="k">.edef</b> <span class="s">"{bold}"</span>, [<span>27</span>, <span class="s">"["</span>, <span class="s">"1"</span>, <span class="s">"m"</span>]
         <b class="k">.endencode</b>
 
-        <b class="k">.encode</b> <u>vt100</u><i>;use custom encoding from here</i>
+        <b class="k">.encode</b> <u>vt100</u>   <i>;use custom encoding from here</i>
         <b class="d">.text</b> <span class="s">"<span>{bold}</span>bold<span>{moff}</span> text"</span>
         <b>lda</b> #<span class="s">"<span>{esc}"</span></span>
-        <b class="k">.endencode</b>  <i>;restores original encoding</i>
+        <b class="k">.endencode</b>      <i>;restores original encoding</i>
         <b>cmp</b> #<u>vt100</u>(<span class="s">"<span>{esc}</span>"</span>)<i>;conversion when not in scope</i>
-        <b class="k">.enc</b> <u>vt100</u><i>;select custom encoding (at start of source)</i>
+        <b class="k">.enc</b> <u>vt100</u>      <i>;select custom encoding (at start of source)</i>
 </pre></dd>
 
 <dt><b>.cdef</b> &lt;start&gt;, &lt;end&gt;, &lt;coded&gt; [, &lt;start&gt;, &lt;end&gt;, &lt;coded&gt;, &hellip;]<a name="d_cdef" href="#d_cdef"></a>
@@ -2424,8 +2424,8 @@ for each character definition. This allows easy assignment of randomly
 scattered Unicode values to a consecutive range of bytes values.</p>
 
 <pre width="80">
-        <b class="k">.tdef</b> <span class="s">"A"</span>, <span>65</span><i>;A -> 65</i>
-        <b class="k">.tdef</b> <span class="s">"ACX"</span>, <span>65</span><i>;A -> 65, C-> 66, X -> 67</i>
+        <b class="k">.tdef</b> <span class="s">"A"</span>, <span>65</span>   <i>;A -> 65</i>
+        <b class="k">.tdef</b> <span class="s">"ACX"</span>, <span>65</span> <i>;A -> 65, C-> 66, X -> 67</i>
         <b class="k">.tdef</b> <span class="s">"ACX"</span>, [<span>65</span>, <span>33</span>, <span>11</span>]<i>;A -> 65, C-> 33, X -> 11</i>
 </pre></dd>
 
@@ -3172,7 +3172,7 @@ anytime soon.</p></dd>
 another scope's variables without leaving the current scope. May be
 useful to allow a short hand access in some situations.</p>
 
-<p>It's advised to use the <a href="#o_Wshadow">-Wshadow</a> command line
+<p>It's advised to use the <q><a href="#o_Wshadow"><code>-Wshadow</code></a></q> command line
 option to warn about any unexpected symbol ambiguity.</p></dd>
 </dl>
 

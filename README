@@ -830,7 +830,7 @@ is used as a constant as there can be only one definition for them.
 Duplicate names in parent scopes are not a problem and this gives the ability
 to override names defined in lower scopes. However this can just as well lead
 to mistakes if a lower scoped symbol with the same name was meant so there's a
--Wshadow command line option to warn if such ambiguity exists.
+`-Wshadow' command line option to warn if such ambiguity exists.
 
 Case sensitivity can be enabled with the `-C' command line option, otherwise
 all symbols are matched case insensitive.
@@ -1562,7 +1562,7 @@ of the structure. This means the structure layout will always be the same
 independent of which address it's instantiated at. Anonymous structures do not
 change the way the alignment works.
 
-The -Walign command line option can be used to emit warnings on where and how
+The `-Walign' command line option can be used to emit warnings on where and how
 much padding was necessary for alignment.
 
 .page [<interval>[, <offset>]]
@@ -1593,7 +1593,7 @@ much padding was necessary for alignment.
     table   .fill $40       ;table within the same page
             .endpage        ;different page here but no crossing
 
-    Normally a page check results in an error but the -Wno-error=page command
+    Normally a page check results in an error but the `-Wno-error=page' command
     line option can reduce it into a warning.
 
     Once this directive reports an error it's time to rearrange the source in a
@@ -1962,24 +1962,24 @@ sources it could be useful to define escape sequences for control codes.
     conversion function which converts a character string to a byte string
     using the encoding.
 
-            .encode     ;starts anonymous local encoding scope
+            .encode         ;starts anonymous local encoding scope
             .enc "titlefont";special character set
             .text "game title"
-            .endencode  ;restores original encoding
+            .endencode      ;restores original encoding
 
-    vt100   .encode     ;define custom encoding
+    vt100   .encode         ;define custom encoding
             .cdef " ~", 32
             .edef "{esc}", 27;add escape codes
             .edef "{moff}", [27, "[", "m"]
             .edef "{bold}", [27, "[", "1", "m"]
             .endencode
 
-            .encode vt100;use custom encoding from here
+            .encode vt100   ;use custom encoding from here
             .text "{bold}bold{moff} text"
             lda #"{esc}"
-            .endencode  ;restores original encoding
+            .endencode      ;restores original encoding
             cmp #vt100("{esc}");conversion when not in scope
-            .enc vt100;select custom encoding (at start of source)
+            .enc vt100      ;select custom encoding (at start of source)
 
 .cdef <start>, <end>, <coded> [, <start>, <end>, <coded>, ...]
 .cdef "<start><end>", <coded> [, "<start><end>", <coded>, ...]
@@ -2008,8 +2008,8 @@ sources it could be useful to define escape sequences for control codes.
     for each character definition. This allows easy assignment of randomly
     scattered Unicode values to a consecutive range of bytes values.
 
-            .tdef "A", 65;A -> 65
-            .tdef "ACX", 65;A -> 65, C-> 66, X -> 67
+            .tdef "A", 65   ;A -> 65
+            .tdef "ACX", 65 ;A -> 65, C-> 66, X -> 67
             .tdef "ACX", [65, 33, 11];A -> 65, C-> 33, X -> 11
 
 .edef "<escapetext>", <value> [, "<escapetext>", <value>, ...]
@@ -2679,7 +2679,7 @@ ctable  .byte colors.(red, green, blue)
     scope's variables without leaving the current scope. May be useful to allow
     a short hand access in some situations.
 
-    It's advised to use the -Wshadow command line option to warn about any
+    It's advised to use the `-Wshadow' command line option to warn about any
     unexpected symbol ambiguity.
 
 Sections
