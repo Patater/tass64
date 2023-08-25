@@ -233,7 +233,7 @@ wrbyte  sta $ffff       ;quick byte writer at $02
         bne +
         inc wrbyte+2
 +       rts
-        .here
+        .endlogical
 
 The assembler supports lists and tuples, which does not seems interesting at
 first as it sound like something which is only useful when heavy scripting is
@@ -601,7 +601,7 @@ a[s]    reverse, as tuple       label[::-1]
 mydata  .word 1, 4, 3
 mycode  .block
 local   lda #0
-        .bend
+        .endblock
 
         ldx #size(mydata) ;6 bytes (3*2)
         ldx #len(mydata)  ;3 elements
@@ -844,8 +844,8 @@ until the global scope is reached.
 f       .block
 g        .block
 n        nop            ;jump here
-         .bend
-        .bend
+         .endblock
+        .endblock
 
         jsr f.g.n       ;reference from a scope
 f.x     = 3             ;create x in scope f with value 3
@@ -1451,7 +1451,7 @@ it does not need to be.
     .0800   1000                                    label2
                                                     *       = $1200
     .0a00   1200                                    label3
-                                                            .here
+                                                            .endlogical
     .0a00                                           label4
 
 .offs <expression>
@@ -1488,7 +1488,7 @@ it does not need to be.
     .1000   0300     a9 80          lda #$80        drive   lda #$80
     .1002   0302     85 00          sta $00                 sta $00
     .1004   0304     4c 00 03       jmp $0300               jmp drive
-                                                            .here
+                                                            .endlogical
 
 .virtual [<expression>]
     Starts a virtual block
@@ -1507,7 +1507,7 @@ it does not need to be.
     control .byte ?         ; control
     ad      .byte ?         ; attack/decay
     sr      .byte ?         ; sustain/release
-            .bend
+            .endblock
             .endvirtual
 
     Or to define stack "allocated" variables on 65816.
@@ -2620,7 +2620,7 @@ ctable  .byte colors.(red, green, blue)
             .block
             inc count + 1
     count   ldx #0
-            .bend
+            .endblock
 
 .namespace [<expression>]
     Namespace area start
@@ -2694,7 +2694,8 @@ offset and program counters for each defined section.
 .endsection [<name>]
     Ends a segment block
 
-    Defines a section fragment. The name at .send must match but it's optional.
+    Defines a section fragment. The name at .endsection must match but it's
+    optional.
 
 .dsection <name>
     Collect the section fragments here.
@@ -2732,10 +2733,10 @@ ss      .word 0
 start   sei
         .section zp     ;declare some new zero page variables
 p2      .addr ?         ;a pointer
-        .send zp
+        .endsection zp
         .section bss    ;new variables
 buffer  .fill 10        ;temporary area
-        .send bss
+        .endsection bss
 
         lda (p2),y
         lda #<label
@@ -2744,13 +2745,13 @@ buffer  .fill 10        ;temporary area
 
         .section data   ;some data
 label   .null "message"
-        .send data
+        .endsection data
 
         jmp error
         .section zp     ;declare some more zero page variables
 p3      .addr ?         ;a pointer
-        .send zp
-        .send code
+        .endsection zp
+        .endsection code
 
 The compiled code will look like:
 
@@ -2787,7 +2788,7 @@ and `data' sections they use, while the `bss' section is shared for all banks.
         .logical $8000
         .dsection bank1
         .cerror * > $a000, "Bank1 too long"
-        .here
+        .endlogical
 
 bank1   .block          ;Make all symbols local
         .section bank1
@@ -2796,16 +2797,16 @@ bank1   .block          ;Make all symbols local
         .section code   ;Pre-open code section
         .include "code.asm"; see below
         .include "iter.asm"
-        .send code
-        .send bank1
-        .bend
+        .endsection code
+        .endsection bank1
+        .endblock
 
 ;Second 8K bank at $2000, PC at $8000
 *       = $2000
         .logical $8000
         .dsection bank2
         .cerror * > $a000, "Bank2 too long"
-        .here
+        .endlogical
 
 bank2   .block          ;Make all symbols local
         .section bank2
@@ -2813,9 +2814,9 @@ bank2   .block          ;Make all symbols local
         .dsection data
         .section code   ;Pre-open code section
         .include "scr.asm"
-        .send code
-        .send bank2
-        .bend
+        .endsection code
+        .endsection bank2
+        .endblock
 
 ;Common data, avoid initialized variables here!
 *       = $c000
@@ -2826,11 +2827,11 @@ code    sei
 
         .section bss   ;Common data section
 buffer  .fill 10
-        .send bss
+        .endsection bss
 
         .section data  ;Data section (in bank1)
 routine .addr print
-        .send bss
+        .endsection bss
 
 65816 related
 
@@ -3901,7 +3902,7 @@ default, the others are disabled.
 Target selection on command line
 
 These options will select the default architecture. It can be overridden by
-using the .cpu directive in the source.
+using the `.cpu' directive in the source.
 
 --m65xx
     Standard 65xx (default). For writing compatible code, no extra codes. This

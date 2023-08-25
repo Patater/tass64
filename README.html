@@ -372,7 +372,7 @@ wrbyte  <b>sta</b> <span>$ffff</span>       <i>;quick byte writer at $02</i>
         <b>bne</b> <u>+</u>
         <b>inc</b> <u>wrbyte</u>+<span>2</span>
 +       <b>rts</b>
-        <b class="k">.here</b>
+        <b class="k">.endlogical</b>
 </pre>
 
 <p>The assembler supports lists and tuples, which does not seems interesting at
@@ -787,7 +787,7 @@ risk for now, you might need to update your code later.</b>
 mydata  <b class="d">.word</b> <span>1</span>, <span>4</span>, <span>3</span>
 mycode  <b class="k">.block</b>
 local   <b>lda</b> #<span>0</span>
-        <b class="k">.bend</b>
+        <b class="k">.endblock</b>
 
         <b>ldx</b> #<span class="k">size</span>(<u>mydata</u>) <i>;6 bytes (3&lowast;2)</i>
         <b>ldx</b> #<span class="k">len</span>(<u>mydata</u>)  <i>;3 elements</i>
@@ -1058,8 +1058,8 @@ until the global scope is reached.
 f       <b class="k">.block</b>
 g        <b class="k">.block</b>
 n        <b>nop</b>            <i>;jump here</i>
-         <b class="k">.bend</b>
-        <b class="k">.bend</b>
+         <b class="k">.endblock</b>
+        <b class="k">.endblock</b>
 
         <b>jsr</b> <u>f</u>.<u>g</u>.<u>n</u>       <i>;reference from a scope</i>
 f.x     <b>=</b> <span>3</span>             <i>;create x in scope f with value 3</i>
@@ -1814,7 +1814,7 @@ will match the requested address in the expression.
 .0800   1000                                    label2
                                                 *       = <span>$1200</span>
 .0a00   1200                                    label3
-                                                        <b class="k">.here</b>
+                                                        <b class="k">.endlogical</b>
 .0a00                                           label4
 </pre></dd>
 
@@ -1852,7 +1852,7 @@ to use alternatives below.</p>
 .1000   0300     a9 80          lda #$80        drive   <b>lda</b> #<span>$80</span>
 .1002   0302     85 00          sta $00                 <b>sta</b> <span>$00</span>
 .1004   0304     4c 00 03       jmp $0300               <b>jmp</b> <u>drive</u>
-                                                        <b class="k">.here</b>
+                                                        <b class="k">.endlogical</b>
 </pre></dd>
 
 <dt><b>.virtual</b> [&lt;expression&gt;]<a name="d_virtual" href="#d_virtual"></a>
@@ -1872,7 +1872,7 @@ pulsew  <b class="d">.word</b> <span>?</span>         <i>; pulse width</i>
 control <b class="d">.byte</b> <span>?</span>         <i>; control</i>
 ad      <b class="d">.byte</b> <span>?</span>         <i>; attack/decay</i>
 sr      <b class="d">.byte</b> <span>?</span>         <i>; sustain/release</i>
-        <b class="k">.bend</b>
+        <b class="k">.endblock</b>
         <b class="k">.endvirtual</b>
 </pre>
 
@@ -3108,7 +3108,7 @@ then local symbols are accessible through that using the dot notation.</p>
         <b class="k">.block</b>
         <b>inc</b> <u>count</u> + <span>1</span>
 count   <b>ldx</b> #<span>0</span>
-        <b class="k">.bend</b>
+        <b class="k">.endblock</b>
 </pre></dd>
 
 <dt><b>.namespace</b> [&lt;expression&gt;]<a name="d_namespace" href="#d_namespace"></a>
@@ -3189,7 +3189,7 @@ compile offset and program counters for each defined section.</p>
 <dt><b>.endsection</b> [&lt;name&gt;]<a name="d_endsection" href="#d_endsection"></a>
 <dd>Ends a segment block
 
-<p>Defines a section fragment. The name at <code>.send</code> must match but
+<p>Defines a section fragment. The name at <code>.endsection</code> must match but
 it's optional.</p></dd>
 
 <dt><b>.dsection</b> &lt;name&gt;<a name="d_dsection" href="#d_dsection"></a>
@@ -3231,10 +3231,10 @@ ss      <b class="d">.word</b> <span>0</span>
 start   <b>sei</b>
         <b class="k">.section</b> <u>zp</u>     <i>;declare some new zero page variables</i>
 p2      <b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
-        <b class="k">.send</b> <u>zp</u>
+        <b class="k">.endsection</b> <u>zp</u>
         <b class="k">.section</b> <u>bss</u>    <i>;new variables</i>
 buffer  <b class="d">.fill</b> <span>10</span>        <i>;temporary area</i>
-        <b class="k">.send</b> <u>bss</u>
+        <b class="k">.endsection</b> <u>bss</u>
 
         <b>lda</b> (<u>p2</u>),y
         <b>lda</b> #&lt;<u>label</u>
@@ -3243,13 +3243,13 @@ buffer  <b class="d">.fill</b> <span>10</span>        <i>;temporary area</i>
 
         <b class="k">.section</b> <u>data</u>   <i>;some data</i>
 label   <b class="d">.null</b> <span class="s">"message"</span>
-        <b class="k">.send</b> <u>data</u>
+        <b class="k">.endsection</b> <u>data</u>
 
         <b>jmp</b> <u>error</u>
         <b class="k">.section</b> <u>zp</u>     <i>;declare some more zero page variables</i>
 p3      <b class="d">.addr</b> <span>?</span>         <i>;a pointer</i>
-        <b class="k">.send</b> <u>zp</u>
-        <b class="k">.send</b> <u>code</u>
+        <b class="k">.endsection</b> <u>zp</u>
+        <b class="k">.endsection</b> <u>code</u>
 </pre>
 
 <p>The compiled code will look like:
@@ -3291,7 +3291,7 @@ shared for all banks.
         <b class="k">.logical</b> <span>$8000</span>
         <b class="d">.dsection</b> <u>bank1</u>
         <b class="k">.cerror</b> <u>*</u> &gt; <span>$a000</span>, <span class="s">"Bank1 too long"</span>
-        <b class="k">.here</b>
+        <b class="k">.endlogical</b>
 
 bank1   <b class="k">.block</b>          <i>;Make all symbols local</i>
         <b class="k">.section</b> <u>bank1</u>
@@ -3300,16 +3300,16 @@ bank1   <b class="k">.block</b>          <i>;Make all symbols local</i>
         <b class="k">.section</b> <u>code</u>   <i>;Pre-open code section</i>
         <b class="k">.include</b> <span class="s">"code.asm"</span><i>; see below</i>
         <b class="k">.include</b> <span class="s">"iter.asm"</span>
-        <b class="k">.send</b> <u>code</u>
-        <b class="k">.send</b> <u>bank1</u>
-        <b class="k">.bend</b>
+        <b class="k">.endsection</b> <u>code</u>
+        <b class="k">.endsection</b> <u>bank1</u>
+        <b class="k">.endblock</b>
 
 <i>;Second 8K bank at $2000, PC at $8000</i>
 *       <b>=</b> <span>$2000</span>
         <b class="k">.logical</b> <span>$8000</span>
         <b class="d">.dsection</b> <u>bank2</u>
         <b class="k">.cerror</b> <u>*</u> &gt; <span>$a000</span>, <span class="s">"Bank2 too long"</span>
-        <b class="k">.here</b>
+        <b class="k">.endlogical</b>
 
 bank2   <b class="k">.block</b>          <i>;Make all symbols local</i>
         <b class="k">.section</b> <u>bank2</u>
@@ -3317,9 +3317,9 @@ bank2   <b class="k">.block</b>          <i>;Make all symbols local</i>
         <b class="d">.dsection</b> <u>data</u>
         <b class="k">.section</b> <u>code</u>   <i>;Pre-open code section</i>
         <b class="k">.include</b> <span class="s">"scr.asm"</span>
-        <b class="k">.send</b> <u>code</u>
-        <b class="k">.send</b> <u>bank2</u>
-        <b class="k">.bend</b>
+        <b class="k">.endsection</b> <u>code</u>
+        <b class="k">.endsection</b> <u>bank2</u>
+        <b class="k">.endblock</b>
 
 <i>;Common data, avoid initialized variables here!</i>
 *       <b>=</b> <span>$c000</span>
@@ -3330,11 +3330,11 @@ code    <b>sei</b>
 
         <b class="k">.section</b> <u>bss</u>   <i>;Common data section</i>
 buffer  <b class="d">.fill</b> <span>10</span>
-        <b class="k">.send</b> <u>bss</u>
+        <b class="k">.endsection</b> <u>bss</u>
 
         <b class="k">.section</b> <u>data</u>  <i>;Data section (in bank1)</i>
 routine <b class="d">.addr</b> <u>print</u>
-        <b class="k">.send</b> <u>bss</u>
+        <b class="k">.endsection</b> <u>bss</u>
 </pre>
 
 <h3>65816 related<a name="w65816" href="#w65816"></a></h3>
@@ -4513,7 +4513,7 @@ symbols are treated as used for exporting purposes.</p></dd>
 <h3>Target selection on command line<a name="commandline-target" href="#commandline-target"></a></h3>
 
 <p>These options will select the default architecture. It can be overridden by
-using the <a href="#d_cpu"><code>.cpu</code></a> directive in the source.</p>
+using the <q><a href="#d_cpu"><code>.cpu</code></a></q> directive in the source.</p>
 
 <dl class="dir">
 <dt><b>--m65xx</b><a name="o_m65xx" href="#o_m65xx"></a>
