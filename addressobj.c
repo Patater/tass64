@@ -171,6 +171,9 @@ static MUST_CHECK Obj *repr(Obj *o1, linepos_t epoint, size_t maxsize) {
         return NULL;
     }
 
+    if (ind != 0 && str->len != 0 && b2[ind - 1] == '+' && str->data[0] == '-') {
+        ind--; len--; chars--;
+    }
     v = new_str2(len);
     if (v == NULL) goto error;
     v->chars = chars;
