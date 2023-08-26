@@ -611,14 +611,14 @@ in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.
 
 <pre width="80">
         <b class="k">.enc</b> <span class="s">"screen"</span>   <i>;use screen encoding</i>
-mystr   <b>=</b> <span class="s">b"oeU"</span>        <i>;convert text to bytes, like .text</i>
+mystr   <b>=</b> <span class="s">b"oeU"</span>        <i>;convert text to bytes, like <a href="#d_text">.text</a></i>
         <b class="k">.enc</b> <span class="s">"none"</span>     <i>;normal encoding</i>
 
         <b class="d">.text</b> <u>mystr</u>     <i>;text as originally encoded</i>
-        <b class="d">.text</b> <span class="s">s"p1"</span>     <i>;convert to bytes like .shift</i>
-        <b class="d">.text</b> <span class="s">l"p2"</span>     <i>;convert to bytes like .shiftl</i>
-        <b class="d">.text</b> <span class="s">n"p3"</span>     <i>;convert to bytes like .null</i>
-        <b class="d">.text</b> <span class="s">p"p4"</span>     <i>;convert to bytes like .ptext</i>
+        <b class="d">.text</b> <span class="s">s"p1"</span>     <i>;convert to bytes like <a href="#d_shift">.shift</a></i>
+        <b class="d">.text</b> <span class="s">l"p2"</span>     <i>;convert to bytes like <a href="#d_shiftl">.shiftl</a></i>
+        <b class="d">.text</b> <span class="s">n"p3"</span>     <i>;convert to bytes like <a href="#d_null">.null</a></i>
+        <b class="d">.text</b> <span class="s">p"p4"</span>     <i>;convert to bytes like <a href="#d_ptext">.ptext</a></i>
 </pre>
 
 <p>Binary data may be embedded in source code by using hexadecimal byte
@@ -1001,9 +1001,9 @@ exact size. Values which can fit in shorter space will be padded but longer ones
 give an error.
 
 <dl class="dir">
-<dt><b>bits(</b>&lt;expression&gt;, &lt;bits count expression&gt;<b>)</b>
+<dt><b>bits(</b>&lt;expression&gt;[, &lt;bit count&gt;]<b>)</b>
 <dd>Convert to the specific number of bits. If the number of bits is negative then it's a signed.</dd>
-<dt><b>bytes(</b>&lt;expression&gt;, &lt;byte count expression&gt;<b>)</b>
+<dt><b>bytes(</b>&lt;expression&gt;[, &lt;byte count&gt;]<b>)</b>
 <dd>Convert to the specific number of bytes. If the number of bits is negative then it's a signed.</dd>
 </dl>
 
@@ -2199,15 +2199,22 @@ Use <a href="#d_text"><code>.text</code></a> instead which accepts strings of an
 &gt;1014  1e 85 03 00
 </pre></dd>
 
-<dt><b>.text</b> bytes(&lt;expression&gt;, &lt;byte count expression&gt;)
-<dd>Create bytes from arbitrary precision unsigned and signed numbers.</dd>
-<dt><b>.text</b> bits(&lt;expression&gt;, &lt;byte count expression&gt;)
+<dt><b>.text</b> bits(&lt;expression&gt;[, &lt;bit count&gt;])
 <dd>Create bytes from arbitrary precision unsigned and signed numbers.
+<dt><b>.text</b> bytes(&lt;expression&gt;[, &lt;byte count&gt;])
+<dd>Create bytes from arbitrary precision unsigned and signed numbers.</dd>
 
 <p>For cases not covered by the numeric store directives above it's possible to
 convert numbers to byte or bit strings and store the resulting string. If the
-count expression of bytes() and bits() is negative then the stored number is
-signed otherwise unsigned.</p></dd>
+count expression of <code>bytes()</code> and <code>bits()</code> is negative then the stored number is
+signed otherwise unsigned.</p>
+
+<pre width="80">
+&gt;1000  74 65 78 74 00 00 00 00  <b class="d">.text</b> <span class="k">bytes</span>(<span class="s">"text"</span>, <span>8</span>)<i>;pad up to 8 bytes</i>
+&gt;1008  f4 ff ff ff ff ff ff ff  <b class="d">.text</b> <span class="k">bytes</span>(<span>-12</span>, <span>-8</span>)  <i>;8 bytes signed</i>
+&gt;1010  00 04 00 00 00 00        <b class="d">.text</b> <span class="k">bits</span>(<span>1024</span>, <span>48</span>)  <i>;48 bits unsigned</i>
+&gt;1016  f4 ff ff ff ff ff        <b class="d">.text</b> <span class="k">bits</span>(<span>-12</span>, <span>-48</span>)  <i>;48 bits signed</i>
+</pre></dd>
 
 </dl>
 
