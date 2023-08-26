@@ -3011,7 +3011,7 @@ MUST_CHECK Obj *compile(void)
                             uval_t provides = current_section->provides, requires = current_section->requires, conflicts = current_section->conflicts;
                             bool doubledef = false;
                             Type *obj = (prm == CMD_STRUCT) ? STRUCT_OBJ : UNION_OBJ;
-
+                            listing_line(0);
                             if (diagnostics.optimize) cpu_opt_invalidate();
                             new_waitfor((prm==CMD_STRUCT) ? W_ENDS : W_ENDU, &cmdpoint);waitfor->skip = 0;
                             label = new_label(&labelname, mycontext, strength, current_file_list);
@@ -3088,7 +3088,6 @@ MUST_CHECK Obj *compile(void)
                                 structure->size = 0;
                                 structure->names = new_namespace(current_file_list, &epoint);
                             }
-                            listing_line(cmdpoint.pos);
                             waitfor->what = (prm == CMD_STRUCT) ? W_ENDS2 : W_ENDU2;
                             waitfor->skip = 1;
                             val = macro_recurse(W_ENDS, Obj(structure), structure->names, &cmdpoint);
