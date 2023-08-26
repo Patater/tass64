@@ -608,7 +608,6 @@ static void set_cpumode(const struct cpu_s *cpumode) {
     all_mem = cpumode->max_address;
     all_mem_bits = (all_mem == 0xffff) ? 16 : 24;
     select_opcodes(cpumode);
-    listing_set_cpumode(cpumode);
     cpu_opt_set_cpumode(cpumode);
     if (registerobj_createnames(cpumode->registers)) constcreated = true;
 }
