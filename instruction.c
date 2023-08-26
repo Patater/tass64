@@ -838,6 +838,16 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable || vals->val[2].val->obj->iterable) {
             goto broadcast;
         }
+        if (vals->val[1].val->obj == REGISTER_OBJ && vals->val[2].val->obj == REGISTER_OBJ) {
+            atype_t am2 = Register(vals->val[2].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[2].val)->data[0]);
+            am = Register(vals->val[1].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[1].val)->data[0]);
+            if (am != A_NONE && am2 != A_NONE) {
+                val = vals->val[0].val;
+                am |= val->obj->address(val) << 4;
+                am = (am << 4) | am2;
+                goto retry1;
+            }
+        }
         if (cnmemonic[ADR_BIT_ZP_REL] != ____) {
             if (w != 3 && w != 1) return err_addressize((w != 0) ? ERROR__NO_LONG_ADDR : ERROR__NO_BYTE_ADDR, epoint2, prm);
             if (touval(vals->val[0].val, &uval, 3, epoint2)) {}
