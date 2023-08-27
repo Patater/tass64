@@ -71,6 +71,7 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR_____KEY_ERROR:
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:
+    case ERROR__NOT_ONE_CHAR:
         val_destroy(v1->u.obj);
         return;
     case ERROR__INVALID_CONV:
@@ -134,6 +135,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR_____KEY_ERROR:
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:
+    case ERROR__NOT_ONE_CHAR:
         v = v1->u.obj;
         break;
     case ERROR__INVALID_CONV:
@@ -289,6 +291,7 @@ void error_obj_update(Error *err, const Obj *v1, Obj *v2) {
     case ERROR_____KEY_ERROR:
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:
+    case ERROR__NOT_ONE_CHAR:
         if (err->u.obj == v1) {
             val_replace(&err->u.obj, v2);
         }

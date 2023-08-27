@@ -355,7 +355,7 @@ static const char *const terr_error[] = {
     "double defined range",
     "double defined escape",
     "extra characters on line",
-    "more than two characters",
+    "more than two characters ",
     "floating point overflow",
     "general syntax",
     "expression syntax",
@@ -375,7 +375,7 @@ static const char *const terr_error[] = {
     "empty range not allowed",
     "empty string not allowed",
     "empty list not allowed",
-    "more than a single character",
+    "more than a single character ",
     "requirements not met",
     "conflict",
     "index out of range ",
@@ -591,6 +591,8 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR__NOT_DATABANK:
         case ERROR_CANT_CROSS_BA:
         case ERROR__OFFSET_RANGE:
+        case ERROR_NOT_TWO_CHARS:
+        case ERROR__NOT_ONE_CHAR:
             adderror(terr_error[no - 0x40]);
             if (prm != NULL) err_msg_variable((Obj *)prm);
             break;
@@ -919,7 +921,6 @@ void err_msg_output(const Error *val) {
     case ERROR______NOT_UVAL: more = err_msg_big_integer(val); break;
     case ERROR_REQUIREMENTS_:
     case ERROR______CONFLICT:
-    case ERROR_NOT_TWO_CHARS:
     case ERROR_NUMERIC_OVERF:
     case ERROR_NEGFRAC_POWER:
     case ERROR___EMPTY_RANGE:
@@ -927,7 +928,6 @@ void err_msg_output(const Error *val) {
     case ERROR____EMPTY_LIST:
     case ERROR__BYTES_NEEDED:
     case ERROR___NO_LAST_GAP:
-    case ERROR__NOT_ONE_CHAR:
     case ERROR_NO_ZERO_VALUE:
     case ERROR_OUT_OF_MEMORY:
     case ERROR__ADDR_COMPLEX:
@@ -939,6 +939,7 @@ void err_msg_output(const Error *val) {
     case ERROR__NO_BYTE_ADDR:
     case ERROR__NO_WORD_ADDR:
     case ERROR__NO_LONG_ADDR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_opcode(val->u.addresssize.cod); break;
+    case ERROR__NOT_ONE_CHAR:
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:
     case ERROR__NOT_KEYVALUE:

@@ -542,7 +542,7 @@ MUST_CHECK Obj *bytes_from_z85str(const uint8_t *s, linecpos_t *ln, linepos_t ep
     return Obj(v);
 }
 
-MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types mode) {
+MUST_CHECK Obj *bytes_from_str(Str *v1, linepos_t epoint, Textconv_types mode) {
     size_t len = v1->len, len2 = (mode == BYTES_MODE_PTEXT || mode == BYTES_MODE_NULL) ? 1 : 0;
     uint8_t *s;
     Bytes *v;
@@ -550,12 +550,14 @@ MUST_CHECK Obj *bytes_from_str(const Str *v1, linepos_t epoint, Textconv_types m
         struct encoder_s *encoder;
         int ch;
         if (actual_encoding == NULL) {
+            Error *err;
             if (v1->chars == 1) {
                 unichar_t ch2 = v1->data[0];
                 if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
                 return bytes_from_uval(ch2, ch2 < 256 ? 1 : ch2 < 65536 ? 2 : 3);
             }
-            return Obj(new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint));
+            if (v1->chars != 0) return new_error_obj(ERROR__NOT_ONE_CHAR, Obj(v1), epoint);
+            return Obj(new_error(ERROR__EMPTY_STRING, epoint));
         }
         if (len < sizeof v->u.val) len = sizeof v->u.val;
         if (len == 0) {

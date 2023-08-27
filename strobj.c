@@ -261,7 +261,7 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
     return ret;
 }
 
-MUST_CHECK Obj *float_from_str(const Str *v1, linepos_t epoint) {
+MUST_CHECK Obj *float_from_str(Str *v1, linepos_t epoint) {
     Obj *tmp = bytes_from_str(v1, epoint, BYTES_MODE_TEXT);
     Obj *ret;
     if (tmp->obj != BYTES_OBJ) return tmp;

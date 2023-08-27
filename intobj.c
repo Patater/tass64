@@ -1463,7 +1463,7 @@ failed:
     return new_error_mem(epoint);
 }
 
-MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
+MUST_CHECK Obj *int_from_str(Str *v1, linepos_t epoint) {
     struct encoder_s *encoder;
     int ch;
     Int *v;
@@ -1478,7 +1478,8 @@ MUST_CHECK Obj *int_from_str(const Str *v1, linepos_t epoint) {
             if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
             return int_from_uval(ch2);
         }
-        return Obj(new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint));
+        if (v1->chars != 0) return new_error_obj(ERROR__NOT_ONE_CHAR, Obj(v1), epoint);
+        return Obj(new_error(ERROR__EMPTY_STRING, epoint));
     }
 
     i = v1->len;

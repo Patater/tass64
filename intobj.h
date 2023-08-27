@@ -49,7 +49,7 @@ struct Float;
 extern MUST_CHECK Obj *int_from_size(size_t);
 extern MUST_CHECK Obj *int_from_uval(uval_t);
 extern MUST_CHECK Obj *int_from_ival(ival_t);
-extern MUST_CHECK Obj *int_from_str(const struct Str *, linepos_t);
+extern MUST_CHECK Obj *int_from_str(struct Str *, linepos_t);
 extern MUST_CHECK Obj *int_from_bytes(const struct Bytes *, linepos_t);
 extern MUST_CHECK Obj *int_from_bits(const struct Bits *, linepos_t);
 extern MUST_CHECK Obj *int_from_decstr(const uint8_t *, linecpos_t *, linecpos_t *);

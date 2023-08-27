@@ -2042,7 +2042,7 @@ static bool cdef_command(linepos_t epoint) {
                     if ((ch & 0x80) != 0) i += utf8in(str->data + i, &ch); else i++;
                     tmp.end = ch & 0xffffff;
                     endok = true;
-                    if (str->len > i) {err_msg2(ERROR_NOT_TWO_CHARS, NULL, &vs->epoint); tryit = false;}
+                    if (str->len > i) {err_msg2(ERROR_NOT_TWO_CHARS, str, &vs->epoint); tryit = false;}
                 }
             }
         } else {
@@ -2061,7 +2061,7 @@ static bool cdef_command(linepos_t epoint) {
                     unichar_t ch = str->data[0];
                     if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
                     tmp.end = ch & 0xffffff;
-                    if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, NULL, &vs->epoint); tryit = false;}
+                    if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, str, &vs->epoint); tryit = false;}
                 }
             } else {
                 if (touval2(vs, &uval, 24)) tryit = false;

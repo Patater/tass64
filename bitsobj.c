@@ -642,7 +642,7 @@ MUST_CHECK Obj *bits_from_binstr(const uint8_t *s, linecpos_t *ln) {
     return normalize(v, j, false);
 }
 
-MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
+MUST_CHECK Obj *bits_from_str(Str *v1, linepos_t epoint) {
     struct encoder_s *encoder;
     int ch;
     Bits *v;
@@ -656,7 +656,8 @@ MUST_CHECK Obj *bits_from_str(const Str *v1, linepos_t epoint) {
             if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
             return return_bits(ch2 & 0xffffff, ch2 < 256 ? 8 : ch2 < 65536 ? 16 : 24);
         }
-        return Obj(new_error((v1->chars == 0) ? ERROR__EMPTY_STRING : ERROR__NOT_ONE_CHAR, epoint));
+        if (v1->chars != 0) return new_error_obj(ERROR__NOT_ONE_CHAR, Obj(v1), epoint);
+        return Obj(new_error(ERROR__EMPTY_STRING, epoint));
     }
 
     if (v1->len == 0) {
