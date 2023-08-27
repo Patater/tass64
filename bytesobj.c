@@ -550,7 +550,6 @@ MUST_CHECK Obj *bytes_from_str(Str *v1, linepos_t epoint, Textconv_types mode) {
         struct encoder_s *encoder;
         int ch;
         if (actual_encoding == NULL) {
-            Error *err;
             if (v1->chars == 1) {
                 unichar_t ch2 = v1->data[0];
                 if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
