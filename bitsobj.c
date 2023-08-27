@@ -650,7 +650,7 @@ MUST_CHECK Obj *bits_from_str(Str *v1, linepos_t epoint) {
     size_t j, sz, osz;
     bdigit_t *d, uv;
 
-    if (actual_encoding == NULL) {
+    if (actual_encoding->updating) {
         if (v1->chars == 1) {
             unichar_t ch2 = v1->data[0];
             if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);

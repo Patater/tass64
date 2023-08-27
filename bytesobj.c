@@ -549,7 +549,7 @@ MUST_CHECK Obj *bytes_from_str(Str *v1, linepos_t epoint, Textconv_types mode) {
     if (len != 0 || len2 != 0) {
         struct encoder_s *encoder;
         int ch;
-        if (actual_encoding == NULL) {
+        if (actual_encoding->updating) {
             if (v1->chars == 1) {
                 unichar_t ch2 = v1->data[0];
                 if ((ch2 & 0x80) != 0) utf8in(v1->data, &ch2);
@@ -618,9 +618,7 @@ MUST_CHECK Obj *bytes_from_str(Str *v1, linepos_t epoint, Textconv_types mode) {
         v->len = (ssize_t)len2;
         return Obj(v);
     }
-    if (actual_encoding != NULL) {
-        if (mode == BYTES_MODE_SHIFT || mode == BYTES_MODE_SHIFTL) err_msg2(ERROR__EMPTY_STRING, NULL, epoint);
-    }
+    if (mode == BYTES_MODE_SHIFT || mode == BYTES_MODE_SHIFTL) err_msg2(ERROR__EMPTY_STRING, NULL, epoint);
     return val_reference(null_bytes);
 failed2:
     val_destroy(Obj(v));

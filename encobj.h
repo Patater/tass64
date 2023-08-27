@@ -47,6 +47,7 @@ typedef struct Enc {
     Obj v;
     uint16_t escape_char;
     uint8_t epass;
+    bool updating;
     struct ternary_node_def *escapes;
     size_t escape_length;
     struct avltree ranges;

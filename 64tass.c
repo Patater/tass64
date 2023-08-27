@@ -2008,13 +2008,16 @@ static size_t while_command(const Label *newlabel, List *lst, linepos_t epoint) 
 static bool cdef_command(linepos_t epoint) {
     Obj *val;
     struct character_range_s tmp;
-    Enc *old = actual_encoding;
+    Enc *oldenc = ref_enc(actual_encoding);
+    bool old = oldenc->updating;
     bool rc;
     argcount_t len;
     listing_line(epoint->pos);
-    actual_encoding = NULL;
+    oldenc->updating = true;
     rc = get_exp(0, 2, 0, epoint);
-    actual_encoding = old;
+    oldenc->updating = old;
+    val_destroy(Obj(actual_encoding));
+    actual_encoding = oldenc;
     len = get_val_remaining();
     if (!rc) return true;
     for (;;) {
@@ -2054,20 +2057,20 @@ static bool cdef_command(linepos_t epoint) {
             if (vs == NULL) { err_msg_argnum(len, len + 2, 0, epoint); return true;}
 
             if (tryit) {
-                old = actual_encoding;
-                actual_encoding = NULL;
+                old = actual_encoding->updating;
+                actual_encoding->updating = true;
                 if (touval2(vs, &uval, 24)) tryit = false;
                 else tmp.end = uval & 0xffffff;
-                actual_encoding = old;
+                actual_encoding->updating = old;
             }
         }
         vs = get_val();
         if (vs == NULL) { err_msg_argnum(len, len + 1, 0, epoint); return true;}
         if (tryit) {
-            old = actual_encoding;
-            actual_encoding = NULL;
+            old = actual_encoding->updating;
+            actual_encoding->updating = true;
             if (touval2(vs, &uval, 8)) tryit = false;
-            actual_encoding = old;
+            actual_encoding->updating = old;
         }
         if (tryit) {
             tmp.offset = uval & 0xff;
@@ -2086,13 +2089,16 @@ static bool cdef_command(linepos_t epoint) {
 
 static bool edef_command(linepos_t epoint) {
     Obj *val;
-    Enc *old = actual_encoding;
+    Enc *oldenc = ref_enc(actual_encoding);
+    bool old = oldenc->updating;
     bool rc;
     argcount_t len;
     listing_line(epoint->pos);
-    actual_encoding = NULL;
+    oldenc->updating = true;
     rc = get_exp(0, 2, 0, epoint);
-    actual_encoding = old;
+    oldenc->updating = old;
+    val_destroy(Obj(actual_encoding));
+    actual_encoding = oldenc;
     if (!rc) return true;
     len = get_val_remaining();
     for (;;) {
@@ -2121,13 +2127,16 @@ static bool edef_command(linepos_t epoint) {
 
 static bool tdef_command(linepos_t epoint) {
     Obj *val;
-    Enc *old = actual_encoding;
+    Enc *oldenc = ref_enc(actual_encoding);
+    bool old = oldenc->updating;
     bool rc;
     argcount_t len;
     listing_line(epoint->pos);
-    actual_encoding = NULL;
+    oldenc->updating = true;
     rc = get_exp(0, 2, 0, epoint);
-    actual_encoding = old;
+    oldenc->updating = old;
+    val_destroy(Obj(actual_encoding));
+    actual_encoding = oldenc;
     if (!rc) return true;
     len = get_val_remaining();
     for (;;) {
@@ -2147,10 +2156,10 @@ static bool tdef_command(linepos_t epoint) {
             iter2.data = vs2->val; iter2.data->obj->getiter(&iter2);
         } else {
             bool err;
-            old = actual_encoding;
-            actual_encoding = NULL;
+            old = actual_encoding->updating;
+            actual_encoding->updating = true;
             err = touval2(vs2, &uval, 8);
-            actual_encoding = old;
+            actual_encoding->updating = old;
             if (err) continue;
             uval &= 0xff;
             iter2.data = NULL;
@@ -2171,8 +2180,8 @@ static bool tdef_command(linepos_t epoint) {
         while ((val = iter.next(&iter)) != NULL) {
             uval_t uval2;
             bool ret;
-            old = actual_encoding;
-            actual_encoding = NULL;
+            old = actual_encoding->updating;
+            actual_encoding->updating = true;
             ret = touval(val, &uval2, 24, &vs->epoint);
             if (iter2.data != NULL) {
                 val = iter2.next(&iter2);
@@ -2187,7 +2196,7 @@ static bool tdef_command(linepos_t epoint) {
                 }
                 ret = true;
             }
-            actual_encoding = old;
+            actual_encoding->updating = old;
             if (val == NULL) break;
             if (!ret) {
                 tmp.offset = uval & 0xff;
