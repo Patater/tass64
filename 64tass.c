@@ -2032,7 +2032,7 @@ static bool cdef_command(linepos_t epoint) {
         val = vs->val;
         if (val->obj == STR_OBJ) {
             Str *str = Str(val);
-            if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
+            if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); return true;}
             else {
                 unichar_t ch = str->data[0];
                 if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
@@ -2042,7 +2042,7 @@ static bool cdef_command(linepos_t epoint) {
                     if ((ch & 0x80) != 0) i += utf8in(str->data + i, &ch); else i++;
                     tmp.end = ch & 0xffffff;
                     endok = true;
-                    if (str->len > i) {err_msg2(ERROR_NOT_TWO_CHARS, str, &vs->epoint); tryit = false;}
+                    if (str->len > i) {err_msg2(ERROR_NOT_TWO_CHARS, str, &vs->epoint); return true;}
                 }
             }
         } else {
@@ -2051,27 +2051,25 @@ static bool cdef_command(linepos_t epoint) {
         }
         if (!endok) {
             vs = get_val();
-            if (vs == NULL) { err_msg_argnum(len, len + 2, 0, epoint); return true; }
+            if (vs == NULL) { err_msg_argnum(len, len + 2, 0, epoint); return true;}
 
-            val = vs->val;
-            if (val->obj == STR_OBJ) {
-                Str *str = Str(val);
-                if (str->len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); tryit = false;}
-                else {
-                    unichar_t ch = str->data[0];
-                    if ((ch & 0x80) != 0) i = utf8in(str->data, &ch); else i = 1;
-                    tmp.end = ch & 0xffffff;
-                    if (str->len > i) {err_msg2(ERROR__NOT_ONE_CHAR, str, &vs->epoint); tryit = false;}
-                }
-            } else {
+            if (tryit) {
+                old = actual_encoding;
+                actual_encoding = NULL;
                 if (touval2(vs, &uval, 24)) tryit = false;
                 else tmp.end = uval & 0xffffff;
+                actual_encoding = old;
             }
         }
         vs = get_val();
         if (vs == NULL) { err_msg_argnum(len, len + 1, 0, epoint); return true;}
-        if (touval2(vs, &uval, 8)) {}
-        else if (tryit) {
+        if (tryit) {
+            old = actual_encoding;
+            actual_encoding = NULL;
+            if (touval2(vs, &uval, 8)) tryit = false;
+            actual_encoding = old;
+        }
+        if (tryit) {
             tmp.offset = uval & 0xff;
             if (tmp.start > tmp.end) {
                 unichar_t tmpe = tmp.start;
@@ -2147,9 +2145,13 @@ static bool tdef_command(linepos_t epoint) {
         if (vs2 == NULL) { err_msg_argnum(len, len + 1, 0, epoint); return true; }
         if (vs2->val->obj->iterable) {
             iter2.data = vs2->val; iter2.data->obj->getiter(&iter2);
-        } else if (touval2(vs2, &uval, 8)) {
-            continue;
         } else {
+            bool err;
+            old = actual_encoding;
+            actual_encoding = NULL;
+            err = touval2(vs2, &uval, 8);
+            actual_encoding = old;
+            if (err) continue;
             uval &= 0xff;
             iter2.data = NULL;
         }
@@ -2169,6 +2171,7 @@ static bool tdef_command(linepos_t epoint) {
         while ((val = iter.next(&iter)) != NULL) {
             uval_t uval2;
             bool ret;
+            old = actual_encoding;
             actual_encoding = NULL;
             ret = touval(val, &uval2, 24, &vs->epoint);
             if (iter2.data != NULL) {

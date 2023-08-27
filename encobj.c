@@ -213,7 +213,10 @@ bool enc_escape_add(Enc *enc, const str_t *v, Obj *val, linepos_t epoint)
     *b2 = NULL;
 
     if (val->obj == STR_OBJ || val->obj == BITS_OBJ) {
+        Enc *old = actual_encoding;
+        actual_encoding = NULL;
         val2 = bytes_from_obj(val, epoint);
+        actual_encoding = old;
         iter.data = val2; val2->obj->getiter(&iter); 
         val_destroy(val2);
     } else {
