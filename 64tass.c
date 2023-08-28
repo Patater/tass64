@@ -4501,7 +4501,7 @@ MUST_CHECK Obj *compile(void)
                         else dpage = uval & 0xffff;
                         break;
                     case CMD_EOR:
-                        if (touval2(vs, &uval, 8)) {}
+                        if (touval(vs->val, &uval, 8, &vs->epoint)) {}
                         else outputeor = (uval & 0xff) * 0x01010101;
                         break;
                     case CMD_SEED:
