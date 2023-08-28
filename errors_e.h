@@ -89,7 +89,6 @@ typedef enum Error_types {
     ERROR____CANT_IVAL2,
     ERROR____CANT_UVAL2,
     ERROR______NOT_UVAL,
-    ERROR_CANT_BROADCAS,
     ERROR_____CANT_SIGN,
     ERROR______CANT_ABS,
     ERROR______CANT_INT,
@@ -127,6 +126,7 @@ typedef enum Error_types {
     ERROR__INVALID_CONV,
     ERROR__WRONG_ARGNUM,
     ERROR____WRONG_TYPE,
+    ERROR_CANT_BROADCAS,
     ERROR____STILL_NONE,
 
     ERROR_CANT_FINDFILE = 0xc0,

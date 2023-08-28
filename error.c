@@ -388,7 +388,6 @@ static const char *const terr_error[] = {
     "too large for a %u byte signed integer ",
     "too large for a %u byte unsigned integer ",
     "value needs to be non-negative ",
-    "operands could not be broadcast together with shapes %" PRIuSIZE " and %" PRIuSIZE,
     "can't get sign of ",
     "can't get absolute value of ",
     "can't get integer value of ",
@@ -831,7 +830,7 @@ static bool err_msg_no_lot_operand(const Error *err) {
 static bool err_msg_cant_broadcast(const Error *err) {
     char msg2[256];
     bool more = new_error_msg_err(err); 
-    sprintf(msg2, terr_error[err->num - 0x40], err->u.broadcast.v1, err->u.broadcast.v2);
+    sprintf(msg2, "operands could not be broadcast together with shapes %" PRIuSIZE " and %" PRIuSIZE, err->u.broadcast.v1, err->u.broadcast.v2);
     adderror(msg2);
     return more;
 }
