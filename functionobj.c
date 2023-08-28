@@ -244,7 +244,6 @@ void random_reseed(Obj *o1, linepos_t epoint) {
         else if (v->obj == ERROR_OBJ) err_msg_output(Error(v));
     } else {
         Int *v1 = Int(v);
-        Error *err;
 
         state[0] = (((uint64_t)0x5229a30f) << 32) | (uint64_t)0x996ad7eb;
         state[1] = (((uint64_t)0xc03bbc75) << 32) | (uint64_t)0x3f671f6f;
@@ -256,10 +255,14 @@ void random_reseed(Obj *o1, linepos_t epoint) {
         case 1: state[0] ^= v1->data[0]; FALL_THROUGH; /* fall through */
         case 0: break;
         default:
-            err = new_error(v1->len < 0 ? ERROR______NOT_UVAL : ERROR_____CANT_UVAL, epoint);
-            err->u.intconv.bits = 128;
-            err->u.intconv.val = val_reference(o1);
-            err_msg_output_and_destroy(err);
+            if (v1->len < 0) {
+                err_msg2(ERROR______NOT_UVAL, o1, epoint);
+            } else {
+                Error *err = new_error(ERROR_____CANT_UVAL, epoint);
+                err->u.intconv.bits = 128;
+                err->u.intconv.val = val_reference(o1);
+                err_msg_output_and_destroy(err);
+            }
         }
     }
     val_destroy(v);

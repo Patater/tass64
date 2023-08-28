@@ -48,7 +48,6 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR____CANT_IVAL2:
     case ERROR_____CANT_UVAL:
     case ERROR_____CANT_IVAL:
-    case ERROR______NOT_UVAL:
         val_destroy(v1->u.intconv.val);
         return;
     case ERROR___NOT_DEFINED:
@@ -72,6 +71,7 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:
     case ERROR__NOT_ONE_CHAR:
+    case ERROR______NOT_UVAL:
         val_destroy(v1->u.obj);
         return;
     case ERROR__INVALID_CONV:
@@ -107,7 +107,6 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR____CANT_IVAL2:
     case ERROR_____CANT_UVAL:
     case ERROR_____CANT_IVAL:
-    case ERROR______NOT_UVAL:
         v = v1->u.intconv.val;
         break;
     case ERROR___NOT_DEFINED:
@@ -136,6 +135,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:
     case ERROR__NOT_ONE_CHAR:
+    case ERROR______NOT_UVAL:
         v = v1->u.obj;
         break;
     case ERROR__INVALID_CONV:
@@ -270,7 +270,6 @@ void error_obj_update(Error *err, const Obj *v1, Obj *v2) {
     case ERROR____CANT_IVAL2:
     case ERROR_____CANT_UVAL:
     case ERROR_____CANT_IVAL:
-    case ERROR______NOT_UVAL:
         if (err->u.intconv.val == v1) {
             val_replace(&err->u.intconv.val, v2);
         }
@@ -292,6 +291,7 @@ void error_obj_update(Error *err, const Obj *v1, Obj *v2) {
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:
     case ERROR__NOT_ONE_CHAR:
+    case ERROR______NOT_UVAL:
         if (err->u.obj == v1) {
             val_replace(&err->u.obj, v2);
         }

@@ -592,6 +592,7 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         case ERROR__OFFSET_RANGE:
         case ERROR_NOT_TWO_CHARS:
         case ERROR__NOT_ONE_CHAR:
+        case ERROR______NOT_UVAL:
             adderror(terr_error[no - 0x40]);
             if (prm != NULL) err_msg_variable((Obj *)prm);
             break;
@@ -916,8 +917,7 @@ void err_msg_output(const Error *val) {
     case ERROR____CANT_IVAL2:
     case ERROR____CANT_UVAL2:
     case ERROR_____CANT_IVAL:
-    case ERROR_____CANT_UVAL:
-    case ERROR______NOT_UVAL: more = err_msg_big_integer(val); break;
+    case ERROR_____CANT_UVAL: more = err_msg_big_integer(val); break;
     case ERROR_REQUIREMENTS_:
     case ERROR______CONFLICT:
     case ERROR_NUMERIC_OVERF:
@@ -938,6 +938,7 @@ void err_msg_output(const Error *val) {
     case ERROR__NO_BYTE_ADDR:
     case ERROR__NO_WORD_ADDR:
     case ERROR__NO_LONG_ADDR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_opcode(val->u.addresssize.cod); break;
+    case ERROR______NOT_UVAL:
     case ERROR__NOT_ONE_CHAR:
     case ERROR_DIVISION_BY_Z:
     case ERROR_ZERO_NEGPOWER:

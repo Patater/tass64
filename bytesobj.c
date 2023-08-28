@@ -176,9 +176,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
         len2 = (uval_t)ival;
         if (!inplace && !bits && bytes->len < 0) {
             val_destroy(Obj(bytes));
-            err = new_error(ERROR______NOT_UVAL, &v2->val[0].epoint);
-            err->u.intconv.val = val_reference(v2->val[0].val);
-            return Obj(err);
+            return new_error_obj(ERROR______NOT_UVAL, v2->val[0].val, &v2->val[0].epoint);
         }
     } else {
         len2 = -(uval_t)ival;
@@ -790,11 +788,7 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
 }
 
 static MUST_CHECK Error *uval2(Obj *o1, uval_t *uv, unsigned int bits, linepos_t epoint) {
-    if (Bytes(o1)->len < 0) {
-        Error *v = new_error(ERROR______NOT_UVAL, epoint);
-        v->u.intconv.val = val_reference(o1);
-        return v;
-    }
+    if (Bytes(o1)->len < 0) return Error(new_error_obj(ERROR______NOT_UVAL, o1, epoint));
     return uval(o1, uv, bits, epoint);
 }
 

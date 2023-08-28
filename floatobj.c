@@ -130,7 +130,8 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
     double real = floor(Float(o1)->real);
     Error *v;
     if (real <= -1.0 || real >= (double)(~(uval_t)0) + 1.0) {
-        v = new_error(real < 0.0 ? ERROR______NOT_UVAL : ERROR_____CANT_UVAL, epoint);
+        if (real < 0.0) return Error(new_error_obj(ERROR______NOT_UVAL, o1, epoint));
+        v = new_error(ERROR_____CANT_UVAL, epoint);
         v->u.intconv.bits = bits;
         v->u.intconv.val = val_reference(o1);
         return v;

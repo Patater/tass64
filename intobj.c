@@ -353,7 +353,8 @@ static MUST_CHECK Error *uval(Obj *o1, uval_t *uv, unsigned int bits, linepos_t 
     case 0: *uv = 0; return NULL;
     default: break;
     }
-    v = new_error(v1->len < 0 ? ERROR______NOT_UVAL : ERROR_____CANT_UVAL, epoint);
+    if (v1->len < 0) return Error(new_error_obj(ERROR______NOT_UVAL, o1, epoint));
+    v = new_error(ERROR_____CANT_UVAL, epoint);
     v->u.intconv.bits = bits;
     v->u.intconv.val = val_reference(o1);
     return v;
