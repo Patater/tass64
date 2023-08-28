@@ -2069,7 +2069,7 @@ static bool cdef_command(linepos_t epoint) {
         if (tryit) {
             old = actual_encoding->updating;
             actual_encoding->updating = true;
-            if (touval2(vs, &uval, 8)) tryit = false;
+            if (touval(vs->val, &uval, 8, &vs->epoint)) tryit = false;
             actual_encoding->updating = old;
         }
         if (tryit) {
@@ -2182,7 +2182,7 @@ static bool tdef_command(linepos_t epoint) {
             bool ret;
             old = actual_encoding->updating;
             actual_encoding->updating = true;
-            ret = touval(val, &uval2, 24, &vs->epoint);
+            ret = touval2(vs, &uval2, 24);
             if (iter2.data != NULL) {
                 val = iter2.next(&iter2);
                 if (val != NULL) {
