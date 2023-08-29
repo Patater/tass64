@@ -2182,7 +2182,7 @@ static bool tdef_command(linepos_t epoint) {
             bool ret;
             old = actual_encoding->updating;
             actual_encoding->updating = true;
-            ret = touval2(vs, &uval2, 24);
+            ret = touval(val, &uval2, 24, &vs->epoint);
             if (iter2.data != NULL) {
                 val = iter2.next(&iter2);
                 if (val != NULL) {
