@@ -2070,6 +2070,7 @@ static bool cdef_command(linepos_t epoint) {
             old = actual_encoding->updating;
             actual_encoding->updating = true;
             if (touval(vs->val, &uval, 8, &vs->epoint)) tryit = false;
+            else uval &= 0xff;
             actual_encoding->updating = old;
         }
         if (tryit) {
@@ -2081,6 +2082,11 @@ static bool cdef_command(linepos_t epoint) {
             }
             if (enc_trans_add(actual_encoding, &tmp, epoint)) {
                 err_msg2(ERROR__DOUBLE_RANGE, NULL, opoint); return true;
+            } else {
+                uval += tmp.end - tmp.start;
+                if (uval > 256) {
+                    err_msg_enc_large(uval - 1, &vs->epoint);
+                }
             }
         }
     }
@@ -2142,9 +2148,9 @@ static bool tdef_command(linepos_t epoint) {
     for (;;) {
         struct character_range_s tmp;
         struct iter_s iter, iter2;
-        struct values_s *vs, *vs2;
+        struct values_s *vs, *vs2, vs1;
         bool doublerange;
-        uval_t uval;
+        uval_t uval = 0;
 
         vs = get_val();
         if (vs == NULL) break;
@@ -2158,7 +2164,7 @@ static bool tdef_command(linepos_t epoint) {
             bool err;
             old = actual_encoding->updating;
             actual_encoding->updating = true;
-            err = touval2(vs2, &uval, 8);
+            err = touval(vs2->val, &uval, 8, &vs2->epoint);
             actual_encoding->updating = old;
             if (err) continue;
             uval &= 0xff;
@@ -2177,24 +2183,19 @@ static bool tdef_command(linepos_t epoint) {
             err->u.broadcast.v2 = iter2.len;
             err_msg_output_and_destroy(err);
         }
-        while ((val = iter.next(&iter)) != NULL) {
+        vs1.epoint = vs->epoint;
+        while ((vs1.val = iter.next(&iter)) != NULL) {
             uval_t uval2;
             bool ret;
             old = actual_encoding->updating;
             actual_encoding->updating = true;
-            ret = touval(val, &uval2, 24, &vs->epoint);
+            ret = touval2(&vs1, &uval2, 24);
             if (iter2.data != NULL) {
                 val = iter2.next(&iter2);
-                if (val != NULL) {
+                if (!ret && val != NULL) {
                     if (touval(val, &uval, 8, &vs2->epoint)) ret = true;
+                    else uval &= 0xff;
                 }
-            } else if (uval > 255) {
-                if (uval == 256) {
-                    val = int_from_uval(uval);
-                    if (touval(val, &uval, 8, &vs2->epoint)) ret = true;
-                    val_destroy(val);
-                }
-                ret = true;
             }
             actual_encoding->updating = old;
             if (val == NULL) break;
@@ -2210,6 +2211,8 @@ static bool tdef_command(linepos_t epoint) {
         if (iter2.data != NULL) iter_destroy(&iter2);
         if (doublerange) {
             err_msg2(ERROR__DOUBLE_RANGE, NULL, &vs->epoint);
+        } else if (uval > 256) {
+            err_msg_enc_large(uval - 1, &vs2->epoint);
         }
     }
     return false;

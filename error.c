@@ -648,6 +648,14 @@ static void err_msg_str_name(const char *msg, const str_t *name, linepos_t epoin
     if (more) new_error_msg_more();
 }
 
+void err_msg_enc_large(uval_t v, linepos_t epoint) {
+    char msg2[256];
+    bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
+    sprintf(msg2, "encoded value %" PRIuval " larger than 8 bit", v);
+    adderror(msg2);
+    if (more) new_error_msg_more();
+}
+
 void err_msg_big_address(linepos_t epoint) {
     Obj *val = get_star_value(current_address->l_address, current_address->l_address_val);
     bool more = new_error_msg(SV_ERROR, current_file_list, epoint);

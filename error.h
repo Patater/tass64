@@ -107,6 +107,7 @@ extern void err_msg_compound_note(linepos_t);
 extern void err_msg_byte_note(linepos_t);
 extern void err_msg_char_note(const char *, linepos_t);
 extern void err_msg_immediate_note(linepos_t);
+extern void err_msg_enc_large(uval_t, linepos_t);
 extern void err_msg_big_address(linepos_t);
 extern void error_reset(void);
 extern void error_print(const struct error_output_s *);

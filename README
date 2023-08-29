@@ -4461,6 +4461,8 @@ double defined range
     ranges can't overlap
 duplicate definition
     symbol defined more than once
+encoded value ? larger than 8 bit
+    the value for the end of character range for an encoding is too large
 empty list not allowed
     at least one element is required
 empty range not allowed
