@@ -1284,7 +1284,6 @@ static bool virtual_start(linepos_t epoint) {
     bool retval = false;
 
     if (diagnostics.optimize) cpu_opt_invalidate();
-    listing_line(epoint->pos);
     new_waitfor(W_ENDV2, epoint); waitfor->u.cmd_virtual.section_address = current_address; waitfor->u.cmd_virtual.label = NULL;
     new_instance(&section_address);
     section_address->wrapwarn = section_address->moved = false;
