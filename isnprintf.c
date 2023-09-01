@@ -56,6 +56,7 @@
 #include "floatobj.h"
 #include "strobj.h"
 #include "intobj.h"
+#include "bitsobj.h"
 #include "typeobj.h"
 #include "noneobj.h"
 #include "errorobj.h"
@@ -136,7 +137,7 @@ static inline void pad(Data *p)
     for (; p->width > 0; p->width--) put_char(p);
 }
 
-static void pad_right2(Data *p, uint8_t c, bool minus, size_t ln)
+static void pad_right2(Data *p, uint8_t c, char minus, size_t ln)
 {
     size_t n = 0;
     p->width = (p->width < 0 || ln > (unsigned int)p->width) ? -1 : p->width - (int)ln;
@@ -145,14 +146,14 @@ static void pad_right2(Data *p, uint8_t c, bool minus, size_t ln)
         n = (unsigned int)p->precision - ln;
         p->width = (p->width < 0 || n > (unsigned int)p->width) ? -1 : p->width - (int)n;
     }
-    if (minus || p->plus || p->space) p->width--;
+    if (minus != '\0' || p->plus || p->space) p->width--;
     if (c != 0 && p->square) p->width--;
     if (!p->zero && !p->left) {
         p->c = ' ';
         pad(p);
     }
     do {
-        if (minus) p->c = '-';
+        if (minus != '\0') p->c = (unsigned char)minus;
         else if (p->plus) p->c = '+';
         else if (p->space) p->c = ' ';
         else break;
@@ -240,7 +241,7 @@ static inline void decimal(Data *p)
 
     str = Str(err2 != NULL ? err2 : val_reference(null_str));
     i = minus ? 1 : 0;
-    pad_right2(p, 0, minus, str->len - i);
+    pad_right2(p, 0, minus ? '-' : '\0', str->len - i);
     for (; i < str->len; i++) {p->c = str->data[i]; put_char(p);}
     val_destroy(Obj(str));
     if (p->left) {
@@ -261,40 +262,79 @@ static MUST_CHECK Obj *get_int(Data *p) {
     return val_reference(int_value[0]);
 }
 
+static MUST_CHECK Obj *get_bits(Data *p) {
+    const struct values_s *v = star_args(p);
+
+    if (v != NULL) {
+        Obj *val = v->val;
+        Obj *err = bits_from_obj(val, &v->epoint);
+        if (err->obj == BITS_OBJ) return err;
+        note_failure(p, err);
+    }
+    return val_reference(bits_value[0]);
+}
+
 /* for %x %X hexadecimal representation */
 static inline void hexa(Data *p)
 {
     bool minus;
-    Int *integer;
     const char *hex = (*p->pf == 'x') ? "0123456789abcdef" : "0123456789ABCDEF";
     unsigned int bp, b;
     size_t bp2;
 
-    integer = Int(get_int(p));
-    minus = (integer->len < 0);
-    bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
-    bp = b = 0;
-    do {
-        if (bp == 0) {
-            if (bp2 == 0) break;
-            bp2--;
-            bp = 8 * sizeof(digit_t) - 4;
-        } else bp -= 4;
-        b = (integer->data[bp2] >> bp) & 0xf;
-    } while (b == 0);
+    if (p->square) {
+        Bits *bits = Bits(get_bits(p));
+        minus = (bits->len < 0);
+        bp2 = (size_t)(minus ? ~bits->len : bits->len);
+        bp = b = 0;
+        do {
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(bdigit_t) - 4;
+            } else bp -= 4;
+            b = (bits->data[bp2] >> bp) & 0xf;
+        } while (b == 0);
 
-    pad_right2(p, '$', minus, bp / 4 + bp2 * (sizeof(digit_t) * 2) + 1);
-    for (;;) {
-        p->c = (uint8_t)hex[b];
-        put_char(p);
-        if (bp == 0) {
-            if (bp2 == 0) break;
-            bp2--;
-            bp = 8 * sizeof(digit_t) - 4;
-        } else bp -= 4;
-        b = (integer->data[bp2] >> bp) & 0xf;
+        pad_right2(p, '$', minus ? '~' : '\0', bp / 4 + bp2 * (sizeof(bdigit_t) * 2) + 1);
+        for (;;) {
+            p->c = (unsigned char)hex[b];
+            put_char(p);
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(bdigit_t) - 4;
+            } else bp -= 4;
+            b = (bits->data[bp2] >> bp) & 0xf;
+        }
+        val_destroy(Obj(bits));
+    } else {
+        Int *integer = Int(get_int(p));
+        minus = (integer->len < 0);
+        bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
+        bp = b = 0;
+        do {
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(digit_t) - 4;
+            } else bp -= 4;
+            b = (integer->data[bp2] >> bp) & 0xf;
+        } while (b == 0);
+
+        pad_right2(p, '$', minus ? '-' : '\0', bp / 4 + bp2 * (sizeof(digit_t) * 2) + 1);
+        for (;;) {
+            p->c = (unsigned char)hex[b];
+            put_char(p);
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(digit_t) - 4;
+            } else bp -= 4;
+            b = (integer->data[bp2] >> bp) & 0xf;
+        }
+        val_destroy(Obj(integer));
     }
-    val_destroy(Obj(integer));
     if (p->left) {
         p->c = ' ';
         pad(p);
@@ -305,35 +345,62 @@ static inline void hexa(Data *p)
 static inline void bin(Data *p)
 {
     bool minus;
-    Int *integer;
     unsigned int bp, b;
     size_t bp2;
 
-    integer = Int(get_int(p));
-    minus = (integer->len < 0);
-    bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
-    bp = b = 0;
-    do {
-        if (bp == 0) {
-            if (bp2 == 0) break;
-            bp2--;
-            bp = 8 * sizeof(digit_t) - 1;
-        } else bp--;
-        b = (integer->data[bp2] >> bp) & 1;
-    } while (b == 0);
+    if (p->square) {
+        Bits *bits = Bits(get_bits(p));
+        minus = (bits->len < 0);
+        bp2 = (size_t)(minus ? ~bits->len : bits->len);
+        bp = b = 0;
+        do {
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(bdigit_t) - 1;
+            } else bp--;
+            b = (bits->data[bp2] >> bp) & 1;
+        } while (b == 0);
 
-    pad_right2(p, '%', minus, bp + bp2 * (sizeof(digit_t) * 8) + 1);
-    for (;;) {
-        p->c = '0' + b;
-        put_char(p);
-        if (bp == 0) {
-            if (bp2 == 0) break;
-            bp2--;
-            bp = 8 * sizeof(digit_t) - 1;
-        } else bp--;
-        b = (integer->data[bp2] >> bp) & 1;
+        pad_right2(p, '%', minus ? '~' : '\0', bp + bp2 * (sizeof(bdigit_t) * 8) + 1);
+        for (;;) {
+            p->c = '0' + b;
+            put_char(p);
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(bdigit_t) - 1;
+            } else bp--;
+            b = (bits->data[bp2] >> bp) & 1;
+        }
+        val_destroy(Obj(bits));
+    } else {
+        Int *integer = Int(get_int(p));
+        minus = (integer->len < 0);
+        bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
+        bp = b = 0;
+        do {
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(digit_t) - 1;
+            } else bp--;
+            b = (integer->data[bp2] >> bp) & 1;
+        } while (b == 0);
+
+        pad_right2(p, '%', minus ? '-' : '\0', bp + bp2 * (sizeof(digit_t) * 8) + 1);
+        for (;;) {
+            p->c = '0' + b;
+            put_char(p);
+            if (bp == 0) {
+                if (bp2 == 0) break;
+                bp2--;
+                bp = 8 * sizeof(digit_t) - 1;
+            } else bp--;
+            b = (integer->data[bp2] >> bp) & 1;
+        }
+        val_destroy(Obj(integer));
     }
-    val_destroy(Obj(integer));
     if (p->left) {
         p->c = ' ';
         pad(p);
@@ -453,7 +520,7 @@ static inline void floating(Data *p)
     t = tmp;
 
     p->precision = 0;
-    pad_right2(p, 0, minus, (l > 0) ? (size_t)l : 0);
+    pad_right2(p, 0, minus ? '-' : '\0', (l > 0) ? (size_t)l : 0);
     while (*t != 0) { /* the integral */
         p->c = (uint8_t)*t;
         put_char(p);
