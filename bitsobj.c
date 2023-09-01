@@ -232,7 +232,7 @@ static MUST_CHECK Obj *negate(Bits *v1, linepos_t epoint) {
         }
         if (i == v1->bits / SHIFT) {
             if (bs == 0) return NULL;
-            if (v1->data[i] == ~((~(v1->data[i] >> bs)) << bs)) return NULL;
+            if (i < sz && v1->data[i] == ~((~(v1->data[i] >> bs)) << bs)) return NULL;
         }
         v = new_bits2(ext ? sz + 1 : sz);
         if (v == NULL) goto failed;
