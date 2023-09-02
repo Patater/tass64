@@ -639,7 +639,7 @@ handled by omitting leading zeros in the last group.
 
 <p>For data lengths of multiple of 4 bytes any z85 encoder will do. Otherwise the
 simplest way to encode a binary file into a z85 string is to create a source file
-which reads it using the line <q>label = binary('filename')</q>. Now if the labels
+which reads it using the line <q><code>label = binary('filename')</code></q>. Now if the labels
 are listed to a file then there will be a z85 encoded definition for this
 label.
 
@@ -1027,7 +1027,7 @@ too.
 
 <p>Scopes are usually created by <a href="#d_proc"><code>.proc</code></a> and <a href="#d_block"><code>.block</code></a>
 directives, but there are a few other ways. Symbols in a scope can be accessed
-by using the dot operator, which is applied between the name of the scope and the symbol (e.g. <code><u>myconsts</u>.<u>math</u>.<u>pi</u></code>).
+by using the dot operator, which is applied between the name of the scope and the symbol (e.g. <code>myconsts.math.pi</code>).
 
 <h4>Regular symbols<a name="symbols-regular" href="#symbols-regular"></a></h4>
 
@@ -1562,8 +1562,8 @@ This is done to be in line with it's use in most other assemblers.
 <td><code>!in</code><td>excludes
 </table></div>
 
-<p>Spacing must be used for the <q>x</q> and <q>in</q> operators or else they won't
-be recognized as such. For example the expression <q>[1,2]x2</q> should be written as <q>[1,2]x 2</q> instead.
+<p>Spacing must be used for the <q><code>x</code></q> and <q><code>in</code></q> operators or else they won't
+be recognized as such. For example the expression <q><code>[1,2]x2</code></q> should be written as <q><code>[1,2]x 2</code></q> instead.
 
 <p>Parenthesis (<code>( )</code>) can be used to override operator precedence.
 Don't forget that they also denote indirect addressing mode for certain
@@ -2822,6 +2822,8 @@ better to use comparison operators instead.
 <dt><b>.fi</b><a name="d_fi" href="#d_fi"></a>
 <dt><b>.endif</b><a name="d_endif" href="#d_endif"></a>
 <dd>End of conditional compilation.</dd>
+<dt><b>.elif</b> &lt;condition&gt;<a name="d_elif" href="#d_elif"></a>
+<dd>Same as <code>.elsif</code> because it's a popular typo and it's difficult to notice.</dd>
 </dl>
 
 <h4>Switch, case, default<a name="conditional-switch" href="#conditional-switch"></a></h4>
@@ -4729,7 +4731,7 @@ uses numeric constants for addresses only this may be acceptable.</p></dd>
 <p>The output will contain symbol locations and paths.</p></dd>
 
 <dt><b>--simple-labels</b><a name="o_simple-labels" href="#o_simple-labels"></a>
-<dd>List labels in a simple label = $x fashion for interoperatibility.
+<dd>List labels in a simple <code>label = $x</code> fashion for interoperatibility.
 
 <p>Somewhat limited but much easier to parse than the normal output with all
 it's data types.</p></dd>
@@ -6187,6 +6189,7 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_dunion">.dunion</a>
 <a href="#d_dword">.dword</a>
 <a href="#d_edef">.edef</a>
+<a href="#d_elif">.elif</a>
 <a href="#d_else">.else</a>
 <a href="#d_elsif">.elsif</a>
 <a href="#d_enc">.enc</a>

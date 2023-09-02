@@ -815,8 +815,8 @@ sometimes too.
 
 Scopes are usually created by .proc and .block directives, but there are a few
 other ways. Symbols in a scope can be accessed by using the dot operator, which
-is applied between the name of the scope and the symbol (e.g. myconsts.math.pi
-).
+is applied between the name of the scope and the symbol (e.g.
+myconsts.math.pi).
 
 Regular symbols
 
@@ -2365,6 +2365,8 @@ If, else if, else
 .fi
 .endif
     End of conditional compilation.
+.elif <condition>
+    Same as .elsif because it's a popular typo and it's difficult to notice.
 
 Switch, case, default
 
@@ -5125,16 +5127,17 @@ Assembler directives
 .addr .al .align .alignblk .alignind .alignpageind .as .assert .autsiz .bend
 .binary .binclude .bfor .block .break .breakif .brept .bwhile .byte .case .cdef
 .cerror .char .check .comment .continue .continueif .cpu .cwarn .databank
-.default .dint .dpage .dsection .dstruct .dunion .dword .edef .else .elsif .enc
-.encode .end .endblock .endc .endalignblk .endcomment .endencode .endf .endfor
-.endfunction .endif .endlogical .endm .endmacro .endn .endnamespace .endp
-.endpage .endproc .endrept .ends .endsection .endsegment .endstruct .endswitch
-.endu .endunion .endv .endvirtual .endweak .endwhile .endwith .eor .error .fi
-.fill .for .from .function .goto .here .hidemac .if .ifeq .ifmi .ifne .ifpl
-.include .lbl .lint .logical .long .macro .mansiz .namespace .next .null .offs
-.option .page .pend .proc .proff .pron .ptext .rept .rta .section .seed
-.segment .send .sfunction .shift .shiftl .showmac .sint .struct .switch .tdef
-.text .union .var .virtual .warn .weak .while .with .word .xl .xs
+.default .dint .dpage .dsection .dstruct .dunion .dword .edef .elif .else
+.elsif .enc .encode .end .endblock .endc .endalignblk .endcomment .endencode
+.endf .endfor .endfunction .endif .endlogical .endm .endmacro .endn
+.endnamespace .endp .endpage .endproc .endrept .ends .endsection .endsegment
+.endstruct .endswitch .endu .endunion .endv .endvirtual .endweak .endwhile
+.endwith .eor .error .fi .fill .for .from .function .goto .here .hidemac .if
+.ifeq .ifmi .ifne .ifpl .include .lbl .lint .logical .long .macro .mansiz
+.namespace .next .null .offs .option .page .pend .proc .proff .pron .ptext
+.rept .rta .section .seed .segment .send .sfunction .shift .shiftl .showmac
+.sint .struct .switch .tdef .text .union .var .virtual .warn .weak .while .with
+.word .xl .xs
 
 Built-in functions
 

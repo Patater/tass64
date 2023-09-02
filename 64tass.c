@@ -228,6 +228,7 @@ static const char *const command[] = { /* must be sorted, first char is the ID *
     "\x4a" "dunion",
     "\x0e" "dword",
     "\x4f" "edef",
+    "\x17" "elif",
     "\x15" "else",
     "\x17" "elsif",
     "\x2c" "enc",
@@ -3759,7 +3760,7 @@ MUST_CHECK Obj *compile(void)
                     }
                 }
                 break;
-            case CMD_ELSIF: /* .elsif */
+            case CMD_ELSIF: /* .elsif, .elif */
                 {
                     bool truth;
                     if ((waitfor->skip & 1) != 0) listing_line_cut(epoint.pos);
