@@ -815,8 +815,8 @@ sometimes too.
 
 Scopes are usually created by .proc and .block directives, but there are a few
 other ways. Symbols in a scope can be accessed by using the dot operator, which
-is applied between the name of the scope and the symbol (e.g.
-myconsts.math.pi).
+is applied between the name of the scope and the symbol (e.g. myconsts.math.pi
+).
 
 Regular symbols
 
@@ -1732,7 +1732,7 @@ which accepts strings of any length.
     .1008  bd 0f 10  lda $1010,x             lda jumps,x
     .100b  8d 0e 10  sta $100f               sta smod+1
     .100e  d0 fe     bne $100e       smod    bne *
-    ;Routines nearby (-128-127 bytes)
+    ;Routines nearby (-128 to 127 bytes)
     >1010  23 49                     jumps   .char (routine1, routine2)-smod-2
 
 .word <expression>[, <expression>, ...]
@@ -3559,7 +3559,7 @@ default, the others are disabled.
     Warns about alias opcodes.
 
     There are several opcodes for the same task, especially for the "6502i"
-    target.
+    target. This warning helps to find where their use.
 
 -Walign
     Warns when padding bytes were used for alignment.
@@ -3746,7 +3746,7 @@ default, the others are disabled.
 
     var     .byte ?, ?, ?
     var2    = var - 2       ; start 2 bytes earlier
-            ldx #size(var2) ; size is 6 bytes due to 2 bytes ahead
+            ldx #size(var2) ; size is 5 bytes as it's 2 bytes ahead
 
 -Wno-star-assign
     Don't warn about ignored compound multiply.
@@ -3757,7 +3757,7 @@ default, the others are disabled.
 
     If the symbol was a variable defined earlier then the multiply is performed
     without a warning. If it's a new label definition then this warning is used
-    to note that maybe a variable definition was missed earlier.
+    to note that possibly a variable definition was missed earlier.
 
     If the intention was really a label definition then the `*=' can be moved
     to a separate line, or in case of space allocation it could be improved to
