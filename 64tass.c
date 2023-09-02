@@ -548,55 +548,64 @@ FAST_CALL uint8_t *pokealloc(address_t db, linepos_t epoint) {
 
 /* --------------------------------------------------------------------------- */
 static int get_command(void) {
+    enum { MASK = 255 };
+    static const uint8_t *hash[MASK + 1];
     unsigned int no, also, felso, elozo;
     const uint8_t *label;
     uint8_t tmp[13];
+    unsigned int ln, h;
     lpoint.pos++;
     label = pline + lpoint.pos;
-    if (arguments.caseinsensitive) {
-        int i, j;
-        for (i = j = 0; i < (int)sizeof tmp; i++) {
-            if ((uint8_t)(label[i] - 'a') <= ('z' - 'a')) continue;
-            if ((uint8_t)(label[i] - 'A') > ('Z' - 'A')) break;
-            while (j < i) { tmp[j] = label[j]; j++; }
-            tmp[j++] = label[i] | 0x20;
+    for (ln = h = 0; ln < sizeof tmp; ln++) {
+        if ((uint8_t)(label[ln] - 'a') <= ('z' - 'a')) {
+            h *= 7;
+            h ^= tmp[ln] = label[ln];
+            continue;
         }
-        if ((unsigned int)(i - 2) >= (sizeof tmp - 2)) return lenof(command);
-        if (j != 0) {
-            while (j <= i) { tmp[j] = label[j]; j++; }
-            label = tmp;
+        if ((uint8_t)(label[ln] - 'A') > ('Z' - 'A')) break;
+        if (!arguments.caseinsensitive) break;
+        h *= 7;
+        h ^= tmp[ln] = label[ln] | 0x20;
+    }
+    if ((unsigned int)(ln - 2u) >= (sizeof tmp - 2)) return lenof(command);
+    if (label[ln] >= '0') {
+        if ((label[ln] & 0x80) != 0) {
+            if (arguments.to_ascii) {
+                unichar_t ch;
+                utf8in(label + ln, &ch);
+                if ((uget_property(ch)->property & (id_Continue | id_Start)) != 0) return lenof(command);
+            }
+        } else if (label[ln] <= '9' || (uint8_t)(label[ln] - 'A') <= ('Z' - 'A') || label[ln] == '_') return lenof(command);
+    }
+    tmp[ln] = 0;
+    for (;;) {
+        const uint8_t *cmd2 = hash[h & MASK];
+        if (cmd2 == NULL) break;
+        if (tmp[0] == cmd2[0]) {
+            unsigned int i;
+            for (i = 1; tmp[i] == cmd2[i]; i++) {
+                if (tmp[i] != 0) continue;
+                lpoint.pos += ln;
+                return cmd2[-1];
+            }
         }
+        h += 5;
     }
 
     also = 0;
     felso = lenof(command);
     no = lenof(command)/2;
-    do {  /* do binary search */
-        const uint8_t *cmd2 = (const uint8_t *)command[no];
-        int s4 = label[0] - cmd2[1];
-        if (s4 == 0) {
-            unsigned int l = 1;
-            for (;;) {
-                s4 = label[l] - cmd2[l + 1];
-                if (s4 != 0) break;
-                l++;
-                if (cmd2[l + 1] != 0) continue;
-                if (label[l] >= '0') {
-                    if ((uint8_t)(label[l] - 'a') <= ('z' - 'a')) break;
-                    if ((label[l] & 0x80) != 0) {
-                        if (arguments.to_ascii) {
-                            unichar_t ch;
-                            utf8in(pline + lpoint.pos + l, &ch);
-                            if ((uget_property(ch)->property & (id_Continue | id_Start)) != 0) return lenof(command);
-                        }
-                    } else if (label[l] <= '9' || (uint8_t)(label[l] - 'A') <= ('Z' - 'A') || label[l] == '_') return lenof(command);
-                }
-                lpoint.pos += l;
-                return cmd2[0];
-            }
+    do {
+        const uint8_t *cmd2 = (const uint8_t *)command[no] + 1;
+        unsigned int i;
+        for (i = 0; tmp[i] == cmd2[i]; i++) {
+            if (tmp[i] != 0) continue;
+            lpoint.pos += i;
+            hash[h & MASK] = cmd2;
+            return cmd2[-1];
         }
         elozo = no;
-        no = ((s4 >= 0) ? (felso + (also = no)) : (also + (felso = no)))/2;
+        no = ((tmp[i] >= cmd2[i]) ? (felso + (also = no)) : (also + (felso = no)))/2;
     } while (elozo != no);
     return lenof(command);
 }
