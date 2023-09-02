@@ -549,7 +549,7 @@ FAST_CALL uint8_t *pokealloc(address_t db, linepos_t epoint) {
 /* --------------------------------------------------------------------------- */
 static int get_command(void) {
     enum { MASK = 255 };
-    static const uint8_t *hash[MASK + 1];
+    static uint8_t hash[MASK + 1];
     unsigned int no, also, felso, elozo;
     const uint8_t *label;
     uint8_t tmp[13];
@@ -579,8 +579,10 @@ static int get_command(void) {
     }
     tmp[ln] = 0;
     for (;;) {
-        const uint8_t *cmd2 = hash[h & MASK];
-        if (cmd2 == NULL) break;
+        const uint8_t *cmd2;
+        uint8_t h2 = hash[h & MASK];
+        if (h2 == 0) break;
+        cmd2 = (const uint8_t *)command[h2 - 1] + 1;
         if (tmp[0] == cmd2[0]) {
             unsigned int i;
             for (i = 1; tmp[i] == cmd2[i]; i++) {
@@ -601,7 +603,7 @@ static int get_command(void) {
         for (i = 0; tmp[i] == cmd2[i]; i++) {
             if (tmp[i] != 0) continue;
             lpoint.pos += i;
-            hash[h & MASK] = cmd2;
+            hash[h & MASK] = (uint8_t)(no + 1);
             return cmd2[-1];
         }
         elozo = no;
