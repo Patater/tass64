@@ -129,7 +129,7 @@ syn match tass64PreProc /\v\.%(offs|option|page|pend|proc|endproc|proff|pron|rep
 syn match tass64PreProc /\v\.%(seed|send|showmac|tdef|var|weak|xl|xs|namespace|endnamespace|endn|with|endwith|endencode)>/ contained
 syn match tass64Define  /\v\.%(segment|endsegment|macro|endmacro|endm|function|endfunction|endf|sfunction)>/ contained
 syn match tass64Include /\v\.%(include|binclude)>/ contained
-syn match tass64PreCondit /\v\.%(elsif|ifmi|ifne|ifpl|else|fi|if|ifeq|endif|switch|endswitch|case|default|comment|endcomment|endc|breakif|continueif|break|continue)>/ contained
+syn match tass64PreCondit /\v\.%(elif|elsif|ifmi|ifne|ifpl|else|fi|if|ifeq|endif|switch|endswitch|case|default|comment|endcomment|endc|breakif|continueif|break|continue)>/ contained
 syn match tass64Structure /\v\.%(union|endunion|endu|struct|endstruct|ends|dstruct|dunion)>/ contained
 syn match tass64Debug /\v\.%(error|cwarn|warn|cerror|check|assert)>/ contained
 

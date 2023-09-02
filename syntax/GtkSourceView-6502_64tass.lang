@@ -213,7 +213,7 @@
     </context>
 
     <context id="preprocessor-cond" end-at-line-end="true">
-      <start>\.(if|ifne|ifeq|ifpl|ifmi|else|elsif|fi|endif|switch|case|default|endswitch|c?error|c?warn)(\s|(?=;)|$)</start>
+      <start>\.(if|ifne|ifeq|ifpl|ifmi|elif|else|elsif|fi|endif|switch|case|default|endswitch|c?error|c?warn)(\s|(?=;)|$)</start>
       <include>
         <context sub-pattern="0" where="start" style-ref="preprocessor"/>
         <context ref="miscparam"/>

@@ -69,6 +69,7 @@
                         <KEYWORD3>.dpage</KEYWORD3>
                         <KEYWORD3>.dsection</KEYWORD3>
                         <KEYWORD3>.edef</KEYWORD3>
+                        <KEYWORD3>.elif</KEYWORD3>
                         <KEYWORD3>.else</KEYWORD3>
                         <KEYWORD3>.elsif</KEYWORD3>
                         <KEYWORD3>.enc</KEYWORD3>
