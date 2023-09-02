@@ -3419,7 +3419,8 @@ Operation options
 
     64tass --long-branch a.asm
     *       = $1000
-            bcc $1233       ;no error, automatically converted to the above one.
+            bcc $1233       ;no error, automatically converted to the one above
+            bcs @b $1233    ;keep this one short regardless and fail if too far
 
 -C, --case-sensitive
     Make all symbols (variables, opcodes, directives, operators, etc.) case
@@ -4914,8 +4915,6 @@ LSR 4A                                  ROL 2A
 ROR 6A                                  SHL 06 0A 0E 16 1E
 SHR 46 4A 4E 56 5E
 
--------------------------------------------------------------------------------
-
 6502 illegal opcodes
 
 This processor is a standard 6502 with the NMOS illegal opcodes.
@@ -4939,8 +4938,6 @@ INS E3 E7 EF F3 F7 FB FF                ISC E3 E7 EF F3 F7 FB FF
 LAE BB                                  LAS BB
 LXA AB                                  TAS 9B
 XAA 8B
-
--------------------------------------------------------------------------------
 
 65DTV02 opcodes
 
@@ -4966,8 +4963,6 @@ AHX 93 9F                               AXS CB
 LAE BB                                  LAS BB
 TAS 9B
 
--------------------------------------------------------------------------------
-
 Standard 65C02 opcodes
 
 This processor is an enhanced version of standard 6502.
@@ -4989,8 +4984,6 @@ CLR 64 74 9C 9E                         CPA D2
 DEA 3A                                  GRA 4C 80
 INA 1A
 
--------------------------------------------------------------------------------
-
 R65C02 opcodes
 
 This processor is an enhanced version of standard 65C02.
@@ -5004,8 +4997,6 @@ BBR 0F 1F 2F 3F 4F 5F 6F 7F             BBS 8F 9F AF BF CF DF EF FF
 NOP 44 54 82 DC                         RMB 07 17 27 37 47 57 67 77
 SMB 87 97 A7 B7 C7 D7 E7 F7
 
--------------------------------------------------------------------------------
-
 W65C02 opcodes
 
 This processor is an enhanced version of R65C02.
@@ -5015,8 +5006,6 @@ STP DB                                  WAI CB
 
                               Additional aliases
 HLT DB
-
--------------------------------------------------------------------------------
 
 W65816 opcodes
 
@@ -5049,8 +5038,6 @@ CSP 02                                  HLT DB
 JML 5C DC                               SWA EB
 TAD 5B                                  TAS 1B
 TDA 7B                                  TSA 3B
-
--------------------------------------------------------------------------------
 
 65EL02 opcodes
 
@@ -5086,8 +5073,6 @@ XCE FB                                  ZEA 8F
 CLP C2                                  CPA C3 C7 D3 D7
 HLT DB
 
--------------------------------------------------------------------------------
-
 65CE02 opcodes
 
 This processor is an enhanced version of R65C02.
@@ -5121,8 +5106,6 @@ RTN 62
                             This alias is not valid
 CLR 64 74 9C 9E
 
--------------------------------------------------------------------------------
-
 CSG 4510 opcodes
 
 This processor is an enhanced version of 65CE02.
@@ -5152,8 +5135,6 @@ Assembler directives
 .option .page .pend .proc .proff .pron .ptext .rept .rta .section .seed
 .segment .send .sfunction .shift .shiftl .showmac .sint .struct .switch .tdef
 .text .union .var .virtual .warn .weak .while .with .word .xl .xs
-
--------------------------------------------------------------------------------
 
 Built-in functions
 

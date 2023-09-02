@@ -24,10 +24,10 @@ pre.diag span.error {color:red;}
 pre.diag span.note {color:darkcyan;}
 pre.diag span.caret {color:green;}
 pre b, code b {color:navy;}
-pre b.d, code b.d {color:#f80;}
-pre b.k, pre span.k, code b.k, code span.k {color:blue;}
+pre b.d, code b.d {color:#e60;}
+pre b.k, pre span.k, code b.k, code span.k {color:#00d;}
 pre span, code span {color:#d00;}
-pre span.s, code span.s {color:#f80;}
+pre span.s, code span.s {color:#e60;}
 pre i {color:brown;}
 pre u, code u {text-decoration:none;color:green;}
 p, dd {text-align:justify;word-break:hypenate;}
@@ -118,9 +118,9 @@ difficult to get everything <q>right</q> first time.</b>
 <p>The page hosts the latest and older versions with sources and a bug and a feature request tracker.</p>
 
 <hr>
+<nav id="toc">
 <h2>Table of Contents<a name="contents" href="#contents"></a></h2>
 
-<div id="toc">
 <ul>
  <li><a href="#contents">Table of Contents</a></li>
  <li><a href="#usage-tips">Usage tips</a></li>
@@ -267,7 +267,7 @@ difficult to get everything <q>right</q> first time.</b>
   <li><a href="#types">Built-in types</a></li>
  </ul></li>
 </ul>
-</div>
+</nav>
 
 <hr>
 <h2>Usage tips<a name="usage-tips" href="#usage-tips"></a></h2>
@@ -4009,7 +4009,8 @@ is of course not converted.
 
 64tass --long-branch a.asm
 *       <b>=</b> <span>$1000</span>
-        <b>bcc</b> <span>$1233</span>       <i>;no error, automatically converted to the above one.</i>
+        <b>bcc</b> <span>$1233</span>       <i>;no error, automatically converted to the one above</i>
+        <b>bcs</b> @b <span>$1233</span>    <i>;keep this one short regardless and fail if too far</i>
 </pre></dd>
 
 <dt><b>-C</b>, <b>--case-sensitive</b><a name="o_case-sensitive" href="#o_case-sensitive"></a>
@@ -5781,7 +5782,6 @@ This mode is for compiling sources which are already PETSCII.
 <th><td>
 </table></div>
 
-<hr>
 <h3>6502 illegal opcodes<a name="opcodes-6502i" href="#opcodes-6502i"></a></h3>
 
 <p>This processor is a standard 6502 with the NMOS illegal opcodes.
@@ -5826,7 +5826,6 @@ This mode is for compiling sources which are already PETSCII.
 <th><td>
 </table></div>
 
-<hr>
 <h3>65DTV02 opcodes<a name="opcodes-65dtv02" href="#opcodes-65dtv02"></a></h3>
 
 <p>This processor is an enhanced version of standard 6502 with some illegal opcodes.
@@ -5869,7 +5868,6 @@ This mode is for compiling sources which are already PETSCII.
 <th><td>
 </table></div>
 
-<hr>
 <h3>Standard 65C02 opcodes<a name="opcodes-65c02" href="#opcodes-65c02"></a></h3>
 
 <p>This processor is an enhanced version of standard 6502.
@@ -5908,7 +5906,6 @@ This mode is for compiling sources which are already PETSCII.
 <th><td>
 </table></div>
 
-<hr>
 <h3>R65C02 opcodes<a name="opcodes-r65c02" href="#opcodes-r65c02"></a></h3>
 
 <p>This processor is an enhanced version of standard 65C02.
@@ -5927,7 +5924,6 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <th><td>
 </table></div>
 
-<hr>
 <h3>W65C02 opcodes<a name="opcodes-w65c02" href="#opcodes-w65c02"></a></h3>
 
 <p>This processor is an enhanced version of R65C02.
@@ -5944,7 +5940,6 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <th width="4%">&nbsp;&nbsp;&nbsp;<td width="46%">&nbsp;&nbsp;
 </table></div>
 
-<hr>
 <h3>W65816 opcodes<a name="opcodes-w65816" href="#opcodes-w65816"></a></h3>
 
 <p>This processor is an enhanced version of 65C02.
@@ -6005,7 +6000,6 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <th>TSA<td>3B
 </table></div>
 
-<hr>
 <h3>65EL02 opcodes<a name="opcodes-65el02" href="#opcodes-65el02"></a></h3>
 
 <p>This processor is an enhanced version of standard 65C02.
@@ -6070,7 +6064,6 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <th><td>
 </table></div>
 
-<hr>
 <h3>65CE02 opcodes<a name="opcodes-65ce02" href="#opcodes-65ce02"></a></h3>
 
 <p>This processor is an enhanced version of R65C02.
@@ -6133,7 +6126,6 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <th width="4%">&nbsp;&nbsp;&nbsp;<td width="46%">&nbsp;&nbsp;
 </table></div>
 
-<hr>
 <h3>CSG 4510 opcodes<a name="opcodes-4510" href="#opcodes-4510"></a></h3>
 
 <p>This processor is an enhanced version of 65CE02.
@@ -6153,6 +6145,7 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <hr>
 <h2>Appendix<a name="appendix" href="#appendix"></a></h2>
 
+<nav>
 <h3>Assembler directives<a name="directives" href="#directives"></a></h3>
 
 <p class="links">
@@ -6288,8 +6281,9 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#d_xl">.xl</a>
 <a href="#d_xs">.xs</a>
 </p>
+</nav>
 
-<hr>
+<nav>
 <h3>Built-in functions<a name="functions" href="#functions"></a></h3>
 
 <p class="links">
@@ -6340,7 +6334,9 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#f_trunc">trunc</a>
 <a href="#f_word">word</a>
 </p>
+</nav>
 
+<nav>
 <h3>Built-in types<a name="types" href="#types"></a></h3>
 
 <p class="links">
@@ -6358,5 +6354,6 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <a href="#t_tuple">tuple</a>
 <a href="#t_type">type</a>
 </p>
+</nav>
 </div>
 </body></html>
