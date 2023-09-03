@@ -10,6 +10,7 @@
 
  ~/.local/share/gtksourceview-2.0/language-specs/
  ~/.local/share/gtksourceview-3.0/language-specs/
+ ~/.local/share/gtksourceview-4/language-specs/
 
  Author: Zsolt Kajtar <soci at c64.rulez.org>
  Copyright (C) 2012 Zsolt Kajtar <soci at c64.rulez.org>
