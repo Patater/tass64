@@ -178,14 +178,22 @@ err:
     return false;
 }
 
-static void output_mem_c64(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
+static void output_mem_raw(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     address_t pos, end;
     size_t i;
-    unsigned char header[4];
+    unsigned char header[8];
 
     if (memblocks->p == 0) return;
     pos = memblocks->data[0].addr;
     switch (output->mode) {
+    case OUTPUT_PGX:
+        memcpy(header, "PGX\x01", 4);
+        header[4] = (uint8_t)pos;
+        header[5] = (uint8_t)(pos >> 8);
+        header[6] = (uint8_t)(pos >> 16);
+        header[7] = (uint8_t)(pos >> 24);
+        i = 8;
+        break;
     case OUTPUT_CBM:
         header[0] = (uint8_t)pos;
         header[1] = (uint8_t)(pos >> 8);
@@ -248,6 +256,38 @@ static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool lo
     }
     memset(header, 0, 4);
     fwrite(header, longaddr ? 3 : 2, 1, fout);
+}
+
+static void output_mem_c256_pgz(FILE *fout, const Memblocks *memblocks) {
+    size_t i, j;
+    bool first = true;
+    unsigned char header[7];
+    unsigned int p = 1;
+    header[0] = 'Z';
+    for (i = 0; i < memblocks->p;) {
+        const struct memblock_s *block = &memblocks->data[i];
+        address_t start = block->addr;
+        address_t size = block->len;
+        for (j = i + 1; j < memblocks->p; j++) {
+            const struct memblock_s *b = &memblocks->data[j];
+            address_t addr = start + size;
+            if (b->addr != addr || addr < start) break;
+            size += b->len;
+        }
+        header[p] = (uint8_t)start;
+        header[p+1] = (uint8_t)(start >> 8);
+        header[p+2] = (uint8_t)(start >> 16);
+        header[p+3] = (uint8_t)size;
+        header[p+4] = (uint8_t)(size >> 8);
+        header[p+5] = (uint8_t)(size >> 16);
+        p += 6;
+        if (fwrite(header, p, 1, fout) == 0) return;
+        p = 0;
+        for (;i < j; i++) {
+            const struct memblock_s *b = &memblocks->data[i];
+            if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
+        }
+    }
 }
 
 static void output_mem_flat(FILE *fout, const Memblocks *memblocks, bool append) {
@@ -618,10 +658,12 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     switch (output->mode) {
     case OUTPUT_FLAT: output_mem_flat(fout, memblocks, output->append); break;
     case OUTPUT_NONLINEAR: output_mem_nonlinear(fout, memblocks, output->longaddr); break;
+    case OUTPUT_PGZ: output_mem_c256_pgz(fout, memblocks); break;
     case OUTPUT_XEX: output_mem_atari_xex(fout, memblocks); break;
+    case OUTPUT_PGX:
     case OUTPUT_RAW:
     case OUTPUT_APPLE:
-    case OUTPUT_CBM: output_mem_c64(fout, memblocks, output); break;
+    case OUTPUT_CBM: output_mem_raw(fout, memblocks, output); break;
     case OUTPUT_IHEX: output_mem_ihex(fout, memblocks); break;
     case OUTPUT_SREC: output_mem_srec(fout, memblocks); break;
     case OUTPUT_MHEX: output_mem_mhex(fout, memblocks); break;

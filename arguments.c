@@ -361,7 +361,7 @@ enum {
     INTEL_HEX, APPLE_II, ATARI_XEX, MOS_HEX, NO_LONG_ADDRESS, NO_QUIET, WARN,
     OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND, MAP,
     NO_MAP, MAP_APPEND, LIST_APPEND, SIMPLE_LABELS, LABELS_SECTION,
-    MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND
+    MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND, C256_PGX, C256_PGZ
 };
 
 static const struct my_option long_options[] = {
@@ -380,6 +380,8 @@ static const struct my_option long_options[] = {
     {"mos-hex"          , my_no_argument      , NULL,  MOS_HEX},
     {"s-record"         , my_no_argument      , NULL,  S_RECORD},
     {"cbm-prg"          , my_no_argument      , NULL,  CBM_PRG},
+    {"c256-pgx"         , my_no_argument      , NULL,  C256_PGX},
+    {"c256-pgz"         , my_no_argument      , NULL,  C256_PGZ},
     {"no-ascii"         , my_no_argument      , NULL,  NO_ASCII},
     {"ascii"            , my_no_argument      , NULL, 'a'},
     {"no-tasm-compatible",my_no_argument      , NULL,  NO_TASM_COMPATIBLE},
@@ -423,7 +425,7 @@ static const struct my_option long_options[] = {
     {"list"             , my_required_argument, NULL, 'L'},
     {"list-append"      , my_required_argument, NULL,  LIST_APPEND},
     {"dependencies"     , my_required_argument, NULL, 'M'},
-    {"dependencies-append", my_required_argument, NULL, MAKE_APPEND},
+    {"dependencies-append",my_required_argument,NULL,  MAKE_APPEND},
     {"no-make-phony"    , my_no_argument      , NULL,  NO_MAKE_PHONY},
     {"make-phony"       , my_no_argument      , NULL,  MAKE_PHONY},
     {"no-verbose-list"  , my_no_argument      , NULL,  NO_VERBOSE_LIST},
@@ -582,7 +584,9 @@ int init_arguments(int *argc2, char **argv2[]) {
             case INTEL_HEX:output.mode = OUTPUT_IHEX;break;
             case MOS_HEX:output.mode = OUTPUT_MHEX;break;
             case S_RECORD:output.mode = OUTPUT_SREC;break;
-            case CBM_PRG:output.mode = OUTPUT_CBM;break;
+            case CBM_PRG: output.mode = OUTPUT_CBM;break;
+            case C256_PGX: output.mode = OUTPUT_PGX;break;
+            case C256_PGZ: output.mode = OUTPUT_PGZ;break;
             case 'b':output.mode = OUTPUT_RAW;break;
             case 'f':output.mode = OUTPUT_FLAT;break;
             case 'a':arguments.to_ascii = true;break;
@@ -682,15 +686,16 @@ int init_arguments(int *argc2, char **argv2[]) {
                "        [-E <file>] [-I <path>] [-l <file>] [-L <file>] [-M <file>] [--ascii]\n"
                "        [--nostart] [--long-branch] [--case-sensitive] [--cbm-prg] [--flat]\n"
                "        [--atari-xex] [--apple-ii] [--intel-hex] [--mos-hex] [--s-record]\n"
-               "        [--nonlinear] [--tasm-compatible] [--quiet] [--no-warn] [--long-address]\n"
-               "        [--output-section=<name>] [--m65c02] [--m6502] [--m65xx] [--m65dtv02]\n"
-               "        [--m65816] [--m65el02] [--mr65c02] [--mw65c02] [--m65ce02] [--m4510]\n"
-               "        [--labels=<file>] [--normal-labels] [--export-labels] [--vice-labels]\n"
-               "        [--vice-labels-numeric] [--dump-labels] [--simple-labels]\n"
-               "        [--list=<file>] [--list-append=<file>] [--no-monitor] [--no-source]\n"
-               "        [--line-numbers] [--tab-size=<value>] [--verbose-list] [-W<option>]\n"
-               "        [--dependencies=<file>] [--dependencies-append=<file>] [--make-phony]\n"
-               "        [--output=<file>] [--output-append=<file>] [--no-output] [--map=<file>]\n"
+               "        [--nonlinear] [--c256-pgx] [--c256-pgz] [--tasm-compatible] [--quiet]\n"
+               "        [--no-warn] [--long-address] [--output-section=<name>] [--m65c02]\n"
+               "        [--m6502] [--m65xx] [--m65dtv02] [--m65816] [--m65el02] [--mr65c02]\n"
+               "        [--mw65c02] [--labels=<file>] [--normal-labels] [--export-labels]\n"
+               "        [--vice-labels] [--m65ce02] [--m4510] [--vice-labels-numeric]\n"
+               "        [--dump-labels] [--simple-labels] [--list=<file>] [--list-append=<file>]\n"
+               "        [--no-monitor] [--no-source] [--line-numbers] [--tab-size=<value>]\n"
+               "        [--verbose-list] [-W<option>] [--dependencies=<file>]\n"
+               "        [--dependencies-append=<file>] [--make-phony] [--output=<file>]\n"
+               "        [--output-append=<file>] [--no-output] [--map=<file>]\n"
                "        [--map-append=<file>] [--no-map] [--errors=<file>] [--help] [--usage]\n"
                "        [--version] SOURCES\n");
                    return 0;
@@ -779,6 +784,8 @@ int init_arguments(int *argc2, char **argv2[]) {
                "      --intel-hex        Output Intel HEX file\n"
                "      --mos-hex          Output MOS Technology file\n"
                "      --s-record         Output Motorola S-record file\n"
+               "      --c256-pgx         Output C256 PGX file\n"
+               "      --c256-pgz         Output C256 PGZ file\n"
                "\n"
                " Target CPU selection:\n"
                "      --m65xx            Standard 65xx (default)\n"

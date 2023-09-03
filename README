@@ -3215,12 +3215,14 @@ Output options
 --no-map
     Do not display or record the memory map.
 --output-section <sectionname>
+    Specify which section to write in the output.
+
     By default all sections go into the output file. Using this option limits
     the output to specific section and it's children. This is useful to split a
     larger program into several files.
 
-    64tass a.asm --output-section main -o main.prg
-    64tass a.asm --output-section loader -o loader.prg
+    64tass a.asm --output-section main -o main.prg \
+                 --output-section loader -o loader.prg
 
 -X, --long-address
     Use 3 byte address/length for CBM and nonlinear output instead of 2 bytes.
@@ -3231,13 +3233,12 @@ Output options
 --cbm-prg
     Generate CBM format binaries (default)
 
-    The first 2 bytes are the little endian address of the first valid byte
-    (start address). Overlapping blocks are flattened and uninitialized memory
-    is filled up with zeros. Uninitialized memory before the first and after
-    the last valid bytes are not saved. Up to 64 KiB or 16 MiB with long
-    address.
+    Overlapping blocks are flattened and uninitialized memory is filled up with
+    zeros. Uninitialized memory before the first and after the last valid bytes
+    are not saved. Up to 64 KiB or 16 MiB with long address.
 
-    Used for C64 binaries.
+    Used for C64 binaries. The first 2 bytes are the little endian address of
+    the first valid byte (start address). This is followed by the data.
 
 -b, --nostart
     Output raw data without start address.
@@ -3263,22 +3264,25 @@ Output options
     Overlapping blocks are flattened. Blocks are saved in sorted order and
     uninitialized memory is skipped. Up to 64 KiB or 16 MiB with long address.
 
-    Used for linkers and downloading.
+    Used for linkers and downloading. Before writing each memory block the
+    length and the memory address is saved in a little endian order. Once
+    everything was saved a zero length block is written without an address or
+    data. These zeros serve as an end marker.
 
     64tass --nonlinear a.asm
-    *       = $1000
+    *       = $1000          ;1st segment
             lda #2
-    *       = $2000
-            nop
+    *       = $2000          ;2nd segment
+            rts
 
-          Result of compilation
-    $02, $00 little endian length, 2 bytes
-    $00, $10 little endian start $1000
-    $a9, $02 code
-    $01, $00 little endian length, 1 byte
-    $00, $20 little endian start $2000
-    $ea      code
-    $00, $00 end marker (length=0)
+      Example 64 KiB nonlinear output
+    02 00          load 2 bytes
+    00 10          to $1000
+    a9 02          data
+    01 00          load 1 byte
+    00 20          to $2000
+    60             data
+    00 00          load 0 bytes, end marker
 
 --atari-xex
     Generate an Atari XEX output file.
@@ -3287,7 +3291,9 @@ Output options
     happens in the definition order without sorting, and uninitialized memory
     is skipped in the output. Up to 64 KiB.
 
-    Used for Atari executables.
+    Used for Atari executables. First 2 bytes of signature is written. Then
+    before saving each memory block the words of load address and last byte
+    address is written in little endian format.
 
     64tass --atari-xex a.asm
     *       = $02e0
@@ -3295,14 +3301,15 @@ Output options
     *       = $2000
     start   rts
 
-          Result of compilation
-    $ff, $ff header, 2 bytes
-    $e0, $02 little endian start $02e0
-    $e1, $02 little endian last byte $02e1
-    $00, $20 start address word
-    $00, $20 little endian start $2000
-    $00, $20 little endian last byte $2000
-    $60      code
+       Example Atari XEX format
+                output
+    ff ff          signature
+    e0 02          load to $02e0
+    e1 02          until $02e1
+    00 20          run address ($2000)
+    00 20          load to $2000
+    00 20          until $2000
+    60             data
 
 --apple2
     Generate an Apple II output file (DOS 3.3).
@@ -3311,16 +3318,63 @@ Output options
     zeros. Uninitialized memory before the first and after the last valid bytes
     are not saved. Up to 64 KiB.
 
-    Used for Apple II executables.
+    Used for Apple II executables. First the load address and the data length
+    words are written in little endian format. This is followed by the data.
 
     64tass --apple-ii a.asm
     *       = $0c00
             rts
 
-         Result of compilation
-    $00, $0c little endian start $0c00
-    $01, $00 little endian length $0001
-    $60      code
+    Example of Apple II format
+              output
+    00 0c          load to $0c00
+    01 00          length is 1 byte
+    60             data
+
+--c256-pgx
+    Generate C256 Foenix PGX output file.
+
+    Overlapping blocks are flattened and uninitialized memory is filled up with
+    zeros. Uninitialized memory before the first and after the last valid bytes
+    are not saved. Up to 16 MiB.
+
+    Used for single segment C256 Foenix executables. After the PGX signature a
+    four byte little endian load address is written. This is followed by the
+    data.
+
+    64tass --c256-pgx a.asm
+    *       = $1000          ;single segment
+            rts
+
+    Example PGX format output
+    50 47 58 01    PGX signature
+    00 10 00 00    load to $1000
+    60             data
+
+--c256-pgz
+    Generate C256 Foenix PGZ output file.
+
+    Overlapping blocks are flattened. Blocks are saved in sorted order and
+    uninitialized memory is skipped. Up to 16 MiB.
+
+    Used for multi segment C256 Foenix binaries. It starts with a single byte
+    signature. Then before each memory block a three byte load address and
+    length is written in little endian format.
+
+    64tass --c256-pgz a.asm
+    *       = $1000          ;1st segment
+            lda #2
+    *       = $2000          ;2nd segment
+            rts
+
+      Example PGZ format output
+    5a             PGZ signature byte
+    00 10 00       load to $1000
+    02 00 00       length is 2 bytes
+    a9 02          data
+    00 20 00       load to $2000
+    01 00 00       length is 1 bytes
+    60             data
 
 --intel-hex
     Use Intel HEX output file format.

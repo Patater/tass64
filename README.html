@@ -3778,13 +3778,15 @@ by using <q><code>-</code></q> as the file name.</p></dd>
 <dd>Do not display or record the memory map.</dd>
 
 <dt><b>--output-section</b> &lt;sectionname&gt;<a name="o_output-section" href="#o_output-section"></a>
-<dd>By default all sections go into the output file. Using this option
-limits the output to specific section and it's children. This is useful
-to split a larger program into several files.
+<dd>Specify which section to write in the output.
+
+<p>By default all sections go into the output file. Using this option limits
+the output to specific section and it's children.  This is useful to split a
+larger program into several files.</p>
 
 <pre>
-64tass a.asm --output-section main -o main.prg
-64tass a.asm --output-section loader -o loader.prg
+64tass a.asm --output-section main -o main.prg \
+             --output-section loader -o loader.prg
 </pre></dd>
 
 <dt><b>-X</b>, <b>--long-address</b><a name="o_long-address" href="#o_long-address"></a>
@@ -3798,17 +3800,19 @@ bytes. Also increases the size of raw output to 16&nbsp;MiB.
 <dt><b>--cbm-prg</b><a name="o_cbm-prg" href="#o_cbm-prg"></a>
 <dd>Generate CBM format binaries (default)
 
-<p>The first 2 bytes are the little endian address of the first valid byte (start
-address). Overlapping blocks are flattened and uninitialized memory is filled up with zeros.
-Uninitialized memory before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.</p>
+<p>Overlapping blocks are flattened and uninitialized memory is filled up with
+zeros.  Uninitialized memory before the first and after the last valid bytes
+are not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.
 
-<p>Used for C64 binaries.</p></dd>
+<p>Used for C64 binaries. The first 2 bytes are the little endian address of
+the first valid byte (start address). This is followed by the data.</p></dd>
 
 <dt><b>-b</b>, <b>--nostart</b><a name="o_nostart" href="#o_nostart"></a>
 <dd>Output raw data without start address.
 
-<p>Overlapping blocks are flattened and uninitialized memory is filled up with zeros. Uninitialized memory
-before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.</p>
+<p>Overlapping blocks are flattened and uninitialized memory is filled up with
+zeros. Uninitialized memory before the first and after the last valid bytes are
+not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.
 
 <p>Useful for small ROM files.</p></dd>
 
@@ -3816,34 +3820,39 @@ before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB
 <dd>Flat address space output mode.
 
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with
-zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp;GiB.</p>
+zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp;GiB.
 
 <p>Useful for creating huge multi bank ROM files. See sections for an example.</p></dd>
 
 <dt><b>-n</b><a name="o_n"></a>, <b>--nonlinear</b><a name="o_nonlinear" href="#o_nonlinear"></a>
 <dd>Generate nonlinear output file.
 
-<p>Overlapping blocks are flattened. Blocks are saved in sorted order and uninitialized memory is skipped. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.</p>
+<p>Overlapping blocks are flattened. Blocks are saved in sorted order and
+uninitialized memory is skipped. Up to 64&nbsp;KiB or 16&nbsp;MiB with long
+address.
 
-<p>Used for linkers and downloading.</p>
+<p>Used for linkers and downloading. Before writing each memory block the
+length and the memory address is saved in a little endian order. Once
+everything was saved a zero length block is written without an address or data.
+These zeros serve as an end marker.</p>
 
 <pre>
 64tass --nonlinear a.asm
-*       <b>=</b> <span>$1000</span>
+*       <b>=</b> <span>$1000</span>          <i>;1st segment</i>
         <b>lda</b> #<span>2</span>
-*       <b>=</b> <span>$2000</span>
-        <b>nop</b>
+*       <b>=</b> <span>$2000</span>          <i>;2nd segment</i>
+        <b>rts</b>
 </pre>
 
 <div><table border="0">
-<caption>Result of compilation</caption>
-<tr><td><code>$02, $00</code><td>little endian length, 2 bytes
-<tr><td><code>$00, $10</code><td>little endian start <code>$1000</code>
-<tr><td><code>$a9, $02</code><td>code
-<tr><td><code>$01, $00</code><td>little endian length, 1 byte
-<tr><td><code>$00, $20</code><td>little endian start <code>$2000</code>
-<tr><td><code>$ea</code><td>code
-<tr><td><code>$00, $00</code><td>end marker (length=0)
+<caption>Example 64&nbsp;KiB nonlinear output</caption>
+<tr><td width="100"><code>02 00</code><td>load 2 bytes
+<tr><td><code>00 10</code><td>to <code>$1000</code>
+<tr><td><code>a9 02</code><td>data
+<tr><td><code>01 00</code><td>load 1 byte
+<tr><td><code>00 20</code><td>to <code>$2000</code>
+<tr><td><code>60</code><td>data
+<tr><td><code>00 00</code><td>load 0 bytes, end marker
 </table></div></dd>
 
 <dt><b>--atari-xex</b><a name="o_atari-xex" href="#o_atari-xex"></a>
@@ -3851,9 +3860,11 @@ zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp
 
 <p>Overlapping blocks are kept, continuing blocks are concatenated. Saving
 happens in the definition order without sorting, and uninitialized memory is
-skipped in the output. Up to 64&nbsp;KiB.</p>
+skipped in the output. Up to 64&nbsp;KiB.
 
-<p>Used for Atari executables.</p>
+<p>Used for Atari executables. First 2 bytes of signature is written. Then
+before saving each memory block the words of load address and last byte address is
+written in little endian format.</p>
 
 <pre>
 64tass --atari-xex a.asm
@@ -3864,23 +3875,25 @@ start   <b>rts</b>
 </pre>
 
 <div><table border="0">
-<caption>Result of compilation</caption>
-<tr><td><code>$ff, $ff</code><td>header, 2 bytes
-<tr><td><code>$e0, $02</code><td>little endian start <code>$02e0</code>
-<tr><td><code>$e1, $02</code><td>little endian last byte <code>$02e1</code>
-<tr><td><code>$00, $20</code><td>start address word
-<tr><td><code>$00, $20</code><td>little endian start <code>$2000</code>
-<tr><td><code>$00, $20</code><td>little endian last byte <code>$2000</code>
-<tr><td><code>$60</code><td>code
+<caption>Example Atari XEX format output</caption>
+<tr><td width="100"><code>ff ff</code><td>signature
+<tr><td><code>e0 02</code><td>load to <code>$02e0</code>
+<tr><td><code>e1 02</code><td>until <code>$02e1</code>
+<tr><td><code>00 20</code><td>run address (<code>$2000</code>)
+<tr><td><code>00 20</code><td>load to <code>$2000</code>
+<tr><td><code>00 20</code><td>until <code>$2000</code>
+<tr><td><code>60</code><td>data
 </table></div></dd>
 
 <dt><b>--apple2</b><a name="o_apple2" href="#o_apple2"></a>
 <dd>Generate an Apple II output file (DOS 3.3).
 
-<p>Overlapping blocks are flattened and uninitialized memory is filled up with zeros. Uninitialized memory
-before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB.</p>
+<p>Overlapping blocks are flattened and uninitialized memory is filled up with
+zeros. Uninitialized memory before the first and after the last valid bytes are
+not saved. Up to 64&nbsp;KiB.
 
-<p>Used for Apple II executables.</p>
+<p>Used for Apple II executables. First the load address and the data length
+words are written in little endian format. This is followed by the data.</p>
 
 <pre>
 64tass --apple-ii a.asm
@@ -3889,10 +3902,63 @@ before the first and after the last valid bytes are not saved. Up to 64&nbsp;KiB
 </pre>
 
 <div><table border="0">
-<caption>Result of compilation</caption>
-<tr><td><code>$00, $0c</code><td>little endian start <code>$0c00</code>
-<tr><td><code>$01, $00</code><td>little endian length <code>$0001</code>
-<tr><td><code>$60</code><td>code
+<caption>Example of Apple II format output</caption>
+<tr><td width="100"><code>00 0c</code><td>load to <code>$0c00</code>
+<tr><td><code>01 00</code><td>length is 1 byte
+<tr><td><code>60</code><td>data
+</table></div></dd>
+
+<dt><b>--c256-pgx</b><a name="o_c256-pgx" href="#o_c256-pgx"></a>
+<dd>Generate C256 Foenix PGX output file.
+
+<p>Overlapping blocks are flattened and uninitialized memory is filled up with
+zeros. Uninitialized memory before the first and after the last valid bytes are
+not saved. Up to 16&nbsp;MiB.
+
+<p>Used for single segment C256 Foenix executables. After the PGX signature a
+four byte little endian load address is written.  This is followed by the
+data.</p>
+
+<pre>
+64tass --c256-pgx a.asm
+*       <b>=</b> <span>$1000</span>          <i>;single segment</i>
+        <b>rts</b>
+</pre>
+
+<div><table border="0">
+<caption>Example PGX format output</caption>
+<tr><td width="100"><code>50 47 58 01</code><td>PGX signature
+<tr><td><code>00 10 00 00</code><td>load to <code>$1000</code>
+<tr><td><code>60</code><td>data
+</table></div></dd>
+
+<dt><b>--c256-pgz</b><a name="o_c256-pgz" href="#o_c256-pgz"></a>
+<dd>Generate C256 Foenix PGZ output file.
+
+<p>Overlapping blocks are flattened. Blocks are saved in sorted order and
+uninitialized memory is skipped. Up to 16&nbsp;MiB.</p>
+
+<p>Used for multi segment C256 Foenix binaries. It starts with a single
+byte signature. Then before each memory block a three byte load address and
+length is written in little endian format.</p>
+
+<pre>
+64tass --c256-pgz a.asm
+*       <b>=</b> <span>$1000</span>          <i>;1st segment</i>
+        <b>lda</b> #<span>2</span>
+*       <b>=</b> <span>$2000</span>          <i>;2nd segment</i>
+        <b>rts</b>
+</pre>
+
+<div><table border="0">
+<caption>Example PGZ format output</caption>
+<tr><td width="100"><code>5a</code><td>PGZ signature byte
+<tr><td><code>00 10 00</code><td>load to <code>$1000</code>
+<tr><td><code>02 00 00</code><td>length is 2 bytes
+<tr><td><code>a9 02</code><td>data
+<tr><td><code>00 20 00</code><td>load to <code>$2000</code>
+<tr><td><code>01 00 00</code><td>length is 1 bytes
+<tr><td><code>60</code><td>data
 </table></div></dd>
 
 <dt><b>--intel-hex</b><a name="o_intel-hex" href="#o_intel-hex"></a>
