@@ -491,14 +491,14 @@ static address_t check_outputs(void) {
     for (i = 0; i < arguments.output_len; i++) {
         const struct output_s *output = &arguments.output[i];
         switch (output->mode) {
-        case OUTPUT_PGX:
-        case OUTPUT_PGZ: min &= 0xffffff; break;
         case OUTPUT_RAW:
         case OUTPUT_NONLINEAR:
         case OUTPUT_CBM: min &= output->longaddr ? 0xffffff : 0xffff; break;
         case OUTPUT_IHEX:
         case OUTPUT_SREC:
         case OUTPUT_FLAT: min &= 0xffffffff; break;
+        case OUTPUT_PGX:
+        case OUTPUT_PGZ: min &= 0xffffff; break;
         case OUTPUT_MHEX:
         case OUTPUT_APPLE:
         case OUTPUT_XEX: min &= 0xffff; break;
