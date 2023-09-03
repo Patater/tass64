@@ -434,6 +434,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
 
     err = Error(tostr2(&v[0], &filename));
     if (err != NULL) return Obj(err);
+    if (filename.len == 0) return Obj(new_error(ERROR__EMPTY_STRING, &v[0].epoint));
     cfile2 = file_open(&filename, current_file_list, FILE_OPEN_BINARY, &v[0].epoint);
 
     switch (vals->len) {
