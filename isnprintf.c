@@ -74,7 +74,7 @@ typedef struct Data {
     const uint8_t *pfend;
     /* FLAGS */
     int width, precision;
-    bool left, square, space, plus, star_w, star_p, dot, zero;
+    bool left, square, space, plus, tilde, star_w, star_p, dot, zero;
     argcount_t listp;
     const struct values_s *list;
     argcount_t largs;
@@ -254,14 +254,17 @@ static MUST_CHECK Obj *get_intbits(Data *p) {
     const struct values_s *v = star_args(p);
 
     if (v != NULL) {
-        Obj *val = v->val;
         Obj *err;
-        if (val->obj == BITS_OBJ) return val_reference(val);
-        err = int_from_obj(val, &v->epoint);
-        if (err->obj == INT_OBJ) return err;
+        if (p->tilde) {
+            err = bits_from_obj(v->val, &v->epoint);
+            if (err->obj == BITS_OBJ) return err;
+        } else {
+            err = int_from_obj(v->val, &v->epoint);
+            if (err->obj == INT_OBJ) return err;
+        }
         note_failure(p, err);
     }
-    return val_reference(int_value[0]);
+    return val_reference(p->tilde ? bits_value[0] : int_value[0]);
 }
 
 /* for %x %X hexadecimal representation */
@@ -566,7 +569,7 @@ MUST_CHECK Obj *isnprintf(oper_t op)
         data.star_w = data.star_p = false;
         data.square = data.plus = data.space = false;
         data.left = false; data.dot = false;
-        data.zero = false;
+        data.zero = false; data.tilde = false;
         while (data.pf < data.pfend) {
             data.pf++;
             if (data.pf >= data.pfend) goto error;
@@ -630,6 +633,10 @@ MUST_CHECK Obj *isnprintf(oper_t op)
             case '-':
                 if (data.dot) goto error;
                 data.left = true;
+                continue;
+            case '~':
+                if (data.dot) goto error;
+                data.tilde = true;
                 continue;
             case '.':
                 if (data.dot) goto error;

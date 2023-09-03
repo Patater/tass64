@@ -1130,6 +1130,7 @@ format(<string expression>[, <expression>, ...])
     -     left adjusted (default right)
           blank when positive or minus sign
     +     sign even if positive
+    ~     binary and hexadecimal as bits
 
     The following conversion types are implemented:
 
