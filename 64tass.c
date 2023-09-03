@@ -1625,6 +1625,7 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
             if (label->constant) {
                 err_msg_double_defined(label, &varname, &epoint2);
                 val_destroy(val);
+                label = NULL;
             } else {
                 if (label->defpass != pass) {
                     label->ref = false;
@@ -1696,15 +1697,19 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
                 if (nopos < 0) nopos = 0;
                 else if ((waitfor->skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
                 if (labels.p == 1) {
-                    val_destroy(label->value);
-                    label->value = val_reference(val2);
+                    if (labels.data[0] != NULL) {
+                        val_destroy(labels.data[0]->value);
+                        labels.data[0]->value = val_reference(val2);
+                    }
                 } else {
                     struct iter_s iter2;
                     size_t j;
                     iter2.data = val2; val2->obj->getiter(&iter2);
                     for (j = 0; j < labels.p && (val2 = iter2.next(&iter2)) != NULL; j++) {
-                        val_destroy(labels.data[j]->value);
-                        labels.data[j]->value = val_reference(val2);
+                        if (labels.data[j] != NULL) {
+                            val_destroy(labels.data[j]->value);
+                            labels.data[j]->value = val_reference(val2);
+                        }
                     }
                     if (iter2.len != labels.p) err_msg_cant_unpack(labels.p, iter2.len, epoint);
                     iter_destroy(&iter2);
