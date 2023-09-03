@@ -260,7 +260,6 @@ static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool lo
 
 static void output_mem_c256_pgz(FILE *fout, const Memblocks *memblocks) {
     size_t i, j;
-    bool first = true;
     unsigned char header[7];
     unsigned int p = 1;
     header[0] = 'Z';

@@ -491,6 +491,8 @@ static address_t check_outputs(void) {
     for (i = 0; i < arguments.output_len; i++) {
         const struct output_s *output = &arguments.output[i];
         switch (output->mode) {
+        case OUTPUT_PGX:
+        case OUTPUT_PGZ: min &= 0xffffff; break;
         case OUTPUT_RAW:
         case OUTPUT_NONLINEAR:
         case OUTPUT_CBM: min &= output->longaddr ? 0xffffff : 0xffff; break;
