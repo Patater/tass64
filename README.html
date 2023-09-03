@@ -493,7 +493,7 @@ in section <q><a href="#slicing_indexing">Slicing and indexing</a></q>.
 <h3>Floating point constants<a name="floating-point" href="#floating-point"></a></h3>
 
 <p>Floating point constants have a radix point in them and optionally an
-exponent. A decimal exponent is <q>e</q> while a binary one is <q>p</q>.
+exponent. A decimal exponent is <q><code>e</code></q> while a binary one is <q><code>p</code></q>.
 An underscore can be used between digits as a separator for better
 readability. The following operations can be used:
 
@@ -583,12 +583,12 @@ mystr   <b>=</b> <span class="s">"oeU"</span>         <i>; character string cons
 
 <p>Byte strings are like character strings, but hold bytes instead of characters.
 
-<p>Quoted character strings prefixing by <q>b</q>, <q>l</q>, <q>n</q>, <q>p</q>, <q>s</q>, <q>x</q>
+<p>Quoted character strings prefixing by <q><code>b</code></q>, <q><code>l</code></q>, <q><code>n</code></q>, <q><code>p</code></q>, <q><code>s</code></q>, <q><code>x</code></q>
 or <q>z</q> characters can be used to create byte strings. The resulting byte
 string contains what <a href="#d_text"><code>.text</code></a>, <a href="#d_shiftl"><code>.shiftl</code></a>,
 <a href="#d_null"><code>.null</code></a>, <a href="#d_ptext"><code>.ptext</code></a> and <a href="#d_shift"><code>.shift</code></a> would
-create. Direct hexadecimal entry can be done using the <q>x</q> prefix and
-<q>z</q> denotes a z85 encoded byte string. Spaces can be used between pairs of
+create. Direct hexadecimal entry can be done using the <q><code>x</code></q> prefix and
+<q><code>z</code></q> denotes a z85 encoded byte string. Spaces can be used between pairs of
 hexadecimal digits as a separator for better readability.
 
 <div><table border="0">
@@ -871,8 +871,8 @@ modes of the supported CPUs.</b>
 <p>Direct page, data bank, program bank indexed and long addressing modes
 of instructions are intelligently chosen based on the instruction type,
 the address ranges set up by <a href="#d_dpage"><code>.dpage</code></a>, <a href="#d_databank"><code>.databank</code></a>
-and the current program counter address. Therefore the <q>,d</q>,
-<q>,b</q> and <q>,k</q> indexing is only used in very special cases.
+and the current program counter address. Therefore the <q><code>,d</code></q>,
+<q><code>,b</code></q> and <q><code>,k</code></q> indexing is only used in very special cases.
 
 <p>The immediate direct page indexed <q><code>#0,d</code></q> addressing
 mode is usable for direct page access. The 8&nbsp;bit constant is a
@@ -2638,7 +2638,7 @@ labels can be accessed through that label.</p></dd>
 
 <dt><b>#&lt;name&gt;</b> [&lt;param&gt;][[,][&lt;param&gt;] &hellip;]
 <dt><b>.&lt;name&gt;</b> [&lt;param&gt;][[,][&lt;param&gt;] &hellip;]
-<dd>Invoke the macro after <q>#</q> or <q>.</q> with the parameters. Normally the name of
+<dd>Invoke the macro after <q><code>#</code></q> or <q><code>.</code></q> with the parameters. Normally the name of
 the macro is used, but it can be any expression.</dd>
 
 <dt><b>.endm</b> [&lt;result&gt;][, &lt;result&gt; &hellip;]<a name="d_endm" href="#d_endm"></a>
@@ -3047,7 +3047,7 @@ can be reused as long as it's in a different scope.
 then parent scopes and the global scope may be searched in addition.  This means
 that a symbol in a parent or global scope may be <q>shadowed</q>.
 
-<p>Symbols of a named scope can be looked up using the <q>.</q> operator.
+<p>Symbols of a named scope can be looked up using the <q><code>.</code></q> operator.
 The searched symbol stands on the right and it's looked up in the scope on the
 left. More than one symbol may be looked up at the same time and the result
 will be a list or tuple.
@@ -3725,21 +3725,21 @@ you get a related error move the respective label out of the <a href="#d_block">
 <hr>
 <h2>Command line options<a name="commandline-options" href="#commandline-options"></a></h2>
 
-<p>Short command line options consist of <q>-</q> and a letter, long options
-start with <q>--</q>.
+<p>Short command line options consist of <q><code>-</code></q> and a letter, long options
+start with <q><code>--</code></q>.
 
-<p>If <q>--</q> is encountered then further options are not recognized and are
+<p>If <q><code>--</code></q> is encountered then further options are not recognized and are
 assumed to be file names.
 
 <p>Options requiring file names are marked with <q>&lt;filename&gt;</q>. A
-single <q>-</q> as name means standard input or output. File name quoting is
+single <q><code>-</code></q> as name means standard input or output. File name quoting is
 system specific.
 
 <h3>Output options<a name="commandline-output" href="#commandline-output"></a></h3>
 
 <dl class="dir">
 <dt><b>-o</b> &lt;filename&gt;, <b>--output</b> &lt;filename&gt;<a name="o_output" href="#o_output"></a>
-<dd>Place output into &lt;filename&gt;. The default output filename is <q>a.out</q>. This option changes it.
+<dd>Place output into &lt;filename&gt;. The default output filename is <q><code>a.out</code></q>. This option changes it.
 
 <pre>
 64tass a.asm -o a.prg
@@ -3755,7 +3755,7 @@ repeated for each output. The maximum image size will be the smallest of all
 selected formats. Using the same name multiple times is not a good idea.</p></dd>
 
 <dt><b>--output-append</b> &lt;filename&gt;<a name="o_output-append" href="#o_output-append"></a>
-<dd>Same as the --output option but appends instead of overwrites.
+<dd>Same as the <a href="#o_output"><code>--output</code></a> option but appends instead of overwrites.
 
 <p>Normally output files are overwritten but in some cases it's useful to append them instead.</p></dd>
 
@@ -3769,10 +3769,10 @@ selected formats. Using the same name multiple times is not a good idea.</p></dd
 
 <p>Normally the memory map is displayed on the standard output together with
 other messages. It's possible to write it to a file or to the standard output
-by using <q>-</q> as the file name.</p></dd>
+by using <q><code>-</code></q> as the file name.</p></dd>
 
 <dt><b>--map-append</b> &lt;filename&gt;<a name="o_map-append" href="#o_map-append"></a>
-<dd>Same as the --map option but appends instead of overwrites.</dd>
+<dd>Same as the <a href="#o_map"><code>--map</code></a> option but appends instead of overwrites.</dd>
 
 <dt><b>--no-map</b><a name="o_no_map" href="#o_no_map"></a>
 <dd>Do not display or record the memory map.</dd>
@@ -4039,7 +4039,7 @@ shell might eat the quotes unless escaped.</p>
 them as variables. Either quoting or backslash escaping might help.</p>
 
 <p>In Makefiles all $ signs need to be escaped by doubling them. This needs to
-be done over the normal shell escaping. For example <q>$1000</q> becomes <q>\$$1000</q>.</p>
+be done over the normal shell escaping. For example <q><code>$1000</code></q> becomes <q><code>\$$1000</code></q>.</p>
 
 <pre>
 64tass -D ii=2 -D var=\"string\" -D FAST:=true a.asm
@@ -4058,7 +4058,7 @@ FAST    <b>:?=</b> <span>false</span> <i>;define if undefined</i>
 <dd>Enable TASM compatible operators and precedence
 
 <p>Switches the expression evaluator into compatibility mode. This
-enables <q>.</q>, <q>:</q> and <q>!</q> operators and disables 64tass specific extensions, disables precedence handling
+enables <q><code>.</code></q>, <q><code>:</code></q> and <q><code>!</code></q> operators and disables 64tass specific extensions, disables precedence handling
 and forces 16&nbsp;bit unsigned evaluation (see <q>differences to original Turbo Assembler</q> below)</p></dd>
 
 <dt><b>-I</b> &lt;path&gt;<a name="o_I" href="#o_I"></a>
@@ -4077,7 +4077,7 @@ by repeating this option. If multiple matches exist the first one is used.</p></
 are very little escaping possibilities.</p></dd>
 
 <dt><b>--dependencies-append</b> &lt;file&gt;<a name="o_dependencies-append" href="#o_dependencies-append"></a>
-<dd>Same as the --dependencies option but appends instead of overwrites.</dd>
+<dd>Same as the <a href="#o_dependencies"><code>--dependencies</code></a> option but appends instead of overwrites.</dd>
 
 <dt><b>--make-phony</b><a name="o_make-phony" href="#o_make-phony"></a>
 <dd>Enable phony targets for dependencies
@@ -4098,7 +4098,7 @@ to achieve automatic dependency tracking:</p>
 
 <h3>Diagnostic options<a name="commandline-diagnostic" href="#commandline-diagnostic"></a></h3>
 
-<p>Diagnostic message switched start with a <q>-W</q> and can have an optional <q>no-</q> prefix to
+<p>Diagnostic message switched start with a <q><code>-W</code></q> and can have an optional <q><code>no-</code></q> prefix to
 disable them. The options below with this prefix are enabled by default, the others are disabled.</p>
 
 <dl class="dir">
@@ -4107,10 +4107,10 @@ disable them. The options below with this prefix are enabled by default, the oth
 
 <p>Normally compilation errors a written to the standard error output.
 It's possible to redirect them to a file or to the standard output by
-using <q>-</q> as the file name.</p></dd>
+using <q><code>-</code></q> as the file name.</p></dd>
 
 <dt><b>--error-append</b> &lt;filename&gt;<a name="o_error-append" href="#o_error-append"></a>
-<dd>Same as the --error option but appends instead of overwrites.</dd>
+<dd>Same as the <a href="#o_error"><code>--error</code></a> option but appends instead of overwrites.</dd>
 
 <dt><b>--no-error</b><a name="o_no_error" href="#o_no_error"></a>
 <dd>Do not output any error messages, just count them.</dd>
@@ -4148,15 +4148,15 @@ duplicate what's in the source editor window will be not.</p>
 </pre></dd>
 
 <dt><b>-Wall</b><a name="o_Wall" href="#o_Wall"></a>
-<dd>Enable most diagnostic warnings, except those individually disabled. Or with the <q>no-</q> prefix disable all except those enabled.</dd>
+<dd>Enable most diagnostic warnings, except those individually disabled. Or with the <q><code>no-</code></q> prefix disable all except those enabled.</dd>
 
 <dt><b>-Werror</b><a name="o_Werror" href="#o_Werror"></a>
 <dd>Make all diagnostic warnings to an error, except those individually set to a warning.</dd>
 
-<dt><b>-Werror=</b>&lt;name&gt;<a name="o_Werror" href="#o_Werror"></a>
+<dt><b>-Werror=</b>&lt;name&gt;
 <dd>Change a diagnostic warning to an error.
 
-<p>For example <q>-Werror=implied-reg</q> makes this check an error. The <q>-Wno-error=</q> variant is useful with <q>-Werror</q> to set some to warnings.</p></dd>
+<p>For example <q><code>-Werror=implied-reg</code></q> makes this check an error. The <q><code>-Wno-error=</code></q> variant is useful with <q><code>-Werror</code></q> to set some to warnings.</p></dd>
 
 <dt><b>-Walias</b><a name="o_Walias" href="#o_Walias"></a>
 <dd>Warns about alias opcodes.
@@ -4191,7 +4191,7 @@ definitions differing only in case (these are reported as duplicates).</p></dd>
 <dt><b>-Wimmediate</b><a name="o_Wimmediate" href="#o_Wimmediate"></a>
 <dd>Warns for cases where immediate addressing is more likely.
 
-<p>It may be hard to notice if a <q>#</q> was missed. The code still compiles but
+<p>It may be hard to notice if a <q><code>#</code></q> was missed. The code still compiles but
 there's a huge difference between <q><code>cpx #const</code></q> and
 <q><code>cpx const</code></q>. Unless the right sort of garbage was on zero
 page at the time of testing...
@@ -4369,7 +4369,7 @@ Unfortunately this looks the same a <q><code>label *=*+x</code></q> which is an 
 If it's a new label definition then this warning is used to note that possibly a variable definition was missed earlier.</p>
 <p>If the intention was really a label definition then the <q><code>*=</code></q>
 can be moved to a separate line, or in case of space allocation it could be
-improved to use <q><code>.byte&nbsp;?</code></q> or <q><code>.fill&nbsp;x</code></q>.</p></dd>
+improved to use <q><code>.byte ?</code></q> or <q><code>.fill x</code></q>.</p></dd>
 
 <dt><b>-Wno-wrap-addr</b><a name="o_Wwrap-addr" href="#o_Wwrap-addr"></a>
 <dd>Don't warn about memory location address space wrap around.
@@ -4638,7 +4638,7 @@ options must be placed before this option. Using the same name multiple times is
 <q>export</q> into <q>myexport.inc</q>.</p></dd>
 
 <dt><b>--labels-append</b>=&lt;file&gt;<a name="o_labels-append" href="#o_labels-append"></a>
-<dd>Same as the --labels option but appends instead of overwrites.</dd>
+<dd>Same as the <a href="#o_labels"><code>--labels</code></a> option but appends instead of overwrites.</dd>
 
 <dt><b>--labels-root</b>=&lt;path&gt;<a name="o_labels-root" href="#o_labels-root"></a>
 <dd>Specify the scope to list labels from
@@ -4794,7 +4794,7 @@ the source files.
 </pre></dd>
 
 <dt><b>--list-append</b>=&lt;file&gt;<a name="o_list-append" href="#o_list-append"></a>
-<dd>Same as the --list option but appends instead of overwrites.</dd>
+<dd>Same as the <a href="#o_list"><code>--list</code></a> option but appends instead of overwrites.</dd>
 
 <dt><b>-m</b>, <b>--no-monitor</b><a name="o_no-monitor" href="#o_no-monitor"></a>
 <dd>Don't put monitor code into listing. There won't be any monitor listing in the list file.
@@ -4928,8 +4928,7 @@ needed for string quoting.
 <h2>Messages<a name="messages" href="#messages"></a></h2>
 
 <p>Faults and warnings encountered are sent to the standard error for logging. To
-redirect them to a file append <q>2&gt;filename.log</q> after the
-command or use the <q><a href="#o_error"><code>-E</code></a></q> command
+redirect them to a file use the <q><a href="#o_error"><code>-E</code></a></q> command
 line option. The message format is the following:
 
 <p>&lt;filename&gt;:&lt;line&gt;:&lt;character&gt;: &lt;severity&gt;: &lt;message&gt;

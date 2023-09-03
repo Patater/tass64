@@ -4264,8 +4264,8 @@ Forward slashes can be used as a portable path separation on all systems.
 Messages
 
 Faults and warnings encountered are sent to the standard error for logging. To
-redirect them to a file append `2>filename.log' after the command or use the `
--E' command line option. The message format is the following:
+redirect them to a file use the `-E' command line option. The message format is
+the following:
 
 <filename>:<line>:<character>: <severity>: <message>
 
