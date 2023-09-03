@@ -654,7 +654,7 @@ static void textrecursion_flush(struct textrecursion_s *trec) {
 }
 
 static void textrecursion_gaps(struct textrecursion_s *trec) {
-    memskip(trec->gaps, trec->epoint); 
+    memskip(trec->gaps, trec->epoint);
     trec->gaps = 0;
 }
 
@@ -741,7 +741,7 @@ static void textdump_bytes(struct textrecursion_s *trec, const Bytes *bytes) {
             }
             return;
         }
-    } 
+    }
     for (i = 0; i < ln; i++) {
         textdump(trec, bytes->data[i] ^ inv);
     }
@@ -851,7 +851,7 @@ struct byterecursion_s {
 };
 
 static void byterecursion_flush(struct byterecursion_s *brec) {
-    memcpy(pokealloc(brec->p, brec->epoint), brec->buff, brec->p); 
+    memcpy(pokealloc(brec->p, brec->epoint), brec->buff, brec->p);
     brec->p = 0;
 }
 
@@ -1123,7 +1123,7 @@ static void encode_close(void) {
 static const char *check_waitfor(void) {
     switch (waitfor->what) {
     case W_FI2:
-    case W_FI: 
+    case W_FI:
         if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
         return ".endif";
     case W_SWITCH2:
@@ -1151,7 +1151,7 @@ static const char *check_waitfor(void) {
     case W_ENDMACRO:
         if (waitfor->u.cmd_macro.val != NULL) val_destroy(waitfor->u.cmd_macro.val);
         return ".endmacro";
-    case W_ENDF: 
+    case W_ENDF:
         if (waitfor->u.cmd_function.val != NULL) val_destroy(waitfor->u.cmd_function.val);
         return ".endfunction";
     case W_ENDFOR3:
@@ -1665,7 +1665,7 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
         }
         ignore();
     } while (wht == ',');
-    
+
     if (foreach) {
         if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
     } else {
@@ -2007,7 +2007,7 @@ static size_t while_command(const Label *newlabel, List *lst, linepos_t epoint) 
     }
     pline = oldpline;
     lpoint.line = xlin;
-    
+
     if (nf != NULL) {
         if ((waitfor->skip & 1) != 0) listing_line(waitfor->epoint.pos);
         else listing_line_cut2(waitfor->epoint.pos);
@@ -2187,7 +2187,7 @@ static bool tdef_command(linepos_t epoint) {
             iter2.data = NULL;
         }
         doublerange = false;
-        iter.data = val; 
+        iter.data = val;
         if (val->obj->iterable || val->obj == STR_OBJ) {
             val->obj->getiter(&iter);
         } else {
@@ -2342,7 +2342,7 @@ MUST_CHECK Obj *compile(void)
         star = current_address->l_address;
         wht = here();
         if (wht >= 'A') {
-            labelname.data = pline + lpoint.pos; 
+            labelname.data = pline + lpoint.pos;
             labelname.len = get_label(labelname.data);
             if (labelname.len != 0) {
                 struct linepos_s cmdpoint;
@@ -3030,7 +3030,7 @@ MUST_CHECK Obj *compile(void)
                             if (prm == CMD_FUNCTION) {
                                 if (!failed && here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
                                 waitfor->skip = 0;
-                            } 
+                            }
                             goto breakerr;
                         }
                     case CMD_STRUCT:
@@ -3516,7 +3516,7 @@ MUST_CHECK Obj *compile(void)
                             val_destroy(Obj(newlabel));
                         } else if (!newlabel->ref && Code(newlabel->value)->pass != 0) {
                             listing_line(0);
-                            waitfor->skip = 0; 
+                            waitfor->skip = 0;
                             set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
                             Code(newlabel->value)->pass = 1;
                             push_dummy_context();
@@ -4153,10 +4153,10 @@ MUST_CHECK Obj *compile(void)
                         if (!get_exp(0, 0, 0, NULL)) goto breakerr;
                         if (prm == CMD_PTEXT) {
                             trec.buff[0] = (uint8_t)outputeor;
-                            trec.sum = 1; 
+                            trec.sum = 1;
                             trec.p = 1;
                         } else {
-                            trec.sum = 0; 
+                            trec.sum = 0;
                             trec.p = 0;
                         }
                         trec.gaps = 0;
@@ -5023,7 +5023,7 @@ MUST_CHECK Obj *compile(void)
                         waitfor->what = what;
                         if (prm == CMD_BINCLUDE) pop_context();
                         if (val != NULL) val_destroy(val);
-                        lpoint.line = lin; 
+                        lpoint.line = lin;
                         s->vline = vline; star_tree = stree_old; vline = star_tree->vline;
                         exitfile();
                         f->open = false;
@@ -5090,8 +5090,8 @@ MUST_CHECK Obj *compile(void)
                     bool nok = true, doit = true;
                     listing_line(epoint.pos);
                     if (prm == CMD_CONTINUEIF || prm == CMD_BREAKIF) {
-                        if (get_exp(0, 1, 1, &epoint)) { 
-                            struct values_s *vs = get_val(); 
+                        if (get_exp(0, 1, 1, &epoint)) {
+                            struct values_s *vs = get_val();
                             bool truth, result = tobool(vs, &truth);
                             if (prm == CMD_BREAKIF) {
                                 if (!result && !truth) doit = false;
@@ -5569,7 +5569,7 @@ MUST_CHECK Obj *compile(void)
     finish:
         ignore();if (here() != 0 && here() != ';' && (waitfor->skip & 1) != 0) err_msg(ERROR_EXTRA_CHAR_OL,NULL);
     breakerr:
-        if (newlabel != NULL) { 
+        if (newlabel != NULL) {
             if (!newlabel->update_after) set_size(newlabel, current_address->address - oaddr, current_address->mem, oaddr, newmembp);
             val_destroy(Obj(newlabel));
         }
@@ -5720,10 +5720,10 @@ int main2(int *argc2, char **argv2[]) {
                 sectionname.len = lpoint.pos;
                 err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
                 continue;
-            } 
+            }
             parent = section->parent;
             section->parent = NULL;
-            if (arguments.quiet) { 
+            if (arguments.quiet) {
                 if (output->name != NULL) {
                     fputs("Output file:       ", stdout);
                     argv_print(output->name, stdout);

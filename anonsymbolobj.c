@@ -79,7 +79,7 @@ static inline int icmp(oper_t op) {
 static MUST_CHECK Obj *calc2(oper_t op) {
     Obj *o2 = op->v2;
     switch (o2->obj->type) {
-    case T_ANONSYMBOL: 
+    case T_ANONSYMBOL:
         return obj_oper_compare(op, icmp(op));
     case T_NONE:
     case T_ERROR:

@@ -85,7 +85,7 @@ static struct file_s *file_table_update(struct file_s *p) {
         }
         hash >>= 5;
         offs = (5 * offs + hash + 1) & mask;
-    } 
+    }
     file_table.data[offs] = p;
     file_table.len++;
     return NULL;
@@ -192,7 +192,7 @@ static wchar_t *get_real_name(const wchar_t *name) {
     if (ret >= len || ret == 0) {
         free(short_name);
         short_name = (wchar_t *)name;
-    } 
+    }
     ret = GetLongPathNameW(short_name, real_name, len);
     if (ret > len) {
         wchar_t *tmp = reallocate_array(real_name, ret);

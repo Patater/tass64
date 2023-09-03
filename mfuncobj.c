@@ -192,7 +192,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_NONE:
     case T_ERROR:
         return val_reference(op->v2);
-    default: 
+    default:
         if (op->op == O_MEMBER) {
             return namespace_member(op, Mfunc(op->v1)->names);
         }

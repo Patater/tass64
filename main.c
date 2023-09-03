@@ -161,7 +161,7 @@ static unsigned int locale_init(void) {
         cp = GetACP();
     } else if (strcmp(env, ".OCP") == 0) {
         cp = GetOEMCP();
-    } else { 
+    } else {
         cp = 0;
     }
     if (cp != 0) {
@@ -181,7 +181,7 @@ static unsigned int locale_init(void) {
 }
 
 #ifdef __MINGW32__
-static 
+static
 #endif
 int wmain(int argc, wchar_t *argv2[]) {
     int i, r;

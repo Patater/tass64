@@ -208,7 +208,7 @@ static Label *namespace_update(Namespace *ns, Label *p) {
         }
         hash >>= 5;
         offs = (5 * offs + hash + 1) & mask;
-    } 
+    }
     ns->data[offs] = p;
     ns->len++;
     return NULL;
@@ -375,7 +375,7 @@ Label *find_anonlabel(ssize_t count) {
             anonsymbol.count[label.cfname.len - 2] = (uint8_t)count2;
             label.cfname.len++;
             count2 >>= 8;
-        } 
+        }
 
         label.hash = str_hash(&label.cfname);
         c = namespace_lookup(context, &label);
@@ -407,7 +407,7 @@ Label *find_anonlabel2(ssize_t count, Namespace *context) {
         anonsymbol.count[label.cfname.len - 2] = (uint8_t)count2;
         label.cfname.len++;
         count2 >>= 8;
-    } 
+    }
     label.hash = str_hash(&label.cfname);
 
     return namespace_lookup(context, &label);
@@ -773,7 +773,7 @@ void labelprint(const struct symbol_output_s *output) {
             sectionname.data = pline;
             sectionname.len = lpoint.pos;
             err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
-        } 
+        }
     } else lp.section = NULL;
     space = find_space(output->space, false);
     if (space == NULL) {

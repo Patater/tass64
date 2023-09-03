@@ -156,7 +156,7 @@ static inline int icmp(oper_t op) {
 static MUST_CHECK Obj *calc2(oper_t op) {
     const Type *t2 = op->v2->obj;
     switch (t2->type) {
-    case T_REGISTER: 
+    case T_REGISTER:
         return obj_oper_compare(op, icmp(op));
     case T_BOOL:
     case T_INT:

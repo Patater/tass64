@@ -165,7 +165,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
     }
     if (bits->v.refcount == 1) {
         bits->bits = len2;
-    } 
+    }
     if (bits->bits == len2) {
         return inplace ? val_reference(Obj(bits)) : Obj(bits);
     }
@@ -810,7 +810,7 @@ MUST_CHECK Obj *bits_calc1(Oper_types op, unsigned int val) {
     switch (op) {
     case O_BANK: val >>= 8; FALL_THROUGH; /* fall through */
     case O_HIGHER: val >>= 8; FALL_THROUGH; /* fall through */
-    case O_LOWER: 
+    case O_LOWER:
     default: return return_bits((uint8_t)val, 8);
     case O_BSWORD: val = (uint16_t)val | (val << 16); FALL_THROUGH; /* fall through */
     case O_HWORD: val >>= 8; FALL_THROUGH; /* fall through */

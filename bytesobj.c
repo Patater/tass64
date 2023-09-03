@@ -199,7 +199,7 @@ static MUST_CHECK Obj *convert2(oper_t op) {
         }
         bytes2 = inplace ? ref_bytes(bytes) : bytes;
         inplace = true;
-    } else { 
+    } else {
         bytes2 = new_bytes(len2);
         if (blen != 0) memcpy(bytes2->data, bytes->data, blen);
     }

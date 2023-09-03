@@ -67,7 +67,7 @@ struct sliceparam_s {
 struct indexoffs_s {
     Obj *val;
     size_t len;
-    size_t offs; 
+    size_t offs;
     linepos_t epoint;
 };
 

@@ -603,9 +603,9 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
             break;
         case ERROR__NO_BYTE_ADDR:
         case ERROR__NO_WORD_ADDR:
-        case ERROR__NO_LONG_ADDR: 
-            adderror(terr_error[no - 0x40]); 
-            err_opcode(*(const uint32_t *)prm); 
+        case ERROR__NO_LONG_ADDR:
+            adderror(terr_error[no - 0x40]);
+            err_opcode(*(const uint32_t *)prm);
             break;
         default:
             adderror(terr_error[no - 0x40]);
@@ -667,7 +667,7 @@ void err_msg_big_address(linepos_t epoint) {
 
 static bool err_msg_big_integer(const Error *err) {
     char msg2[256];
-    bool more = new_error_msg_err(err); 
+    bool more = new_error_msg_err(err);
     sprintf(msg2, terr_error[err->num - 0x40], err->u.intconv.bits);
     adderror(msg2);
     err_msg_variable(err->u.intconv.val);
@@ -818,7 +818,7 @@ static void err_msg_no_addressing(atype_t addrtype, uint32_t cod) {
 }
 
 static bool err_msg_no_register(const Error *err) {
-    bool more = new_error_msg_err(err); 
+    bool more = new_error_msg_err(err);
     Register *val = err->u.reg.reg;
     adderror("no register '");
     adderror2(val->data, val->len);
@@ -829,7 +829,7 @@ static bool err_msg_no_register(const Error *err) {
 
 static bool err_msg_no_lot_operand(const Error *err) {
     char msg2[256];
-    bool more = new_error_msg_err(err); 
+    bool more = new_error_msg_err(err);
     sprintf(msg2, "no %" PRIuSIZE " operand", err->u.opers.num);
     adderror(msg2);
     err_opcode(err->u.opers.cod);
@@ -838,7 +838,7 @@ static bool err_msg_no_lot_operand(const Error *err) {
 
 static bool err_msg_cant_broadcast(const Error *err) {
     char msg2[256];
-    bool more = new_error_msg_err(err); 
+    bool more = new_error_msg_err(err);
     sprintf(msg2, "operands could not be broadcast together with shapes %" PRIuSIZE " and %" PRIuSIZE, err->u.broadcast.v1, err->u.broadcast.v2);
     adderror(msg2);
     return more;
@@ -889,7 +889,7 @@ static void err_msg_argnum2(argcount_t num, argcount_t min, argcount_t max) {
     char line[1024];
     adderror("expected ");
     n = min;
-    if (min == max) { if (min != 0) adderror("exactly "); } 
+    if (min == max) { if (min != 0) adderror("exactly "); }
     else if (num < min) adderror("at least ");
     else {n = max; adderror("at most "); }
     switch (n) {
@@ -1402,7 +1402,7 @@ static void err_unicode_character(unichar_t ch) {
     *s++ = quote;
     if (ch != 0 && ch < 0x80) *s++ = (uint8_t)ch; else s += utf8out(ch, s);
     *s++ = quote;
-    sprintf((char *)s, " (U+%04" PRIX32 ")", ch); 
+    sprintf((char *)s, " (U+%04" PRIX32 ")", ch);
     adderror((char *)line);
 }
 
@@ -1509,7 +1509,7 @@ static void print_error(FILE *f, const struct errorentry_s *err, bool caret) {
     }
     if (console_use_color) {
         if (bold) {
-            console_defaultbold(f); 
+            console_defaultbold(f);
 #ifdef COLOR_OUTPUT
             console_use_bold = true;
 #endif

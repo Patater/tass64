@@ -626,7 +626,7 @@ static void add_esc(Enc *enc, const char *s) {
             len = 9;
             s2 = shift;
             goto abr;
-        case '{': 
+        case '{':
             len = 0;
             while (s[len++] != '}');
             s2 = (char *)s;

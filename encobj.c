@@ -218,10 +218,10 @@ bool enc_escape_add(Enc *enc, const str_t *v, Obj *val, linepos_t epoint)
         actual_encoding->updating = true;
         val2 = bytes_from_obj(val, epoint);
         actual_encoding->updating = old;
-        iter.data = val2; val2->obj->getiter(&iter); 
+        iter.data = val2; val2->obj->getiter(&iter);
         val_destroy(val2);
     } else {
-        iter.data = val; val->obj->getiter(&iter); 
+        iter.data = val; val->obj->getiter(&iter);
     }
 
     if (iter.len <= lenof(tmp.val)) {

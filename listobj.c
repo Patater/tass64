@@ -155,7 +155,7 @@ static MUST_CHECK Obj *tuple_from_iterable(Obj *v1, Type *typ, linepos_t epoint)
             }
             List(v)->len = i;
         }
-    } 
+    }
     iter_destroy(&iter);
     return v;
 }
@@ -183,12 +183,12 @@ static MUST_CHECK Obj *list_from_obj(Obj *o1, Type *typ, linepos_t epoint) {
     case T_NONE:
     case T_ERROR:
         return val_reference(o1);
-    case T_LIST: 
-    case T_TUPLE: 
+    case T_LIST:
+    case T_TUPLE:
         return tuple_from_list(List(o1), typ, epoint);
-    case T_CODE: 
+    case T_CODE:
         return tuple_from_code(Code(o1), typ);
-    default: 
+    default:
         if (o1->obj->iterable) {
             return tuple_from_iterable(o1, typ, epoint);
         }

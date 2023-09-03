@@ -194,7 +194,7 @@ void section_sizecheck(const struct avltree_node *b) {
             }
             section_sizecheck(b->left);
             if (!fixeddig) return;
-        } 
+        }
         b = b->right;
     } while (b != NULL);
 }
@@ -214,7 +214,7 @@ void section_memclose(const struct avltree_node *b) {
                 continue;
             }
             section_memclose(b->left);
-        } 
+        }
         b = b->right;
     } while (b != NULL);
 }

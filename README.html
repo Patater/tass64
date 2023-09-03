@@ -310,7 +310,7 @@ using an intermediate temporary file:
         <span class="cmd">x64 -autostartprgmode 1 -autostart-warp +truedrive +cart</span> $&lt;
 
 <span>demo.prg:</span> demo.tmp
-	<span class="cmd">pucrunch -ffast -x 2048</span> $&lt; &gt;$@
+        <span class="cmd">pucrunch -ffast -x 2048</span> $&lt; &gt;$@
 
 <span>demo.tmp:</span> source.asm macros.asm pic.drp music.bin
         <span class="cmd">64tass -C -a -B -i</span> $&lt; <span class="cmd">-o</span> $@
@@ -4089,7 +4089,7 @@ to achieve automatic dependency tracking:</p>
 
 <pre width="80" class="make">
 <span>demo:</span> demo.asm .dep
-	<span class="cmd">64tass --make-phony -M.dep</span> $&lt; <span class="cmd">-o</span> $@
+        <span class="cmd">64tass --make-phony -M.dep</span> $&lt; <span class="cmd">-o</span> $@
 
 <span>.dep:</span>
 -<b>include</b> .dep

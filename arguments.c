@@ -521,7 +521,7 @@ static address_t check_outputs(void) {
 
 static struct include_list_s **include_list_add(struct include_list_s **lastil, const char *path)
 {
-    struct include_list_s *include; 
+    struct include_list_s *include;
     size_t i, j, len;
     j = i = strlen(path);
     if (i == 0) return lastil;

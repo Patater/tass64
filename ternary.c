@@ -75,7 +75,7 @@ void *ternary_insert(ternary_tree *pcurr, const uint8_t *s, const uint8_t *end)
 {
     unichar_t spchar;
     ternary_tree curr;
-  
+
     spchar = *s;
     if ((spchar & 0x80) != 0) s += utf8in(s, &spchar); else s++;
 

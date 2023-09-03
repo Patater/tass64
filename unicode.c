@@ -829,7 +829,7 @@ uint8_t *char_to_utf8(const char *s) {
         return (uint8_t *)s;
     }
     while (s[n] != '\0') n++;
-        
+
     data = add_overflow(n, 64, &len) ? NULL : allocate_array(uint8_t, len);
     if (data == NULL) return NULL;
 

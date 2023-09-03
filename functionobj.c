@@ -117,7 +117,7 @@ static MUST_CHECK Obj *gen_broadcast(oper_t op, apply_func_t f) {
             struct iter_s *iter;
             if (elements == NULL) {
                 if (args <= lenof(elements3)) {
-                    elements = elements3; 
+                    elements = elements3;
                 } else {
                     elements = allocate_array(struct elements_s, args);
                     if (elements == NULL) goto failed;
@@ -448,7 +448,7 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
     default:
         break;
     }
-    
+
     if (cfile2 != NULL) {
         filesize_t offset, ln = cfile2->binary.len;
         Bytes *b;
@@ -620,7 +620,7 @@ static MUST_CHECK Obj *apply_func(oper_t op, apply_func_t f) {
             iter_destroy(&iter);
             v->len = i;
             return Obj(v);
-        } 
+        }
         v = List(val_reference(o2));
         len = v->len;
         vals = v->data;
@@ -743,7 +743,7 @@ static MUST_CHECK Obj *function_condition(oper_t op) {
         cond = Bool(val)->value;
         if (diagnostics.strict_bool) err_msg_bool(ERROR_____CANT_BOOL, v->val, &v->epoint);
         val_destroy(val);
-    } 
+    }
     return val_reference(v[cond ? 1 : 2].val);
 }
 
@@ -821,12 +821,12 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                             }
                             return ret;
                         }
-                    case F_LEN: 
+                    case F_LEN:
                         op->v2 = v->val;
                         return v->val->obj->len(op);
                     case F_SORT:
                         return function_sort(v->val, &v->epoint);
-                    default: 
+                    default:
                         op->v2 = v->val;
                         op->inplace = v->val->refcount == 1 ? v->val : NULL;
                         return apply_func(op, function_function);

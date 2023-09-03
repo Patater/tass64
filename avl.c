@@ -222,7 +222,7 @@ struct avltree_node *avltree_insert(struct avltree_node *node, struct avltree *t
 }
 
 /* Deletion might require up to log(n) rotations */
-void avltree_remove(struct avltree_node *node, struct avltree *tree) 
+void avltree_remove(struct avltree_node *node, struct avltree *tree)
 {
     struct avltree_node *parent = node->parent;
     struct avltree_node *left = node->left;
@@ -242,7 +242,7 @@ void avltree_remove(struct avltree_node *node, struct avltree *tree)
 
     if (parent != NULL) {
         is_left = parent->left == node;
-        if (is_left) 
+        if (is_left)
             parent->left = next;
         else
             parent->right = next;

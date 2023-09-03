@@ -80,7 +80,7 @@ MALLOC Memblocks *copy_memblocks(Memblocks *m) {
     size_t i;
     val->mem.p = m->mem.p;
     val->mem.len = m->mem.len;
-    if (m->mem.len == 0) val->mem.data = NULL; 
+    if (m->mem.len == 0) val->mem.data = NULL;
     else {
         new_array(&val->mem.data, m->mem.len);
         memcpy(val->mem.data, m->mem.data, m->mem.len);
