@@ -46,7 +46,7 @@
         <RegExpr String="[+\-*](?=(\s|$|=))" context="Opcode2" insensitive="TRUE"/>
       </context>
       <context name="Opcode2" attribute="Normal Text" lineEndContext="Base">
-        <RegExpr String="([&lt;&gt;&amp|*.:]{2}|[&lt;&gt;:]\?|[-+*%/&amp;|^.:x])?=" attribute="Keyword" context="Miscparam" insensitive="TRUE"/>
+        <RegExpr String="(&lt;&lt;|&gt;&gt;|&amp;&amp;|\|\||\*\*|\.\.|::|[&lt;&gt;:]\?|[-+*%/&amp;|^.:x])?=" attribute="Keyword" context="Miscparam" insensitive="TRUE"/>
         <IncludeRules context="Opcode"/>
       </context>
 
