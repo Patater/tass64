@@ -4427,6 +4427,11 @@ memory location address overflow
     address space
 over the boundary by ? bytes, aligned by ? bytes
     crossed boundary so alignment was necessary
+please separate @b, @w or @l from label or number for future compatibility
+    future versions will have longer symbols after `@' and so will interpret
+    the immediately following numbers and letters as part if the symbol. Please
+    insert a space between @b, @w or @l and the following label or number now
+    to avoid surprises!
 please use format("%d", ...) as '^' will change it's meaning
     this operator will be changed to mean the bank byte later, please update
     your sources

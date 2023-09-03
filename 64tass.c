@@ -5523,6 +5523,17 @@ MUST_CHECK Obj *compile(void)
                                 case 'l': w = 2;break;
                                 default:err_msg2(ERROR______EXPECTED, "'@b' or '@w' or '@l'", &lpoint);goto breakerr;
                                 }
+                                if (diagnostics.deprecated) {
+                                    bool warn;
+                                    unichar_t ch = pline[lpoint.pos + 2];
+                                    if ((ch & 0x80) != 0) {
+                                        if (arguments.to_ascii) {
+                                            utf8in(pline + lpoint.pos + 2, &ch);
+                                            warn = (uget_property(ch)->property & (id_Continue | id_Start)) != 0;
+                                        } else warn = false;
+                                    } else warn = (uint8_t)((ch | 0x20) - 'a') <= ('z' - 'a') || (uint8_t)(ch - '0') < 10 || ch == '_';
+                                    if (warn) err_msg2(ERROR________OLD_AT, NULL, &lpoint);
+                                }
                                 lpoint.pos += 2;
                             }
                         }

@@ -5067,9 +5067,10 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 <dt>label defined instead of variable multiplication for compatibility<dd>move the '*=' construct to a separate line or define the variable first as this construct is ambiguous</dd>
 <dt>label not on left side<dd>check if an instruction name was not mistyped and if the current CPU has it, or remove white space before label</dd>
 <dt>leading zeros ignored<dd>leading zeros in front of decimals are redundant and don't denote an octal number</dd>
-<dt>long branch used<dd>branch distance was too long so long branch was used (bxx *+5 jmp)</dd>
+<dt>long branch used<dd>branch distance was too long so long branch was used (<code>bxx *+5 jmp</code>)</dd>
 <dt>memory location address overflow<dd>the calculated memory location address ended up outside of the processors address space</dd>
 <dt>over the boundary by ? bytes, aligned by ? bytes<dd>crossed boundary so alignment was necessary</dd>
+<dt>please separate @b, @w or @l from label or number for future compatibility<dd>future versions will have longer symbols after <q><code>@</code></q> and so will interpret the immediately following numbers and letters as part if the symbol. Please insert a space between <code>@b</code>, <code>@w</code> or <code>@l</code> and the following label or number now to avoid surprises!</dd>
 <dt>please use format("%d", ...) as '^' will change it's meaning<dd>this operator will be changed to mean the bank byte later, please update your sources</dd>
 <dt>possible jmp ($xxff) bug<dd>some 6502 variants read don't increment the high byte on page cross and this may be unexpected</dd>
 <dt>possibly redundant as ...<dd>according to the optimizer this might not be needed</dd>

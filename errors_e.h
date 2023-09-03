@@ -30,6 +30,7 @@ typedef enum Error_types {
     ERROR_______OLD_NEQ,
     ERROR______OLD_GOTO,
     ERROR____OLD_STRING,
+    ERROR________OLD_AT,
     ERROR__CONST_RESULT,
     ERROR____IND_RESULT,
 #ifdef _WIN32
