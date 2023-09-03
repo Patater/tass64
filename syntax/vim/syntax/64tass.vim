@@ -39,7 +39,7 @@ syn match tass64Label /\v[[:lower:][:upper:]_][[:lower:][:upper:]0-9_]*>\.@=/ co
 syn match tass64Oper3 /\./ contained nextgroup=tass64Label
 
 " Assignments
-syn match tass64Assign /\v%(<<|>>|\*\*|\.\.|::|&&|\|\||[<>:]\?|[-+%*/^&|.x:])?\=/ skipwhite contained nextgroup=@tass64Expression
+syn match tass64Assign /\v%(\<\<|\>\>|\*\*|\.\.|::|\&\&|\|\||[<>:]\?|[-+%*/^&|.x:])?\=/ skipwhite contained nextgroup=@tass64Expression
 
 " Macro invocation
 syn match tass64Macro /\v[#.][[:lower:][:upper:]_][[:lower:][:upper:]0-9_]*>/ skipwhite contained contains=tass64PreProc,tass64PreCondit,tass64Include,tass64Define,tass64Structure,tass64Type,tass64Debug nextgroup=@tass64Expression
