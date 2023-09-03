@@ -250,28 +250,18 @@ static inline void decimal(Data *p)
     }
 }
 
-static MUST_CHECK Obj *get_int(Data *p) {
+static MUST_CHECK Obj *get_intbits(Data *p) {
     const struct values_s *v = star_args(p);
 
     if (v != NULL) {
         Obj *val = v->val;
-        Obj *err = int_from_obj(val, &v->epoint);
+        Obj *err;
+        if (val->obj == BITS_OBJ) return val_reference(val);
+        err = int_from_obj(val, &v->epoint);
         if (err->obj == INT_OBJ) return err;
         note_failure(p, err);
     }
     return val_reference(int_value[0]);
-}
-
-static MUST_CHECK Obj *get_bits(Data *p) {
-    const struct values_s *v = star_args(p);
-
-    if (v != NULL) {
-        Obj *val = v->val;
-        Obj *err = bits_from_obj(val, &v->epoint);
-        if (err->obj == BITS_OBJ) return err;
-        note_failure(p, err);
-    }
-    return val_reference(bits_value[0]);
 }
 
 /* for %x %X hexadecimal representation */
@@ -281,9 +271,10 @@ static inline void hexa(Data *p)
     const char *hex = (*p->pf == 'x') ? "0123456789abcdef" : "0123456789ABCDEF";
     unsigned int bp, b;
     size_t bp2;
+    Obj *val = get_intbits(p);
 
-    if (p->square) {
-        Bits *bits = Bits(get_bits(p));
+    if (val->obj == BITS_OBJ) {
+        Bits *bits = Bits(val);
         minus = (bits->len < 0);
         bp2 = (size_t)(minus ? ~bits->len : bits->len);
         bp = b = 0;
@@ -309,7 +300,7 @@ static inline void hexa(Data *p)
         }
         val_destroy(Obj(bits));
     } else {
-        Int *integer = Int(get_int(p));
+        Int *integer = Int(val);
         minus = (integer->len < 0);
         bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
         bp = b = 0;
@@ -347,9 +338,10 @@ static inline void bin(Data *p)
     bool minus;
     unsigned int bp, b;
     size_t bp2;
+    Obj *val = get_intbits(p);
 
-    if (p->square) {
-        Bits *bits = Bits(get_bits(p));
+    if (val->obj == BITS_OBJ) {
+        Bits *bits = Bits(val);
         minus = (bits->len < 0);
         bp2 = (size_t)(minus ? ~bits->len : bits->len);
         bp = b = 0;
@@ -375,7 +367,7 @@ static inline void bin(Data *p)
         }
         val_destroy(Obj(bits));
     } else {
-        Int *integer = Int(get_int(p));
+        Int *integer = Int(val);
         minus = (integer->len < 0);
         bp2 = minus ? -(size_t)integer->len : (size_t)integer->len;
         bp = b = 0;

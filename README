@@ -1122,8 +1122,8 @@ format(<string expression>[, <expression>, ...])
     flags and minimum field length may follow, before the conversion type
     character. These flags can be used:
 
-             Formatting flags
-    #     alternate form ($a, %10, 10.)
+                  Formatting flags
+    #     alternate form (-$a, ~$a, -%10, ~%10, -10.)
     *     width/precision from list
     .     precision
     0     pad with zeros
