@@ -21,6 +21,8 @@
 #include "stdbool.h"
 #include "inttypes.h"
 
+struct Namespace;
+
 typedef enum Output_types {
     OUTPUT_CBM, OUTPUT_RAW, OUTPUT_NONLINEAR, OUTPUT_FLAT, OUTPUT_XEX,
     OUTPUT_APPLE, OUTPUT_IHEX, OUTPUT_SREC, OUTPUT_MHEX, OUTPUT_PGX, OUTPUT_PGZ
@@ -62,7 +64,8 @@ struct error_output_s {
 
 struct symbol_output_s {
     const char *name;
-    struct argpos_s space;
+    struct argpos_s space_pos;
+    struct Namespace *space;
     const char *section;
     const char *add_prefix;
     Symbollist_types mode;

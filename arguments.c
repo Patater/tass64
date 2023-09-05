@@ -589,7 +589,7 @@ int init_arguments(int *argc2, char **argv2[]) {
     int max = 10;
     bool again;
     struct include_list_s **lastil = &arguments.include;
-    struct symbol_output_s symbol_output = { NULL, {0, 0, 0}, NULL, NULL, LABEL_64TASS, false };
+    struct symbol_output_s symbol_output = { NULL, {0, 0, 0}, NULL, NULL, NULL, LABEL_64TASS, false };
     struct output_s output = { "a.out", NULL, NULL, OUTPUT_CBM, false, false, false, false };
     memcpy(&arguments, &arguments_default, sizeof arguments);
     memcpy(&diagnostics, &diagnostics_default, sizeof diagnostics);
@@ -680,9 +680,9 @@ int init_arguments(int *argc2, char **argv2[]) {
                       symbol_output.append = (opt == LABELS_APPEND);
                       extend_array(&arguments.symbol_output, &arguments.symbol_output_len, 1);
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
-                      symbol_output.space.start = 0;
-                      symbol_output.space.line = 0;
-                      symbol_output.space.pos = 0;
+                      symbol_output.space_pos.start = 0;
+                      symbol_output.space_pos.line = 0;
+                      symbol_output.space_pos.pos = 0;
                       symbol_output.section = NULL;
                       symbol_output.add_prefix = NULL;
                       break;
@@ -693,7 +693,7 @@ int init_arguments(int *argc2, char **argv2[]) {
             case DUMP_LABELS: symbol_output.mode = LABEL_DUMP; break;
             case SIMPLE_LABELS: symbol_output.mode = LABEL_SIMPLE; break;
             case MESEN_LABELS: symbol_output.mode = LABEL_MESEN; break;
-            case LABELS_ROOT: get_arg(&get_args, &symbol_output.space); break;
+            case LABELS_ROOT: get_arg(&get_args, &symbol_output.space_pos); break;
             case LABELS_SECTION: symbol_output.section = my_optarg; break;
             case LABELS_ADD_PREFIX: symbol_output.add_prefix = my_optarg; break;
             case NO_ERROR: arguments.error.name = NULL; arguments.error.no_output = true; arguments.error.append = false; break;
@@ -923,7 +923,7 @@ int init_arguments(int *argc2, char **argv2[]) {
 
     if (arguments.symbol_output_len != 0) {
         arguments.symbol_output[arguments.symbol_output_len - 1].mode = symbol_output.mode;
-        if (symbol_output.space.pos != 0) arguments.symbol_output[arguments.symbol_output_len - 1].space = symbol_output.space;
+        if (symbol_output.space_pos.pos != 0) arguments.symbol_output[arguments.symbol_output_len - 1].space = symbol_output.space;
         if (symbol_output.section != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].section = symbol_output.section;
         if (symbol_output.add_prefix != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].add_prefix = symbol_output.add_prefix;
     }

@@ -718,73 +718,63 @@ static void labeldump(Namespace *names, FILE *flab) {
     names->len = ln;
 }
 
-static Namespace **listing_namespaces;
+void labelprint(const struct symbol_output_s *output) {
+    Labelprint lp;
+    struct linepos_s nopoint = {0, 0};
+    int err;
+    if (output->space == NULL) return;
 
-void labelprint(void) {
-    size_t j;
-    for (j = 0; j < arguments.symbol_output_len; j++) {
-        const struct symbol_output_s *output = &arguments.symbol_output[j];
-        Labelprint lp;
-        struct linepos_s nopoint = {0, 0};
-        int err;
-        if (listing_namespaces == NULL || listing_namespaces[j] == NULL) continue;
-
-        lp.flab = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
-        if (lp.flab == NULL) {
-            err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
-            return;
+    lp.flab = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
+    if (lp.flab == NULL) {
+        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
+        return;
+    }
+    if (lp.flab == stdout && fflush(lp.flab) != 0) setvbuf(lp.flab, NULL, _IOLBF, 1024);
+    clearerr(lp.flab); errno = 0;
+    label_stack.stack = NULL;
+    label_stack.p = label_stack.len = 0;
+    lp.mode = output->mode;
+    lp.add_prefix.data = (const uint8_t *)output->add_prefix;
+    lp.add_prefix.len = (output->add_prefix != NULL) ? strlen(output->add_prefix) : 0;
+    if (output->section != NULL) {
+        lp.section = find_this_section(output->section);
+        if (lp.section == NULL) {
+            str_t sectionname;
+            sectionname.data = pline;
+            sectionname.len = lpoint.pos;
+            err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
         }
-        if (lp.flab == stdout && fflush(lp.flab) != 0) setvbuf(lp.flab, NULL, _IOLBF, 1024);
-        clearerr(lp.flab); errno = 0;
-        label_stack.stack = NULL;
-        label_stack.p = label_stack.len = 0;
-        lp.mode = output->mode;
-        lp.add_prefix.data = (const uint8_t *)output->add_prefix;
-        lp.add_prefix.len = (output->add_prefix != NULL) ? strlen(output->add_prefix) : 0;
-        if (output->section != NULL) {
-            lp.section = find_this_section(output->section);
-            if (lp.section == NULL) {
-                str_t sectionname;
-                sectionname.data = pline;
-                sectionname.len = lpoint.pos;
-                err_msg2(ERROR__SECTION_ROOT, &sectionname, &nopoint);
-            }
-        } else lp.section = NULL;
-        if (output->mode == LABEL_DUMP) {
-            labeldump(listing_namespaces[j], lp.flab);
-        } else {
-            labelprint2(&lp, listing_namespaces[j]);
-        }
-        free(label_stack.stack);
-        err = ferror(lp.flab);
-        err |= (lp.flab != stdout) ? fclose(lp.flab) : fflush(lp.flab);
-        if (err != 0 && errno != 0) {
-            err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
-        }
+    } else lp.section = NULL;
+    if (output->mode == LABEL_DUMP) {
+        labeldump(output->space, lp.flab);
+    } else {
+        labelprint2(&lp, output->space);
+    }
+    free(label_stack.stack);
+    err = ferror(lp.flab);
+    err |= (lp.flab != stdout) ? fclose(lp.flab) : fflush(lp.flab);
+    if (err != 0 && errno != 0) {
+        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
     }
 }
 
 void ref_labels(void) {
     size_t j;
-    if (listing_namespaces == NULL) {
-        new_array(&listing_namespaces, arguments.symbol_output_len);
-        for (j = 0; j < arguments.symbol_output_len; j++) listing_namespaces[j] = NULL;
-    }
     for (j = 0; j < arguments.symbol_output_len; j++) {
-        const struct symbol_output_s *output = &arguments.symbol_output[j];
+        struct symbol_output_s *output = &arguments.symbol_output[j];
         Namespace *space = root_namespace;
         size_t n;
 
-        if (output->space.pos != 0) {
-            struct values_s *vs = get_argument(&output->space);
+        if (output->space_pos.pos != 0) {
+            struct values_s *vs = get_argument(&output->space_pos);
             if (vs != NULL) {
                 space = get_namespace(vs->val);
                 if (space == NULL) err_msg_invalid_namespace_conv(vs);
             } else space = NULL;
         }
-        if (space != listing_namespaces[j]) {
-            if (listing_namespaces[j] != NULL) val_destroy(Obj(listing_namespaces[j]));
-            listing_namespaces[j] = space == NULL ? NULL : ref_namespace(space);
+        if (space != output->space) {
+            if (output->space != NULL) val_destroy(Obj(output->space));
+            output->space = space == NULL ? NULL : ref_namespace(space);
         }
         if (output->mode != LABEL_EXPORT) continue;
         if (space == NULL || space->len == 0) continue;
@@ -839,8 +829,6 @@ void init_variables(void)
     context_stack.stack = NULL;
     context_stack.p = context_stack.len = context_stack.bottom = 0;
 
-    listing_namespaces = NULL;
-
     boolobj_names();
     registerobj_names();
     functionobj_names();
@@ -866,8 +854,12 @@ void destroy_lastlb(void) {
     }
 }
 
-void destroy_variables(void)
-{
+void destroy_variables(void) {
+    size_t i;
+    for (i = 0; i < arguments.symbol_output_len; i++) {
+        if (arguments.symbol_output[i].space == NULL) continue;
+        val_destroy(Obj(arguments.symbol_output[i].space));
+    }
     val_destroy(Obj(builtin_namespace));
     val_destroy(Obj(root_namespace));
     val_destroy(Obj(cheap_context));
@@ -878,12 +870,4 @@ void destroy_variables(void)
         val_destroy(Obj(c->cheap));
     }
     free(context_stack.stack);
-    if (listing_namespaces != NULL) {
-        size_t i = arguments.symbol_output_len;
-        while (i != 0) {
-            if (listing_namespaces[--i] == NULL) continue;
-            val_destroy(Obj(listing_namespaces[i]));
-        }
-        free(listing_namespaces);
-    }
 }

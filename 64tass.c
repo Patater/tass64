@@ -5716,7 +5716,9 @@ int main2(int *argc2, char **argv2[]) {
             if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
         }
 
-        labelprint();
+        for (j = 0; j < arguments.symbol_output_len; j++) {
+            labelprint(&arguments.symbol_output[j]);
+        }
         if (arguments.make.name != NULL) makefile(argc - opts, argv + opts);
 
         failed = error_serious();

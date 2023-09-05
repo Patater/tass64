@@ -25,6 +25,7 @@ struct Namespace;
 struct Label;
 struct Obj;
 struct Mfunc;
+struct symbol_output_s;
 struct file_list_s;
 struct str_t;
 
@@ -47,7 +48,7 @@ extern struct Label *find_anonlabel(ssize_t);
 extern struct Label *find_anonlabel2(ssize_t, struct Namespace *);
 extern struct Label *new_label(const struct str_t *, struct Namespace *, uint8_t, const struct file_list_s *);
 extern void label_move(struct Label *, const struct str_t *, const struct file_list_s *);
-extern void labelprint(void);
+extern void labelprint(const struct symbol_output_s *);
 extern void unused_check(struct Namespace *);
 extern void ref_labels(void);
 extern void destroy_variables(void);
