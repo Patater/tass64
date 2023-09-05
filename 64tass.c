@@ -5611,7 +5611,7 @@ static void one_pass(int argc, char **argv, int opts) {
     val_destroy(Obj(root_section.address.mem));
     root_section.address.mem = new_memblocks(0, 0);
     if (diagnostics.optimize) cpu_opt_invalidate();
-    for (i = opts - 1; i < argc; i++) {
+    for (i = opts - 1; i <= argc; i++) {
         set_cpumode(arguments.cpumode); if (pass == 1 && i == opts - 1) constcreated = false;
         star = databank = dpage = strength = 0;longaccu = longindex = autosize = false;
         val_destroy(Obj(actual_encoding));
@@ -5625,14 +5625,18 @@ static void one_pass(int argc, char **argv, int opts) {
         init_macro();
         star_tree = init_star((linenum_t)i);
 
-        if (i == opts - 1) {
-            cfile = file_open(&cmdline_name, NULL, FILE_OPEN_DEFINES, &nopoint);
+        if (i == opts - 1 || i == argc) {
+            cfile = file_open(&cmdline_name, NULL, i == argc ? FILE_OPEN_COMMANDLINE : FILE_OPEN_DEFINES, &nopoint);
             if (cfile != NULL) {
                 cfile->open = true;
                 enterfile(cfile, &nopoint);
-                listing_file(";******  Command line definitions", NULL);
-                val = compile();
-                if (val != NULL) val_destroy(val);
+                if (i == argc) {
+                    ref_labels();
+                } else {
+                    listing_file(";******  Command line definitions", NULL);
+                    val = compile();
+                    if (val != NULL) val_destroy(val);
+                }
                 exitfile();
                 cfile->open = false;
                 val_destroy(Obj(root_section.address.mem));
@@ -5658,7 +5662,6 @@ static void one_pass(int argc, char **argv, int opts) {
             cfile->open = false;
         }
     }
-    ref_labels();
     if (fwcount != 0 || efwcount != 0) fixeddig = false;
     if (fixeddig && root_section.members.root != NULL) section_sizecheck(root_section.members.root);
     /*garbage_collect();*/
@@ -5713,9 +5716,7 @@ int main2(int *argc2, char **argv2[]) {
             if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
         }
 
-        for (j = 0; j < arguments.symbol_output_len; j++) {
-            labelprint(&arguments.symbol_output[j]);
-        }
+        labelprint();
         if (arguments.make.name != NULL) makefile(argc - opts, argv + opts);
 
         failed = error_serious();

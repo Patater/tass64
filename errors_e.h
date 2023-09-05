@@ -144,7 +144,6 @@ typedef enum Error_types {
     ERROR_WEAKRECURSION,
     ERROR_TOO_MANY_PASS,
     ERROR_UNKNOWN_OPTIO,
-    ERROR____LABEL_ROOT,
     ERROR__SECTION_ROOT
 } Error_types;
 #endif

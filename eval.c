@@ -356,6 +356,15 @@ MUST_CHECK Obj *get_star(void) {
     return Obj(code);
 }
 
+struct values_s *get_argument(const struct argpos_s *argpos) {
+    struct linepos_s epoint;
+    pline = arguments.commandline.data + argpos->start;
+    lpoint.pos = argpos->pos; lpoint.line = argpos->line; vline++;
+    epoint = lpoint;
+    if (!get_exp(0, 1, 1, &epoint)) return NULL;
+    return get_val();
+}
+
 static MUST_CHECK Obj *new_starsymbol(linecpos_t pos) {
     static const str_t symbol = { (const uint8_t *)"*", 1 };
     struct linepos_s epoint;

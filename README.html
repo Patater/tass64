@@ -4707,11 +4707,12 @@ options must be placed before this option. Using the same name multiple times is
 <dt><b>--labels-append</b>=&lt;file&gt;<a name="o_labels-append" href="#o_labels-append"></a>
 <dd>Same as the <a href="#o_labels"><code>--labels</code></a> option but appends instead of overwrites.</dd>
 
-<dt><b>--labels-root</b>=&lt;path&gt;<a name="o_labels-root" href="#o_labels-root"></a>
+<dt><b>--labels-root</b>=&lt;expression&gt;<a name="o_labels-root" href="#o_labels-root"></a>
 <dd>Specify the scope to list labels from
 
 <p>This option can be used to limit the output to only a subset of labels. The
-parameter is a dot separated path to a scope started from the global scope.</p></dd>
+parameter is an expression which must resolve to a namespace. It's usually just
+the name of a label in the root scope which contains the labels to be listed.</p></dd>
 
 <dt><b>--labels-section</b>=&lt;sectionname&gt;<a name="o_labels-section" href="#o_labels-section"></a>
 <dd>Specify the section to list labels from
@@ -5186,7 +5187,6 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 <dt>option '?' not recognized<dd>no such command line option</dd>
 <dt>option '?' requires an argument<dd>command line option needs an argument</dd>
 <dt>out of memory<dd>won't happen ;)</dd>
-<dt>scope '?' for label listing not found<dd>the scope given on command line couldn't be found</dd>
 <dt>section '?' for output not found<dd>the section given on command line couldn't be found</dd>
 <dt>too many passes<dd>with a carefully crafted source file it's possible to create unresolvable situations but try to avoid this</dd>
 <dt>unknown option '?'<dd>option not known</dd>

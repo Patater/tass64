@@ -60,6 +60,10 @@ static const struct arguments_s arguments_default = {
         NULL,    /* data */
         0,       /* len */
     },
+    {            /* commandline */
+        NULL,    /* data */
+        0,       /* len */
+    },
     {            /* error */
         NULL,    /* name */
         CARET_ALWAYS, /* caret */
@@ -545,15 +549,47 @@ static struct include_list_s **include_list_add(struct include_list_s **lastil, 
     return &include->next;
 }
 
+struct get_arg_s {
+    char **argv;
+    int optind;
+    uint32_t pos;
+};
+
+static void get_arg(struct get_arg_s *param, struct argpos_s *argpos) {
+    int i;
+    uint8_t *data;
+    uint32_t len = 0;
+    for (i = param->optind; i < my_optind; i++) {
+        if (inc_overflow(&len, strlen(param->argv[i]) + 1)) err_msg_out_of_memory();
+    }
+    argpos->start = param->pos;
+    argpos->line = (linenum_t)my_optind - 1;
+    argpos->pos = (linecpos_t)(len - strlen(my_optarg) - 1);
+    if (inc_overflow(&param->pos, len)) err_msg_out_of_memory();
+    if (param->pos > arguments.commandline.len) {
+        if (add_overflow(param->pos, 1024, &arguments.commandline.len)) err_msg_out_of_memory();
+        resize_array(&arguments.commandline.data, arguments.commandline.len);
+    }
+    data = arguments.commandline.data + (param->pos - len);
+    for (i = param->optind; i < my_optind; i++) {
+        size_t l = strlen(param->argv[i]);
+        memcpy(data, param->argv[i], l);
+        data += l;
+        *data++ = ' ';
+    }
+    data[-1] = 0;
+}
+
 int init_arguments(int *argc2, char **argv2[]) {
     int argc = *argc2;
     char **argv = *argv2;
     int opt;
     size_t defines_p = 0;
+    struct get_arg_s get_args;
     int max = 10;
     bool again;
     struct include_list_s **lastil = &arguments.include;
-    struct symbol_output_s symbol_output = { NULL, NULL, NULL, NULL, LABEL_64TASS, false };
+    struct symbol_output_s symbol_output = { NULL, {0, 0, 0}, NULL, NULL, LABEL_64TASS, false };
     struct output_s output = { "a.out", NULL, NULL, OUTPUT_CBM, false, false, false, false };
     memcpy(&arguments, &arguments_default, sizeof arguments);
     memcpy(&diagnostics, &diagnostics_default, sizeof diagnostics);
@@ -563,11 +599,14 @@ int init_arguments(int *argc2, char **argv2[]) {
     memset(&diagnostic_no_error_all, 0, sizeof diagnostic_no_error_all);
     memcpy(&diagnostic_error_all, &diagnostic_error_all_default, sizeof diagnostic_error_all);
 
+    get_args.pos = 0;
     my_optind = 1;
     do {
         int i;
+        get_args.argv = argv;
         again = false;
         for (;;) {
+            get_args.optind = my_optind;
             opt = my_getopt_long(argc, argv, short_options, long_options, NULL);
             if (opt == -1) break;
             switch (opt) {
@@ -641,7 +680,9 @@ int init_arguments(int *argc2, char **argv2[]) {
                       symbol_output.append = (opt == LABELS_APPEND);
                       extend_array(&arguments.symbol_output, &arguments.symbol_output_len, 1);
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
-                      symbol_output.space = NULL;
+                      symbol_output.space.start = 0;
+                      symbol_output.space.line = 0;
+                      symbol_output.space.pos = 0;
                       symbol_output.section = NULL;
                       symbol_output.add_prefix = NULL;
                       break;
@@ -652,7 +693,7 @@ int init_arguments(int *argc2, char **argv2[]) {
             case DUMP_LABELS: symbol_output.mode = LABEL_DUMP; break;
             case SIMPLE_LABELS: symbol_output.mode = LABEL_SIMPLE; break;
             case MESEN_LABELS: symbol_output.mode = LABEL_MESEN; break;
-            case LABELS_ROOT: symbol_output.space = my_optarg; break;
+            case LABELS_ROOT: get_arg(&get_args, &symbol_output.space); break;
             case LABELS_SECTION: symbol_output.section = my_optarg; break;
             case LABELS_ADD_PREFIX: symbol_output.add_prefix = my_optarg; break;
             case NO_ERROR: arguments.error.name = NULL; arguments.error.no_output = true; arguments.error.append = false; break;
@@ -882,7 +923,7 @@ int init_arguments(int *argc2, char **argv2[]) {
 
     if (arguments.symbol_output_len != 0) {
         arguments.symbol_output[arguments.symbol_output_len - 1].mode = symbol_output.mode;
-        if (symbol_output.space != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].space = symbol_output.space;
+        if (symbol_output.space.pos != 0) arguments.symbol_output[arguments.symbol_output_len - 1].space = symbol_output.space;
         if (symbol_output.section != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].section = symbol_output.section;
         if (symbol_output.add_prefix != NULL) arguments.symbol_output[arguments.symbol_output_len - 1].add_prefix = symbol_output.add_prefix;
     }
@@ -910,7 +951,7 @@ int init_arguments(int *argc2, char **argv2[]) {
     if (defines_p != arguments.defines.len) {
         arguments.defines.len = defines_p;
         if (defines_p != 0) {
-            char *d = reallocate_array(arguments.defines.data, defines_p);
+            uint8_t *d = reallocate_array(arguments.defines.data, defines_p);
             if (d != NULL) arguments.defines.data = d;
         }
     }
@@ -927,6 +968,7 @@ void destroy_arguments(void) {
     free(arguments.output);
     free(arguments.symbol_output);
     free(arguments.defines.data);
+    free(arguments.commandline.data);
     include = arguments.include;
     while (include != NULL) {
         struct include_list_s *tmp = include;

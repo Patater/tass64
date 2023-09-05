@@ -27,7 +27,8 @@ typedef enum Encoding_types {
 } Encoding_types;
 
 typedef enum File_open_type {
-    FILE_OPEN_STDIN, FILE_OPEN_BINARY, FILE_OPEN_DEFINES, FILE_OPEN_SOURCE
+    FILE_OPEN_STDIN, FILE_OPEN_BINARY, FILE_OPEN_DEFINES, FILE_OPEN_SOURCE,
+    FILE_OPEN_COMMANDLINE
 } File_open_type;
 
 typedef uint32_t filesize_t;

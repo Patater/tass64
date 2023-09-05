@@ -35,6 +35,12 @@ typedef enum Caret_types {
     CARET_ALWAYS, CARET_MACRO, CARET_NEVER
 } Caret_types;
 
+struct argpos_s {
+    uint32_t start;
+    linenum_t line;
+    linecpos_t pos;
+};
+
 struct output_s {
     const char *name;
     const char *section;
@@ -56,7 +62,7 @@ struct error_output_s {
 
 struct symbol_output_s {
     const char *name;
-    const char *space;
+    struct argpos_s space;
     const char *section;
     const char *add_prefix;
     Symbollist_types mode;
@@ -78,8 +84,8 @@ struct make_output_s {
     bool append;
 };
 
-struct cmdline_defines_s {
-    char *data;
+struct arguments_data_s {
+    uint8_t *data;
     size_t len;
 };
 
@@ -108,7 +114,8 @@ struct arguments_s {
     struct include_list_s *include;
     struct list_output_s list;
     struct make_output_s make;
-    struct cmdline_defines_s defines;
+    struct arguments_data_s defines;
+    struct arguments_data_s commandline;
     struct error_output_s error;
     unsigned int tab_size;
 };

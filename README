@@ -4057,11 +4057,13 @@ Symbol listing
 
 --labels-append=<file>
     Same as the --labels option but appends instead of overwrites.
---labels-root=<path>
+--labels-root=<expression>
     Specify the scope to list labels from
 
     This option can be used to limit the output to only a subset of labels. The
-    parameter is a dot separated path to a scope started from the global scope.
+    parameter is an expression which must resolve to a namespace. It's usually
+    just the name of a label in the root scope which contains the labels to be
+    listed.
 
 --labels-section=<sectionname>
     Specify the section to list labels from
@@ -4661,8 +4663,6 @@ option '?' requires an argument
     command line option needs an argument
 out of memory
     won't happen ;)
-scope '?' for label listing not found
-    the scope given on command line couldn't be found
 section '?' for output not found
     the section given on command line couldn't be found
 too many passes

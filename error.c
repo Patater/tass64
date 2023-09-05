@@ -623,11 +623,6 @@ void err_msg2(Error_types no, const void *prm, linepos_t epoint) {
         adderror2(((const str_t *)prm)->data, ((const str_t *)prm)->len);
         adderror("'");
         break;
-    case ERROR____LABEL_ROOT:
-        adderror("scope '");
-        adderror2(((const str_t *)prm)->data, ((const str_t *)prm)->len);
-        adderror("' for label listing not found");
-        break;
     case ERROR__SECTION_ROOT:
         adderror("section '");
         adderror2(((const str_t *)prm)->data, ((const str_t *)prm)->len);

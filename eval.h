@@ -39,6 +39,13 @@ struct oper_s {
 };
 typedef struct oper_s *oper_t;
 
+struct values_s {
+    struct Obj *val;
+    struct linepos_s epoint;
+};
+
+struct argpos_s;
+
 extern bool get_exp(int, argcount_t, argcount_t, linepos_t);
 extern struct values_s *get_val(void);
 extern struct Obj *pull_val(void);
@@ -50,13 +57,9 @@ extern void eval_leave(void);
 extern FAST_CALL size_t get_label(const uint8_t *);
 extern MUST_CHECK struct Obj *get_star_value(address_t, struct Obj *);
 extern MUST_CHECK struct Obj *get_star(void);
+extern struct values_s *get_argument(const struct argpos_s *);
 extern MUST_CHECK struct Obj *get_vals_tuple(void);
 extern void get_vals_funcargs(struct Funcargs *f);
 extern void touch_label(struct Label *);
 extern MUST_CHECK struct Obj *calc2_lxor(oper_t, bool);
-
-struct values_s {
-    struct Obj *val;
-    struct linepos_s epoint;
-};
 #endif
