@@ -117,7 +117,7 @@ intobj.o: intobj.c intobj.h obj.h attributes.h inttypes.h math.h \
  encobj.h avl.h
 isnprintf.o: isnprintf.c isnprintf.h attributes.h inttypes.h unicode.h \
  stdbool.h eval.h oper_e.h error.h errors_e.h str.h floatobj.h obj.h \
- values.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h
+ values.h strobj.h intobj.h bitsobj.h typeobj.h noneobj.h errorobj.h
 labelobj.o: labelobj.c labelobj.h obj.h attributes.h inttypes.h str.h \
  stdbool.h values.h error.h errors_e.h unicode.h file.h strobj.h \
  typeobj.h
