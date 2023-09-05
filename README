@@ -3335,7 +3335,7 @@ Output options
     e0 02 e1 02    run marker
     00 20          run address ($2000)
 
---apple2
+--apple-ii
     Generate an Apple II output file (DOS 3.3).
 
     Overlapping blocks are flattened and uninitialized memory is filled up with
@@ -3444,7 +3444,9 @@ Output options
     uninitialized memory areas are skipped. S19 up to 64 KiB, S28 up to 16 MiB
     and S37 up to 4 GiB.
 
-    Used for EPROM programming or downloading.
+    Used for EPROM programming or downloading. First an S0 header record is
+    written which is followed by S1, S2, or S3 data records. Then an S5 or S6
+    count record comes and a S9, S8 or S7 termination record.
 
     If the --output-exec command line parameter was given then the termination
     record will use this address. Without this the address of the first data
@@ -3456,7 +3458,9 @@ Output options
 
     Example Motorola S-record output:
 
+    S00600004844521B
     S1040C00608F
+    S5030001FB
     S9030C00F0
 
 Operation options

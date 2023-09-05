@@ -3916,7 +3916,7 @@ start   <b>rts</b>
 <tr><td><code>00 20</code><td>run address (<code>$2000</code>)
 </table></div></dd>
 
-<dt><b>--apple2</b><a name="o_apple2" href="#o_apple2"></a>
+<dt><b>--apple-ii</b><a name="o_apple-ii" href="#o_apple-ii"></a>
 <dd>Generate an Apple II output file (DOS 3.3).
 
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with
@@ -4045,7 +4045,10 @@ and uninitialized areas are skipped. Up to 64&nbsp;KiB.</p>
 and uninitialized memory areas are skipped. S19 up to 64&nbsp;KiB, S28 up to 16&nbsp;MiB
 and S37 up to 4&nbsp;GiB.
 
-<p>Used for EPROM programming or downloading.
+<p>Used for EPROM programming or downloading. First a <code>S0</code> header record is
+written which is followed by <code>S1</code>, <code>S2</code>, or
+<code>S3</code> data records. Then an <code>S5</code> or <code>S6</code> count
+record comes and a <code>S9</code>, <code>S8</code> or <code>S7</code> termination record.
 
 <p>If the <a href="#o_output-exec"><code>--output-exec</code></a> command line
 parameter was given then the termination record will use this address.
@@ -4060,7 +4063,9 @@ Without this the address of the first data record is used.</p>
 <p>Example Motorola S-record output:</p>
 
 <pre>
+S00600004844521B
 S1040C00608F
+S5030001FB
 S9030C00F0
 </pre></dd>
 </dl>
