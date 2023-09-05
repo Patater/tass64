@@ -181,7 +181,7 @@ err:
 static void output_mem_raw(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     address_t pos, end;
     size_t i;
-    unsigned char header[8];
+    uint8_t header[8];
 
     if (memblocks->p == 0) return;
     pos = memblocks->data[0].addr;
@@ -226,7 +226,7 @@ static void output_mem_raw(FILE *fout, const Memblocks *memblocks, const struct 
 
 static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool longaddr) {
     size_t i, j;
-    unsigned char header[6];
+    uint8_t header[6];
     for (i = 0; i < memblocks->p;) {
         const struct memblock_s *block = &memblocks->data[i];
         address_t start = block->addr;
@@ -260,7 +260,7 @@ static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool lo
 
 static void output_mem_c256_pgz(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     size_t i, j;
-    unsigned char header[7];
+    uint8_t header[7];
     unsigned int p = 0;
     header[0] = 'Z';
     for (i = 0; i < memblocks->p; p = 1) {
@@ -290,7 +290,7 @@ static void output_mem_c256_pgz(FILE *fout, const Memblocks *memblocks, const st
         header[2] = (uint8_t)(output->exec >> 8);
         header[3] = (uint8_t)(output->exec >> 16);
         header[6] = header[5] = header[4] = 0;
-        if (fwrite(header + p, 7 - p, 1, fout) == 0) return;
+        fwrite(header + p, 7 - p, 1, fout);
     }
 }
 
@@ -308,7 +308,7 @@ static void output_mem_flat(FILE *fout, const Memblocks *memblocks, bool append)
 
 static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     size_t i, j;
-    unsigned char header[8];
+    uint8_t header[8];
     unsigned int p = 0;
     header[0] = 0xff;
     header[1] = 0xff;
@@ -341,7 +341,7 @@ static void output_mem_atari_xex(FILE *fout, const Memblocks *memblocks, const s
         header[5] = 0x02;
         header[6] = (uint8_t)output->exec;
         header[7] = (uint8_t)(output->exec >> 8);
-        if (fwrite(header + p, 8 - p, 1, fout) == 0) return;
+        fwrite(header + p, 8 - p, 1, fout);
     }
 }
 
