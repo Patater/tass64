@@ -5639,9 +5639,11 @@ static void one_pass(int argc, char **argv, int opts) {
                 }
                 exitfile();
                 cfile->open = false;
-                val_destroy(Obj(root_section.address.mem));
-                root_section.address.mem = new_memblocks(ln, ln2);
-                if (diagnostics.optimize) cpu_opt_invalidate();
+                if (i != argc) {
+                    val_destroy(Obj(root_section.address.mem));
+                    root_section.address.mem = new_memblocks(ln, ln2);
+                    if (diagnostics.optimize) cpu_opt_invalidate();
+                }
                 continue;
             }
             i++;
