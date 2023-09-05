@@ -57,7 +57,6 @@ extern void eval_leave(void);
 extern FAST_CALL size_t get_label(const uint8_t *);
 extern MUST_CHECK struct Obj *get_star_value(address_t, struct Obj *);
 extern MUST_CHECK struct Obj *get_star(void);
-extern struct values_s *get_argument(const struct argpos_s *);
 extern MUST_CHECK struct Obj *get_vals_tuple(void);
 extern void get_vals_funcargs(struct Funcargs *f);
 extern void touch_label(struct Label *);

@@ -365,7 +365,8 @@ enum {
     INTEL_HEX, APPLE_II, ATARI_XEX, MOS_HEX, NO_LONG_ADDRESS, NO_QUIET, WARN,
     OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND, MAP,
     NO_MAP, MAP_APPEND, LIST_APPEND, SIMPLE_LABELS, LABELS_SECTION,
-    MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND, C256_PGX, C256_PGZ
+    MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND, C256_PGX, C256_PGZ,
+    OUTPUT_EXEC
 };
 
 static const struct my_option long_options[] = {
@@ -410,6 +411,7 @@ static const struct my_option long_options[] = {
     {"no-output"        , my_no_argument      , NULL,  NO_OUTPUT},
     {"output-append"    , my_required_argument, NULL,  OUTPUT_APPEND},
     {"output-section"   , my_required_argument, NULL,  OUTPUT_SECTION},
+    {"output-exec"      , my_required_argument, NULL,  OUTPUT_EXEC},
     {"map"              , my_required_argument, NULL,  MAP},
     {"no-map"           , my_no_argument      , NULL,  NO_MAP},
     {"map-append"       , my_required_argument, NULL,  MAP_APPEND},
@@ -590,7 +592,7 @@ int init_arguments(int *argc2, char **argv2[]) {
     bool again;
     struct include_list_s **lastil = &arguments.include;
     struct symbol_output_s symbol_output = { NULL, {0, 0, 0}, NULL, NULL, NULL, LABEL_64TASS, false };
-    struct output_s output = { "a.out", NULL, NULL, OUTPUT_CBM, false, false, false, false };
+    struct output_s output = { "a.out", NULL, NULL, {0, 0, 0}, 0, OUTPUT_CBM, false, false, false, false };
     memcpy(&arguments, &arguments_default, sizeof arguments);
     memcpy(&diagnostics, &diagnostics_default, sizeof diagnostics);
     memcpy(&diagnostic_errors, &diagnostic_errors_default, sizeof diagnostic_errors);
@@ -643,8 +645,12 @@ int init_arguments(int *argc2, char **argv2[]) {
                       output.section = NULL;
                       output.mapname = NULL;
                       output.mapfile = false;
+                      output.exec_pos.start = 0;
+                      output.exec_pos.line = 0;
+                      output.exec_pos.pos = 0;
                       break;
             case OUTPUT_SECTION:output.section = my_optarg; break;
+            case OUTPUT_EXEC: get_arg(&get_args, &output.exec_pos); break;
             case MAP_APPEND:
             case MAP: output.mapname = my_optarg; output.mapappend = (opt == MAP_APPEND); output.mapfile = true; break;
             case NO_MAP:output.mapname = NULL; output.mapfile = true; break;
@@ -814,6 +820,7 @@ int init_arguments(int *argc2, char **argv2[]) {
                "      --output-append=<f> Append output to <file>\n"
                "      --no-output        Do not create an output file\n"
                "      --output-section=<n> Output this section only\n"
+               "      --output-exec=<e>  Output execution address\n"
                "      --map=<f>          Place output map into <file>\n"
                "      --map-append=<f>   Append output map to <file>\n"
                "      --no-map           Do not create a map file\n"
@@ -853,7 +860,7 @@ int init_arguments(int *argc2, char **argv2[]) {
                "      --simple-labels    Simple hexadecimal labels\n"
                "      --labels-root=<l>  List from scope <l> only\n"
                "      --labels-section=<n> List from section <n> only\n"
-               "      --labels-add-prefix=<n> Set label prefix\n"
+               "      --labels-add-prefix=<p> Set label prefix\n"
                "  -L, --list=<file>      List into <file>\n"
                "      --list-append=<f>  Append list to <file>\n"
                "  -m, --no-monitor       Don't put monitor code into listing\n"

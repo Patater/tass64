@@ -3225,6 +3225,12 @@ Output options
     64tass a.asm --output-section main -o main.prg \
                  --output-section loader -o loader.prg
 
+--output-exec <expression>
+    Sets execution address for output formats which support this.
+
+    While it's possible to enter the address as a number it's recommended to
+    use a label instead.
+
 -X, --long-address
     Use 3 byte address/length for CBM and nonlinear output instead of 2 bytes.
     Also increases the size of raw output to 16 MiB.
@@ -3239,16 +3245,33 @@ Output options
     are not saved. Up to 64 KiB or 16 MiB with long address.
 
     Used for C64 binaries. The first 2 bytes are the little endian address of
-    the first valid byte (start address). This is followed by the data.
+    the first valid byte (load address). This is followed by the data.
+
+    64tass --cbm-prg a.asm
+    *       = $2000
+    start   rts
+
+    Example CBM format binary
+             output
+    00 20          load to $2000
+    60             data
 
 -b, --nostart
-    Output raw data without start address.
+    Output raw binary data.
 
     Overlapping blocks are flattened and uninitialized memory is filled up with
     zeros. Uninitialized memory before the first and after the last valid bytes
     are not saved. Up to 64 KiB or 16 MiB with long address.
 
     Useful for small ROM files.
+
+    64tass --nostart a.asm
+    *       = $2000
+            rts
+
+      Example raw
+         output
+    60             data
 
 -f, --flat
     Flat address space output mode.
@@ -3296,21 +3319,21 @@ Output options
     before saving each memory block the words of load address and last byte
     address is written in little endian format.
 
-    64tass --atari-xex a.asm
-    *       = $02e0
-            .addr start      ;run address
+    If the --output-exec command line parameter was given then a 6 byte run
+    block is added to the end of the output.
+
+    64tass --output-exec=start --atari-xex a.asm
     *       = $2000
     start   rts
 
        Example Atari XEX format
                 output
-    ff ff          signature
-    e0 02          load to $02e0
-    e1 02          until $02e1
-    00 20          run address ($2000)
+    ff ff          header
     00 20          load to $2000
     00 20          until $2000
     60             data
+    e0 02 e1 02    run marker
+    00 20          run address ($2000)
 
 --apple2
     Generate an Apple II output file (DOS 3.3).
@@ -3344,7 +3367,7 @@ Output options
     data.
 
     64tass --c256-pgx a.asm
-    *       = $1000          ;single segment
+    *       = $1000
             rts
 
     Example PGX format output
@@ -3362,20 +3385,20 @@ Output options
     signature. Then before each memory block a three byte load address and
     length is written in little endian format.
 
-    64tass --c256-pgz a.asm
-    *       = $1000          ;1st segment
-            lda #2
-    *       = $2000          ;2nd segment
-            rts
+    If the --output-exec command line parameter was given then a 6 byte
+    execution block is added to the end of the output.
+
+    64tass --output-exec=start --c256-pgz a.asm
+    *       = $1000
+    start   rts
 
       Example PGZ format output
     5a             PGZ signature byte
     00 10 00       load to $1000
-    02 00 00       length is 2 bytes
-    a9 02          data
-    00 20 00       load to $2000
     01 00 00       length is 1 bytes
     60             data
+    00 10 00       execute at $1000
+    00 00 00       execution marker
 
 --intel-hex
     Use Intel HEX output file format.
@@ -3383,13 +3406,18 @@ Output options
     Overlapping blocks are kept, data is stored in the definition order, and
     uninitialized areas are skipped. I8HEX up to 64 KiB, I32HEX up to 4 GiB.
 
-    Used for EPROM programming or downloading.
+    Used for EPROM programming or downloading. Data bytes are written using 00
+    records. If the file is larger than 64 KiB then 04 records are used as
+    needed. The output ends with a 01 record.
+
+    If the --output-exec command line parameter was given then a 05 record is
+    added with the execution address right before the end 01 record.
 
     64tass --intel-hex a.asm
     *       = $0c00
             rts
 
-    Result of compilation:
+    Example Intel HEX output:
 
     :010C00006093
     :00000001FF
@@ -3404,7 +3432,7 @@ Output options
     *       = $0c00
             rts
 
-    Result of compilation:
+    Example MOS Technology output:
 
     ;010C0060006D
     ;0000010001
@@ -3418,11 +3446,15 @@ Output options
 
     Used for EPROM programming or downloading.
 
+    If the --output-exec command line parameter was given then the termination
+    record will use this address. Without this the address of the first data
+    record is used.
+
     64tass --s-record a.asm
     *       = $0c00
             rts
 
-    Result of compilation:
+    Example Motorola S-record output:
 
     S1040C00608F
     S9030C00F0

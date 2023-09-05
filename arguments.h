@@ -47,6 +47,8 @@ struct output_s {
     const char *name;
     const char *section;
     const char *mapname;
+    struct argpos_s exec_pos;
+    uval_t exec;
     Output_types mode;
     bool append;
     bool longaddr;

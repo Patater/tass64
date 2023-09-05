@@ -762,21 +762,11 @@ void ref_labels(void) {
     size_t j;
     for (j = 0; j < arguments.symbol_output_len; j++) {
         struct symbol_output_s *output = &arguments.symbol_output[j];
-        Namespace *space = root_namespace;
+        Namespace *space;
         size_t n;
 
-        if (output->space_pos.pos != 0) {
-            struct values_s *vs = get_argument(&output->space_pos);
-            if (vs != NULL) {
-                space = get_namespace(vs->val);
-                if (space == NULL) err_msg_invalid_namespace_conv(vs);
-            } else space = NULL;
-        }
-        if (space != output->space) {
-            if (output->space != NULL) val_destroy(Obj(output->space));
-            output->space = space == NULL ? NULL : ref_namespace(space);
-        }
         if (output->mode != LABEL_EXPORT) continue;
+        space = (output->space_pos.pos != 0) ? output->space : root_namespace;
         if (space == NULL || space->len == 0) continue;
 
         for (n = 0; n <= space->mask; n++) {
@@ -855,11 +845,6 @@ void destroy_lastlb(void) {
 }
 
 void destroy_variables(void) {
-    size_t i;
-    for (i = 0; i < arguments.symbol_output_len; i++) {
-        if (arguments.symbol_output[i].space == NULL) continue;
-        val_destroy(Obj(arguments.symbol_output[i].space));
-    }
     val_destroy(Obj(builtin_namespace));
     val_destroy(Obj(root_namespace));
     val_destroy(Obj(cheap_context));

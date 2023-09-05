@@ -50,6 +50,7 @@
 #include "mem.h"
 #include "unicodedata.h"
 #include "main.h"
+#include "argvalues.h"
 #include "version.h"
 
 #include "listobj.h"
@@ -368,6 +369,7 @@ static void compile_init(const char *name) {
 static void compile_destroy(void) {
     destroy_lastlb();
     destroy_eval();
+    destroy_argvalues();
     destroy_variables();
     destroy_section();
     destroy_longjump();
@@ -5631,6 +5633,7 @@ static void one_pass(int argc, char **argv, int opts) {
                 cfile->open = true;
                 enterfile(cfile, &nopoint);
                 if (i == argc) {
+                    update_argvalues();
                     ref_labels();
                 } else {
                     listing_file(";******  Command line definitions", NULL);
