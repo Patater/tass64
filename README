@@ -3444,7 +3444,7 @@ Output options
     uninitialized memory areas are skipped. S19 up to 64 KiB, S28 up to 16 MiB
     and S37 up to 4 GiB.
 
-    Used for EPROM programming or downloading. First an S0 header record is
+    Used for EPROM programming or downloading. First a S0 header record is
     written which is followed by S1, S2, or S3 data records. Then an S5 or S6
     count record comes and a S9, S8 or S7 termination record.
 

@@ -722,7 +722,8 @@ void labelprint(const struct symbol_output_s *output) {
     Labelprint lp;
     struct linepos_s nopoint = {0, 0};
     int err;
-    if (output->space == NULL) return;
+    Namespace *space = (output->space_pos.pos != 0) ? output->space : root_namespace;
+    if (space == NULL) return;
 
     lp.flab = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
     if (lp.flab == NULL) {
@@ -746,9 +747,9 @@ void labelprint(const struct symbol_output_s *output) {
         }
     } else lp.section = NULL;
     if (output->mode == LABEL_DUMP) {
-        labeldump(output->space, lp.flab);
+        labeldump(space, lp.flab);
     } else {
-        labelprint2(&lp, output->space);
+        labelprint2(&lp, space);
     }
     free(label_stack.stack);
     err = ferror(lp.flab);
