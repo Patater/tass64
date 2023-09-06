@@ -959,7 +959,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 }
                 args -= vsp;
                 if (stop && !expc) {
-                    atype_t am2;
+                    Address_types am2;
                     if (out + 1 != ev->out.end) {
                         Obj *obj = out[1].val;
                         if (obj->obj != OPER_OBJ ||
