@@ -222,7 +222,7 @@ int my_getopt_long(int argc, char *argv[], const char *shortopts,
       opt = 0;
 
       if (argv[my_optind][charind] == '=') {
-        if (longopts[found].has_arg == 0) {
+        if (longopts[found].has_arg == my_no_argument) {
           opt = '?';
           if (my_opterr) {fatal_error("option '--");
                          printable_print((const uint8_t *)longopts[found].name, stderr);
@@ -231,7 +231,7 @@ int my_getopt_long(int argc, char *argv[], const char *shortopts,
           my_optarg = argv[my_optind] + ++charind;
           /*charind = 0;*/
         }
-      } else if (longopts[found].has_arg == 1) {
+      } else if (longopts[found].has_arg == my_required_argument) {
         if (++my_optind >= argc) {
           opt = (colon_mode == ':') ? ':' : '?';
           if (my_opterr) {fatal_error("option '--");
