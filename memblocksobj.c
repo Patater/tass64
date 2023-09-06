@@ -248,7 +248,7 @@ void memorymapfile(const Memblocks *mem, const struct output_s *output) {
 
     state.f = dash_name(output->mapname) ? stdout : fopen_utf8(output->mapname, output->mapappend ? "at" : "wt");
     if (state.f == NULL) {
-        err_msg_file2(ERROR_CANT_WRTE_MAP, output->mapname);
+        err_msg_file2(ERROR_CANT_WRTE_MAP, output->mapname, &output->mapname_pos);
         return;
     }
     if (state.f == stdout && fflush(state.f) != 0) setvbuf(state.f, NULL, _IOLBF, 1024);
@@ -266,7 +266,7 @@ void memorymapfile(const Memblocks *mem, const struct output_s *output) {
 
     err = ferror(state.f);
     err |= (state.f != stdout) ? fclose(state.f) : fflush(state.f);
-    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAP, output->mapname);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAP, output->mapname, &output->mapname_pos);
 }
 
 

@@ -42,6 +42,7 @@
 #include "console.h"
 
 struct file_list_s *current_file_list;
+struct file_list_s *commandline_file_list;
 const struct file_list_s *dummy_file_list;
 
 #define ALIGN(v) (((v) + (sizeof(int *) - 1)) & ~(sizeof(int *) - 1))
@@ -1564,7 +1565,7 @@ void error_print(const struct error_output_s *output) {
     if (output->name != NULL) {
         ferr = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
         if (ferr == NULL) {
-            err_msg_file2(ERROR_CANT_WRTE_ERR, output->name);
+            err_msg_file2(ERROR_CANT_WRTE_ERR, output->name, &output->name_pos);
             ferr = stderr;
         }
     } else ferr = output->no_output ? NULL : stderr;
@@ -1667,6 +1668,7 @@ void err_init(const char *name) {
     avltree_init(&error_list.members);
     current_file_list = &file_list.flist;
     dummy_file_list = &file_list.flist;
+    commandline_file_list = &file_list.flist;
     included_from = &file_list;
     avltree_init(&notdefines);
     lastnd = NULL;
@@ -1735,9 +1737,10 @@ void err_msg_file(Error_types no, const char *prm, const struct file_list_s *cfi
     if (more) new_error_msg_more();
 }
 
-void err_msg_file2(Error_types no, const char *prm) {
-    static const struct linepos_s nopoint = {0, 0};
-    err_msg_file(no, prm, current_file_list, &nopoint);
+void err_msg_file2(Error_types no, const char *name, const struct argpos_s *prm) {
+    pline = arguments.commandline.data + prm->start;
+    lpoint.pos = prm->pos; lpoint.line = prm->line;
+    err_msg_file(no, name, commandline_file_list, &lpoint);
 }
 
 void error_status(void) {

@@ -5633,6 +5633,7 @@ static void one_pass(int argc, char **argv, int opts) {
                 cfile->open = true;
                 enterfile(cfile, &nopoint);
                 if (i == argc) {
+                    commandline_file_list = current_file_list;
                     update_argvalues();
                     ref_labels();
                 } else {
@@ -5716,7 +5717,7 @@ int main2(int *argc2, char **argv2[]) {
             max_pass = pass; pass++;
             listing_open(&arguments.list, argc, argv);
             one_pass(argc, argv, opts);
-            listing_close();
+            listing_close(&arguments.list);
 
             if (diagnostics.unused.macro || diagnostics.unused.consts || diagnostics.unused.label || diagnostics.unused.variable) unused_check(root_namespace);
         }

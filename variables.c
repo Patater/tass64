@@ -727,7 +727,7 @@ void labelprint(const struct symbol_output_s *output) {
 
     lp.flab = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
     if (lp.flab == NULL) {
-        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
+        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name, &output->name_pos);
         return;
     }
     if (lp.flab == stdout && fflush(lp.flab) != 0) setvbuf(lp.flab, NULL, _IOLBF, 1024);
@@ -755,7 +755,7 @@ void labelprint(const struct symbol_output_s *output) {
     err = ferror(lp.flab);
     err |= (lp.flab != stdout) ? fclose(lp.flab) : fflush(lp.flab);
     if (err != 0 && errno != 0) {
-        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name);
+        err_msg_file2(ERROR_CANT_WRTE_LBL, output->name, &output->name_pos);
     }
 }
 

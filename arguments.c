@@ -44,6 +44,7 @@ static const struct arguments_s arguments_default = {
     0,           /* symbol_output_len */
     NULL,        /* include */
     {            /* list */
+        {0,0,0}, /* name_pos */
         NULL,    /* name */
         true,    /* monitor */
         true,    /* source */
@@ -52,6 +53,7 @@ static const struct arguments_s arguments_default = {
         false    /* append */
     },
     {            /* make */
+        {0,0,0}, /* name_pos */
         NULL,    /* name */
         false,   /* phony */
         false    /* append */
@@ -65,6 +67,7 @@ static const struct arguments_s arguments_default = {
         0,       /* len */
     },
     {            /* error */
+        {0,0,0}, /* name_pos */
         NULL,    /* name */
         CARET_ALWAYS, /* caret */
         true,    /* warning */
@@ -591,8 +594,8 @@ int init_arguments(int *argc2, char **argv2[]) {
     int max = 10;
     bool again;
     struct include_list_s **lastil = &arguments.include;
-    struct symbol_output_s symbol_output = { NULL, {0, 0, 0}, NULL, NULL, NULL, LABEL_64TASS, false };
-    struct output_s output = { "a.out", NULL, NULL, {0, 0, 0}, 0, OUTPUT_CBM, false, false, false, false };
+    struct symbol_output_s symbol_output = { {0, 0, 0}, NULL, {0, 0, 0}, NULL, NULL, NULL, LABEL_64TASS, false };
+    struct output_s output = { {0, 0, 0}, "a.out", NULL, {0, 0, 0}, NULL, {0, 0, 0}, 0, OUTPUT_CBM, false, false, false, false };
     memcpy(&arguments, &arguments_default, sizeof arguments);
     memcpy(&diagnostics, &diagnostics_default, sizeof diagnostics);
     memcpy(&diagnostic_errors, &diagnostic_errors_default, sizeof diagnostic_errors);
@@ -636,14 +639,17 @@ int init_arguments(int *argc2, char **argv2[]) {
             case NO_ASCII:arguments.to_ascii = false;break;
             case 'T':arguments.tasmcomp = true;break;
             case NO_TASM_COMPATIBLE:arguments.tasmcomp = false;break;
-            case NO_OUTPUT:
+            case NO_OUTPUT: output.name = NULL; output.name_pos.start = 0; output.name_pos.line = 0; output.name_pos.pos = 0; output.append = false; break;
             case OUTPUT_APPEND:
-            case 'o': output.name = (opt == NO_OUTPUT) ? NULL : my_optarg;
-                      output.append = (opt == OUTPUT_APPEND) || (output.name != NULL && dash_name(output.name));
+            case 'o': output.name = my_optarg; get_arg(&get_args, &output.name_pos);
+                      output.append = (opt == OUTPUT_APPEND) || dash_name(output.name);
                       extend_array(&arguments.output, &arguments.output_len, 1);
                       arguments.output[arguments.output_len - 1] = output;
                       output.section = NULL;
                       output.mapname = NULL;
+                      output.mapname_pos.start = 0;
+                      output.mapname_pos.line = 0;
+                      output.mapname_pos.pos = 0;
                       output.mapfile = false;
                       output.exec_pos.start = 0;
                       output.exec_pos.line = 0;
@@ -652,8 +658,8 @@ int init_arguments(int *argc2, char **argv2[]) {
             case OUTPUT_SECTION:output.section = my_optarg; break;
             case OUTPUT_EXEC: get_arg(&get_args, &output.exec_pos); break;
             case MAP_APPEND:
-            case MAP: output.mapname = my_optarg; output.mapappend = (opt == MAP_APPEND); output.mapfile = true; break;
-            case NO_MAP:output.mapname = NULL; output.mapfile = true; break;
+            case MAP: output.mapname = my_optarg; get_arg(&get_args, &output.mapname_pos); output.mapappend = (opt == MAP_APPEND); output.mapfile = true; break;
+            case NO_MAP:output.mapname = NULL; output.mapname_pos.start = 0; output.mapname_pos.line = 0; output.mapname_pos.pos = 0; output.mapfile = true; break;
             case CARET_DIAG:arguments.error.caret = CARET_ALWAYS;break;
             case MACRO_CARET_DIAG:arguments.error.caret = CARET_MACRO;break;
             case NO_CARET_DIAG:arguments.error.caret = CARET_NEVER;break;
@@ -684,6 +690,7 @@ int init_arguments(int *argc2, char **argv2[]) {
             case LABELS_APPEND:
             case 'l': symbol_output.name = my_optarg;
                       symbol_output.append = (opt == LABELS_APPEND);
+                      get_arg(&get_args, &symbol_output.name_pos);
                       extend_array(&arguments.symbol_output, &arguments.symbol_output_len, 1);
                       arguments.symbol_output[arguments.symbol_output_len - 1] = symbol_output;
                       symbol_output.space_pos.start = 0;
@@ -702,13 +709,13 @@ int init_arguments(int *argc2, char **argv2[]) {
             case LABELS_ROOT: get_arg(&get_args, &symbol_output.space_pos); break;
             case LABELS_SECTION: symbol_output.section = my_optarg; break;
             case LABELS_ADD_PREFIX: symbol_output.add_prefix = my_optarg; break;
-            case NO_ERROR: arguments.error.name = NULL; arguments.error.no_output = true; arguments.error.append = false; break;
+            case NO_ERROR: arguments.error.name = NULL; arguments.error.name_pos.start = 0; arguments.error.name_pos.line = 0; arguments.error.name_pos.pos = 0; arguments.error.no_output = true; arguments.error.append = false; break;
             case ERROR_APPEND:
-            case 'E': arguments.error.name = my_optarg; arguments.error.no_output = false; arguments.error.append = (opt == ERROR_APPEND); break;
+            case 'E': arguments.error.name = my_optarg; get_arg(&get_args, &arguments.error.name_pos); arguments.error.no_output = false; arguments.error.append = (opt == ERROR_APPEND); break;
             case LIST_APPEND:
-            case 'L': arguments.list.name = my_optarg; arguments.list.append = (opt == LIST_APPEND); break;
+            case 'L': arguments.list.name = my_optarg; get_arg(&get_args, &arguments.list.name_pos); arguments.list.append = (opt == LIST_APPEND); break;
             case MAKE_APPEND:
-            case 'M': arguments.make.name = my_optarg; arguments.make.append = (opt == MAKE_APPEND); break;
+            case 'M': arguments.make.name = my_optarg; get_arg(&get_args, &arguments.make.name_pos); arguments.make.append = (opt == MAKE_APPEND); break;
             case 'I': lastil = include_list_add(lastil, my_optarg);break;
             case 'm': arguments.list.monitor = false;break;
             case MONITOR: arguments.list.monitor = true;break;
@@ -936,9 +943,11 @@ int init_arguments(int *argc2, char **argv2[]) {
     }
 
     if (arguments.output == NULL) {
-        new_instance(&arguments.output);
-        arguments.output[0] = output;
-        arguments.output_len = 1;
+        if (output.name != NULL) {
+            new_instance(&arguments.output);
+            arguments.output[0] = output;
+            arguments.output_len = 1;
+        }
     } else {
         struct output_s *lastoutput = &arguments.output[arguments.output_len - 1];
         lastoutput->mode = output.mode;

@@ -674,7 +674,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
         fout = fopen_utf8(output->name, output->append ? (binary ? "ab" : "at") : (binary ? "wb" : "wt"));
     }
     if (fout == NULL) {
-        err_msg_file2(ERROR_CANT_WRTE_OBJ, output->name);
+        err_msg_file2(ERROR_CANT_WRTE_OBJ, output->name, &output->name_pos);
         return;
     }
     memcomp(memblocks, output->mode == OUTPUT_XEX || output->mode == OUTPUT_IHEX || output->mode == OUTPUT_SREC || output->mode == OUTPUT_MHEX);
@@ -695,7 +695,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     }
     err = ferror(fout);
     err |= (fout != stdout) ? fclose(fout) : fflush(fout);
-    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_OBJ, output->name);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_OBJ, output->name, &output->name_pos);
 #ifdef SETMODE_AVAILABLE
     if (oldmode >= 0) setmode(STDOUT_FILENO, oldmode);
 #endif

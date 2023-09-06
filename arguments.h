@@ -44,8 +44,10 @@ struct argpos_s {
 };
 
 struct output_s {
+    struct argpos_s name_pos;
     const char *name;
     const char *section;
+    struct argpos_s mapname_pos;
     const char *mapname;
     struct argpos_s exec_pos;
     uval_t exec;
@@ -57,6 +59,7 @@ struct output_s {
 };
 
 struct error_output_s {
+    struct argpos_s name_pos;
     const char *name;
     Caret_types caret;
     bool warning;
@@ -65,6 +68,7 @@ struct error_output_s {
 };
 
 struct symbol_output_s {
+    struct argpos_s name_pos;
     const char *name;
     struct argpos_s space_pos;
     struct Namespace *space;
@@ -75,6 +79,7 @@ struct symbol_output_s {
 };
 
 struct list_output_s {
+    struct argpos_s name_pos;
     const char *name;
     bool monitor;
     bool source;
@@ -84,6 +89,7 @@ struct list_output_s {
 };
 
 struct make_output_s {
+    struct argpos_s name_pos;
     const char *name;
     bool phony;
     bool append;

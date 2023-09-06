@@ -54,7 +54,6 @@ typedef struct Listing {
     } columns;
     FILE *flist;
     uint16_t lastfile;
-    const char *filename;
     unsigned int tab_size;
     bool linenum, verbose, monitor, pccolumn, source;
 } Listing;
@@ -147,7 +146,7 @@ void listing_open(const struct list_output_s *output, int argc, char *argv[]) {
 
     flist = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
     if (flist == NULL) {
-        err_msg_file2(ERROR_CANT_WRTE_LST, output->name);
+        err_msg_file2(ERROR_CANT_WRTE_LST, output->name, &output->name_pos);
         listing = NULL;
         return;
     }
@@ -157,7 +156,6 @@ void listing_open(const struct list_output_s *output, int argc, char *argv[]) {
     ls = &listing2;
 
     memcpy(ls->hex, "0123456789abcdef", 16);
-    ls->filename = output->name;
     ls->flist = flist;
     ls->linenum = arguments.list.linenum;
     ls->pccolumn = listing_pccolumn;
@@ -207,7 +205,7 @@ void listing_open(const struct list_output_s *output, int argc, char *argv[]) {
     listing = ls;
 }
 
-void listing_close(void) {
+void listing_close(const struct list_output_s *output) {
     Listing *const ls = listing;
     int err;
     if (ls == NULL) return;
@@ -215,7 +213,7 @@ void listing_close(void) {
     fputs("\n;******  End of listing\n", ls->flist);
     err = ferror(ls->flist);
     err |= (ls->flist != stdout) ? fclose(ls->flist) : fflush(ls->flist);
-    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_LST, ls->filename);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_LST, output->name, &output->name_pos);
     listing = NULL;
 }
 

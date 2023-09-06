@@ -960,7 +960,7 @@ void makefile(int argc, char *argv[]) {
 
     m.f = dash_name(arguments.make.name) ? stdout : fopen_utf8(arguments.make.name, arguments.make.append ? "at" : "wt");
     if (m.f == NULL) {
-        err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make.name);
+        err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make.name, &arguments.make.name_pos);
         return;
     }
     if (m.f == stdout && fflush(m.f) != 0) setvbuf(m.f, NULL, _IOLBF, 1024);
@@ -1008,5 +1008,5 @@ void makefile(int argc, char *argv[]) {
 
     err = ferror(m.f);
     err |= (m.f != stdout) ? fclose(m.f) : fflush(m.f);
-    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make.name);
+    if (err != 0 && errno != 0) err_msg_file2(ERROR_CANT_WRTE_MAK, arguments.make.name, &arguments.make.name_pos);
 }
