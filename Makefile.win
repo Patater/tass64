@@ -41,7 +41,7 @@ arguments.o: arguments.c arguments.h stdbool.h inttypes.h 64tass.h \
  version.h
 argvalues.o: argvalues.c argvalues.h arguments.h stdbool.h inttypes.h \
  64tass.h attributes.h wait_e.h eval.h oper_e.h error.h errors_e.h \
- values.h namespaceobj.h obj.h
+ values.h instruction.h namespaceobj.h obj.h
 avl.o: avl.c avl.h attributes.h stdbool.h
 bitsobj.o: bitsobj.c bitsobj.h obj.h attributes.h inttypes.h oper_e.h \
  math.h eval.h stdbool.h variables.h unicode.h error.h errors_e.h \
