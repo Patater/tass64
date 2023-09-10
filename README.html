@@ -426,9 +426,13 @@ accepted:
 <tr><td><code><u>x</u> &gt;&gt; <u>y</u></code><td>arithmetic shift right<td><code><span>-8</span> &gt;&gt; <span>3</span></code> is <code><span>-1</span></code>
 </table></div>
 
-<p>Integers are automatically promoted to float as necessary in expressions.
+<p>Integers are automatically promoted to floats as necessary in expressions.
 Other types can be converted to integer using the integer type
 <code>int</code>.
+
+<p>Integer division is a floor division (rounding down) so <code>7 / 4</code>
+is <code>1</code> and not <code>1.75</code>. If ceiling division is required (rounding up) that
+can be done by negating both the divident and the result. Typically it's done like <code>0 - -5 / 4</code> which results in <code>2</code>.
 
 <pre>
         <b class="d">.byte</b> <span>23</span>        <i>; as unsigned</i>
