@@ -792,6 +792,7 @@ found:
     v = new_int();
     v->len = intlen(vv1);
     v->data = inew2(v, v->len);
+    if (v->data == NULL) goto failed2;
     memcpy(v->data, vv1->data, v->len * sizeof *v->data);
     for (j >>= 1; j != 0; j >>= 1) {
         imul(v, v, v);
@@ -806,6 +807,9 @@ found:
     }
     if (vv1->len < 0 && (vv2->data[0] & 1) != 0) v->len = -v->len;
     return Obj(v);
+failed2:
+    val_destroy(Obj(v));
+    return new_error_mem(op->epoint3);
 }
 
 static MUST_CHECK Obj *lshift(oper_t op, uval_t s) {
