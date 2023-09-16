@@ -775,26 +775,36 @@ static MUST_CHECK Obj *idivrem(oper_t op, bool divrem) {
 }
 
 static inline MUST_CHECK Obj *power(oper_t op) {
-    const Int *vv1 = Int(op->v1), *vv2 = Int(op->v2);
-    int j;
-    bool neg = false;
+    Int *vv1 = Int(op->v1), *vv2 = Int(op->v2);
+    digit_t d, j;
     size_t i;
-    Int *v = new_int();
-    v->data = v->val;
-    v->val[0] = 1;
-    v->len = 1;
+    Int *v;
 
-    for (i = (size_t)vv2->len; (i--) != 0;) {
-        digit_t d = vv2->data[i];
-        for (j = SHIFT - 1; j >= 0; j--) {
-            imul(v, v, v);
-            if ((d & (1U << j)) != 0) {
-                imul(v, vv1, v);
-                neg = true;
-            } else neg = false;
+    i = (size_t)vv2->len;
+    while (i != 0) {
+        d = vv2->data[--i];
+        for (j = (digit_t)1 << (SHIFT - 1); j != 0; j >>= 1) {
+            if ((d & j) != 0) goto found;
         }
     }
-    if (neg && vv1->len < 0) v->len = -v->len;
+    return val_reference(int_value[1]);
+found:
+    v = new_int();
+    v->len = intlen(vv1);
+    v->data = inew2(v, v->len);
+    memcpy(v->data, vv1->data, v->len * sizeof *v->data);
+    for (j >>= 1; j != 0; j >>= 1) {
+        imul(v, v, v);
+        if ((d & j) != 0) imul(v, vv1, v);
+    }
+    while (i != 0) {
+        d = vv2->data[--i];
+        for (j = (digit_t)1 << (SHIFT - 1); j != 0; j >>= 1) {
+            imul(v, v, v);
+            if ((d & j) != 0) imul(v, vv1, v);
+        }
+    }
+    if (vv1->len < 0 && (vv2->data[0] & 1) != 0) v->len = -v->len;
     return Obj(v);
 }
 
