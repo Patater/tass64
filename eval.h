@@ -55,6 +55,7 @@ extern void init_eval(void);
 extern void eval_enter(void);
 extern void eval_leave(void);
 extern FAST_CALL size_t get_label(const uint8_t *);
+extern FAST_CALL size_t get_label2(const uint8_t *, const uint8_t *);
 extern MUST_CHECK struct Obj *get_star_value(address_t, struct Obj *);
 extern MUST_CHECK struct Obj *get_star(void);
 extern MUST_CHECK struct Obj *get_vals_tuple(void);
