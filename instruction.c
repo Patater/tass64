@@ -890,10 +890,17 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
     default:
         epoint2 = &vals->val[0].epoint;
     unknown:
-        err = new_error(ERROR___NO_LOT_OPER, epoint2);
-        err->u.opers.num = vals->len;
-        err->u.opers.cod = mnemonic[prm];
-        return err;
+        {
+            argcount_t j, args = vals->len;
+            for (j = 0; j < args; j++) {
+                Obj *v = vals->val[j].val;
+                if (v->obj == ERROR_OBJ) return Error(v);
+            }
+            err = new_error(ERROR___NO_LOT_OPER, epoint);
+            err->u.opers.num = j;
+            err->u.opers.cod = mnemonic[prm];
+            return err;
+        }
     }
     switch (adrgen) {
     case AG_ZP: /* zero page address only */
