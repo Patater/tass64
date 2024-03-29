@@ -3331,7 +3331,22 @@ MUST_CHECK Obj *compile(void)
                                     if (vs->val == none_value || vs->val->obj == ERROR_OBJ) {
                                         val = val_reference(vs->val);
                                     } else {
-                                        val = new_error_conv(vs->val, NAMESPACE_OBJ, &vs->epoint);
+                                        struct oper_s tmp;
+                                        Obj *sym;
+                                        if (labelname.data == (const uint8_t *)&anonsymbol) {
+                                            sym = new_anonsymbol((anonsymbol.dir == '-') ? -1 : 0);
+                                        } else {
+                                            sym = new_symbol(&labelname, &epoint);
+                                        }
+                                        tmp.op = O_MEMBER;
+                                        tmp.epoint = &vs->epoint;
+                                        tmp.epoint2 = &epoint;
+                                        tmp.epoint3 = &cmdpoint;
+                                        tmp.v1 = vs->val;
+                                        tmp.v2 = sym;
+                                        tmp.inplace = NULL;
+                                        val = tmp.v1->obj->calc2(&tmp);
+                                        val_destroy(sym);
                                     }
                                 } else {
                                     Label *l;
