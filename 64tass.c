@@ -4747,25 +4747,24 @@ MUST_CHECK Obj *compile(void)
                         if (vs != NULL && toival(vs->val, &ival, 8 * sizeof ival, &vs->epoint)) {}
                         else if (ival == 0) err_msg2(ERROR_NO_ZERO_VALUE, NULL, &vs->epoint);
                         else {
+                            address_t db;
+                            uval_t offset;
                             uval_t uval = (ival >= 0) ? (uval_t)ival : -(uval_t)ival;
                             if ((ival > 0) ? (size > uval) : (size >= uval)) {
                                 address_t ln2 = size - uval;
                                 if (ival < 0) ln2++;
                                 ln2 &= all_mem2;
                                 err_msg2(ERROR____ALIGN_LONG, &ln2, &epoint);
-                            } else {
-                                address_t db;
-                                uval_t offset;
-                                vs = get_val();
-                                waitfor->u.cmd_alignblk.size = ival;
-                                offset = (vs == NULL) ? 0 : memalign_offset(get_val(), uval);
-                                waitfor->u.cmd_alignblk.offset = offset;
-                                db = dmemalign(offset, uval);
-                                if ((ival > 0) ? (size <= db) : (size < db)) {}
-                                else if (db != 0) {
-                                    if (diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
-                                    memskipfill(db, vs, &epoint);
-                                }
+                            }
+                            vs = get_val();
+                            waitfor->u.cmd_alignblk.size = ival;
+                            offset = (vs == NULL) ? 0 : memalign_offset(get_val(), uval);
+                            waitfor->u.cmd_alignblk.offset = offset;
+                            db = dmemalign(offset, uval);
+                            if ((ival > 0) ? (size <= db) : (size < db)) {}
+                            else if (db != 0) {
+                                if (diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
+                                memskipfill(db, vs, &epoint);
                             }
                         }
                     }
