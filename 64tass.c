@@ -4642,7 +4642,8 @@ MUST_CHECK Obj *compile(void)
                             address_t itt, oldstar, itt2;
                             uval_t offset;
                             uval_t uval = (ival >= 0) ? (uval_t)ival : -(uval_t)ival;
-                            if ((ival > 0) ? (size > uval) : (size >= uval)) {
+                            bool error = (ival > 0) ? (size > uval) : (size >= uval);
+                            if (error) {
                                 address_t ln2 = size - uval;
                                 if (ival < 0) ln2++;
                                 ln2 &= all_mem2;
@@ -4670,7 +4671,7 @@ MUST_CHECK Obj *compile(void)
                             db = rmemalign(offset, uval, itt2);
                             if ((ival > 0) ? (size <= db) : (size < db)) {}
                             else if (db != 0) {
-                                if (diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
+                                if (diagnostics.align && !error) err_msg_alignblk(size - db, db, &epoint);
                                 memskipfill(db, vs2, &epoint);
                             }
                             if (fixeddig) {
@@ -4749,7 +4750,8 @@ MUST_CHECK Obj *compile(void)
                             address_t db;
                             uval_t offset;
                             uval_t uval = (ival >= 0) ? (uval_t)ival : -(uval_t)ival;
-                            if ((ival > 0) ? (size > uval) : (size >= uval)) {
+                            bool error = (ival > 0) ? (size > uval) : (size >= uval);
+                            if (error) {
                                 address_t ln2 = size - uval;
                                 if (ival < 0) ln2++;
                                 ln2 &= all_mem2;
@@ -4762,7 +4764,7 @@ MUST_CHECK Obj *compile(void)
                             db = dmemalign(offset, uval);
                             if ((ival > 0) ? (size <= db) : (size < db)) {}
                             else if (db != 0) {
-                                if (diagnostics.align) err_msg_alignblk(size - db, db, &epoint);
+                                if (diagnostics.align && !error) err_msg_alignblk(size - db, db, &epoint);
                                 memskipfill(db, vs, &epoint);
                             }
                         }
