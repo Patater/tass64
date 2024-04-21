@@ -5123,7 +5123,7 @@ href="#commandline-diagnostic">Diagnostic options</a> for more details.
 <dt>over the boundary by ? bytes, aligned by ? bytes<dd>crossed boundary so alignment was necessary</dd>
 <dt>please separate @b, @w or @l from label or number for future compatibility<dd>future versions will have longer symbols after <q><code>@</code></q> and so will interpret the immediately following numbers and letters as part if the symbol. Please insert a space between <code>@b</code>, <code>@w</code> or <code>@l</code> and the following label or number now to avoid surprises!</dd>
 <dt>please use format("%d", ...) as '^' will change it's meaning<dd>this operator will be changed to mean the bank byte later, please update your sources</dd>
-<dt>possible jmp ($xxff) bug<dd>some 6502 variants read don't increment the high byte on page cross and this may be unexpected</dd>
+<dt>possible jmp ($xxff) bug with argument ?<dd>some 6502 variants read don't increment the high byte on page cross and this may be unexpected</dd>
 <dt>possibly redundant as ...<dd>according to the optimizer this might not be needed</dd>
 <dt>possibly redundant if last 'jsr' is changed to 'jmp'<dd>tail call elimination possibility was detected</dd>
 <dt>possibly redundant indexing with a constant value<dd>the index register used seems to be constant and there's a way to eliminate indexing by a constant offset</dd>

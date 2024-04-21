@@ -948,7 +948,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             if (uval2 <= 0xffff) {
                 adr = uval;
                 if (uval > 0xffff) err_msg_bank0_wrap(epoint2);
-                if (diagnostics.jmp_bug && cnmemonic[opr] == 0x6c && opcode != w65816.opcode && opcode != c65c02.opcode && opcode != r65c02.opcode && opcode != w65c02.opcode && opcode != c65ce02.opcode && opcode != c4510.opcode && opcode != c65el02.opcode && (~adr & 0xff) == 0) err_msg_jmp_bug(epoint2);/* jmp ($xxff) */
+                if (diagnostics.jmp_bug && cnmemonic[opr] == 0x6c && opcode != w65816.opcode && opcode != c65c02.opcode && opcode != r65c02.opcode && opcode != w65c02.opcode && opcode != c65ce02.opcode && opcode != c4510.opcode && opcode != c65el02.opcode && (~adr & 0xff) == 0) err_msg_jmp_bug(val2, epoint2);/* jmp ($xxff) */
                 break;
             }
             err_msg2(ERROR_____NOT_BANK0, val2, epoint2);
