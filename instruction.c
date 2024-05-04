@@ -894,7 +894,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             argcount_t j, args = vals->len;
             for (j = 0; j < args; j++) {
                 Obj *v = vals->val[j].val;
-                if (v->obj == ERROR_OBJ) return Error(v);
+                if (v->obj == ERROR_OBJ) return Error(val_reference(v));
             }
             err = new_error(ERROR___NO_LOT_OPER, epoint);
             err->u.opers.num = j;
