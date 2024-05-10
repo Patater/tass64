@@ -777,7 +777,7 @@ static MUST_CHECK Obj *idivrem(oper_t op, bool divrem) {
 static inline MUST_CHECK Obj *power(oper_t op) {
     Int *vv1 = Int(op->v1), *vv2 = Int(op->v2);
     digit_t d, j;
-    size_t i;
+    size_t i, ln;
     Int *v;
 
     i = (size_t)vv2->len;
@@ -790,10 +790,11 @@ static inline MUST_CHECK Obj *power(oper_t op) {
     return val_reference(int_value[1]);
 found:
     v = new_int();
-    v->len = intlen(vv1);
-    v->data = inew2(v, v->len);
+    ln = intlen(vv1);
+    v->len = (ssize_t)ln;
+    v->data = inew2(v, ln);
     if (v->data == NULL) goto failed2;
-    memcpy(v->data, vv1->data, v->len * sizeof *v->data);
+    memcpy(v->data, vv1->data, ln * sizeof *v->data);
     for (j >>= 1; j != 0; j >>= 1) {
         imul(v, v, v);
         if ((d & j) != 0) imul(v, vv1, v);
