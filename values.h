@@ -32,7 +32,7 @@ struct iter_s {
     size_t len;
 };
 
-extern FAST_CALL MALLOC struct Obj *val_alloc(const struct Type *);
+extern FAST_CALL MUST_CHECK struct Obj *val_alloc(const struct Type *);
 extern FAST_CALL void val_destroy(struct Obj *);
 extern FAST_CALL void val_replace(struct Obj **, struct Obj *);
 extern size_t val_print(struct Obj *, FILE *, size_t);

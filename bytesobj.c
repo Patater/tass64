@@ -97,7 +97,7 @@ static FAST_CALL void destroy(Obj *o1) {
     if unlikely(v1->u.val != v1->data) bytes_destroy(v1);
 }
 
-MALLOC Bytes *new_bytes(size_t ln) {
+MUST_CHECK Bytes *new_bytes(size_t ln) {
     Bytes *v = Bytes(val_alloc(BYTES_OBJ));
     if (ln > sizeof v->u.val) {
         v->u.s.max = ln;

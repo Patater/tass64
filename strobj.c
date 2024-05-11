@@ -400,7 +400,7 @@ MUST_CHECK Obj *str_from_str(const uint8_t *s, linecpos_t *ln, linepos_t epoint)
     return Obj(v);
 }
 
-MALLOC Str *new_str(size_t ln) {
+MUST_CHECK Str *new_str(size_t ln) {
     Str *v = Str(val_alloc(STR_OBJ));
     v->len = ln;
     if (ln > sizeof v->u.val) {

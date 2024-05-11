@@ -888,7 +888,6 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         FALL_THROUGH; /* fall through */
     default:
-        epoint2 = &vals->val[0].epoint;
     unknown:
         {
             argcount_t j, args = vals->len;

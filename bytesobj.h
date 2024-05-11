@@ -54,7 +54,7 @@ typedef enum Textconv_types {
     BYTES_MODE_PTEXT
 } Textconv_types;
 
-extern MALLOC Bytes *new_bytes(size_t);
+extern MUST_CHECK Bytes *new_bytes(size_t);
 
 struct Str;
 struct Bits;

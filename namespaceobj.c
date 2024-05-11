@@ -269,7 +269,7 @@ MUST_CHECK Obj *namespace_member(oper_t op, Namespace *v1) {
     return obj_oper_error(op);
 }
 
-MALLOC Namespace *new_namespace(const struct file_list_s *file_list, linepos_t epoint) {
+MUST_CHECK Namespace *new_namespace(const struct file_list_s *file_list, linepos_t epoint) {
     Namespace *val = Namespace(val_alloc(NAMESPACE_OBJ));
     val->data = NULL;
     val->mask = 0;

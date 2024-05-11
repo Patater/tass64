@@ -794,7 +794,7 @@ static void err_msg_no_addressing(atype_t addrtype, uint32_t cod) {
     adderror("no");
     if (addrtype == A_NONE) adderror(" implied");
     for (; (addrtype & MAX_ADDRESS_MASK) != 0; addrtype <<= 4) {
-        const char *txt = "?";
+        const char *txt;
         switch ((Address_types)((addrtype & 0xf000) >> 12)) {
         case A_NONE: continue;
         case A_IMMEDIATE: txt = " immediate"; break;
@@ -809,6 +809,7 @@ static void err_msg_no_addressing(atype_t addrtype, uint32_t cod) {
         case A_KR: txt = " program bank"; break;
         case A_I: txt = " indirect"; break;
         case A_LI: txt = " long indirect"; break;
+        default: txt = "?"; break;
         }
         adderror(txt);
     }

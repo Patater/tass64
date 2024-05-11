@@ -26,7 +26,7 @@
 
 #ifdef DEBUG
 #define tern_free(tern) free(tern)
-static MALLOC ternary_node *tern_alloc(void) {
+static MUST_CHECK ternary_node *tern_alloc(void) {
     ternary_node *r;
     new_instance(&r);
     return r;
@@ -59,7 +59,7 @@ static union tern_u *terns_alloc(void) {
     return &terns->terns[0];
 }
 
-static MALLOC ternary_node *tern_alloc(void) {
+static MUST_CHECK ternary_node *tern_alloc(void) {
     ternary_node *tern;
     if (terns_free == NULL) terns_free = terns_alloc();
     tern = (ternary_node *)terns_free;

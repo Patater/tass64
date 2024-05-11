@@ -268,7 +268,7 @@ failed:
     return new_error_mem(epoint);
 }
 
-static MALLOC Obj *return_bits(bdigit_t c, unsigned int blen) {
+static MUST_CHECK Obj *return_bits(bdigit_t c, unsigned int blen) {
     Bits *vv = Bits(val_alloc(BITS_OBJ));
     vv->data = vv->u.val;
     vv->u.val[0] = c;

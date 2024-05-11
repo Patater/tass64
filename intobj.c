@@ -92,7 +92,7 @@ static FAST_CALL void destroy(Obj *o1) {
     if unlikely(v1->val != v1->data) int_destroy(v1);
 }
 
-static inline MALLOC Int *new_int(void) {
+static inline MUST_CHECK Int *new_int(void) {
     return Int(val_alloc(INT_OBJ));
 }
 
