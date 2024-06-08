@@ -38,6 +38,7 @@ typedef struct Symbol {
 #define Symbol(a) OBJ_CAST(Symbol, a)
 
 extern void symbolobj_init(void);
+extern void symbolobj_names(void);
 
 extern Obj *new_symbol(const str_t *name, linepos_t);
 

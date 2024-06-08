@@ -48,6 +48,7 @@
 #include "labelobj.h"
 #include "errorobj.h"
 #include "mfuncobj.h"
+#include "symbolobj.h"
 
 static Label *lastlb;
 
@@ -835,6 +836,7 @@ void init_variables(void)
     bytesobj_names();
     typeobj_names();
     namespaceobj_names();
+    symbolobj_names();
 }
 
 void destroy_lastlb(void) {

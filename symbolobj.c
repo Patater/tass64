@@ -24,6 +24,7 @@
 #include "file.h"
 #include "values.h"
 #include "arguments.h"
+#include "variables.h"
 
 #include "typeobj.h"
 #include "strobj.h"
@@ -236,4 +237,8 @@ void symbolobj_init(void) {
     type->str = str;
     type->calc2 = calc2;
     type->rcalc2 = rcalc2;
+}
+
+void symbolobj_names(void) {
+    new_builtin("symbol", val_reference(Obj(SYMBOL_OBJ)));
 }

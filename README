@@ -788,6 +788,7 @@ gap     Uninitialized memory type
 int     Integer type
 list    List type
 str     Character string type
+symbol  Symbol type
 tuple   Tuple type
 type    Type type
 
@@ -5248,5 +5249,5 @@ range repr round rta sign sin sinh sint size sort sqrt tan tanh trunc word
 
 Built-in types
 
-address bits bool bytes code dict float gap int list str tuple type
+address bits bool bytes code dict float gap int list str symbol tuple type
 
