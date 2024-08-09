@@ -648,10 +648,11 @@ struct textrecursion_s {
     Error_types error;
     uint8_t buff[16];
     linepos_t epoint;
+    linepos_t epoint2;
 };
 
 static void textrecursion_flush(struct textrecursion_s *trec) {
-    memcpy(pokealloc(trec->p, trec->epoint), trec->buff, trec->p);
+    memcpy(pokealloc(trec->p, trec->epoint2), trec->buff, trec->p);
     trec->p = 0;
 }
 
@@ -974,7 +975,7 @@ static void memfill(address_t db, const struct values_s *vs) {
     trec.prm = CMD_TEXT;
     trec.tconv = BYTES_MODE_TEXT;
     trec.error = ERROR__USER_DEFINED;
-    trec.epoint = &vs->epoint;
+    trec.epoint2 = trec.epoint = &vs->epoint;
     textrecursion(&trec, vs->val);
     if (trec.error != ERROR__USER_DEFINED) err_msg2(trec.error, NULL, trec.epoint);
 
@@ -4187,11 +4188,9 @@ MUST_CHECK Obj *compile(void)
                         default: trec.tconv = BYTES_MODE_TEXT; break;
                         }
                         trec.error = ERROR__USER_DEFINED;
-                        trec.epoint = &epoint;
+                        trec.epoint2 = trec.epoint = &epoint;
                         mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
                         for (ln = get_val_remaining(), vs = get_val(); ln != 0; ln--, vs++) {
-                            if (trec.p > 0) textrecursion_flush(&trec);
-                            else if (trec.gaps > 0) textrecursion_gaps(&trec);
                             trec.epoint = &vs->epoint;
                             textrecursion(&trec, vs->val);
                             if (trec.error != ERROR__USER_DEFINED) { err_msg2(trec.error, NULL, trec.epoint); trec.error = ERROR__USER_DEFINED;}
@@ -4204,7 +4203,7 @@ MUST_CHECK Obj *compile(void)
                                 uint8_t inv = (prm == CMD_SHIFT) ? 0x80 : 0x01;
                                 trec.buff[trec.p - 1] ^= inv;
                             } else if (trec.sum != 0) err_msg2(ERROR___NO_LAST_GAP, NULL, trec.epoint);
-                            else err_msg2(ERROR__BYTES_NEEDED, NULL, &epoint);
+                            else err_msg2(ERROR__BYTES_NEEDED, NULL, trec.epoint2);
                             break;
                         case CMD_NULL:
                             if (trec.p >= sizeof trec.buff) textrecursion_flush(&trec);
@@ -4215,7 +4214,7 @@ MUST_CHECK Obj *compile(void)
                         if (prm == CMD_PTEXT) {
                             if (trec.sum > 0x100) {
                                 size_t ln2 = trec.sum;
-                                err_msg2(ERROR____PTEXT_LONG, &ln2, &epoint);
+                                err_msg2(ERROR____PTEXT_LONG, &ln2, trec.epoint2);
                             }
                             write_mark_mem(&mm, current_address->mem, (trec.sum-1) ^ outputeor);
                         }
