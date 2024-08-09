@@ -212,7 +212,7 @@ bool mtranslate(void) {
                     if (macro->param[j].cfname.len != cf.len) continue;
                     data = macro->param[j].cfname.data;
                     if (data[0] != cf.data[0]) continue;
-                    if (memcmp(data, cf.data, cf.len) == 0) break;
+                    if (cf.len == 1 || memcmp(data, cf.data, cf.len) == 0) break;
                 }
                 if (j < macro->argc) break;
                 lpoint.pos = (linecpos_t)(op - pline);
