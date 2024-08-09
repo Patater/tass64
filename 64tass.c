@@ -854,7 +854,7 @@ struct byterecursion_s {
 };
 
 static void byterecursion_flush(struct byterecursion_s *brec) {
-    memcpy(pokealloc(brec->p, brec->epoint), brec->buff, brec->p);
+    memcpy(pokealloc(brec->p, brec->epoint2), brec->buff, brec->p);
     brec->p = 0;
 }
 
