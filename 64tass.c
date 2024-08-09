@@ -4263,9 +4263,9 @@ MUST_CHECK Obj *compile(void)
                             brec.epoint = &vs->epoint;
                             byterecursion(&brec, vs->val);
                             if (brec.warn) { err_msg_still_none(NULL, brec.epoint); brec.warn = false; }
-                            if (brec.p > 0) byterecursion_flush(&brec);
-                            else if (brec.gaps > 0) byterecursion_gaps(&brec);
                         }
+                        if (brec.p > 0) byterecursion_flush(&brec);
+                        else if (brec.gaps > 0) byterecursion_gaps(&brec);
                         if (nolisting == 0) list_mem(&mm, current_address->mem);
                     } else if (prm==CMD_BINARY) { /* .binary */
                         struct file_s *cfile2 = NULL;
