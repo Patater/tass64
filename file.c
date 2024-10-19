@@ -186,7 +186,7 @@ static wchar_t *get_real_name(const wchar_t *name) {
         if (tmp != NULL) {
             short_name = tmp;
             len = ret;
-            ret = GetShortPathNameW(name, real_name, len);
+            ret = GetShortPathNameW(name, short_name, len);
         }
     }
     if (ret >= len || ret == 0) {
