@@ -142,7 +142,7 @@ MUST_CHECK Obj *tostr2(const struct values_s *v1, str_t *out) {
     }
 }
 
-MALLOC Str *new_str2(size_t ln) {
+MUST_CHECK Str *new_str2(size_t ln) {
     Str *v = Str(val_alloc(STR_OBJ));
     v->len = ln;
     if (ln <= sizeof v->u.val) {
