@@ -416,24 +416,26 @@ bool close_waitfor(Wait_types what) {
     return false;
 }
 
-static void set_size(const Label *label, address_t size, Memblocks *mem, address_t oaddr, size_t membp) {
-    Code *code = Code(label->value);
-    if (code->v.obj != CODE_OBJ) return;
-    size &= all_mem2;
-    if (code->size != size) {
-        code->size = size;
-        if (code->pass != 0) {
-            if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &label->epoint);
-            fixeddig = false;
+static void set_size(Label *label, address_t size, Memblocks *mem, address_t oaddr, size_t membp) {
+    if (label->value->obj == CODE_OBJ) {
+        Code *code = Code(label->value);
+        size &= all_mem2;
+        if (code->size != size) {
+            code->size = size;
+            if (code->pass != 0) {
+                if (fixeddig && pass > max_pass) err_msg_cant_calculate(&label->name, &label->epoint);
+                fixeddig = false;
+            }
         }
+        code->pass = pass;
+        if (code->memblocks != mem) {
+            val_destroy(Obj(code->memblocks));
+            code->memblocks = ref_memblocks(mem);
+        }
+        code->memaddr = oaddr;
+        code->membp = membp;
     }
-    code->pass = pass;
-    if (code->memblocks != mem) {
-        val_destroy(Obj(code->memblocks));
-        code->memblocks = ref_memblocks(mem);
-    }
-    code->memaddr = oaddr;
-    code->membp = membp;
+    val_destroy(Obj(label));
 }
 
 static address_t alignblk_set_size(Label *label) {
@@ -1071,7 +1073,6 @@ static void logical_close(linepos_t epoint) {
     current_address->l_address_val = waitfor->u.cmd_logical.val;
     if (waitfor->u.cmd_logical.label != NULL) {
         set_size(waitfor->u.cmd_logical.label, diff, current_address->mem, waitfor->u.cmd_logical.addr, waitfor->u.cmd_logical.membp);
-        val_destroy(Obj(waitfor->u.cmd_logical.label));
     }
     current_section->logicalrecursion--;
 }
@@ -1080,7 +1081,6 @@ static void virtual_close(linepos_t epoint) {
     if (waitfor->u.cmd_virtual.label != NULL) {
         address_t end = (current_address->end < current_address->address) ? current_address->address : current_address->end;
         set_size(waitfor->u.cmd_virtual.label, end - current_address->start, current_address->mem, current_address->start, waitfor->u.cmd_virtual.membp);
-        val_destroy(Obj(waitfor->u.cmd_virtual.label));
     }
     val_destroy(current_address->l_address_val);
     val_destroy(Obj(current_address->mem));
@@ -1095,7 +1095,6 @@ static void virtual_close(linepos_t epoint) {
 static void section_close(linepos_t epoint) {
     if (waitfor->u.cmd_section.label != NULL) {
         set_size(waitfor->u.cmd_section.label, current_address->address - waitfor->u.cmd_section.addr, current_address->mem, waitfor->u.cmd_section.addr, waitfor->u.cmd_section.membp);
-        val_destroy(Obj(waitfor->u.cmd_section.label));
     }
     current_section = waitfor->u.cmd_section.section;
     current_address = waitfor->u.cmd_section.section_address;
@@ -1128,25 +1127,25 @@ static const char *check_waitfor(void) {
     switch (waitfor->what) {
     case W_FI2:
     case W_FI:
-        if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
+        if (waitfor->u.cmd_if.label != NULL) set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);
         return ".endif";
     case W_SWITCH2:
     case W_SWITCH:
-        if (waitfor->u.cmd_switch.label != NULL) {set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);val_destroy(Obj(waitfor->u.cmd_switch.label));}
+        if (waitfor->u.cmd_switch.label != NULL) set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);
         if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
         return ".endswitch";
     case W_WEAK2:
-        if (waitfor->u.cmd_weak.label != NULL) {set_size(waitfor->u.cmd_weak.label, current_address->address - waitfor->u.cmd_weak.addr, current_address->mem, waitfor->u.cmd_weak.addr, waitfor->u.cmd_weak.membp);val_destroy(Obj(waitfor->u.cmd_weak.label));}
+        if (waitfor->u.cmd_weak.label != NULL) set_size(waitfor->u.cmd_weak.label, current_address->address - waitfor->u.cmd_weak.addr, current_address->mem, waitfor->u.cmd_weak.addr, waitfor->u.cmd_weak.membp);
         strength--;
         FALL_THROUGH; /* fall through */
     case W_WEAK: return ".endweak";
     case W_ENDP2:
-        if (waitfor->u.cmd_page.label != NULL) {set_size(waitfor->u.cmd_page.label, current_address->address - waitfor->u.cmd_page.addr, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);val_destroy(Obj(waitfor->u.cmd_page.label));}
+        if (waitfor->u.cmd_page.label != NULL) set_size(waitfor->u.cmd_page.label, current_address->address - waitfor->u.cmd_page.addr, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);
         FALL_THROUGH; /* fall through */
     case W_ENDP: return ".endpage";
     case W_ENDALIGNBLK2:
         alignblk_set_size(waitfor->u.cmd_alignblk.label2);
-        if (waitfor->u.cmd_alignblk.label != NULL) {set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp);val_destroy(Obj(waitfor->u.cmd_alignblk.label));}
+        if (waitfor->u.cmd_alignblk.label != NULL) set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp);
         FALL_THROUGH; /* fall through */
     case W_ENDALIGNBLK: return ".endalignblk";
     case W_ENDSEGMENT:
@@ -1172,10 +1171,10 @@ static const char *check_waitfor(void) {
     case W_ENDWHILE: return ".endwhile";
     case W_PEND:
         pop_context();
-        if (waitfor->u.cmd_proc.label != NULL) {set_size(waitfor->u.cmd_proc.label, current_address->address - waitfor->u.cmd_proc.addr, current_address->mem, waitfor->u.cmd_proc.addr, waitfor->u.cmd_proc.membp);val_destroy(Obj(waitfor->u.cmd_proc.label));}
+        if (waitfor->u.cmd_proc.label != NULL) set_size(waitfor->u.cmd_proc.label, current_address->address - waitfor->u.cmd_proc.addr, current_address->mem, waitfor->u.cmd_proc.addr, waitfor->u.cmd_proc.membp);
         return ".endproc";
     case W_BEND2:
-        if (waitfor->u.cmd_block.label != NULL) {set_size(waitfor->u.cmd_block.label, current_address->address - waitfor->u.cmd_block.addr, current_address->mem, waitfor->u.cmd_block.addr, waitfor->u.cmd_block.membp);val_destroy(Obj(waitfor->u.cmd_block.label));}
+        if (waitfor->u.cmd_block.label != NULL) set_size(waitfor->u.cmd_block.label, current_address->address - waitfor->u.cmd_block.addr, current_address->mem, waitfor->u.cmd_block.addr, waitfor->u.cmd_block.membp);
         FALL_THROUGH; /* fall through */
     case W_BEND:
         pop_context();
@@ -1188,7 +1187,7 @@ static const char *check_waitfor(void) {
         pop_context2();
         FALL_THROUGH; /* fall through */
     case W_ENDWITH:
-        if (waitfor->u.cmd_with.label != NULL) {set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(Obj(waitfor->u.cmd_with.label));}
+        if (waitfor->u.cmd_with.label != NULL) set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);
         return ".endwith";
     case W_ENDENCODE2:
         encode_close();
@@ -3302,6 +3301,7 @@ MUST_CHECK Obj *compile(void)
                             }
 
                             if (!ret && !doubledef) set_size(label, ((current_address->end < current_address->address) ? current_address->address : current_address->end) - oaddr, current_address->mem, oaddr, newmembp);
+                            else val_destroy(Obj(label));
                             current_address->start = oldstart;
                             oldstart = current_address->unionmode ? current_address->end : current_address->address;
                             if (oldend > current_address->end) current_address->end = oldend;
@@ -3311,7 +3311,6 @@ MUST_CHECK Obj *compile(void)
                             if (oldstart > current_address->address) {
                                 memskip(oldstart - current_address->address, &epoint);
                             }
-                            val_destroy(Obj(label));
                             goto breakerr;
                         }
                     case CMD_FROM: /* .from */
@@ -3534,13 +3533,14 @@ MUST_CHECK Obj *compile(void)
                             waitfor->u.cmd_proc.label = NULL;
                             val_destroy(Obj(newlabel));
                         } else if (!newlabel->ref && Code(newlabel->value)->pass != 0) {
+                            Code *code = Code(val_reference(newlabel->value));
                             listing_line(0);
                             waitfor->skip = 0;
                             set_size(newlabel, 0, current_address->mem, oaddr, newmembp);
-                            Code(newlabel->value)->pass = 1;
+                            code->pass = 1;
+                            val_destroy(Obj(code));
                             push_dummy_context();
                             waitfor->u.cmd_proc.label = NULL;
-                            val_destroy(Obj(newlabel));
                         } else {         /* TODO: first time it should not compile */
                             listing_line(epoint.pos);
                             push_context(Code(newlabel->value)->names);
@@ -3689,7 +3689,7 @@ MUST_CHECK Obj *compile(void)
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     if (waitfor->what==W_FI || waitfor->what==W_FI2) {
-                        if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
+                        if (waitfor->u.cmd_if.label != NULL) set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);
                         close_waitfor(waitfor->what);
                     } else {err_msg2(ERROR__MISSING_OPEN, ".if", &epoint); goto breakerr;}
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
@@ -3699,7 +3699,7 @@ MUST_CHECK Obj *compile(void)
                 {
                     if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                     if (waitfor->what==W_SWITCH || waitfor->what==W_SWITCH2) {
-                        if (waitfor->u.cmd_switch.label != NULL) {set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);val_destroy(Obj(waitfor->u.cmd_switch.label));}
+                        if (waitfor->u.cmd_switch.label != NULL) set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);
                         if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
                         close_waitfor(waitfor->what);
                     } else {err_msg2(ERROR__MISSING_OPEN, ".switch", &epoint); goto breakerr;}
@@ -3961,7 +3961,7 @@ MUST_CHECK Obj *compile(void)
                     if ((waitfor->skip & 1) != 0) {
                         listing_line(epoint.pos);
                         if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".proc", &epoint);
-                        if (waitfor->u.cmd_proc.label != NULL) {set_size(waitfor->u.cmd_proc.label, current_address->address - waitfor->u.cmd_proc.addr, current_address->mem, waitfor->u.cmd_proc.addr, waitfor->u.cmd_proc.membp);val_destroy(Obj(waitfor->u.cmd_proc.label));}
+                        if (waitfor->u.cmd_proc.label != NULL) set_size(waitfor->u.cmd_proc.label, current_address->address - waitfor->u.cmd_proc.addr, current_address->mem, waitfor->u.cmd_proc.addr, waitfor->u.cmd_proc.membp);
                     } else pop_context();
                     close_waitfor(W_PEND);
                     if ((waitfor->skip & 1) != 0) listing_line_cut2(epoint.pos);
@@ -4048,7 +4048,7 @@ MUST_CHECK Obj *compile(void)
                             }
                         }
                     }
-                    if (waitfor->u.cmd_page.label != NULL) {set_size(waitfor->u.cmd_page.label, size, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);val_destroy(Obj(waitfor->u.cmd_page.label));}
+                    if (waitfor->u.cmd_page.label != NULL) set_size(waitfor->u.cmd_page.label, size, current_address->mem, waitfor->u.cmd_page.addr, waitfor->u.cmd_page.membp);
                     close_waitfor(W_ENDP2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".page", &epoint); goto breakerr;}
                 break;
@@ -4068,7 +4068,7 @@ MUST_CHECK Obj *compile(void)
                         }
                     }
                     if (db != 0) memskip(db, &epoint);
-                    if (waitfor->u.cmd_alignblk.label != NULL) {set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp); val_destroy(Obj(waitfor->u.cmd_alignblk.label));}
+                    if (waitfor->u.cmd_alignblk.label != NULL) set_size(waitfor->u.cmd_alignblk.label, current_address->address - waitfor->u.cmd_alignblk.addr, current_address->mem, waitfor->u.cmd_alignblk.addr, waitfor->u.cmd_alignblk.membp);
                     close_waitfor(W_ENDALIGNBLK2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".alignblk", &epoint); goto breakerr;}
                 break;
@@ -4095,7 +4095,7 @@ MUST_CHECK Obj *compile(void)
                 if (close_waitfor(W_BEND)) {
                     pop_context();
                 } else if (waitfor->what==W_BEND2) {
-                    if (waitfor->u.cmd_block.label != NULL) {set_size(waitfor->u.cmd_block.label, current_address->address - waitfor->u.cmd_block.addr, current_address->mem, waitfor->u.cmd_block.addr, waitfor->u.cmd_block.membp);val_destroy(Obj(waitfor->u.cmd_block.label));}
+                    if (waitfor->u.cmd_block.label != NULL) set_size(waitfor->u.cmd_block.label, current_address->address - waitfor->u.cmd_block.addr, current_address->mem, waitfor->u.cmd_block.addr, waitfor->u.cmd_block.membp);
                     if (pop_context()) err_msg2(ERROR__MISSING_OPEN, ".block", &epoint);
                     close_waitfor(W_BEND2);
                 } else {err_msg2(ERROR__MISSING_OPEN, ".block", &epoint); goto breakerr;}
@@ -4120,7 +4120,7 @@ MUST_CHECK Obj *compile(void)
             case CMD_ENDWITH: /* .endwith */
                 if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if ((waitfor->what==W_ENDWITH || waitfor->what==W_ENDWITH2) && waitfor->u.cmd_with.label != NULL) {
-                    set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);val_destroy(Obj(waitfor->u.cmd_with.label));
+                    set_size(waitfor->u.cmd_with.label, current_address->address - waitfor->u.cmd_with.addr, current_address->mem, waitfor->u.cmd_with.addr, waitfor->u.cmd_with.membp);
                 }
                 if (close_waitfor(W_ENDWITH)) {
                 } else if (waitfor->what==W_ENDWITH2) {
@@ -4132,7 +4132,7 @@ MUST_CHECK Obj *compile(void)
                 if ((waitfor->skip & 1) != 0) listing_line(epoint.pos);
                 if (close_waitfor(W_WEAK)) {
                 } else if (waitfor->what==W_WEAK2) {
-                    if (waitfor->u.cmd_weak.label != NULL) {set_size(waitfor->u.cmd_weak.label, current_address->address - waitfor->u.cmd_weak.addr, current_address->mem, waitfor->u.cmd_weak.addr, waitfor->u.cmd_weak.membp);val_destroy(Obj(waitfor->u.cmd_weak.label));}
+                    if (waitfor->u.cmd_weak.label != NULL) set_size(waitfor->u.cmd_weak.label, current_address->address - waitfor->u.cmd_weak.addr, current_address->mem, waitfor->u.cmd_weak.addr, waitfor->u.cmd_weak.membp);
                     close_waitfor(W_WEAK2);
                     strength--;
                 } else {err_msg2(ERROR__MISSING_OPEN, ".weak", &epoint); goto breakerr;}
@@ -4676,7 +4676,7 @@ MUST_CHECK Obj *compile(void)
                                 if (diagnostics.align && !error) err_msg_alignblk(size - db, db, &epoint);
                                 memskipfill(db, vs2, &epoint);
                             }
-                            if (fixeddig) {
+                            if (fixeddig && !error) {
                                 itt %= uval;
                                 if (itt >= offset) offset += uval;
                                 offset -= itt;
@@ -5212,11 +5212,11 @@ MUST_CHECK Obj *compile(void)
                             switch (waitfor->what) {
                             case W_FI:
                             case W_FI2:
-                                if (waitfor->u.cmd_if.label != NULL) {set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);val_destroy(Obj(waitfor->u.cmd_if.label));}
+                                if (waitfor->u.cmd_if.label != NULL) set_size(waitfor->u.cmd_if.label, current_address->address - waitfor->u.cmd_if.addr, current_address->mem, waitfor->u.cmd_if.addr, waitfor->u.cmd_if.membp);
                                 break;
                             case W_SWITCH2:
                             case W_SWITCH:
-                                if (waitfor->u.cmd_switch.label != NULL) {set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);val_destroy(Obj(waitfor->u.cmd_switch.label));}
+                                if (waitfor->u.cmd_switch.label != NULL) set_size(waitfor->u.cmd_switch.label, current_address->address - waitfor->u.cmd_switch.addr, current_address->mem, waitfor->u.cmd_switch.addr, waitfor->u.cmd_switch.membp);
                                 if (waitfor->u.cmd_switch.val != NULL) val_destroy(waitfor->u.cmd_switch.val);
                                 break;
                             default:
@@ -5604,7 +5604,7 @@ MUST_CHECK Obj *compile(void)
     breakerr:
         if (newlabel != NULL) {
             if (!newlabel->update_after) set_size(newlabel, current_address->address - oaddr, current_address->mem, oaddr, newmembp);
-            val_destroy(Obj(newlabel));
+            else val_destroy(Obj(newlabel));
         }
     }
 
