@@ -187,7 +187,7 @@ static MUST_CHECK Obj *list_from_obj(Obj *o1, Type *typ, linepos_t epoint) {
     case T_TUPLE:
         return tuple_from_list(List(o1), typ, epoint);
     case T_CODE:
-        return tuple_from_code(Code(o1), typ);
+        return tuple_from_code(Code(o1), typ, epoint);
     default:
         if (o1->obj->iterable) {
             return tuple_from_iterable(o1, typ, epoint);

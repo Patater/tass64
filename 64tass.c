@@ -1493,7 +1493,7 @@ static MUST_CHECK Code *create_code(linepos_t epoint) {
     code->typ = val_reference(current_address->l_address_val);
     code->size = 0;
     code->offs = 0;
-    code->dtype = D_NONE;
+    code->dtype = D_BYTE;
     code->pass = 0;
     code->apass = pass;
     code->memblocks = ref_memblocks(current_address->mem);
@@ -4624,10 +4624,13 @@ MUST_CHECK Obj *compile(void)
                         if (code->offs == 0) {
                             size = code->size;
                         } else if (code->offs > 0) {
+                            if (code->size < (uval_t)code->offs) {err_msg2(ERROR_NEGATIVE_SIZE, NULL, &vs->epoint); break;}
                             size = code->size - (uval_t)code->offs;
-                            if (size > code->size) return Obj(new_error(ERROR_NEGATIVE_SIZE, &vs->epoint));
                         } else {
-                            if (add_overflow(-(uval_t)code->offs, code->size, &size)) err_msg_out_of_memory();
+                            if (add_overflow(-(uval_t)code->offs, code->size, &size)) {
+                                err_msg_output_and_destroy(Error(new_error_obj(ERROR_____CANT_SIZE, Obj(code), &vs->epoint)));
+                                break;
+                            }
                             if (diagnostics.size_larger) err_msg_size_larger(&vs->epoint);
                         }
                     }
