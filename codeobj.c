@@ -668,7 +668,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_FLOAT:
     case T_STR:
     case T_BYTES:
-    case T_ADDRESS:
         if (op->op == O_ADD || op->op == O_SUB) {
             bool inplace;
             ival_t iv;
@@ -686,35 +685,34 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 v->names = ref_namespace(v1->names);
                 v->typ = val_reference(v1->typ);
             }
-            if (op->op == O_ADD) { v->offs += iv; } else { v->offs -= iv; }
+            if (op->op == O_ADD) v->offs += iv; else v->offs -= iv;
             if (v->offs >= 1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = 1073741823; }
             if (v->offs < -1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = -1073741824; }
             return Obj(v);
         }
         break;
+    case T_ADDRESS:
     case T_REGISTER:
         if (v1->typ->obj == ADDRESS_OBJ) {
-            bool inplace = (op->inplace == Obj(v1));
             Code *v;
-            op->v1 = v1->typ;
-            op->inplace = NULL;
-            result = op->v1->obj->calc2(op);
-            if (result->obj != ADDRESS_OBJ) {
-                val_destroy(result);
-                break;
-            }
-            if (inplace) {
+            atype_t am = Address(v1->typ)->type;
+            tmp = val_reference(Address(v1->typ)->val);
+            if (op->inplace == Obj(v1)) {
                 v = Code(val_reference(Obj(v1)));
-                val_destroy(v1->typ);
-                v1->typ = result;
+                val_destroy(v->typ);
             } else {
                 v = new_code();
                 memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
                 v->memblocks = ref_memblocks(v1->memblocks);
                 v->names = ref_namespace(v1->names);
-                v->typ = result;
             }
-            return Obj(v);
+            v->typ = tmp;
+            tmp = new_address(Obj(v), am);
+            op->v1 = tmp;
+            op->inplace = NULL;
+            result = op->v1->obj->calc2(op);
+            val_destroy(tmp);
+            return result;
         }
         break;
     default:

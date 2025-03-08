@@ -570,6 +570,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 }
                 if (am2 != A_NONE) break;
                 if (am1 != A_NONE) while ((am1 & 0xf) == A_NONE) am1 >>= 4;
+                if (am1 == A_NONE) return val_reference(v1->val);
                 return new_address(val_reference(v1->val), am1);
             }
         }
