@@ -603,8 +603,10 @@ static MUST_CHECK Obj *calc1(oper_t op) {
 }
 
 static MUST_CHECK Obj *calc2(oper_t op) {
-    Code *v1 = Code(op->v1), *v;
+    Code *v1 = Code(op->v1);
     Obj *o2 = op->v2;
+    Obj *tmp, *result;
+
     if (op->op == O_MEMBER) {
         if (o2->obj == SYMBOL_OBJ) {
             Symbol *v2 = Symbol(o2);
@@ -625,8 +627,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         return obj_oper_error(op);
     }
     if (op->op == O_LAND || op->op == O_LOR || op->op == O_LXOR) {
-        Obj *result = truth(Obj(v1), TRUTH_BOOL, op->epoint);
         bool i;
+        result = truth(Obj(v1), TRUTH_BOOL, op->epoint);
         if (result->obj != BOOL_OBJ) return result;
         i = Bool(result)->value;
         val_destroy(result);
@@ -637,7 +639,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     switch (o2->obj->type) {
     case T_CODE:
         if (!Code(o2)->memblocks->enumeration || v1->memblocks->enumeration) {
-            Obj *tmp1, *tmp2, *result;
+            Obj *tmp2;
             Code *v2 = Code(o2);
             if (!v2->memblocks->enumeration && v1->memblocks->enumeration) return o2->obj->rcalc2(op);
             result = access_check(v1, op->epoint);
@@ -649,14 +651,14 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 address_t addr2 = ldigit(v2, op->epoint2);
                 return int_from_ival((ival_t)addr1 - (ival_t)addr2);
             }
-            tmp1 = get_code_address(v1, op->epoint);
+            tmp = get_code_address(v1, op->epoint);
             tmp2 = get_code_address(v2, op->epoint2);
-            op->v1 = tmp1;
+            op->v1 = tmp;
             op->v2 = tmp2;
-            op->inplace = (op->inplace == Obj(v1) && tmp1->refcount == 1) ? tmp1 : NULL;
+            op->inplace = (op->inplace == Obj(v1) && tmp->refcount == 1) ? tmp : NULL;
             result = op->v1->obj->calc2(op);
             val_destroy(tmp2);
-            val_destroy(tmp1);
+            val_destroy(tmp);
             return result;
         }
         FALL_THROUGH; /* fall through */
@@ -667,47 +669,65 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_STR:
     case T_BYTES:
     case T_ADDRESS:
-    case T_REGISTER:
-        {
-            Obj *tmp, *result;
-            switch (op->op) {
-            case O_ADD:
-            case O_SUB:
-                {
-                    bool inplace;
-                    ival_t iv;
-                    Error *err = o2->obj->ival(o2, &iv, 30, op->epoint2);
-                    if (err != NULL) { val_destroy(Obj(err)); break; }
-                    if (iv == 0) return val_reference(Obj(v1));
-                    inplace = (op->inplace == Obj(v1));
-                    if (inplace) {
-                        v = Code(val_reference(Obj(v1)));
-                    } else {
-                        v = new_code();
-                        memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
-                        v->memblocks = ref_memblocks(v1->memblocks);
-                        v->names = ref_namespace(v1->names);
-                        v->typ = val_reference(v1->typ);
-                    }
-                    if (op->op == O_ADD) { v->offs += iv; } else { v->offs -= iv; }
-                    if (v->offs >= 1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = 1073741823; }
-                    if (v->offs < -1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = -1073741824; }
-                    return Obj(v);
-                }
-            default: break;
+        if (op->op == O_ADD || op->op == O_SUB) {
+            bool inplace;
+            ival_t iv;
+            Code *v;
+            Error *err = o2->obj->ival(o2, &iv, 30, op->epoint2);
+            if (err != NULL) { val_destroy(Obj(err)); break; }
+            if (iv == 0) return val_reference(Obj(v1));
+            inplace = (op->inplace == Obj(v1));
+            if (inplace) {
+                v = Code(val_reference(Obj(v1)));
+            } else {
+                v = new_code();
+                memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
+                v->memblocks = ref_memblocks(v1->memblocks);
+                v->names = ref_namespace(v1->names);
+                v->typ = val_reference(v1->typ);
             }
-            result = access_check(v1, op->epoint);
-            if (result != NULL) return result;
-            tmp = get_code_address(v1, op->epoint);
-            op->v1 = tmp;
-            op->inplace = (op->inplace == Obj(v1) && tmp->refcount == 1) ? tmp : NULL;
-            result = op->v1->obj->calc2(op);
-            val_destroy(tmp);
-            return result;
+            if (op->op == O_ADD) { v->offs += iv; } else { v->offs -= iv; }
+            if (v->offs >= 1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = 1073741823; }
+            if (v->offs < -1073741824) { err_msg2(ERROR__OFFSET_RANGE, o2, op->epoint2); v->offs = -1073741824; }
+            return Obj(v);
         }
+        break;
+    case T_REGISTER:
+        if (v1->typ->obj == ADDRESS_OBJ) {
+            bool inplace = (op->inplace == Obj(v1));
+            Code *v;
+            op->v1 = v1->typ;
+            op->inplace = NULL;
+            result = op->v1->obj->calc2(op);
+            if (result->obj != ADDRESS_OBJ) {
+                val_destroy(result);
+                break;
+            }
+            if (inplace) {
+                v = Code(val_reference(Obj(v1)));
+                val_destroy(v1->typ);
+                v1->typ = result;
+            } else {
+                v = new_code();
+                memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
+                v->memblocks = ref_memblocks(v1->memblocks);
+                v->names = ref_namespace(v1->names);
+                v->typ = result;
+            }
+            return Obj(v);
+        }
+        break;
     default:
         return o2->obj->rcalc2(op);
     }
+    result = access_check(v1, op->epoint);
+    if (result != NULL) return result;
+    tmp = get_code_address(v1, op->epoint);
+    op->v1 = tmp;
+    op->inplace = (op->inplace == Obj(v1) && tmp->refcount == 1) ? tmp : NULL;
+    result = op->v1->obj->calc2(op);
+    val_destroy(tmp);
+    return result;
 }
 
 static MUST_CHECK Obj *rcalc2(oper_t op) {
