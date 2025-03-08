@@ -22,7 +22,6 @@
 #include "eval.h"
 #include "variables.h"
 #include "arguments.h"
-#include "instruction.h"
 
 #include "boolobj.h"
 #include "strobj.h"
@@ -506,7 +505,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
         case O_MAX:
         case O_GT:
         case O_GE:
-            if (am == A_NONE || (am == A_DR && dpage == 0) || (am == A_BR && databank == 0)) {
+            if (am == A_NONE) {
                 op->v1 = v1->val;
                 op->inplace = NULL;
                 return op->v1->obj->calc2(op);
