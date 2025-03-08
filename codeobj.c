@@ -577,14 +577,34 @@ static MUST_CHECK Obj *calc1(oper_t op) {
         val_destroy(v);
         return result;
     case O_BANK:
-        if (all_mem < 0xffffff) return bits_calc1(op->op, ldigit(v1, op->epoint));
-        FALL_THROUGH; /* fall through */
     case O_HIGHER:
     case O_LOWER:
     case O_HWORD:
     case O_WORD:
     case O_BSWORD:
-        return bits_calc1(op->op, code_address(v1) & all_mem);
+        v = access_check(v1, op->epoint);
+        if (v != NULL) return v;
+        switch (v1->typ->obj->type) {
+        case T_BITS:
+        case T_INT:
+        case T_BYTES:
+            if (op->op == O_BANK && all_mem < 0xffffff) {
+                return bits_calc1(op->op, ldigit(v1, op->epoint));
+            }
+            return bits_calc1(op->op, code_address(v1) & all_mem);
+        default:
+            break;
+        }
+        if (op->op == O_BANK && all_mem < 0xffffff) {
+            v = get_code_address(v1, op->epoint);
+        } else {
+            v = get_star_value(code_address(v1) & all_mem, v1->typ);
+        }
+        op->v1 = v;
+        op->inplace = (op->inplace == Obj(v1) && v->refcount == 1) ? v : NULL;
+        result = op->v1->obj->calc1(op);
+        val_destroy(v);
+        return result;
     case O_STRING:
     case O_INV:
     case O_NEG:
