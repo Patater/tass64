@@ -557,22 +557,26 @@ static MUST_CHECK Obj *contains(oper_t op) {
     return result2;
 }
 
-static MUST_CHECK Obj *code_to_address(Code *v1, bool inplace) {
+MUST_CHECK Obj *code_remove_address(Code *v1, bool inplace) {
     Code *v;
+    Obj *tmp = val_reference(Address(v1->typ)->val);
+    if (inplace && v1->v.refcount == 1) {
+        v = Code(val_reference(Obj(v1)));
+        val_destroy(v->typ);
+    } else {
+        v = new_code();
+        memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
+        v->memblocks = ref_memblocks(v1->memblocks);
+        v->names = ref_namespace(v1->names);
+    }
+    v->typ = tmp;
+    return Obj(v);
+}
+
+static MUST_CHECK Obj *code_to_address(Code *v1, bool inplace) {
     if (v1->typ->obj == ADDRESS_OBJ) {
         atype_t am = Address(v1->typ)->type;
-        Obj *tmp = val_reference(Address(v1->typ)->val);
-        if (inplace) {
-            v = Code(val_reference(Obj(v1)));
-            val_destroy(v->typ);
-        } else {
-            v = new_code();
-            memcpy(((unsigned char *)v) + sizeof(Obj), ((unsigned char *)v1) + sizeof(Obj), sizeof(Code) - sizeof(Obj));
-            v->memblocks = ref_memblocks(v1->memblocks);
-            v->names = ref_namespace(v1->names);
-        }
-        v->typ = tmp;
-        return new_address(Obj(v), am);
+        return new_address(code_remove_address(v1, inplace), am);
     }
     return new_address(val_reference(Obj(v1)), A_NONE);
 }
