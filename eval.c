@@ -894,7 +894,8 @@ static MUST_CHECK Obj *apply_addressing(Obj *o1, atype_t addrtype, bool inplace)
             return val_reference(o1);
         }
         return new_address(val_reference(v1->val), addrtype | (v1->type << 4));
-    } else if (o1->obj == CODE_OBJ && Code(o1)->typ->obj == ADDRESS_OBJ) {
+    } 
+    if (o1->obj == CODE_OBJ && Code(o1)->typ->obj == ADDRESS_OBJ) {
         atype_t am = Address(Code(o1)->typ)->type;
         return new_address(code_remove_address(Code(o1), inplace), addrtype | (am << 4));
     }
