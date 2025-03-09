@@ -4292,7 +4292,6 @@ MUST_CHECK Obj *compile(void)
                                 else fsize = uval;
                             }
                         }
-
                         if (cfile2 != NULL) {
                             filesize_t foffset;
                             mark_mem(&mm, current_address->mem, current_address->address, current_address->l_address);
@@ -4310,6 +4309,9 @@ MUST_CHECK Obj *compile(void)
                                 fsize -= ln;
                             }
                             if (nolisting == 0) list_mem(&mm, current_address->mem);
+                        } else if (newlabel != NULL && (newlabel->value->obj == CODE_OBJ || newlabel->value->obj == NONE_OBJ)) {
+                            newlabel->update_after = true;
+                            const_assign(newlabel, ref_none());
                         }
                     }
                 }
@@ -5010,7 +5012,7 @@ MUST_CHECK Obj *compile(void)
                     }
                     if (here() != 0 && here() != ';') err_msg(ERROR_EXTRA_CHAR_OL,NULL);
 
-                    if (newlabel != NULL && prm == CMD_BINCLUDE && (f == NULL || f->open) && (newlabel->value->obj == CODE_OBJ || newlabel->value->obj == NONE_OBJ)) {
+                    if (newlabel != NULL && (f == NULL || f->open) && (newlabel->value->obj == CODE_OBJ || newlabel->value->obj == NONE_OBJ)) {
                         newlabel->update_after = true;
                         const_assign(newlabel, ref_none());
                     }
