@@ -1007,7 +1007,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     case 1:
                     ind1:
                         am = (op == O_BRACKET) ? A_LI : A_I;
-                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable) {
+                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable && (v[1].val->obj != CODE_OBJ || Code(v[1].val)->typ->obj != ADDRESS_OBJ)) {
                             v[0].val = new_address(v[1].val, am);
                         } else {
                             v[0].val = apply_addressing(v[1].val, am, true);
@@ -1022,7 +1022,7 @@ static bool get_val2(struct eval_context_s *ev) {
                     ind2:
                         val_destroy(v[2].val);
                         v[2].val = NULL;
-                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable) {
+                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable && (v[1].val->obj != CODE_OBJ || Code(v[1].val)->typ->obj != ADDRESS_OBJ)) {
                             v[1].val = new_address(v[1].val, am);
                         } else {
                             Obj *tmp = apply_addressing(v[1].val, am, true);
@@ -1040,7 +1040,7 @@ static bool get_val2(struct eval_context_s *ev) {
                         val_destroy(v[2].val);
                         v[2].val = v[3].val;
                         v[3].val = NULL;
-                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable) {
+                        if (v[1].val->obj != ADDRESS_OBJ && !v[1].val->obj->iterable && (v[1].val->obj != CODE_OBJ || Code(v[1].val)->typ->obj != ADDRESS_OBJ)) {
                             v[1].val = new_address(v[1].val, am);
                         } else {
                             Obj *tmp = apply_addressing(v[1].val, am, true);
