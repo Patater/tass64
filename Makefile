@@ -53,7 +53,7 @@ version.h:
 addressobj.o: addressobj.c addressobj.h obj.h attributes.h inttypes.h \
  values.h stdbool.h error.h errors_e.h eval.h oper_e.h variables.h \
  arguments.h boolobj.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h \
- floatobj.h bitsobj.h bytesobj.h registerobj.h
+ floatobj.h bitsobj.h bytesobj.h registerobj.h codeobj.h
 anonsymbolobj.o: anonsymbolobj.c anonsymbolobj.h obj.h attributes.h \
  inttypes.h eval.h stdbool.h oper_e.h values.h typeobj.h strobj.h
 arguments.o: arguments.c arguments.h stdbool.h inttypes.h 64tass.h \

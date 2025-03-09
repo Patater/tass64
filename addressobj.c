@@ -33,6 +33,7 @@
 #include "bitsobj.h"
 #include "bytesobj.h"
 #include "registerobj.h"
+#include "codeobj.h"
 
 static Type obj;
 
@@ -40,6 +41,12 @@ Type *const ADDRESS_OBJ = &obj;
 
 static MUST_CHECK Obj *address_from_obj(Obj *v1, linepos_t epoint) {
     switch (v1->obj->type) {
+    case T_CODE:
+        if (Code(v1)->typ->obj == ADDRESS_OBJ) {
+            atype_t am = Address(Code(v1)->typ)->type;
+            return new_address(code_remove_address(Code(v1), true), am);
+        }
+        FALL_THROUGH; /* fall through */
     case T_BOOL:
     case T_INT:
     case T_BITS:
