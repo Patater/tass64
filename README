@@ -559,13 +559,20 @@ scrhi   .byte >_
 
 Dictionaries
 
-Dictionaries hold key and value pairs. Definition is done by collecting
-key:value pairs separated by comma between braces {"key":"value", :"default
-value"}.
+Dictionaries hold key and value pairs normally but can be used as sets too if
+simple values are used. In the latter case the values are the keys for
+themselves.
+
+A dictionary is defined with coma separated values between curly brackets. An
+empty one is {}. Key and value pairs are separated with colon, like { <key>:
+<value> }. A default value for missing items is can be defined by leaving out
+the key before the colon, like { :<default> }. Simple value don't use a colon {
+<value> }.
 
 Looking up a non-existing key is normally an error unless a default value is
-given. An empty dictionary is {}. This type is immutable. There are limitations
-what may be used as a key but the value can be anything.
+given. Dictionaries are immutable. There are limitations what may be used as a
+key but the value can be anything. As the keys are used for lookups these must
+be unique.
 
                   Dictionary operators and functions
 y .. x combine dictionaries {1:2, 3:4} .. {2:3, 3:1} is {1:2, 2:3, 3:1}
@@ -577,10 +584,23 @@ y in x is a key             1 in {1:2} is true
         .text {1:"one", 2:"two"}[2]; "two"
 ; 16 element "fader" table 1->15->12->11->0
         .byte {1:15, 15:12, 12:11, :0}[range(16)]
+; Variables can be used to build dictionaries incrementally.
+md      := {1:2}
+md      ..= {3:4}
+
+The keys can be symbols as well, this allows simple definition of data
+structures or enumerations.
+
 ; Symbol accessible values. May be useful as a function return value too.
 coords  = {.x: 24, .y: 50}
         ldx #coords.x
         ldy #coords.y
+; Simple enumeration where red = 0, green = 1, blue = 2
+colors  = dict(.(red, green, blue), range(3))
+        lda #color.green
+; Enumerate register bits as %1, %10, %100, ...
+irqbits = dict(.(ta, tb, tod, serial, flag), %1 << range(5))
+        and #irqbits.flag
 
 Code
 
@@ -792,9 +812,9 @@ symbol  Symbol type
 tuple   Tuple type
 type    Type type
 
-Bit and byte string conversions can take a second parameter to specify and
-exact size. Values which can fit in shorter space will be padded but longer
-ones give an error.
+Bit and byte string conversions can take a second parameter to specify an exact
+size. Values which can fit in shorter space will be padded but longer ones give
+an error.
 
 bits(<expression>[, <bit count>])
     Convert to the specific number of bits. If the number of bits is negative
@@ -802,6 +822,13 @@ bits(<expression>[, <bit count>])
 bytes(<expression>[, <byte count>])
     Convert to the specific number of bytes. If the number of bits is negative
     then it's a signed.
+
+Dictionaries can be built from a single iterable of key and value pairs, or
+from two iterables where the keys come from the first and the values from the
+second parameter.
+
+dict(<iterable>[, <values iterable>])
+    Build dictionary from iterables
 
         .cerror type(var) != str, "Not a string!"
         .text str(year)   ; convert to string

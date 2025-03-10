@@ -23,6 +23,7 @@
 
 #include "strobj.h"
 #include "functionobj.h"
+#include "dictobj.h"
 
 static Type obj;
 
@@ -106,6 +107,9 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             Funcargs *v2 = Funcargs(o2);
             argcount_t args = v2->len;
             if (args != 1) {
+                if (v1 == DICT_OBJ) {
+                    return v1->convert2(op);
+                }
                 return apply_convert2(op);
             }
             op->v2 = v2->val->val;

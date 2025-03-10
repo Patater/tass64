@@ -709,9 +709,9 @@ lst     := <u>lst</u>[:<span>2</span>] .. [<span>4</span>] .. <u>lst</u>[<span>3
 (right). The list must contain at least one element. Here are some folding examples:
 
 <pre>
-minimum <b>=</b> size([<u>part1</u>, <u>part2</u>, <u>part3</u>]) &lt;? ...
-maximum <b>=</b> size([<u>part1</u>, <u>part2</u>, <u>part3</u>]) &gt;? ...
-sum     <b>=</b> size([<u>part1</u>, <u>part2</u>, <u>part3</u>]) + ...
+minimum <b>=</b> <span class="k">size</span>([<u>part1</u>, <u>part2</u>, <u>part3</u>]) &lt;? ...
+maximum <b>=</b> <span class="k">size</span>([<u>part1</u>, <u>part2</u>, <u>part3</u>]) &gt;? ...
+sum     <b>=</b> <span class="k">size</span>([<u>part1</u>, <u>part2</u>, <u>part3</u>]) + ...
 xorall  <b>=</b> <u>list_of_numbers</u> ^ ...
 join    <b>=</b> <u>list_of_strings</u> .. ...
 allbits <b>=</b> <u>sprites</u>.(<u>left</u>, <u>middle</u>, <u>right</u>).<u>bits</u> | ...
@@ -737,14 +737,21 @@ scrhi   <b class="d">.byte</b> &gt;<u>_</u>
 
 <h3>Dictionaries<a name="dictionaries" href="#dictionaries"></a></h3>
 
-<p>Dictionaries hold key and value pairs. Definition is done by collecting
-key:value pairs separated by comma between braces <code>{"key":"value",
-:"default value"}</code>.
+<p>Dictionaries hold key and value pairs normally but can be used as sets too
+if simple values are used. In the latter case the values are the keys for
+themselves.
 
-<p>Looking up a non-existing key is normally an error
-unless a default value is given. An empty dictionary is <code>{}</code>.
-This type is immutable. There are limitations what may be used as a
-key but the value can be anything.
+<p>A dictionary is defined with coma separated values between curly brackets. An
+empty one is <code>{}</code>. Key and value pairs are separated with colon,
+like <code>{ &lt;key&gt;:&lt;value&gt; }</code>. A default value for missing
+items is can be defined by leaving out the key before the colon, like <code>{
+:&lt;default&gt; }</code>. Simple value don't use a colon <code>{
+&lt;value&gt; }</code>.
+
+<p>Looking up a non-existing key is normally an error unless a default value is
+given. Dictionaries are immutable. There are limitations what may be used as a
+key but the value can be anything. As the keys are used for lookups these must
+be unique.
 
 <div><table border="0">
 <caption>Dictionary operators and functions</caption>
@@ -759,10 +766,25 @@ key but the value can be anything.
         <b class="d">.text</b> {<span>1</span>:<span class="s">"one"</span>, <span>2</span>:<span class="s">"two"</span>}[<span>2</span>]<i>; "two"</i>
 <i>; 16 element "fader" table 1-&gt;15-&gt;12-&gt;11-&gt;0</i>
         <b class="d">.byte</b> {<span>1</span>:<span>15</span>, <span>15</span>:<span>12</span>, <span>12</span>:<span>11</span>, :<span>0</span>}[<span class="k">range</span>(<span>16</span>)]
+<i>; Variables can be used to build dictionaries incrementally.</i>
+md      <b>:=</b> {<span>1</span>:<span>2</span>}
+md      <b>..=</b> {<span>3</span>:<span>4</span>}
+</pre>
+
+<p>The keys can be symbols as well, this allows simple definition of data
+structures or enumerations.
+
+<pre>
 <i>; Symbol accessible values. May be useful as a function return value too.</i>
 coords  <b>=</b> {.<u>x</u>: <span>24</span>, .<u>y</u>: <span>50</span>}
         <b>ldx</b> #<u>coords</u>.<u>x</u>
         <b>ldy</b> #<u>coords</u>.<u>y</u>
+<i>; Simple enumeration where red = 0, green = 1, blue = 2</i>
+colors  <b>=</b> <span class="k">dict</span>(.(<u>red</u>, <u>green</u>, <u>blue</u>), <span class="k">range</span>(<span>3</span>))
+        <b>lda</b> #<u>color</u>.<u>green</u>
+<i>; Enumerate register bits as %1, %10, %100, ...</i>
+irqbits <b>=</b> <span class="k">dict</span>(.(<u>ta</u>, <u>tb</u>, <u>tod</u>, <u>serial</u>, <u>flag</u>), <span>%1</span> &lt;&lt; <span class="k">range</span>(<span>5</span>))
+        <b>and</b> #<u>irqbits</u>.<u>flag</u>
 </pre>
 
 <h3>Code<a name="code" href="#code"></a></h3>
@@ -1001,7 +1023,7 @@ used for conversions or type checks.
 <tr><td><code><a name="t_type"><u>type</u></a></code><td>Type type
 </table></div>
 
-<p>Bit and byte string conversions can take a second parameter to specify and
+<p>Bit and byte string conversions can take a second parameter to specify an
 exact size. Values which can fit in shorter space will be padded but longer ones
 give an error.
 
@@ -1010,6 +1032,15 @@ give an error.
 <dd>Convert to the specific number of bits. If the number of bits is negative then it's a signed.</dd>
 <dt><b>bytes(</b>&lt;expression&gt;[, &lt;byte count&gt;]<b>)</b>
 <dd>Convert to the specific number of bytes. If the number of bits is negative then it's a signed.</dd>
+</dl>
+
+<p>Dictionaries can be built from a single iterable of key and value pairs, or
+from two iterables where the keys come from the first and the values from the
+second parameter.
+
+<dl class="dir">
+<dt><b>dict(</b>&lt;iterable&gt;[, &lt;values iterable&gt;]<b>)</b>
+<dd>Build dictionary from iterables</dd>
 </dl>
 
 <pre>

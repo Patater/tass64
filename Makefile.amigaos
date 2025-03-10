@@ -194,7 +194,7 @@ symbolobj.o: symbolobj.c symbolobj.h obj.h attributes.h inttypes.h str.h \
 ternary.o: ternary.c ternary.h stdbool.h inttypes.h unicode.h \
  attributes.h error.h errors_e.h
 typeobj.o: typeobj.c typeobj.h obj.h attributes.h inttypes.h stdbool.h \
- variables.h eval.h oper_e.h strobj.h functionobj.h
+ variables.h eval.h oper_e.h strobj.h functionobj.h dictobj.h
 unicodedata.o: unicodedata.c unicodedata.h inttypes.h attributes.h
 unicode.o: unicode.c unicode.h attributes.h inttypes.h stdbool.h wchar.h \
  unicodedata.h str.h console.h error.h errors_e.h
