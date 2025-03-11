@@ -428,6 +428,10 @@ struct out_list_s {
     struct out_s *data, *p, *max;
 };
 
+struct slist_s {
+    bool *data, *p, *max;
+};
+
 static size_t evxnum, evx_p;
 static struct eval_context_s {
     struct values_s *values;
@@ -442,6 +446,9 @@ static struct eval_context_s {
     struct {
         struct opr_s *data, *max;
     } opr;
+    struct {
+        bool *data, *max;
+    } slist;
 } **evx;
 
 static struct eval_context_s *eval;
@@ -460,6 +467,14 @@ static NO_INLINE void extend_opr(struct opr_list_s *opr) {
     extend_array(&opr->data, &size, 64);
     opr->max = opr->data + size;
     opr->p = opr->data + p;
+}
+
+static NO_INLINE void extend_slist(struct slist_s *slist) {
+    argcount_t size = (argcount_t)(slist->max - slist->data);
+    argcount_t p = (argcount_t)(slist->p - slist->data);
+    extend_array(&slist->data, &size, 64);
+    slist->max = slist->data + size;
+    slist->p = slist->data + p;
 }
 
 static inline void clean_out(struct eval_context_s *ev) {
@@ -1387,10 +1402,10 @@ static bool get_exp2(int stop) {
     unsigned int prec;
     struct linepos_s epoint;
     linecpos_t llen;
-    size_t symbollist;
     Obj *val;
     struct out_list_s out;
     struct opr_list_s opr;
+    struct slist_s slist;
 
     clean_out(eval);
     eval->gstop = stop;
@@ -1408,12 +1423,13 @@ static bool get_exp2(int stop) {
         eval->out.p = eval->out.data;
         return true;
     }
-    symbollist = 0;
     epoint.line = lpoint.line;
     out.p = out.data = eval->out.data;
     out.max = eval->out.max;
     opr.p = opr.data = eval->opr.data;
     opr.max = eval->opr.max;
+    slist.p = slist.data = eval->slist.data;
+    slist.max = eval->slist.max;
     for (;;) {
         ignore(); ch = here(); epoint.pos = lpoint.pos;
         switch (ch) {
@@ -1455,7 +1471,8 @@ static bool get_exp2(int stop) {
             val = ref_default();
             goto push_other;
         case '(':
-            if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || symbollist != 0) symbollist++;
+            *slist.p = (opr.p != opr.data && opr.p[-1].op == O_MEMBER);
+            if (++slist.p == slist.max) extend_slist(&slist);
         tphack2:
             lpoint.pos++;
             opr.p->op = O_PARENT;
@@ -1464,7 +1481,8 @@ static bool get_exp2(int stop) {
             val = &operators[O_PARENT].v;
             goto push_continue;
         case '[':
-            if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || symbollist != 0) symbollist++;
+            *slist.p = (opr.p != opr.data && opr.p[-1].op == O_MEMBER);
+            if (++slist.p == slist.max) extend_slist(&slist);
         lshack2:
             lpoint.pos++;
             opr.p->op = O_BRACKET;
@@ -1473,6 +1491,8 @@ static bool get_exp2(int stop) {
             val = &operators[O_BRACKET].v;
             goto push_continue;
         case '{':
+            *slist.p = false;
+            if (++slist.p == slist.max) extend_slist(&slist);
             lpoint.pos++;
             opr.p->op = O_BRACE;
             opr.p->pos = epoint.pos;
@@ -1541,11 +1561,13 @@ static bool get_exp2(int stop) {
                     goto push_other;
                 case '(':
                     lpoint.pos++;
-                    symbollist++;
+                    *slist.p = true;
+                    if (++slist.p == slist.max) extend_slist(&slist);
                     goto tphack2;
                 case '[':
                     lpoint.pos++;
-                    symbollist++;
+                    *slist.p = true;
+                    if (++slist.p == slist.max) extend_slist(&slist);
                     goto lshack2;
                 case '.':
                     if (symbol.data[1] == '.') {
@@ -1604,7 +1626,7 @@ static bool get_exp2(int stop) {
                 }
                 symbol.data = pline + epoint.pos;
                 symbol.len = lpoint.pos - epoint.pos;
-                if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || symbollist != 0) {
+                if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || (slist.p != slist.data && slist.p[-1])) {
                     val = new_symbol(&symbol, &epoint);
                 } else {
                     down = (symbol.data[0] != '_');
@@ -1630,7 +1652,7 @@ static bool get_exp2(int stop) {
             while (opr.p != opr.data && opr.p[-1].op == O_POS) {opr.p--; db++;}
             if (db != 0) {
                 ssize_t as = (ssize_t)db - 1;
-                if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || symbollist != 0) {
+                if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || (slist.p != slist.data && slist.p[-1])) {
                     val = new_anonsymbol(as);
                 } else {
                     val = resolv_anonlabel(as, opr.p->pos);
@@ -1641,7 +1663,7 @@ static bool get_exp2(int stop) {
             while (opr.p != opr.data && opr.p[-1].op == O_NEG) {opr.p--; db++;}
             if (db != 0) {
                 ssize_t as = -(ssize_t)db;
-                if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || symbollist != 0) {
+                if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || (slist.p != slist.data && slist.p[-1])) {
                     val = new_anonsymbol(as);
                 } else {
                     val = resolv_anonlabel(as, opr.p->pos);
@@ -1656,7 +1678,7 @@ static bool get_exp2(int stop) {
                 }
                 if (opr.p[-1].op == O_SPLAT) {
                     opr.p--;
-                    if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || symbollist != 0) {
+                    if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || (slist.p != slist.data && slist.p[-1])) {
                         val = new_starsymbol(opr.p->pos);
                     } else {
                         val = get_star();
@@ -1673,7 +1695,7 @@ static bool get_exp2(int stop) {
         if (opr.p != opr.data && opr.p[-1].op == O_SPLAT) {
             opr.p--;
             lpoint.pos = epoint.pos;
-            if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || symbollist != 0) {
+            if ((opr.p != opr.data && opr.p[-1].op == O_MEMBER) || (slist.p != slist.data && slist.p[-1])) {
                 val = new_starsymbol(opr.p->pos);
             } else {
                 val = get_star();
@@ -1767,7 +1789,8 @@ static bool get_exp2(int stop) {
             opr.p->op = O_FUNC;
             opr.p->pos = epoint.pos;
             if (++opr.p == opr.max) extend_opr(&opr);
-            if (symbollist != 0) symbollist++;
+            slist.p = false;
+            if (++slist.p == slist.max) extend_slist(&slist);
             val = &operators[O_PARENT].v;
             goto push_continue;
         case '[':
@@ -1784,7 +1807,8 @@ static bool get_exp2(int stop) {
             opr.p->op = O_INDEX;
             opr.p->pos = epoint.pos;
             if (++opr.p == opr.max) extend_opr(&opr);
-            if (symbollist != 0) symbollist++;
+            slist.p = false;
+            if (++slist.p == slist.max) extend_slist(&slist);
             val = &operators[O_BRACKET].v;
             goto push_continue;
         case '&': op = pline[lpoint.pos + 1] == '&' ? (pline[lpoint.pos + 2] == '=' ? O_LAND_ASSIGN : O_LAND) : (pline[lpoint.pos + 1] == '=' ? O_AND_ASSIGN : O_AND); goto push2;
@@ -1887,7 +1911,7 @@ static bool get_exp2(int stop) {
         case ')':
             val = &operators[O_RPARENT].v;
         tphack:
-            if (symbollist != 0) symbollist--;
+            if (slist.p != slist.data) slist.p--;
             do {
                 const char *mis;
                 if (opr.p != opr.data) {
@@ -1916,7 +1940,7 @@ static bool get_exp2(int stop) {
         case ']':
             val = &operators[O_RBRACKET].v;
         lshack:
-            if (symbollist != 0) symbollist--;
+            if (slist.p != slist.data) slist.p--;
             do {
                 const char *mis;
                 if (opr.p != opr.data) {
@@ -1945,6 +1969,7 @@ static bool get_exp2(int stop) {
         case '}':
             val = &operators[O_RBRACE].v;
         brhack:
+            if (slist.p != slist.data) slist.p--;
             do {
                 const char *mis;
                 if (opr.p != opr.data) {
@@ -2001,6 +2026,8 @@ static bool get_exp2(int stop) {
             }
             err_msg2(ERROR______EXPECTED, mis, &epoint); goto error;
         }
+        eval->slist.data = slist.data;
+        eval->slist.max = slist.max;
         eval->opr.data = opr.data;
         eval->opr.max = opr.max;
         eval->out.data = out.data;
@@ -2011,6 +2038,8 @@ static bool get_exp2(int stop) {
     error:
         break;
     }
+    eval->slist.data = slist.data;
+    eval->slist.max = slist.max;
     eval->opr.data = opr.data;
     eval->opr.max = opr.max;
     eval->out.data = out.data;
@@ -2083,6 +2112,8 @@ void eval_enter(void) {
         eval->out.end = NULL;
         new_array(&eval->opr.data, 16);
         eval->opr.max = eval->opr.data + 16;
+        new_array(&eval->slist.data, 16);
+        eval->slist.max = eval->slist.data + 16;
         evx[evx_p] = eval;
         return;
     }
@@ -2108,6 +2139,7 @@ void destroy_eval(void) {
         clean_out(eval);
         free(eval->out.data);
         free(eval->opr.data);
+        free(eval->slist.data);
         v = eval->values;
         while ((eval->values_size--) != 0) {
             if (v->val != NULL) val_destroy(v->val);
