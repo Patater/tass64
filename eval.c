@@ -1789,7 +1789,7 @@ static bool get_exp2(int stop) {
             opr.p->op = O_FUNC;
             opr.p->pos = epoint.pos;
             if (++opr.p == opr.max) extend_opr(&opr);
-            slist.p = false;
+            *slist.p = false;
             if (++slist.p == slist.max) extend_slist(&slist);
             val = &operators[O_PARENT].v;
             goto push_continue;
@@ -1807,7 +1807,7 @@ static bool get_exp2(int stop) {
             opr.p->op = O_INDEX;
             opr.p->pos = epoint.pos;
             if (++opr.p == opr.max) extend_opr(&opr);
-            slist.p = false;
+            *slist.p = false;
             if (++slist.p == slist.max) extend_slist(&slist);
             val = &operators[O_BRACKET].v;
             goto push_continue;
