@@ -370,14 +370,12 @@ static MUST_CHECK Obj *convert2(oper_t op) {
     if (args != 2) {
         return new_error_argnum(args, 1, 2, op->epoint2);
     }
-
+    for (j = 0; j < 2; j++) {
+        if (v[j].val->obj->iterable) continue;
+        return new_error_obj(ERROR______NOT_ITER, v[j].val, &v[j].epoint);
+    }
     for (j = 0; j < 2; j++) {
         Obj *val = v[j].val;
-        if (val->obj->getiter == DEFAULT_OBJ->getiter) {
-            iter[j].data = NULL;
-            if (len < 1) len = 1;
-            continue;
-        }
         iter[j].data = val; val->obj->getiter(&iter[j]);
         if (len < iter[j].len) len = iter[j].len;
     }
@@ -386,22 +384,19 @@ static MUST_CHECK Obj *convert2(oper_t op) {
         v2 = new_error_mem(op->epoint);
     } else {
         dict->def = NULL;
+        v2 = NULL;
         for (i = 0; i < len; i++) {
             struct pair_s p;
-            p.data = NULL;
-            for (j = 0; j < 2; j++) {
-                p.key = p.data;
-                p.data = (iter[j].data == NULL) ? v[j].val : iter[j].next(&iter[j]);
-                if (p.data == NULL) break;
-            }
-            if (j < 2) {
+            p.key = iter[0].next(&iter[0]);
+            p.data = iter[1].next(&iter[1]);
+            if (p.key == NULL && p.data == NULL) break;
+            if (p.key == NULL || p.data == NULL) {
                 Error *err2 = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
                 err2->u.broadcast.v1 = len;
                 err2->u.broadcast.v2 = i;
                 v2 = Obj(err2);
                 break;
             }
-
             if (p.key == none_value || p.key->obj == ERROR_OBJ) {
                 v2 = val_reference(p.key);
                 break;
@@ -412,14 +407,14 @@ static MUST_CHECK Obj *convert2(oper_t op) {
             }
             if (p.key == default_value) {
                 if (dict->def != NULL) val_destroy(dict->def);
-                dict->def = (p.data == NULL || p.data == default_value) ? NULL : val_reference(p.data);
+                dict->def = (p.data == default_value) ? NULL : val_reference(p.data);
                 continue;
             }
             v2 = p.key->obj->hash(p.key, &p.hash, &v[0].epoint);
             if (v2 != NULL) break;
             dict_update(dict, &p);
         }
-        if (i == len) v2 = normalize(dict);
+        if (v2 == NULL) v2 = normalize(dict);
         else val_destroy(Obj(dict));
     }
     for (j = 0; j < 2; j++) if (iter[j].data != NULL) iter_destroy(&iter[j]);
