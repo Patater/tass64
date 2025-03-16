@@ -2142,9 +2142,9 @@ nnarray .brept 4        ;4 element "array" here
 
         lda nnarray[0].y;access of "array" field
 
-coords2 .bfor x2, y2 in (1,3),(4,2),(7,5)
+coords2 .bfor x2, y2 in [(1,3),(4,2),(7,5)]
         .dstruct nn_s, x2, y2
-        .next           ;initialized "array" from list
+        .endfor         ;initialized "array" from list
 
 Union
 
@@ -2480,15 +2480,41 @@ within.
             dex
             bne lp
 
-.for <variable>[, <variable>, ...] in <expression>
-.bfor <variable>[, <variable>, ...] in <expression>
+.for <variable>[, <variable>, ...] in <expression>[, <expression>, ...]
+.bfor <variable>[, <variable>, ...] in <expression>[, <expression>, ...]
     Assign variable(s) to values in sequence one-by-one in order.
 
-    The expression is usually the range function or some sort of list.
+    Usually one variable is used to loop through all values. The values can be
+    supplied by range function or some sort of list.
 
+    It's also possible to use more than one variable for each iteration. These
+    can be assigned to a collection of values each time (row oriented) or a
+    single value from each collection (column oriented).
+
+    A row oriented for loop expects collections of the same number of values as
+    the number of variables as each variable gets assigned to one of them. The
+    loop iteration count depends on how many such collections were supplied.
+
+    A column oriented for loop expects the same number of collections (comma
+    separated) as the number of variables. On each iteration a single value is
+    taken from each and is assigned to the matching variable. All collections
+    should have the same length so that all variables can be assigned. This
+    length also determines the loop iteration count.
+
+    ;loop through on iterable or on comma separated values
             .for col in 0, 11, 12, 15, 1
             lda #col         ;0, 11, 12, 15 and 1
             sta $d020
+            .endfor
+    ;row oriented iterating for loop, on list of tuples
+            .for dest, val in [($d011, $3b), ($d020, 0), ($d018, $18)]
+            lda #val
+            sta dest
+            .endfor
+    ;column oriented iterating for loop, one iterable for each variable.
+            .for dest, val in ($d011, $d020, $d018), ($3b, 0, $18)
+            lda #val
+            sta dest
             .endfor
 
 .endfor
@@ -4467,7 +4493,7 @@ direct page address overflow
     is now wrapped.
 directive ignored
     an assembler directive was ignored for compatibility reasons
-expected ? values but got ? to unpack
+for ? variables got ? values in ?
     the number of variables must match the number of values when unpacking
 file name uses reserved character '?'
     do not use \ : * ? " < > | in file names as some operating systems don't
@@ -4497,6 +4523,9 @@ long branch used
 memory location address overflow
     the calculated memory location address ended up outside of the processors
     address space
+not enough values in ?
+    all variables in a column oriented for loop should be fed with the same
+    amount of values
 over the boundary by ? bytes, aligned by ? bytes
     crossed boundary so alignment was necessary
 please separate @b, @w or @l from label or number for future compatibility

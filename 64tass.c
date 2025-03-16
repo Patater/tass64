@@ -1555,19 +1555,19 @@ static MUST_CHECK bool list_extend2(List *lst) {
 
 static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
     int wht;
-    linenum_t lin;
     int nopos = -1;
     struct linepos_s epoint2, epoint3;
-    uint8_t *expr, *expr2;
+    uint8_t *expr;
+    const uint8_t *oldpline;
     struct {
-        size_t p, len;
+        argcount_t p, len;
         Label **data;
         Label *val[4];
     } labels;
     Label *label;
     Obj *val, *nf = NULL;
     struct star_s *s, *stree_old;
-    bool foreach = false;
+    bool foreach = false, single = false;
     struct iter_s iter;
     size_t i = 0;
     labels.p = 0;
@@ -1604,16 +1604,31 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
             if (foreach) {
                 ignore();
                 epoint3 = lpoint;
-                if (!get_exp(0, 1, 0, &epoint3)) goto error;
-                val = get_vals_tuple();
-                if (val->obj == ERROR_OBJ) {
-                    err_msg_output(Error(val));
-                } else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
-                    if (val != none_value) {
-                        Obj *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
-                        val_destroy(val); val = err;
-                        err_msg_output(Error(val));
+                if (!get_exp(0, (labels.p == 0) ? 1 : 0, 0, &epoint3)) goto error;
+                if (labels.p != 0) {
+                    argcount_t l = get_val_remaining();
+                    single = (l == 1);
+                    if (!single && l != labels.p + 1) {
+                        argcount_t mn, mx;
+                        if (l == 0) {
+                            mn = 1; mx = 0;
+                        } else if (l <= labels.p) {
+                            mn = labels.p + 1;
+                            mx = 0;
+                        } else {
+                            mn = 0;
+                            mx = labels.p + 1;
+                        }
+                        err_msg_argnum(l, mn, mx, &epoint3);
+                        goto error;
                     }
+                }
+                val = get_vals_tuple();
+                if (val == none_value) err_msg_still_none(NULL, &epoint3);
+                else if (val->obj == ERROR_OBJ) err_msg_output(Error(val));
+                else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
+                    Obj *err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
+                    err_msg_output_and_destroy(Error(err));
                 } else {
                     iter.data = val; val->obj->getiter(&iter);
                 }
@@ -1688,64 +1703,152 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
     }
     s->addr = star;
     star_tree->vline = vline; star_tree = s; vline = s->vline;
-    lin = lpoint.line;
 
+    oldpline = pline;
+    if (not_in_file(pline, current_file_list->file)) {
+        size_t lentmp = strlen((const char *)pline) + 1;
+        new_array(&expr, lentmp);
+        memcpy(expr, pline, lentmp);
+    } else expr = (uint8_t *)oldpline;
     new_waitfor(W_ENDFOR2, epoint);
     if (foreach) {
         waitfor->u.cmd_rept.breakout = false;
         if (iter.data != NULL) {
-            Obj *val2;
+            bool doerror = true;
+            if (single) {
+                while ((val = iter.next(&iter)) != NULL) {
+                    argcount_t j, k;
+                    Obj *err = NULL;
 
-            while ((val2 = iter.next(&iter)) != NULL) {
-                if (nopos < 0) nopos = 0;
-                else if ((waitfor->skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
-                if (labels.p == 1) {
-                    if (labels.data[0] != NULL) {
-                        val_destroy(labels.data[0]->value);
-                        labels.data[0]->value = val_reference(val2);
+                    lpoint.line = epoint->line;
+                    pline = expr;
+                    if (nopos < 0) nopos = 0;
+                    else if ((waitfor->skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
+
+                    if (val->obj->getiter == DEFAULT_OBJ->getiter && val != none_value && val->obj != ERROR_OBJ) {
+                        val = err = new_error_obj(ERROR______NOT_ITER, val, &epoint3);
                     }
-                } else {
-                    struct iter_s iter2;
-                    size_t j;
-                    iter2.data = val2; val2->obj->getiter(&iter2);
-                    for (j = 0; j < labels.p && (val2 = iter2.next(&iter2)) != NULL; j++) {
-                        if (labels.data[j] != NULL) {
-                            val_destroy(labels.data[j]->value);
-                            labels.data[j]->value = val_reference(val2);
+                    if (val != none_value && val->obj != ERROR_OBJ) {
+                        struct iter_s iter2;
+                        size_t len;
+                        err = val_reference(val);
+                        iter2.data = val; val->obj->getiter(&iter2);
+                        len = iter2.len;
+                        for (j = k = 0; j < labels.p; j++) {
+                            val = iter2.next(&iter2);
+                            if (val == NULL) val = none_value; else k++;
+                            if (labels.data[j] != NULL) {
+                                val_destroy(labels.data[j]->value);
+                                labels.data[j]->value = val_reference(val);
+                            }
+                        }
+                        if (doerror) {
+                            if (len != j && j == k && iter2.next(&iter2) != NULL) k++;
+                            if (k != j) {
+                                err_msg_cant_unpack(labels.p, k > len ? k : len, err, &epoint3);
+                                doerror = false;
+                            }
+                        }
+                        iter_destroy(&iter2);
+                    } else {
+                        for (j = 0; j < labels.p; j++) {
+                            if (labels.data[j] != NULL) {
+                                val_destroy(labels.data[j]->value);
+                                labels.data[j]->value = val_reference(val);
+                            }
                         }
                     }
-                    if (iter2.len != labels.p) err_msg_cant_unpack(labels.p, iter2.len, epoint);
-                    iter_destroy(&iter2);
+                    if (err != NULL) val_destroy(err);
+
+                    waitfor->skip = 1;
+                    if (lst != NULL) {
+                        if (i >= lst->len && list_extend2(lst)) {i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
+                        else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
+                        else nf = tuple_scope(newlabel, &lst->data[i]);
+                        i++;
+                    } else nf = compile();
+                    if (nf == NULL || waitfor->u.cmd_rept.breakout) {
+                        break;
+                    }
                 }
-                lpoint.line = lin;
-                waitfor->skip = 1;
-                if (lst != NULL) {
-                    if (i >= lst->len && list_extend2(lst)) {i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
-                    else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
-                    else nf = tuple_scope(newlabel, &lst->data[i]);
-                    i++;
-                } else nf = compile();
-                if (nf == NULL || waitfor->u.cmd_rept.breakout) {
-                    break;
-                }
+                iter_destroy(&iter);
+            } else {
+                argcount_t j, k;
+                struct iter_s *iters;
+
+                if (labels.p > 1) {
+                    new_array(&iters, labels.p);
+                    for (j = 0; j < labels.p; j++) {
+                        val = iter.next(&iter);
+                        if (val == NULL) {
+                            if (doerror) {
+                                err_msg_cant_unpack(labels.p, j, iter.data, &epoint3);
+                                doerror = false;
+                            }
+                            val = none_value;
+                        } else if (val == none_value) {
+                            Funcargs f;
+                            get_vals_funcargs(&f);
+                            err_msg_still_none(NULL, &f.val[j].epoint);
+                        } else if (val->obj == ERROR_OBJ) {
+                            err_msg_output(Error(val));
+                            val = none_value;
+                        } else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
+                            if (doerror) {
+                                Funcargs f;
+                                get_vals_funcargs(&f);
+                                Obj *err = new_error_obj(ERROR______NOT_ITER, val, &f.val[j].epoint);
+                                err_msg_output_and_destroy(Error(err));
+                                doerror = false;
+                            }
+                            val = none_value;
+                        }
+                        iters[j].data = val; val->obj->getiter(&iters[j]);
+                    }
+                    iter_destroy(&iter);
+                } else iters = &iter;
+
+                do {
+                    argcount_t ar;
+                    if (nopos < 0) nopos = 0;
+                    else if ((waitfor->skip & 1) != 0) listing_line_cut(waitfor->epoint.pos);
+                    for (j = k = ar = 0; j < labels.p; j++) {
+                        val = iters[j].next(&iters[j]);
+                        if (val == NULL) {
+                            ar = j;
+                            val = none_value;
+                        } else k++;
+                        if (labels.data[j] != NULL) {
+                            val_destroy(labels.data[j]->value);
+                            labels.data[j]->value = val_reference(val);
+                        }
+                    }
+                    if (k == 0) break;
+                    pline = expr;
+                    lpoint.line = epoint->line;
+                    if (k != j && doerror) {
+                        err_msg_for_no_value(iters[ar].data, labels.data[ar] != NULL ? &labels.data[ar]->epoint : epoint);
+                        doerror = false;
+                    }
+                    waitfor->skip = 1;
+                    if (lst != NULL) {
+                        if (i >= lst->len && list_extend2(lst)) {i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL;}
+                        else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
+                        else nf = tuple_scope(newlabel, &lst->data[i]);
+                        i++;
+                    } else nf = compile();
+                } while (nf != NULL && !waitfor->u.cmd_rept.breakout);
+
+                for (j = 0; j < labels.p; j++) iter_destroy(&iters[j]);
+                if (iters != &iter) free(iters);
             }
-            iter_destroy(&iter);
         }
         if (labels.p != 0 && labels.data != labels.val) free(labels.data);
-        expr = expr2 = NULL;
     } else {
         struct linepos_s apoint = lpoint, bpoint = {0, 0};
         linenum_t xlin = lpoint.line;
         struct oper_s tmp;
-        const uint8_t *oldpline = pline, *oldpline2 = pline;
         uint8_t skip = 0;
-        expr2 = (uint8_t *)oldpline2;
-        if (not_in_file(pline, current_file_list->file)) {
-            size_t lentmp = strlen((const char *)pline) + 1;
-            new_array(&expr, lentmp);
-            memcpy(expr, pline, lentmp);
-            pline = expr;
-        } else expr = (uint8_t *)oldpline;
         label = NULL;
         waitfor->u.cmd_rept.breakout = false;
         tmp.op = O_NONE;
@@ -1760,13 +1863,6 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
             if (nopos < 0) {
                 ignore();if (here() != ',') {err_msg(ERROR______EXPECTED, "','"); waitfor->skip = skip; break;}
                 lpoint.pos++;ignore();
-                oldpline2 = pline;
-                if (pline != expr && not_in_file(pline, current_file_list->file)) {
-                    size_t lentmp = strlen((const char *)pline) + 1;
-                    new_array(&expr2, lentmp);
-                    memcpy(expr2, pline, lentmp);
-                    pline = expr2;
-                } else expr2 = (uint8_t *)oldpline2;
                 if (here() == 0 || here() == ';') {bpoint.pos = 0; nopos = 0;}
                 else bpoint = lpoint;
             } else {
@@ -1780,7 +1876,7 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
             } else nf = compile();
             xlin = lpoint.line;
             if (nf == NULL || waitfor->u.cmd_rept.breakout) break;
-            pline = expr2;
+            pline = expr;
             if (nopos < 0) {
                 str_t varname;
                 Namespace *context;
@@ -1885,8 +1981,6 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
             lpoint = apoint;
         }
         pline = oldpline;
-        if (expr == oldpline) expr = NULL;
-        if (expr2 == oldpline2) expr2 = NULL;
         lpoint.line = xlin;
     }
     if (nf != NULL) {
@@ -1896,9 +1990,8 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
     } else {
         waitfor->what = W_ENDFOR; waitfor->skip = 0;
     }
-    free(expr);
-    free(expr2);
-    s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - lin;
+    if (expr != oldpline) free(expr);
+    s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - epoint->line;
     return i;
 }
 
@@ -1917,7 +2010,6 @@ static size_t rept_command(const Label *newlabel, List *lst, linepos_t epoint) {
     if (cnt == 0) {
         new_waitfor(W_ENDREPT, epoint); waitfor->skip = 0;
     } else {
-        linenum_t lin = lpoint.line;
         struct star_s *s = new_star(vline);
         struct star_s *stree_old = star_tree;
 
@@ -1930,7 +2022,7 @@ static size_t rept_command(const Label *newlabel, List *lst, linepos_t epoint) {
         new_waitfor(W_ENDREPT2, epoint);
         waitfor->u.cmd_rept.breakout = false;
         for (;;) {
-            lpoint.line = lin;
+            lpoint.line = epoint->line;
             if (lst != NULL) {
                 if (i >= lst->len && list_extend2(lst)) { i = lst->len - 1; err_msg2(ERROR_OUT_OF_MEMORY, NULL, epoint); nf = NULL; }
                 else if (newlabel == NULL) nf = tuple_scope_light(&lst->data[i], epoint);
@@ -1950,7 +2042,7 @@ static size_t rept_command(const Label *newlabel, List *lst, linepos_t epoint) {
         } else {
             waitfor->what = W_ENDREPT; waitfor->skip = 0;
         }
-        s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - lin;
+        s->vline = vline; star_tree = stree_old; vline = star_tree->vline + lpoint.line - epoint->line;
     }
     return i;
 }
@@ -1984,7 +2076,6 @@ static size_t while_command(const Label *newlabel, List *lst, linepos_t epoint) 
         size_t lentmp = strlen((const char *)pline) + 1;
         new_array(&expr, lentmp);
         memcpy(expr, pline, lentmp);
-        pline = expr;
     } else expr = (uint8_t *)oldpline;
     new_waitfor(W_ENDWHILE2, epoint);
     waitfor->u.cmd_rept.breakout = false;
