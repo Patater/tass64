@@ -1579,6 +1579,10 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
 
     do { /* label */
         str_t varname;
+        struct oper_s tmp;
+        struct linepos_s bpoint;
+        Namespace *context;
+        tmp.op = O_NONE;
         epoint2 = lpoint;
 
         varname.data = pline + lpoint.pos; varname.len = get_label(varname.data);
@@ -1591,16 +1595,49 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
             foreach = true;
             val = ref_none();
         } else {
-            if (wht != '=' || foreach) {
-                if (wht == ':' && pline[lpoint.pos + 1] == '=' && !arguments.tasmcomp && !foreach) lpoint.pos += 2;
-                else {
-                    if ((pline[lpoint.pos] | arguments.caseinsensitive) != 'i' || (pline[lpoint.pos+1] | arguments.caseinsensitive) != 'n' || get_label(pline + lpoint.pos) != 2) {
-                        err_msg(ERROR______EXPECTED, foreach ? "',' or 'in'" : "':=' or ',' or 'in'"); goto error;
+            while (wht != 0 && !foreach && !arguments.tasmcomp) {
+                int wht2 = pline[lpoint.pos + 1];
+                if (wht2 == '=') {
+                    Oper_types op;
+                    if (wht == ':') {
+                        wht = '=';
+                        lpoint.pos++;
+                        break;
                     }
+                    op = oper_from_token(wht);
+                    if (op == O_NONE) break;
+                    tmp.op = op;
+                    epoint3 = lpoint;
                     lpoint.pos += 2;
-                    foreach = true;
-                }
-            } else lpoint.pos++;
+                } else if (wht2 != 0 && pline[lpoint.pos + 2] == '=') {
+                    Oper_types op;
+                    op = oper_from_token2(wht, wht2);
+                    if (op == O_COND) op = O_NONE;
+                    if (op == O_NONE) break;
+                    tmp.op = op;
+                    epoint3 = lpoint;
+                    lpoint.pos += 3;
+                } else break;
+
+                ignore();
+                bpoint = lpoint;
+                tmp.epoint = &epoint2;
+                tmp.epoint2 = &bpoint;
+                tmp.epoint3 = &epoint3;
+                break;
+            }
+            if (tmp.op == O_NONE) {
+                if (wht != '=' || foreach) {
+                    if (wht == ':' && pline[lpoint.pos + 1] == '=' && !arguments.tasmcomp && !foreach) lpoint.pos += 2;
+                    else {
+                        if ((pline[lpoint.pos] | arguments.caseinsensitive) != 'i' || (pline[lpoint.pos+1] | arguments.caseinsensitive) != 'n' || get_label(pline + lpoint.pos) != 2) {
+                            err_msg(ERROR______EXPECTED, foreach ? "',' or 'in'" : "':=' or ',' or 'in'"); goto error;
+                        }
+                        lpoint.pos += 2;
+                        foreach = true;
+                    }
+                } else lpoint.pos++;
+            }
             if (foreach) {
                 ignore();
                 epoint3 = lpoint;
@@ -1638,33 +1675,58 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
                 val = pull_val();
             }
         }
-        label = new_label(&varname, (varname.data[0] == '_') ? cheap_context : current_context, strength, current_file_list);
-        if (label->value != NULL) {
-            if (label->constant) {
-                err_msg_double_defined(label, &varname, &epoint2);
-                val_destroy(val);
-                label = NULL;
-            } else {
-                if (label->defpass != pass) {
-                    label->ref = false;
-                    label->defpass = pass;
+        context = (varname.data[0] == '_') ? cheap_context : current_context;
+        if (tmp.op == O_NONE) {
+            label = new_label(&varname, context, strength, current_file_list);
+            if (label->value != NULL) {
+                if (label->constant) {
+                    err_msg_double_defined(label, &varname, &epoint2);
+                    val_destroy(val);
+                    label = NULL;
                 } else {
-                    if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
+                    if (label->defpass != pass) {
+                        label->ref = false;
+                        label->defpass = pass;
+                    } else {
+                        if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
+                    }
+                    label->owner = false;
+                    if (label->file_list != current_file_list) {
+                        label_move(label, &varname, current_file_list);
+                    }
+                    label->epoint = epoint2;
+                    val_destroy(label->value);
+                    label->value = val;
+                    label->usepass = 0;
                 }
+            } else {
+                label->constant = false;
                 label->owner = false;
-                if (label->file_list != current_file_list) {
-                    label_move(label, &varname, current_file_list);
-                }
-                label->epoint = epoint2;
-                val_destroy(label->value);
                 label->value = val;
-                label->usepass = 0;
+                label->epoint = epoint2;
             }
         } else {
-            label->constant = false;
-            label->owner = false;
+            label = (varname.data[0] == '_') ? find_label2(&varname, context) : find_label(&varname, NULL);
+            if (label == NULL) {err_msg_not_defined2(&varname, context, false, &epoint2); break;}
+            if (label->constant) {err_msg_not_variable(label, &varname, &epoint2); break;}
+            if (diagnostics.case_symbol && str_cmp(&varname, &label->name) != 0) err_msg_symbol_case(&varname, label, &epoint2);
+            if (tmp.op != O_REASSIGN) {
+                bool minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
+                Obj *result2, *val1 = label->value;
+                tmp.v1 = val1;
+                tmp.v2 = val;
+                tmp.inplace = (tmp.v1->refcount == 1 && !minmax) ? tmp.v1 : NULL;
+                result2 = tmp.v1->obj->calc2(&tmp);
+                if (minmax) {
+                    if (result2 == true_value) val_replace(&result2, val1);
+                    else if (result2 == false_value) val_replace(&result2, val);
+                }
+                val_destroy(val);
+                val = result2;
+            }
+            val_destroy(label->value);
             label->value = val;
-            label->epoint = epoint2;
+            label->usepass = 0;
         }
         if (foreach) {
             if (labels.p == 0) {
