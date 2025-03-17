@@ -988,10 +988,10 @@ void err_msg_invalid_namespace_conv(const struct values_s *vs) {
     else err_msg_output_and_destroy(Error(new_error_conv(val, NAMESPACE_OBJ, &vs->epoint)));
 }
 
-void err_msg_cant_unpack(argcount_t expect, argcount_t got, Obj *val, linepos_t epoint) {
+void err_msg_cant_unpack(argcount_t expect, size_t got, Obj *val, linepos_t epoint) {
     char line[1024];
     bool more = new_error_msg(SV_ERROR, current_file_list, epoint);
-    sprintf(line, "for %" PRIuargcount " variables got %" PRIuargcount " values in ", expect, got);
+    sprintf(line, "for %" PRIuargcount " variables got %" PRIuSIZE " values in ", expect, got);
     adderror(line);
     err_msg_variable(val);
     if (more) new_error_msg_more();

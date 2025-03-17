@@ -427,6 +427,7 @@ MUST_CHECK Obj *tuple_from_code(Code *v1, Type *typ, linepos_t epoint) {
 }
 
 static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
+    address_t ln;
     Obj **vals;
     Code *v1 = Code(op->v1);
     Obj *err;
@@ -437,13 +438,14 @@ static MUST_CHECK Obj *slice(oper_t op, argcount_t indx) {
     if (args->len < 1 || args->len - 1 > indx) {
         return new_error_argnum(args->len, 1, indx + 1, op->epoint2);
     }
-    if (code_item_prepare(&ci, v1, &io.len)) {
+    if (code_item_prepare(&ci, v1, &ln)) {
         return obj_oper_error(op);
     }
     if (diagnostics.size_larger && v1->offs < 0) err_msg_size_larger(op->epoint);
 
     io.epoint = &args->val[indx].epoint;
     io.val = args->val[indx].val;
+    io.len = ln;
 
     if (io.val->obj->iterable) {
         struct iter_s iter;
