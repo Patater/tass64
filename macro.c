@@ -625,7 +625,6 @@ bool get_func_params(Mfunc *v, bool single) {
             if (single) {
                 const uint8_t *s = pline + lpoint.pos;
                 if (!stard && s[0] != ',' && s[0] != ':' && (s[0] != '=' || s[1] == '=')) {
-                    v->epoint.line = lpoint.line - 1;
                     lpoint.pos = param->epoint.pos;
                     v->epoint.pos = lpoint.pos;
                     break;
@@ -659,7 +658,6 @@ bool get_func_params(Mfunc *v, bool single) {
                     }
                     lpoint.pos++;
                     ignore();
-                    v->epoint.line = lpoint.line - 1;
                     v->epoint.pos = lpoint.pos;
                 }
                 break;
@@ -964,6 +962,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         push_context(context);
         functionrecursion++;
         if (mfunc->v.obj == SFUNC_OBJ) {
+            lpoint.line--;
             if (mtranslate()) {
                 lpoint.pos = mfunc->epoint.pos;
                 if (mfunc->line != NULL) pline = mfunc->line;
