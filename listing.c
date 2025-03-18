@@ -137,18 +137,20 @@ static void out_txt(Listing *ls, const char *s) {
 
 static Listing *listing;
 
-void listing_open(const struct list_output_s *output, int argc, char *argv[]) {
+bool listing_open(const struct list_output_s *output, int argc, char *argv[]) {
     static Listing listing2;
     Listing *ls;
     time_t t;
     int i;
     FILE *flist;
 
+    if (output->name == NULL) return false;
+
     flist = dash_name(output->name) ? stdout : fopen_utf8(output->name, output->append ? "at" : "wt");
     if (flist == NULL) {
         err_msg_file2(ERROR_CANT_WRTE_LST, output->name, &output->name_pos);
         listing = NULL;
-        return;
+        return false;
     }
     if (flist == stdout && fflush(flist) != 0) setvbuf(flist, NULL, _IOLBF, 1024);
     clearerr(flist); errno = 0;
@@ -203,6 +205,7 @@ void listing_open(const struct list_output_s *output, int argc, char *argv[]) {
     flushbuf(ls);
     newline(ls);
     listing = ls;
+    return true;
 }
 
 void listing_close(const struct list_output_s *output) {

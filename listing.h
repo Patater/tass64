@@ -29,7 +29,7 @@ struct list_output_s;
 extern bool listing_pccolumn;
 extern unsigned int nolisting;
 extern const uint8_t *llist;
-extern void listing_open(const struct list_output_s *, int, char *[]);
+extern bool listing_open(const struct list_output_s *, int, char *[]);
 extern void listing_close(const struct list_output_s *);
 extern FAST_CALL void listing_equal(struct Obj *);
 extern FAST_CALL void listing_equal2(struct Obj *, linecpos_t);

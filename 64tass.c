@@ -5884,11 +5884,10 @@ int main2(int *argc2, char **argv2[]) {
     failed = error_serious();
     if (!failed) {
         /* assemble again to create listing */
-        if (arguments.list.name != NULL) {
+        if (listing_open(&arguments.list, argc, argv)) {
             nolisting = 0;
 
             max_pass = pass; pass++;
-            listing_open(&arguments.list, argc, argv);
             one_pass(argc, argv, opts);
             listing_close(&arguments.list);
 
