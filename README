@@ -2342,7 +2342,7 @@ vicmem  .sfunction _font, _scr=0, ((_font >> 10) & $0f) | ((_scr >> 6) & $f0)
         lda #vicmem($2000, $0400); calculate constant
         sta $d018
 
-If a multi line macro is used in an expression only the returned result is
+If a multi line function is used in an expression only the returned result is
 used. If multiple values are returned these will form a tuple.
 
 If a multi line function is used as macro, directive or pseudo instruction and
