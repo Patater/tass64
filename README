@@ -3085,6 +3085,9 @@ example LDA X becomes TXA.
 Store instructions with registers are translated to transfer instructions, but
 only if it involves the `s' or `b' registers. For example STX S becomes TXS.
 
+Generic push and pull instructions are available which take a register or an
+address. For example PUL P and PSH A becomes PLP and PHA.
+
 Many illegal opcodes have aliases for compatibility as there's no standard
 naming convention.
 
@@ -5071,7 +5074,8 @@ GEQ 4C F0                               GGE 4C B0
 GLT 4C 90                               GMI 30 4C
 GNE 4C D0                               GPL 10 4C
 GVC 4C 50                               GVS 4C 70
-LSR 4A                                  ROL 2A
+LSR 4A                                  PSH 08 48
+PUL 28 68                               ROL 2A
 ROR 6A                                  SHL 06 0A 0E 16 1E
 SHR 46 4A 4E 56 5E
 
@@ -5142,7 +5146,8 @@ TRB 14 1C                               TSB 04 0C
                   Additional aliases and pseudo instructions
 CLR 64 74 9C 9E                         CPA D2
 DEA 3A                                  GRA 4C 80
-INA 1A
+INA 1A                                  PSH 5A DA
+PUL 7A FA
 
 R65C02 opcodes
 
@@ -5195,7 +5200,8 @@ XCE FB
                               Additional aliases
 CLP C2                                  CPA C3 C7 CF D3 D7 DF
 CSP 02                                  HLT DB
-JML 5C DC                               SWA EB
+JML 5C DC                               PSH 0B 4B 8B D4 F4
+PUL 2B AB                               SWA EB
 TAD 5B                                  TAS 1B
 TDA 7B                                  TSA 3B
 
@@ -5231,7 +5237,9 @@ XCE FB                                  ZEA 8F
 
                               Additional aliases
 CLP C2                                  CPA C3 C7 D3 D7
-HLT DB
+HLT DB                                  PSH D4 DF F4
+PUL CF                                  RSH 0B 1B 44 4B 54 5B
+RUL 2B 3B 6B 7B
 
 65CE02 opcodes
 

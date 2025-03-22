@@ -3636,6 +3636,10 @@ For example <code>LDA X</code> becomes <code>TXA</code>.
 but only if it involves the <q>s</q> or <q>b</q> registers. For example
 <code>STX S</code> becomes <code>TXS</code>.
 
+<p>Generic push and pull instructions are available which take a register or an
+address. For example <code>PUL P</code> and <code>PSH A</code> becomes
+<code>PLP</code> and <code>PHA</code>.
+
 <p>Many illegal opcodes have aliases for compatibility as there's no standard
 naming convention.
 
@@ -5953,6 +5957,8 @@ This mode is for compiling sources which are already PETSCII.
 <tr><th>GVC<td>4C 50
 <th>GVS<td>4C 70
 <tr><th>LSR<td>4A
+<th>PSH<td>08 48
+<tr><th>PUL<td>28 68
 <th>ROL<td>2A
 <tr><th>ROR<td>6A
 <th>SHL<td>06 0A 0E 16 1E
@@ -6081,6 +6087,8 @@ This mode is for compiling sources which are already PETSCII.
 <tr><th>DEA<td width="46%">3A
 <th>GRA<td>4C 80
 <tr><th>INA<td>1A
+<th>PSH<td>5A DA
+<tr><th>PUL<td>7A FA
 <th><td>
 </table></div>
 
@@ -6171,6 +6179,8 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <tr><th>CSP<td width="46%">02
 <th>HLT<td width="46%">DB
 <tr><th>JML<td>5C DC
+<th>PSH<td>0B 4B 8B D4 F4
+<tr><th>PUL<td>2B AB
 <th>SWA<td>EB
 <tr><th>TAD<td>5B
 <th>TAS<td>1B
@@ -6239,6 +6249,10 @@ parameters (e.g. <code>rmb 7,$20</code>).
 <tr><th width="4%">CLP<td width="46%">C2
 <th width="4%">CPA<td>C3 C7 D3 D7
 <tr><th>HLT<td width="46%">DB
+<th>PSH<td>D4 DF F4
+<tr><th>PUL<td>CF
+<th>RSH<td>0B 1B 44 4B 54 5B
+<tr><th>RUL<td>2B 3B 6B 7B
 <th><td>
 </table></div>
 
