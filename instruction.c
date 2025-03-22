@@ -404,6 +404,34 @@ static Adrgen adrmatch(const uint8_t *cnmemonic, int prm, atype_t am, unsigned i
     return adrgen;
 }
 
+static int register_generic(int prm, int c) {
+    switch (c) {
+    case 'a':
+        if (prm == current_cpu->ldr) return current_cpu->lda;
+        if (prm == current_cpu->str) return current_cpu->sta;
+        if (prm == current_cpu->cpr) return current_cpu->cpa;
+        break;
+    case 'x':
+        if (prm == current_cpu->ldr) return current_cpu->ldx;
+        if (prm == current_cpu->str) return current_cpu->stx;
+        if (prm == current_cpu->cpr) return current_cpu->cpx;
+        break;
+    case 'y':
+        if (prm == current_cpu->ldr) return current_cpu->ldy;
+        if (prm == current_cpu->str) return current_cpu->sty;
+        if (prm == current_cpu->cpr) return current_cpu->cpy;
+        break;
+    case 'z':
+        if (prm == current_cpu->ldr) return current_cpu->ldz;
+        if (prm == current_cpu->str) return current_cpu->stz;
+        if (prm == current_cpu->cpr) return current_cpu->cpz;
+        break;
+    default:
+        break;
+    }
+    return -1;
+}
+
 MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t epoint) {
     Adrgen adrgen;
     Adr_types opr;
@@ -423,6 +451,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
 
     switch (vals->len) {
     case 0:
+    retry0:
         if (cnmemonic[ADR_IMPLIED] != ____) {
             if (diagnostics.implied_reg && cnmemonic[ADR_REG] != 0) err_msg_implied_reg(epoint, mnemonic[prm]);
             adrgen = AG_IMP; opr = ADR_IMPLIED;
@@ -445,6 +474,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             iter_destroy(&iter);
             return err;
         }
+    retry1a:
         am = val->obj->address(val);
     retry1:
         if (am != A_NONE) {
@@ -490,22 +520,28 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         if (val->obj == REGISTER_OBJ) {
             Register *cpureg = Register(val);
-            cod = cnmemonic[(opr = ADR_REG)];
-            if (cod != 0 && cpureg->len == 1) {
+            if (cpureg->len == 1) {
                 const char *ind = strchr(reg_names, cpureg->data[0]);
                 if (ind != NULL) {
-                    reg = (Reg_types)(ind - reg_names);
-                    if (regopcode_table[cod][reg] != ____) {
-                        adrgen = AG_IMP;
-                        break;
+                    cod = cnmemonic[(opr = ADR_REG)];
+                    if (cod != 0) {
+                        reg = (Reg_types)(ind - reg_names);
+                        if (regopcode_table[cod][reg] != ____) {
+                            adrgen = AG_IMP;
+                            break;
+                        }
+                    }
+                    if ((prm == current_cpu->sta && cpureg->data[0] == 'a')
+                               || (prm == current_cpu->stx && cpureg->data[0] == 'x')
+                               || (prm == current_cpu->sty && cpureg->data[0] == 'y')
+                               || (prm == current_cpu->stz && cpureg->data[0] == 'z')) 
+                    {
+                        dump_instr(0, 0, -1, epoint);
+                        return NULL;
                     }
                 }
             }
-            err = new_error(ERROR___NO_REGISTER, epoint2);
-            err->u.reg.reg = ref_register(cpureg);
-            err->u.reg.cod = mnemonic[prm];
-            err_msg_output_and_destroy(err);
-            val = none_value;
+            goto noregister;
         }
         if (cnmemonic[ADR_REL] != ____) {
             struct star_s *s;
@@ -738,7 +774,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             struct elements_s {
                 Obj *oval;
                 struct iter_s iter;
-            } elements[3];
+            } elements[4];
         broadcast:
             v = vals->val;
             args = vals->len;
@@ -787,6 +823,31 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             }
             return err;
         }
+        if (vals->val[0].val->obj == REGISTER_OBJ) {
+            if (Register(vals->val[0].val)->len == 1) {
+                int nprm = register_generic(prm, Register(vals->val[0].val)->data[0]);
+                if (nprm >= 0) {
+                    val = vals->val[1].val;
+                    epoint2 = &vals->val[1].epoint;
+                    prm = nprm;
+                    cnmemonic = opcode_table[opcode[prm]];
+                    goto retry1a;
+                }
+                if (Register(vals->val[1].val)->len == 1) {
+                    nprm = -1;
+                    if (Register(vals->val[0].val)->data[0] == 'd' && Register(vals->val[1].val)->data[0] == 'a') nprm = current_cpu->tcd;
+                    if (Register(vals->val[0].val)->data[0] == 'i' && Register(vals->val[1].val)->data[0] == 'x') nprm = current_cpu->txi;
+                    if (Register(vals->val[0].val)->data[0] == 'r' && Register(vals->val[1].val)->data[0] == 'x') nprm = current_cpu->txr;
+                    if (nprm >= 0) {
+                        prm = nprm;
+                        cnmemonic = opcode_table[opcode[prm]];
+                        goto retry0;
+                    }
+                }
+            }
+            goto noregister;
+        }
+    retry2:
         if (vals->val[1].val->obj == REGISTER_OBJ) {
             am = Register(vals->val[1].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[1].val)->data[0]);
             if (am != A_NONE) {
@@ -838,6 +899,21 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable || vals->val[2].val->obj->iterable) {
             goto broadcast;
         }
+        if (vals->val[0].val->obj == REGISTER_OBJ) {
+            if (Register(vals->val[0].val)->len == 1) {
+                int nprm = register_generic(prm, Register(vals->val[0].val)->data[0]);
+                if (nprm >= 0) {
+                    struct values_s vs = vals->val[0];
+                    vals->val[0] = vals->val[1];
+                    vals->val[1] = vals->val[2];
+                    vals->val[2] = vs;
+                    prm = nprm;
+                    cnmemonic = opcode_table[opcode[prm]];
+                    goto retry2;
+                }
+            }
+            goto noregister;
+        }
         if (vals->val[1].val->obj == REGISTER_OBJ && vals->val[2].val->obj == REGISTER_OBJ) {
             atype_t am2 = Register(vals->val[2].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[2].val)->data[0]);
             am = Register(vals->val[1].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[1].val)->data[0]);
@@ -886,6 +962,28 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             }
             goto justrel;
         }
+        goto unknown;
+    case 4:
+        epoint2 = &vals->val[0].epoint;
+        if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable || vals->val[2].val->obj->iterable || vals->val[3].val->obj->iterable) {
+            goto broadcast;
+        }
+        if (vals->val[0].val->obj == REGISTER_OBJ) {
+            if (Register(vals->val[0].val)->len == 1) {
+                int nprm = register_generic(prm, Register(vals->val[0].val)->data[0]);
+                if (nprm >= 0) {
+                    struct values_s vs = vals->val[0];
+                    vals->val[0] = vals->val[1];
+                    vals->val[1] = vals->val[2];
+                    vals->val[2] = vals->val[3];
+                    vals->val[3] = vs;
+                    prm = nprm;
+                    cnmemonic = opcode_table[opcode[prm]];
+                    goto retry2;
+                }
+            }
+            goto noregister;
+        }
         FALL_THROUGH; /* fall through */
     default:
     unknown:
@@ -895,11 +993,22 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 Obj *v = vals->val[j].val;
                 if (v->obj == ERROR_OBJ) return Error(val_reference(v));
             }
+            if (prm == current_cpu->ldr || prm == current_cpu->str || prm == current_cpu->cpr) {
+                err = new_error(ERROR____WRONG_TYPE, &vals->val[0].epoint);
+                err->u.otype.t1 = vals->val[0].val->obj;
+                err->u.otype.t2 = REGISTER_OBJ;
+                return err;
+            }
             err = new_error(ERROR___NO_LOT_OPER, epoint);
             err->u.opers.num = j;
             err->u.opers.cod = mnemonic[prm];
             return err;
         }
+    noregister:
+        err = new_error(ERROR___NO_REGISTER, epoint2);
+        err->u.reg.reg = ref_register(Register(vals->val[0].val));
+        err->u.reg.cod = mnemonic[prm];
+        return err;
     }
     switch (adrgen) {
     case AG_ZP: /* zero page address only */

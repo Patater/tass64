@@ -193,6 +193,7 @@
                         <KEYWORD1>clv</KEYWORD1>
                         <KEYWORD1>cmp</KEYWORD1>
                         <KEYWORD1>cpa</KEYWORD1>
+                        <KEYWORD1>cpr</KEYWORD1>
                         <KEYWORD1>cpx</KEYWORD1>
                         <KEYWORD1>cpy</KEYWORD1>
                         <KEYWORD1>dec</KEYWORD1>
@@ -205,6 +206,7 @@
                         <KEYWORD1>jmp</KEYWORD1>
                         <KEYWORD1>jsr</KEYWORD1>
                         <KEYWORD1>lda</KEYWORD1>
+                        <KEYWORD1>ldr</KEYWORD1>
                         <KEYWORD1>ldx</KEYWORD1>
                         <KEYWORD1>ldy</KEYWORD1>
                         <KEYWORD1>lsr</KEYWORD1>
@@ -214,6 +216,8 @@
                         <KEYWORD1>php</KEYWORD1>
                         <KEYWORD1>pla</KEYWORD1>
                         <KEYWORD1>plp</KEYWORD1>
+                        <KEYWORD1>psh</KEYWORD1>
+                        <KEYWORD1>pul</KEYWORD1>
                         <KEYWORD1>rol</KEYWORD1>
                         <KEYWORD1>ror</KEYWORD1>
                         <KEYWORD1>rti</KEYWORD1>
@@ -223,6 +227,7 @@
                         <KEYWORD1>sed</KEYWORD1>
                         <KEYWORD1>sei</KEYWORD1>
                         <KEYWORD1>sta</KEYWORD1>
+                        <KEYWORD1>str</KEYWORD1>
                         <KEYWORD1>stx</KEYWORD1>
                         <KEYWORD1>sty</KEYWORD1>
                         <KEYWORD1>tax</KEYWORD1>

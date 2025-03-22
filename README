@@ -99,6 +99,7 @@ Table of Contents
       + Printer control
   * Pseudo instructions
       + Aliases
+      + Generic instructions
       + Always taken branches
       + Long branches
   * Original turbo assembler compatibility
@@ -3070,26 +3071,130 @@ SHR (SHift Right). This naming however is not very common.
 The implied variants LSR, ROR, ASL and ROL are a shorthand for LSR A, ROR A,
 ASL A and ROL A. Using the implied form is considered poor coding style.
 
-For compatibility INA and DEA is a shorthand of INC A and DEC A. Therefore
+For compatibility INA and DEA are a shorthand of INC A and DEC A. Therefore
 there's no `implied' variants like INC or DEC. The full form with the
 accumulator is preferred.
 
-The longer forms of INC X, DEC X, INC Y, DEC Y, INC Z and DEC Z are available
-for INX, DEX, INY, DEY, INZ and DEZ. For this to work care must be taken to not
-reuse the `x', `y' and `z' single letter register symbols for other purposes.
-Same goes for `a' of course.
-
-Load instructions with registers are translated to transfer instructions. For
-example LDA X becomes TXA.
-
-Store instructions with registers are translated to transfer instructions, but
-only if it involves the `s' or `b' registers. For example STX S becomes TXS.
-
-Generic push and pull instructions are available which take a register or an
-address. For example PUL P and PSH A becomes PLP and PHA.
-
 Many illegal opcodes have aliases for compatibility as there's no standard
 naming convention.
+
+Generic instructions
+
+Instructions operating on different registers have different mnemonics, for
+example CMP and CPX. That makes writing code fast and easy but sometimes it'd
+be nice to parametrize the register as well not just the address. It's not like
+it's unsolvable through conditional compilation directives or macro text
+replacement but there's a better way.
+
+The processor registers have predefined single letter symbols like a, x or y.
+These can be assigned to symbols with longer names if needed.
+
+Parametrizing register increment and decrement instructions is straightforward
+by using the register as the address similar like ASL A:
+
+             Register addressing modes of increment and decrement
+DEA       DEX       DEY       DEZ       INA       INX       INY       INZ
+DEC A     DEC X     DEC Y     DEC Z     INC A     INC X     INC Y     INC Z
+
+Push and pull instructions have a generic version called PSH and PUL. The user
+stack ones for 65EL02 are called RSH and RUL. These can take a register
+address:
+
+               Register parametrized push and pull instructions
+PHA       PHB       PHD       PHK       PHP       PHX       PHY       PHZ
+PSH A     PSH B     PSH D     PSH K     PSH P     PSH X     PSH Y     PSH Z
+PLA       PLB       PLD                 PLP       PLX       PLY       PLZ
+PUL A     PUL B     PUL D               PUL P     PUL X     PUL Y     PUL Z
+RHA       RHI       RHX       RHY       RLA       RLI       RLX       RLY
+RSH A     RSH I     RSH X     RSH Y     RUL A     RUL I     RUL X     RUL Y
+
+The parametrized version of load and store instructions are LDR and STR,
+respectively. The first parameter is the register to be used and then the
+regular addressing mode can be written after a coma. For example LDX $1000,Y is
+equivalent to LDR X, $1000,Y. It is recommended to leave a space before the
+addressing mode.
+
+               Register parametrized load and store instructions
+LDA       LDX       LDY       LDZ       STA       STX       STY       STZ
+LDR A,    LDR X,    LDR Y,    LDR Z,    STR A,    STR X,    STR Y,    STR Z,
+
+Compare instructions also operate on various registers, for these the
+parametrizable version is called CPR. Same like load and stores the first
+parameter is the register to be used and then the regular addressing mode after
+a coma. For example CPX $1000 is equivalent to CPR X, $1000. It is recommended
+to leave a space after the coma.
+
+               Register parametrized load and store instructions
+CMP       CPX       CPY       CPZ
+CPR A,    CPR X,    CPR Y,    CPR Z,
+
+Transfer instructions have generic versions as well, actually in two variants.
+The first one is when only one of the registers need to be variable. A register
+address can be used with regular load instructions to get those setting the
+flags, like TAX which is LDA X. Store instructions are used for those which
+don't, like TXS which is STX S.
+
+           Register transfer parametrization through load and stores
+TBA       TDC       TSC       TXA       TYA       TZA
+LDA B     LDA D     LDA S     LDA X     LDA Y     LDA Z
+          TAX       TIX       TRX       TSX       TYX       TAY       TSY
+          LDX A     LDX I     LDX R     LDX S     LDX Y     LDY A     LDY S
+TXY       TAZ                           TAB       TCS       TXS       TYS
+LDY X     LDZ A                         STA B     STA S     STX S     STY S
+
+The second variant allows parametrizing both the source and target register.
+This can be done with LDR for those setting the flags and STR for those which
+don't. Here it's especially important to leave a space after the coma to not
+create an unintended register indexing mode.
+
+                   Register transfer fully parametrized form
+TBA       TDC       TSC       TXA       TYA       TZA       TCD       TXI
+LDR A, B  LDR A, D  LDR A, S  LDR A, X  LDR A, Y  LDR A, Z  LDR D, A  LDR I, X
+TXR       TAX       TIX       TRX       TSX       TYX       TAY       TSY
+LDR R, X  LDR X, A  LDR X, I  LDR X, R  LDR X, S  LDR X, Y  LDR Y, A  LDR Y, S
+TXY       TAZ                           TAB       TCS       TXS       TYS
+LDR Y, X  LDR Z, A                      STR A, B  STR A, S  STR X, S  STR Y, S
+
+In the following example the subroutine has input parameters in registers.
+These were given symbols and are used to load them at the call site using LDR.
+The pointer address is stored with STR. A register pair is used for this in a
+tuple. The the y register was also named as pos to show that it's possible,
+even if it's not very useful in this case.
+
+=$ffd2                                  out     = $ffd2
+
+                                        *       = $1000
+
+.1000                                   print   .proc
+=$02                                    txtp    = $02
+=register("x")                          length  = x
+=(register("y"),register("a"))          txtadr  = (y, a)
+=register("y")                          pos     = y
+
+.1000   84 02           sty $02                 str txtadr, txtp+(0, 1)
+.1002   85 03           sta $03
+.1004   a0 00           ldy #$00                ldr pos, #0
+.1006   b1 02           lda ($02),y     -       lda (txtp),pos
+.1008   20 d2 ff        jsr $ffd2               jsr out
+.100b   c8              iny                     inc pos
+.100c   ca              dex                     dec length
+.100d   d0 f7           bne $1006               bne -
+.100f   60              rts                     rts
+                                                .pend
+
+>1011   52 45 41 44 59 2e               text    .text "ready."
+
+.1017   a0 11           ldy #$11                ldr print.txtadr, #(<text, >text)
+.1019   a9 10           lda #$10
+.101b   a2 06           ldx #$06                ldr print.length, #size(text)
+.101d   20 00 10        jsr $1000               jsr print
+
+A simpler example to push and pull multiple registers on a 65C02:
+
+irq     psh (a, x, y,)  ;pha, phx, phy
+        ...
+        pul (y, x, a,)  ;ply, plx, pla
+        rti
 
 Always taken branches
 

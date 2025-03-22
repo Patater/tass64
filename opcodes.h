@@ -42,8 +42,7 @@ struct cpu_s {
     const uint32_t registers;
     unsigned int opcodes;
     address_t max_address;
-    int jmp;
-    int brl;
+    int jmp, brl, ldr, lda, ldx, ldy, ldz, str, sta, stx, sty, stz, cpr, cpa, cpx, cpy, cpz, tcd, txi, txr;
 };
 
 extern const char *reg_names;
