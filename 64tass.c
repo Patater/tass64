@@ -1798,7 +1798,8 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
                         len = iter2.len;
                         for (j = k = 0; j < labels.p; j++) {
                             val = iter2.next(&iter2);
-                            if (val == NULL) val = none_value; else k++;
+                            if (val == NULL) continue;
+                            k++;
                             if (labels.data[j] != NULL) {
                                 val_destroy(labels.data[j]->value);
                                 labels.data[j]->value = val_reference(val);
@@ -1878,8 +1879,9 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
                         val = iters[j].next(&iters[j]);
                         if (val == NULL) {
                             ar = j;
-                            val = none_value;
-                        } else k++;
+                            continue;
+                        }
+                        k++;
                         if (labels.data[j] != NULL) {
                             val_destroy(labels.data[j]->value);
                             labels.data[j]->value = val_reference(val);
