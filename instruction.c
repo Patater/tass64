@@ -827,8 +827,11 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             if (Register(vals->val[0].val)->len == 1) {
                 int nprm = register_generic(prm, Register(vals->val[0].val)->data[0]);
                 if (nprm >= 0) {
-                    val = vals->val[1].val;
-                    epoint2 = &vals->val[1].epoint;
+                    struct values_s vs = vals->val[0];
+                    vals->val[0] = vals->val[1];
+                    vals->val[1] = vs;
+                    val = vals->val[0].val;
+                    epoint2 = &vals->val[0].epoint;
                     prm = nprm;
                     cnmemonic = opcode_table[opcode[prm]];
                     goto retry1a;
