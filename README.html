@@ -3634,7 +3634,7 @@ the address. It's not like it's unsolvable through conditional compilation
 directives or macro text replacement but there's a better way.
 
 <p>The processor registers have predefined single letter symbols like
-<code>a</code>, <code>x</code> or <code>y</code>. These can be assigned to
+<code>A</code>, <code>X</code> or <code>Y</code>. These can be assigned to
 symbols with longer names if needed. 
 
 <p>Parametrizing register increment and decrement instructions is
@@ -3655,52 +3655,41 @@ address:</p>
 <caption>Register parametrized push and pull instructions</caption>
 <tr><td width="12%">PHA<td width="12%">PHB<td width="12%">PHD<td width="12%">PHK<td width="12%">PHP<td width="12%">PHX<td width="12%">PHY<td width="12%">PHZ
 <tr><td>PSH&nbsp;A<td>PSH&nbsp;B<td>PSH&nbsp;D<td>PSH&nbsp;K<td>PSH&nbsp;P<td>PSH&nbsp;X<td>PSH&nbsp;Y<td>PSH&nbsp;Z
-<tr><td>PLA<td>PLB<td>PLD<td><td>PLP<td>PLX<td>PLY<td>PLZ
-<tr><td>PUL&nbsp;A<td>PUL&nbsp;B<td>PUL&nbsp;D<td><td>PUL&nbsp;P<td>PUL&nbsp;X<td>PUL&nbsp;Y<td>PUL&nbsp;Z
+<tr><td>PLA<td>PLB<td>PLD<td>&nbsp;&nbsp;&nbsp;<td>PLP<td>PLX<td>PLY<td>PLZ
+<tr><td>PUL&nbsp;A<td>PUL&nbsp;B<td>PUL&nbsp;D<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>PUL&nbsp;P<td>PUL&nbsp;X<td>PUL&nbsp;Y<td>PUL&nbsp;Z
 <tr><td>RHA<td>RHI<td>RHX<td>RHY<td>RLA<td>RLI<td>RLX<td>RLY
 <tr><td>RSH&nbsp;A<td>RSH&nbsp;I<td>RSH&nbsp;X<td>RSH&nbsp;Y<td>RUL&nbsp;A<td>RUL&nbsp;I<td>RUL&nbsp;X<td>RUL&nbsp;Y
 </table></div>
 
-<p>The parametrized version of load and store instructions are <code>LDR</code>
-and <code>STR</code>, respectively. The first parameter is the register to
+<p>The parametrized version of load, store and compare instructions are <code>LDR</code>, <code>STR</code>
+and <code>CPR</code>, respectively. The first parameter is the register to
 be used and then the regular addressing mode can be written after a coma. For
-example <code>LDX&nbsp;$1000,Y</code> is equivalent to <code>LDR&nbsp;X,&nbsp;$1000,Y</code>.
+example <code>LDX&nbsp;$1000,y</code> is equivalent to <code>LDR&nbsp;x,&nbsp;$1000,y</code>.
 It is recommended to leave a space before the addressing mode.</p>
 
 <div><table width="100%" class="opcodes">
-<caption>Register parametrized load and store instructions</caption>
+<caption>Register parametrized load, store and compare instructions</caption>
 <tr><td width="12%">LDA<td width="12%">LDX<td width="12%">LDY<td width="12%">LDZ<td width="12%">STA<td width="12%">STX<td width="12%">STY<td width="12%">STZ
 <tr><td>LDR&nbsp;A,<td>LDR&nbsp;X,<td>LDR&nbsp;Y,<td>LDR&nbsp;Z,<td>STR&nbsp;A,<td>STR&nbsp;X,<td>STR&nbsp;Y,<td>STR&nbsp;Z,
-</table></div>
-
-<p>Compare instructions also operate on various registers, for these the
-parametrizable version is called <code>CPR</code>. Same like load and stores
-the first parameter is the register to be used and then the regular addressing
-mode after a coma. For example <code>CPX&nbsp;$1000</code> is equivalent to
-<code>CPR&nbsp;X,&nbsp;$1000</code>. It is recommended to leave a space after the
-coma.</p>
-
-<div><table width="100%" class="opcodes">
-<caption>Register parametrized load and store instructions</caption>
-<tr><td width="12%">CMP<td width="12%">CPX<td width="12%">CPY<td width="12%">CPZ<td width="12%">&nbsp;<td width="12%">&nbsp;<td width="12%">&nbsp;<td width="12%">&nbsp;
-<tr><td>CPR&nbsp;A,<td>CPR&nbsp;X,<td>CPR&nbsp;Y,<td>CPR&nbsp;Z,<td>&nbsp;<td>&nbsp;<td>&nbsp;<td>&nbsp;
+<tr><td width="12%">CMP<td width="12%">CPX<td width="12%">CPY<td width="12%">CPZ<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;
+<tr><td>CPR&nbsp;A,<td>CPR&nbsp;X,<td>CPR&nbsp;Y,<td>CPR&nbsp;Z,<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </table></div>
 
 <p>Transfer instructions have generic versions as well, actually in two
 variants. The first one is when only one of the registers need to be variable.
 A register address can be used with regular load instructions to get those
-setting the flags, like <code>TAX</code> which is <code>LDA&nbsp;X</code>.
+setting the flags, like <code>TAX</code> which is <code>LDA&nbsp;x</code>.
 Store instructions are used for those which don't, like <code>TXS</code> which
-is <code>STX&nbsp;S</code>.</p>
+is <code>STX&nbsp;s</code>.</p>
 
 <div><table width="100%" class="opcodes">
 <caption>Register transfer parametrization through load and stores</caption>
-<tr><td width="12%">TBA<td width="12%">TDC<td width="12%">TSC<td width="12%">TXA<td width="12%">TYA<td width="12%">TZA<td width="12%">&nbsp;<td width="12%">&nbsp;
-<tr><td>LDA&nbsp;B<td>LDA&nbsp;D<td>LDA&nbsp;S<td>LDA&nbsp;X<td>LDA&nbsp;Y<td>LDA&nbsp;Z<td>&nbsp;<td>&nbsp;
-<tr><td>&nbsp;<td>TAX<td>TIX<td>TRX<td>TSX<td>TYX<td>TAY<td>TSY
-<tr><td><td>LDX&nbsp;A<td>LDX&nbsp;I<td>LDX&nbsp;R<td>LDX&nbsp;S<td>LDX&nbsp;Y<td>LDY&nbsp;A<td>LDY&nbsp;S
-<tr><td>TXY<td>TAZ<td>&nbsp;<td>&nbsp;<td>TAB<td>TCS<td>TXS<td>TYS
-<tr><td>LDY&nbsp;X<td>LDZ&nbsp;A<td>&nbsp;<td>&nbsp;<td>STA&nbsp;B<td>STA&nbsp;S<td>STX&nbsp;S<td>STY&nbsp;S
+<tr><td width="12%">TBA<td width="12%">TDC<td width="12%">TSC<td width="12%">TXA<td width="12%">TYA<td width="12%">TZA<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;
+<tr><td>LDA&nbsp;B<td>LDA&nbsp;D<td>LDA&nbsp;S<td>LDA&nbsp;X<td>LDA&nbsp;Y<td>LDA&nbsp;Z<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<tr><td>&nbsp;&nbsp;&nbsp;<td>TAX<td>TIX<td>TRX<td>TSX<td>TYX<td>TAY<td>TSY
+<tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>LDX&nbsp;A<td>LDX&nbsp;I<td>LDX&nbsp;R<td>LDX&nbsp;S<td>LDX&nbsp;Y<td>LDY&nbsp;A<td>LDY&nbsp;S
+<tr><td>TXY<td>TAZ<td>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<td>TAB<td>TCS<td>TXS<td>TYS
+<tr><td>LDY&nbsp;X<td>LDZ&nbsp;A<td>&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;<td>STA&nbsp;B<td>STA&nbsp;S<td>STX&nbsp;S<td>STY&nbsp;S
 </table></div>
 
 <p>The second variant allows parametrizing both the source and target register.
@@ -3715,15 +3704,15 @@ mode.</code>
 <tr><td>LDR&nbsp;A,&nbsp;B<td>LDR&nbsp;A,&nbsp;D<td>LDR&nbsp;A,&nbsp;S<td>LDR&nbsp;A,&nbsp;X<td>LDR&nbsp;A,&nbsp;Y<td>LDR&nbsp;A,&nbsp;Z<td>LDR&nbsp;D,&nbsp;A<td>LDR&nbsp;I,&nbsp;X
 <tr><td>TXR<td>TAX<td>TIX<td>TRX<td>TSX<td>TYX<td>TAY<td>TSY
 <tr><td>LDR&nbsp;R,&nbsp;X<td>LDR&nbsp;X,&nbsp;A<td>LDR&nbsp;X,&nbsp;I<td>LDR&nbsp;X,&nbsp;R<td>LDR&nbsp;X,&nbsp;S<td>LDR&nbsp;X,&nbsp;Y<td>LDR&nbsp;Y,&nbsp;A<td>LDR&nbsp;Y,&nbsp;S
-<tr><td>TXY<td>TAZ<td><td><td>TAB<td>TCS<td>TXS<td>TYS
-<tr><td>LDR&nbsp;Y,&nbsp;X<td>LDR&nbsp;Z,&nbsp;A<td><td><td>STR&nbsp;A,&nbsp;B<td>STR&nbsp;A,&nbsp;S<td>STR&nbsp;X,&nbsp;S<td>STR&nbsp;Y,&nbsp;S
+<tr><td>TXY<td>TAZ<td>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<td>TAB<td>TCS<td>TXS<td>TYS
+<tr><td>LDR&nbsp;Y,&nbsp;X<td>LDR&nbsp;Z,&nbsp;A<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>STR&nbsp;A,&nbsp;B<td>STR&nbsp;A,&nbsp;S<td>STR&nbsp;X,&nbsp;S<td>STR&nbsp;Y,&nbsp;S
 </table></div>
 
-<p>In the following example the subroutine has input parameters in registers.
+<p>In the following subroutine has input parameters in registers.
 These were given symbols and are used to load them at the call site using
-<code>LDR</code>. The pointer address is stored with <code>STR</code>. A register
-pair is used for this in a tuple. The the <code>y</code> register was also
-named as pos to show that it's possible, even if it's not very useful in this case.</p>
+<code>LDR</code>. The pointer address is a pair of registers in a tuple and is
+stored with <code>STR</code>. The the <code>Y</code> register was named as
+pos to show that it's possible even if it's not very useful in this case.</p>
 
 <pre>
 =$ffd2                                  out     <b>=</b> <span>$ffd2</span>
