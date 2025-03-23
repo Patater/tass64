@@ -5171,24 +5171,28 @@ TAX AA                                  TAY A8
 TSX BA                                  TXA 8A
 TXS 9A                                  TYA 98
 
-                         Aliases, pseudo instructions
+                       6502 aliases, pseudo instructions
 ASL 0A                                  BGE B0
 BLT 90                                  CPA C1 C5 C9 CD D1 D5 D9 DD
-GCC 4C 90                               GCS 4C B0
-GEQ 4C F0                               GGE 4C B0
-GLT 4C 90                               GMI 30 4C
-GNE 4C D0                               GPL 10 4C
-GVC 4C 50                               GVS 4C 70
+CPR C0 C1 C4 C5 C9 CC CD D1 D5 D9 DD E0 GCC 4C 90
+    E4 EC
+GCS 4C B0                               GEQ 4C F0
+GGE 4C B0                               GLT 4C 90
+GMI 30 4C                               GNE 4C D0
+GPL 10 4C                               GVC 4C 50
+GVS 4C 70                               LDR 8A 98 A0 A1 A2 A4 A5 A6 A8 A9 AA AC
+                                            AD AE B1 B4 B5 B6 B9 BA BC BD BE
 LSR 4A                                  PSH 08 48
 PUL 28 68                               ROL 2A
 ROR 6A                                  SHL 06 0A 0E 16 1E
-SHR 46 4A 4E 56 5E
+SHR 46 4A 4E 56 5E                      STR 81 84 85 86 8C 8D 8E 91 94 95 96 99
+                                            9A 9D
 
 6502 illegal opcodes
 
 This processor is a standard 6502 with the NMOS illegal opcodes.
 
-                              Additional opcodes
+                         Additional NMOS 6502 opcodes
 ANC 0B                                  ANE 8B
 ARR 6B                                  ASR 4B
 DCP C3 C7 CF D3 D7 DB DF                ISB E3 E7 EF F3 F7 FB FF
@@ -5200,7 +5204,7 @@ SHA 93 9F                               SHS 9B
 SHX 9E                                  SHY 9C
 SLO 03 07 0F 13 17 1B 1F                SRE 43 47 4F 53 57 5B 5F
 
-                              Additional aliases
+                         Additional NMOS 6502 aliases
 AHX 93 9F                               ALR 4B
 AXS CB                                  DCM C3 C7 CF D3 D7 DB DF
 INS E3 E7 EF F3 F7 FB FF                ISC E3 E7 EF F3 F7 FB FF
@@ -5213,11 +5217,11 @@ XAA 8B
 This processor is an enhanced version of standard 6502 with some illegal
 opcodes.
 
-                     Additionally to 6502 illegal opcodes
+                          Additional 65DTV02 opcodes
 BRA 12                                  SAC 32
 SIR 42
 
-                         Additional pseudo instruction
+                    Additional 65DTV02 pseudo instructions
 GRA 12 4C
 
                       These illegal opcodes are not valid
@@ -5236,7 +5240,7 @@ Standard 65C02 opcodes
 
 This processor is an enhanced version of standard 6502.
 
-                              Additional opcodes
+                           Additional 65C02 opcodes
 ADC 72                                  AND 32
 BIT 34 3C 89                            BRA 80
 CMP D2                                  DEC 3A
@@ -5248,21 +5252,22 @@ PLY 7A                                  SBC F2
 STA 92                                  STZ 64 74 9C 9E
 TRB 14 1C                               TSB 04 0C
 
-                  Additional aliases and pseudo instructions
+               Additional 65C02 aliases and pseudo instructions
 CLR 64 74 9C 9E                         CPA D2
-DEA 3A                                  GRA 4C 80
-INA 1A                                  PSH 5A DA
-PUL 7A FA
+CPR D2                                  DEA 3A
+GRA 4C 80                               INA 1A
+LDR B2                                  PSH 5A DA
+PUL 7A FA                               STR 64 74 92 9C 9E
 
 R65C02 opcodes
 
 This processor is an enhanced version of standard 65C02.
 
-Please note that the bit number is not part of the instruction name (like rmb7
-$20). Instead it's the first element of coma separated parameters (e.g. rmb
+Please note that the bit number is not part of the instruction name (like RMB7
+$20). Instead it's the first element of coma separated parameters (e.g. RMB
 7,$20).
 
-                              Additional opcodes
+                     Additional R65C02 opcodes over 65C02
 BBR 0F 1F 2F 3F 4F 5F 6F 7F             BBS 8F 9F AF BF CF DF EF FF
 NOP 44 54 82 DC                         RMB 07 17 27 37 47 57 67 77
 SMB 87 97 A7 B7 C7 D7 E7 F7
@@ -5271,17 +5276,17 @@ W65C02 opcodes
 
 This processor is an enhanced version of R65C02.
 
-                              Additional opcodes
+                     Additional W65C02 opcodes over R65C02
 STP DB                                  WAI CB
 
-                              Additional aliases
+                     Additional W65C02 aliases over R65C02
 HLT DB
 
 W65816 opcodes
 
 This processor is an enhanced version of 65C02.
 
-                              Additional opcodes
+                     Additional W65816 opcodes over 65C02
 ADC 63 67 6F 73 77 7F                   AND 23 27 2F 33 37 3F
 BRL 82                                  CMP C3 C7 CF D3 D7 DF
 COP 02                                  EOR 43 47 4F 53 57 5F
@@ -5302,19 +5307,21 @@ TYX BB                                  WAI CB
 WDM 42                                  XBA EB
 XCE FB
 
-                              Additional aliases
+                     Additional W65816 aliases over 65C02
 CLP C2                                  CPA C3 C7 CF D3 D7 DF
-CSP 02                                  HLT DB
-JML 5C DC                               PSH 0B 4B 8B D4 F4
-PUL 2B AB                               SWA EB
-TAD 5B                                  TAS 1B
-TDA 7B                                  TSA 3B
+CPR C3 C7 CF D3 D7 DF                   CSP 02
+HLT DB                                  JML 5C DC
+LDR 3B 7B 9B A3 A7 AF B3 B7 BB BF       PSH 0B 4B 8B D4 F4
+PUL 2B AB                               STR 1B 83 87 8F 93 97 9F
+SWA EB                                  TAD 5B
+TAS 1B                                  TDA 7B
+TSA 3B
 
 65EL02 opcodes
 
 This processor is an enhanced version of standard 65C02.
 
-                              Additional opcodes
+                     Additional 65EL02 opcodes over 65C02
 ADC 63 67 73 77                         AND 23 27 33 37
 CMP C3 C7 D3 D7                         DIV 4F 5F 6F 7F
 ENT 22                                  EOR 43 47 53 57
@@ -5340,17 +5347,18 @@ TXY 9B                                  TYX BB
 WAI CB                                  XBA EB
 XCE FB                                  ZEA 8F
 
-                              Additional aliases
+                     Additional 65EL02 aliases over 65C02
 CLP C2                                  CPA C3 C7 D3 D7
-HLT DB                                  PSH D4 DF F4
+CPR C3 C7 D3 D7                         HLT DB
+LDR 9B A3 A7 AB AF B3 B7 BB DC          PSH D4 DF F4
 PUL CF                                  RSH 0B 1B 44 4B 54 5B
-RUL 2B 3B 6B 7B
+RUL 2B 3B 6B 7B                         STR 83 87 93 97
 
 65CE02 opcodes
 
 This processor is an enhanced version of R65C02.
 
-                              Additional opcodes
+                     Additional 65CE02 opcodes over R65C02
 ASR 43 44 54                            ASW CB
 BCC 93                                  BCS B3
 BEQ F3                                  BMI 33
@@ -5371,22 +5379,23 @@ TAZ 4B                                  TBA 7B
 TSY 0B                                  TYS 2B
 TZA 6B
 
-                              Additional aliases
+                     Additional 65CE02 aliases over R65C02
 ASR 43                                  BGE B3
-BLT 93                                  NEG 42
-RTN 62
+BLT 93                                  CPR C2 D4 DC
+LDR 0B 4B 6B 7B A3 AB BB E2             NEG 42
+RTN 62                                  STR 2B 5B 82 8B 9B
 
-                            This alias is not valid
+                    Aliases of R65C02 not valid for 65CE02
 CLR 64 74 9C 9E
 
 CSG 4510 opcodes
 
 This processor is an enhanced version of 65CE02.
 
-                              Additional opcodes
+                    Additional CSG 4510 opcodes over 65CE02
 MAP 5C
 
-                              Additional aliases
+                    Additional CSG 4510 aliases over 65CE02
 EOM EA
 
 -------------------------------------------------------------------------------
