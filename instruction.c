@@ -851,7 +851,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         cnmemonic = opcode_table[opcode[prm]];
                         goto retry0;
                     }
-                    if (r1name == r2name && r1name >= 'a' && r1name <= 'z' && ((current_cpu->registers >> (r1name - 'a')) & 1) != 0) {
+                    if (prm == current_cpu->str && r1name == r2name && r1name >= 'a' && r1name <= 'z' && ((current_cpu->registers >> (r1name - 'a')) & 1) != 0) {
                         dump_instr(0, 0, -1, epoint);
                         return NULL;
                     }
