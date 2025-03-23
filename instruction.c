@@ -824,8 +824,11 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             return err;
         }
         if (vals->val[0].val->obj == REGISTER_OBJ) {
-            if (Register(vals->val[0].val)->len == 1) {
-                int nprm = register_generic(prm, Register(vals->val[0].val)->data[0]);
+            const Register *r1 = Register(vals->val[0].val);
+            if (r1->len == 1) {
+                const Register *r2;
+                int r1name = r1->data[0];
+                int nprm = register_generic(prm, r1name);
                 if (nprm >= 0) {
                     struct values_s vs = vals->val[0];
                     vals->val[0] = vals->val[1];
@@ -836,15 +839,21 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     cnmemonic = opcode_table[opcode[prm]];
                     goto retry1a;
                 }
-                if (Register(vals->val[1].val)->len == 1) {
+                r2 = Register(vals->val[1].val);
+                if (r2->len == 1) {
+                    int r2name = r2->data[0];
                     nprm = -1;
-                    if (Register(vals->val[0].val)->data[0] == 'd' && Register(vals->val[1].val)->data[0] == 'a') nprm = current_cpu->tcd;
-                    if (Register(vals->val[0].val)->data[0] == 'i' && Register(vals->val[1].val)->data[0] == 'x') nprm = current_cpu->txi;
-                    if (Register(vals->val[0].val)->data[0] == 'r' && Register(vals->val[1].val)->data[0] == 'x') nprm = current_cpu->txr;
+                    if (r1name == 'd' && r2name == 'a') nprm = current_cpu->tcd;
+                    if (r1name == 'i' && r2name == 'x') nprm = current_cpu->txi;
+                    if (r1name == 'r' && r2name == 'x') nprm = current_cpu->txr;
                     if (nprm >= 0) {
                         prm = nprm;
                         cnmemonic = opcode_table[opcode[prm]];
                         goto retry0;
+                    }
+                    if (r1name == r2name && r1name >= 'a' && r1name <= 'z' && ((current_cpu->registers >> (r1name - 'a')) & 1) != 0) {
+                        dump_instr(0, 0, -1, epoint);
+                        return NULL;
                     }
                 }
             }
