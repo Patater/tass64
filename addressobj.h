@@ -61,10 +61,12 @@ static inline MUST_CHECK Obj *new_address(Obj *val, atype_t type) {
     return Obj(v);
 }
 
+struct Register;
+
 extern MUST_CHECK Obj *int_from_address(Address *, linepos_t);
 extern MUST_CHECK Obj *float_from_address(Address *, linepos_t);
 extern MUST_CHECK Obj *bits_from_address(Address *, linepos_t);
 extern MUST_CHECK Obj *bytes_from_address(Address *, linepos_t);
 extern bool check_addr(atype_t);
-extern Address_types register_to_indexing(unsigned int);
+extern Address_types register_to_indexing(const struct Register *);
 #endif

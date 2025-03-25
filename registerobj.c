@@ -167,8 +167,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BYTES:
     case T_STR:
     case T_CODE:
-        if (Register(op->v1)->len == 1) {
-            Address_types am = register_to_indexing(Register(op->v1)->data[0]);
+        {
+            Address_types am = register_to_indexing(Register(op->v1));
             if (am == A_NONE) break;
             if (op->op == O_ADD) {
                 return new_address(val_reference(op->v2), am);
@@ -202,12 +202,10 @@ static MUST_CHECK Obj *rcalc2(oper_t op) {
     case T_BITS:
     case T_FLOAT:
     case T_BYTES:
-        if (Register(op->v2)->len == 1) {
-            if (op->op == O_ADD) {
-                Address_types am = register_to_indexing(Register(op->v2)->data[0]);
-                if (am != A_NONE) {
-                    return new_address(val_reference(op->v1), am);
-                }
+        if (op->op == O_ADD) {
+            Address_types am = register_to_indexing(Register(op->v2));
+            if (am != A_NONE) {
+                return new_address(val_reference(op->v1), am);
             }
         }
         break;

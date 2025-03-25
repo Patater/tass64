@@ -839,21 +839,23 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     cnmemonic = opcode_table[opcode[prm]];
                     goto retry1a;
                 }
-                r2 = Register(vals->val[1].val);
-                if (r2->len == 1) {
-                    int r2name = r2->data[0];
-                    nprm = -1;
-                    if (r1name == 'd' && r2name == 'a') nprm = current_cpu->tcd;
-                    if (r1name == 'i' && r2name == 'x') nprm = current_cpu->txi;
-                    if (r1name == 'r' && r2name == 'x') nprm = current_cpu->txr;
-                    if (nprm >= 0) {
-                        prm = nprm;
-                        cnmemonic = opcode_table[opcode[prm]];
-                        goto retry0;
-                    }
-                    if (prm == current_cpu->str && r1name == r2name && r1name >= 'a' && r1name <= 'z' && ((current_cpu->registers >> (r1name - 'a')) & 1) != 0) {
-                        dump_instr(0, 0, -1, epoint);
-                        return NULL;
+                if (vals->val[1].val->obj == REGISTER_OBJ) {
+                    r2 = Register(vals->val[1].val);
+                    if (r2->len == 1) {
+                        int r2name = r2->data[0];
+                        nprm = -1;
+                        if (r1name == 'd' && r2name == 'a') nprm = current_cpu->tcd;
+                        if (r1name == 'i' && r2name == 'x') nprm = current_cpu->txi;
+                        if (r1name == 'r' && r2name == 'x') nprm = current_cpu->txr;
+                        if (nprm >= 0) {
+                            prm = nprm;
+                            cnmemonic = opcode_table[opcode[prm]];
+                            goto retry0;
+                        }
+                        if (prm == current_cpu->str && r1name == r2name && r1name >= 'a' && r1name <= 'z' && ((current_cpu->registers >> (r1name - 'a')) & 1) != 0) {
+                            dump_instr(0, 0, -1, epoint);
+                            return NULL;
+                        }
                     }
                 }
             }
@@ -861,7 +863,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
     retry2:
         if (vals->val[1].val->obj == REGISTER_OBJ) {
-            am = Register(vals->val[1].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[1].val)->data[0]);
+            am = register_to_indexing(Register(vals->val[1].val));
             if (am != A_NONE) {
                 val = vals->val[0].val;
                 am |= val->obj->address(val) << 4;
@@ -927,8 +929,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             goto noregister;
         }
         if (vals->val[1].val->obj == REGISTER_OBJ && vals->val[2].val->obj == REGISTER_OBJ) {
-            atype_t am2 = Register(vals->val[2].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[2].val)->data[0]);
-            am = Register(vals->val[1].val)->len != 1 ? A_NONE : register_to_indexing(Register(vals->val[1].val)->data[0]);
+            atype_t am2 = register_to_indexing(Register(vals->val[2].val));
+            am = register_to_indexing(Register(vals->val[1].val));
             if (am != A_NONE && am2 != A_NONE) {
                 val = vals->val[0].val;
                 am |= val->obj->address(val) << 4;
