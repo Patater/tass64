@@ -409,22 +409,28 @@ static int register_generic(int prm, int c) {
     case 'a':
         if (prm == current_cpu->ldr) return current_cpu->lda;
         if (prm == current_cpu->str) return current_cpu->sta;
-        if (prm == current_cpu->cpr) return current_cpu->cpa;
+        if (prm == current_cpu->cmp) return current_cpu->cpa;
+        if (prm == current_cpu->adc) return prm;
+        if (prm == current_cpu->sbc) return prm;
+        if (prm == current_cpu->and) return prm;
+        if (prm == current_cpu->orr) return current_cpu->ora;
+        if (prm == current_cpu->eor) return prm;
+        if (prm == current_cpu->bit) return prm;
         break;
     case 'x':
         if (prm == current_cpu->ldr) return current_cpu->ldx;
         if (prm == current_cpu->str) return current_cpu->stx;
-        if (prm == current_cpu->cpr) return current_cpu->cpx;
+        if (prm == current_cpu->cmp) return current_cpu->cpx;
         break;
     case 'y':
         if (prm == current_cpu->ldr) return current_cpu->ldy;
         if (prm == current_cpu->str) return current_cpu->sty;
-        if (prm == current_cpu->cpr) return current_cpu->cpy;
+        if (prm == current_cpu->cmp) return current_cpu->cpy;
         break;
     case 'z':
         if (prm == current_cpu->ldr) return current_cpu->ldz;
         if (prm == current_cpu->str) return current_cpu->stz;
-        if (prm == current_cpu->cpr) return current_cpu->cpz;
+        if (prm == current_cpu->cmp) return current_cpu->cpz;
         break;
     default:
         break;
@@ -1007,7 +1013,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 Obj *v = vals->val[j].val;
                 if (v->obj == ERROR_OBJ) return Error(val_reference(v));
             }
-            if (prm == current_cpu->ldr || prm == current_cpu->str || prm == current_cpu->cpr) {
+            if (prm == current_cpu->ldr || prm == current_cpu->str) {
                 struct values_s *v = &vals->val[0];
                 am = v->val->obj->address(v->val);
                 if (am != A_NONE) {

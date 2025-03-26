@@ -27,7 +27,6 @@ context default lightgray
     keyword whole clv white
     keyword whole cmp white
     keyword whole cpa white
-    keyword whole cpr white
     keyword whole cpx white
     keyword whole cpy white
     keyword whole dec white
@@ -56,6 +55,7 @@ context default lightgray
     keyword whole lsr white
     keyword whole nop white
     keyword whole ora white
+    keyword whole orr white
     keyword whole pha white
     keyword whole php white
     keyword whole pla white

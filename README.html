@@ -3661,9 +3661,9 @@ address:</p>
 <tr><td>RSH&nbsp;A<td>RSH&nbsp;I<td>RSH&nbsp;X<td>RSH&nbsp;Y<td>RUL&nbsp;A<td>RUL&nbsp;I<td>RUL&nbsp;X<td>RUL&nbsp;Y
 </table></div>
 
-<p>The parametrized version of load, store and compare instructions are <code>LDR</code>, <code>STR</code>
-and <code>CPR</code>, respectively. The first parameter is the register to
-be used and then the regular addressing mode can be written after a coma. For
+<p>The parametrized version of load and store instructions are
+<code>LDR</code> and <code>STR</code>, respectively. The first parameter is the
+register to be used and then the regular addressing mode can be written after a coma. For
 example <code>LDX&nbsp;$1000,y</code> is equivalent to <code>LDR&nbsp;x,&nbsp;$1000,y</code>.
 It is recommended to leave a space before the addressing mode.</p>
 
@@ -3671,8 +3671,8 @@ It is recommended to leave a space before the addressing mode.</p>
 <caption>Register parametrized load, store and compare instructions</caption>
 <tr><td width="12%">LDA<td width="12%">LDX<td width="12%">LDY<td width="12%">LDZ<td width="12%">STA<td width="12%">STX<td width="12%">STY<td width="12%">STZ
 <tr><td>LDR&nbsp;A,<td>LDR&nbsp;X,<td>LDR&nbsp;Y,<td>LDR&nbsp;Z,<td>STR&nbsp;A,<td>STR&nbsp;X,<td>STR&nbsp;Y,<td>STR&nbsp;Z,
-<tr><td width="12%">CMP<td width="12%">CPX<td width="12%">CPY<td width="12%">CPZ<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;
-<tr><td>CPR&nbsp;A,<td>CPR&nbsp;X,<td>CPR&nbsp;Y,<td>CPR&nbsp;Z,<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<tr><td width="12%">CPA<td width="12%">CPX<td width="12%">CPY<td width="12%">CPZ<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;
+<tr><td>CMP&nbsp;A,<td>CMP&nbsp;X,<td>CMP&nbsp;Y,<td>CMP&nbsp;Z,<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 </table></div>
 
 <p>Transfer instructions have generic versions as well, actually in two
@@ -6055,8 +6055,8 @@ This mode is for compiling sources which are already PETSCII.
 <tr><th width="4%">ASL<td width="46%">0A
 <th width="4%">BGE<td width="46%">B0
 <tr><th>BLT<td>90
-<th>CPA<td>C1 C5 C9 CD D1 D5 D9 DD
-<tr><th>CPR<td>C0 C1 C4 C5 C9 CC CD D1 D5 D9 DD E0 E4 EC
+<th>CMP<td>C0 C4 CC E0 E4 EC
+<tr><th>CPA<td>C1 C5 C9 CD D1 D5 D9 DD
 <th>GCC<td>4C 90
 <tr><th>GCS<td>4C B0
 <th>GEQ<td>4C F0
@@ -6069,13 +6069,15 @@ This mode is for compiling sources which are already PETSCII.
 <tr><th>GVS<td>4C 70
 <th>LDR<td>8A 98 A0 A1 A2 A4 A5 A6 A8 A9 AA AC AD AE B1 B4 B5 B6 B9 BA BC BD BE
 <tr><th>LSR<td>4A
-<th>PSH<td>08 48
-<tr><th>PUL<td>28 68
-<th>ROL<td>2A
-<tr><th>ROR<td>6A
-<th>SHL<td>06 0A 0E 16 1E
-<tr><th>SHR<td>46 4A 4E 56 5E
-<th>STR<td>81 84 85 86 8C 8D 8E 91 94 95 96 99 9A 9D
+<th>ORR<td>01 05 09 0D 11 15 19 1D
+<tr><th>PSH<td>08 48
+<th>PUL<td>28 68
+<tr><th>ROL<td>2A
+<th>ROR<td>6A
+<tr><th>SHL<td>06 0A 0E 16 1E
+<th>SHR<td>46 4A 4E 56 5E
+<tr><th>STR<td>81 84 85 86 8C 8D 8E 91 94 95 96 99 9A 9D
+<th>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;
 </table></div>
 
 <h3>6502 illegal opcodes<a name="opcodes-6502i" href="#opcodes-6502i"></a></h3>
@@ -6196,11 +6198,11 @@ This mode is for compiling sources which are already PETSCII.
 <caption>Additional 65C02 aliases and pseudo instructions</caption>
 <tr><th width="4%">CLR<td width="46%">64 74 9C 9E
 <th width="4%">CPA<td width="46%">D2
-<tr><th>CPR<td>D2
-<th>DEA<td>3A
-<tr><th>GRA<td>4C 80
-<th>INA<td>1A
-<tr><th>LDR<td>B2
+<tr><th>DEA<td>3A
+<th>GRA<td>4C 80
+<tr><th>INA<td>1A
+<th>LDR<td>B2
+<tr><th>ORR<td>12
 <th>PSH<td>5A DA
 <tr><th>PUL<td>7A FA
 <th>STR<td>64 74 92 9C 9E
@@ -6290,11 +6292,11 @@ parameters (e.g. <code>RMB 7,$20</code>).
 <caption>Additional W65816 aliases over 65C02</caption>
 <tr><th width="4%">CLP<td width="46%">C2
 <th width="4%">CPA<td width="46%">C3 C7 CF D3 D7 DF
-<tr><th>CPR<td>C3 C7 CF D3 D7 DF
-<th>CSP<td>02
-<tr><th>HLT<td>DB
-<th>JML<td>5C DC
-<tr><th>LDR<td>3B 7B 9B A3 A7 AF B3 B7 BB BF
+<tr><th>CSP<td>02
+<th>HLT<td>DB
+<tr><th>JML<td>5C DC
+<th>LDR<td>3B 7B 9B A3 A7 AF B3 B7 BB BF
+<tr><th>ORR<td>03 07 0F 13 17 1F
 <th>PSH<td>0B 4B 8B D4 F4
 <tr><th>PUL<td>2B AB
 <th>STR<td>1B 83 87 8F 93 97 9F
@@ -6366,9 +6368,9 @@ parameters (e.g. <code>RMB 7,$20</code>).
 <caption>Additional 65EL02 aliases over 65C02</caption>
 <tr><th width="4%">CLP<td width="46%">C2
 <th width="4%">CPA<td width="46%">C3 C7 D3 D7
-<tr><th>CPR<td>C3 C7 D3 D7
-<th>HLT<td>DB
-<tr><th>LDR<td>9B A3 A7 AB AF B3 B7 BB DC
+<tr><th>HLT<td>DB
+<th>LDR<td>9B A3 A7 AB AF B3 B7 BB DC
+<tr><th>ORR<td>03 07 13 17
 <th>PSH<td>D4 DF F4
 <tr><th>PUL<td>CF
 <th>RSH<td>0B 1B 44 4B 54 5B
@@ -6427,7 +6429,7 @@ parameters (e.g. <code>RMB 7,$20</code>).
 <tr><th width="4%">ASR<td width="46%">43
 <th width="4%">BGE<td width="46%">B3
 <tr><th>BLT<td>93
-<th>CPR<td>C2 D4 DC
+<th>CMP<td>C2 D4 DC
 <tr><th>LDR<td>0B 4B 6B 7B A3 AB BB E2
 <th>NEG<td>42
 <tr><th>RTN<td>62

@@ -193,7 +193,6 @@
                         <KEYWORD1>clv</KEYWORD1>
                         <KEYWORD1>cmp</KEYWORD1>
                         <KEYWORD1>cpa</KEYWORD1>
-                        <KEYWORD1>cpr</KEYWORD1>
                         <KEYWORD1>cpx</KEYWORD1>
                         <KEYWORD1>cpy</KEYWORD1>
                         <KEYWORD1>dec</KEYWORD1>
@@ -212,6 +211,7 @@
                         <KEYWORD1>lsr</KEYWORD1>
                         <KEYWORD1>nop</KEYWORD1>
                         <KEYWORD1>ora</KEYWORD1>
+                        <KEYWORD1>orr</KEYWORD1>
                         <KEYWORD1>pha</KEYWORD1>
                         <KEYWORD1>php</KEYWORD1>
                         <KEYWORD1>pla</KEYWORD1>

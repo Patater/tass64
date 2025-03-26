@@ -3108,17 +3108,17 @@ PUL A     PUL B     PUL D               PUL P     PUL X     PUL Y     PUL Z
 RHA       RHI       RHX       RHY       RLA       RLI       RLX       RLY
 RSH A     RSH I     RSH X     RSH Y     RUL A     RUL I     RUL X     RUL Y
 
-The parametrized version of load, store and compare instructions are LDR, STR
-and CPR, respectively. The first parameter is the register to be used and then
-the regular addressing mode can be written after a coma. For example
-LDX $1000,y is equivalent to LDR x, $1000,y. It is recommended to leave a space
-before the addressing mode.
+The parametrized version of load and store instructions are LDR and STR,
+respectively. The first parameter is the register to be used and then the
+regular addressing mode can be written after a coma. For example LDX $1000,y is
+equivalent to LDR x, $1000,y. It is recommended to leave a space before the
+addressing mode.
 
           Register parametrized load, store and compare instructions
 LDA       LDX       LDY       LDZ       STA       STX       STY       STZ
 LDR A,    LDR X,    LDR Y,    LDR Z,    STR A,    STR X,    STR Y,    STR Z,
-CMP       CPX       CPY       CPZ
-CPR A,    CPR X,    CPR Y,    CPR Z,
+CPA       CPX       CPY       CPZ
+CMP A,    CMP X,    CMP Y,    CMP Z,
 
 Transfer instructions have generic versions as well, actually in two variants.
 The first one is when only one of the registers need to be variable. A register
@@ -5165,20 +5165,20 @@ TXS 9A                                  TYA 98
 
                        6502 aliases, pseudo instructions
 ASL 0A                                  BGE B0
-BLT 90                                  CPA C1 C5 C9 CD D1 D5 D9 DD
-CPR C0 C1 C4 C5 C9 CC CD D1 D5 D9 DD E0 GCC 4C 90
-    E4 EC
+BLT 90                                  CMP C0 C4 CC E0 E4 EC
+CPA C1 C5 C9 CD D1 D5 D9 DD             GCC 4C 90
 GCS 4C B0                               GEQ 4C F0
 GGE 4C B0                               GLT 4C 90
 GMI 30 4C                               GNE 4C D0
 GPL 10 4C                               GVC 4C 50
 GVS 4C 70                               LDR 8A 98 A0 A1 A2 A4 A5 A6 A8 A9 AA AC
                                             AD AE B1 B4 B5 B6 B9 BA BC BD BE
-LSR 4A                                  PSH 08 48
-PUL 28 68                               ROL 2A
-ROR 6A                                  SHL 06 0A 0E 16 1E
-SHR 46 4A 4E 56 5E                      STR 81 84 85 86 8C 8D 8E 91 94 95 96 99
-                                            9A 9D
+LSR 4A                                  ORR 01 05 09 0D 11 15 19 1D
+PSH 08 48                               PUL 28 68
+ROL 2A                                  ROR 6A
+SHL 06 0A 0E 16 1E                      SHR 46 4A 4E 56 5E
+STR 81 84 85 86 8C 8D 8E 91 94 95 96 99
+    9A 9D
 
 6502 illegal opcodes
 
@@ -5246,9 +5246,9 @@ TRB 14 1C                               TSB 04 0C
 
                Additional 65C02 aliases and pseudo instructions
 CLR 64 74 9C 9E                         CPA D2
-CPR D2                                  DEA 3A
-GRA 4C 80                               INA 1A
-LDR B2                                  PSH 5A DA
+DEA 3A                                  GRA 4C 80
+INA 1A                                  LDR B2
+ORR 12                                  PSH 5A DA
 PUL 7A FA                               STR 64 74 92 9C 9E
 
 R65C02 opcodes
@@ -5301,9 +5301,9 @@ XCE FB
 
                      Additional W65816 aliases over 65C02
 CLP C2                                  CPA C3 C7 CF D3 D7 DF
-CPR C3 C7 CF D3 D7 DF                   CSP 02
-HLT DB                                  JML 5C DC
-LDR 3B 7B 9B A3 A7 AF B3 B7 BB BF       PSH 0B 4B 8B D4 F4
+CSP 02                                  HLT DB
+JML 5C DC                               LDR 3B 7B 9B A3 A7 AF B3 B7 BB BF
+ORR 03 07 0F 13 17 1F                   PSH 0B 4B 8B D4 F4
 PUL 2B AB                               STR 1B 83 87 8F 93 97 9F
 SWA EB                                  TAD 5B
 TAS 1B                                  TDA 7B
@@ -5341,8 +5341,8 @@ XCE FB                                  ZEA 8F
 
                      Additional 65EL02 aliases over 65C02
 CLP C2                                  CPA C3 C7 D3 D7
-CPR C3 C7 D3 D7                         HLT DB
-LDR 9B A3 A7 AB AF B3 B7 BB DC          PSH D4 DF F4
+HLT DB                                  LDR 9B A3 A7 AB AF B3 B7 BB DC
+ORR 03 07 13 17                         PSH D4 DF F4
 PUL CF                                  RSH 0B 1B 44 4B 54 5B
 RUL 2B 3B 6B 7B                         STR 83 87 93 97
 
@@ -5373,7 +5373,7 @@ TZA 6B
 
                      Additional 65CE02 aliases over R65C02
 ASR 43                                  BGE B3
-BLT 93                                  CPR C2 D4 DC
+BLT 93                                  CMP C2 D4 DC
 LDR 0B 4B 6B 7B A3 AB BB E2             NEG 42
 RTN 62                                  STR 2B 5B 82 8B 9B
 
