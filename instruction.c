@@ -1015,7 +1015,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 Obj *v = vals->val[j].val;
                 if (v->obj == ERROR_OBJ) return Error(val_reference(v));
             }
-            if (prm == current_cpu->ldr || prm == current_cpu->str) {
+            if (prm == current_cpu->ldr || prm == current_cpu->str || prm == current_cpu->orr) {
                 struct values_s *v = &vals->val[0];
                 am = v->val->obj->address(v->val);
                 if (am != A_NONE) {
