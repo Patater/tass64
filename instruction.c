@@ -1008,8 +1008,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 if (v->obj == ERROR_OBJ) return Error(val_reference(v));
             }
             if (prm == current_cpu->ldr || prm == current_cpu->str || prm == current_cpu->cpr) {
-                err = new_error(ERROR____WRONG_TYPE, &vals->val[0].epoint);
-                err->u.otype.t1 = vals->val[0].val->obj;
+                struct values_s *v = &vals->val[0];
+                am = v->val->obj->address(v->val);
+                if (am != A_NONE) {
+                    if (am > MAX_ADDRESS_MASK) return new_error(ERROR__ADDR_COMPLEX, &v->epoint);
+                    return err_addressing(am, &v->epoint, prm);
+                }
+                err = new_error(ERROR____WRONG_TYPE, &v->epoint);
+                err->u.otype.t1 = v->val->obj;
                 err->u.otype.t2 = REGISTER_OBJ;
                 return err;
             }
