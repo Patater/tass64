@@ -410,12 +410,14 @@ static int register_generic(int prm, int c) {
         if (prm == current_cpu->ldr) return current_cpu->lda;
         if (prm == current_cpu->str) return current_cpu->sta;
         if (prm == current_cpu->cmp) return current_cpu->cpa;
-        if (prm == current_cpu->adc) return prm;
-        if (prm == current_cpu->sbc) return prm;
-        if (prm == current_cpu->and) return prm;
+        if (prm == current_cpu->adc) return current_cpu->adc;
+        if (prm == current_cpu->sbc) return current_cpu->sbc;
+        if (prm == current_cpu->and) return current_cpu->and;
         if (prm == current_cpu->orr) return current_cpu->ora;
-        if (prm == current_cpu->eor) return prm;
-        if (prm == current_cpu->bit) return prm;
+        if (prm == current_cpu->eor) return current_cpu->eor;
+        if (prm == current_cpu->bit) return current_cpu->bit;
+        if (prm == current_cpu->tsb) return current_cpu->tsb;
+        if (prm == current_cpu->trb) return current_cpu->trb;
         break;
     case 'x':
         if (prm == current_cpu->ldr) return current_cpu->ldx;
