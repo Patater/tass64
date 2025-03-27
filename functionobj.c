@@ -651,13 +651,36 @@ static MUST_CHECK Obj *to_real(struct values_s *v, double *r) {
 static MUST_CHECK Obj *function_hypot(oper_t op) {
     struct values_s *v = Funcargs(op->v2)->val;
     Obj *val;
-    double real, real2;
+    double real, result;
+    argcount_t i, len = Funcargs(op->v2)->len;
 
-    val = to_real(&v[0], &real);
-    if (val != NULL) return val;
-    val = to_real(&v[1], &real2);
-    if (val != NULL) return val;
-    return float_from_double(hypot(real, real2), op->epoint);
+    if (len == 0) {
+        result = 0.0;
+    } else {
+        val = to_real(&v[0], &result);
+        if (val != NULL) return val;
+
+        switch (len) {
+        case 1:
+            if (result < 0) result = -result;
+            break;
+        case 2:
+            val = to_real(&v[1], &real);
+            if (val != NULL) return val;
+            result = hypot(result, real);
+            break;
+        default:
+            result *= result;
+            for (i = 1; i < len; i++) {
+                val = to_real(&v[i], &real);
+                if (val != NULL) return val;
+                result += real * real;
+            }
+            result = sqrt(result);
+            break;
+        }
+    }
+    return float_from_double(result, op->epoint);
 }
 
 static MUST_CHECK Obj *function_atan2(oper_t op) {
@@ -765,9 +788,6 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                 func = v1->func;
                 switch (func) {
                 case F_HYPOT:
-                    if (args != 2) {
-                        return new_error_argnum(args, 2, 2, op->epoint3);
-                    }
                     return gen_broadcast(op, function_hypot);
                 case F_ATAN2:
                     if (args != 2) {

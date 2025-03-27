@@ -1051,8 +1051,8 @@ rad(<expression>)
     Degrees to radian. E.g. rad(0.0) is 0.0
 deg(<expression>)
     Radian to degrees. E.g. deg(0.0) is 0.0
-hypot(<expression y>, <expression x>)
-    Polar distance. E.g. hypot(4.0, 3.0) is 5.0
+hypot([<expression>, ...])
+    Euclidean distance, any dimensions. E.g. hypot(4.0, 3.0) is 5.0
 atan2(<expression y>, <expression x>)
     Polar angle in -pi to +pi range. E.g. atan2(0.0, 3.0) is 0.0
 abs(<expression>)
