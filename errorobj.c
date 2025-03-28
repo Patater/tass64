@@ -65,6 +65,7 @@ static FAST_CALL void destroy(Obj *o1) {
     case ERROR______NOT_ITER:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
+    case ERROR______LOG_BASE:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
@@ -129,6 +130,7 @@ static FAST_CALL void garbage(Obj *o1, int i) {
     case ERROR______NOT_ITER:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
+    case ERROR______LOG_BASE:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:
@@ -285,6 +287,7 @@ void error_obj_update(Error *err, const Obj *v1, Obj *v2) {
     case ERROR______NOT_ITER:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
+    case ERROR______LOG_BASE:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR:

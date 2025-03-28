@@ -373,6 +373,7 @@ static const char *const terr_error[] = {
     "zero raised to negative power ",
     "square root of negative number ",
     "logarithm of non-positive number ",
+    "invalid logarithm base ",
     "not in range -1.0 to 1.0 ",
     "empty range not allowed",
     "empty string not allowed",
@@ -960,6 +961,7 @@ void err_msg_output(const Error *val) {
     case ERROR______NOT_ITER:
     case ERROR___MATH_DOMAIN:
     case ERROR_LOG_NON_POSIT:
+    case ERROR______LOG_BASE:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
     case ERROR_____KEY_ERROR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_msg_variable(val->u.obj);break;

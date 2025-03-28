@@ -551,12 +551,6 @@ static MUST_CHECK Obj *function_function(oper_t op) {
         }
         real = log10(real);
         break;
-    case F_LOG:
-        if (real <= 0.0) {
-            err = ERROR_LOG_NON_POSIT; goto failed;
-        }
-        real = log(real);
-        break;
     case F_EXP: real = exp(real);break;
     case F_SIN: real = sin(real);break;
     case F_COS: real = cos(real);break;
@@ -706,6 +700,30 @@ static MUST_CHECK Obj *function_pow(oper_t op) {
     return op->v1->obj->calc2(op);
 }
 
+static MUST_CHECK Obj *function_log(oper_t op) {
+    struct values_s *v = Funcargs(op->v2)->val;
+    Obj *val;
+    double real, real2;
+
+    val = to_real(&v[0], &real);
+    if (val != NULL) return val;
+    if (real <= 0.0) return new_error_obj(ERROR_LOG_NON_POSIT, v[0].val, &v[0].epoint);
+
+    if (Funcargs(op->v2)->len == 2) {
+        val = to_real(&v[1], &real2);
+        if (val != NULL) return val;
+        if (real2 == 10.0) real = log10(real);
+        else {
+            if (real2 > 0.0) real2 = log(real2); else real2 = 0.0;
+            if (real2 == 0.0 || real2 == HUGE_VAL || real2 == -HUGE_VAL || real2 != real2) {
+                return new_error_obj(ERROR______LOG_BASE, v[1].val, &v[1].epoint);
+            }
+            real = log(real) / real2;
+        }
+    } else real = log(real);
+    return float_from_double(real, op->epoint);
+}
+
 static MUST_CHECK Obj *function_all_any(oper_t op, Obj **warn, bool first) {
     Truth_types typ = (Function(op->v1)->func == F_ALL) ? TRUTH_ALL : TRUTH_ANY;
     struct values_s *v = Funcargs(op->v2)->val;
@@ -799,6 +817,11 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                         return new_error_argnum(args, 2, 2, op->epoint3);
                     }
                     return function_pow(op);
+                case F_LOG:
+                    if (args < 1 || args > 2) {
+                        return new_error_argnum(args, 1, 2, op->epoint3);
+                    }
+                    return gen_broadcast(op, function_log);
                 case F_RANGE:
                     if (args < 1 || args > 3) {
                         return new_error_argnum(args, 1, 3, op->epoint3);

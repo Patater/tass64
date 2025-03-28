@@ -1023,8 +1023,8 @@ cbrt(<expression>)
     Cube root. E.g. cbrt(27.0) is 3.0
 log10(<expression>)
     Common logarithm. E.g. log10(100.0) is 2.0
-log(<expression>)
-    Natural logarithm. E.g. log(1) is 0.0
+log(<expression>[, <expression base>])
+    Logarithm, natural by default. E.g. log(1) is 0.0
 exp(<expression>)
     Exponential. E.g. exp(0) is 1.0
 pow(<expression a>, <expression b>)
@@ -4746,6 +4746,8 @@ general syntax
     can't do anything with this
 index out of range
     not enough elements in list
+invalid logarithm base
+    logarithm base should be positive and not one
 key not in dictionary
     key not in the dictionary
 label required
