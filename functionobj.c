@@ -713,7 +713,15 @@ static MUST_CHECK Obj *function_log(oper_t op) {
         val = to_real(&v[1], &real2);
         if (val != NULL) return val;
         if (real2 == 10.0) real = log10(real);
-        else {
+        else if (real2 == 2.0) {
+            int e;
+            real = frexp(real, &e);
+            if (real < 0.707106781186547524400844362104849039284) {
+                real *= 2.0;
+                e--;
+            }
+            real = (double)e + log(real)*1.44269504088896340735992468100189213743;
+        } else {
             if (real2 > 0.0) real2 = log(real2); else real2 = 0.0;
             if (real2 == 0.0 || real2 == HUGE_VAL || real2 == -HUGE_VAL || real2 != real2) {
                 return new_error_obj(ERROR______LOG_BASE, v[1].val, &v[1].epoint);
