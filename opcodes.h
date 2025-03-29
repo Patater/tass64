@@ -21,6 +21,7 @@
 #include "inttypes.h"
 
 #define ____ 0x69
+
 typedef enum Adr_types {
     ADR_REG, ADR_IMPLIED, ADR_IMMEDIATE, ADR_LONG, ADR_ADDR, ADR_ZP, ADR_LONG_X,
     ADR_ADDR_X, ADR_ZP_X, ADR_ADDR_X_I, ADR_ZP_X_I, ADR_ZP_S, ADR_ZP_S_I_Y,
@@ -43,9 +44,10 @@ struct cpu_s {
     const uint32_t registers;
     unsigned int opcodes;
     address_t max_address;
-    int jmp, brl, ldr, lda, ldx, ldy, ldz, str, sta, stx, sty, stz, cmp, cpa, cpx, cpy, cpz, tcd, txi, txr, adc, sbc, and, orr, eor, bit, ora, tsb, trb;
+    int jmp, brl, ldr, lda, ldx, ldy, ldz, str, sta, stx, sty, stz, cmp, cpa;
+    int cpx, cpy, cpz, tcd, txi, txr, adc, sbc, and, orr, eor, bit, ora, tsb, trb;
 };
-    
+
 extern const char *reg_names;
 extern const uint8_t regopcode_table[][REG_LEN];
 
