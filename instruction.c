@@ -39,7 +39,7 @@
 #include "eval.h"
 
 static const uint32_t *mnemonic;    /* mnemonics */
-static const uint8_t *opcode;       /* opcodes */
+static const uint16_t *opcode;      /* opcodes */
 static unsigned int last_mnem;
 
 bool longaccu, longindex, autosize; /* hack */
@@ -417,8 +417,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
     Error *err;
     atype_t am;
 
-    cnmemonic = opcode_table[opcode[prm]];
-    amode = opcode_table_modes[opcode[prm]];
+    cnmemonic = opcode_table[opcode[prm] & 0xff];
+    amode = opcode_table_modes[opcode[prm] >> 8];
     longbranch = 0; reg = REG_A; adr = 0;
 
     switch (vals->len) {
@@ -804,8 +804,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     val = vals->val[0].val;
                     epoint2 = &vals->val[0].epoint;
                     prm = nprm;
-                    cnmemonic = opcode_table[opcode[prm]];
-                    amode = opcode_table_modes[opcode[prm]];
+                    cnmemonic = opcode_table[opcode[prm] & 0xff];
+                    amode = opcode_table_modes[opcode[prm] >> 8];
                     goto retry1a;
                 }
                 if (vals->val[1].val->obj == REGISTER_OBJ) {
@@ -818,8 +818,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         if (r1name == 'r' && r2name == 'x') nprm = current_cpu->txr;
                         if (nprm >= 0) {
                             prm = nprm;
-                            cnmemonic = opcode_table[opcode[prm]];
-                            amode = opcode_table_modes[opcode[prm]];
+                            cnmemonic = opcode_table[opcode[prm] & 0xff];
+                            amode = opcode_table_modes[opcode[prm] >> 8];
                             goto retry0;
                         }
                         if (prm == current_cpu->str && r1name == r2name && r1name >= 'a' && r1name <= 'z' && ((current_cpu->registers >> (r1name - 'a')) & 1) != 0) {
@@ -892,8 +892,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     vals->val[1] = vals->val[2];
                     vals->val[2] = vs;
                     prm = nprm;
-                    cnmemonic = opcode_table[opcode[prm]];
-                    amode = opcode_table_modes[opcode[prm]];
+                    cnmemonic = opcode_table[opcode[prm] & 0xff];
+                    amode = opcode_table_modes[opcode[prm] >> 8];
                     goto retry2;
                 }
             }
@@ -963,8 +963,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     vals->val[2] = vals->val[3];
                     vals->val[3] = vs;
                     prm = nprm;
-                    cnmemonic = opcode_table[opcode[prm]];
-                    amode = opcode_table_modes[opcode[prm]];
+                    cnmemonic = opcode_table[opcode[prm] & 0xff];
+                    amode = opcode_table_modes[opcode[prm] >> 8];
                     goto retry2;
                 }
             }
