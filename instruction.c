@@ -1164,7 +1164,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
 
                 switch (w) {
                 case 0:
-                    if (is_amode(amode, ADR_ZP)) return err_addressize(ERROR__NO_BYTE_ADDR, epoint2, prm);
+                    if (!is_amode(amode, ADR_ZP)) return err_addressize(ERROR__NO_BYTE_ADDR, epoint2, prm);
                     uval2 &= all_mem;
                     uval3 = (opcode == c65el02.opcode || opcode == w65816.opcode) ? (uval & all_mem) : uval2;
                     if (uval3 <= 0xffff) {
@@ -1180,7 +1180,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     err_msg2(ERROR_____NOT_BANK0, val2, epoint2);
                     break;
                 case 1:
-                    if (is_amode(amode, ADR_ADDR)) return err_addressize(ERROR__NO_WORD_ADDR, epoint2, prm);
+                    if (!is_amode(amode, ADR_ADDR)) return err_addressize(ERROR__NO_WORD_ADDR, epoint2, prm);
                     uval &= all_mem;
                     adr = uval;
                     if (databank != (uval >> 16)) err_msg2(ERROR__NOT_DATABANK, val2, epoint2);
