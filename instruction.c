@@ -1111,12 +1111,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         {
             uval_t uval2;
             Obj *val2 = (val->obj == ADDRESS_OBJ) ? Address(val)->val : val;
+            if (opr == OPR_ZP_X) amode >>= ADR_ZP_X - ADR_ZP;
+            else if (opr == OPR_ZP_Y) amode >>= ADR_ZP_Y - ADR_ZP;
 
             if (w == 3) {/* auto length */
                 if (val2->obj == CODE_OBJ && !Code(val2)->memblocks->enumeration) {
-                    if (tocode_uaddress(val2, &uval, &uval2, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
+                    if (tocode_uaddress(val2, &uval, &uval2, epoint2)) w = is_amode(amode, ADR_ADDR) ? 1 : 0;
                 } else {
-                    if (touaddress(val, &uval, all_mem_bits, epoint2)) w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
+                    if (touaddress(val, &uval, all_mem_bits, epoint2)) w = is_amode(amode, ADR_ADDR) ? 1 : 0;
                     else uval2 = uval;
                 }
                 if (w == 3) {/* auto length */
@@ -1129,7 +1131,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         else w = 2;
                     }
 
-                    if (cnmemonic[opr] != ____ && uval3 <= 0xffff && dpage <= 0xffff && (uint16_t)(uval3 - dpage) <= 0xff) {
+                    if (is_amode(amode, ADR_ZP) && uval3 <= 0xffff && dpage <= 0xffff && (uint16_t)(uval3 - dpage) <= 0xff) {
                         if (diagnostics.immediate && opr == OPR_ZP && is_amode(amode, ADR_IMMEDIATE) && (val->obj != CODE_OBJ || Code(val)->memblocks->enumeration) && val->obj != ADDRESS_OBJ) err_msg2(ERROR_NONIMMEDCONST, NULL, epoint2);
                         else if (w != 3 && w != 0) err_msg_address_mismatch(opr-0, opr-w, epoint2);
                         adr = uval - dpage; w = 0;
@@ -1138,16 +1140,16 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         } else {
                             if (adr > 0xff) err_msg_dpage_wrap(epoint2);
                         }
-                    } else if (cnmemonic[opr - 1] != ____ && databank == ((uval & all_mem) >> 16)) {
+                    } else if (is_amode(amode, ADR_ADDR) && databank == ((uval & all_mem) >> 16)) {
                         if (w != 3 && w != 1) err_msg_address_mismatch(opr-1, opr-w, epoint2);
                         adr = uval; w = 1;
                         if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
-                    } else if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) {
+                    } else if (adrgen == AG_DB3 && is_amode(amode, ADR_LONG)) {
                         if (w != 3 && w != 2) err_msg_address_mismatch(opr-2, opr-w, epoint2);
                         adr = uval; w = 2;
                         if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
                     } else {
-                        w = (cnmemonic[opr - 1] != ____) ? 1 : 0;
+                        w = is_amode(amode, ADR_ADDR) ? 1 : 0;
                         err_msg2((w != 0) ? ERROR__NOT_DATABANK : ERROR____NOT_DIRECT, val2, epoint2);
                     }
                 }
@@ -1162,7 +1164,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
 
                 switch (w) {
                 case 0:
-                    if (cnmemonic[opr] == ____) return err_addressize(ERROR__NO_BYTE_ADDR, epoint2, prm);
+                    if (is_amode(amode, ADR_ZP)) return err_addressize(ERROR__NO_BYTE_ADDR, epoint2, prm);
                     uval2 &= all_mem;
                     uval3 = (opcode == c65el02.opcode || opcode == w65816.opcode) ? (uval & all_mem) : uval2;
                     if (uval3 <= 0xffff) {
@@ -1178,14 +1180,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     err_msg2(ERROR_____NOT_BANK0, val2, epoint2);
                     break;
                 case 1:
-                    if (cnmemonic[opr - 1] == ____) return err_addressize(ERROR__NO_WORD_ADDR, epoint2, prm);
+                    if (is_amode(amode, ADR_ADDR)) return err_addressize(ERROR__NO_WORD_ADDR, epoint2, prm);
                     uval &= all_mem;
                     adr = uval;
                     if (databank != (uval >> 16)) err_msg2(ERROR__NOT_DATABANK, val2, epoint2);
                     else if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
                     break;
                 case 2:
-                    if (adrgen == AG_DB3 && cnmemonic[opr - 2] != ____) {
+                    if (adrgen == AG_DB3 && is_amode(amode, ADR_LONG)) {
                         adr = uval & all_mem;
                         if ((uval & all_mem) != uval) err_msg_addr_wrap(epoint2);
                         break;
