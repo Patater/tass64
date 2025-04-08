@@ -360,6 +360,7 @@ static void printmon(Listing *ls, unsigned int cod, int ln, uint32_t adr) {
     case ADR_ZP_I_Z:
     case ADR_ZP_LI:
     case ADR_ZP_LI_Y:
+    case ADR_ZP_LI_Z:
     case ADR_ZP_X:
     case ADR_ZP_X_I:
     case ADR_ZP_Y: out_zp(ls, adr); break;

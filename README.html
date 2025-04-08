@@ -93,7 +93,7 @@ the 65xx series of processors. Key features:
 <ul>
 <li>Open source portable C with minimal dependencies</li>
 <li>Familiar syntax to Omicron TASS and TASM</li>
-<li>Supports 6502, 65C02, R65C02, W65C02, 65CE02, 65816, DTV, 65EL02, 4510</li>
+<li>Supports 6502, 65C02, R65C02, W65C02, 65CE02, 65816, DTV, 65EL02, 4510, 45GS02</li>
 <li>Arbitrary-precision integers and bit strings, double precision floating point numbers</li>
 <li>Character and byte strings, array arithmetic</li>
 <li>Handles UTF-8, UTF-16 and 8&nbsp;bit RAW encoded source files, Unicode character strings</li>
@@ -260,6 +260,7 @@ difficult to get everything <q>right</q> first time.</b>
   <li><a href="#opcodes-65el02">65EL02 opcodes</a></li>
   <li><a href="#opcodes-65ce02">65CE02 opcodes</a></li>
   <li><a href="#opcodes-4510">CSG 4510 opcodes</a></li>
+  <li><a href="#opcodes-45gs02">45GS02 opcodes</a></li>
  </ul></li>
  <li><a href="#appendix">Appendix</a>
  <ul>
@@ -3525,6 +3526,7 @@ can ruin the timing of a carefully cycle counted code.
         <b class="k">.cpu</b> <span class="s">"r65c02"</span>   <i>;R65C02</i>
         <b class="k">.cpu</b> <span class="s">"w65c02"</span>   <i>;W65C02</i>
         <b class="k">.cpu</b> <span class="s">"4510"</span>     <i>;CSG 4510</i>
+        <b class="k">.cpu</b> <span class="s">"45gs02"</span>   <i>;45GS02</i>
         <b class="k">.cpu</b> <span class="s">"default"</span>  <i>;cpu set on command line</i>
 </pre></dd>
 </dl>
@@ -3671,8 +3673,8 @@ It is recommended to leave a space before the addressing mode.</p>
 <caption>Register parametrized load, store and compare instructions</caption>
 <tr><td width="12%">LDA<td width="12%">LDX<td width="12%">LDY<td width="12%">LDZ<td width="12%">STA<td width="12%">STX<td width="12%">STY<td width="12%">STZ
 <tr><td>LDR&nbsp;A,<td>LDR&nbsp;X,<td>LDR&nbsp;Y,<td>LDR&nbsp;Z,<td>STR&nbsp;A,<td>STR&nbsp;X,<td>STR&nbsp;Y,<td>STR&nbsp;Z,
-<tr><td width="12%">CPA<td width="12%">CPX<td width="12%">CPY<td width="12%">CPZ<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;
-<tr><td>CMP&nbsp;A,<td>CMP&nbsp;X,<td>CMP&nbsp;Y,<td>CMP&nbsp;Z,<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<tr><td width="12%">CPA<td width="12%">CPX<td width="12%">CPY<td width="12%">CPZ<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">LDQ<td width="12%">STQ<td width="12%">CPQ
+<tr><td>CMP&nbsp;A,<td>CMP&nbsp;X,<td>CMP&nbsp;Y,<td>CMP&nbsp;Z,<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>LDR&nbsp;Q,<td>STR&nbsp;Q,<td>CMP&nbsp;Q,
 </table></div>
 
 <p>Transfer instructions have generic versions as well, actually in two
@@ -3775,8 +3777,8 @@ longer.
 <p>If the branch would skip only one byte then the opposite condition is
 compiled and only the first byte is emitted. This is now a never executed jump,
 and the relative distance byte after the opcode is the jumped over byte. If the
-CPU has long conditional branches (65CE02/4510) then the same method is applied
-to two byte skips as well.
+CPU has long conditional branches (65CE02/4510/45GS02) then the same method is
+applied to two byte skips as well.
 
 <p>There's a pseudo opcode called <code>GRA</code> for CPUs supporting
 <code>BRA</code>, which is expanded to <code>BRL</code> (if available) or
@@ -4741,6 +4743,7 @@ analysis done. Currently it's easy to fool with these constructs:</p>
 <li>Using <code>*+5</code> and similar tricks to skip instructions, or to loop like <code>*-1</code>.</li>
 <li>Any other method of flow control not involving referenced labels. E.g. calculated returns.</li>
 <li>Register re-mappings on 65DTV02 with SIR and SAC.</li>
+<li>32 bit operations on 45GS02.</li>
 </ul>
 
 <p>It's also rather simple and conservative, so some opportunities will be
@@ -4898,6 +4901,14 @@ disk drive code, etc.
 64tass --m4510 a.asm
         <b>map</b>
         <b>eom</b>
+</pre></dd>
+
+<dt><b>--m45gs02</b><a name="o_m45gs02" href="#o_m45gs02"></a>
+<dd>45GS02. Enables extra opcodes and addressing modes specific to this CPU. Useful for MEGA65 projects.
+
+<pre>
+64tass --m45gs02 a.asm
+        <b>ldq</b> <span>$1000</span>
 </pre></dd>
 </dl>
 
@@ -6381,7 +6392,18 @@ parameters (e.g. <code>RMB 7,$20</code>).
 
 <h3>65CE02 opcodes<a name="opcodes-65ce02" href="#opcodes-65ce02"></a></h3>
 
-<p>This processor is an enhanced version of R65C02.
+<p>There's a small deviation in the use of <code>TAD</code> and <code>TDA</code>
+for the base page. That's consistent with the direct page addressing
+mode, <a href="#d_dpage"><code>.dpage</code></a> directive and convention of other
+processors. Therefore <code>TAB</code> and <code>TBA</code> mnemonics are aliases only.
+
+<p>For similar reason the base page register needs to be referenced as
+<code>D</code> instead of <code>B</code> as the latter is the data bank
+register on other processors.
+
+<p>As later variants have both left and right rotating multi byte instructions
+the rotate left word <code>ROW</code> mnemonic should be written as
+<code>RLW</code> if possible.
 
 <div><table width="100%" class="opcodes">
 <caption>Additional 65CE02 opcodes over R65C02</caption>
@@ -6410,15 +6432,15 @@ parameters (e.g. <code>RMB 7,$20</code>).
 <tr><th>PHW<td>F4 FC
 <th>PHZ<td>DB
 <tr><th>PLZ<td>FB
-<th>ROW<td>EB
+<th>RLW<td>EB
 <tr><th>RTS<td>62
 <th>SEE<td>03
 <tr><th>STA<td>82
 <th>STX<td>9B
 <tr><th>STY<td>8B
-<th>TAB<td>5B
+<th>TAD<td>5B
 <tr><th>TAZ<td>4B
-<th>TBA<td>7B
+<th>TDA<td>7B
 <tr><th>TSY<td>0B
 <th>TYS<td>2B
 <tr><th>TZA<td>6B
@@ -6433,8 +6455,12 @@ parameters (e.g. <code>RMB 7,$20</code>).
 <th>CMP<td>C2 D4 DC
 <tr><th>LDR<td>0B 4B 6B 7B A3 AB BB E2
 <th>NEG<td>42
-<tr><th>RTN<td>62
-<th>STR<td>2B 5B 82 8B 9B
+<tr><th>ROW<td>EB
+<th>RTN<td>62
+<tr><th>STR<td>2B 5B 82 8B 9B
+<th>TAB<td>5B
+<tr><th>TBA<td>7B
+<th>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;
 </table></div>
 
 <div><table width="100%" class="opcodes">
@@ -6457,6 +6483,117 @@ parameters (e.g. <code>RMB 7,$20</code>).
 <caption>Additional CSG 4510 aliases over 65CE02</caption>
 <tr><th width="4%">EOM<td width="46%">EA
 <th width="4%"><td width="46%">
+</table></div>
+
+<h3>45GS02 opcodes<a name="opcodes-45gs02" href="#opcodes-45gs02"></a></h3>
+
+<p>Unfortunately the original naming convention couldn't be adopted as it
+used four letter mnemonics for most new operations. If these longer names are
+preferred it's quite easy to define macros named like that using <a
+href="#d_segment"><code>.segment</code></a> and <q><code>\@</code></q>.
+
+<p>The four letter mnemonics got shortened so that all register
+<code>Q</code> operations are ending with the name of the register. That leaves two
+letters to describe the function which isn't much.
+
+<p>Alternatively the <a href="#generic-instructions">generic instruction</a>
+syntax can be used with register <code>Q</code> parameter to get more
+descriptive and familiar mnemonics.
+
+<div><table border="0" width="100%">
+<caption>Q register memory 45GS02 mnemonics</caption>
+<tr><th width="6%"><code>ADQ</code><th width="12%"><code>ADC Q,<td width="50%">Add with carry to register <code>Q</code><td width="32%">(also known as <code>ADCQ</code>)
+<tr><th><code>ANQ</code><th><code>AND&nbsp;Q,</code><td>Logical and register <code>Q</code><td>(also known as <code>ANDQ</code>)
+<tr><th><code>BTQ</code><th><code>BIT&nbsp;Q,</code><td>Bit test register <code>Q</code><td>(also known as <code>BITQ</code>)
+<tr><th><code>CPQ</code><th><code>CMP&nbsp;Q,</code><td>Compare register <code>Q</code><td>(also known as <code>CMPQ</code>)
+<tr><th><code>EOQ</code><th><code>EOR&nbsp;Q,</code><td>Exclusive or register <code>Q</code><td>(also known as <code>EORQ</code>)
+<tr><th><code>LDQ</code><th><code>LDR&nbsp;Q,</code><td>Load register <code>Q</code><td>
+<tr><th><code>ORQ</code><th><code>ORR&nbsp;Q,</code><td>Logical or register <code>Q</code><td>
+<tr><th><code>SBQ</code><th><code>SBC&nbsp;Q,</code><td>Subtract with carry from register <code>Q</code><td>(also known as <code>SBCQ</code>)
+<tr><th><code>STQ</code><th><code>STR&nbsp;Q,</code><td>Store register <code>Q</code><td>
+</table></div>
+
+<p>The <code>Q</code> register modify instruction detach the register from the
+mnemonic just like <code>ASL&nbsp;A</code>. Repeating it would be redundant as well.
+
+<p>The <code>INQ</code> and <code>DEQ</code> mnemonics have only implied
+addressing mode. Similarly like <code>INX</code> or <code>INY</code>.
+
+<div><table border="0" width="100%">
+<caption>Q register modify 45GS02 mnemonics</caption>
+<tr><th width="6%"><code>&nbsp;&nbsp;&nbsp;</code><th width="12%"><code>ASL&nbsp;Q&nbsp;</code><td width="50%">Arithmetic shift left register <code>Q</code><td width="32%">(also known as <code>ASRQ&nbsp;Q</code>)
+<tr><th><code>&nbsp;&nbsp;&nbsp;</code><th><code>ASR&nbsp;Q&nbsp;</code><td>Arithmetic shift right register <code>Q</code><td>(also known as <code>ASLQ&nbsp;Q</code>)
+<tr><th><code>DEQ</code><th><code>DEC&nbsp;Q&nbsp;</code><td>Decrement register <code>Q</code><td>(also known as <code>DEQ&nbsp;Q</code>)
+<tr><th><code>INQ</code><th><code>INC&nbsp;Q&nbsp;</code><td>Increment register <code>Q</code><td>(also known as <code>INQ&nbsp;Q</code>)
+<tr><th><code>&nbsp;&nbsp;&nbsp;</code><th><code>LSR&nbsp;Q&nbsp;</code><td>Logical shift right register <code>Q</code><td>(also known as <code>LSRQ&nbsp;Q</code>)
+<tr><th><code>&nbsp;&nbsp;&nbsp;</code><th><code>ROL&nbsp;Q&nbsp;</code><td>Rotate left register <code>Q</code><td>(also known as <code>ROLQ&nbsp;Q</code>)
+<tr><th><code>&nbsp;&nbsp;&nbsp;</code><th><code>ROR&nbsp;Q&nbsp;</code><td>Rotate right register <code>Q</code><td>(also known as <code>RORQ&nbsp;Q</code>)
+</table></div>
+
+<p>The double word memory modify instructions are ending with the letter
+<code>D</code>. That's consistent with pre-existing word operations like <code>INW</code>,
+<code>DEW</code>, <code>ASW</code> and others.
+
+<p>While <code>INQ</code> and <code>DEQ</code> would be short enough these aren't
+used as register <code>Q</code> is not involved in the operation.
+
+<div><table border="0" width="100%">
+<caption>Double word memory modify 45GS02 mnemonics</caption>
+<tr><th width="6%"><code>ARD</code><th width="12%"><td width="50%">Arithmetic shift right double word<td width="32%">(also known as <code>ASRQ</code>)
+<tr><th><code>ASD</code><th><td>Arithmetic shift left double word<td>(also known as <code>ASLQ</code>)
+<tr><th><code>DED</code><th><td>Decrement double word<td>(also known as <code>DEQ</code>)
+<tr><th><code>IND</code><th><td>Increment double word<td>(also known as <code>INQ</code>)
+<tr><th><code>LSD</code><th><td>Logical shift right double word<td>(also known as <code>LSRQ</code>)
+<tr><th><code>RLD</code><th><td>Rotate left double word<td>(also known as <code>ROLQ</code>)
+<tr><th><code>RRD</code><th><td>Rotate right double word<td>(also known as <code>RORQ</code>)
+</table></div>
+
+<div><table width="100%" class="opcodes">
+<caption>Additional 45GS02 opcodes over CSG 4510</caption>
+<tr><th width="4%">ADC<td width="46%">72
+<th width="4%">ADQ<td width="46%">65 6D 72
+<tr><th>AND<td>32
+<th>ANQ<td>25 2D 32
+<tr><th>ARD<td>43 44 54
+<th>ASD<td>0A 06 0E 16 1E
+<tr><th>ASL<td>0A
+<th>ASR<td>43
+<tr><th>BTQ<td>24 2C
+<th>CMP<td>D2
+<tr><th>CPQ<td>C5 CD D2
+<th>DEC<td>3A
+<tr><th>DED<td>3A C6 CE D6 DE
+<th>DEQ<td>3A
+<tr><th>EOQ<td>45 4D 52
+<th>EOR<td>52
+<tr><th>INC<td>1A
+<th>IND<td>1A E6 EE F6 FE
+<tr><th>INQ<td>1A
+<th>LDA<td>B2
+<tr><th>LDQ<td>A5 AD B2
+<th>LSD<td>46 4A 4E 56 5E
+<tr><th>LSR<td>4A
+<th>ORA<td>12
+<tr><th>ORQ<td>05 0D 12
+<th>RLD<td>26 2A 2E 36 3E
+<tr><th>ROL<td>2A
+<th>ROR<td>6A
+<tr><th>RRD<td>66 6A 6E 76 7E
+<th>SBC<td>F2
+<tr><th>SBQ<td>E5 ED F2
+<th>STA<td>92
+<tr><th>STQ<td>85 8D 92
+<th>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;
+</table></div>
+
+<div><table width="100%" class="opcodes">
+<caption>Additional 45GS02 aliases over CSG 4510</caption>
+<tr><th width="4%">CPA<td width="46%">D2
+<th width="4%">LDR<td width="46%">A5 AD B2
+<tr><th>ORR<td>05 0D 12
+<th>SHL<td>0A
+<tr><th>SHR<td>4A
+<th>STR<td>85 8D 92
 </table></div>
 
 <hr>

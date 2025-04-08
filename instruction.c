@@ -360,6 +360,17 @@ static Adrgen adrmatch(const uint8_t *cnmemonic, uint32_t amode, atype_t am, uns
             *opr = OPR_ZP_LI; return AG_BYTE; /* lda [$ff,d] */
         }
         return AG_NONE;
+    case (A_IMMEDIATE << 12) | (A_DR << 8) | (A_LI << 4) | A_ZR:/* lda [#$ff,d],z */
+    case (A_DR << 8) | (A_LI << 4) | A_ZR:
+        if (is_amode(amode, ADR_ZP_LI_Z)) {
+            *opr = OPR_ZP_LI_Z; return AG_BYTE; /* lda [$ff,d],y */
+        }
+        return AG_NONE;
+    case (A_LI << 4) | A_ZR:
+        if (is_amode(amode, ADR_ZP_LI_Z)) {
+            *opr = OPR_ZP_LI_Z; return AG_ZP; /* lda [$ff],z */
+        }
+        return AG_NONE;
     default:
         return AG_NONE;
     }
@@ -381,6 +392,17 @@ static int register_generic(int prm, int c) {
         if (prm == current_cpu->tsb) return current_cpu->tsb;
         if (prm == current_cpu->trb) return current_cpu->trb;
         break;
+    case 'q':
+        if (prm == current_cpu->ldr) return current_cpu->ldq;
+        if (prm == current_cpu->str) return current_cpu->stq;
+        if (prm == current_cpu->cmp) return current_cpu->cpq;
+        if (prm == current_cpu->adc) return current_cpu->adq;
+        if (prm == current_cpu->sbc) return current_cpu->sbq;
+        if (prm == current_cpu->and) return current_cpu->anq;
+        if (prm == current_cpu->orr) return current_cpu->orq;
+        if (prm == current_cpu->eor) return current_cpu->eoq;
+        if (prm == current_cpu->bit) return current_cpu->btq;
+        break;
     case 'x':
         if (prm == current_cpu->ldr) return current_cpu->ldx;
         if (prm == current_cpu->str) return current_cpu->stx;
@@ -400,6 +422,28 @@ static int register_generic(int prm, int c) {
         break;
     }
     return -1;
+}
+
+static void qprefix(int prm, linepos_t epoint) {
+    if (prm == current_cpu->adq
+        || prm == current_cpu->anq
+        || prm == current_cpu->ard
+        || prm == current_cpu->btq
+        || prm == current_cpu->cpq
+        || prm == current_cpu->ded
+        || prm == current_cpu->eoq
+        || prm == current_cpu->ind
+        || prm == current_cpu->ldq
+        || prm == current_cpu->orq
+        || prm == current_cpu->rld
+        || prm == current_cpu->rrd
+        || prm == current_cpu->sbq
+        || prm == current_cpu->asd
+        || prm == current_cpu->lsd
+        || prm == current_cpu->stq) {
+        dump_instr(0x42, 0, 0, epoint);
+        dump_instr(0x42, 0, 0, epoint);
+    }
 }
 
 MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t epoint) {
@@ -426,6 +470,10 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
     retry0:
         if (is_amode(amode, ADR_IMPLIED)) {
             if (diagnostics.implied_reg && is_amode(amode, ADR_REG)) err_msg_implied_reg(epoint, mnemonic[prm]);
+            if (opcode == c45gs02.opcode && (prm == current_cpu->inq || prm == current_cpu->deq)) {
+                dump_instr(0x42, 0, 0, epoint);
+                dump_instr(0x42, 0, 0, epoint);
+            }
             adrgen = AG_IMP; opr = OPR_IMPLIED;
             break;
         }
@@ -473,10 +521,20 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 case OPR_ZP_X_I:
                 case OPR_ZP_I:
                     if (pline[epoint2->pos] == '(') epoint2->pos++;
+                    if (opcode == c45gs02.opcode) qprefix(prm, epoint);
                     break;
                 case OPR_ZP_LI_Y:
                 case OPR_ZP_LI:
                     if (pline[epoint2->pos] == '[') epoint2->pos++;
+                    if (opcode == c45gs02.opcode) {
+                        qprefix(prm, epoint);
+                        dump_instr(0xea, 0, 0, epoint);
+                    }
+                    break;
+                case OPR_ZP:
+                case OPR_ZP_X:
+                case OPR_ADDR:
+                    if (opcode == c45gs02.opcode) qprefix(prm, epoint);
                     break;
                 default:
                     break;
@@ -495,6 +553,10 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     if (cod != 0) {
                         reg = (Reg_types)(ind - reg_names);
                         if (regopcode_table[cod][reg] != ____) {
+                            if (reg == REG_Q && opcode == c45gs02.opcode) {
+                                dump_instr(0x42, 0, 0, epoint);
+                                dump_instr(0x42, 0, 0, epoint);
+                            }
                             adrgen = AG_IMP;
                             break;
                         }
@@ -692,7 +754,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             goto branchend;
                         }
                     }
-                    if (adr == 2 && (opcode == c65ce02.opcode || opcode == c4510.opcode)) {
+                    if (adr == 2 && (opcode == c65ce02.opcode || opcode == c4510.opcode || opcode == c45gs02.opcode)) {
                         if ((cnmemonic[OPR_REL] & 0x1f) == 0x10) {
                             if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
                             dump_instr(cnmemonic[OPR_REL] ^ 0x23, 2, 0, epoint);
@@ -728,6 +790,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             break;
         }
         if (is_amode3(amode, ADR_ZP, ADR_ADDR, ADR_LONG)) {
+            if (opcode == c45gs02.opcode) qprefix(prm, epoint);
             adrgen = AG_DB3; opr = OPR_ZP; /* lda $ff lda $ffff lda $ffffff */
             break;
         }
@@ -1048,7 +1111,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             if (uval2 <= 0xffff) {
                 adr = uval;
                 if (uval > 0xffff) err_msg_bank0_wrap(epoint2);
-                if (diagnostics.jmp_bug && cnmemonic[opr] == 0x6c && opcode != w65816.opcode && opcode != c65c02.opcode && opcode != r65c02.opcode && opcode != w65c02.opcode && opcode != c65ce02.opcode && opcode != c4510.opcode && opcode != c65el02.opcode && (~adr & 0xff) == 0) err_msg_jmp_bug(val2, epoint2);/* jmp ($xxff) */
+                if (diagnostics.jmp_bug && cnmemonic[opr] == 0x6c && opcode != w65816.opcode && opcode != c65c02.opcode && opcode != r65c02.opcode && opcode != w65c02.opcode && opcode != c65ce02.opcode && opcode != c4510.opcode && opcode != c45gs02.opcode && opcode != c65el02.opcode && (~adr & 0xff) == 0) err_msg_jmp_bug(val2, epoint2);/* jmp ($xxff) */
                 break;
             }
             err_msg2(ERROR_____NOT_BANK0, val2, epoint2);
@@ -1225,7 +1288,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         ln = 2;
         if (touaddress(val, &uval, 16, epoint2)) break;
         uval &= 0xffff;
-        adr = uval - current_address->l_address - ((opcode != c65ce02.opcode && opcode != c4510.opcode) ? 3 : 2);
+        adr = uval - current_address->l_address - ((opcode != c65ce02.opcode && opcode != c4510.opcode && opcode != c45gs02.opcode) ? 3 : 2);
         break;
     case AG_RELL:
         if (w != 3 && w != 1) return err_addressize((w != 0) ? ERROR__NO_LONG_ADDR : ERROR__NO_BYTE_ADDR, epoint2, prm);
@@ -1233,7 +1296,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         if (touaddress(val, &uval, all_mem_bits, epoint2)) break;
         uval &= all_mem;
         if ((current_address->l_address ^ uval) <= 0xffff) {
-            adr = uval - current_address->l_address - ((opcode != c65ce02.opcode && opcode != c4510.opcode) ? 3 : 2);
+            adr = uval - current_address->l_address - ((opcode != c65ce02.opcode && opcode != c4510.opcode && opcode != c45gs02.opcode) ? 3 : 2);
             break;
         }
         err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);

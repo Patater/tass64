@@ -369,7 +369,7 @@ enum {
     OUTPUT_APPEND, NO_OUTPUT, ERROR_APPEND, NO_ERROR, LABELS_APPEND, MAP,
     NO_MAP, MAP_APPEND, LIST_APPEND, SIMPLE_LABELS, LABELS_SECTION,
     MESEN_LABELS, LABELS_ADD_PREFIX, MAKE_APPEND, C256_PGX, C256_PGZ,
-    OUTPUT_EXEC
+    OUTPUT_EXEC, M45GS02
 };
 
 static const struct my_option long_options[] = {
@@ -408,6 +408,7 @@ static const struct my_option long_options[] = {
     {"mr65c02"          , my_no_argument      , NULL,  MR65C02},
     {"mw65c02"          , my_no_argument      , NULL,  MW65C02},
     {"m4510"            , my_no_argument      , NULL,  M4510},
+    {"m45gs02"          , my_no_argument      , NULL,  M45GS02},
     {"labels"           , my_required_argument, NULL, 'l'},
     {"labels-append"    , my_required_argument, NULL,  LABELS_APPEND},
     {"output"           , my_required_argument, NULL, 'o'},
@@ -687,6 +688,7 @@ int init_arguments(int *argc2, char **argv2[]) {
             case MR65C02: arguments.cpumode = &r65c02;break;
             case MW65C02: arguments.cpumode = &w65c02;break;
             case M4510: arguments.cpumode = &c4510;break;
+            case M45GS02: arguments.cpumode = &c45gs02;break;
             case LABELS_APPEND:
             case 'l': symbol_output.name = my_optarg;
                       symbol_output.append = (opt == LABELS_APPEND);
@@ -745,12 +747,13 @@ int init_arguments(int *argc2, char **argv2[]) {
                "        [--nonlinear] [--c256-pgx] [--c256-pgz] [--tasm-compatible]\n"
                "        [--long-address] [--output-section=<name>] [--m65c02] [--m6502]\n"
                "        [--m65xx] [--m65dtv02] [--m65816] [--m65el02] [--mr65c02] [--mw65c02]\n"
-               "        [--m65ce02] [--m4510] [--labels=<file>] [--labels-append=<file>]\n"
-               "        [--labels-add-prefix=<txt>] [--labels-section=<name>]\n"
-               "        [--labels-root=<expr>] [--export-labels] [--vice-labels-numeric]\n"
-               "        [--vice-labels] [--dump-labels] [--simple-labels] [--mesen-labels]\n"
-               "        [--list=<file>] [--list-append=<file>] [--no-monitor] [--no-source]\n"
-               "        [--line-numbers] [--tab-size=<value>] [--verbose-list] [-W<option>]\n"
+               "        [--m65ce02] [--m4510] [--m45gs02] [--labels=<file>]\n"
+               "        [--labels-append=<file>] [--labels-add-prefix=<txt>]\n"
+               "        [--labels-section=<name>] [--labels-root=<expr>] [--export-labels]\n"
+               "        [--vice-labels-numeric] [--vice-labels] [--dump-labels]\n"
+               "        [--simple-labels] [--mesen-labels] [--list=<file>]\n"
+               "        [--list-append=<file>] [--no-monitor] [--no-source] [--line-numbers]\n"
+               "        [--tab-size=<value>] [--verbose-list] [-W<option>]\n"
                "        [--dependencies=<file>] [--dependencies-append=<file>] [--make-phony]\n"
                "        [--output=<file>] [--output-append=<file>] [--output-exec=<expr>]\n"
                "        [--no-output] [--map=<file>] [--map-append=<file>] [--no-map]\n"
@@ -858,6 +861,7 @@ int init_arguments(int *argc2, char **argv2[]) {
                "      --mr65c02          R65C02\n"
                "      --mw65c02          W65C02\n"
                "      --m4510            CSG 4510\n"
+               "      --m45gs02          45GS02\n"
                "\n"
                " Source listing and labels:\n"
                "  -l, --labels=<file>    List labels into <file>\n"

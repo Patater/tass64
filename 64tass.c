@@ -5101,10 +5101,10 @@ MUST_CHECK Obj *compile(void)
                 { /* .cpu */
                     struct values_s *vs;
                     const struct cpu_s **cpui;
-                    static const struct cpu_s default_cpu = {"default", NULL, NULL, NULL, NULL, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+                    static const struct cpu_s default_cpu = {"default", NULL, NULL, NULL, NULL, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
                     static const struct cpu_s *cpus[] = {
                         &c6502, &c65c02, &c65ce02, &c6502i, &w65816, &c65dtv02,
-                        &c65el02, &r65c02, &w65c02, &c4510, &default_cpu, NULL
+                        &c65el02, &r65c02, &w65c02, &c4510, &c45gs02, &default_cpu, NULL
                     };
                     str_t cpuname;
 

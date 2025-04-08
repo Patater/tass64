@@ -5,7 +5,8 @@ the 65xx series of processors. Key features:
 
   * Open source portable C with minimal dependencies
   * Familiar syntax to Omicron TASS and TASM
-  * Supports 6502, 65C02, R65C02, W65C02, 65CE02, 65816, DTV, 65EL02, 4510
+  * Supports 6502, 65C02, R65C02, W65C02, 65CE02, 65816, DTV, 65EL02, 4510,
+    45GS02
   * Arbitrary-precision integers and bit strings, double precision floating
     point numbers
   * Character and byte strings, array arithmetic
@@ -141,6 +142,7 @@ Table of Contents
       + 65EL02 opcodes
       + 65CE02 opcodes
       + CSG 4510 opcodes
+      + 45GS02 opcodes
   * Appendix
       + Assembler directives
       + Built-in functions
@@ -2996,6 +2998,7 @@ Target
             .cpu "r65c02"   ;R65C02
             .cpu "w65c02"   ;W65C02
             .cpu "4510"     ;CSG 4510
+            .cpu "45gs02"   ;45GS02
             .cpu "default"  ;cpu set on command line
 
 Misc
@@ -3117,8 +3120,8 @@ addressing mode.
           Register parametrized load, store and compare instructions
 LDA       LDX       LDY       LDZ       STA       STX       STY       STZ
 LDR A,    LDR X,    LDR Y,    LDR Z,    STR A,    STR X,    STR Y,    STR Z,
-CPA       CPX       CPY       CPZ
-CMP A,    CMP X,    CMP Y,    CMP Z,
+CPA       CPX       CPY       CPZ                 LDQ       STQ       CPQ
+CMP A,    CMP X,    CMP Y,    CMP Z,              LDR Q,    STR Q,    CMP Q,
 
 Transfer instructions have generic versions as well, actually in two variants.
 The first one is when only one of the registers need to be variable. A register
@@ -3205,8 +3208,8 @@ GPL, GMI, GVC, GVS, GLT and GGE.
 If the branch would skip only one byte then the opposite condition is compiled
 and only the first byte is emitted. This is now a never executed jump, and the
 relative distance byte after the opcode is the jumped over byte. If the CPU has
-long conditional branches (65CE02/4510) then the same method is applied to two
-byte skips as well.
+long conditional branches (65CE02/4510/45GS02) then the same method is applied
+to two byte skips as well.
 
 There's a pseudo opcode called GRA for CPUs supporting BRA, which is expanded
 to BRL (if available) or JMP. A one byte skip will be shortened to a single
@@ -4099,6 +4102,7 @@ default, the others are disabled.
       + Any other method of flow control not involving referenced labels. E.g.
         calculated returns.
       + Register re-mappings on 65DTV02 with SIR and SAC.
+      + 32 bit operations on 45GS02.
 
     It's also rather simple and conservative, so some opportunities will be
     missed. Most CPUs are supported with the notable exception of 65816 and
@@ -4228,6 +4232,13 @@ using the `.cpu' directive in the source.
     64tass --m4510 a.asm
             map
             eom
+
+--m45gs02
+    45GS02. Enables extra opcodes and addressing modes specific to this CPU.
+    Useful for MEGA65 projects.
+
+    64tass --m45gs02 a.asm
+            ldq $1000
 
 Symbol listing
 
@@ -5350,7 +5361,16 @@ RUL 2B 3B 6B 7B                         STR 83 87 93 97
 
 65CE02 opcodes
 
-This processor is an enhanced version of R65C02.
+There's a small deviation in the use of TAD and TDA for the base page. That's
+consistent with the direct page addressing mode, .dpage directive and
+convention of other processors. Therefore TAB and TBA mnemonics are aliases
+only.
+
+For similar reason the base page register needs to be referenced as D instead
+of B as the latter is the data bank register on other processors.
+
+As later variants have both left and right rotating multi byte instructions the
+rotate left word ROW mnemonic should be written as RLW if possible.
 
                      Additional 65CE02 opcodes over R65C02
 ASR 43 44 54                            ASW CB
@@ -5365,11 +5385,11 @@ INW E3                                  INZ 1B
 JSR 22 23                               LDA E2
 LDZ A3 AB BB                            NEG 42
 PHW F4 FC                               PHZ DB
-PLZ FB                                  ROW EB
+PLZ FB                                  RLW EB
 RTS 62                                  SEE 03
 STA 82                                  STX 9B
-STY 8B                                  TAB 5B
-TAZ 4B                                  TBA 7B
+STY 8B                                  TAD 5B
+TAZ 4B                                  TDA 7B
 TSY 0B                                  TYS 2B
 TZA 6B
 
@@ -5377,7 +5397,9 @@ TZA 6B
 ASR 43                                  BGE B3
 BLT 93                                  CMP C2 D4 DC
 LDR 0B 4B 6B 7B A3 AB BB E2             NEG 42
-RTN 62                                  STR 2B 5B 82 8B 9B
+ROW EB                                  RTN 62
+STR 2B 5B 82 8B 9B                      TAB 5B
+TBA 7B
 
                     Aliases of R65C02 not valid for 65CE02
 CLR 64 74 9C 9E
@@ -5391,6 +5413,85 @@ MAP 5C
 
                     Additional CSG 4510 aliases over 65CE02
 EOM EA
+
+45GS02 opcodes
+
+Unfortunately the original naming convention couldn't be adopted as it used
+four letter mnemonics for most new operations. If these longer names are
+preferred it's quite easy to define macros named like that using .segment and
+`\@'.
+
+The four letter mnemonics got shortened so that all register Q operations are
+ending with the name of the register. That leaves two letters to describe the
+function which isn't much.
+
+Alternatively the generic instruction syntax can be used with register Q
+parameter to get more descriptive and familiar mnemonics.
+
+                      Q register memory 45GS02 mnemonics
+ ADQ   ADC Q,   Add with carry to register Q           (also known as ADCQ)
+ ANQ   AND Q,   Logical and register Q                 (also known as ANDQ)
+ BTQ   BIT Q,   Bit test register Q                    (also known as BITQ)
+ CPQ   CMP Q,   Compare register Q                     (also known as CMPQ)
+ EOQ   EOR Q,   Exclusive or register Q                (also known as EORQ)
+ LDQ   LDR Q,   Load register Q
+ ORQ   ORR Q,   Logical or register Q
+ SBQ   SBC Q,   Subtract with carry from register Q    (also known as SBCQ)
+ STQ   STR Q,   Store register Q
+
+The Q register modify instruction detach the register from the mnemonic just
+like ASL A. Repeating it would be redundant as well.
+
+The INQ and DEQ mnemonics have only implied addressing mode. Similarly like INX
+or INY.
+
+                      Q register modify 45GS02 mnemonics
+       ASL Q    Arithmetic shift left register Q       (also known as ASRQ Q)
+       ASR Q    Arithmetic shift right register Q      (also known as ASLQ Q)
+ DEQ   DEC Q    Decrement register Q                   (also known as DEQ Q)
+ INQ   INC Q    Increment register Q                   (also known as INQ Q)
+       LSR Q    Logical shift right register Q         (also known as LSRQ Q)
+       ROL Q    Rotate left register Q                 (also known as ROLQ Q)
+       ROR Q    Rotate right register Q                (also known as RORQ Q)
+
+The double word memory modify instructions are ending with the letter D. That's
+consistent with pre-existing word operations like INW, DEW, ASW and others.
+
+While INQ and DEQ would be short enough these aren't used as register Q is not
+involved in the operation.
+
+                  Double word memory modify 45GS02 mnemonics
+ ARD            Arithmetic shift right double word     (also known as ASRQ)
+ ASD            Arithmetic shift left double word      (also known as ASLQ)
+ DED            Decrement double word                  (also known as DEQ)
+ IND            Increment double word                  (also known as INQ)
+ LSD            Logical shift right double word        (also known as LSRQ)
+ RLD            Rotate left double word                (also known as ROLQ)
+ RRD            Rotate right double word               (also known as RORQ)
+
+                    Additional 45GS02 opcodes over CSG 4510
+ADC 72                                  ADQ 65 6D 72
+AND 32                                  ANQ 25 2D 32
+ARD 43 44 54                            ASD 0A 06 0E 16 1E
+ASL 0A                                  ASR 43
+BTQ 24 2C                               CMP D2
+CPQ C5 CD D2                            DEC 3A
+DED 3A C6 CE D6 DE                      DEQ 3A
+EOQ 45 4D 52                            EOR 52
+INC 1A                                  IND 1A E6 EE F6 FE
+INQ 1A                                  LDA B2
+LDQ A5 AD B2                            LSD 46 4A 4E 56 5E
+LSR 4A                                  ORA 12
+ORQ 05 0D 12                            RLD 26 2A 2E 36 3E
+ROL 2A                                  ROR 6A
+RRD 66 6A 6E 76 7E                      SBC F2
+SBQ E5 ED F2                            STA 92
+STQ 85 8D 92
+
+                    Additional 45GS02 aliases over CSG 4510
+CPA D2                                  LDR A5 AD B2
+ORR 05 0D 12                            SHL 0A
+SHR 4A                                  STR 85 8D 92
 
 -------------------------------------------------------------------------------
 
