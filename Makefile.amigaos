@@ -176,8 +176,8 @@ optimizer.o: optimizer.c optimizer.h inttypes.h stdbool.h error.h \
  attributes.h errors_e.h section.h avl.h str.h opcodes.h opt_bit.h \
  macro.h wait_e.h
 registerobj.o: registerobj.c registerobj.h obj.h attributes.h inttypes.h \
- stdbool.h eval.h oper_e.h variables.h values.h strobj.h typeobj.h \
- errorobj.h errors_e.h addressobj.h intobj.h error.h
+ stdbool.h eval.h oper_e.h variables.h values.h error.h errors_e.h \
+ strobj.h typeobj.h errorobj.h addressobj.h intobj.h
 section.o: section.c section.h avl.h attributes.h stdbool.h str.h \
  inttypes.h unicode.h error.h errors_e.h 64tass.h wait_e.h values.h \
  intobj.h obj.h longjump.h optimizer.h eval.h oper_e.h memblocksobj.h \
