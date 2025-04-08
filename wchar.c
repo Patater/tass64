@@ -712,7 +712,7 @@ int wcwidth_v13(unichar_t ch) {
     if (ch == 0xE0001 || (ch >= 0xE0020 && 0xE007F >= ch) || (ch >= 0xE0100 && 0xE01EF >= ch)) {
         return 0;
     }
-    if ((ch >= 0x20000 && 0x2FFFD >= ch) || (0x30000 >= ch && 0x3FFFD >= ch)) {
+    if ((ch >= 0x20000 && 0x2FFFD >= ch) || (ch >= 0x30000 && 0x3FFFD >= ch)) {
         return 2;
     }
     return 1;
