@@ -1794,49 +1794,49 @@ which accepts strings of any length.
     bank)
 
                                             *       = $12000
-    .012000  7c 03 20       jmp ($012003,x)         jmp (jumps,x)
-    >012003  50 20 32 03 92 15              jumps   .addr $12050, routine1, routine2
+    .012000 7c 03 20        jmp ($012003,x)         jmp (jumps,x)
+    >012003 50 20 32 03 92 15               jumps   .addr $12050, routine1, routine2
     ;Computed jumps by using stack (current bank)
                                             *       = $103000
-    .103000  bf 0c 30 10    lda $10300c,x           lda rets+1,x
-    .103004  48             pha                     pha
-    .103005  bf 0b 30 10    lda $10300b,x           lda rets,x
-    .103009  48             pha                     pha
-    .10300a  60             rts                     rts
-    >10300b  ff ef a1 36 f3 42              rets    .rta $10f000, routine1, routine2
+    .103000 bf 0c 30 10     lda $10300c,x           lda rets+1,x
+    .103004 48              pha                     pha
+    .103005 bf 0b 30 10     lda $10300b,x           lda rets,x
+    .103009 48              pha                     pha
+    .10300a 60              rts                     rts
+    >10300b ff ef a1 36 f3 42               rets    .rta $10f000, routine1, routine2
 
 .long <expression>[, <expression>, ...]
     Create bytes from 24 bit unsigned constants (0-16777215)
 .lint <expression>[, <expression>, ...]
     Create bytes from 24 bit signed constants (-8388608-8388607)
 
-    >1000  56 34 12                          .long $123456
+    >1000   56 34 12                         .long $123456
     >1003                                    .long ?        ; reserve 3 bytes
-    >1006  eb fd ff 51 11 00                 .lint -533, 4433
+    >1006   eb fd ff 51 11 00                .lint -533, 4433
     ;Store 8.16 signed fixed point constants
-    >100c  5d 8f fc 66 66 03 1e 85           .lint (-3.44, 3.4, 3.52) * 1p16
-    >1014  03
+    >100c   5d 8f fc 66 66 03 1e 85          .lint (-3.44, 3.4, 3.52) * 1p16
+    >1014   03
     ;Computed long jumps with jump table (65816)
-    .1015  bd 2a 10  lda $102a,x             lda jumps,x
-    .1018  8d 11 03  sta $0311               sta ind
-    .101b  bd 2b 10  lda $102b,x             lda jumps+1,x
-    .101e  8d 12 03  sta $0312               sta ind+1
-    .1021  bd 2c 10  lda $102c,x             lda jumps+2,x
-    .1024  8d 13 03  sta $0313               sta ind+2
-    .1027  dc 11 03  jmp [$0311]             jmp [ind]
-    >102a  32 03 01 92 05 02         jumps   .long routine1, routine2
+    .1015   bd 2a 10        lda $102a,x      lda jumps,x
+    .1018   8d 11 03        sta $0311        sta ind
+    .101b   bd 2b 10        lda $102b,x      lda jumps+1,x
+    .101e   8d 12 03        sta $0312        sta ind+1
+    .1021   bd 2c 10        lda $102c,x      lda jumps+2,x
+    .1024   8d 13 03        sta $0313        sta ind+2
+    .1027   dc 11 03        jmp [$0311]      jmp [ind]
+    >102a   32 03 01 92 05 02        jumps   .long routine1, routine2
 
 .dword <expression>[, <expression>, ...]
     Create bytes from 32 bit unsigned constants (0-4294967295)
 .dint <expression>[, <expression>, ...]
     Create bytes from 32 bit signed constants (-2147483648-2147483647)
 
-    >1000  78 56 34 12              .dword $12345678
+    >1000   78 56 34 12             .dword $12345678
     >1004                           .dword ?        ; reserve 4 bytes
-    >1008  5d 7a 79 e7              .dint -411469219
+    >1008   5d 7a 79 e7             .dint -411469219
     ;Store 16.16 signed fixed point constants
-    >100c  5d 8f fc ff 66 66 03 00  .dint (-3.44, 3.4, 3.52) * 1p16
-    >1014  1e 85 03 00
+    >100c   5d 8f fc ff 66 66 03 00 .dint (-3.44, 3.4, 3.52) * 1p16
+    >1014   1e 85 03 00
 
 .text bits(<expression>[, <bit count>])
     Create bytes from arbitrary precision unsigned and signed numbers.
@@ -1848,10 +1848,10 @@ which accepts strings of any length.
     If the count expression of bytes() and bits() is negative then the stored
     number is signed otherwise unsigned.
 
-    >1000  74 65 78 74 00 00 00 00  .text bytes("text", 8);pad up to 8 bytes
-    >1008  f4 ff ff ff ff ff ff ff  .text bytes(-12, -8)  ;8 bytes signed
-    >1010  00 04 00 00 00 00        .text bits(1024, 48)  ;48 bits unsigned
-    >1016  f4 ff ff ff ff ff        .text bits(-12, -48)  ;48 bits signed
+    >1000   74 65 78 74 00 00 00 00 .text bytes("text", 8);pad up to 8 bytes
+    >1008   f4 ff ff ff ff ff ff ff .text bytes(-12, -8)  ;8 bytes signed
+    >1010   00 04 00 00 00 00       .text bits(1024, 48)  ;48 bits unsigned
+    >1016   f4 ff ff ff ff ff       .text bits(-12, -48)  ;48 bits signed
 
 Storing string values
 
@@ -1866,21 +1866,21 @@ using the current encoding.
 .text <expression>[, <expression>, ...]
     Assemble strings into 8 bit bytes.
 
-    >1000  4f 45 d5  .text "oeU"
-    >1003  4f 45 d5  .text 'oeU'
-    >1006  17 33     .text 23, $33  ; bytes
-    >1008  0d 0a     .text $0a0d    ; $0d, $0a, little endian!
-    >100a  1f        .text %00011111; more bytes
+    >1000   4f 45 d5  .text "oeU"
+    >1003   4f 45 d5  .text 'oeU'
+    >1006   17 33     .text 23, $33  ; bytes
+    >1008   0d 0a     .text $0a0d    ; $0d, $0a, little endian!
+    >100a   1f        .text %00011111; more bytes
 
 .fill <length>[, <fill>]
     Reserve space (using uninitialized data), or fill with repeated bytes.
 
-    >1000            .fill $100      ;no fill, just reserve $100 bytes
-    >1100  00 00 00  .fill $4000, 0  ;16384 bytes of 0
+    >1000             .fill $100      ;no fill, just reserve $100 bytes
+    >1100   00 00 00  .fill $4000, 0  ;16384 bytes of 0
     ...
-    >5100  55 aa 55  .fill 8000, [$55, $aa];8000 bytes of alternating $55, $aa
+    >5100   55 aa 55  .fill 8000, [$55, $aa];8000 bytes of alternating $55, $aa
     ...
-    >7040  ff ff ff  .fill $8000 - *, $ff;fill up rest of EPROM with $ff
+    >7040   ff ff ff  .fill $8000 - *, $ff;fill up rest of EPROM with $ff
     ...
 
 .shift <expression>[, <expression>, ...]
@@ -1893,17 +1893,17 @@ using the current encoding.
     The naming comes from old TASM and is a reference to setting the high bit
     of alphabetic letters which results in it's uppercase version in PETSCII.
 
-    .1000  a2 00          ldx #$00                ldx #0
-    .1002  bd 10 10       lda $1010,x     loop    lda txt,x
-    .1005  08             php                     php
-    .1006  29 7f          and #$7f                and #$7f
-    .1008  20 d2 ff       jsr $ffd2               jsr $ffd2
-    .100b  e8             inx                     inx
-    .100c  28             plp                     plp
-    .100d  10 f3          bpl $1002               bpl loop
-    .100f  60             rts                     rts
-    >1010  53 49 4e 47 4c 45 20 53        txt     .shift "single", 32, "string"
-    >1018  54 52 49 4e c7
+    .1000   a2 00         ldx #$00                ldx #0
+    .1002   bd 10 10      lda $1010,x     loop    lda txt,x
+    .1005   08            php                     php
+    .1006   29 7f         and #$7f                and #$7f
+    .1008   20 d2 ff      jsr $ffd2               jsr $ffd2
+    .100b   e8            inx                     inx
+    .100c   28            plp                     plp
+    .100d   10 f3         bpl $1002               bpl loop
+    .100f   60            rts                     rts
+    >1010   53 49 4e 47 4c 45 20 53       txt     .shift "single", 32, "string"
+    >1018   54 52 49 4e c7
 
 .shiftl <expression>[, <expression>, ...]
     Assemble strings of 7 bit bytes shifted to the left once with the last
@@ -1915,50 +1915,50 @@ using the current encoding.
 
     The naming is a reference to left shifting.
 
-    .1000  a2 00          ldx #$00                ldx #0
-    .1002  bd 0d 10       lda $100d,x     loop    lda txt,x
-    .1005  4a             lsr a                   lsr a
-    .1006  9d 00 04       sta $0400,x             sta $400,x      ;screen memory
-    .1009  e8             inx                     inx
-    .100a  90 f6          bcc $1002               bcc loop
-    .100c  60             rts                     rts
+    .1000   a2 00         ldx #$00                ldx #0
+    .1002   bd 0d 10      lda $100d,x     loop    lda txt,x
+    .1005   4a            lsr a                   lsr a
+    .1006   9d 00 04      sta $0400,x             sta $400,x      ;screen memory
+    .1009   e8            inx                     inx
+    .100a   90 f6         bcc $1002               bcc loop
+    .100c   60            rts                     rts
                                                   .enc "screen"
-    >100d  a6 92 9c 8e 98 8a 40 a6        txt     .shiftl "single", 32, "string"
-    >1015  a8 a4 92 9c 8f                         .enc "none"
+    >100d   a6 92 9c 8e 98 8a 40 a6       txt     .shiftl "single", 32, "string"
+    >1015   a8 a4 92 9c 8f                        .enc "none"
 
 .null <expression>[, <expression>, ...]
     Same as .text, but adds a zero byte to the end. An existing zero byte is an
     error as it'd cause a false end marker.
 
-    .1000  a9 07          lda #$07                lda #<txt
-    .1002  a0 10          ldy #$10                ldy #>txt
-    .1004  20 1e ab       jsr $ab1e               jsr $ab1e
-    >1007  53 49 4e 47 4c 45 20 53        txt     .null "single", 32, "string"
-    >100f  54 52 49 4e 47 00
+    .1000   a9 07         lda #$07                lda #<txt
+    .1002   a0 10         ldy #$10                ldy #>txt
+    .1004   20 1e ab      jsr $ab1e               jsr $ab1e
+    >1007   53 49 4e 47 4c 45 20 53       txt     .null "single", 32, "string"
+    >100f   54 52 49 4e 47 00
 
 .ptext <expression>[, <expression>, ...]
     Same as .text, but prepend the number of bytes in front of the string
     (pascal style string). Therefore it can't do more than 255 bytes.
 
-    .1000  a9 1d          lda #$1d                lda #<txt
-    .1002  a2 10          ldx #$10                ldx #>txt
-    .1004  20 08 10       jsr $1008               jsr print
-    .1007  60             rts                     rts
+    .1000   a9 1d         lda #$1d                lda #<txt
+    .1002   a2 10         ldx #$10                ldx #>txt
+    .1004   20 08 10      jsr $1008               jsr print
+    .1007   60            rts                     rts
 
-    .1008  85 fb          sta $fb         print   sta $fb
-    .100a  86 fc          stx $fc                 stx $fc
-    .100c  a0 00          ldy #$00                ldy #0
-    .100e  b1 fb          lda ($fb),y             lda ($fb),y
-    .1010  f0 0a          beq $101c               beq null
-    .1012  aa             tax                     tax
-    .1013  c8             iny             -       iny
-    .1014  b1 fb          lda ($fb),y             lda ($fb),y
-    .1016  20 d2 ff       jsr $ffd2               jsr $ffd2
-    .1019  ca             dex                     dex
-    .101a  d0 f7          bne $1013               bne -
-    .101c  60             rts             null    rts
-    >101d  0d 53 49 4e 47 4c 45 20        txt     .ptext "single", 32, "string"
-    >1025  53 54 52 49 4e 47
+    .1008   85 fb         sta $fb         print   sta $fb
+    .100a   86 fc         stx $fc                 stx $fc
+    .100c   a0 00         ldy #$00                ldy #0
+    .100e   b1 fb         lda ($fb),y             lda ($fb),y
+    .1010   f0 0a         beq $101c               beq null
+    .1012   aa            tax                     tax
+    .1013   c8            iny             -       iny
+    .1014   b1 fb         lda ($fb),y             lda ($fb),y
+    .1016   20 d2 ff      jsr $ffd2               jsr $ffd2
+    .1019   ca            dex                     dex
+    .101a   d0 f7         bne $1013               bne -
+    .101c   60            rts             null    rts
+    >101d   0d 53 49 4e 47 4c 45 20       txt     .ptext "single", 32, "string"
+    >1025   53 54 52 49 4e 47
 
 Text encoding
 
@@ -1984,11 +1984,11 @@ sources it could be useful to define escape sequences for control codes.
     case .encode is better suited.
 
                                     .enc "screen";screen code mode
-    >1000  13 03 12 05 05 0e 20 03  .text "screen codes"
-    >1008  0f 04 05 13
-    .100c  c9 15     cmp #$15       cmp #"u"    ;compare screen code
+    >1000   13 03 12 05 05 0e 20 03 .text "screen codes"
+    >1008   0f 04 05 13
+    .100c   c9 15    cmp #$15       cmp #"u"    ;compare screen code
                                     .enc "none" ;normal mode again
-    .100e  c9 55     cmp #$55       cmp #"u"    ;compare PETSCII
+    .100e   c9 55    cmp #$55       cmp #"u"    ;compare PETSCII
 
 .encode [<expression>]
     Encoding area start
@@ -2092,8 +2092,8 @@ lower   .encode;lowercase PETSCII
         .endnamespace
 
                                     .encode petscii.lower
->1000  93 d4 45 58 54 20 49 4e     .text "{clr}Text in PETSCII{cr}"
->1008  20 d0 c5 d4 d3 c3 c9 c9 0d
+>1000   93 d4 45 58 54 20 49 4e    .text "{clr}Text in PETSCII{cr}"
+>1008   20 d0 c5 d4 d3 c3 c9 c9 0d
                                     .endencode
 
 Structured data
@@ -2825,23 +2825,23 @@ p3      .addr ?         ;a pointer
 
 The compiled code will look like:
 
->0801    0b 08 d5 07                            .word ss, 2005
->0805    9e 32 30 36 31 00                      .null $9e, format("%4d", start)
->080b    00 00                          ss      .word 0
+>0801   0b 08 d5 07                             .word ss, 2005
+>0805   9e 32 30 36 31 00                       .null $9e, format("%4d", start)
+>080b   00 00                           ss      .word 0
 
-.080d    78                             start   sei
+.080d   78                              start   sei
 
 >0002                                   p2      .addr ?         ;a pointer
 >0334                                   buffer  .fill 10        ;temporary area
 
-.080e    b1 02                                  lda (p2),y
-.0810    a9 00                                  lda #<label
-.0812    a0 10                                  ldy #>label
-.0814    20 1e ab                               jsr print
+.080e   b1 02                                   lda (p2),y
+.0810   a9 00                                   lda #<label
+.0812   a0 10                                   ldy #>label
+.0814   20 1e ab                                jsr print
 
->1000    6d 65 73 73 61 67 65 00        label   .null "message"
+>1000   6d 65 73 73 61 67 65 00         label   .null "message"
 
-.0817    4c e2 fc                               jmp error
+.0817   4c e2 fc                                jmp error
 
 >0004                                   p2      .addr ?         ;a pointer
 
@@ -3193,69 +3193,108 @@ irq     psh (a, x, y,)  ;pha, phx, phy
 
 Always taken branches
 
-For writing short code there are some special pseudo instructions for always
-taken branches. These are automatically compiled as relative branches when the
-jump distance is short enough and as JMP or BRL when longer.
+Special pseudo instructions exist for using shorter conditional branches in
+place of longer jump instructions. Their names are derived from conditional
+branches and are: GEQ, GNE, GCC, GCS, GPL, GMI, GVC, GVS, GLT and GGE.
+Arranging the flags so that these branch are always taken is the responsibility
+of the programmer of course.
 
-The names are derived from conditional branches and are: GEQ, GNE, GCC, GCS,
-GPL, GMI, GVC, GVS, GLT and GGE.
+The main use case is that these 2 byte branches automatically turn into a 3
+byte JMP or BRL once the target gets too far.
 
-.0000    a9 03          lda #$03        in1     lda #3
-.0002    d0 02          bne $0006               gne at          ;branch always
-.0004    a9 02          lda #$02        in2     lda #2
-.0006    4c 00 10       jmp $1000       at      gne $1000       ;branch farther
+.0000   a9 03           lda #$03        in1     lda #3          ;not zero
+.0002   d0 02           bne $0006               gne at          ;branch always
+.0004   a9 02           lda #$02        in2     lda #2
+.0006   4c 00 10        jmp $1000       at      gne $1000       ;branch farther
 
 If the branch would skip only one byte then the opposite condition is compiled
-and only the first byte is emitted. This is now a never executed jump, and the
-relative distance byte after the opcode is the jumped over byte. If the CPU has
-long conditional branches (65CE02/4510/45GS02) then the same method is applied
-to two byte skips as well.
+and only a single opcode byte is emitted.
 
-There's a pseudo opcode called GRA for CPUs supporting BRA, which is expanded
-to BRL (if available) or JMP. A one byte skip will be shortened to a single
-byte if the CPU has a NOP immediate instruction (R65C02/W65C02).
+Due to the reversed condition the branch will be never taken. As the following
+byte becomes part of the intruction it gets skipped. If the CPU has long
+conditional branches (65CE02 / 4510 / 45GS02) then the same trick is applied to
+produce two byte skips as well.
 
-If the branch would not skip anything at all then no code is generated.
+.0009   18              clc             in3     clc
+.000a   b0              bcs                     gcc at2         ;one byte skip
+.000b   38              sec             in4     sec             ;sec is skipped!
 
-.0009                                           geq in3         ;zero length "branch"
-.0009    18             clc             in3     clc
-.000a    b0             bcs                     gcc at2         ;one byte skip, as bcs
-.000b    38             sec             in4     sec             ;sec is skipped!
-.000c    20 0f 00       jsr $000f       at2     jsr func
-.000f                                   func
+There's a pseudo opcode called GRA for CPUs having BRA which can turn into a
+BRL (if available) or JMP for longer distances. The condition can't be reversed
+for a one byte skip but if the CPU has a NOP immediate instruction (R65C02 /
+W65C02) then that'll be used for this special case.
 
-Please note that expressions like Gxx *+2 or Gxx *+3 are not allowed as the
-compiler can't figure out if it has to create no code at all, the 1 byte
-variant or the 2 byte one. Therefore use normal or anonymous labels defined
+.1000   82              nop #                   gra skip        ;on r65c02
+.1001   60              rts                     rts
+.1002                                   skip
+
+If the branch pseudo instructions would not skip anything at all then no code
+is generated. This is useful for `fall-through' cases.
+
+.000c                                           geq at2         ;dummy branch
+.000c   ea              nop             at2     nop
+
+If the branch destination is a RTS, RTI or RTL instruction then this opcode
+will used in place of the branch to save space. This only works if the
+destination label is on the same line as the instruction.
+
+.1000   60              rts                     gne exit        ;just return
+.1001   ea              nop                     nop
+.1002   60              rts             exit    rts
+
+Please note that expressions like Gxx *+2 or Gxx *+3 are not allowed as it's
+not possible to figure out whether no code, the 1 byte variant or the 2 byte
+one needs to be generated. Therefore use normal or anonymous labels defined
 after the jump instruction when jumping forward!
 
 Long branches
 
-To avoid branch too long errors the assembler also supports long branches. It
-can automatically convert conditional relative branches to it's opposite and a
-JMP or BRL. This can be enabled on the command line using the `--long-branch'
-option.
+Conditional branches usually have limited range. This limitation can be worked
+around by jumping over a JMP or BRL instruction with the opposite condition.
 
-.0000    ea             nop                     nop
-.0001    b0 03          bcs $0006               bcc $1000      ;long branch (6502)
-.0003    4c 00 10       jmp $1000
-.0006    1f 17 03       bbr 1,$17,$000c         bbs 1,23,$1000 ;long branch (R65C02)
-.0009    4c 00 10       jmp $1000
-.000c    d0 04          bne $0012               beq $10000     ;long branch (65816)
-.000e    5c 00 00 01    jmp $010000
-.0012    30 03          bmi $0017               bpl $1000      ;long branch (65816)
-.0014    82 e9 lf       brl $1000
-.0017    ea             nop                     nop
+To avoid hardcoding potentially unnecessary long branches 64tass can apply this
+trick automatically when necessary. This can be enabled with the `--long-branch
+' option.
+
+.0000   ea              nop                     nop
+.0001   b0 03           bcs $0006               bcc $1000       ;long branch
+.0003   4c 00 10        jmp $1000
+.0006   1f 17 03        bbr 1,$17,$000c         bbs 1,23,$1000  ;on R65C02
+.0009   4c 00 10        jmp $1000
+.000c   30 03           bmi $0011               bpl $1000       ;on 65816
+.000e   82 e9 lf        brl $1000
+.0011   ea              nop                     nop
+
+In the listing above an example extra JMP instructions is shown for each long
+branch. In practice that's not really the case as the assembler can avoid
+redundant JMP instructions if several long branches target the same
+destination.
+
+.1000   b0 03           bcs $1005               bcc $2000
+.1002   4c 00 20        jmp $2000
+.1003   ea              nop                     nop
+.1006   d0 fb           bne $1002               bne $2000       ;jump reused
+
+If the branch destination is a RTS, RTI or RTL instruction then this opcode
+will used in place of the jump instruction to save space. This only works if
+the destination label is on the same line as the instruction.
+
+.1000   b0 01           bcs $1003               bcc exit        ;uses rts
+.1002   60              rts
+.1003   ea              nop                     nop
+.2000   60              rts             exit    rts
+
+It's possible to figure out without reading the listing file or disabling the
+long branch function which branches were turned into long ones by using the `
+-Wlong-branch' command line option,
+
+Forcing address size using @b on a branch disables the automatic long branch
+function there.
 
 Please note that forward jump expressions like Bxx *+130, Bxx *+131 and Bxx
-*+132 are not allowed as the compiler can't decide between a short/long branch.
-Of course these destinations can be used, but only with normal or anonymous
-labels defined after the jump instruction.
-
-In the above example extra JMP instructions are emitted for each long branch.
-This is suboptimal and wasting space if there are several long branches to the
-same location in close proximity. Therefore the assembler might decide to reuse
-a JMP for more than one long branch to save space.
+*+132 are not allowed as with such construct it can't be decided if a short or
+long branch is needed. Of course such distances can be used but with normal or
+anonymous labels, as one would normally do.
 
 -------------------------------------------------------------------------------
 
@@ -3644,19 +3683,19 @@ Operation options
 
     64tass a.asm
 
-    .0000    a9 61          lda #$61        lda #"a"
+    .0000   a9 61           lda #$61        lda #"a"
 
-    >0002    31 61 41                       .text "1aA"
-    >0005    7b 63 6c 65 61 72 7d 74        .text "{clear}text{return}more"
-    >000e    65 78 74 7b 72 65 74 75
-    >0016    72 6e 7d 6d 6f 72 65
+    >0002   31 61 41                        .text "1aA"
+    >0005   7b 63 6c 65 61 72 7d 74         .text "{clear}text{return}more"
+    >000e   65 78 74 7b 72 65 74 75
+    >0016   72 6e 7d 6d 6f 72 65
 
     64tass --ascii a.asm
 
-    .0000    a9 41          lda #$41        lda #"a"
-    >0002    31 41 c1                       .text "1aA"
-    >0005    93 54 45 58 54 0d 4d 4f        .text "{clear}text{return}more"
-    >000e    52 45
+    .0000   a9 41           lda #$41        lda #"a"
+    >0002   31 41 c1                        .text "1aA"
+    >0005   93 54 45 58 54 0d 4d 4f         .text "{clear}text{return}more"
+    >000e   52 45
 
 -B, --long-branch
     Automatic BXX *+5 JMP xxx. Branch too long messages are usually solved by

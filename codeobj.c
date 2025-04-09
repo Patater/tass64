@@ -402,6 +402,31 @@ static bool code_item_prepare(struct code_item_s *ci, const Code *v1, address_t 
     return ln1 != *ln * ln2;
 }
 
+int code_opcode(Code *v1) {
+    Obj *val;
+    Error *err;
+    static const struct linepos_s nopoint = {0, 0};
+    ival_t ret;
+    address_t ln;
+    struct code_item_s ci;
+
+    if (code_item_prepare(&ci, v1, &ln)) {
+        return -1;
+    }
+    if (ln != 1) {
+        return -1;
+    }
+    ci.offs2 = 0;
+    val = code_item(&ci);
+    err = val->obj->ival(val, &ret, 8, &nopoint);
+    if (err != NULL) {
+        val_destroy(Obj(err));
+        ret = -1;
+    }
+    val_destroy(val);
+    return ret;
+}
+
 MUST_CHECK Obj *tuple_from_code(Code *v1, Type *typ, linepos_t epoint) {
     address_t ln;
     List *v;

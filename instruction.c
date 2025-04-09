@@ -635,6 +635,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     ln = 2;
                 } else if (arguments.longbranch && !is_amode(amode, ADR_ADDR) && w == 3) { /* fake long branches */
                     if ((cnmemonic[OPR_REL] & 0x1f) == 0x10) {/* bxx branch */
+                        int opc;
                         struct longjump_s *lj = new_longjump(&current_section->longjump, uval);
                         if (lj->defpass == pass) {
                             if ((current_address->l_address ^ lj->dest) <= 0xffff) {
@@ -645,19 +646,29 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                                 }
                             }
                         }
+                        if (val->obj == CODE_OBJ) {
+                            opc = code_opcode(Code(val));
+                            if (opc != 0x60 && opc != 0x40 && (opc != 0x6B || opcode != w65816.opcode)) opc = -1; /* rts, rti, rtl */
+                        } else opc = -1;
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL]);
                         if (s == NULL) s = new_star(vline + 1);
-                        dump_instr(cnmemonic[OPR_REL] ^ 0x20, s->pass != 0 ? ((uint16_t)(s->addr - current_address->l_address - 2)) : 3, 1, epoint);
+                        dump_instr(cnmemonic[OPR_REL] ^ 0x20, s->pass != 0 ? ((uint16_t)(s->addr - current_address->l_address - 2)) : (opc < 0 ? 3 : 1), 1, epoint);
                         lj->dest = current_address->l_address;
                         lj->defpass = pass;
                         if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
                         if (diagnostics.optimize) cpu_opt_long_branch(0xea);
-                        err = instruction((current_cpu->brl >= 0 && !longbranchasjmp && !crossbank) ? current_cpu->brl : current_cpu->jmp, w, vals, epoint);
+                        if (opc < 0) {
+                            err = instruction((current_cpu->brl >= 0 && !longbranchasjmp && !crossbank) ? current_cpu->brl : current_cpu->jmp, w, vals, epoint);
+                        } else {
+                            err = NULL;
+                            dump_instr((uint8_t)opc, 1, 0, epoint);
+                        }
                         if (diagnostics.optimize) cpu_opt_long_branch(0);
                         goto branchend;
                     }
                     if (opr == OPR_BIT_ZP_REL) {
                         struct longjump_s *lj;
+                        int opc;
                         if (crossbank) {
                             err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);
                             goto branchok;
@@ -672,22 +683,41 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                                 }
                             }
                         }
+                        if (val->obj == CODE_OBJ) {
+                            opc = code_opcode(Code(val));
+                            if (opc != 0x60 && opc != 0x40) opc = -1; /* rts, rti */
+                        } else opc = -1;
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_BIT_ZP_REL] ^ longbranch);
-                        dump_instr(cnmemonic[OPR_BIT_ZP_REL] ^ 0x80 ^ longbranch, xadr | 0x300, 2, epoint);
+                        dump_instr(cnmemonic[OPR_BIT_ZP_REL] ^ 0x80 ^ longbranch, xadr | (opc < 0 ? 0x300 : 0x100), 2, epoint);
                         lj->dest = current_address->l_address;
                         lj->defpass = pass;
                         if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
                         if (diagnostics.optimize) cpu_opt_long_branch(0xea);
-                        err = instruction(current_cpu->jmp, w, vals, epoint);
+                        if (opc < 0) {
+                            struct values_s vs = vals->val[0];
+                            vals->val[0] = vals->val[2];
+                            vals->val[2] = vs;
+                            vals->len = 1;
+                            err = instruction(current_cpu->jmp, w, vals, epoint);
+                        } else {
+                            err = NULL;
+                            dump_instr((uint8_t)opc, 1, 0, epoint);
+                        }
                         if (diagnostics.optimize) cpu_opt_long_branch(0);
                         goto branchend;
                     } else {/* bra */
                         if (current_cpu->brl >= 0 && !longbranchasjmp) { /* bra -> brl */
                         asbrl:
+                            if (val->obj == CODE_OBJ) {
+                                int opc = code_opcode(Code(val));
+                                if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
+                                    dump_instr((uint8_t)opc, 1, 0, epoint);
+                                    err = NULL;
+                                    goto branchend;
+                                }
+                            }
                             if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
-                            if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
                             err = instruction(current_cpu->brl, w, vals, epoint);
-                            if (diagnostics.optimize) cpu_opt_long_branch(0);
                             goto branchend;
                         } else if (cnmemonic[OPR_REL] == 0x82 && opcode == c65el02.opcode) { /* not a branch ! */
                             int dist = (int16_t)adr; dist += (dist < 0) ? 0x80 : -0x7f;
@@ -696,10 +726,16 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             } else err_msg2(ERROR_BRANCH_TOOFAR, &dist, epoint2); /* rer not a branch */
                         } else { /* bra -> jmp */
                         asjmp:
+                            if (val->obj == CODE_OBJ) {
+                                int opc = code_opcode(Code(val));
+                                if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
+                                    dump_instr((uint8_t)opc, 1, 0, epoint);
+                                    err = NULL;
+                                    goto branchend;
+                                }
+                            }
                             if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
-                            if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
                             err = instruction(current_cpu->jmp, w, vals, epoint);
-                            if (diagnostics.optimize) cpu_opt_long_branch(0);
                         branchend:
                             if (s != NULL) {
                                 address_t st = current_address->l_address;
@@ -738,6 +774,14 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         err = NULL;
                         goto branchend;
                     }
+                    if (val->obj == CODE_OBJ) {
+                        int opc = code_opcode(Code(val));
+                        if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
+                            dump_instr((uint8_t)opc, 1, 0, epoint);
+                            err = NULL;
+                            goto branchend;
+                        }
+                    }
                     if (adr == 1) {
                         if ((cnmemonic[OPR_REL] & 0x1f) == 0x10) {
                             if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
@@ -747,9 +791,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             goto branchend;
                         }
                         if (cnmemonic[OPR_REL] == 0x80 && (opcode == r65c02.opcode || opcode == w65c02.opcode)) {
-                            if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
                             dump_instr(0x82, 1, 0, epoint);
-                            if (diagnostics.optimize) cpu_opt_long_branch(0);
                             err = NULL;
                             goto branchend;
                         }

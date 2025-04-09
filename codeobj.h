@@ -72,4 +72,5 @@ extern MUST_CHECK Obj *bits_from_code(const Code *, linepos_t);
 extern MUST_CHECK Obj *bytes_from_code(const Code *, linepos_t);
 extern MUST_CHECK Obj *tuple_from_code(Code *, struct Type *, linepos_t);
 extern MUST_CHECK Obj *code_remove_address(Code *, bool);
+extern int code_opcode(Code *);
 #endif
