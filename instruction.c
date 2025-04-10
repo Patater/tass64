@@ -706,36 +706,26 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         if (diagnostics.optimize) cpu_opt_long_branch(0);
                         goto branchend;
                     } else {/* bra */
-                        if (current_cpu->brl >= 0 && !longbranchasjmp) { /* bra -> brl */
-                        asbrl:
-                            if (val->obj == CODE_OBJ) {
-                                int opc = code_opcode(Code(val));
-                                if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
-                                    dump_instr((uint8_t)opc, 1, 0, epoint);
-                                    err = NULL;
-                                    goto branchend;
-                                }
-                            }
-                            if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
-                            err = instruction(current_cpu->brl, w, vals, epoint);
-                            goto branchend;
-                        } else if (cnmemonic[OPR_REL] == 0x82 && opcode == c65el02.opcode) { /* not a branch ! */
+                        if (cnmemonic[OPR_REL] == 0x82 && opcode == c65el02.opcode) { /* not a branch ! */
                             int dist = (int16_t)adr; dist += (dist < 0) ? 0x80 : -0x7f;
                             if (crossbank) {
                                 err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);
                             } else err_msg2(ERROR_BRANCH_TOOFAR, &dist, epoint2); /* rer not a branch */
-                        } else { /* bra -> jmp */
-                        asjmp:
+                        } else { /* bra -> jmp or brl */
+                        asjmpbrl:
                             if (val->obj == CODE_OBJ) {
                                 int opc = code_opcode(Code(val));
                                 if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
+                                    struct longjump_s *lj = new_longjump(&current_section->longjump, uval);
+                                    lj->dest = current_address->l_address;
+                                    lj->defpass = pass;
                                     dump_instr((uint8_t)opc, 1, 0, epoint);
                                     err = NULL;
                                     goto branchend;
                                 }
                             }
                             if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
-                            err = instruction(current_cpu->jmp, w, vals, epoint);
+                            err = instruction((current_cpu->brl >= 0 && !longbranchasjmp) ? current_cpu->brl : current_cpu->jmp, w, vals, epoint);
                         branchend:
                             if (s != NULL) {
                                 address_t st = current_address->l_address;
@@ -749,8 +739,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         }
                     }
                 } else if (is_amode(amode, ADR_ADDR)) { /* gcc */
-                    if (current_cpu->brl >= 0 && !longbranchasjmp) goto asbrl; /* gcc -> brl */
-                    goto asjmp; /* gcc -> jmp */
+                    goto asjmpbrl; /* gcc -> jmp or brl */
                 } else { /* too long */
                     if (w != 3 && w != 0) {
                         err_msg2((w == 1) ? ERROR__NO_WORD_ADDR : ERROR__NO_LONG_ADDR, &mnemonic[prm], epoint2);
