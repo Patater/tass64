@@ -3288,12 +3288,6 @@ long branch function which branches were turned into long ones by using the `
 
 Forcing address size using @b on a branch disables the automatic long branch
 function there.
-
-Please note that forward jump expressions like Bxx *+130, Bxx *+131 and Bxx
-*+132 are not allowed as with such construct it can't be decided if a short or
-long branch is needed. Of course such distances can be used but with normal or
-anonymous labels, as one would normally do.
-
 -------------------------------------------------------------------------------
 
 Original turbo assembler compatibility
