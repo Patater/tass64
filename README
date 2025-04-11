@@ -3229,8 +3229,9 @@ If the branch would skip only one byte then the opposite condition is compiled
 following byte becomes part of the intruction it gets skipped.
 
 .0009   18              clc             in3     clc
-.000a   b0              bcs                     gcc at2         ;one byte skip
+.000a   b0              bcs                     gcc +           ;one byte skip
 .000b   38              sec             in4     sec             ;sec is skipped!
+.000c   ea              nop             +       nop
 
 If the CPU has long conditional branches (65CE02 / 4510 / 45GS02) then the same
 trick above is applied to produce two byte skips as well.
