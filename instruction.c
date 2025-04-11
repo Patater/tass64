@@ -751,12 +751,6 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     }
                 }
             } else if (!invalid) { /* short */
-                if (((current_address->l_address + 1 + ln) & 0xff00) != (oadr & 0xff00)) {
-                    int diff = (int8_t)oadr;
-                    if (diff >= 0) diff++;
-                    if (!allowslowbranch) err_msg2(ERROR__BRANCH_CROSS, &diff, epoint2);
-                    else if (diagnostics.branch_page) err_msg_branch_page(diff, epoint2);
-                }
                 if (is_amode(amode, ADR_ADDR) && w == 3) { /* gcc */
                     if (adr == 0) {
                         dump_instr(cnmemonic[OPR_REL], 0, -1, epoint);
@@ -794,6 +788,12 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             goto branchend;
                         }
                     }
+                }
+                if (((current_address->l_address + 1 + ln) & 0xff00) != (oadr & 0xff00)) {
+                    int diff = (int8_t)oadr;
+                    if (diff >= 0) diff++;
+                    if (!allowslowbranch) err_msg2(ERROR__BRANCH_CROSS, &diff, epoint2);
+                    else if (diagnostics.branch_page) err_msg_branch_page(diff, epoint2);
                 }
             }
         branchok:
