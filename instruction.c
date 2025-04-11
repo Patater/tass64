@@ -648,7 +648,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             }
                         }
                         if (oval->obj == CODE_OBJ) {
-                            opc = code_opcode(Code(val));
+                            opc = code_opcode(Code(oval));
                             if (opc != 0x60 && opc != 0x40 && (opc != 0x6B || opcode != w65816.opcode)) opc = -1; /* rts, rti, rtl */
                         } else opc = -1;
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL]);
@@ -685,7 +685,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             }
                         }
                         if (oval->obj == CODE_OBJ) {
-                            opc = code_opcode(Code(val));
+                            opc = code_opcode(Code(oval));
                             if (opc != 0x60 && opc != 0x40) opc = -1; /* rts, rti */
                         } else opc = -1;
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_BIT_ZP_REL] ^ longbranch);
@@ -715,7 +715,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         } else { /* bra -> jmp or brl */
                         asjmpbrl:
                             if (oval->obj == CODE_OBJ) {
-                                int opc = code_opcode(Code(val));
+                                int opc = code_opcode(Code(oval));
                                 if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
                                     struct longjump_s *lj = new_longjump(&current_section->longjump, uval);
                                     lj->dest = current_address->l_address;
