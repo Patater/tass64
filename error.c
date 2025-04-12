@@ -750,11 +750,7 @@ static void err_msg_not_defined3(const Error *err) {
     err_msg_variable(err->u.notdef.symbol);
     if (more) new_error_msg_err_more(err);
 
-    if (l->file_list == NULL) {
-        struct linepos_s nopoint = {0, 0};
-        new_error_msg(SV_NOTE, err->file_list, &nopoint);
-        adderror("searched in the global scope");
-    } else {
+    if (l->file_list != NULL) {
         new_error_msg(SV_NOTE, l->file_list, &l->epoint);
         if (err->u.notdef.down) adderror("searched in this scope and in all it's parents");
         else adderror("searched in this object only");
