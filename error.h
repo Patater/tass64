@@ -107,6 +107,7 @@ extern void err_msg_wrong_character(linepos_t);
 extern void err_msg_encode_definition_note(const struct file_list_s *, linepos_t);
 extern void err_msg_star_assign(linepos_t);
 extern void err_msg_compound_note(linepos_t);
+extern void err_msg_string_expected(linepos_t);
 extern void err_msg_byte_note(linepos_t);
 extern void err_msg_char_note(const char *, linepos_t);
 extern void err_msg_immediate_note(linepos_t);

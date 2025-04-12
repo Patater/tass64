@@ -1078,6 +1078,11 @@ void err_msg_compound_note(linepos_t epoint) {
     }
 }
 
+void err_msg_string_expected(linepos_t epoint) {
+    new_error_msg(SV_NOTE, current_file_list, epoint);
+    adderror("possibly missing quotes as a string is expected [-Wpitfalls]");
+}
+
 static unsigned int err_msg_byte_note_once;
 void err_msg_byte_note(linepos_t epoint) {
     if (err_msg_byte_note_once != pass) {

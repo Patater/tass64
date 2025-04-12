@@ -1983,6 +1983,9 @@ sources it could be useful to define escape sequences for control codes.
     source code using the .enc directive this is not recommended. For such use
     case .encode is better suited.
 
+    In the past the .enc directive accepted an unquoted string but currently it
+    needs to be an expression.
+
                                     .enc "screen";screen code mode
     >1000   13 03 12 05 05 0e 20 03 .text "screen codes"
     >1008   0f 04 05 13
@@ -2987,6 +2990,9 @@ Target
 
 .cpu <expression>
     Selects CPU according to the string argument.
+
+    In the past the .cpu directive accepted an unquoted string but currently it
+    needs to be an expression.
 
             .cpu "6502"     ;standard 65xx
             .cpu "65c02"    ;CMOS 65C02

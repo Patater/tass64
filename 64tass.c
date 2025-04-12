@@ -91,6 +91,8 @@ uint32_t outputeor = 0; /* EOR value for final output (usually 0, unless changed
 bool referenceit = true;
 const struct cpu_s *current_cpu;
 static unsigned int err_msg_char_note_once;
+static unsigned int err_msg_enc_string_expected_once;
+static unsigned int err_msg_cpu_string_expected_once;
 
 static size_t waitfor_p, waitfor_len;
 static struct waitfor_s {
@@ -363,6 +365,8 @@ static void compile_init(const char *name) {
     waitfor_len = 0;
     pass = 0;
     err_msg_char_note_once = 0;
+    err_msg_enc_string_expected_once = 0;
+    err_msg_cpu_string_expected_once = 0;
     max_pass = MAX_PASS;
 }
 
@@ -2620,7 +2624,7 @@ MUST_CHECK Obj *compile(void)
                         if (tmp.op == O_MUL && !islabel && (label == NULL || label->constant)) {
                             if (diagnostics.star_assign) {
                                 err_msg_star_assign(&epoint3);
-                                if (pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
+                                if (diagnostics.pitfalls && pline[lpoint.pos] == '*') err_msg_compound_note(&epoint3);
                             }
                             lpoint.pos = epoint3.pos;
                             wht = '*';
@@ -5072,12 +5076,25 @@ MUST_CHECK Obj *compile(void)
                     vs = get_val();
                     if (vs->val->obj == ENC_OBJ) {
                         newenc = Enc(vs->val);
+                    } else if (vs->val->obj == ERROR_OBJ) {
+                        Error *err = Error(vs->val);
+                        err_msg_output(err);
+                        if (diagnostics.pitfalls) {
+                            if (err->num == ERROR___NOT_DEFINED && err->u.notdef.symbol->obj == SYMBOL_OBJ) {
+                                if (err_msg_enc_string_expected_once != pass) {
+                                    err_msg_enc_string_expected_once = pass;
+                                    err_msg_string_expected(&vs->epoint);
+                                }
+                            }
+                        }
+                        break;
                     } else {
                         str_t encname;
                         if (tostr(vs, &encname)) break;
                         if (encname.len == 0) {err_msg2(ERROR__EMPTY_STRING, NULL, &vs->epoint); break;}
                         newenc = new_encoding(&encname, &epoint);
                     }
+                    err_msg_enc_string_expected_once = pass;
                     val_destroy(Obj(actual_encoding));
                     actual_encoding = ref_enc(newenc);
                 }
@@ -5112,7 +5129,15 @@ MUST_CHECK Obj *compile(void)
                     listing_line(epoint.pos);
                     if (!get_exp(0, 1, 1, &epoint)) goto breakerr;
                     vs = get_val();
-                    if (tostr(vs, &cpuname)) break;
+                    if (tostr(vs, &cpuname)) {
+                        if (vs->val->obj == INT_OBJ) {
+                            if (err_msg_cpu_string_expected_once != pass) {
+                                err_msg_cpu_string_expected_once = pass;
+                                err_msg_string_expected(&vs->epoint);
+                            }
+                        }
+                        break;
+                    }
                     for (cpui = cpus; *cpui != NULL; cpui++) {
                         if (cpuname.len == strlen((*cpui)->name) && memcmp((*cpui)->name, cpuname.data, cpuname.len) == 0) {
                             const struct cpu_s *cpumode = (*cpui != &default_cpu) ? *cpui : arguments.cpumode;
@@ -5124,6 +5149,7 @@ MUST_CHECK Obj *compile(void)
                             break;
                         }
                     }
+                    err_msg_cpu_string_expected_once = pass;
                     if (*cpui == NULL) err_msg2(ERROR___UNKNOWN_CPU, &cpuname, &vs->epoint);
                 }
                 break;

@@ -2398,6 +2398,9 @@ covered.
 code using the <code>.enc</code> directive this is not recommended. For such
 use case <a href="#d_encode"><code>.encode</code></a> is better suited.</p>
 
+<p>In the past the <code>.enc</code> directive accepted an unquoted string but currently it
+needs to be an expression.</p>
+
 <pre>
                                 <b class="k">.enc</b> <span class="s">"screen"</span><i>;screen code mode</i>
 &gt;1000   13 03 12 05 05 0e 20 03 <b class="d">.text</b> <span class="s">"screen codes"</span>
@@ -3514,6 +3517,9 @@ can ruin the timing of a carefully cycle counted code.
 <dl class="dir">
 <dt><b>.cpu</b> &lt;expression&gt;<a name="d_cpu" href="#d_cpu"></a>
 <dd>Selects CPU according to the string argument.
+
+<p>In the past the <code>.cpu</code> directive accepted an unquoted string but
+currently it needs to be an expression.</p>
 
 <pre>
         <b class="k">.cpu</b> <span class="s">"6502"</span>     <i>;standard 65xx</i>
