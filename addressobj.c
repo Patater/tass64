@@ -534,6 +534,8 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             op->v1 = v1->val;
             op->inplace = NULL;
             return new_address(op->v1->obj->calc2(op), am);
+        case O_MEMBER:
+        case O_X: break;
         }
         break;
     case T_REGISTER:
