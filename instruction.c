@@ -636,26 +636,32 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     ln = 2;
                 } else if (arguments.longbranch && !is_amode(amode, ADR_ADDR) && w == 3) { /* fake long branches */
                     if ((cnmemonic[OPR_REL] & 0x1f) == 0x10) {/* bxx branch */
+                        struct longjump_s *lj;
                         int opc;
-                        struct longjump_s *lj = new_longjump(&current_section->longjump, uval);
-                        if (lj->defpass == pass) {
-                            if ((current_address->l_address ^ lj->dest) <= 0xffff) {
-                                uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 2);
-                                if (adrk >= 0xFF80 || adrk <= 0x007F) {
-                                    adr = adrk;
-                                    goto branchok;
+                        if (oval->obj == CODE_OBJ) {
+                            lj = new_longjump(&current_section->longjump, uval, Code(oval));
+                            if (lj->defpass == pass) {
+                                if ((current_address->l_address ^ lj->dest) <= 0xffff) {
+                                    uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 2);
+                                    if (adrk >= 0xFF80 || adrk <= 0x007F) {
+                                        adr = adrk;
+                                        goto branchok;
+                                    }
                                 }
                             }
-                        }
-                        if (oval->obj == CODE_OBJ) {
                             opc = code_opcode(Code(oval));
                             if (opc != 0x60 && opc != 0x40 && (opc != 0x6B || opcode != w65816.opcode)) opc = -1; /* rts, rti, rtl */
-                        } else opc = -1;
+                        } else {
+                            lj = NULL;
+                            opc = -1;
+                        }
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL]);
                         if (s == NULL) s = new_star(vline + 1);
                         dump_instr(cnmemonic[OPR_REL] ^ 0x20, s->pass != 0 ? ((uint16_t)(s->addr - current_address->l_address - 2)) : (opc < 0 ? 3 : 1), 1, epoint);
-                        lj->dest = current_address->l_address;
-                        lj->defpass = pass;
+                        if (lj != NULL) {
+                            lj->dest = current_address->l_address;
+                            lj->defpass = pass;
+                        }
                         if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
                         if (diagnostics.optimize) cpu_opt_long_branch(0xea);
                         if (opc < 0) {
@@ -674,24 +680,29 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             err_msg2(ERROR_CANT_CROSS_BA, val, epoint2);
                             goto branchok;
                         }
-                        lj = new_longjump(&current_section->longjump, uval);
-                        if (lj->defpass == pass) {
-                            if ((current_address->l_address ^ lj->dest) <= 0xffff) {
-                                uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 3);
-                                if (adrk >= 0xFF80 || adrk <= 0x007F) {
-                                    adr = adrk;
-                                    goto branchok;
+                        if (oval->obj == CODE_OBJ) {
+                            lj = new_longjump(&current_section->longjump, uval, Code(oval));
+                            if (lj->defpass == pass) {
+                                if ((current_address->l_address ^ lj->dest) <= 0xffff) {
+                                    uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 3);
+                                    if (adrk >= 0xFF80 || adrk <= 0x007F) {
+                                        adr = adrk;
+                                        goto branchok;
+                                    }
                                 }
                             }
-                        }
-                        if (oval->obj == CODE_OBJ) {
                             opc = code_opcode(Code(oval));
                             if (opc != 0x60 && opc != 0x40) opc = -1; /* rts, rti */
-                        } else opc = -1;
+                        } else {
+                            lj = NULL;
+                            opc = -1;
+                        }
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_BIT_ZP_REL] ^ longbranch);
                         dump_instr(cnmemonic[OPR_BIT_ZP_REL] ^ 0x80 ^ longbranch, xadr | (opc < 0 ? 0x300 : 0x100), 2, epoint);
-                        lj->dest = current_address->l_address;
-                        lj->defpass = pass;
+                        if (lj != NULL) {
+                            lj->dest = current_address->l_address;
+                            lj->defpass = pass;
+                        }
                         if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
                         if (diagnostics.optimize) cpu_opt_long_branch(0xea);
                         if (opc < 0) {
@@ -717,7 +728,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                             if (oval->obj == CODE_OBJ) {
                                 int opc = code_opcode(Code(oval));
                                 if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
-                                    struct longjump_s *lj = new_longjump(&current_section->longjump, uval);
+                                    struct longjump_s *lj = new_longjump(&current_section->longjump, uval, Code(oval));
                                     lj->dest = current_address->l_address;
                                     lj->defpass = pass;
                                     dump_instr((uint8_t)opc, 1, 0, epoint);

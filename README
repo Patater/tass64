@@ -3268,15 +3268,16 @@ trick automatically when necessary. This can be enabled with the `--long-branch
 .000e   82 e9 lf        brl $1000
 .0011   ea              nop                     nop
 
-In the listing above an example extra JMP instructions is shown for each long
-branch. In practice that's not really the case as the assembler can avoid
-redundant JMP instructions if several long branches target the same
-destination.
+In the listing above an extra JMP instructions is shown for each long branch.
+In practice that's not really the case as the assembler can avoid redundant JMP
+instructions if several long branches target the same destination. But for that
+to work a numeric address match alone isn't sufficient.
 
-.1000   b0 03           bcs $1005               bcc $2000
+.1000   b0 03           bcs $1005               bcc target
 .1002   4c 00 20        jmp $2000
 .1003   ea              nop                     nop
-.1006   d0 fb           bne $1002               bne $2000       ;jump reused
+.1006   d0 fb           bne $1002               bne target       ;jump reused
+.2000                                   target
 
 If the branch destination is a RTS, RTI or RTL instruction then this opcode
 will used in place of the jump instruction to save space. This only works if

@@ -3847,16 +3847,18 @@ href="#o_long-branch"><code>--long-branch</code></a></q> option.
 .0011   ea              nop                     <b>nop</b>
 </pre>
 
-<p>In the listing above an example extra <code>JMP</code> instructions is
-shown for each long branch. In practice that's not really the case as the
-assembler can avoid redundant <code>JMP</code> instructions if several
-long branches target the same destination.
+<p>In the listing above an extra <code>JMP</code> instructions is shown for
+each long branch. In practice that's not really the case as the assembler can
+avoid redundant <code>JMP</code> instructions if several long branches target
+the same destination. But for that to work a numeric address match alone isn't
+sufficient.
 
 <pre>
-.1000   b0 03           bcs $1005               <b>bcc</b> <span>$2000</span>
+.1000   b0 03           bcs $1005               <b>bcc</b> <u>target</u>
 .1002   4c 00 20        jmp $2000
 .1003   ea              nop                     <b>nop</b>
-.1006   d0 fb           bne $1002               <b>bne</b> <span>$2000</span>       <i>;jump reused</i>
+.1006   d0 fb           bne $1002               <b>bne</b> <u>target</u>       <i>;jump reused</i>
+.2000                                   target
 </pre>
 
 <p>If the branch destination is a <code>RTS</code>, <code>RTI</code> or

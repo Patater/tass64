@@ -149,8 +149,8 @@ listing.o: listing.c listing.h attributes.h inttypes.h stdbool.h file.h \
 listobj.o: listobj.c listobj.h obj.h attributes.h inttypes.h values.h \
  stdbool.h eval.h oper_e.h variables.h error.h errors_e.h boolobj.h \
  codeobj.h strobj.h intobj.h typeobj.h noneobj.h errorobj.h foldobj.h
-longjump.o: longjump.c longjump.h avl.h attributes.h stdbool.h inttypes.h \
- error.h errors_e.h
+longjump.o: longjump.c longjump.h avl.h attributes.h inttypes.h error.h \
+ stdbool.h errors_e.h obj.h values.h codeobj.h
 macro.o: macro.c macro.h inttypes.h wait_e.h stdbool.h file.h eval.h \
  attributes.h oper_e.h values.h section.h avl.h str.h variables.h \
  64tass.h listing.h error.h errors_e.h arguments.h optimizer.h main.h \
