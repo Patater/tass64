@@ -204,7 +204,7 @@ difficult to get everything <q>right</q> first time.</b>
  <li><a href="#pseudo-instructions">Pseudo instructions</a>
  <ul>
   <li><a href="#aliases">Aliases</a></li>
-  <li><a href="#generic-instruction">Generic instructions</a></li>
+  <li><a href="#generic-instructions">Generic instructions</a></li>
   <li><a href="#branch-always">Always taken branches</a></li>
   <li><a href="#branch-long">Long branches</a></li>
  </ul></li>
@@ -3656,7 +3656,7 @@ straightforward by using the register as the address similar like <code>ASL&nbsp
 
 <p>Push and pull instructions have a generic version called
 <code>PSH</code> and <code>PUL</code>. The user stack ones for 65EL02 are
-called <code>RSH</code> and <code>RUL</code>. These can take a register
+called <code>RSH</code> and <code>RUL</code>. These take a register
 address:</p>
 
 <div><table width="100%" class="opcodes">
@@ -3872,7 +3872,7 @@ This only works if the destination label is on the same line as the instruction.
 
 <p>It's possible to figure out without reading the listing file or disabling
 the long branch function which branches were turned into long ones by using the <q><a
-href="#o_Wlong-branch"><code>-Wlong-branch</code></a></q> command line option,
+href="#o_Wlong-branch"><code>-Wlong-branch</code></a></q> command line option.
 
 <p>Forcing address size using <code>@b</code> on a branch disables the
 automatic long branch function there.
@@ -6557,11 +6557,9 @@ descriptive and familiar mnemonics.
 <tr><th><code>STQ</code><th><code>STR&nbsp;Q,</code><td>Store register <code>Q</code><td>
 </table></div>
 
-<p>The <code>Q</code> register modify instruction detach the register from the
-mnemonic just like <code>ASL&nbsp;A</code>. Repeating it would be redundant as well.
-
-<p>The <code>INQ</code> and <code>DEQ</code> mnemonics have only implied
-addressing mode. Similarly like <code>INX</code> or <code>INY</code>.
+<p>The <code>Q</code> register modify instructions detach the register from the
+mnemonic just like <code>ASL&nbsp;A</code>. The four letter convention had it
+in both the mnmemonic and the parameter which is redundant.
 
 <div><table border="0" width="100%">
 <caption>Q register modify 45GS02 mnemonics</caption>
@@ -6574,12 +6572,15 @@ addressing mode. Similarly like <code>INX</code> or <code>INY</code>.
 <tr><th><code>&nbsp;&nbsp;&nbsp;</code><th><code>ROR&nbsp;Q&nbsp;</code><td>Rotate right register <code>Q</code><td>(also known as <code>RORQ&nbsp;Q</code>)
 </table></div>
 
+<p>The <code>INQ</code> and <code>DEQ</code> mnemonics have only implied
+addressing mode just like <code>INX</code> or <code>INY</code>. These
+can't be used on memory as register <code>Q</code> is not involved in the
+operation. No <code>Q</code> register parameter either, the name makes it clear
+already.
+
 <p>The double word memory modify instructions are ending with the letter
 <code>D</code>. That's consistent with pre-existing word operations like <code>INW</code>,
 <code>DEW</code>, <code>ASW</code> and others.
-
-<p>While <code>INQ</code> and <code>DEQ</code> would be short enough these aren't
-used as register <code>Q</code> is not involved in the operation.
 
 <div><table border="0" width="100%">
 <caption>Double word memory modify 45GS02 mnemonics</caption>

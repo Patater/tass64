@@ -3106,8 +3106,7 @@ DEA       DEX       DEY       DEZ       INA       INX       INY       INZ
 DEC A     DEC X     DEC Y     DEC Z     INC A     INC X     INC Y     INC Z
 
 Push and pull instructions have a generic version called PSH and PUL. The user
-stack ones for 65EL02 are called RSH and RUL. These can take a register
-address:
+stack ones for 65EL02 are called RSH and RUL. These take a register address:
 
                Register parametrized push and pull instructions
 PHA       PHB       PHD       PHK       PHP       PHX       PHY       PHZ
@@ -3290,7 +3289,7 @@ the destination label is on the same line as the instruction.
 
 It's possible to figure out without reading the listing file or disabling the
 long branch function which branches were turned into long ones by using the `
--Wlong-branch' command line option,
+-Wlong-branch' command line option.
 
 Forcing address size using @b on a branch disables the automatic long branch
 function there.
@@ -5476,11 +5475,9 @@ parameter to get more descriptive and familiar mnemonics.
  SBQ   SBC Q,   Subtract with carry from register Q    (also known as SBCQ)
  STQ   STR Q,   Store register Q
 
-The Q register modify instruction detach the register from the mnemonic just
-like ASL A. Repeating it would be redundant as well.
-
-The INQ and DEQ mnemonics have only implied addressing mode. Similarly like INX
-or INY.
+The Q register modify instructions detach the register from the mnemonic just
+like ASL A. The four letter convention had it in both the mnmemonic and the
+parameter which is redundant.
 
                       Q register modify 45GS02 mnemonics
        ASL Q    Arithmetic shift left register Q       (also known as ASRQ Q)
@@ -5491,11 +5488,12 @@ or INY.
        ROL Q    Rotate left register Q                 (also known as ROLQ Q)
        ROR Q    Rotate right register Q                (also known as RORQ Q)
 
+The INQ and DEQ mnemonics have only implied addressing mode just like INX or
+INY. These can't be used on memory as register Q is not involved in the
+operation. No Q register parameter either, the name makes it clear already.
+
 The double word memory modify instructions are ending with the letter D. That's
 consistent with pre-existing word operations like INW, DEW, ASW and others.
-
-While INQ and DEQ would be short enough these aren't used as register Q is not
-involved in the operation.
 
                   Double word memory modify 45GS02 mnemonics
  ARD            Arithmetic shift right double word     (also known as ASRQ)
