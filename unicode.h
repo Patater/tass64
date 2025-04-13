@@ -39,6 +39,8 @@ extern MUST_CHECK bool unfc(struct ubuff_s *);
 extern MUST_CHECK bool unfkc(struct str_t *, const struct str_t *, int);
 extern size_t argv_print(const char *, FILE *);
 extern size_t makefile_print(const char *, FILE *);
+extern void ctagsfile_print(const char *, FILE *);
+extern void ctagsline_print(const uint8_t *, FILE *);
 extern void printable_print(const uint8_t *, FILE *);
 extern size_t printable_print2(const uint8_t *, FILE *, size_t);
 extern void caret_print(const uint8_t *, FILE *, size_t);

@@ -4421,6 +4421,11 @@ Symbol listing
     --labels-section=work --labels-add-prefix=W --labels-append labels.mlb
     --labels-section=registers --labels-add-prefix=G --labels-append labels.mlb
 
+--ctags-labels
+    List labels in ctags format
+
+    Can be useful to jump to global definitions if the editor supports it.
+
 Assembly listing
 
 -L <file>, --list=<file>
