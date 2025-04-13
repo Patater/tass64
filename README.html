@@ -4023,7 +4023,8 @@ a label instead.</p></dd>
 
 <dt><b>-X</b>, <b>--long-address</b><a name="o_long-address" href="#o_long-address"></a>
 <dd>Use 3 byte address/length for CBM and nonlinear output instead of 2
-bytes. Also increases the size of raw output to 16&nbsp;MiB.
+bytes. Also increases the size of raw output to 16&nbsp;MiB and prevent the use
+of S19 for S-record.
 
 <pre>
 64tass --long-address --m65816 a.asm
@@ -4034,7 +4035,8 @@ bytes. Also increases the size of raw output to 16&nbsp;MiB.
 
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with
 zeros.  Uninitialized memory before the first and after the last valid bytes
-are not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.
+are not saved. Up to 64&nbsp;KiB normally or 16&nbsp;MiB with the <a
+href="#o_long-address"><code>--long-address</code></a> command line parameter.
 
 <p>Used for C64 binaries. The first 2 bytes are the little endian address of
 the first valid byte (load address). This is followed by the data.</p>
@@ -4056,7 +4058,8 @@ start   <b>rts</b>
 
 <p>Overlapping blocks are flattened and uninitialized memory is filled up with
 zeros. Uninitialized memory before the first and after the last valid bytes are
-not saved. Up to 64&nbsp;KiB or 16&nbsp;MiB with long address.
+not saved. Up to 64&nbsp;KiB normally or 16&nbsp;MiB with the <a
+href="#o_long-address"><code>--long-address</code></a> command line parameter.
 
 <p>Useful for small ROM files.</p>
 
@@ -4083,8 +4086,8 @@ zeros. Uninitialized memory after the last valid byte is not saved. Up to 4&nbsp
 <dd>Generate nonlinear output file.
 
 <p>Overlapping blocks are flattened. Blocks are saved in sorted order and
-uninitialized memory is skipped. Up to 64&nbsp;KiB or 16&nbsp;MiB with long
-address.
+uninitialized memory is skipped. Up to 64&nbsp;KiB normally or 16&nbsp;MiB with the <a
+href="#o_long-address"><code>--long-address</code></a> command line parameter.
 
 <p>Used for linkers and downloading. Before writing each memory block the
 length and the memory address is saved in a little endian order. Once
@@ -4277,7 +4280,10 @@ record comes and a <code>S9</code>, <code>S8</code> or <code>S7</code> terminati
 
 <p>If the <a href="#o_output-exec"><code>--output-exec</code></a> command line
 parameter was given then the termination record will use this address.
-Without this the address of the first data record is used.</p>
+Without this the address of the first data record is used.
+
+<p>The <a href="#o_long-address"><code>--long-address</code></a> command line
+parameter can be used to avoid the use of S19 format.</p>
 
 <pre>
 64tass --s-record a.asm
