@@ -529,13 +529,14 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
         }
         label = new_label(&param->name, context, strength, mfunc->file_list);
         if (label->value != NULL) {
-            if (label->constant) {
+            if (label->defpass == pass && label->constant) {
                 err_msg_double_defined(label, &param->name, &param->epoint); /* not possible in theory */
                 val_destroy(val);
             } else {
                 if (label->defpass != pass) {
                     label->ref = false;
                     label->defpass = pass;
+                    label->constant = false;
                 } else {
                     if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                 }
@@ -903,13 +904,14 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
         }
         label = new_label(&param->name, context, 0, mfunc->file_list);
         if (label->value != NULL) {
-            if (label->constant) {
+            if (label->defpass == pass && label->constant) {
                 err_msg_double_defined(label, &param->name, &param->epoint);
                 val_destroy(val);
             } else {
                 if (label->defpass != pass) {
                     label->ref = false;
                     label->defpass = pass;
+                    label->constant = false;
                 } else {
                     if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                 }

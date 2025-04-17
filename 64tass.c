@@ -1683,7 +1683,7 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
         if (tmp.op == O_NONE) {
             label = new_label(&varname, context, strength, current_file_list);
             if (label->value != NULL) {
-                if (label->constant) {
+                if (label->defpass == pass && label->constant) {
                     err_msg_double_defined(label, &varname, &epoint2);
                     val_destroy(val);
                     label = NULL;
@@ -1691,6 +1691,7 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
                     if (label->defpass != pass) {
                         label->ref = false;
                         label->defpass = pass;
+                        label->constant = false;
                     } else {
                         if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                     }
@@ -1991,11 +1992,12 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
                     lpoint.pos++;ignore();
                     label = new_label(&varname, context, strength, current_file_list);
                     if (label->value != NULL) {
-                        if (label->constant) { err_msg_double_defined(label, &varname, &bpoint); break; }
                         if (label->defpass != pass) {
                             label->ref = false;
                             label->defpass = pass;
+                            label->constant = false;
                         } else {
+                            if (label->constant) { err_msg_double_defined(label, &varname, &bpoint); break; }
                             if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                         }
                         label->owner = false;
@@ -2688,14 +2690,13 @@ MUST_CHECK Obj *compile(void)
                             labelexists = label->value != NULL;
                         }
                         if (labelexists) {
-                            if (label->constant) {
-                                err_msg_not_variable(label, &labelname, &epoint);
-                                val_destroy(val2);
-                            } else if (label->defpass == pass) {
+                            if (label->defpass == pass) {
+                                if (label->constant) err_msg_not_variable(label, &labelname, &epoint);
                                 val_destroy(val2);
                             } else {
                                 label->ref = false;
                                 label->defpass = pass;
+                                label->constant = false;
                                 label->owner = false;
                                 if (label->file_list != current_file_list) {
                                     label_move(label, &labelname, current_file_list);
@@ -2850,13 +2851,14 @@ MUST_CHECK Obj *compile(void)
                             if (label == NULL) label = new_label(&labelname, mycontext, strength, current_file_list);
                             else if (diagnostics.case_symbol && str_cmp(&labelname, &label->name) != 0) err_msg_symbol_case(&labelname, label, &epoint);
                             if (label->value != NULL) {
-                                if (label->constant) {
+                                if (label->defpass == pass && label->constant) {
                                     err_msg_double_defined(label, &labelname, &epoint);
                                     val_destroy(val);
                                 } else {
                                     if (label->defpass != pass) {
                                         label->ref = false;
                                         label->defpass = pass;
+                                        label->constant = false;
                                     } else {
                                         if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                                     }
@@ -3540,7 +3542,7 @@ MUST_CHECK Obj *compile(void)
                             listing_equal(val);
                             if (label == NULL) label = new_label(&labelname, mycontext, strength, current_file_list);
                             if (label->value != NULL) {
-                                if (constant ? (label->defpass == pass) : label->constant) {
+                                if (label->defpass == pass && (constant || label->constant)) {
                                     val_destroy(val);
                                     err_msg_double_defined(label, &labelname, &epoint);
                                 } else {
@@ -3550,7 +3552,6 @@ MUST_CHECK Obj *compile(void)
                                             if (pass > max_pass) err_msg_cant_calculate(&label->name, &epoint);
                                             constcreated = true;
                                         }
-                                        label->constant = true;
                                     } else {
                                         if (label->defpass != pass) {
                                             label->ref = false;
@@ -3559,6 +3560,7 @@ MUST_CHECK Obj *compile(void)
                                             if (diagnostics.unused.variable && label->usepass != pass) err_msg_unused_variable(label);
                                         }
                                     }
+                                    label->constant = constant;
                                     label->owner = false;
                                     if (label->file_list != current_file_list) {
                                         label_move(label, &labelname, current_file_list);
