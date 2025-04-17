@@ -75,7 +75,7 @@ Overlapping blocks are kept, continuing blocks are concatenated. Saving
 happens in the definition order without sorting, and uninitialized memory
 is skipped in the output. Up to 64 KiB.
 .TP 0.5i
-\fB\-\-apple2\fR
+\fB\-\-apple\-ii\fR
 Generate a Apple II output file (DOS 3.3).
 Overlapping blocks are flattened and uninitialized memory is filled up
 with zeros. Uninitialized memory before the first and after the last
@@ -90,6 +90,12 @@ valid bytes are not saved. Up to 16 MiB.
 Generate a C256 Foenix PGZ output file.
 Overlapping blocks are flattened. Blocks are saved in sorted order and
 uninitialized memory is skipped. Up to 16 MiB.
+.TP 0.5i
+\fB\-\-cody\-bin\fR
+Generate a Cody binary output file.
+Overlapping blocks are flattened and uninitialized memory is filled up
+with zeros. Uninitialized memory before the first and after the last
+valid bytes are not saved. Up to 64 KiB.
 .TP 0.5i
 \fB\-\-intel\-hex\fR
 Use Intel HEX output file format.

@@ -3603,6 +3603,27 @@ Output options
     00 10 00       execute at $1000
     00 00 00       execution marker
 
+--cody-bin
+    Generate a Cody binary output file
+
+    Overlapping blocks are flattened and uninitialized memory is filled up with
+    zeros. Uninitialized memory before the first and after the last valid bytes
+    are not saved. Up to 64 KiB.
+
+    Used for Cody executables. First the load address and last byte's address
+    words are written in little endian format. This is followed by the data.
+
+    64tass --cody-bin a.asm
+    *       = $6300
+            nop
+            rts
+
+     Example of Cody format
+             output
+    00 63          load to $6300
+    01 63          last byte
+    EA 60          data
+
 --intel-hex
     Use Intel HEX output file format.
 

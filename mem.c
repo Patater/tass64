@@ -211,6 +211,14 @@ static void output_mem_raw(FILE *fout, const Memblocks *memblocks, const struct 
         header[3] = (uint8_t)(end >> 8);
         i = 4;
         break;
+    case OUTPUT_CODY:
+        header[0] = (uint8_t)pos;
+        header[1] = (uint8_t)(pos >> 8);
+        end = memblocks->data[memblocks->p - 1].addr + memblocks->data[memblocks->p - 1].len - 1;
+        header[2] = (uint8_t)end;
+        header[3] = (uint8_t)(end >> 8);
+        i = 4;
+        break;
     default:
         i = 0;
         break;
@@ -685,6 +693,7 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     case OUTPUT_NONLINEAR: output_mem_nonlinear(fout, memblocks, output->longaddr); break;
     case OUTPUT_PGZ: output_mem_c256_pgz(fout, memblocks, output); break;
     case OUTPUT_XEX: output_mem_atari_xex(fout, memblocks, output); break;
+    case OUTPUT_CODY:
     case OUTPUT_PGX:
     case OUTPUT_RAW:
     case OUTPUT_APPLE:
