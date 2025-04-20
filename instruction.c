@@ -446,7 +446,7 @@ static void qprefix(int prm, linepos_t epoint) {
     }
 }
 
-MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t epoint) {
+MUST_CHECK Error *instruction(int prm, unsigned int w, struct values_s *vals, argcount_t argc, linepos_t epoint) {
     Adrgen adrgen;
     Opr_types opr;
     Reg_types reg;
@@ -460,12 +460,12 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
     struct linepos_s *epoint2;
     Error *err;
     atype_t am;
-
+retry:
     cnmemonic = opcode_table[opcode[prm] & 0xff];
     amode = opcode_table_modes[opcode[prm] >> 8];
     longbranch = 0; reg = REG_A; adr = 0;
 
-    switch (vals->len) {
+    switch (argc) {
     case 0:
     retry0:
         if (is_amode(amode, ADR_IMPLIED)) {
@@ -479,22 +479,21 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         return err_addressing(A_NONE, epoint, prm);
     case 1:
-        epoint2 = &vals->val[0].epoint;
-        val = vals->val[0].val;
+        epoint2 = &vals[0].epoint;
+        val = vals[0].val;
         if (val->obj->iterable) {
             struct iter_s iter;
-            iter.data = vals->val[0].val; iter.data->obj->getiter(&iter);
+            iter.data = vals[0].val; iter.data->obj->getiter(&iter);
             err = NULL;
-            while ((vals->val[0].val = iter.next(&iter)) != NULL) {
-                Error *err2 = instruction(prm, w, vals, epoint);
+            while ((vals[0].val = iter.next(&iter)) != NULL) {
+                Error *err2 = instruction(prm, w, vals, argc, epoint);
                 if (err != NULL) err_msg_output_and_destroy(err);
                 err = err2;
             }
-            vals->val[0].val = iter.data;
+            vals[0].val = iter.data;
             iter_destroy(&iter);
             return err;
         }
-    retry1a:
         am = val->obj->address(val);
     retry1:
         if (am != A_NONE) {
@@ -665,7 +664,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
                         if (diagnostics.optimize) cpu_opt_long_branch(0xea);
                         if (opc < 0) {
-                            err = instruction((current_cpu->brl >= 0 && !longbranchasjmp && !crossbank) ? current_cpu->brl : current_cpu->jmp, w, vals, epoint);
+                            err = instruction((current_cpu->brl >= 0 && !longbranchasjmp && !crossbank) ? current_cpu->brl : current_cpu->jmp, w, vals, argc, epoint);
                         } else {
                             err = NULL;
                             dump_instr((uint8_t)opc, 1, 0, epoint);
@@ -706,11 +705,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                         if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
                         if (diagnostics.optimize) cpu_opt_long_branch(0xea);
                         if (opc < 0) {
-                            struct values_s vs = vals->val[0];
-                            vals->val[0] = vals->val[2];
-                            vals->val[2] = vs;
-                            vals->len = 1;
-                            err = instruction(current_cpu->jmp, w, vals, epoint);
+                            err = instruction(current_cpu->jmp, w, &vals[2], argc - 2, epoint);
                         } else {
                             err = NULL;
                             dump_instr((uint8_t)opc, 1, 0, epoint);
@@ -737,7 +732,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                                 }
                             }
                             if (diagnostics.long_branch) err_msg2(ERROR___LONG_BRANCH, NULL, epoint2);
-                            err = instruction((current_cpu->brl >= 0 && !longbranchasjmp) ? current_cpu->brl : current_cpu->jmp, w, vals, epoint);
+                            err = instruction((current_cpu->brl >= 0 && !longbranchasjmp) ? current_cpu->brl : current_cpu->jmp, w, vals, argc, epoint);
                         branchend:
                             if (s != NULL) {
                                 address_t st = current_address->l_address;
@@ -849,10 +844,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         goto unknown;
     case 2:
-        epoint2 = &vals->val[0].epoint;
-        if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable) {
-            struct values_s *v;
-            argcount_t args;
+        epoint2 = &vals[0].epoint;
+        if (vals[0].val->obj->iterable || vals[1].val->obj->iterable) {
             argcount_t j;
             size_t ln2;
             struct elements_s {
@@ -860,23 +853,21 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                 struct iter_s iter;
             } elements[4];
         broadcast:
-            v = vals->val;
-            args = vals->len;
             ln2 = 1;
             err = NULL;
-            for (j = 0; j < args; j++) {
-                const Type *objt = v[j].val->obj;
+            for (j = 0; j < argc; j++) {
+                const Type *objt = vals[j].val->obj;
                 if (objt->iterable) {
                     struct iter_s *iter = &elements[j].iter;
-                    elements[j].oval = iter->data = v[j].val; objt->getiter(iter);
+                    elements[j].oval = iter->data = vals[j].val; objt->getiter(iter);
                     if (iter->len == 1) {
-                        v[j].val = iter->next(iter);
+                        vals[j].val = iter->next(iter);
                     } else if (iter->len != ln2) {
                         if (ln2 != 1) {
-                            err = new_error(ERROR_CANT_BROADCAS, &v[j].epoint);
+                            err = new_error(ERROR_CANT_BROADCAS, &vals[j].epoint);
                             err->u.broadcast.v1 = ln2;
                             err->u.broadcast.v2 = iter->len;
-                            for (j++; j < args; j++) {
+                            for (j++; j < argc; j++) {
                                 elements[j].oval = NULL;
                             }
                             break;
@@ -890,42 +881,37 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             if (err == NULL) {
                 while (ln2 != 0) {
                     Error *err2;
-                    for (j = 0; j < args; j++) {
+                    for (j = 0; j < argc; j++) {
                         if (elements[j].oval == NULL) continue;
-                        if (elements[j].iter.len != 1) v[j].val = elements[j].iter.next(&elements[j].iter);
+                        if (elements[j].iter.len != 1) vals[j].val = elements[j].iter.next(&elements[j].iter);
                     }
-                    err2 = instruction(prm, w, vals, epoint);
+                    err2 = instruction(prm, w, vals, argc, epoint);
                     if (err != NULL) err_msg_output_and_destroy(err);
                     err = err2;
                     ln2--;
                 }
             }
-            for (j = 0; j < args; j++) {
+            for (j = 0; j < argc; j++) {
                 if (elements[j].oval == NULL) continue;
-                v[j].val = elements[j].oval;
+                vals[j].val = elements[j].oval;
                 iter_destroy(&elements[j].iter);
             }
             return err;
         }
-        if (vals->val[0].val->obj == REGISTER_OBJ) {
-            const Register *r1 = Register(vals->val[0].val);
+        if (vals[0].val->obj == REGISTER_OBJ) {
+            const Register *r1 = Register(vals[0].val);
             if (r1->len == 1) {
                 const Register *r2;
                 int r1name = r1->data[0];
                 int nprm = register_generic(prm, r1name);
                 if (nprm >= 0) {
-                    struct values_s vs = vals->val[0];
-                    vals->val[0] = vals->val[1];
-                    vals->val[1] = vs;
-                    val = vals->val[0].val;
-                    epoint2 = &vals->val[0].epoint;
-                    prm = nprm;
-                    cnmemonic = opcode_table[opcode[prm] & 0xff];
-                    amode = opcode_table_modes[opcode[prm] >> 8];
-                    goto retry1a;
+                    prm = nprm; 
+                    vals++; 
+                    argc--;
+                    goto retry;
                 }
-                if (vals->val[1].val->obj == REGISTER_OBJ) {
-                    r2 = Register(vals->val[1].val);
+                if (vals[1].val->obj == REGISTER_OBJ) {
+                    r2 = Register(vals[1].val);
                     if (r2->len == 1) {
                         int r2name = r2->data[0];
                         nprm = -1;
@@ -947,26 +933,25 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             }
             goto noregister;
         }
-    retry2:
-        if (vals->val[1].val->obj == REGISTER_OBJ) {
-            am = register_to_indexing(Register(vals->val[1].val));
+        if (vals[1].val->obj == REGISTER_OBJ) {
+            am = register_to_indexing(Register(vals[1].val));
             if (am != A_NONE) {
-                val = vals->val[0].val;
+                val = vals[0].val;
                 am |= val->obj->address(val) << 4;
                 goto retry1;
             }
         }
         if (is_amode(amode, ADR_MOVE)) {
             if (w != 3 && w != 1) return err_addressize((w == 0) ? ERROR__NO_BYTE_ADDR : ERROR__NO_LONG_ADDR, epoint2, prm);
-            val = vals->val[0].val;
+            val = vals[0].val;
             if (touaddress(val, &uval, 8, epoint2)) {}
             else {
                 am = val->obj->address(val);
                 if (am != A_NONE && am != A_IMMEDIATE) err_msg_output_and_destroy(err_addressing(am, epoint2, prm));
                 else adr = (uval & 0xff) << 8;
             }
-            epoint2 = &vals->val[1].epoint;
-            val = vals->val[1].val;
+            epoint2 = &vals[1].epoint;
+            val = vals[1].val;
             if (touaddress(val, &uval, 8, epoint2)) {}
             else {
                 am = val->obj->address(val);
@@ -979,10 +964,10 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         if (is_amode(amode, ADR_BIT_ZP)) {
             if (w != 3 && w != 0) return err_addressize((w == 1) ? ERROR__NO_WORD_ADDR : ERROR__NO_LONG_ADDR, epoint2, prm);
-            if (touval(vals->val[0].val, &uval, 3, epoint2)) {}
+            if (touval(vals[0].val, &uval, 3, epoint2)) {}
             else longbranch = ((uval & 7) << 4) & 0x70;
-            val = vals->val[1].val;
-            epoint2 = &vals->val[1].epoint;
+            val = vals[1].val;
+            epoint2 = &vals[1].epoint;
             am = val->obj->address(val);
             if (am == A_DR) {
                 adrgen = AG_BYTE;
@@ -995,32 +980,27 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         goto unknown;
     case 3:
-        epoint2 = &vals->val[0].epoint;
-        if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable || vals->val[2].val->obj->iterable) {
+        epoint2 = &vals[0].epoint;
+        if (vals[0].val->obj->iterable || vals[1].val->obj->iterable || vals[2].val->obj->iterable) {
             goto broadcast;
         }
-        if (vals->val[0].val->obj == REGISTER_OBJ) {
-            if (Register(vals->val[0].val)->len == 1) {
-                int nprm = register_generic(prm, Register(vals->val[0].val)->data[0]);
+        if (vals[0].val->obj == REGISTER_OBJ) {
+            if (Register(vals[0].val)->len == 1) {
+                int nprm = register_generic(prm, Register(vals[0].val)->data[0]);
                 if (nprm >= 0) {
-                    struct values_s vs = vals->val[0];
-                    vals->val[0] = vals->val[1];
-                    vals->val[1] = vals->val[2];
-                    vals->val[2] = vs;
-                    prm = nprm;
-                    cnmemonic = opcode_table[opcode[prm] & 0xff];
-                    amode = opcode_table_modes[opcode[prm] >> 8];
-                    goto retry2;
+                    prm = nprm; 
+                    vals++; 
+                    argc--;
+                    goto retry;
                 }
             }
             goto noregister;
         }
-    retry3:
-        if (vals->val[1].val->obj == REGISTER_OBJ && vals->val[2].val->obj == REGISTER_OBJ) {
-            atype_t am2 = register_to_indexing(Register(vals->val[2].val));
-            am = register_to_indexing(Register(vals->val[1].val));
+        if (vals[1].val->obj == REGISTER_OBJ && vals[2].val->obj == REGISTER_OBJ) {
+            atype_t am2 = register_to_indexing(Register(vals[2].val));
+            am = register_to_indexing(Register(vals[1].val));
             if (am != A_NONE && am2 != A_NONE) {
-                val = vals->val[0].val;
+                val = vals[0].val;
                 am |= val->obj->address(val) << 4;
                 am = (am << 4) | am2;
                 goto retry1;
@@ -1028,10 +1008,10 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         if (is_amode(amode, ADR_BIT_ZP_REL)) {
             if (w != 3 && w != 1) return err_addressize((w != 0) ? ERROR__NO_LONG_ADDR : ERROR__NO_BYTE_ADDR, epoint2, prm);
-            if (touval(vals->val[0].val, &uval, 3, epoint2)) {}
+            if (touval(vals[0].val, &uval, 3, epoint2)) {}
             else longbranch = ((uval & 7) << 4) & 0x70;
-            val = vals->val[1].val;
-            epoint2 = &vals->val[1].epoint;
+            val = vals[1].val;
+            epoint2 = &vals[1].epoint;
             am = val->obj->address(val);
             if (am == A_DR) {
                 if (touaddress(val, &uval, 8, epoint2)) {}
@@ -1047,8 +1027,8 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     } else err_msg2(ERROR_____NOT_BANK0, val, epoint2);
                 }
             }
-            val = vals->val[2].val;
-            epoint2 = &vals->val[2].epoint;
+            val = vals[2].val;
+            epoint2 = &vals[2].epoint;
             ln = 2; opr = OPR_BIT_ZP_REL;
             am = val->obj->address(val);
             if (am == A_KR) {
@@ -1066,23 +1046,18 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
         goto unknown;
     case 4:
-        epoint2 = &vals->val[0].epoint;
-        if (vals->val[0].val->obj->iterable || vals->val[1].val->obj->iterable || vals->val[2].val->obj->iterable || vals->val[3].val->obj->iterable) {
+        epoint2 = &vals[0].epoint;
+        if (vals[0].val->obj->iterable || vals[1].val->obj->iterable || vals[2].val->obj->iterable || vals[3].val->obj->iterable) {
             goto broadcast;
         }
-        if (vals->val[0].val->obj == REGISTER_OBJ) {
-            if (Register(vals->val[0].val)->len == 1) {
-                int nprm = register_generic(prm, Register(vals->val[0].val)->data[0]);
+        if (vals[0].val->obj == REGISTER_OBJ) {
+            if (Register(vals[0].val)->len == 1) {
+                int nprm = register_generic(prm, Register(vals[0].val)->data[0]);
                 if (nprm >= 0) {
-                    struct values_s vs = vals->val[0];
-                    vals->val[0] = vals->val[1];
-                    vals->val[1] = vals->val[2];
-                    vals->val[2] = vals->val[3];
-                    vals->val[3] = vs;
-                    prm = nprm;
-                    cnmemonic = opcode_table[opcode[prm] & 0xff];
-                    amode = opcode_table_modes[opcode[prm] >> 8];
-                    goto retry3;
+                    prm = nprm; 
+                    vals++; 
+                    argc--;
+                    goto retry;
                 }
             }
             goto noregister;
@@ -1091,13 +1066,13 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
     default:
     unknown:
         {
-            argcount_t j, args = vals->len;
-            for (j = 0; j < args; j++) {
-                Obj *v = vals->val[j].val;
+            argcount_t j;
+            for (j = 0; j < argc; j++) {
+                Obj *v = vals[j].val;
                 if (v->obj == ERROR_OBJ) return Error(val_reference(v));
             }
             if (prm == current_cpu->ldr || prm == current_cpu->str || prm == current_cpu->orr) {
-                struct values_s *v = &vals->val[0];
+                struct values_s *v = &vals[0];
                 am = v->val->obj->address(v->val);
                 if (am != A_NONE) {
                     if (am > MAX_ADDRESS_MASK) return new_error(ERROR__ADDR_COMPLEX, &v->epoint);
@@ -1115,7 +1090,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
         }
     noregister:
         err = new_error(ERROR___NO_REGISTER, epoint2);
-        err->u.reg.reg = ref_register(Register(vals->val[0].val));
+        err->u.reg.reg = ref_register(Register(vals[0].val));
         err->u.reg.cod = mnemonic[prm];
         return err;
     }

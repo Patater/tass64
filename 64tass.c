@@ -5715,8 +5715,7 @@ MUST_CHECK Obj *compile(void)
                     oldlpoint = lpoint;
                     w = 3; /* 0=byte 1=word 2=long 3=negative/too big */
                     if (here() == 0 || here() == ';') {
-                        tmp.len = 0;
-                        err = instruction(prm, w, &tmp, &epoint);
+                        err = instruction(prm, w, NULL, 0, &epoint);
                     } else {
                         if (arguments.tasmcomp) {
                             if (here() == '!') {w = 1; lpoint.pos++;}
@@ -5744,7 +5743,7 @@ MUST_CHECK Obj *compile(void)
                         }
                         if (!get_exp(3, 0, 0, NULL)) goto breakerr;
                         get_vals_funcargs(&tmp);
-                        err = instruction(prm, w, &tmp, &epoint);
+                        err = instruction(prm, w, tmp.val, tmp.len, &epoint);
                     }
                     if (err == NULL) {
                         if (llist != NULL) listing_instr(0, 0, -1);
