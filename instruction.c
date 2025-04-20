@@ -1015,6 +1015,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
             }
             goto noregister;
         }
+    retry3:
         if (vals->val[1].val->obj == REGISTER_OBJ && vals->val[2].val->obj == REGISTER_OBJ) {
             atype_t am2 = register_to_indexing(Register(vals->val[2].val));
             am = register_to_indexing(Register(vals->val[1].val));
@@ -1081,7 +1082,7 @@ MUST_CHECK Error *instruction(int prm, unsigned int w, Funcargs *vals, linepos_t
                     prm = nprm;
                     cnmemonic = opcode_table[opcode[prm] & 0xff];
                     amode = opcode_table_modes[opcode[prm] >> 8];
-                    goto retry2;
+                    goto retry3;
                 }
             }
             goto noregister;
