@@ -655,8 +655,7 @@ retry:
                             opc = -1;
                         }
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL]);
-                        if (s == NULL) s = new_star(vline + 1);
-                        dump_instr(cnmemonic[OPR_REL] ^ 0x20, s->pass != 0 ? ((uint16_t)(s->addr - current_address->l_address - 2)) : (opc < 0 ? 3 : 1), 1, epoint);
+                        dump_instr(cnmemonic[OPR_REL] ^ 0x20, opc < 0 ? 3 : 1, 1, epoint);
                         if (lj != NULL) {
                             lj->dest = current_address->l_address;
                             lj->defpass = pass;
@@ -736,7 +735,7 @@ retry:
                         branchend:
                             if (s != NULL) {
                                 address_t st = current_address->l_address;
-                                if (s != NULL && s->pass != 0 && s->addr != st) {
+                                if (s->pass != 0 && s->addr != st) {
                                     if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
                                     fixeddig = false;
                                 }
