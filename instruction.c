@@ -761,12 +761,9 @@ retry:
                     int opc;
                     bool after = pass != Code(oval)->apass;
                     if (after && adr == 0) {
-                        if (s == NULL) s = new_star(vline + 1);
-                        if (s->pass == 0 || (uint16_t)(uval - s->addr) == 0) {
-                            dump_instr(cnmemonic[OPR_REL], 0, -1, epoint);
-                            err = NULL;
-                            goto branchend;
-                        }
+                        dump_instr(cnmemonic[OPR_REL], 0, -1, epoint);
+                        err = NULL;
+                        goto branchend;
                     }
                     opc = code_opcode(Code(oval));
                     if (opc == 0x60 || opc == 0x40 || (opc == 0x6B && opcode == w65816.opcode)) { /* rts, rti, rtl */
@@ -777,31 +774,22 @@ retry:
                     if (after) {
                         if ((cnmemonic[OPR_REL] & 0x1f) == 0x10) {
                             if (adr == 1) {
-                                if (s == NULL) s = new_star(vline + 1);
-                                if (s->pass == 0 || (uint16_t)(uval - s->addr) == 1) {
-                                    if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
-                                    dump_instr(cnmemonic[OPR_REL] ^ 0x20, 1, 0, epoint);
-                                    if (diagnostics.optimize) cpu_opt_long_branch(0);
-                                    err = NULL;
-                                    goto branchend;
-                                }
+                                if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
+                                dump_instr(cnmemonic[OPR_REL] ^ 0x20, 1, 0, epoint);
+                                if (diagnostics.optimize) cpu_opt_long_branch(0);
+                                err = NULL;
+                                goto branchend;
                             } else if (adr == 2 && (opcode == c65ce02.opcode || opcode == c4510.opcode || opcode == c45gs02.opcode)) {
-                                if (s == NULL) s = new_star(vline + 1);
-                                if (s->pass == 0 || (uint16_t)(uval - s->addr) == 2) {
-                                    if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
-                                    dump_instr(cnmemonic[OPR_REL] ^ 0x23, 2, 0, epoint);
-                                    if (diagnostics.optimize) cpu_opt_long_branch(0);
-                                    err = NULL;
-                                    goto branchend;
-                                }
-                            }
-                        } else if (cnmemonic[OPR_REL] == 0x80 && adr == 1 && (opcode == r65c02.opcode || opcode == w65c02.opcode)) {
-                            if (s == NULL) s = new_star(vline + 1);
-                            if (s->pass == 0 || (uint16_t)(uval - s->addr) == 1) {
-                                dump_instr(0x82, 1, 0, epoint);
+                                if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_REL] | 0x100U);
+                                dump_instr(cnmemonic[OPR_REL] ^ 0x23, 2, 0, epoint);
+                                if (diagnostics.optimize) cpu_opt_long_branch(0);
                                 err = NULL;
                                 goto branchend;
                             }
+                        } else if (cnmemonic[OPR_REL] == 0x80 && adr == 1 && (opcode == r65c02.opcode || opcode == w65c02.opcode)) {
+                            dump_instr(0x82, 1, 0, epoint);
+                            err = NULL;
+                            goto branchend;
                         }
                     }
                 }
