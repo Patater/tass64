@@ -483,15 +483,27 @@ retry:
         val = vals[0].val;
         if (val->obj->iterable) {
             struct iter_s iter;
+            struct star_s *s, *stree_old;
+            if (is_amode(amode, ADR_REL)) {
+                s = new_star(vline); stree_old = star_tree;
+                if (s->pass != 0 && s->addr != star) {
+                    if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+                    fixeddig = false;
+                }
+                s->addr = star;
+                star_tree->vline = vline; star_tree = s; vline = s->vline;
+            } else { s = NULL; stree_old = NULL; }
             iter.data = vals[0].val; iter.data->obj->getiter(&iter);
             err = NULL;
             while ((vals[0].val = iter.next(&iter)) != NULL) {
                 Error *err2 = instruction(prm, w, vals, argc, epoint);
                 if (err != NULL) err_msg_output_and_destroy(err);
                 err = err2;
+                if (s != NULL) vline++;
             }
             vals[0].val = iter.data;
             iter_destroy(&iter);
+            if (s != NULL) { s->vline = vline; star_tree = stree_old; vline = star_tree->vline; }
             return err;
         }
         am = val->obj->address(val);
@@ -866,6 +878,16 @@ retry:
                 }
             }
             if (err == NULL) {
+                struct star_s *s, *stree_old;
+                if (is_amode(amode, ADR_REL)) {
+                    s = new_star(vline); stree_old = star_tree;
+                    if (s->pass != 0 && s->addr != star) {
+                        if (fixeddig && pass > max_pass) err_msg_cant_calculate(NULL, epoint);
+                        fixeddig = false;
+                    }
+                    s->addr = star;
+                    star_tree->vline = vline; star_tree = s; vline = s->vline;
+                } else { s = NULL; stree_old = NULL; }
                 while (ln2 != 0) {
                     Error *err2;
                     for (j = 0; j < argc; j++) {
@@ -876,7 +898,9 @@ retry:
                     if (err != NULL) err_msg_output_and_destroy(err);
                     err = err2;
                     ln2--;
+                    if (s != NULL) vline++;
                 }
+                if (s != NULL) { s->vline = vline; star_tree = stree_old; vline = star_tree->vline; }
             }
             for (j = 0; j < argc; j++) {
                 if (elements[j].oval == NULL) continue;
