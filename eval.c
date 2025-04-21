@@ -951,6 +951,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 tmp.val = v + 1;
                 tmp.len = args; /* assumes no referencing */
                 tmp.v.obj = FUNCARGS_OBJ;
+                tmp.v.refcount = 1;
 
                 epoint.pos = out->pos;
                 v--;
@@ -1130,6 +1131,7 @@ static bool get_val2(struct eval_context_s *ev) {
                 tmp.val = v;
                 tmp.len = 3; /* assumes no referencing */
                 tmp.v.obj = FUNCARGS_OBJ;
+                tmp.v.refcount = 1;
 
                 epoint.pos = out->pos;
                 oper.v1 = none_value;

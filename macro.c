@@ -521,6 +521,7 @@ Obj *mfunc_recurse(Mfunc *mfunc, Namespace *context, uint8_t strength, linepos_t
                         tmp.val = vs;
                         tmp.len = 1; /* assumes no referencing */
                         tmp.v.obj = FUNCARGS_OBJ;
+                        tmp.v.refcount = 1;
                         oper.v2 = &tmp.v;
                         val = oper.v1->obj->calc2(&oper);
                     }
@@ -894,6 +895,7 @@ Obj *mfunc2_recurse(Mfunc *mfunc, Funcargs *v2, linepos_t epoint) {
                         tmp.val = &vs;
                         tmp.len = 1; /* assumes no referencing */
                         tmp.v.obj = FUNCARGS_OBJ;
+                        tmp.v.refcount = 1;
                         oper.v2 = &tmp.v;
                         functionrecursion++;
                         val = oper.v1->obj->calc2(&oper);

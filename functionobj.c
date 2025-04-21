@@ -873,7 +873,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
                         return function_sort(v->val, &v->epoint);
                     default:
                         op->v2 = v->val;
-                        op->inplace = v->val->refcount == 1 ? v->val : NULL;
+                        op->inplace = o2->refcount == 1 && v->val->refcount == 1 ? v->val : NULL;
                         return apply_func(op, function_function);
                     }
                 }
