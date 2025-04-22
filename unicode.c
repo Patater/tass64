@@ -657,7 +657,7 @@ void ctagsline_print(const uint8_t *l, FILE *f) {
             }
         } else i++;
         putc('\\', f);
-        putc((ch == '/' || ch == '\\') ? ch : '.', f);
+        putc((ch == '/' || ch == '\\') ? (int)ch : '.', f);
         len += 2;
         l = i;
     }

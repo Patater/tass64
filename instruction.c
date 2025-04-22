@@ -708,7 +708,7 @@ retry:
                             opc = -1;
                         }
                         if (diagnostics.optimize) cpu_opt_long_branch(cnmemonic[OPR_BIT_ZP_REL] ^ longbranch);
-                        dump_instr(cnmemonic[OPR_BIT_ZP_REL] ^ 0x80 ^ longbranch, xadr | (opc < 0 ? 0x300 : 0x100), 2, epoint);
+                        dump_instr(cnmemonic[OPR_BIT_ZP_REL] ^ 0x80 ^ longbranch, xadr | (opc < 0 ? 0x300u : 0x100u), 2, epoint);
                         if (lj != NULL) {
                             lj->dest = current_address->l_address;
                             lj->defpass = pass;
