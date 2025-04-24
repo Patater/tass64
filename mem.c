@@ -266,7 +266,7 @@ static void output_mem_nonlinear(FILE *fout, const Memblocks *memblocks, bool lo
     fwrite(header, longaddr ? 3 : 2, 1, fout);
 }
 
-static void output_mem_c256_pgz(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
+static void output_mem_pgz_wdc(FILE *fout, const Memblocks *memblocks, const struct output_s *output) {
     size_t i, j;
     uint8_t header[7];
     unsigned int p = 0;
@@ -293,7 +293,10 @@ static void output_mem_c256_pgz(FILE *fout, const Memblocks *memblocks, const st
             if (fwrite(memblocks->mem.data + b->p, b->len, 1, fout) == 0) return;
         }
     }
-    if (output->exec_pos.pos != 0) {
+    if (output->mode == OUTPUT_WDC) {
+        memset(header + 1, 0, 6);
+        fwrite(header + p, 7 - p, 1, fout);
+    } else if (output->exec_pos.pos != 0) {
         header[1] = (uint8_t)output->exec;
         header[2] = (uint8_t)(output->exec >> 8);
         header[3] = (uint8_t)(output->exec >> 16);
@@ -691,7 +694,8 @@ void output_mem(Memblocks *memblocks, const struct output_s *output) {
     switch (output->mode) {
     case OUTPUT_FLAT: output_mem_flat(fout, memblocks, output->append); break;
     case OUTPUT_NONLINEAR: output_mem_nonlinear(fout, memblocks, output->longaddr); break;
-    case OUTPUT_PGZ: output_mem_c256_pgz(fout, memblocks, output); break;
+    case OUTPUT_WDC:
+    case OUTPUT_PGZ: output_mem_pgz_wdc(fout, memblocks, output); break;
     case OUTPUT_XEX: output_mem_atari_xex(fout, memblocks, output); break;
     case OUTPUT_CODY:
     case OUTPUT_PGX:

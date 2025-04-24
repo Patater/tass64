@@ -3624,6 +3624,29 @@ Output options
     01 63          last byte
     EA 60          data
 
+--wdc-bin
+    Generate WDC binary output file. Also known as zardoz binary.
+
+    Overlapping blocks are flattened. Blocks are saved in sorted order and
+    uninitialized memory is skipped. Up to 16 MiB.
+
+    It starts with a single byte signature. Then before each memory block a
+    three byte load address and length is written in little endian format. Ends
+    with a zero load and start address.
+
+    64tass --output-exec=start --wdc-bin a.asm
+    *       = $1000
+    start   rts
+
+    Example WDC binary (zardoz)
+           format output
+    5a             Z signature byte
+    00 10 00       load to $1000
+    01 00 00       length is 1 bytes
+    60             data
+    00 00 00       end
+    00 00 00       marker
+
 --intel-hex
     Use Intel HEX output file format.
 
