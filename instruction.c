@@ -656,6 +656,12 @@ retry:
                                     uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 2);
                                     if (adrk >= 0xFF80 || adrk <= 0x007F) {
                                         adr = adrk;
+                                        if (((current_address->l_address + 2) & 0xff00) != (lj->dest & 0xff00)) {
+                                            int diff = (int8_t)oadr;
+                                            if (diff >= 0) diff++;
+                                            if (!allowslowbranch) err_msg2(ERROR__BRANCH_CROSS, &diff, epoint2);
+                                            else if (diagnostics.branch_page) err_msg_branch_page(diff, epoint2);
+                                        }
                                         goto branchok;
                                     }
                                 }
@@ -697,6 +703,12 @@ retry:
                                     uint32_t adrk = (uint16_t)(lj->dest - current_address->l_address - 3);
                                     if (adrk >= 0xFF80 || adrk <= 0x007F) {
                                         adr = adrk;
+                                        if (((current_address->l_address + 3) & 0xff00) != (lj->dest & 0xff00)) {
+                                            int diff = (int8_t)oadr;
+                                            if (diff >= 0) diff++;
+                                            if (!allowslowbranch) err_msg2(ERROR__BRANCH_CROSS, &diff, epoint2);
+                                            else if (diagnostics.branch_page) err_msg_branch_page(diff, epoint2);
+                                        }
                                         goto branchok;
                                     }
                                 }
