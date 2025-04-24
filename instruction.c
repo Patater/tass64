@@ -632,13 +632,13 @@ retry:
                 }
                 if (invalid) uval = 0;
                 if (!longpossible && (uval & 0x80) != 0) uval |= ~(uval_t)0xff;
-                uval &= 0xffff;
-                uval |= current_address->l_address & ~(uval_t)0xffff;
                 crossbank = false;
                 xadr = (uint16_t)adr;
                 s = NULL;
-                oadr = uval;
                 adr = (uint16_t)uval;
+                uval = (uval + current_address->l_address + 1 + ln) & 0xffff;
+                uval |= current_address->l_address & ~(uval_t)0xffff;
+                oadr = uval;
                 oval = val;
             }
             if ((adr<0xFF80 && adr>0x007F) || crossbank || w == 1 || w == 2) {
