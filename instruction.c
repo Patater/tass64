@@ -385,7 +385,7 @@ static int register_generic(int prm, int c) {
         if (prm == current_cpu->cmp) return current_cpu->cpa;
         if (prm == current_cpu->adc) return current_cpu->adc;
         if (prm == current_cpu->sbc) return current_cpu->sbc;
-        if (prm == current_cpu->and) return current_cpu->and;
+        if (prm == current_cpu->and_) return current_cpu->and_;
         if (prm == current_cpu->orr) return current_cpu->ora;
         if (prm == current_cpu->eor) return current_cpu->eor;
         if (prm == current_cpu->bit) return current_cpu->bit;
@@ -398,7 +398,7 @@ static int register_generic(int prm, int c) {
         if (prm == current_cpu->cmp) return current_cpu->cpq;
         if (prm == current_cpu->adc) return current_cpu->adq;
         if (prm == current_cpu->sbc) return current_cpu->sbq;
-        if (prm == current_cpu->and) return current_cpu->anq;
+        if (prm == current_cpu->and_) return current_cpu->anq;
         if (prm == current_cpu->orr) return current_cpu->orq;
         if (prm == current_cpu->eor) return current_cpu->eoq;
         if (prm == current_cpu->bit) return current_cpu->btq;
