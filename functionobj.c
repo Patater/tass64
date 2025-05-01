@@ -469,35 +469,33 @@ static MUST_CHECK Obj *function_binary(oper_t op) {
 
 static Obj *function_unsigned_bytes(oper_t op, unsigned int bits) {
     uval_t uv;
-    if (touval(op->v2, &uv, bits, op->epoint2)) uv = 0;
-    return bytes_from_uval(uv, bits >> 3);
+    Error *err = op->v2->obj->uval(op->v2, &uv, bits, op->epoint2);
+    return err != NULL ? Obj(err) : bytes_from_uval(uv, bits >> 3);
 }
 
 static Obj *function_signed_bytes(oper_t op, unsigned int bits) {
     ival_t iv;
-    if (toival(op->v2, &iv, bits, op->epoint2)) iv = 0;
-    return bytes_from_uval((uval_t)iv, bits >> 3);
+    Error *err = op->v2->obj->ival(op->v2, &iv, bits, op->epoint2);
+    return err != NULL ? Obj(err) : bytes_from_uval((uval_t)iv, bits >> 3);
 }
 
 static Obj *function_rta_addr(oper_t op, bool rta) {
     uval_t uv;
     Obj *val = op->v2;
     atype_t am = val->obj->address(val);
-    if (touaddress(val, &uv, (am == A_KR) ? 16 : all_mem_bits, op->epoint2)) {
-        uv = 0;
-    } else {
-        uv &= all_mem;
-        switch (am) {
-        case A_NONE:
-            if ((current_address->l_address ^ uv) > 0xffff) err_msg2(ERROR_CANT_CROSS_BA, val, op->epoint2);
-            break;
-        case A_KR:
-            break;
-        default:
-            err_msg_output_and_destroy(err_addressing(am, op->epoint2, -1));
-        }
-        if (rta) uv--;
+    Error *err = val->obj->uaddress(val, &uv, (am == A_KR) ? 16 : all_mem_bits, op->epoint2);
+    if (err != NULL) return Obj(err);
+    uv &= all_mem;
+    switch (am) {
+    case A_NONE:
+        if ((current_address->l_address ^ uv) > 0xffff) return new_error_obj(ERROR_CANT_CROSS_BA, val, op->epoint2);
+        break;
+    case A_KR:
+        break;
+    default:
+        return Obj(err_addressing(am, op->epoint2, -1));
     }
+    if (rta) uv--;
     return bytes_from_uval(uv, 2);
 }
 

@@ -960,6 +960,7 @@ void err_msg_output(const Error *val) {
     case ERROR______LOG_BASE:
     case ERROR_SQUARE_ROOT_N:
     case ERROR___INDEX_RANGE:
+    case ERROR_CANT_CROSS_BA:
     case ERROR_____KEY_ERROR: more = new_error_msg_err(val); adderror(terr_error[val->num - 0x40]); err_msg_variable(val->u.obj);break;
     case ERROR__WRONG_ARGNUM: more = new_error_msg_err(val); err_msg_argnum2(val->u.argnum.num, val->u.argnum.min, val->u.argnum.max); break;
     case ERROR____WRONG_TYPE: err_msg_wrong_type(val->u.otype.t1, val->u.otype.t2, &val->epoint); break;
