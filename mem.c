@@ -790,6 +790,7 @@ void list_mem(const struct mem_mark_s *mm, const Memblocks *memblocks) {
     for (; o <= memblocks->p; o++) {
         address_t p;
         address_t addr, len;
+        const uint8_t *data;
 
         if (o < memblocks->p) {
             addr = memblocks->data[o].addr;
@@ -813,9 +814,11 @@ void list_mem(const struct mem_mark_s *mm, const Memblocks *memblocks) {
                 len -= diff;
             }
             addr = addr2;
+            data = (len != 0) ? memblocks->mem.data + p : NULL;
         } else {
             if (len == 0) continue;
+            data = memblocks->mem.data + p;
         }
-        listing_mem(memblocks->mem.data + p, len, addr, (mm->oaddr2 + addr - addr2) & all_mem);
+        listing_mem(data, len, addr, (mm->oaddr2 + addr - addr2) & all_mem);
     }
 }
