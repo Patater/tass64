@@ -1743,6 +1743,7 @@ static MUST_CHECK Obj *calc2_int(oper_t op) {
             val_destroy(vv2);
             return val;
         }
+        if (v1->len == 0) return val_reference(Obj(v1));
         return power(op);
     case O_LSHIFT:
         err = ival(Obj(v2), &shift, 8 * sizeof shift, op->epoint2);
