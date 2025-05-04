@@ -1864,8 +1864,9 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
                         } else if (val->obj->getiter == DEFAULT_OBJ->getiter) {
                             if (doerror) {
                                 Funcargs f;
+                                Obj *err;
                                 get_vals_funcargs(&f);
-                                Obj *err = new_error_obj(ERROR______NOT_ITER, val, &f.val[j].epoint);
+                                err = new_error_obj(ERROR______NOT_ITER, val, &f.val[j].epoint);
                                 err_msg_output_and_destroy(Error(err));
                                 doerror = false;
                             }
