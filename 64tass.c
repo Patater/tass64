@@ -1712,8 +1712,8 @@ static size_t for_command(const Label *newlabel, List *lst, linepos_t epoint) {
             }
         } else {
             label = (varname.data[0] == '_') ? find_label2(&varname, context) : find_label(&varname, NULL);
-            if (label == NULL) {err_msg_not_defined2(&varname, context, false, &epoint2); break;}
-            if (label->constant) {err_msg_not_variable(label, &varname, &epoint2); break;}
+            if (label == NULL) {err_msg_not_defined2(&varname, context, false, &epoint2); val_destroy(val); break;}
+            if (label->constant) {err_msg_not_variable(label, &varname, &epoint2); val_destroy(val); break;}
             if (diagnostics.case_symbol && str_cmp(&varname, &label->name) != 0) err_msg_symbol_case(&varname, label, &epoint2);
             if (tmp.op != O_REASSIGN) {
                 bool minmax = (tmp.op == O_MIN) || (tmp.op == O_MAX);
