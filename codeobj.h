@@ -49,7 +49,7 @@ typedef struct Code {
     address_t memaddr;
     size_t membp;
     struct Namespace *names;
-    uval_t requires;
+    uval_t required;
     uval_t conflicts;
 } Code;
 

@@ -48,7 +48,7 @@ struct section_s {
     str_t cfname;
     struct avltree_node node;
 
-    uval_t requires;
+    uval_t required;
     uval_t conflicts;
     uval_t provides;
     address_t restart;

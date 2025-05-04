@@ -375,7 +375,7 @@ MUST_CHECK Obj *get_star(void) {
     code->apass = pass;
     code->memblocks = ref_memblocks(current_address->mem);
     code->names = ref_namespace(current_context);
-    code->requires = current_section->requires;
+    code->required = current_section->required;
     code->conflicts = current_section->conflicts;
     code->memaddr = current_address->address;
     code->membp = 0;
