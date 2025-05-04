@@ -341,7 +341,7 @@ static uval_t bitscalc(address_t addr, Bits *val) {
 
 static uval_t bytescalc(address_t addr, Bytes *val) {
     size_t b = val->len < 0 ? (size_t)~val->len : (size_t)val->len;
-    if (b >= 8 * sizeof(addr)) return (uval_t)b;
+    if (b >= sizeof(addr)) return (uval_t)b;
     if ((addr >> (b << 3)) == 0) return (uval_t)b;
     if (addr <= 0xff) return 1;
     if (addr <= 0xffff) return 2;
