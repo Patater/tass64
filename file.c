@@ -314,9 +314,9 @@ static struct {
     time_t value;
 } latest_file_time;
 
-bool get_latest_file_time(void *time) {
+bool get_latest_file_time(void *ftime) {
     if (!latest_file_time.valid || latest_file_time.current) return true;
-    *((time_t *)time) = latest_file_time.value;
+    *((time_t *)ftime) = latest_file_time.value;
     return false;
 }
 
