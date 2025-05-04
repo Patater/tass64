@@ -542,18 +542,21 @@ static MUST_CHECK Obj *contains(oper_t op) {
     case T_NONE:
     case T_ERROR:
         return val_reference(o1);
-    case T_GAP:
-        o1 = val_reference(o1);
-        break;
     default:
-        o1 = int_from_obj(o1, op->epoint);
-        if (o1->obj != INT_OBJ) return o1;
         break;
     }
+
     if (code_item_prepare(&ci, v2, &ln)) {
         return obj_oper_error(op);
     }
     if (diagnostics.size_larger && v2->offs < 0) err_msg_size_larger(op->epoint2);
+
+    if (o1->obj == GAP_OBJ) {
+        o1 = val_reference(o1);
+    } else {
+        o1 = int_from_obj(o1, op->epoint);
+        if (o1->obj != INT_OBJ) return o1;
+    }
 
     oper = op->op;
     good = (oper == O_IN) ? false_value : true_value;
