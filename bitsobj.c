@@ -1377,7 +1377,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
     case T_BOOL:
         if (diagnostics.strict_bool) err_msg_bool_oper(op);
         op->v2 = tmp = val_reference(bits_value[Bool(o2)->value ? 1 : 0]);
-        if (op->inplace != NULL && op->inplace->refcount != 1) op->inplace = NULL;
+        if (op->inplace == o2) op->inplace = NULL;
         result = calc2(op);
         val_destroy(tmp);
         return result;

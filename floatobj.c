@@ -397,6 +397,7 @@ static MUST_CHECK Obj *calc2(oper_t op) {
             if (err != NULL) return err;
             if (shift == 0) return val_reference(op->v1);
             if (op->op == O_RSHIFT) shift = -shift;
+            if (op->inplace == op->v2) op->inplace = NULL;
             return float_from_double_inplace(ldexp(Float(op->v1)->real, shift), op);
         }
         err = float_from_obj(v2, op->epoint2);
