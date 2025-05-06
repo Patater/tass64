@@ -475,6 +475,7 @@ void encobj_init(void) {
 }
 
 void encobj_destroy(void) {
+    if (lasttr != NULL) trans_free((union trans_u *)lasttr);
     val_destroy(Obj(actual_encoding));
 }
 
