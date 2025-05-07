@@ -167,6 +167,7 @@ retry:
         }
         if (tmp->fwpass == pass) efwcount--;
         avltree_remove(b, &enc->ranges);
+        trans_free((union trans_u *)tmp);
         goto retry;
     }
     if (tmp->pass >= pass) {
