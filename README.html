@@ -3684,7 +3684,7 @@ It is recommended to leave a space before the addressing mode.</p>
 </table></div>
 
 <p>Transfer instructions have generic versions as well, actually in two
-variants. The first one is when only one of the registers need to be variable.
+variants. The first one is when only one of the registers needs to be variable.
 A register address can be used with regular load instructions to get those
 setting the flags, like <code>TAX</code> which is <code>LDA&nbsp;X</code>.
 Store instructions are used for those which don't, like <code>TXS</code> which
@@ -3692,12 +3692,12 @@ is <code>STX&nbsp;S</code>.</p>
 
 <div><table width="100%" class="opcodes">
 <caption>Register transfer parametrization through load and stores</caption>
-<tr><td width="12%">TBA<td width="12%">TDC<td width="12%">TSC<td width="12%">TXA<td width="12%">TYA<td width="12%">TZA<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;
-<tr><td>LDA&nbsp;B<td>LDA&nbsp;D<td>LDA&nbsp;S<td>LDA&nbsp;X<td>LDA&nbsp;Y<td>LDA&nbsp;Z<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<tr><td width="12%">TDA<td width="12%">TDC<td width="12%">TSC<td width="12%">TXA<td width="12%">TYA<td width="12%">TZA<td width="12%">&nbsp;&nbsp;&nbsp;<td width="12%">&nbsp;&nbsp;&nbsp;
+<tr><td>LDA&nbsp;D<td>LDA&nbsp;D<td>LDA&nbsp;S<td>LDA&nbsp;X<td>LDA&nbsp;Y<td>LDA&nbsp;Z<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <tr><td>&nbsp;&nbsp;&nbsp;<td>TAX<td>TIX<td>TRX<td>TSX<td>TYX<td>TAY<td>TSY
 <tr><td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>LDX&nbsp;A<td>LDX&nbsp;I<td>LDX&nbsp;R<td>LDX&nbsp;S<td>LDX&nbsp;Y<td>LDY&nbsp;A<td>LDY&nbsp;S
-<tr><td>TXY<td>TAZ<td>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<td>TAB<td>TCS<td>TXS<td>TYS
-<tr><td>LDY&nbsp;X<td>LDZ&nbsp;A<td>&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;<td>STA&nbsp;B<td>STA&nbsp;S<td>STX&nbsp;S<td>STY&nbsp;S
+<tr><td>TXY<td>TAZ<td>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<td>TAD<td>TCS<td>TXS<td>TYS
+<tr><td>LDY&nbsp;X<td>LDZ&nbsp;A<td>&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;<td>STA&nbsp;D<td>STA&nbsp;S<td>STX&nbsp;S<td>STY&nbsp;S
 </table></div>
 
 <p>The second variant allows parametrizing both the source and target register.
@@ -3708,12 +3708,12 @@ mode.
 
 <div><table width="100%" class="opcodes">
 <caption>Register transfer fully parametrized form</caption>
-<tr><td width="12%">TBA<td width="12%">TDC<td width="12%">TSC<td width="12%">TXA<td width="12%">TYA<td width="12%">TZA<td width="12%">TCD<td width="12%">TXI
-<tr><td>LDR&nbsp;A,&nbsp;B<td>LDR&nbsp;A,&nbsp;D<td>LDR&nbsp;A,&nbsp;S<td>LDR&nbsp;A,&nbsp;X<td>LDR&nbsp;A,&nbsp;Y<td>LDR&nbsp;A,&nbsp;Z<td>LDR&nbsp;D,&nbsp;A<td>LDR&nbsp;I,&nbsp;X
+<tr><td width="12%">TDA<td width="12%">TDC<td width="12%">TSC<td width="12%">TXA<td width="12%">TYA<td width="12%">TZA<td width="12%">TCD<td width="12%">TXI
+<tr><td>LDR&nbsp;A,&nbsp;D<td>LDR&nbsp;A,&nbsp;D<td>LDR&nbsp;A,&nbsp;S<td>LDR&nbsp;A,&nbsp;X<td>LDR&nbsp;A,&nbsp;Y<td>LDR&nbsp;A,&nbsp;Z<td>LDR&nbsp;D,&nbsp;A<td>LDR&nbsp;I,&nbsp;X
 <tr><td>TXR<td>TAX<td>TIX<td>TRX<td>TSX<td>TYX<td>TAY<td>TSY
 <tr><td>LDR&nbsp;R,&nbsp;X<td>LDR&nbsp;X,&nbsp;A<td>LDR&nbsp;X,&nbsp;I<td>LDR&nbsp;X,&nbsp;R<td>LDR&nbsp;X,&nbsp;S<td>LDR&nbsp;X,&nbsp;Y<td>LDR&nbsp;Y,&nbsp;A<td>LDR&nbsp;Y,&nbsp;S
-<tr><td>TXY<td>TAZ<td>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<td>TAB<td>TCS<td>TXS<td>TYS
-<tr><td>LDR&nbsp;Y,&nbsp;X<td>LDR&nbsp;Z,&nbsp;A<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>STR&nbsp;A,&nbsp;B<td>STR&nbsp;A,&nbsp;S<td>STR&nbsp;X,&nbsp;S<td>STR&nbsp;Y,&nbsp;S
+<tr><td>TXY<td>TAZ<td>&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;<td>TAD<td>TCS<td>TXS<td>TYS
+<tr><td>LDR&nbsp;Y,&nbsp;X<td>LDR&nbsp;Z,&nbsp;A<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<td>STR&nbsp;A,&nbsp;D<td>STR&nbsp;A,&nbsp;S<td>STR&nbsp;X,&nbsp;S<td>STR&nbsp;Y,&nbsp;S
 </table></div>
 
 <p>In the following subroutine has input parameters in registers.

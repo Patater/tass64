@@ -3129,18 +3129,18 @@ CPA       CPX       CPY       CPZ                 LDQ       STQ       CPQ
 CMP A,    CMP X,    CMP Y,    CMP Z,              LDR Q,    STR Q,    CMP Q,
 
 Transfer instructions have generic versions as well, actually in two variants.
-The first one is when only one of the registers need to be variable. A register
-address can be used with regular load instructions to get those setting the
-flags, like TAX which is LDA X. Store instructions are used for those which
-don't, like TXS which is STX S.
+The first one is when only one of the registers needs to be variable. A
+register address can be used with regular load instructions to get those
+setting the flags, like TAX which is LDA X. Store instructions are used for
+those which don't, like TXS which is STX S.
 
            Register transfer parametrization through load and stores
-TBA       TDC       TSC       TXA       TYA       TZA
-LDA B     LDA D     LDA S     LDA X     LDA Y     LDA Z
+TDA       TDC       TSC       TXA       TYA       TZA
+LDA D     LDA D     LDA S     LDA X     LDA Y     LDA Z
           TAX       TIX       TRX       TSX       TYX       TAY       TSY
           LDX A     LDX I     LDX R     LDX S     LDX Y     LDY A     LDY S
-TXY       TAZ                           TAB       TCS       TXS       TYS
-LDY X     LDZ A                         STA B     STA S     STX S     STY S
+TXY       TAZ                           TAD       TCS       TXS       TYS
+LDY X     LDZ A                         STA D     STA S     STX S     STY S
 
 The second variant allows parametrizing both the source and target register.
 This can be done with LDR for those setting the flags and STR for those which
@@ -3148,12 +3148,12 @@ don't. Here it's especially important to leave a space after the coma to not
 create an unintended register indexing mode.
 
                    Register transfer fully parametrized form
-TBA       TDC       TSC       TXA       TYA       TZA       TCD       TXI
-LDR A, B  LDR A, D  LDR A, S  LDR A, X  LDR A, Y  LDR A, Z  LDR D, A  LDR I, X
+TDA       TDC       TSC       TXA       TYA       TZA       TCD       TXI
+LDR A, D  LDR A, D  LDR A, S  LDR A, X  LDR A, Y  LDR A, Z  LDR D, A  LDR I, X
 TXR       TAX       TIX       TRX       TSX       TYX       TAY       TSY
 LDR R, X  LDR X, A  LDR X, I  LDR X, R  LDR X, S  LDR X, Y  LDR Y, A  LDR Y, S
-TXY       TAZ                           TAB       TCS       TXS       TYS
-LDR Y, X  LDR Z, A                      STR A, B  STR A, S  STR X, S  STR Y, S
+TXY       TAZ                           TAD       TCS       TXS       TYS
+LDR Y, X  LDR Z, A                      STR A, D  STR A, S  STR X, S  STR Y, S
 
 In the following subroutine has input parameters in registers. These were given
 symbols and are used to load them at the call site using LDR. The pointer
