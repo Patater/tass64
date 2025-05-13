@@ -2529,15 +2529,73 @@ within.
 .brept <expression>
     Repeat enclosed lines the specified number of times.
 
-            .rept 100
-    -       inx
-            bne -
+    This style of loop is for simple repetitions where no loop variable is
+    needed.
+
+            lda pos
+            .rept 3         ;multiply pos by 8
+            asl a
+            rol pos+1
+            .endrept
+            adc #<start
+
+    As .rept simply repeats the lines anonymous labels are preferred over
+    regular ones to avoid redefinition errors.
+
+            lsr a           ;result = a * (x + 1)
+            sta result
+            stx tmp
+            lda #0
+            .rept 8         ;unroll for speed
+            bcc +
+            adc tmp
+    +       ror a
+            ror result
+            .endrept
+            sta result+1
+
+    A .brept loop is similar but each iteration gets its own scope. This allows
+    regular labels and these won't collide with external ones either.
+
+    Internal labels are accessible through a label put in front of the loop.
+    This will hold a tuple of all iterations.
+
+    sprites .brept 4                ;array for 4 sprites
+    x       .byte ?
+    y       .byte ?
+    color   .byte ?
             .endrept
 
-    lst     .brept 100       ;each iteration into a tuple
-    label   jmp label        ;not a duplicate definition
-            .endrept
-            jmp lst[5].label ;use label of 6th iteration
+            lda sprites[2].x        ;position of 3rd sprite
+            ldx #len(sprites)       ;sprite count
+            ldx #size(sprites[0])   ;byte count of first
+    addrtab .addr sprites           ;address of each one
+    offsets .byte sprites-sprites[0];offsets for indexing
+            ldy offsets,x           ;get the offset and
+            lda sprites[0].color,y  ;use for element access
+
+    For indexed access it's easy to forget about [0] from LDA label[0].var,X
+    but without that all elements will be used which is likely not desired.
+    That's something to keep in mind.
+
+    Similar arrays can be defined without the use of .brept. It's enough to
+    define the first element using .block and then reserve the space for the
+    rest with .fill. This avoids the use of [0] for element access with
+    indexing.
+
+    sprites .block
+    COUNT   = 4                     ;sprite count
+    x       .byte ?
+    y       .byte ?
+    color   .byte ?
+            .endblock
+            .fill size(sprites) * (sprites.COUNT - 1)
+
+            ldx #sprites.COUNT      ;sprite count
+            ldx #size(sprites)      ;byte count of one
+    addrtab .addr sprites + size(sprites) * range(sprites.COUNT)
+    offsets .byte size(sprites) * range(sprites.COUNT)
+            lda sprites.color,y
 
 .endrept
     End of a .rept or .brept block

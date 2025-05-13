@@ -2936,9 +2936,9 @@ each iteration will be assigned to it. This allows accessing labels within.</p>
 <dt><b>.bfor</b> [&lt;assignment&gt;], [&lt;condition&gt;], [&lt;assignment&gt;]<a name="d_bfor" href="#d_bfor"></a>
 <dd>Assign initial value, loop while the condition is true and modify value.
 
-<p>First a variable is set, usually this is used for counting. This is optional, the variable may be set already before the loop.</p>
+<p>First a variable is set, usually this is used for counting. This is optional, the variable may be set already before the loop.
 
-<p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.</p>
+<p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.
 
 <p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.</p>
 
@@ -2999,16 +2999,82 @@ determines the loop iteration count.</p>
 <dt><b>.brept</b> &lt;expression&gt;<a name="d_brept" href="#d_brept"></a>
 <dd>Repeat enclosed lines the specified number of times.
 
+<p>This style of loop is for simple repetitions where no loop
+variable is needed.</p>
+
 <pre>
-        <b class="k">.rept</b> <span>100</span>
--       <b>inx</b>
-        <b>bne</b> <u>-</u>
+        <b>lda</b> <u>pos</u>
+        <b class="k">.rept</b> <span>3</span>         <i>;multiply pos by 8</i>
+        <b>asl</b> <u>a</u>
+        <b>rol</b> <u>pos</u>+<span>1</span>
+        <b class="k">.endrept</b>
+        <b>adc</b> #&lt;<u>start</u>
+</pre>
+
+<p>As <code>.rept</code> simply repeats the lines anonymous labels are
+preferred over regular ones to avoid redefinition errors.</p>
+
+<pre>
+        <b>lsr</b> <u>a</u>           <i>;result = a * (x + 1)</i>
+        <b>sta</b> <u>result</u>
+        <b>stx</b> <u>tmp</u>
+        <b>lda</b> #<span>0</span>
+        <b class="k">.rept</b> <span>8</span>         <i>;unroll for speed</i>
+        <b>bcc</b> <u>+</u>
+        <b>adc</b> <u>tmp</u>
++       <b>ror</b> <u>a</u>
+        <b>ror</b> <u>result</u>
+        <b class="k">.endrept</b>
+        <b>sta</b> <u>result</u>+<span>1</span>
+</pre>
+
+<p>A <code>.brept</code> loop is similar but each iteration gets its own scope.
+This allows regular labels and these won't collide with external ones
+either.
+
+<p>Internal labels are accessible through a label put in front of the loop.
+This will hold a tuple of all iterations.</p>
+
+<pre>
+sprites <b class="k">.brept</b> <span>4</span>                <i>;array for 4 sprites</i>
+x       <b class="d">.byte</b> <span>?</span>
+y       <b class="d">.byte</b> <span>?</span>
+color   <b class="d">.byte</b> <span>?</span>
         <b class="k">.endrept</b>
 
-lst     <b class="k">.brept</b> <span>100</span>       <i>;each iteration into a tuple</i>
-label   <b>jmp</b> <u>label</u>        <i>;not a duplicate definition</i>
-        <b class="k">.endrept</b>
-        <b>jmp</b> <u>lst</u>[<span>5</span>].<u>label</u> <i>;use label of 6th iteration</i>
+        <b>lda</b> <u>sprites</u>[<span>2</span>].<u>x</u>        <i>;position of 3rd sprite</i>
+        <b>ldx</b> #<span class="k">len</span>(<u>sprites</u>)       <i>;sprite count</i>
+        <b>ldx</b> #<span class="k">size</span>(<u>sprites</u>[<span>0</span>])   <i>;byte count of first</i>
+addrtab <b class="d">.addr</b> <u>sprites</u>           <i>;address of each one</i>
+offsets <b class="d">.byte</b> <u>sprites</u>-<u>sprites</u>[<span>0</span>]<i>;offsets for indexing</i>
+        <b>ldy</b> <u>offsets</u>,x           <i>;get the offset and</i>
+        <b>lda</b> <u>sprites</u>[<span>0</span>].<u>color</u>,y  <i>;use for element access</i>
+</pre>
+
+<p>For indexed access it's easy to forget about <code>[0]</code> from <code>LDA
+label[0].var,X</code> but without that all elements will be used which is likely
+not desired. That's something to keep in mind.
+
+<p>Similar arrays can be defined without the use of <code>.brept</code>.
+It's enough to define the first element using <a
+href="#d_block"><code>.block</code></a> and then reserve the space for the rest
+with <a href="#d_fill"><code>.fill</code></a>. This avoids the use of
+<code>[0]</code> for element access with indexing.</p>
+
+<pre>
+sprites <b class="k">.block</b>
+COUNT   <b>=</b> <span>4</span>                     <i>;sprite count</i>
+x       <b class="d">.byte</b> <span>?</span>
+y       <b class="d">.byte</b> <span>?</span>
+color   <b class="d">.byte</b> <span>?</span>
+        <b class="k">.endblock</b>
+        <b class="d">.fill</b> <span class="k">size</span>(<u>sprites</u>) * (<u>sprites</u>.<u>COUNT</u> - <span>1</span>)
+
+        <b>ldx</b> #<u>sprites</u>.<u>COUNT</u>      <i>;sprite count</i>
+        <b>ldx</b> #<span class="k">size</span>(<u>sprites</u>)      <i>;byte count of one</i>
+addrtab <b class="d">.addr</b> <u>sprites</u> + <span class="k">size</span>(<u>sprites</u>) * <span class="k">range</span>(<u>sprites</u>.<u>COUNT</u>)
+offsets <b class="d">.byte</b> <span class="k">size</span>(<u>sprites</u>) * <span class="k">range</span>(<u>sprites</u>.<u>COUNT</u>)
+        <b>lda</b> <u>sprites</u>.<u>color</u>,y
 </pre></dd>
 
 <dt><b>.endrept</b><a name="d_endrept" href="#d_endrept"></a>
