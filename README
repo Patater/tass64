@@ -2478,13 +2478,42 @@ within.
     After an iteration the second assignment is calculated, usually it's
     updating the loop counter variable. This is optional as well.
 
-            ldx #0
-            lda #32
-    lp      .for ue := $400, ue < $800, ue += $100
-            sta ue,x         ;do $400, $500, $600 and $700
+    All three expressions are free form and can be almost anything which makes
+    this style of loop very flexible.
+
+    Still in it's most typical application it just increments an counter from
+    start to end with a steps:
+
+            .for counter := start, counter < end, counter += step
+            ...
             .endfor
-            dex
-            bne lp
+
+    If the loop counter only runs through a range of integers then this
+    iterative form is recommended instead:
+
+    ;Iterative for loop (start to end with steps, not including end)
+            .for counter in range(start, end, step)
+    ;Can be shorter if step is 1 (start to end-1)
+            .for counter in range(start, end)
+    ;Or even shorter if start is 0 (0 to end-1)
+            .for counter in range(end)
+
+    Beyond being more compact it has an advantage that the counter name doesn't
+    need to be repeated 3 times. Sure it ain't much if it's a single letter but
+    a single typo can easily cause an infinite loop if the mistyped name
+    happens to exist as well.
+
+    Sometimes the counter isn't used for anything in the loop body at all. For
+    that simple repetitions are better:
+
+            .rept count
+            ...
+            .endrept
+
+    That said I'm having hard time to find a useful example for this style of
+    loop. Since the iterative form appeared that took most of its use cases for
+    me. But it has an advantage of long history and that this form might be
+    more familiar to some.
 
 .for <variable>[, <variable>, ...] in <expression>[, <expression>, ...]
 .bfor <variable>[, <variable>, ...] in <expression>[, <expression>, ...]

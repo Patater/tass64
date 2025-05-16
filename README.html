@@ -2940,17 +2940,50 @@ each iteration will be assigned to it. This allows accessing labels within.</p>
 
 <p>Then the condition is checked and the enclosed lines are compiled if it's true. If there's no condition then it's an infinite loop and <a href="#d_break"><code>.break</code></a> must be used to terminate it.
 
-<p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.</p>
+<p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.
+
+<p>All three expressions are free form and can be almost anything which makes this style of
+loop very flexible.
+
+<p>Still in it's most typical application it just increments an counter from start to end with a steps:</p>
 
 <pre>
-        <b>ldx</b> #<span>0</span>
-        <b>lda</b> #<span>32</span>
-lp      <b class="k">.for</b> <u>ue</u> := <span>$400</span>, <u>ue</u> &lt; <span>$800</span>, <u>ue</u> += <span>$100</span>
-        <b>sta</b> <u>ue</u>,x         <i>;do $400, $500, $600 and $700</i>
+        <b class="k">.for</b> <u>counter</u> := <u>start</u>, <u>counter</u> &lt; <u>end</u>, <u>counter</u> += <u>step</u>
+        ...
         <b class="k">.endfor</b>
-        <b>dex</b>
-        <b>bne</b> <u>lp</u>
-</pre></dd>
+</pre>
+
+<p>If the loop counter only runs through a range of integers then this iterative form is recommended instead:</p>
+
+<pre>
+<i>;Iterative for loop (start to end with steps, not including end)</i>
+        <b class="k">.for</b> <u>counter</u> <span class="k">in</span> <span class="k">range</span>(<u>start</u>, <u>end</u>, <u>step</u>)
+<i>;Can be shorter if step is 1 (start to end-1)</i>
+        <b class="k">.for</b> <u>counter</u> <span class="k">in</span> <span class="k">range</span>(<u>start</u>, <u>end</u>)
+<i>;Or even shorter if start is 0 (0 to end-1)</i>
+        <b class="k">.for</b> <u>counter</u> <span class="k">in</span> <span class="k">range</span>(<u>end</u>)
+</pre>
+
+<p>Beyond being more compact it has an advantage that the counter name
+doesn't need to be repeated 3 times. Sure it ain't much if it's a single
+letter but a single typo can easily cause an infinite loop if the mistyped
+name happens to exist as well.
+
+<p>Sometimes the counter isn't used for anything in the loop body at all. For
+that simple repetitions are better:</p>
+
+<pre>
+        <b class="k">.rept</b> <u>count</u>
+        ...
+        <b class="k">.endrept</b>
+</pre>
+
+<p>That said I'm having hard time to find a useful example for this style of
+loop. Since the iterative form appeared that took most of its use cases for me.
+But it has an advantage of long history and that this form might be more
+familiar to some.</p>
+
+</dd>
 
 <dt><b>.for</b> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]
 <dt><b>.bfor</b> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]
