@@ -2482,7 +2482,7 @@ within.
     this style of loop very flexible.
 
     Still in it's most typical application it just increments an counter from
-    start to end with a steps:
+    start to end by constant steps:
 
             .for counter := start, counter < end, counter += step
             ...
@@ -2498,22 +2498,28 @@ within.
     ;Or even shorter if start is 0 (0 to end-1)
             .for counter in range(end)
 
-    Beyond being more compact it has an advantage that the counter name doesn't
-    need to be repeated 3 times. Sure it ain't much if it's a single letter but
-    a single typo can easily cause an infinite loop if the mistyped name
-    happens to exist as well.
+    That's not only more compact it also has an advantage that the counter name
+    doesn't need to be repeated 3 times. Sure it ain't much if it's a single
+    letter but a single typo can easily cause an infinite loop if the mistyped
+    name happens to exist as well.
 
-    Sometimes the counter isn't used for anything in the loop body at all. For
-    that simple repetitions are better:
+    If the counter isn't used in the loop body then a simple repetition is
+    better:
 
             .rept count
             ...
             .endrept
 
+    It can act as a while loop when the assignment expressions are left empty
+    but there's .while for that now.
+
     That said I'm having hard time to find a useful example for this style of
     loop. Since the iterative form appeared that took most of its use cases for
-    me. But it has an advantage of long history and that this form might be
-    more familiar to some.
+    me. Except in special cases where the steps can vary:
+
+            .for pos := 12, pos < len(data), pos += (length + 9) & ~1
+    length  := data[pos + 4 : pos + 8]
+            ...
 
 .for <variable>[, <variable>, ...] in <expression>[, <expression>, ...]
 .bfor <variable>[, <variable>, ...] in <expression>[, <expression>, ...]
@@ -2521,6 +2527,12 @@ within.
 
     Usually one variable is used to loop through all values. The values can be
     supplied by range function or some sort of list.
+
+    ;loop through on iterable or on comma separated values
+            .for col in 0, 11, 12, 15, 1
+            lda #col         ;0, 11, 12, 15 and 1
+            sta $d020
+            .endfor
 
     It's also possible to use more than one variable for each iteration. These
     can be assigned to a collection of values each time (row oriented) or a
@@ -2530,22 +2542,18 @@ within.
     the number of variables as each variable gets assigned to one of them. The
     loop iteration count depends on how many such collections were supplied.
 
+    ;row oriented iterating for loop, on list of tuples
+            .for dest, val in [($d011, $3b), ($d020, 0), ($d018, $18)]
+            lda #val
+            sta dest
+            .endfor
+
     A column oriented for loop expects the same number of collections (comma
     separated) as the number of variables. On each iteration a single value is
     taken from each and is assigned to the matching variable. All collections
     should have the same length so that all variables can be assigned. This
     length also determines the loop iteration count.
 
-    ;loop through on iterable or on comma separated values
-            .for col in 0, 11, 12, 15, 1
-            lda #col         ;0, 11, 12, 15 and 1
-            sta $d020
-            .endfor
-    ;row oriented iterating for loop, on list of tuples
-            .for dest, val in [($d011, $3b), ($d020, 0), ($d018, $18)]
-            lda #val
-            sta dest
-            .endfor
     ;column oriented iterating for loop, one iterable for each variable.
             .for dest, val in ($d011, $d020, $d018), ($3b, 0, $18)
             lda #val
@@ -2645,6 +2653,12 @@ within.
     Exit current repetition loop immediately if the condition holds.
 
     It's a shorthand for a .if, .break, .endif sequence.
+
+            .for spr in range(8)
+            stx screen + $3f8 + spr
+            .breakif spr == 7
+            inx             ;except for the last one
+            .next
 
 .continue
     Continue current repetition loop's next iteration.

@@ -704,7 +704,7 @@ moment) the same effect can be achieved by combining slicing and
 concatenation:
 
 <pre>
-lst     := <u>lst</u>[:<span>2</span>] .. [<span>4</span>] .. <u>lst</u>[<span>3</span>:]<i>; same as lst[2] := 4 would be</i>
+lst     <b>:=</b> <u>lst</u>[:<span>2</span>] .. [<span>4</span>] .. <u>lst</u>[<span>3</span>:]<i>; same as lst[2] := 4 would be</i>
 </pre>
 
 <p>Folding is done on pair of elements either forward (left) or reverse
@@ -1434,8 +1434,8 @@ play    <b>=</b> <u>sid</u>[[<span>$d</span>, <span>$c</span>]]      <i>; play a
 
 <i>; if load address is zero then it's the first 2 bytes of data</i>
         <b class="k">.if</b> <u>load</u> == <span>0</span>
-load    := <u>sid</u>[<u>offs</u>:<u>offs</u>+<span>2</span>]  <i>; load address (little endian)</i>
-offs    += <span>2</span>                 <i>; skip load address bytes</i>
+load    <b>:=</b> <u>sid</u>[<u>offs</u>:<u>offs</u>+<span>2</span>]  <i>; load address (little endian)</i>
+offs    <b>+=</b> <span>2</span>                 <i>; skip load address bytes</i>
         <b class="k">.endif</b>
 
 *       <b>=</b> <u>load</u>               <i>; set pc to load address</i>
@@ -1851,7 +1851,7 @@ will match the requested address in the expression.
 .0800                                           label1
                                                         <b class="k">.logical</b> <span>$1000</span>
 .0800   1000                                    label2
-                                                *       = <span>$1200</span>
+                                                *       <b>=</b> <span>$1200</span>
 .0a00   1200                                    label3
                                                         <b class="k">.endlogical</b>
 .0a00                                           label4
@@ -2945,7 +2945,7 @@ each iteration will be assigned to it. This allows accessing labels within.</p>
 <p>All three expressions are free form and can be almost anything which makes this style of
 loop very flexible.
 
-<p>Still in it's most typical application it just increments an counter from start to end with a steps:</p>
+<p>Still in it's most typical application it just increments an counter from start to end by constant steps:</p>
 
 <pre>
         <b class="k">.for</b> <u>counter</u> := <u>start</u>, <u>counter</u> &lt; <u>end</u>, <u>counter</u> += <u>step</u>
@@ -2964,13 +2964,12 @@ loop very flexible.
         <b class="k">.for</b> <u>counter</u> <span class="k">in</span> <span class="k">range</span>(<u>end</u>)
 </pre>
 
-<p>Beyond being more compact it has an advantage that the counter name
-doesn't need to be repeated 3 times. Sure it ain't much if it's a single
-letter but a single typo can easily cause an infinite loop if the mistyped
-name happens to exist as well.
+<p>That's not only more compact it also has an advantage that the counter name
+doesn't need to be repeated 3 times. Sure it ain't much if it's a single letter
+but a single typo can easily cause an infinite loop if the mistyped name
+happens to exist as well.
 
-<p>Sometimes the counter isn't used for anything in the loop body at all. For
-that simple repetitions are better:</p>
+<p>If the counter isn't used in the loop body then a simple repetition is better:</p>
 
 <pre>
         <b class="k">.rept</b> <u>count</u>
@@ -2978,12 +2977,18 @@ that simple repetitions are better:</p>
         <b class="k">.endrept</b>
 </pre>
 
+<p>It can act as a while loop when the assignment expressions are left
+empty but there's <a href="#d_while"><code>.while</code></a> for that now.
+
 <p>That said I'm having hard time to find a useful example for this style of
 loop. Since the iterative form appeared that took most of its use cases for me.
-But it has an advantage of long history and that this form might be more
-familiar to some.</p>
+Except in special cases where the steps can vary:</p>
 
-</dd>
+<pre>
+        <b class="k">.for</b> <u>pos</u> := <span>12</span>, <u>pos</u> &lt; <span class="k">len</span>(<u>data</u>), <u>pos</u> += (<u>length</u> + <span>9</span>) &amp; ~<span>1</span>
+length  <b>:=</b> <u>data</u>[<u>pos</u> + <span>4</span> : <u>pos</u> + <span>8</span>]
+        ...
+</pre></dd>
 
 <dt><b>.for</b> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]
 <dt><b>.bfor</b> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]
@@ -2993,13 +2998,29 @@ familiar to some.</p>
 supplied by <a href="#f_range"><code>range</code></a> function or some sort of
 <a href="#list-tuples">list</a>.
 
+<pre>
+<i>;loop through on iterable or on comma separated values</i>
+        <b class="k">.for</b> <u>col</u> <span class="k">in</span> <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
+        <b>lda</b> #<u>col</u>         <i>;0, 11, 12, 15 and 1</i>
+        <b>sta</b> <span>$d020</span>
+        <b class="k">.endfor</b>
+</pre>
+
 <p>It's also possible to use more than one variable for each iteration. These
 can be assigned to a collection of values each time (row oriented) or a single
 value from each collection (column oriented).
 
 <p>A row oriented for loop expects collections of the same number of values as
 the number of variables as each variable gets assigned to one of them. The
-loop iteration count depends on how many such collections were supplied.
+loop iteration count depends on how many such collections were supplied.</p>
+
+<pre>
+<i>;row oriented iterating for loop, on list of tuples</i>
+        <b class="k">.for</b> <u>dest</u>, <u>val</u> <span class="k">in</span> [(<span>$d011</span>, <span>$3b</span>), (<span>$d020</span>, <span>0</span>), (<span>$d018</span>, <span>$18</span>)]
+        <b>lda</b> #<u>val</u>
+        <b>sta</b> <u>dest</u>
+        <b class="k">.endfor</b>
+</pre>
 
 <p>A column oriented for loop expects the same number of collections (comma
 separated) as the number of variables. On each iteration a single value is
@@ -3008,16 +3029,6 @@ have the same length so that all variables can be assigned. This length also
 determines the loop iteration count.</p>
 
 <pre>
-<i>;loop through on iterable or on comma separated values</i>
-        <b class="k">.for</b> <u>col</u> <span class="k">in</span> <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
-        <b>lda</b> #<u>col</u>         <i>;0, 11, 12, 15 and 1</i>
-        <b>sta</b> <span>$d020</span>
-        <b class="k">.endfor</b>
-<i>;row oriented iterating for loop, on list of tuples</i>
-        <b class="k">.for</b> <u>dest</u>, <u>val</u> <span class="k">in</span> [(<span>$d011</span>, <span>$3b</span>), (<span>$d020</span>, <span>0</span>), (<span>$d018</span>, <span>$18</span>)]
-        <b>lda</b> #<u>val</u>
-        <b>sta</b> <u>dest</u>
-        <b class="k">.endfor</b>
 <i>;column oriented iterating for loop, one iterable for each variable.</i>
         <b class="k">.for</b> <u>dest</u>, <u>val</u> <span class="k">in</span> (<span>$d011</span>, <span>$d020</span>, <span>$d018</span>), (<span>$3b</span>, <span>0</span>, <span>$18</span>)
         <b>lda</b> #<u>val</u>
@@ -3132,6 +3143,14 @@ or the reassign operator (<code>::=</code>).</p></dd>
 <dd>Exit current repetition loop immediately if the condition holds.
 
 <p>It's a shorthand for a <a href="#d_if"><code>.if</code></a>, <a href="#d_break"><code>.break</code></a>, <a href="#d_endif"><code>.endif</code></a> sequence.</p></dd>
+
+<pre>
+        <b class="k">.for</b> spr in <span class="k">range</span>(<span>8</span>)
+        <b>stx</b> <u>screen</u> + <span>$3f8</span> + <u>spr</u>
+        <b class="k">.breakif</b> <u>spr</u> == <span>7</span>
+        <b>inx</b>             <i>;except for the last one</i>
+        <b class="k">.next</b>
+</pre>
 
 <dt><b>.continue</b><a name="d_continue" href="#d_continue"></a>
 <dd>Continue current repetition loop's next iteration.</dd>
