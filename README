@@ -2451,13 +2451,13 @@ Comment
 
 Repetitions
 
-The following directives are used to repeat code or data.
+There are multiple directives which can be used to repeat lines of code.
 
 The regular non-scoped variants cover most cases except when normal labels are
 required as those will be double defined.
 
-Scoped variants (those starting with the letter b) create a new scope for each
-iteration. This allows normal labels without collision but it's a bit more
+Scoped variants (those starting with the letter `b') create a new scope for
+each iteration. This allows normal labels without collision but it's a bit more
 resource intensive.
 
 If the scoped variant is prefixed with a label then the list of individual
@@ -2479,9 +2479,15 @@ within.
     updating the loop counter variable. This is optional as well.
 
     All three expressions are free form and can be almost anything which makes
-    this style of loop very flexible.
+    this style of loop very flexible. A good example is this loop which
+    processes a multipart data structure having a word length fields field in
+    front of each part:
 
-    Still in it's most typical application it just increments an counter from
+            .for pos := 0, pos < len(data), pos += data[pos : pos + 2]
+            ...
+            .endfor
+
+    Still in it's most typical application it just increments a counter from
     start to end by constant steps:
 
             .for counter := start, counter < end, counter += step
@@ -2498,10 +2504,8 @@ within.
     ;Or even shorter if start is 0 (0 to end-1)
             .for counter in range(end)
 
-    That's not only more compact it also has an advantage that the counter name
-    doesn't need to be repeated 3 times. Sure it ain't much if it's a single
-    letter but a single typo can easily cause an infinite loop if the mistyped
-    name happens to exist as well.
+    That's not only more compact it also has the advantage that the counter
+    name doesn't need to be repeated 3 times.
 
     If the counter isn't used in the loop body then a simple repetition is
     better:
@@ -2510,16 +2514,8 @@ within.
             ...
             .endrept
 
-    It can act as a while loop when the assignment expressions are left empty
-    but there's .while for that now.
-
-    That said I'm having hard time to find a useful example for this style of
-    loop. Since the iterative form appeared that took most of its use cases for
-    me. Except in special cases where the steps can vary:
-
-            .for pos := 12, pos < len(data), pos += (length + 9) & ~1
-    length  := data[pos + 4 : pos + 8]
-            ...
+    A for loop can also act as a while loop when the assignment expressions are
+    left empty. That was useful in the past but there's a .while now.
 
 .for <variable>[, <variable>, ...] in <expression>[, <expression>, ...]
 .bfor <variable>[, <variable>, ...] in <expression>[, <expression>, ...]
@@ -2576,8 +2572,9 @@ within.
             .endrept
             adc #<start
 
-    As .rept simply repeats the lines anonymous labels are preferred over
-    regular ones to avoid redefinition errors.
+    As .rept simply repeats lines anonymous labels are preferred in the loop
+    body. Using anonymous scopes to enclose parts with regular labels is also a
+    working strategy to get around redefinition errors.
 
             lsr a           ;result = a * (x + 1)
             sta result
@@ -2594,8 +2591,10 @@ within.
     A .brept loop is similar but each iteration gets its own scope. This allows
     regular labels and these won't collide with external ones either.
 
-    Internal labels are accessible through a label put in front of the loop.
-    This will hold a tuple of all iterations.
+    Labels in the loop body are accessible through a label put in front of the
+    loop. This will hold a tuple with an entry for each iteration.
+
+    It's tempting to use it to create arrays:
 
     sprites .brept 4                ;array for 4 sprites
     x       .byte ?
@@ -2611,9 +2610,9 @@ within.
             ldy offsets,x           ;get the offset and
             lda sprites[0].color,y  ;use for element access
 
-    For indexed access it's easy to forget about [0] from LDA label[0].var,X
-    but without that all elements will be used which is likely not desired.
-    That's something to keep in mind.
+    Indexed access needs that [0] as the offset is counted from the first
+    entry. Leaving that out all the array elements will be used which is likely
+    not desired. That's something to keep in mind.
 
     Similar arrays can be defined without the use of .brept. It's enough to
     define the first element using .block and then reserve the space for the
@@ -2640,10 +2639,18 @@ within.
 .bwhile <condition>
     Repeat enclosed lines until the condition holds.
 
-    Works as expected however the scoped variant might be tricky to use as
-    variables of the condition are usually part of the parent scope. So
-    modifying them in the loop body should be done with compound assignments or
-    the reassign operator (::=).
+    ;run length maxes out at 255, so split as necessary
+            .while pos < end
+    len     := (end - last) <? 255
+            .byte prefix, len
+    pos     += len
+            .endwhile
+
+    The scoped variant might be tricky to use as variables of the condition are
+    usually part of the parent scope. Modifying them in the loop body should be
+    done with compound assignments (like +=) or the reassign operator (::=),
+    and not with := or .var. The latter two creates or updates a variable in
+    the inner scope.
 
 .endwhile
     End of a .while or .bwhile loop block
@@ -2666,6 +2673,12 @@ within.
     Continue current repetition loop's next iteration if the condition holds.
 
     It's a shorthand for a .if, .continue, .endif sequence.
+
+    closest := candidates[0]
+            .for current in candidates[1::]
+            .continueif abs(closest - target) <= abs(current - target)
+    closest := current
+            .next
 
 .next
     Closing directive of .for, .bfor, .rept, .brept, .while and .bwhile loop

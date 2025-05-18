@@ -2576,7 +2576,7 @@ nnarray <b class="k">.brept</b> <span>4</span>        <i>;4 element "array" here
 
         <b>lda</b> <u>nnarray</u>[<span>0</span>].<u>y</u><i>;access of "array" field</i>
 
-coords2 <b class="k">.bfor</b> <u>x2</u>, <u>y2</u> <span class="k">in</span> [(<span>1</span>,<span>3</span>),(<span>4</span>,<span>2</span>),(<span>7</span>,<span>5</span>)]
+coords2 <b class="k">.bfor</b> <u>x2</u>, <u>y2</u> in [(<span>1</span>,<span>3</span>),(<span>4</span>,<span>2</span>),(<span>7</span>,<span>5</span>)]
         <b class="d">.dstruct</b> <u>nn_s</u>, <u>x2</u>, <u>y2</u>
         <b class="k">.endfor</b>         <i>;initialized "array" from list</i>
 </pre>
@@ -2919,12 +2919,12 @@ statement.</p>
 
 <h3>Repetitions<a name="repetitions" href="#repetitions"></a></h3>
 
-<p>The following directives are used to repeat code or data.
+<p>There are multiple directives which can be used to repeat lines of code.
 
 <p>The regular non-scoped variants cover most cases except when normal labels
 are required as those will be double defined.
 
-<p>Scoped variants (those starting with the letter b) create a new scope
+<p>Scoped variants (those starting with the letter <q>b</q>) create a new scope
 for each iteration. This allows normal labels without collision but it's a bit more
 resource intensive.
 
@@ -2943,9 +2943,16 @@ each iteration will be assigned to it. This allows accessing labels within.</p>
 <p>After an iteration the second assignment is calculated, usually it's updating the loop counter variable. This is optional as well.
 
 <p>All three expressions are free form and can be almost anything which makes this style of
-loop very flexible.
+loop very flexible. A good example is this loop which processes a multipart
+data structure having a word length fields field in front of each part:</p>
 
-<p>Still in it's most typical application it just increments an counter from start to end by constant steps:</p>
+<pre>
+        <b class="k">.for</b> <u>pos</u> := <span>0</span>, <u>pos</u> &lt; <span class="k">len</span>(<u>data</u>), <u>pos</u> += <u>data</u>[<u>pos</u> : <u>pos</u> + <span>2</span>]
+        ...
+        <b class="k">.endfor</b>
+</pre>
+
+<p>Still in it's most typical application it just increments a counter from start to end by constant steps:</p>
 
 <pre>
         <b class="k">.for</b> <u>counter</u> := <u>start</u>, <u>counter</u> &lt; <u>end</u>, <u>counter</u> += <u>step</u>
@@ -2957,17 +2964,15 @@ loop very flexible.
 
 <pre>
 <i>;Iterative for loop (start to end with steps, not including end)</i>
-        <b class="k">.for</b> <u>counter</u> <span class="k">in</span> <span class="k">range</span>(<u>start</u>, <u>end</u>, <u>step</u>)
+        <b class="k">.for</b> <u>counter</u> in <span class="k">range</span>(<u>start</u>, <u>end</u>, <u>step</u>)
 <i>;Can be shorter if step is 1 (start to end-1)</i>
-        <b class="k">.for</b> <u>counter</u> <span class="k">in</span> <span class="k">range</span>(<u>start</u>, <u>end</u>)
+        <b class="k">.for</b> <u>counter</u> in <span class="k">range</span>(<u>start</u>, <u>end</u>)
 <i>;Or even shorter if start is 0 (0 to end-1)</i>
-        <b class="k">.for</b> <u>counter</u> <span class="k">in</span> <span class="k">range</span>(<u>end</u>)
+        <b class="k">.for</b> <u>counter</u> in <span class="k">range</span>(<u>end</u>)
 </pre>
 
-<p>That's not only more compact it also has an advantage that the counter name
-doesn't need to be repeated 3 times. Sure it ain't much if it's a single letter
-but a single typo can easily cause an infinite loop if the mistyped name
-happens to exist as well.
+<p>That's not only more compact it also has the advantage that the counter name
+doesn't need to be repeated 3 times.
 
 <p>If the counter isn't used in the loop body then a simple repetition is better:</p>
 
@@ -2977,18 +2982,9 @@ happens to exist as well.
         <b class="k">.endrept</b>
 </pre>
 
-<p>It can act as a while loop when the assignment expressions are left
-empty but there's <a href="#d_while"><code>.while</code></a> for that now.
-
-<p>That said I'm having hard time to find a useful example for this style of
-loop. Since the iterative form appeared that took most of its use cases for me.
-Except in special cases where the steps can vary:</p>
-
-<pre>
-        <b class="k">.for</b> <u>pos</u> := <span>12</span>, <u>pos</u> &lt; <span class="k">len</span>(<u>data</u>), <u>pos</u> += (<u>length</u> + <span>9</span>) &amp; ~<span>1</span>
-length  <b>:=</b> <u>data</u>[<u>pos</u> + <span>4</span> : <u>pos</u> + <span>8</span>]
-        ...
-</pre></dd>
+<p>A for loop can also act as a while loop when the assignment expressions are
+left empty. That was useful in the past but there's a <a href="#d_while"><code>.while</code></a> now.</p>
+</dd>
 
 <dt><b>.for</b> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]
 <dt><b>.bfor</b> &lt;variable&gt;[, &lt;variable&gt;, &hellip;] <b class="k">in</b> &lt;expression&gt;[, &lt;expression&gt;, &hellip;]
@@ -3000,7 +2996,7 @@ supplied by <a href="#f_range"><code>range</code></a> function or some sort of
 
 <pre>
 <i>;loop through on iterable or on comma separated values</i>
-        <b class="k">.for</b> <u>col</u> <span class="k">in</span> <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
+        <b class="k">.for</b> <u>col</u> in <span>0</span>, <span>11</span>, <span>12</span>, <span>15</span>, <span>1</span>
         <b>lda</b> #<u>col</u>         <i>;0, 11, 12, 15 and 1</i>
         <b>sta</b> <span>$d020</span>
         <b class="k">.endfor</b>
@@ -3016,7 +3012,7 @@ loop iteration count depends on how many such collections were supplied.</p>
 
 <pre>
 <i>;row oriented iterating for loop, on list of tuples</i>
-        <b class="k">.for</b> <u>dest</u>, <u>val</u> <span class="k">in</span> [(<span>$d011</span>, <span>$3b</span>), (<span>$d020</span>, <span>0</span>), (<span>$d018</span>, <span>$18</span>)]
+        <b class="k">.for</b> <u>dest</u>, <u>val</u> in [(<span>$d011</span>, <span>$3b</span>), (<span>$d020</span>, <span>0</span>), (<span>$d018</span>, <span>$18</span>)]
         <b>lda</b> #<u>val</u>
         <b>sta</b> <u>dest</u>
         <b class="k">.endfor</b>
@@ -3030,7 +3026,7 @@ determines the loop iteration count.</p>
 
 <pre>
 <i>;column oriented iterating for loop, one iterable for each variable.</i>
-        <b class="k">.for</b> <u>dest</u>, <u>val</u> <span class="k">in</span> (<span>$d011</span>, <span>$d020</span>, <span>$d018</span>), (<span>$3b</span>, <span>0</span>, <span>$18</span>)
+        <b class="k">.for</b> <u>dest</u>, <u>val</u> in (<span>$d011</span>, <span>$d020</span>, <span>$d018</span>), (<span>$3b</span>, <span>0</span>, <span>$18</span>)
         <b>lda</b> #<u>val</u>
         <b>sta</b> <u>dest</u>
         <b class="k">.endfor</b>
@@ -3055,8 +3051,9 @@ variable is needed.</p>
         <b>adc</b> #&lt;<u>start</u>
 </pre>
 
-<p>As <code>.rept</code> simply repeats the lines anonymous labels are
-preferred over regular ones to avoid redefinition errors.</p>
+<p>As <code>.rept</code> simply repeats lines anonymous labels are preferred in
+the loop body. Using anonymous scopes to enclose parts with regular labels is
+also a working strategy to get around redefinition errors.</p>
 
 <pre>
         <b>lsr</b> <u>a</u>           <i>;result = a * (x + 1)</i>
@@ -3076,8 +3073,10 @@ preferred over regular ones to avoid redefinition errors.</p>
 This allows regular labels and these won't collide with external ones
 either.
 
-<p>Internal labels are accessible through a label put in front of the loop.
-This will hold a tuple of all iterations.</p>
+<p>Labels in the loop body are accessible through a label put in front of the loop.
+This will hold a tuple with an entry for each iteration.
+
+<p>It's tempting to use it to create arrays:</p>
 
 <pre>
 sprites <b class="k">.brept</b> <span>4</span>                <i>;array for 4 sprites</i>
@@ -3095,9 +3094,9 @@ offsets <b class="d">.byte</b> <u>sprites</u>-<u>sprites</u>[<span>0</span>]<i>;
         <b>lda</b> <u>sprites</u>[<span>0</span>].<u>color</u>,y  <i>;use for element access</i>
 </pre>
 
-<p>For indexed access it's easy to forget about <code>[0]</code> from <code>LDA
-label[0].var,X</code> but without that all elements will be used which is likely
-not desired. That's something to keep in mind.
+<p>Indexed access needs that <code>[0]</code> as the offset is counted
+from the first entry. Leaving that out all the array elements will be used which is
+likely not desired. That's something to keep in mind.
 
 <p>Similar arrays can be defined without the use of <code>.brept</code>.
 It's enough to define the first element using <a
@@ -3128,10 +3127,22 @@ offsets <b class="d">.byte</b> <span class="k">size</span>(<u>sprites</u>) * <sp
 <dt><b>.bwhile</b> &lt;condition&gt;<a name="d_bwhile" href="#d_bwhile"></a>
 <dd>Repeat enclosed lines until the condition holds.
 
-<p>Works as expected however the scoped variant might be tricky to use as
-variables of the condition are usually part of the parent scope. So
-modifying them in the loop body should be done with compound assignments
-or the reassign operator (<code>::=</code>).</p></dd>
+<pre>
+<i>;run length maxes out at 255, so split as necessary</i>
+        <b class="k">.while</b> <u>pos</u> &lt; <u>end</u>
+len     <b>:=</b> (<u>end</u> - <u>last</u>) &lt;? <span>255</span>
+        <b class="d">.byte</b> <u>prefix</u>, <u>len</u>
+pos     <b>+=</b> len
+        <b class="k">.endwhile</b>
+</pre>
+
+<p>The scoped variant might be tricky to use as
+variables of the condition are usually part of the parent scope.
+Modifying them in the loop body should be done with compound assignments (like <code>+=</code>)
+or the reassign operator (<code>::=</code>), and not with <code>:=</code> or
+<code>.var</code>. The latter two creates or updates a variable in the inner scope.</p>
+
+</dd>
 
 <dt><b>.endwhile</b><a name="d_endwhile" href="#d_endwhile"></a>
 <dd>End of a <a href="#d_while"><code>.while</code></a> or <a href="#d_bwhile"><code>.bwhile</code></a> loop block</dd>
@@ -3142,15 +3153,15 @@ or the reassign operator (<code>::=</code>).</p></dd>
 <dt><b>.breakif</b> &lt;condition&gt;<a name="d_breakif" href="#d_breakif"></a>
 <dd>Exit current repetition loop immediately if the condition holds.
 
-<p>It's a shorthand for a <a href="#d_if"><code>.if</code></a>, <a href="#d_break"><code>.break</code></a>, <a href="#d_endif"><code>.endif</code></a> sequence.</p></dd>
+<p>It's a shorthand for a <a href="#d_if"><code>.if</code></a>, <a href="#d_break"><code>.break</code></a>, <a href="#d_endif"><code>.endif</code></a> sequence.</p>
 
 <pre>
-        <b class="k">.for</b> spr in <span class="k">range</span>(<span>8</span>)
+        <b class="k">.for</b> <u>spr</u> in <span class="k">range</span>(<span>8</span>)
         <b>stx</b> <u>screen</u> + <span>$3f8</span> + <u>spr</u>
         <b class="k">.breakif</b> <u>spr</u> == <span>7</span>
         <b>inx</b>             <i>;except for the last one</i>
         <b class="k">.next</b>
-</pre>
+</pre></dd>
 
 <dt><b>.continue</b><a name="d_continue" href="#d_continue"></a>
 <dd>Continue current repetition loop's next iteration.</dd>
@@ -3158,7 +3169,15 @@ or the reassign operator (<code>::=</code>).</p></dd>
 <dt><b>.continueif</b> &lt;condition&gt;<a name="d_continueif" href="#d_continueif"></a>
 <dd>Continue current repetition loop's next iteration if the condition holds.
 
-<p>It's a shorthand for a <a href="#d_if"><code>.if</code></a>, <a href="#d_continue"><code>.continue</code></a>, <a href="#d_endif"><code>.endif</code></a> sequence.</p></dd>
+<p>It's a shorthand for a <a href="#d_if"><code>.if</code></a>, <a href="#d_continue"><code>.continue</code></a>, <a href="#d_endif"><code>.endif</code></a> sequence.</p>
+
+<pre>
+closest <b>:=</b> <u>candidates</u>[<span>0</span>]
+        <b class="k">.for</b> <u>current</u> in <u>candidates</u>[<span>1</span>::]
+        <b class="k">.continueif</b> <span class="k">abs</span>(<u>closest</u> - <u>target</u>) &lt;= <span class="k">abs</span>(<u>current</u> - <u>target</u>)
+closest <b>:=</b> <u>current</u>
+        <b class="k">.next</b>
+</pre></dd>
 
 <dt><b>.next</b><a name="d_next" href="#d_next"></a>
 <dd>Closing directive of <a href="#d_for"><code>.for</code></a>,
