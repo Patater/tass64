@@ -2944,7 +2944,7 @@ each iteration will be assigned to it. This allows accessing labels within.</p>
 
 <p>All three expressions are free form and can be almost anything which makes this style of
 loop very flexible. A good example is this loop which processes a multipart
-data structure having a word length fields field in front of each part:</p>
+data structure having a word sized length field in front of each part:</p>
 
 <pre>
         <b class="k">.for</b> <u>pos</u> := <span>0</span>, <u>pos</u> &lt; <span class="k">len</span>(<u>data</u>), <u>pos</u> += <u>data</u>[<u>pos</u> : <u>pos</u> + <span>2</span>]
@@ -3076,7 +3076,7 @@ either.
 <p>Labels in the loop body are accessible through a label put in front of the loop.
 This will hold a tuple with an entry for each iteration.
 
-<p>It's tempting to use it to create arrays:</p>
+<p>Can also be used to create an array of variables:</p>
 
 <pre>
 sprites <b class="k">.brept</b> <span>4</span>                <i>;array for 4 sprites</i>
@@ -3094,15 +3094,14 @@ offsets <b class="d">.byte</b> <u>sprites</u>-<u>sprites</u>[<span>0</span>]<i>;
         <b>lda</b> <u>sprites</u>[<span>0</span>].<u>color</u>,y  <i>;use for element access</i>
 </pre>
 
-<p>Indexed access needs that <code>[0]</code> as the offset is counted
+<p>Indexed access needs that <code>[0]</code> assuming the offset is counted
 from the first entry. Leaving that out all the array elements will be used which is
 likely not desired. That's something to keep in mind.
 
 <p>Similar arrays can be defined without the use of <code>.brept</code>.
 It's enough to define the first element using <a
 href="#d_block"><code>.block</code></a> and then reserve the space for the rest
-with <a href="#d_fill"><code>.fill</code></a>. This avoids the use of
-<code>[0]</code> for element access with indexing.</p>
+with <a href="#d_fill"><code>.fill</code></a>.</p>
 
 <pre>
 sprites <b class="k">.block</b>
@@ -3113,12 +3112,19 @@ color   <b class="d">.byte</b> <span>?</span>
         <b class="k">.endblock</b>
         <b class="d">.fill</b> <span class="k">size</span>(<u>sprites</u>) * (<u>sprites</u>.<u>COUNT</u> - <span>1</span>)
 
-        <b>ldx</b> #<u>sprites</u>.<u>COUNT</u>      <i>;sprite count</i>
-        <b>ldx</b> #<span class="k">size</span>(<u>sprites</u>)      <i>;byte count of one</i>
+        <b>lda</b> <u>sprites</u>.<u>x</u> + <span>2</span> * <span class="k">size</span>(<u>sprites</u>)
+        <b>ldx</b> #<u>sprites</u>.<u>COUNT</u>
+        <b>ldx</b> #<span class="k">size</span>(<u>sprites</u>)
 addrtab <b class="d">.addr</b> <u>sprites</u> + <span class="k">size</span>(<u>sprites</u>) * <span class="k">range</span>(<u>sprites</u>.<u>COUNT</u>)
 offsets <b class="d">.byte</b> <span class="k">size</span>(<u>sprites</u>) * <span class="k">range</span>(<u>sprites</u>.<u>COUNT</u>)
+        <b>ldy</b> <u>offsets</u>,x
         <b>lda</b> <u>sprites</u>.<u>color</u>,y
-</pre></dd>
+</pre>
+
+<p>This avoids the use of <code>[0]</code> for element access with indexing.
+Element offset calculation is a bit longer and assumes uniform size.</p>
+
+</dd>
 
 <dt><b>.endrept</b><a name="d_endrept" href="#d_endrept"></a>
 <dd>End of a <a href="#d_rept"><code>.rept</code></a> or <a href="#d_brept"><code>.brept</code></a> block</dd>

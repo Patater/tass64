@@ -2480,7 +2480,7 @@ within.
 
     All three expressions are free form and can be almost anything which makes
     this style of loop very flexible. A good example is this loop which
-    processes a multipart data structure having a word length fields field in
+    processes a multipart data structure having a word sized length field in
     front of each part:
 
             .for pos := 0, pos < len(data), pos += data[pos : pos + 2]
@@ -2594,7 +2594,7 @@ within.
     Labels in the loop body are accessible through a label put in front of the
     loop. This will hold a tuple with an entry for each iteration.
 
-    It's tempting to use it to create arrays:
+    Can also be used to create an array of variables:
 
     sprites .brept 4                ;array for 4 sprites
     x       .byte ?
@@ -2610,14 +2610,13 @@ within.
             ldy offsets,x           ;get the offset and
             lda sprites[0].color,y  ;use for element access
 
-    Indexed access needs that [0] as the offset is counted from the first
+    Indexed access needs that [0] assuming the offset is counted from the first
     entry. Leaving that out all the array elements will be used which is likely
     not desired. That's something to keep in mind.
 
     Similar arrays can be defined without the use of .brept. It's enough to
     define the first element using .block and then reserve the space for the
-    rest with .fill. This avoids the use of [0] for element access with
-    indexing.
+    rest with .fill.
 
     sprites .block
     COUNT   = 4                     ;sprite count
@@ -2627,11 +2626,16 @@ within.
             .endblock
             .fill size(sprites) * (sprites.COUNT - 1)
 
-            ldx #sprites.COUNT      ;sprite count
-            ldx #size(sprites)      ;byte count of one
+            lda sprites.x + 2 * size(sprites)
+            ldx #sprites.COUNT
+            ldx #size(sprites)
     addrtab .addr sprites + size(sprites) * range(sprites.COUNT)
     offsets .byte size(sprites) * range(sprites.COUNT)
+            ldy offsets,x
             lda sprites.color,y
+
+    This avoids the use of [0] for element access with indexing. Element offset
+    calculation is a bit longer and assumes uniform size.
 
 .endrept
     End of a .rept or .brept block
